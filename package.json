@@ -18,7 +18,8 @@
     "db:stop": "supabase stop",
     "db:status": "supabase status",
     "db:reset": "supabase db reset",
-    "db:new": "supabase migration new"
+    "db:new": "supabase migration new",
+    "db:test": "supabase test db"
   },
   "dependencies": {
     "next": "16.4.2",

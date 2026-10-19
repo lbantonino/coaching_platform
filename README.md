@@ -43,7 +43,10 @@ Prérequis : **Docker Desktop lancé**. Le CLI Supabase est une dépendance du p
 | `npm run db:status` | Affiche les URL et les clés locales (à recopier dans `.env.local`) |
 | `npm run db:reset` | Recrée la base locale de zéro : toutes les migrations puis `supabase/seed.sql` |
 | `npm run db:new <nom>` | Crée un fichier de migration horodaté dans `supabase/migrations/` |
+| `npm run db:test` | Lance les tests SQL/RLS (pgTAP) de `supabase/tests/` sur la base locale |
 | `npm run db:stop` | Arrête les conteneurs (les données locales sont conservées) |
+
+Comptes de démonstration locaux (créés par le seed, mot de passe `demo-coach-local`) : `coach-a@example.test` (Organisation Démo A) et `coach-b@example.test` (Organisation Démo B).
 
 URL locales utiles : Studio http://127.0.0.1:54323, boîte mail de test (Mailpit) http://127.0.0.1:54324.
 

@@ -6,7 +6,7 @@
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
 | P0 Bootstrap | En cours : P0-01, P0-02, P0-03 faits ; P0-04 à P0-06 à faire | lint, typecheck, format:check, build, dev, db:reset x2, test trigger SQL | Commits P0-01 à P0-03, session du 19/10/2026 ci-dessous |
-| P1 Auth/organisations | À faire | Aucun | - |
+| P1 Auth/organisations | En cours : P1-02 fait, P1-03 fait pour organisations/membres ; P1-01, P1-04, P1-05 à faire | db:reset, db:test (16 tests pgTAP), contre-épreuve RLS, connexion du compte démo | Session du 19/10/2026 (story P1-02/P1-03) |
 | P2 CRM | À faire | Aucun | - |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
@@ -16,9 +16,45 @@
 | P8 SaaS commercial | À faire | Aucun | - |
 
 ## Dernière session
+- Date : 2026-10-19 (après-midi)
+- Objectif : P1-02 / P1-03, organisations, membres et isolation RLS entre deux tenants.
+- Décisions validées par Antonino : **pas de page d'inscription publique avant P8** (P8-01) ; les comptes coachs sont créés par l'administrateur ; on commence par le socle de sécurité avant la page de connexion.
+
+### Story P1-02 / P1-03 : organisations, membres, admins plateforme et RLS
+```
+Date : 2026-10-19
+Story : P1-02 (organisation + memberships, admin plateforme indépendant) et P1-03 (RLS + tests 2 organisations)
+Objectif et fichiers specs lus : docs/02 §1-2 et §6, docs/11 §2, docs/12 §2-3
+Fichiers créés/modifiés :
+  supabase/migrations/20261019151645_organisations_et_membres.sql
+  supabase/seed.sql (2 organisations démo + 2 comptes coachs fictifs @example.test)
+  supabase/tests/database/01_isolation_organisations.test.sql (pgTAP)
+  package.json (script db:test), README.md
+Migrations / endpoints / vues ajoutées :
+  tables organizations, organization_members (owner|coach, active|disabled, un seul owner par org), platform_admins
+  schéma private + fonction private.is_org_member (security definer, search_path verrouillé)
+  RLS : lecture de sa propre organisation et de ses membres uniquement ; aucune écriture client ;
+        platform_admins sans policy ; anon sans aucun privilège
+Commandes exécutées et résultats :
+  npm run db:reset -> 2 migrations + seed appliqués
+  npm run db:test -> 16/16 tests PASS
+  Contre-épreuve : policy remplacée par using(true) -> tests FAIL (la fuite est détectée) ; reset -> PASS
+  Connexion API Auth avec coach-a@example.test / mot de passe démo -> jeton obtenu
+Tests automatiques et manuels : 16 tests pgTAP (isolation A/B dans les deux sens, ciblage par ID, membres,
+  membre désactivé, admin plateforme sans accès implicite, anon refusé, écritures refusées, owner unique)
+Points de sécurité/tenant vérifiés : SEC-01 et DB-01 pour organisations/membres ; ADM-01 (admin sans accès implicite)
+Bugs/limites :
+  - Pas encore d'interface : connexion (P1-01) et garde-fous serveur requireCoach/... (P1-04) à venir
+  - Pas encore de script de création d'un vrai compte coach (prévu avec P1-01/P1-04)
+  - owner_user_id de docs/11 remplacé par le membre de rôle 'owner' (un seul par organisation, contrainte en base)
+Décisions OPEN/ADR : inscription publique repoussée à P8 (conforme à P8-01)
+Prochaine story : P1-01 (connexion, session, déconnexion, page /coach protégée) puis P1-04
+```
+
+## Session du matin (P0)
 - Date : 2026-10-19
 - Objectif : cadrage technique et amorçage P0 (`P0-01` à `P0-03` uniquement).
-- Décisions validées par Antonino : Node 24 LTS ; Supabase DEV en local (CLI + Docker) ; un commit par story avec Claude en co-auteur.
+- Décisions validées par Antonino : Node 24 LTS ; Supabase DEV en local (CLI + Docker) ; un commit par story, **sans** co-auteur.
 - Réalisé : socle Next.js, environnements, outillage migrations/seed/reset (détail ci-dessous). **Aucune table métier, aucune auth, aucune RLS** : c'est P1.
 - Prochaine tâche recommandée : décider du contenu de P0-04/P0-05 ou passer à P1 (voir « Points à valider »).
 
