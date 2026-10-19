@@ -16,6 +16,23 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
+## Environnements et variables
+
+Un projet Supabase **par environnement**, jamais partagé :
+
+| Environnement | Supabase | Données |
+|---|---|---|
+| DEV | Local, via le CLI et Docker (`npm run db:start`) | Seed de démonstration uniquement |
+| STAGING | Projet cloud dédié, région UE (créé plus tard) | Données de test |
+| PROD | Projet cloud dédié, région UE (créé plus tard) | Données réelles, jamais copiées en DEV |
+
+```bash
+cp .env.example .env.local   # puis remplir avec les valeurs de `npx supabase status`
+```
+
+- `.env.local` et tous les `.env*` sont ignorés par Git ; seul `.env.example` (noms sans valeurs) est versionné.
+- Seules les variables `NEXT_PUBLIC_*` atteignent le navigateur. La clé secrète Supabase reste côté serveur.
+
 ## Commandes de qualité
 
 | Commande | Rôle |
