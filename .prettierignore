@@ -1,0 +1,9 @@
+# Les spécifications Markdown et PDF ne sont jamais reformatées automatiquement.
+*.md
+*.pdf
+package-lock.json
+.next/
+node_modules/
+supabase/.temp/
+supabase/.branches/
+.impeccable/
