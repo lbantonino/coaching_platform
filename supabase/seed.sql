@@ -1,0 +1,14 @@
+-- =====================================================================
+-- DONNÉES DE DÉMONSTRATION : DÉVELOPPEMENT ET TESTS UNIQUEMENT
+-- =====================================================================
+-- Exécuté par `npm run db:reset` sur la base Supabase LOCALE après les migrations.
+-- Jamais appliqué en staging ni en production.
+--
+-- Règles :
+--   - aucune donnée personnelle réelle (nom, email, téléphone, programme d'un vrai sportif) ;
+--   - noms explicitement fictifs (ex. « Camille Test », « Organisation Démo A ») ;
+--   - emails en domaine réservé : *@example.test ;
+--   - le seed doit pouvoir être rejoué à l'identique après chaque reset.
+--
+-- Contenu : vide en P0. Les deux organisations de test et leurs membres arrivent en P1,
+-- en même temps que les tables et les politiques RLS qui les protègent.

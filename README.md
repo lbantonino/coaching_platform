@@ -33,6 +33,22 @@ cp .env.example .env.local   # puis remplir avec les valeurs de `npx supabase st
 - `.env.local` et tous les `.env*` sont ignorés par Git ; seul `.env.example` (noms sans valeurs) est versionné.
 - Seules les variables `NEXT_PUBLIC_*` atteignent le navigateur. La clé secrète Supabase reste côté serveur.
 
+## Base de données locale (DEV)
+
+Prérequis : **Docker Desktop lancé**. Le CLI Supabase est une dépendance du projet (`npx supabase`), aucune installation globale.
+
+| Commande | Rôle |
+|---|---|
+| `npm run db:start` | Démarre Supabase en local (Postgres, Auth, Storage, Studio). Le premier lancement télécharge les images Docker (plusieurs Go) |
+| `npm run db:status` | Affiche les URL et les clés locales (à recopier dans `.env.local`) |
+| `npm run db:reset` | Recrée la base locale de zéro : toutes les migrations puis `supabase/seed.sql` |
+| `npm run db:new <nom>` | Crée un fichier de migration horodaté dans `supabase/migrations/` |
+| `npm run db:stop` | Arrête les conteneurs (les données locales sont conservées) |
+
+URL locales utiles : Studio http://127.0.0.1:54323, boîte mail de test (Mailpit) http://127.0.0.1:54324.
+
+**Règles des migrations** : le schéma ne change que par un nouveau fichier de migration, jamais à la main dans Studio. Une migration déjà commitée n'est pas modifiée ; on corrige avec une nouvelle migration. Chaque migration indique en commentaire son SQL de retour arrière.
+
 ## Commandes de qualité
 
 | Commande | Rôle |
