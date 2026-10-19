@@ -72,5 +72,10 @@ Construire progressivement une application web responsive/PWA de programmation e
 3. Vérifier la stack V1.1 ci-dessus ; demander validation du petit périmètre prévu ; ne jamais générer tout le SaaS en un seul passage et ne jamais réinitialiser un projet déjà codé sans analyser les changements existants.
 4. Exécuter une tranche, tester, consigner, proposer suivante.
 
+## Rappel Docker obligatoire (demande d'Antonino, 19/10/2026)
+Supabase DEV tourne en local dans Docker. **À chaque session**, sans attendre qu'on le demande :
+- **Au début**, vérifier `docker ps --filter name=coaching-platform`, puis dire clairement soit « Lance Docker Desktop puis `npm run db:start` » (si la tâche touche la base, l'auth, les migrations, les tests d'intégration ou l'app avec données), soit « Pas besoin de Docker pour cette tâche ».
+- **À la fin** (récap final, fin de journée, changement de projet), si les conteneurs tournent : « Pense à arrêter : `npm run db:stop` puis quitter Docker Desktop ».
+
 ## Critère de succès concret
 Un coach crée un client 4 séances/semaine, applique une trame sur 8 semaines (Sortie longue, Endurance, Race Pace, Circuit), personnalise chaque séance, duplique/progresse une semaine, publie et exporte un PDF ; le sportif consulte la version publiée sur mobile, marque une séance faite et saisit RPE/commentaires ; le coach voit le retour dans sa fiche. Ce parcours est documenté dans `docs/15_DEMO_RECRUTEURS.md`.
