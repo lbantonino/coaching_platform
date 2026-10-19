@@ -42,7 +42,8 @@ Commandes exécutées et résultats :
   coach B voit Démo B et pas Démo A ; coach connecté sur /login -> 307 /coach ; cookie falsifié -> 307 /login ;
   /coach connecté servi en Cache-Control private, no-store ; 0 erreur serveur
 Tests automatiques et manuels : pas de test automatisé de l'interface (Playwright pas encore installé) ;
-  la Server Action login n'est vérifiée que par test manuel navigateur (à faire par Antonino)
+  test manuel navigateur par Antonino le 19/10/2026 : connexion coach-a, affichage Démo A, déconnexion,
+  mauvais mot de passe -> message d'erreur : OK
 Points de sécurité/tenant vérifiés : vérification serveur indépendante du proxy (requireUser), getClaims et non
   getSession, message d'erreur générique, isolation A/B visible dans l'interface, pas de cache des pages authentifiées
 Bugs/limites :
