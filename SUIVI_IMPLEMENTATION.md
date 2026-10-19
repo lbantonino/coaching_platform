@@ -6,7 +6,7 @@
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
 | P0 Bootstrap | En cours : P0-01, P0-02, P0-03 faits ; P0-04 à P0-06 à faire | lint, typecheck, format:check, build, dev, db:reset x2, test trigger SQL | Commits P0-01 à P0-03, session du 19/10/2026 ci-dessous |
-| P1 Auth/organisations | En cours : P1-02 fait, P1-03 fait pour organisations/membres ; P1-01, P1-04, P1-05 à faire | db:reset, db:test (16 tests pgTAP), contre-épreuve RLS, connexion du compte démo | Session du 19/10/2026 (story P1-02/P1-03) |
+| P1 Auth/organisations | En cours : P1-02 et P1-03 (organisations/membres) faits ; P1-01 partiel (connexion, session, déconnexion, /coach protégée ; reset et vérification e-mail à faire) ; P1-04, P1-05 à faire | db:test 16/16, contre-épreuve RLS, check, build, 6 vérifications HTTP sur serveur de production | Session du 19/10/2026 (stories P1-02/03 et P1-01a) |
 | P2 CRM | À faire | Aucun | - |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
@@ -19,6 +19,39 @@
 - Date : 2026-10-19 (après-midi)
 - Objectif : P1-02 / P1-03, organisations, membres et isolation RLS entre deux tenants.
 - Décisions validées par Antonino : **pas de page d'inscription publique avant P8** (P8-01) ; les comptes coachs sont créés par l'administrateur ; on commence par le socle de sécurité avant la page de connexion.
+
+### Story P1-01a : connexion, session, déconnexion, espace coach protégé
+```
+Date : 2026-10-19
+Story : P1-01 (partie a) : connexion e-mail/mot de passe, session, déconnexion, page /coach protégée
+Objectif et fichiers specs lus : docs/02 §1-2 et §8 (AUTH-01, SEC-01), docs/12 §2 et §10 (SSR/auth), doc Next 16
+  embarquée (proxy, authentication-with-cache-components), guide Supabase SSR Next.js
+Dépendances ajoutées (justification) : @supabase/supabase-js + @supabase/ssr (session par cookies), zod (validation
+  serveur du formulaire), server-only (empêche l'import de code serveur côté navigateur)
+Fichiers créés/modifiés :
+  src/proxy.ts (rafraîchit la session via getClaims, redirection optimiste /coach <-> /login, en-têtes anti-cache)
+  src/lib/env.ts (validation Zod des variables publiques), src/lib/supabase/server.ts (client typé, connection())
+  src/lib/supabase/database.types.ts (généré par npm run db:types)
+  src/features/auth/{schemas,session,actions}.ts (Zod, getCurrentUser/requireUser/getCoachMemberships, login/logout)
+  src/app/(auth)/login/{page,login-form}.tsx, src/app/(coach)/coach/page.tsx, src/app/page.tsx (lien connexion)
+  package.json (script db:types), README.md ; .env.local local créé (ignoré par Git)
+Migrations / endpoints / vues ajoutées : aucune migration ; Server Actions login/logout ; pas de Route Handler
+Commandes exécutées et résultats :
+  npm run check -> exit 0 ; npm run build -> OK (/coach en Partial Prerender, /login statique, Proxy actif)
+  next start + curl : /coach sans session -> 307 /login ; /login -> 200 ; coach A voit Démo A et pas Démo B ;
+  coach B voit Démo B et pas Démo A ; coach connecté sur /login -> 307 /coach ; cookie falsifié -> 307 /login ;
+  /coach connecté servi en Cache-Control private, no-store ; 0 erreur serveur
+Tests automatiques et manuels : pas de test automatisé de l'interface (Playwright pas encore installé) ;
+  la Server Action login n'est vérifiée que par test manuel navigateur (à faire par Antonino)
+Points de sécurité/tenant vérifiés : vérification serveur indépendante du proxy (requireUser), getClaims et non
+  getSession, message d'erreur générique, isolation A/B visible dans l'interface, pas de cache des pages authentifiées
+Bugs/limites :
+  - Erreur Next « Date.now() pendant le prérendu » trouvée puis corrigée par connection() dans le client serveur
+  - Reste de P1-01 : mot de passe oublié/reset et vérification e-mail (Mailpit local)
+  - Pas de contrôle de rôle coach vs sportif : guards requireCoach/requireAthlete = P1-04
+Décisions OPEN/ADR : aucune
+Prochaine story : P1-01b (reset mot de passe) ou P1-04 (guards de rôle) ; installer Playwright pour le parcours connexion
+```
 
 ### Story P1-02 / P1-03 : organisations, membres, admins plateforme et RLS
 ```

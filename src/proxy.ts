@@ -1,0 +1,57 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+import { publicEnv } from "@/lib/env";
+
+// Proxy (ex-middleware, Next 16) : rafraîchit la session Supabase à chaque requête et fait une
+// redirection « optimiste ». Ce n'est PAS la protection des données : chaque page et chaque action
+// revérifie l'utilisateur côté serveur, et la RLS PostgreSQL filtre en dernier ressort.
+export async function proxy(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(publicEnv.supabaseUrl, publicEnv.supabasePublishableKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet, headers) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options),
+        );
+        // En-têtes anti-cache : une réponse qui pose un cookie de session ne doit jamais être mise en cache.
+        Object.entries(headers ?? {}).forEach(([key, value]) => response.headers.set(key, value));
+      },
+    },
+  });
+
+  // getClaims() vérifie le jeton (contrairement à getSession()) et le rafraîchit si besoin.
+  const { data } = await supabase.auth.getClaims();
+  const isSignedIn = Boolean(data?.claims);
+  const { pathname } = request.nextUrl;
+
+  if (!isSignedIn && pathname.startsWith("/coach")) {
+    return redirectWithCookies(request, response, "/login");
+  }
+  if (isSignedIn && pathname === "/login") {
+    return redirectWithCookies(request, response, "/coach");
+  }
+
+  return response;
+}
+
+// Une redirection doit conserver les cookies éventuellement rafraîchis par getClaims().
+function redirectWithCookies(request: NextRequest, from: NextResponse, path: string) {
+  const redirect = NextResponse.redirect(new URL(path, request.url));
+  from.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+  from.headers.forEach((value, key) => {
+    if (key.toLowerCase() !== "set-cookie") redirect.headers.set(key, value);
+  });
+  return redirect;
+}
+
+export const config = {
+  // Toutes les routes sauf les fichiers statiques et les images.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+};
