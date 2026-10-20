@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { LogoutButton } from "@/components/ui/logout-button";
@@ -38,12 +39,17 @@ async function CoachSession() {
         </h2>
         <ul className="flex flex-col gap-2">
           {memberships.map((membership) => (
-            <li
-              key={membership.organizationId}
-              className="flex items-center justify-between gap-4 rounded-lg border border-zinc-300 p-4 dark:border-zinc-700"
-            >
-              <span className="font-medium">{membership.organizationName}</span>
-              <span className="text-sm text-zinc-500">{roleLabels[membership.role]}</span>
+            <li key={membership.organizationId}>
+              <Link
+                href={`/coach/o/${membership.organizationId}/sportifs`}
+                className="flex items-center justify-between gap-4 rounded-lg border border-zinc-300 p-4 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900"
+              >
+                <span className="flex flex-col">
+                  <span className="font-medium">{membership.organizationName}</span>
+                  <span className="text-sm text-zinc-500">Voir les sportifs →</span>
+                </span>
+                <span className="text-sm text-zinc-500">{roleLabels[membership.role]}</span>
+              </Link>
             </li>
           ))}
         </ul>

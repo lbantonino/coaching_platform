@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | En cours : P0-01, P0-02, P0-03 faits ; P0-04 à P0-06 à faire | lint, typecheck, format:check, build, dev, db:reset x2, test trigger SQL | Commits P0-01 à P0-03, session du 19/10/2026 ci-dessous |
 | P1 Auth/organisations | En cours : P1-01 (connexion + mot de passe oublié), P1-02, P1-03, P1-04 faits ; P1-05 invitation sportif à faire ; vérification e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 21/21, test:e2e 17/17 (x2 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | À faire | Aucun | - |
+| P2 CRM | En cours : P2-01 partiel (fiche sportif minimale, liste, ajout) ; modification, recherche, filtres à faire | db:test 34/34, test:e2e 21/21 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -18,6 +18,33 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P2-01a : fiche sportif minimale, liste et ajout (préalable à l'invitation P1-05)
+```
+Date : 2026-10-20
+Story : P2-01 (partie a), décidée avec Antonino avant P1-05 : on invite toujours un sportif qui a déjà une fiche
+Objectif et fichiers specs lus : docs/03 §1 et §6, docs/11 §2, docs/02 §1
+Fichiers créés/modifiés :
+  supabase/migrations/20261020080822_fiches_sportifs.sql (athlete_profiles, e-mail unique par organisation
+    insensible à la casse, RLS membres, update limité par colonnes, pas de delete)
+  supabase/tests/database/03_isolation_sportifs.test.sql (13 tests)
+  src/features/athletes/{schemas,queries,actions}.ts
+  src/app/(coach)/coach/o/[orgId]/sportifs/page.tsx, .../nouveau/{page,new-athlete-form}.tsx, coach/page.tsx (liens)
+  tests/e2e/athletes.spec.ts ; tests/e2e/password-reset.spec.ts (attente de fin de déconnexion)
+  src/lib/supabase/database.types.ts (régénéré)
+Commandes exécutées et résultats :
+  npm run db:test -> 34/34 PASS ; npm run check -> exit 0 ; npm run test:e2e -> 21 passés + 1 ignoré, 3 exécutions stables
+Points de sécurité/tenant vérifiés : SEC-01 sur les sportifs (lecture, création, modification, ciblage par ID),
+  IDOR par URL /coach/o/[ID de B]/sportifs -> /acces-refuse, created_by et athlete_user_id non falsifiables,
+  organization_id non modifiable, pas de suppression
+Bugs/limites :
+  - Champs minimaux (nom, e-mail, téléphone, statut) : fiche complète en attente d'OPEN-01
+  - Pas encore de modification, recherche, filtres ni archivage depuis l'interface
+  - Le test E2E ajoute un sportif à chaque exécution dans la base locale (nettoyé par npm run db:reset)
+  - Défaut de test corrigé : course entre déconnexion et navigation (test « mot de passe oublié »)
+Décisions OPEN/ADR : choix Antonino du 20/10 pour P1-05 : lien à copier, 7 jours, case « 18 ans ou plus », page /app honnête
+Prochaine story : P1-05 invitation sportif
+```
 
 ### Story P1-01b : mot de passe oublié et durcissement de la config Auth locale
 ```

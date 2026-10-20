@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de P1-01b).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de la story « fiche sportif », début de P2-01).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -49,10 +49,12 @@ Coaching_Platform/
 │   ├── app/                        Les pages et les routes (une URL = un dossier)
 │   │   ├── (auth)/                 Connexion, mot de passe oublié, nouveau mot de passe
 │   │   ├── (coach)/coach/          Espace coach
+│   │   │   └── o/[orgId]/sportifs/ Liste et ajout des sportifs d'une organisation
 │   │   ├── (admin)/admin/          Espace administrateur
 │   │   ├── auth/confirm/           Retour des liens reçus par e-mail
 │   │   └── espace/                 Aiguillage : envoie chacun vers son espace
 │   ├── features/auth/              La logique « comptes » : actions, garde-fous, validations
+│   ├── features/athletes/          La logique « sportifs » : validation, lecture, création
 │   ├── components/ui/              Petits composants réutilisables (bouton déconnexion, styles)
 │   ├── lib/                        Outils techniques (connexion Supabase, variables d'env)
 │   └── proxy.ts                    S'exécute avant chaque requête (session, redirections)
@@ -64,7 +66,7 @@ Coaching_Platform/
 └── tests/e2e/                      Les tests Playwright
 ```
 
-Les parenthèses comme `(auth)` sont des **groupes de routes** Next : ils rangent les fichiers sans apparaître dans l'URL. `src/app/(coach)/coach/page.tsx` répond à `/coach`.
+Les crochets comme `[orgId]` sont des **segments dynamiques** : `/coach/o/1234/sportifs` donne `orgId = "1234"`. Les parenthèses comme `(auth)` sont des **groupes de routes** Next : ils rangent les fichiers sans apparaître dans l'URL. `src/app/(coach)/coach/page.tsx` répond à `/coach`.
 
 **Pourquoi séparer `app/` et `features/` ?** `app/` contient seulement l'affichage. La logique (« qui a le droit ? », « que valider ? ») est dans `features/`. Ainsi la même règle sert à plusieurs pages, et on la teste une seule fois.
 
@@ -137,6 +139,13 @@ Installé au moment où un vrai parcours existait. Chaque test tourne deux fois 
 ### P1-01b : mot de passe oublié (20/10)
 Demande de lien, e-mail, lien à usage unique, nouveau mot de passe (10 caractères minimum). En local, les e-mails sont capturés par **Mailpit** (http://127.0.0.1:54324) au lieu d'être envoyés : le test Playwright lit l'e-mail via son API et fait tout le parcours. La destination du lien est dans une liste fermée, pour empêcher une redirection vers un site malveillant.
 
+### Fiche sportif, début de P2-01 (20/10)
+Avant de pouvoir inviter un sportif, il faut qu'il existe : on a donc créé la table `athlete_profiles` (nom obligatoire, e-mail et téléphone facultatifs, statut actif / en pause / archivé), la liste des sportifs et le formulaire d'ajout. Une fiche **n'est pas un compte** : le sportif n'a pas besoin de se connecter pour que le coach le suive, le lien avec un compte viendra avec l'invitation.
+
+Trois choix de sécurité à retenir. L'**e-mail est unique par organisation** (le même sportif peut être suivi par deux coachs différents, mais pas apparaître deux fois chez le même). Un sportif **ne peut jamais changer d'organisation** : la base n'autorise la modification que de certains champs. Et l'adresse contient l'identifiant de l'organisation (`/coach/o/[orgId]/sportifs`) : c'est la première vraie utilisation de `requireOrgAccess`, testée en remplaçant l'identifiant par celui d'une autre organisation (« Accès refusé »). Ce type d'attaque s'appelle un **IDOR**.
+
+Les champs restent volontairement minimaux : la fiche complète (objectifs, disponibilités, allures) attend la validation de Gianluca. On n'invente pas de règle métier.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -146,13 +155,14 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **« Date.now() pendant le prérendu »** : Next 16 essayait de pré-calculer la page coach, alors que la session dépend de l'heure. Solution : `connection()` force le calcul à chaque requête. Bonus : les données personnelles ne sont jamais en cache.
 - **L'adresse restait sur `/espace` après connexion** : la page affichée était bonne, mais l'URL non. Trouvé par Playwright, corrigé en redirigeant directement au bon endroit.
 - **L'inscription libre était ouverte** : sans page d'inscription, l'API de Supabase acceptait quand même de créer des comptes. Fermé dans la configuration et vérifié.
+- **Des tests « chanceux »** : deux fois, un test cliquait puis naviguait sans attendre la fin de l'action (déconnexion, changement de page). Il passait par chance de timing, puis a échoué plus tard. Leçon : toujours attendre un signe visible (nouvelle adresse, nouveau titre) avant l'étape suivante, et relancer la suite plusieurs fois pour vérifier sa stabilité.
 - **Une correction qui a tout cassé** : en fermant l'inscription, un deuxième réglage a coupé toute connexion. Les tests l'ont attrapé immédiatement. Leçon : c'est exactement pour ça qu'on a des tests automatiques.
 
 ---
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 16 tests SQL plus des tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 34 tests SQL et 21 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment as-tu utilisé l'IA ? »** Claude Code écrit le code à partir d'un cahier des charges détaillé ; je valide chaque décision métier, je teste dans le navigateur, et tout est tracé dans un journal avec les preuves de tests.
@@ -169,3 +179,5 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Proxy** : code exécuté avant chaque requête (s'appelait « middleware » avant Next 16).
 - **PKCE** : mécanisme qui garantit qu'un lien reçu par e-mail ne fonctionne que dans le navigateur qui l'a demandé.
 - **E2E (end-to-end)** : test d'un parcours complet, du clic à la base de données.
+- **IDOR** : attaque qui consiste à changer un identifiant dans l'adresse pour accéder aux données de quelqu'un d'autre.
+- **Segment dynamique** : partie variable d'une adresse, comme `[orgId]`.

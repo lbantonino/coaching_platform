@@ -73,6 +73,8 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
 
   // 4. Le lien est à usage unique.
   await page.getByRole("button", { name: "Se déconnecter" }).click();
+  // Attendre la fin de la déconnexion : naviguer trop tôt interromprait l'action.
+  await expect(page).toHaveURL(/\/login$/);
   await page.goto(link);
   // Supabase ajoute un fragment #error=...otp_expired, conservé par le navigateur.
   await expect(page).toHaveURL(/\/lien-invalide(#.*)?$/);

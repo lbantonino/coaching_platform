@@ -3,6 +3,54 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      athlete_profiles: {
+        Row: {
+          athlete_user_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          display_name: string;
+          email: string | null;
+          id: string;
+          organization_id: string;
+          phone: string | null;
+          status: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_user_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          display_name: string;
+          email?: string | null;
+          id?: string;
+          organization_id: string;
+          phone?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          athlete_user_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          display_name?: string;
+          email?: string | null;
+          id?: string;
+          organization_id?: string;
+          phone?: string | null;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_profiles_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       organization_members: {
         Row: {
           created_at: string;
