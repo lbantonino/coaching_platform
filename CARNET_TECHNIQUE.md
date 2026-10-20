@@ -15,6 +15,8 @@ Une application web SaaS pour coachs sportifs (Running, Musculation, Hyrox, Hybr
 
 **« SaaS multi-tenant »** : plusieurs coachs utilisent la même application et la même base de données, mais chacun ne voit **jamais** les données des autres. Un coach (ou un studio) = une **organisation**. C'est la contrainte n°1 du projet, et elle explique beaucoup de choix ci-dessous.
 
+**Le nom : Coory. Le positionnement** (détail dans `docs/16_POSITIONNEMENT.md`) : un concurrent, Athleex, fait du coaching généraliste orienté musculation et business. Coory ne le copie pas : même socle, mais spécialisé **Running, Hyrox et Hybride**, avec dix différences prévues (allures calculées par sportif, mode club, minuteur de séance, boîte à outils Hyrox, import de programmes existants, marque du coach, IA d'assistance validée par le coach, import Strava/Garmin, hors ligne). Phrase pour un recruteur : « On n'a pas cherché la parité avec le concurrent, on a choisi une niche qu'on connaît et des fonctions qu'il ne fait pas bien. »
+
 ---
 
 ## 2. La stack, et pourquoi chaque outil
