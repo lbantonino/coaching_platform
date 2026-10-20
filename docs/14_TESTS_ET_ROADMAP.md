@@ -129,6 +129,12 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-10` Connecteurs Garmin/Strava/calendriers si voulus.
 - `OPEN-11` Mineurs : non supportés tant que exigences légales non cadrées.
 - `OPEN-12` Gestion coach assigné quand sportif suit plusieurs structures.
+- `OPEN-13` Formules d'allures et zones par défaut, à valider par le coach (avant `DIF-04`).
+- `OPEN-14` Définition d'un groupe (club, salle) et droits associés (avant `DIF-05`).
+- `OPEN-15` Conditions actuelles des API Strava et Garmin (avant `DIF-09` étape 2).
+- `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08`).
+
+**Différenciateurs `DIF-01` à `DIF-10`** (décision du 20/10/2026) : voir `docs/16_POSITIONNEMENT.md` §4–5 pour leur phase d'insertion. Ils ne modifient pas l'ordre P2 → P6.
 
 ## 7. Risques à surveiller
 Éditeur imbriqué trop compliqué sur mobile ; versionnage mal isolé ; fuite cross-tenant ; rendu PDF qui perd blocs ; expérience trop large au démarrage ; métriques sportives non fiables ; intégrations payantes/envoi non autorisé ; dérive Claude Code vers une « jolie démo » non branchée à la base ; cas complexes (LEG CURL série/reps ambiguës) importés incorrectement.

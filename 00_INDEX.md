@@ -32,6 +32,8 @@
 
 **Fichiers auxiliaires, hors des 17 de référence** : `PROMPT_DEMARRAGE_CLAUDE_CODE.md`, `SUIVI_IMPLEMENTATION.md`, `README_MAJ_V1_1.md` et `DEMARRAGE_APRES_MAJ.md`.
 
+**Ajouts après la V1.1** : `docs/16_POSITIONNEMENT.md` (nom Coory, concurrent Athleex, différenciateurs `DIF-01` à `DIF-10` et leur phase), `CARNET_TECHNIQUE.md` (explication des choix techniques, mis à jour à chaque story).
+
 ## 3 espaces applicatifs et 4 surfaces
 1. **Coach** : desktop complet + mobile complet pour créer/éditer ; la facturation SaaS n'est pas une fonctionnalité du coach sportif.
 2. **Sportif / client** : desktop + mobile orienté consultation, exécution et feedback ; pas de droit de modifier les prescriptions du coach.
@@ -85,6 +87,8 @@ Chaque spec donne scénarios, règles et critère d'acceptation ; la roadmap les
 - D-09 (V1.1) : la liste des routes API indique des opérations métier, pas une obligation de créer une API REST pour chaque écran ; Server Actions/Functions et Route Handlers sont choisis au cas par cas.
 - D-10 (V1.1) : le paiement est **prévu en P8 mais non implémenté** ; facturation portée par l'organisation, Stripe candidat à confirmer, sans hypothèse de prix ni de plan.
 - D-11 (V1.1) : dépendances ajoutées à la phase utile, tests sécurité/RLS dès P1, suite E2E quand des parcours réels existent.
+- D-12 (20/10/2026) : nom commercial de travail **Coory** (remplace D-07 « nom différé ») ; marques et nom de domaine à vérifier avant lancement. Design system sombre graphite + orange (`src/app/globals.css`).
+- D-13 (20/10/2026) : pas de parité avec le concurrent Athleex ; dix différenciateurs retenus (`docs/16_POSITIONNEMENT.md`), insérés dans les phases existantes sans changer leur ordre.
 
 ## Questions ouvertes (avant production, pas nécessairement avant scaffolding)
 - OPEN-01 : valeurs exactes obligatoires de la fiche client, profil sportif et politique d'accès coach.
@@ -98,6 +102,7 @@ Chaque spec donne scénarios, règles et critère d'acceptation ; la roadmap les
 - OPEN-09 : tarification SaaS, essai, TVA/facturation et fournisseur de paiement (**P8**, pas P6).
 - OPEN-10 : partage du suivi d'entraînement et éventuelles intégrations Garmin/Strava (hors MVP).
 - OPEN-11 : politique de récupération de compte, suppression d'organisation, comptes mineurs (bloquer les mineurs au démarrage tant que non cadré).
+- OPEN-13 à OPEN-16 : voir `docs/16_POSITIONNEMENT.md` §6 (formules d'allures, groupes, API Strava/Garmin, fournisseur d'IA).
 
 ## Critère de fin du cadrage et premier développement
 Une fois les décisions bloquantes de phase 1 validées : initialiser dépôt, configurer environnement, schéma organisation/membership et RLS, parcours authentification, CRUD client et test d'isolation entre deux organisations. **Ne pas coder l'éditeur complet avant ce socle.**
