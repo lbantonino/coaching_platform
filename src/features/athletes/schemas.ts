@@ -32,3 +32,23 @@ export const athleteStatusLabels = {
 } as const;
 
 export type AthleteStatus = keyof typeof athleteStatusLabels;
+
+export const ATHLETE_STATUSES = ["active", "paused", "archived"] as const;
+
+// Modification d'une fiche : mêmes règles que la création, plus le statut.
+export const athleteUpdateSchema = newAthleteSchema.extend({
+  status: z.enum(ATHLETE_STATUSES, { error: "Statut invalide." }),
+});
+
+// Filtres de la liste des sportifs (valeurs venant de l'URL, donc validées).
+export const athleteListFilterSchema = z.object({
+  status: z.enum([...ATHLETE_STATUSES, "all"]).catch("active"),
+  q: z
+    .string()
+    .trim()
+    .max(80)
+    .catch("")
+    .transform((value) => value.toLowerCase()),
+});
+
+export type AthleteListFilter = z.infer<typeof athleteListFilterSchema>;

@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de P0-05 : design system Athlix appliqué).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de P2-01 : fiche sportif complète, recherche et filtres).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -174,6 +174,13 @@ Méthode de vérification : les 27 tests Playwright ont confirmé que le changem
 
 ### Vitest et note de décision, fin de P0 (20/10)
 Trois niveaux de tests désormais : **pgTAP** pour la base et la sécurité, **Vitest** pour les règles pures (11 tests en 0,3 seconde : validations de formulaires, jetons d'invitation), **Playwright** pour les parcours. La pyramide classique : beaucoup de petits tests rapides, quelques tests complets plus lents. On a aussi écrit une **ADR** (Architecture Decision Record, `docs/adr/0001`) : une page qui dit quelle stack on a choisie, ce qu'on a refusé et pourquoi. Tout nouvel outil devra passer par une ADR. C'est une pratique d'équipe professionnelle, utile en entretien.
+
+### Fiche sportif, recherche et filtres, fin de P2-01 (20/10)
+Chaque sportif a maintenant sa **fiche** : on y modifie le nom, le contact et le statut (actif, en pause, archivé) avec un **sélecteur segmenté** du design system. Archiver n'efface rien : le sportif quitte la liste active et peut être restauré. Une règle métier protège la cohérence : quand le sportif a activé son compte, son e-mail devient son identifiant de connexion, donc il n'est plus modifiable depuis la fiche (vérifié côté serveur, pas seulement grisé à l'écran).
+
+La liste a une **recherche** et des **pastilles de filtre**. Choix technique : le filtre est **dans l'adresse** (`?statut=archives&q=camille`), pas dans la mémoire de la page. Avantages : on peut partager ou mettre en favori une liste filtrée, le bouton retour du navigateur fonctionne, et ça marche même sans JavaScript. Les valeurs lues dans l'adresse sont validées par Zod : une adresse bricolée retombe sur des valeurs sûres.
+
+Leçon de test du jour : deux tests lancés **en parallèle** ont créé des sportifs à la même milliseconde, donc avec le même nom « unique ». On ajoute maintenant une partie aléatoire aux noms de test.
 
 ---
 

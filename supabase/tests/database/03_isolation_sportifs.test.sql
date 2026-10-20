@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(13);
+select plan(14);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -56,6 +56,12 @@ select lives_ok(
   $$ insert into public.athlete_profiles (organization_id, display_name, created_by)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'Nouveau A', '11111111-1111-4111-8111-111111111111') $$,
   'Coach A peut créer un sportif dans son organisation'
+);
+
+select lives_ok(
+  $$ update public.athlete_profiles set display_name = 'Sportif A modifié', status = 'archived'
+     where id = 'a1a1a1a1-0000-4000-8000-000000000001' $$,
+  'Coach A peut modifier et archiver un sportif de son organisation'
 );
 
 select throws_ok(

@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 partiel (fiche sportif minimale, liste, ajout) ; modification, recherche, filtres à faire | db:test 34/34, test:e2e 21/21 (x3 stables) | Session du 20/10/2026 |
+| P2 CRM | En cours : P2-01 fait (fiche minimale, liste avec recherche et filtres, ajout, modification, archivage/restauration) ; P2-02 à P2-05 à faire | test 15/15, db:test 55/55, test:e2e 31/31 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -18,6 +18,32 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P2-01b : fiche sportif, modification, archivage, recherche et filtres
+```
+Date : 2026-10-20
+Story : P2-01 (suite) : CRM-02 (recherche, filtres, statut, archivage) et CRM-03 partiel (fiche)
+Objectif et fichiers specs lus : docs/03 §1 et §6, docs/10 (design), design system Coory
+Fichiers créés/modifiés :
+  src/features/athletes/schemas.ts (athleteUpdateSchema, athleteListFilterSchema) ; queries.ts (listAthletes avec
+    filtre statut + recherche, getAthlete) ; actions.ts (updateAthlete : e-mail verrouillé si compte activé)
+  src/components/ui/{filter-chips,segmented,avatar}.tsx (composants du design system)
+  src/app/(coach)/coach/o/[orgId]/sportifs/page.tsx (recherche GET, pastilles ?statut=actifs|en-pause|archives|tous)
+  src/app/(coach)/coach/o/[orgId]/sportifs/[athleteId]/{page,athlete-edit-form}.tsx (fiche, 404 si autre organisation)
+  tests/unit/athletes.test.ts (4) ; supabase/tests/database/03 (+1 test positif : un coach modifie/archive son sportif)
+  tests/e2e/athlete-profile.spec.ts (2 scénarios x 2 profils) ; invitation.spec.ts (e-mail verrouillé sur la fiche)
+Commandes exécutées et résultats :
+  npm run check -> exit 0 (Vitest 15/15) ; npm run db:test -> 55/55 ; npm run test:e2e -> 31 passés + 1 ignoré, 3 exécutions
+  Captures ordinateur et téléphone de la liste filtrée et de la fiche ; nom tronqué sur téléphone corrigé (retour à la ligne)
+Points de sécurité vérifiés : fiche d'un sportif de l'organisation B ouverte par le coach A via l'URL -> 404 sans fuite ;
+  filtres d'URL validés par Zod (valeurs fantaisistes -> valeurs sûres) ; recherche sans construction de requête SQL
+Incidents de test (corrigés) : sélecteurs ambigus (lien du nom et lien « Inviter [nom] ») ; deux tests parallèles ont
+  créé un sportif à la même milliseconde (suffixe rendu aléatoire dans tous les tests)
+Bugs/limites :
+  - Recherche filtrée côté serveur en mémoire (quelques dizaines de sportifs) : pagination et recherche en base à prévoir
+  - Champs de fiche minimaux en attente d'OPEN-01 (objectifs, disponibilités : P2-02)
+Prochaine story : P2-03 (repères datés : tests, allures, charges ; préalable à DIF-04)
+```
 
 ### Stories P0-04 et P0-06 : Vitest et ADR du socle
 ```

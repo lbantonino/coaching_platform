@@ -17,7 +17,7 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   page,
 }, testInfo) => {
   // Nom et e-mail uniques par exécution et par profil : les tests ne se gênent pas entre eux.
-  const suffix = `${testInfo.project.name}-${Date.now()}`;
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const name = `Camille Test ${suffix}`;
   const email = `camille-${suffix}@example.test`;
 

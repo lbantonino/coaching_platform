@@ -1,11 +1,13 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
-import { newAthleteSchema } from "./schemas";
+import { getAthlete } from "./queries";
+import { athleteUpdateSchema, newAthleteSchema } from "./schemas";
 
 export type NewAthleteState = {
   error: string | null;
@@ -50,4 +52,67 @@ export async function createAthlete(
   }
 
   redirect(`/coach/o/${membership.organizationId}/sportifs`);
+}
+
+export type UpdateAthleteState = {
+  error: string | null;
+  saved: boolean;
+};
+
+// Modification d'une fiche (nom, contact, statut). Archiver = statut « archived » : rien n'est effacé.
+export async function updateAthlete(
+  organizationId: string,
+  athleteId: string,
+  _previous: UpdateAthleteState,
+  formData: FormData,
+): Promise<UpdateAthleteState> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const current = await getAthlete(membership.organizationId, athleteId);
+  if (!current) return { error: "Sportif introuvable.", saved: false };
+
+  const parsed = athleteUpdateSchema.safeParse({
+    displayName: String(formData.get("displayName") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    phone: String(formData.get("phone") ?? ""),
+    status: String(formData.get("status") ?? ""),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide.", saved: false };
+  }
+
+  // Une fois le compte activé, l'e-mail est l'identifiant de connexion du sportif : il ne se change
+  // pas depuis la fiche du coach (sinon la fiche et le compte ne correspondraient plus).
+  const emailChanged =
+    (parsed.data.email ?? "").toLowerCase() !== (current.email ?? "").toLowerCase();
+  if (current.hasAccount && emailChanged) {
+    return {
+      error: "Le sportif a activé son compte : son adresse e-mail ne peut plus être modifiée ici.",
+      saved: false,
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("athlete_profiles")
+    .update({
+      display_name: parsed.data.displayName,
+      email: parsed.data.email,
+      phone: parsed.data.phone,
+      status: parsed.data.status,
+    })
+    .eq("id", current.id)
+    .eq("organization_id", membership.organizationId);
+
+  if (error) {
+    return {
+      error:
+        error.code === "23505"
+          ? "Un sportif de ton organisation utilise déjà cette adresse e-mail."
+          : "Les modifications n'ont pas pu être enregistrées. Réessaie.",
+      saved: false,
+    };
+  }
+
+  revalidatePath(`/coach/o/${membership.organizationId}/sportifs`, "layout");
+  return { error: null, saved: true };
 }

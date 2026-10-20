@@ -42,7 +42,7 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
   browser,
   context,
 }, testInfo) => {
-  const suffix = `${testInfo.project.name}-${Date.now()}`;
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const name = `Invité ${suffix}`;
   const email = `invite-${suffix}@example.test`;
   const athletePassword = `sportif-${Date.now()}`;
@@ -103,10 +103,15 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
   const row = page.getByRole("listitem").filter({ hasText: name });
   await expect(row.getByText("compte activé")).toBeVisible();
   await expect(row.getByRole("link", { name: `Inviter ${name}` })).toHaveCount(0);
+
+  // Sur la fiche, l'e-mail (identifiant de connexion) est verrouillé.
+  await row.getByRole("link", { name: new RegExp(`^${name}`) }).click();
+  await expect(page.getByLabel("Adresse e-mail")).toHaveAttribute("readonly", "");
+  await expect(page.getByText("Identifiant de connexion du sportif")).toBeVisible();
 });
 
 test("un lien révoqué par le coach n'est plus utilisable", async ({ page, browser }, testInfo) => {
-  const suffix = `${testInfo.project.name}-${Date.now()}`;
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const name = `Révoqué ${suffix}`;
 
   await loginAsCoachA(page);
