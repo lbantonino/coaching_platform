@@ -5,7 +5,7 @@
 ## Statut des phases
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
-| P0 Bootstrap | En cours : P0-01, P0-02, P0-03, P0-05 faits ; P0-04 partiel (Playwright fait, Vitest à faire) ; P0-06 (ADR du socle) à faire | lint, typecheck, format, build, db:reset, test:e2e 27/27 après restyle, captures ordinateur/téléphone | Sessions du 19 et 20/10/2026 |
+| P0 Bootstrap | **Fait** : P0-01 à P0-06 | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | En cours : P2-01 partiel (fiche sportif minimale, liste, ajout) ; modification, recherche, filtres à faire | db:test 34/34, test:e2e 21/21 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
@@ -18,6 +18,17 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Stories P0-04 et P0-06 : Vitest et ADR du socle
+```
+Date : 2026-10-20
+P0-04 : vitest 5.0.5 (vitest.config.mts : alias @ et neutralisation de server-only), script test, check inclut test
+  tests/unit/schemas.test.ts (validations fiche sportif, connexion, mot de passe) ;
+  tests/unit/invitation-token.test.ts (format, unicité sur 1000 tirages, empreinte SHA-256 identique à pgTAP)
+  Résultat : 11/11 en 0,3 s ; npm run check exit 0
+P0-06 : docs/adr/0001-socle-technique.md (choix, alternatives écartées, conséquences, règle des futures ADR)
+Prochaine story : P2-01b (fiche sportif : modifier, archiver, rechercher, filtrer)
+```
 
 ### Story P0-05 : design system Athlix, navigation, pages d'erreur
 ```

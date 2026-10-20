@@ -62,7 +62,8 @@ URL locales utiles : Studio http://127.0.0.1:54323, boîte mail de test (Mailpit
 | `npm run typecheck` | Génère les types de routes Next puis vérifie TypeScript strict (`tsc --noEmit`) |
 | `npm run format` | Formate le code avec Prettier (les `.md` et `.pdf` de spécification ne sont jamais reformatés) |
 | `npm run format:check` | Vérifie le formatage sans modifier |
-| `npm run check` | Les trois contrôles ci-dessus, à lancer avant chaque commit |
+| `npm run test` | Tests unitaires Vitest des règles métier pures (`tests/unit/`) |
+| `npm run check` | Lint, typecheck, format et tests unitaires, à lancer avant chaque commit |
 | `npm run build` | Build de production |
 | `npm run test:e2e` | Tests de parcours Playwright (ordinateur + téléphone) sur le build de production. Prérequis : Supabase local démarré et seedé |
 

@@ -33,6 +33,7 @@ Une application web SaaS pour coachs sportifs (Running, Musculation, Hyrox, Hybr
 | **Docker** | Faire tourner Supabase sur le Mac | Développer hors ligne, gratuitement, et remettre la base à zéro en quelques secondes. Uniquement en développement. |
 | **pgTAP** | Tests de la base de données | Prouver par des tests que la sécurité SQL fonctionne. Intégré à Supabase. |
 | **Playwright** | Tests « comme un humain » | Un robot ouvre un vrai navigateur (ordinateur et téléphone), clique, remplit, vérifie. |
+| **Vitest** | Tests unitaires | Vérifie en une fraction de seconde les règles « pures » (validations, calculs, jetons), sans base ni navigateur. |
 | **ESLint + Prettier** | Qualité et format du code | Repérer les erreurs courantes, garder un style uniforme. |
 
 **Ce qu'on a volontairement refusé** (et pourquoi) : un backend séparé (Express, NestJS), un ORM (Prisma, Drizzle), GraphQL, Redis. Chacun ajoute de la complexité sans besoin réel aujourd'hui : Next + Supabase couvrent tout. La règle du projet : **on n'ajoute un outil qu'au moment où une fonctionnalité le justifie**. Exemple : Zod est arrivé avec le premier formulaire, Playwright avec le premier parcours utilisateur, pas avant.
@@ -171,6 +172,9 @@ On a aussi créé la **navigation** : barre latérale sur ordinateur, onglets en
 
 Méthode de vérification : les 27 tests Playwright ont confirmé que le changement de style ne cassait aucun parcours, puis des **captures d'écran automatiques** (ordinateur et téléphone) ont permis de repérer trois défauts visuels sur mobile, corrigés aussitôt. Le nom de marque est centralisé dans `src/config/brand.ts`. Une recherche a montré que « Athleex » est déjà un logiciel concurrent et qu'« Athlix » est utilisé ailleurs : Antonino a donc choisi **Coory**, appliqué en changeant une seule ligne. Le design system garde ses couleurs et sa police. Marque et nom de domaine à vérifier avant le lancement.
 
+### Vitest et note de décision, fin de P0 (20/10)
+Trois niveaux de tests désormais : **pgTAP** pour la base et la sécurité, **Vitest** pour les règles pures (11 tests en 0,3 seconde : validations de formulaires, jetons d'invitation), **Playwright** pour les parcours. La pyramide classique : beaucoup de petits tests rapides, quelques tests complets plus lents. On a aussi écrit une **ADR** (Architecture Decision Record, `docs/adr/0001`) : une page qui dit quelle stack on a choisie, ce qu'on a refusé et pourquoi. Tout nouvel outil devra passer par une ADR. C'est une pratique d'équipe professionnelle, utile en entretien.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -208,5 +212,6 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Segment dynamique** : partie variable d'une adresse, comme `[orgId]`.
 - **Hash (empreinte)** : transformation à sens unique d'un texte. On peut vérifier qu'un lien correspond à l'empreinte, mais pas retrouver le lien à partir d'elle.
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
+- **ADR** : courte note qui documente une décision technique, ses alternatives et ses conséquences.
 - **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.
 - **Clé secrète (service role)** : clé Supabase qui contourne la RLS ; réservée au serveur, à quelques procédures précises.
