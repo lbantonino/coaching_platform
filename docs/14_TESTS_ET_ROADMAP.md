@@ -117,7 +117,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - Test manuel de la fonctionnalité avec 1 cas vrai (sans données personnelles en repo) et validation métier coach quand nécessaire.
 
 ## 6. Décisions bloquantes / risques et suivi
-- `OPEN-01` Exemple de fiche sportive idéale à faire confirmer à Gianluca avant CRM définitif.
+- `OPEN-01` **Tranché le 20/10/2026** (Antonino, retour coach) : fiche = prénom et nom séparés, téléphone, e-mail, objectifs et/ou compétitions (type, date, priorité ; compétition : nom, date, lieu, catégorie Hyrox), disponibilités (séances/semaine, jours, durée max), contraintes d'organisation, **contraintes physiques / blessures en champ minimal** (texte court sans diagnostic, visible du coach, enregistré seulement avec consentement explicite du sportif, tracé et daté : donnée de santé, RGPD art. 9), niveau et expérience, matériel et lieu d'entraînement, records personnels (5 km, 10 km, semi, marathon, Hyrox), canal de contact préféré. Pas de date de naissance, taille ni poids sans finalité claire.
 - `OPEN-02` Programmes multiples et conflits d'agenda.
 - `OPEN-03` Permission coach collaborateur et modèle d'équipe.
 - `OPEN-04` Conservation/effacement et données sensibles, conditions juridiques SaaS.
@@ -129,7 +129,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-10` Connecteurs Garmin/Strava/calendriers si voulus.
 - `OPEN-11` Mineurs : non supportés tant que exigences légales non cadrées.
 - `OPEN-12` Gestion coach assigné quand sportif suit plusieurs structures.
-- `OPEN-13` Formules d'allures et zones par défaut, à valider par le coach (avant `DIF-04`).
+- `OPEN-13` **Tranché le 20/10/2026** : allures issues d'un **test de Cooper** (VMA ≈ distance en 12 min ÷ 200) **ou d'un test de 5 km** (allure 5 km mesurée, VMA estimée = vitesse 5 km ÷ 95 %). Allures = % de VMA, **table par défaut modifiable par chaque coach**, à faire relire par Gianluca : endurance 65–75 %, marathon 80 %, seuil et semi 85 %, 10 km 90 %, 5 km 95 %. Tempo et race pace Hyrox restent saisis à la main. Le calcul **propose**, le coach **valide** avant enregistrement ; pas de VO2max affichée.
 - `OPEN-14` Définition d'un groupe (club, salle) et droits associés (avant `DIF-05`).
 - `OPEN-15` Conditions actuelles des API Strava et Garmin (avant `DIF-09` étape 2).
 - `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08`).

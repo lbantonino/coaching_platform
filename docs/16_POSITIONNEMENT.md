@@ -63,7 +63,7 @@ L'ordre des phases du cahier des charges ne change pas : **P2 → P6 d'abord** (
 
 ## 6. Questions ouvertes liées
 
-- `OPEN-13` : formules d'allures (VMA, seuil, test 5 km) et zones par défaut, **à valider par Gianluca** avant DIF-04.
+- `OPEN-13` : **tranché le 20/10/2026** (test de Cooper ou de 5 km, % de VMA par défaut modifiables) : voir `docs/14`.
 - `OPEN-14` : définition d'un groupe (club, salle) et droits associés, avant DIF-05.
 - `OPEN-15` : conditions actuelles des API Strava et Garmin, à vérifier sur leurs portails officiels avant DIF-09 étape 2.
 - `OPEN-16` : fournisseur d'IA, coûts, hébergement des données et consentement, avant DIF-08.
