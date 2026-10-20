@@ -167,7 +167,7 @@ Antonino a fourni son design system (« Sombre, précis, une seule couleur qui c
 
 On a aussi créé la **navigation** : barre latérale sur ordinateur, onglets en bas sur téléphone, avec seulement les sections qui existent vraiment (pas de faux liens). Le tableau de bord affiche de **vrais chiffres** calculés depuis la base, avec une seule carte orange par ligne comme le veut le design system. Pages d'erreur et 404 propres, sans jamais afficher de détail technique.
 
-Méthode de vérification : les 27 tests Playwright ont confirmé que le changement de style ne cassait aucun parcours, puis des **captures d'écran automatiques** (ordinateur et téléphone) ont permis de repérer trois défauts visuels sur mobile, corrigés aussitôt. Le nom « Athlix » est centralisé dans `src/config/brand.ts` : une recherche a montré que « Athleex » est déjà un logiciel concurrent, et qu'« Athlix » est utilisé ailleurs. À vérifier côté marques avant le lancement.
+Méthode de vérification : les 27 tests Playwright ont confirmé que le changement de style ne cassait aucun parcours, puis des **captures d'écran automatiques** (ordinateur et téléphone) ont permis de repérer trois défauts visuels sur mobile, corrigés aussitôt. Le nom de marque est centralisé dans `src/config/brand.ts`. Une recherche a montré que « Athleex » est déjà un logiciel concurrent et qu'« Athlix » est utilisé ailleurs : Antonino a donc choisi **Coory**, appliqué en changeant une seule ligne. Le design system garde ses couleurs et sa police. Marque et nom de domaine à vérifier avant le lancement.
 
 ---
 
