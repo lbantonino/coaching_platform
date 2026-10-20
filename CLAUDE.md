@@ -72,6 +72,9 @@ Construire progressivement une application web responsive/PWA de programmation e
 3. Vérifier la stack V1.1 ci-dessus ; demander validation du petit périmètre prévu ; ne jamais générer tout le SaaS en un seul passage et ne jamais réinitialiser un projet déjà codé sans analyser les changements existants.
 4. Exécuter une tranche, tester, consigner, proposer suivante.
 
+## Carnet technique obligatoire (demande d'Antonino, 20/10/2026)
+`CARNET_TECHNIQUE.md` explique à Antonino **pourquoi** chaque choix a été fait (stack, architecture, sécurité, progression), pour qu'il puisse le relire et l'expliquer à un recruteur. **À la fin de chaque story**, en plus de `SUIVI_IMPLEMENTATION.md` : ajouter un court paragraphe dans « La progression » (quoi, pourquoi maintenant, ce qu'on a appris), compléter les autres sections si un nouvel outil, dossier, concept ou incident apparaît, et mettre à jour la date en tête. Ton simple, paragraphes courts, pas de détail ligne par ligne.
+
 ## Rappel Docker obligatoire (demande d'Antonino, 19/10/2026)
 Supabase DEV tourne en local dans Docker. **À chaque session**, sans attendre qu'on le demande :
 - **Au début**, vérifier `docker ps --filter name=coaching-platform`, puis dire clairement soit « Lance Docker Desktop puis `npm run db:start` » (si la tâche touche la base, l'auth, les migrations, les tests d'intégration ou l'app avec données), soit « Pas besoin de Docker pour cette tâche ».

@@ -3,6 +3,7 @@
 Application web SaaS de programmation et de suivi d'entraînements Running, Musculation, Hyrox et Hybride, avec trois espaces : coach, sportif et administration de la plateforme.
 
 > **État réel du code** : voir [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md). Les documents de `docs/` décrivent la cible, pas ce qui est développé.
+> **Pourquoi le projet est construit ainsi** (stack, architecture, sécurité, progression) : voir [CARNET_TECHNIQUE.md](CARNET_TECHNIQUE.md).
 
 ## Prérequis
 
