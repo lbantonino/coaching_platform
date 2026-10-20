@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait (fiche minimale, liste avec recherche et filtres, ajout, modification, archivage/restauration) ; P2-02 à P2-05 à faire | test 15/15, db:test 55/55, test:e2e 31/31 (x3 stables) | Session du 20/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-03 fait pour les repères datés (allures, FC, charges) ; notes coach / notes visibles sportif, P2-02, P2-04, P2-05 à faire | test 34/34, db:test 67/67, test:e2e 35/35 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -18,6 +18,33 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P2-03a : repères datés (allures running, FC, charges de référence)
+```
+Date : 2026-10-20
+Story : P2-03 (partie a) : repères datés ; préalable aux allures calculées par sportif (DIF-04)
+Objectif et fichiers specs lus : docs/03 §2 (repères running, muscu/Hyrox), docs/05 §4, §7, §8 (RUN-01), docs/11 §2
+Fichiers créés/modifiés :
+  supabase/migrations/20261020133811_reperes_sportifs.sql (athlete_reference_metrics : 11 types, plage d'allure en s/km,
+    bpm, charge + exercice + répétitions, source, date ; cohérence type/valeurs en CHECK ; FK composite fiche+organisation ;
+    RLS membres : lecture, ajout, suppression ; AUCUNE mise à jour = historique immuable)
+  supabase/tests/database/05_reperes.test.sql (12 tests)
+  src/domain/training/pace.ts (premier module de domaine : parsePace, parsePaceRange, formatPace, paceToSpeedKmh ;
+    « 4:5 » refusé avec explication au lieu d'être deviné)
+  src/features/references/{schemas,queries,actions,format}.ts ; src/lib/format.ts (formatDate, todayIsoInBrussels)
+  src/app/(coach)/coach/o/[orgId]/sportifs/[athleteId]/{references-section,add-reference-form}.tsx, page.tsx
+  tests/unit/{pace,references}.test.ts (19 tests) ; tests/e2e/references.spec.ts (2 scénarios x 2 profils)
+Correctif transversal : React 19 vide un formulaire d'action après CHAQUE envoi, même en erreur. Les actions de fiche
+  et de repères renvoient désormais la saisie, réaffichée en cas d'erreur (vérifié par un test E2E).
+Commandes exécutées et résultats :
+  npm run check -> exit 0 (Vitest 34/34) ; npm run db:test -> 67/67 ; npm run test:e2e -> 35 passés + 1 ignoré, 3 exécutions
+  Captures ordinateur/téléphone ; cartes « actuelles » triées par type (allures, FC, charges)
+Bugs/limites :
+  - Les formules d'allures et zones (OPEN-13) ne sont PAS implémentées : on stocke les repères, on ne calcule rien
+  - Le sportif ne voit pas encore ses repères (P6) ; exercice en texte libre en attendant le catalogue (P3)
+  - Notes coach / notes visibles sportif (reste de P2-03) : à faire
+Prochaine story : P2-03b (notes coach vs notes visibles sportif) ou P2-02 (objectifs et disponibilités, OPEN-01)
+```
 
 ### Story P2-01b : fiche sportif, modification, archivage, recherche et filtres
 ```

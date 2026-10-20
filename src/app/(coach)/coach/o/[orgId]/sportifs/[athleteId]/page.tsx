@@ -9,9 +9,10 @@ import { buttonClass } from "@/components/ui/button";
 import { getAthlete } from "@/features/athletes/queries";
 import { athleteStatusLabels } from "@/features/athletes/schemas";
 import { requireOrgAccess } from "@/features/auth/guards";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, todayIsoInBrussels } from "@/lib/format";
 
 import { AthleteEditForm } from "./athlete-edit-form";
+import { ReferencesSection } from "./references-section";
 
 export const metadata: Metadata = {
   title: "Fiche sportif",
@@ -95,6 +96,12 @@ async function AthleteSection({ orgId, athleteId }: { orgId: string; athleteId: 
           }}
         />
       </section>
+
+      <ReferencesSection
+        organizationId={membership.organizationId}
+        athleteId={athlete.id}
+        today={todayIsoInBrussels()}
+      />
     </div>
   );
 }

@@ -20,7 +20,7 @@ type Props = {
   };
 };
 
-const initialState: UpdateAthleteState = { error: null, saved: false };
+const initialState: UpdateAthleteState = { error: null, saved: false, values: null };
 
 export function AthleteEditForm({ organizationId, athlete }: Props) {
   // Organisation et fiche liées à l'action ; l'action les revérifie côté serveur.
@@ -28,6 +28,8 @@ export function AthleteEditForm({ organizationId, athlete }: Props) {
     updateAthlete.bind(null, organizationId, athlete.id),
     initialState,
   );
+  // Après une erreur, on réaffiche la saisie ; sinon les valeurs enregistrées.
+  const shown = state.values ?? athlete;
 
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
@@ -43,7 +45,7 @@ export function AthleteEditForm({ organizationId, athlete }: Props) {
             autoComplete="off"
             required
             maxLength={120}
-            defaultValue={athlete.displayName}
+            defaultValue={shown.displayName}
             className={inputClass}
           />
         </div>
@@ -58,7 +60,7 @@ export function AthleteEditForm({ organizationId, athlete }: Props) {
             type="email"
             autoComplete="off"
             inputMode="email"
-            defaultValue={athlete.email}
+            defaultValue={shown.email}
             readOnly={athlete.hasAccount}
             aria-describedby={athlete.hasAccount ? "email-hint" : undefined}
             className={inputClass}
@@ -81,7 +83,7 @@ export function AthleteEditForm({ organizationId, athlete }: Props) {
             autoComplete="off"
             inputMode="tel"
             placeholder="+32 …"
-            defaultValue={athlete.phone}
+            defaultValue={shown.phone}
             className={inputClass}
           />
         </div>
@@ -91,7 +93,7 @@ export function AthleteEditForm({ organizationId, athlete }: Props) {
         <Segmented
           name="status"
           legend="Statut"
-          defaultValue={athlete.status}
+          defaultValue={shown.status as AthleteStatus}
           options={[
             { value: "active", label: "Actif" },
             { value: "paused", label: "En pause" },

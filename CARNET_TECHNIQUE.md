@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de P2-01 : fiche sportif complète, recherche et filtres).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (P2-03 : repères datés, premier module de domaine).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -60,7 +60,9 @@ Coaching_Platform/
 │   │   ├── auth/confirm/           Retour des liens reçus par e-mail
 │   │   └── espace/                 Aiguillage : envoie chacun vers son espace
 │   ├── features/auth/              La logique « comptes » : actions, garde-fous, validations
+│   ├── domain/training/            Règles sportives PURES (allures…), sans base ni écran
 │   ├── features/athletes/          La logique « sportifs » : validation, lecture, création
+│   ├── features/references/        La logique « repères » (allures, FC, charges)
 │   ├── features/invitations/       La logique « invitations » : jetons, création, acceptation
 │   ├── components/ui/              Composants du design system (bouton, badge, carte, logo…)
 │   ├── config/brand.ts             Le nom de la marque, à un seul endroit
@@ -182,6 +184,13 @@ La liste a une **recherche** et des **pastilles de filtre**. Choix technique : l
 
 Leçon de test du jour : deux tests lancés **en parallèle** ont créé des sportifs à la même milliseconde, donc avec le même nom « unique ». On ajoute maintenant une partie aléatoire aux noms de test.
 
+### Repères datés et premier module de domaine, P2-03 (20/10)
+Chaque sportif peut avoir ses **repères** : allures (endurance, seuil, 5 km… y compris une plage comme `6:40–7:15`), fréquence cardiaque, charges de référence. Chaque mesure est **datée** et l'historique est **immuable** : une nouvelle valeur ne remplace pas l'ancienne, elle s'ajoute ; la plus récente fait foi. La base interdit même la modification d'une mesure (on supprime une erreur puis on ressaisit). Pourquoi ? Parce que les programmes déjà publiés doivent garder les allures de leur époque.
+
+C'est aussi le premier code dans `src/domain/` : la lecture et l'écriture des allures (`4:55` ↔ 295 secondes par km, vitesse en km/h). Ce sont des **règles pures**, sans base de données ni écran, donc faciles à tester (19 tests en quelques millisecondes). Une saisie ambiguë comme `4:5` est refusée avec une explication plutôt que devinée : en sport, une allure mal interprétée, c'est une séance mal dosée.
+
+Piège découvert : avec React 19, un formulaire relié à une action **se vide après chaque envoi, même en cas d'erreur**. Le coach aurait perdu sa saisie au moindre faute de frappe. Les actions renvoient maintenant ce qui a été saisi, et un test vérifie que la saisie reste affichée.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -198,7 +207,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 54 tests SQL et 27 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 67 tests SQL, 34 tests unitaires et 35 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment as-tu utilisé l'IA ? »** Claude Code écrit le code à partir d'un cahier des charges détaillé ; je valide chaque décision métier, je teste dans le navigateur, et tout est tracé dans un journal avec les preuves de tests.
@@ -217,6 +226,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **E2E (end-to-end)** : test d'un parcours complet, du clic à la base de données.
 - **IDOR** : attaque qui consiste à changer un identifiant dans l'adresse pour accéder aux données de quelqu'un d'autre.
 - **Segment dynamique** : partie variable d'une adresse, comme `[orgId]`.
+- **Domaine (code de)** : les règles métier pures (calculs, validations), indépendantes de la base et de l'interface.
 - **Hash (empreinte)** : transformation à sens unique d'un texte. On peut vérifier qu'un lien correspond à l'empreinte, mais pas retrouver le lien à partir d'elle.
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
 - **ADR** : courte note qui documente une décision technique, ses alternatives et ses conséquences.

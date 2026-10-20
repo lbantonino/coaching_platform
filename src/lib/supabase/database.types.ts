@@ -112,6 +112,69 @@ export type Database = {
           },
         ];
       };
+      athlete_reference_metrics: {
+        Row: {
+          athlete_id: string;
+          bpm: number | null;
+          coach_note: string | null;
+          created_at: string;
+          created_by: string | null;
+          exercise_label: string | null;
+          id: string;
+          kind: string;
+          load_kg: number | null;
+          measured_on: string;
+          organization_id: string;
+          pace_max_sec_per_km: number | null;
+          pace_min_sec_per_km: number | null;
+          reps: number | null;
+          source: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id: string;
+          bpm?: number | null;
+          coach_note?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          exercise_label?: string | null;
+          id?: string;
+          kind: string;
+          load_kg?: number | null;
+          measured_on: string;
+          organization_id: string;
+          pace_max_sec_per_km?: number | null;
+          pace_min_sec_per_km?: number | null;
+          reps?: number | null;
+          source: string;
+        };
+        Update: {
+          athlete_id?: string;
+          bpm?: number | null;
+          coach_note?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          exercise_label?: string | null;
+          id?: string;
+          kind?: string;
+          load_kg?: number | null;
+          measured_on?: string;
+          organization_id?: string;
+          pace_max_sec_per_km?: number | null;
+          pace_min_sec_per_km?: number | null;
+          reps?: number | null;
+          source?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_reference_metrics_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       organization_members: {
         Row: {
           created_at: string;

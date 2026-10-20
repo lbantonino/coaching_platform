@@ -54,9 +54,11 @@ export async function createAthlete(
   redirect(`/coach/o/${membership.organizationId}/sportifs`);
 }
 
+// `values` : saisie renvoyée en cas d'erreur, car React 19 vide le formulaire après chaque envoi.
 export type UpdateAthleteState = {
   error: string | null;
   saved: boolean;
+  values: { displayName: string; email: string; phone: string; status: string } | null;
 };
 
 // Modification d'une fiche (nom, contact, statut). Archiver = statut « archived » : rien n'est effacé.
@@ -68,16 +70,21 @@ export async function updateAthlete(
 ): Promise<UpdateAthleteState> {
   const { membership } = await requireOrgAccess(organizationId);
   const current = await getAthlete(membership.organizationId, athleteId);
-  if (!current) return { error: "Sportif introuvable.", saved: false };
+  if (!current) return { error: "Sportif introuvable.", saved: false, values: null };
 
-  const parsed = athleteUpdateSchema.safeParse({
+  const values = {
     displayName: String(formData.get("displayName") ?? ""),
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     status: String(formData.get("status") ?? ""),
-  });
+  };
+  const parsed = athleteUpdateSchema.safeParse(values);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide.", saved: false };
+    return {
+      error: parsed.error.issues[0]?.message ?? "Formulaire invalide.",
+      saved: false,
+      values,
+    };
   }
 
   // Une fois le compte activé, l'e-mail est l'identifiant de connexion du sportif : il ne se change
@@ -88,6 +95,7 @@ export async function updateAthlete(
     return {
       error: "Le sportif a activé son compte : son adresse e-mail ne peut plus être modifiée ici.",
       saved: false,
+      values,
     };
   }
 
@@ -110,9 +118,10 @@ export async function updateAthlete(
           ? "Un sportif de ton organisation utilise déjà cette adresse e-mail."
           : "Les modifications n'ont pas pu être enregistrées. Réessaie.",
       saved: false,
+      values,
     };
   }
 
   revalidatePath(`/coach/o/${membership.organizationId}/sportifs`, "layout");
-  return { error: null, saved: true };
+  return { error: null, saved: true, values: null };
 }
