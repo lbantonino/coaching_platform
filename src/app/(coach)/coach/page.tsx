@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { logout } from "@/features/auth/actions";
-import { getCoachMemberships, requireUser } from "@/features/auth/session";
+import { LogoutButton } from "@/components/ui/logout-button";
+import { requireCoach } from "@/features/auth/guards";
 
 export const metadata: Metadata = {
   title: "Espace coach | Coaching Platform",
@@ -23,9 +23,8 @@ export default function CoachHomePage() {
 }
 
 async function CoachSession() {
-  // Vérification serveur, indépendante du proxy (qui n'est qu'une redirection optimiste).
-  const user = await requireUser();
-  const memberships = await getCoachMemberships(user.id);
+  // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
+  const { user, memberships } = await requireCoach();
 
   return (
     <div className="flex flex-col gap-6">
@@ -33,37 +32,24 @@ async function CoachSession() {
         Connecté en tant que <span className="font-medium text-current">{user.email}</span>
       </p>
 
-      {memberships.length === 0 ? (
-        <p role="status" className="rounded-lg border border-zinc-300 p-4 dark:border-zinc-700">
-          Ce compte n&apos;est rattaché à aucune organisation coach.
-        </p>
-      ) : (
-        <section aria-labelledby="orgs-title" className="flex flex-col gap-3">
-          <h2 id="orgs-title" className="text-lg font-medium">
-            {memberships.length > 1 ? "Tes organisations" : "Ton organisation"}
-          </h2>
-          <ul className="flex flex-col gap-2">
-            {memberships.map((membership) => (
-              <li
-                key={membership.organizationId}
-                className="flex items-center justify-between gap-4 rounded-lg border border-zinc-300 p-4 dark:border-zinc-700"
-              >
-                <span className="font-medium">{membership.organizationName}</span>
-                <span className="text-sm text-zinc-500">{roleLabels[membership.role]}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <section aria-labelledby="orgs-title" className="flex flex-col gap-3">
+        <h2 id="orgs-title" className="text-lg font-medium">
+          {memberships.length > 1 ? "Tes organisations" : "Ton organisation"}
+        </h2>
+        <ul className="flex flex-col gap-2">
+          {memberships.map((membership) => (
+            <li
+              key={membership.organizationId}
+              className="flex items-center justify-between gap-4 rounded-lg border border-zinc-300 p-4 dark:border-zinc-700"
+            >
+              <span className="font-medium">{membership.organizationName}</span>
+              <span className="text-sm text-zinc-500">{roleLabels[membership.role]}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-      <form action={logout}>
-        <button
-          type="submit"
-          className="h-11 rounded-lg border border-zinc-300 px-4 font-medium dark:border-zinc-700"
-        >
-          Se déconnecter
-        </button>
-      </form>
+      <LogoutButton />
     </div>
   );
 }

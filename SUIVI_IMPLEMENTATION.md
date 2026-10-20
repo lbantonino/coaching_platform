@@ -6,7 +6,7 @@
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
 | P0 Bootstrap | En cours : P0-01, P0-02, P0-03 faits ; P0-04 à P0-06 à faire | lint, typecheck, format:check, build, dev, db:reset x2, test trigger SQL | Commits P0-01 à P0-03, session du 19/10/2026 ci-dessous |
-| P1 Auth/organisations | En cours : P1-02 et P1-03 (organisations/membres) faits ; P1-01 partiel (connexion, session, déconnexion, /coach protégée ; reset et vérification e-mail à faire) ; P1-04, P1-05 à faire | db:test 16/16, contre-épreuve RLS, check, build, 6 vérifications HTTP sur serveur de production | Session du 19/10/2026 (stories P1-02/03 et P1-01a) |
+| P1 Auth/organisations | En cours : P1-02, P1-03 et P1-04 faits ; P1-01 partiel (reset et vérification e-mail à faire) ; P1-05 à faire | db:test 21/21, contre-épreuve RLS, check, build, matrice d'accès HTTP coach/admin/anonyme | Sessions du 19 et 20/10/2026 |
 | P2 CRM | À faire | Aucun | - |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
@@ -16,6 +16,36 @@
 | P8 SaaS commercial | À faire | Aucun | - |
 
 ## Dernière session
+- Date : 2026-10-20
+- Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P1-04 : garde-fous serveur de rôle
+```
+Date : 2026-10-20
+Story : P1-04 (requireCoach, requireOrgAccess, requirePlatformAdmin ; requireAthlete reporté)
+Objectif et fichiers specs lus : docs/02 §2, §6, §8 (AUTH-01, ADM-01), docs/12 §2
+Fichiers créés/modifiés :
+  supabase/migrations/20261020072933_admin_plateforme_verification.sql (public.current_user_is_platform_admin,
+    security definer, ne répond que pour l'appelant, interdit à anon)
+  supabase/tests/database/02_admin_plateforme.test.sql (5 tests), supabase/seed.sql (admin@example.test)
+  src/features/auth/guards.ts (requireCoach, requireOrgAccess avec validation UUID, requirePlatformAdmin, getHomePath)
+  src/app/(admin)/admin/page.tsx, src/app/acces-refuse/page.tsx, src/app/espace/route.ts (aiguillage après connexion)
+  src/components/ui/logout-button.tsx, src/app/(coach)/coach/page.tsx, src/features/auth/actions.ts, src/proxy.ts
+Commandes exécutées et résultats :
+  npm run db:reset ; npm run db:test -> 21/21 PASS ; npm run check -> exit 0 ; npm run build -> OK
+  next start + curl : coach A /coach OK, /admin refusé (aucun contenu admin dans la réponse) ; admin /admin OK,
+  /coach refusé (aucune donnée coach) ; /espace -> /coach (coach), /admin (admin), /login (anonyme) ; 0 erreur serveur
+Points de sécurité/tenant vérifiés : refus identique pour « interdit » et « inexistant » (pas de fuite d'existence),
+  rôle admin lu côté serveur via fonction SQL, jamais via user_metadata ; admin sans accès aux organisations
+Bugs/limites :
+  - requireOrgAccess n'est encore utilisé par aucune page : il sera testé dès la première action métier (P2)
+  - requireAthlete reporté : la table des sportifs n'existe pas encore (P1-05/P2)
+  - Le refus intervenant dans un Suspense, la redirection est faite côté navigateur (pas de code 307/403 HTTP)
+Décisions OPEN/ADR : forbidden() de Next 16 écarté car expérimental (authInterrupts) ; page /acces-refuse à la place
+Prochaine story : Playwright (parcours connexion coach + refus croisés)
+```
+
+## Session du 19/10/2026 (après-midi)
 - Date : 2026-10-19 (après-midi)
 - Objectif : P1-02 / P1-03, organisations, membres et isolation RLS entre deux tenants.
 - Décisions validées par Antonino : **pas de page d'inscription publique avant P8** (P8-01) ; les comptes coachs sont créés par l'administrateur ; on commence par le socle de sécurité avant la page de connexion.

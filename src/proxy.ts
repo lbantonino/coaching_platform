@@ -6,6 +6,8 @@ import { publicEnv } from "@/lib/env";
 // Proxy (ex-middleware, Next 16) : rafraîchit la session Supabase à chaque requête et fait une
 // redirection « optimiste ». Ce n'est PAS la protection des données : chaque page et chaque action
 // revérifie l'utilisateur côté serveur, et la RLS PostgreSQL filtre en dernier ressort.
+const PROTECTED_PREFIXES = ["/coach", "/admin"];
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -31,11 +33,11 @@ export async function proxy(request: NextRequest) {
   const isSignedIn = Boolean(data?.claims);
   const { pathname } = request.nextUrl;
 
-  if (!isSignedIn && pathname.startsWith("/coach")) {
+  if (!isSignedIn && PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return redirectWithCookies(request, response, "/login");
   }
   if (isSignedIn && pathname === "/login") {
-    return redirectWithCookies(request, response, "/coach");
+    return redirectWithCookies(request, response, "/espace");
   }
 
   return response;

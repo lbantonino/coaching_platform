@@ -13,6 +13,7 @@
 -- Comptes de connexion locaux (mot de passe de démo commun : demo-coach-local) :
 --   coach-a@example.test -> propriétaire de « Organisation Démo A »
 --   coach-b@example.test -> propriétaire de « Organisation Démo B »
+--   admin@example.test   -> administrateur de la plateforme, membre d'aucune organisation
 -- Les UUID sont fixes pour que les tests puissent s'y référer.
 
 -- ---------------------------------------------------------------------
@@ -29,7 +30,10 @@ values
    '{"provider":"email","providers":["email"]}', '{"display_name":"Coach Démo A"}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', 'b0000000-0000-4000-8000-00000000000b', 'authenticated', 'authenticated',
    'coach-b@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"display_name":"Coach Démo B"}', now(), now(), '', '', '', '');
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Coach Démo B"}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', 'c0000000-0000-4000-8000-00000000000c', 'authenticated', 'authenticated',
+   'admin@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Admin Démo"}', now(), now(), '', '', '', '');
 
 insert into auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 values
@@ -38,7 +42,13 @@ values
    'email', now(), now(), now()),
   (gen_random_uuid(), 'b0000000-0000-4000-8000-00000000000b', 'b0000000-0000-4000-8000-00000000000b',
    '{"sub":"b0000000-0000-4000-8000-00000000000b","email":"coach-b@example.test","email_verified":true}',
+   'email', now(), now(), now()),
+  (gen_random_uuid(), 'c0000000-0000-4000-8000-00000000000c', 'c0000000-0000-4000-8000-00000000000c',
+   '{"sub":"c0000000-0000-4000-8000-00000000000c","email":"admin@example.test","email_verified":true}',
    'email', now(), now(), now());
+
+-- Administrateur de la plateforme (aucun accès implicite aux organisations, docs/02 §6).
+insert into public.platform_admins (user_id) values ('c0000000-0000-4000-8000-00000000000c');
 
 -- ---------------------------------------------------------------------
 -- Deux organisations de test indépendantes (isolation multi-tenant)

@@ -35,7 +35,8 @@ export async function login(_previous: LoginState, formData: FormData): Promise<
     return { error: message, email: raw.email };
   }
 
-  redirect("/coach");
+  // Aiguillage selon les rôles réels (coach -> /coach, admin -> /admin).
+  redirect("/espace");
 }
 
 export async function logout() {
