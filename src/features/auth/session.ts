@@ -34,10 +34,16 @@ export async function requireUser(): Promise<CurrentUser> {
   return user;
 }
 
+export type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
 // Organisations dont l'utilisateur est membre actif. La RLS limite déjà la lecture à ses propres
 // organisations ; le filtre sur user_id écarte les autres membres de ces organisations.
-export async function getCoachMemberships(userId: string): Promise<CoachMembership[]> {
-  const supabase = await createClient();
+// `client` permet de réutiliser une session tout juste ouverte (connexion) dans la même requête.
+export async function getCoachMemberships(
+  userId: string,
+  client?: SupabaseServerClient,
+): Promise<CoachMembership[]> {
+  const supabase = client ?? (await createClient());
   const { data, error } = await supabase
     .from("organization_members")
     .select("organization_id, role, organizations ( name )")

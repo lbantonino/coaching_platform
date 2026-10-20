@@ -10,6 +10,7 @@ import {
   requireUser,
   type CoachMembership,
   type CurrentUser,
+  type SupabaseServerClient,
 } from "./session";
 
 // Garde-fous serveur (P1-04). À appeler en tête de chaque page, Server Action ou Route Handler
@@ -50,8 +51,8 @@ export async function requireOrgAccess(
   return { user, membership };
 }
 
-async function isPlatformAdmin(): Promise<boolean> {
-  const supabase = await createClient();
+async function isPlatformAdmin(client?: SupabaseServerClient): Promise<boolean> {
+  const supabase = client ?? (await createClient());
   const { data, error } = await supabase.rpc("current_user_is_platform_admin");
   if (error) throw new Error("Vérification du rôle administrateur impossible.");
   return data === true;
@@ -65,8 +66,8 @@ export async function requirePlatformAdmin(): Promise<CurrentUser> {
 }
 
 // Espace d'arrivée après connexion, selon les rôles réellement détenus.
-export async function getHomePath(user: CurrentUser): Promise<string> {
-  if ((await getCoachMemberships(user.id)).length > 0) return "/coach";
-  if (await isPlatformAdmin()) return "/admin";
+export async function getHomePath(userId: string, client?: SupabaseServerClient): Promise<string> {
+  if ((await getCoachMemberships(userId, client)).length > 0) return "/coach";
+  if (await isPlatformAdmin(client)) return "/admin";
   return ACCESS_DENIED_PATH;
 }

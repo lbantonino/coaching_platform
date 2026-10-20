@@ -47,3 +47,9 @@ supabase/.temp
 
 # cache local d'outils Claude Code
 .impeccable/
+
+# playwright (rapports et traces locaux)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

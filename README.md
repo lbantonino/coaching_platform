@@ -63,6 +63,7 @@ URL locales utiles : Studio http://127.0.0.1:54323, boîte mail de test (Mailpit
 | `npm run format:check` | Vérifie le formatage sans modifier |
 | `npm run check` | Les trois contrôles ci-dessus, à lancer avant chaque commit |
 | `npm run build` | Build de production |
+| `npm run test:e2e` | Tests de parcours Playwright (ordinateur + téléphone) sur le build de production. Prérequis : Supabase local démarré et seedé |
 
 ## Architecture : monolithe modulaire
 

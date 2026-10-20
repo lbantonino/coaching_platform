@@ -7,6 +7,6 @@ import { getCurrentUser } from "@/features/auth/session";
 // Route Handler plutôt que page : une vraie redirection HTTP, sans rendu.
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser();
-  const path = user ? await getHomePath(user) : "/login";
+  const path = user ? await getHomePath(user.id) : "/login";
   return NextResponse.redirect(new URL(path, request.url));
 }

@@ -19,6 +19,27 @@
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
 
+### Story Playwright : premiers tests de parcours (P0-04 / P6-06 anticipé sur le parcours connexion)
+```
+Date : 2026-10-20
+Story : installer Playwright au premier parcours réel (connexion), conformément à P0-04
+Dépendance ajoutée (justification) : @playwright/test 1.64.1 + Chromium headless uniquement (~99 Mo, cache utilisateur
+  hors dépôt) ; profils « ordinateur » (Desktop Chrome) et « telephone » (Pixel 7)
+Fichiers créés/modifiés : playwright.config.ts, tests/e2e/auth.spec.ts, package.json (test:e2e), .gitignore,
+  .prettierignore, eslint.config.mjs (rapports ignorés), README.md
+  Correctif applicatif : src/features/auth/{actions,guards,session}.ts, src/app/espace/route.ts
+Commandes exécutées et résultats :
+  1er passage : 8 échecs / 10. Analyse : (a) sélecteur de test trop large (Next ajoute un role=alert d'annonce de
+  route) ; (b) VRAI DÉFAUT : après connexion, l'adresse restait /espace alors que la bonne page s'affichait
+  (double redirection non reflétée par le routeur client).
+  Correctif : l'action login calcule la destination avec la session qu'elle vient d'ouvrir et redirige directement.
+  2e passage : npm run test:e2e -> 10/10 PASS (5 scénarios x 2 profils, 9,5 s) ; check exit 0 ; db:test PASS
+Scénarios : visiteur -> /login ; coach A connexion, voit Démo A et pas Démo B, déconnexion, /coach refermé ;
+  mauvais mot de passe -> erreur générique ; coach A refusé sur /admin ; admin -> /admin et refusé sur /coach
+Bugs/limites : Supabase doit tourner avant les tests (pas de démarrage automatique) ; pas encore de CI
+Prochaine story : mot de passe oublié (P1-01b)
+```
+
 ### Story P1-04 : garde-fous serveur de rôle
 ```
 Date : 2026-10-20

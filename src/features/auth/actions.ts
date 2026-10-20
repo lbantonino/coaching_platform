@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
+import { getHomePath } from "./guards";
 import { loginSchema } from "./schemas";
 
 export type LoginState = {
@@ -24,19 +25,21 @@ export async function login(_previous: LoginState, formData: FormData): Promise<
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
 
-  if (error) {
+  if (error || !data.user) {
     // Message volontairement générique : ne pas révéler si le compte existe.
     const message =
-      error.status === 429
+      error?.status === 429
         ? "Trop de tentatives. Réessaie dans quelques minutes."
         : "E-mail ou mot de passe incorrect.";
     return { error: message, email: raw.email };
   }
 
-  // Aiguillage selon les rôles réels (coach -> /coach, admin -> /admin).
-  redirect("/espace");
+  // Redirection directe vers l'espace correspondant aux rôles réels (coach -> /coach,
+  // admin -> /admin), avec la session qui vient d'être ouverte. Pas de saut intermédiaire :
+  // le routeur client ne mettrait pas l'adresse à jour après une double redirection.
+  redirect(await getHomePath(data.user.id, supabase));
 }
 
 export async function logout() {
