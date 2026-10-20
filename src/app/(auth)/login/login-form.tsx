@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
+import { errorTextClass, inputClass, primaryButtonClass } from "@/components/ui/form-styles";
 import { login, type LoginState } from "@/features/auth/actions";
 
 const initialState: LoginState = { error: null, email: "" };
@@ -25,14 +27,19 @@ export function LoginForm() {
           defaultValue={state.email}
           aria-invalid={state.error ? true : undefined}
           aria-describedby={state.error ? "login-error" : undefined}
-          className="h-12 rounded-lg border border-zinc-300 bg-white px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:focus-visible:ring-zinc-100"
+          className={inputClass}
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium">
-          Mot de passe
-        </label>
+        <div className="flex items-baseline justify-between gap-4">
+          <label htmlFor="password" className="text-sm font-medium">
+            Mot de passe
+          </label>
+          <Link href="/mot-de-passe-oublie" className="text-sm underline">
+            Mot de passe oublié ?
+          </Link>
+        </div>
         <input
           id="password"
           name="password"
@@ -41,21 +48,17 @@ export function LoginForm() {
           required
           aria-invalid={state.error ? true : undefined}
           aria-describedby={state.error ? "login-error" : undefined}
-          className="h-12 rounded-lg border border-zinc-300 bg-white px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:focus-visible:ring-zinc-100"
+          className={inputClass}
         />
       </div>
 
       {state.error ? (
-        <p id="login-error" role="alert" className="text-sm text-red-700 dark:text-red-400">
+        <p id="login-error" role="alert" className={errorTextClass}>
           {state.error}
         </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-12 rounded-lg bg-zinc-900 font-medium text-white transition-opacity disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900"
-      >
+      <button type="submit" disabled={pending} className={primaryButtonClass}>
         {pending ? "Connexion…" : "Se connecter"}
       </button>
     </form>

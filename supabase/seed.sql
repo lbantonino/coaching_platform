@@ -14,6 +14,8 @@
 --   coach-a@example.test -> propriétaire de « Organisation Démo A »
 --   coach-b@example.test -> propriétaire de « Organisation Démo B »
 --   admin@example.test   -> administrateur de la plateforme, membre d'aucune organisation
+--   coach-reset@example.test -> coach de « Organisation Démo A », réservé au test E2E « mot de passe oublié »
+--                               (son mot de passe change à chaque exécution du test)
 -- Les UUID sont fixes pour que les tests puissent s'y référer.
 
 -- ---------------------------------------------------------------------
@@ -33,7 +35,10 @@ values
    '{"provider":"email","providers":["email"]}', '{"display_name":"Coach Démo B"}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', 'c0000000-0000-4000-8000-00000000000c', 'authenticated', 'authenticated',
    'admin@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"display_name":"Admin Démo"}', now(), now(), '', '', '', '');
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Admin Démo"}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', 'd0000000-0000-4000-8000-00000000000d', 'authenticated', 'authenticated',
+   'coach-reset@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Coach Reset (test)"}', now(), now(), '', '', '', '');
 
 insert into auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 values
@@ -45,6 +50,9 @@ values
    'email', now(), now(), now()),
   (gen_random_uuid(), 'c0000000-0000-4000-8000-00000000000c', 'c0000000-0000-4000-8000-00000000000c',
    '{"sub":"c0000000-0000-4000-8000-00000000000c","email":"admin@example.test","email_verified":true}',
+   'email', now(), now(), now()),
+  (gen_random_uuid(), 'd0000000-0000-4000-8000-00000000000d', 'd0000000-0000-4000-8000-00000000000d',
+   '{"sub":"d0000000-0000-4000-8000-00000000000d","email":"coach-reset@example.test","email_verified":true}',
    'email', now(), now(), now());
 
 -- Administrateur de la plateforme (aucun accès implicite aux organisations, docs/02 §6).
@@ -61,4 +69,5 @@ values
 insert into public.organization_members (organization_id, user_id, role)
 values
   ('0a000000-0000-4000-8000-0000000000a1', 'a0000000-0000-4000-8000-00000000000a', 'owner'),
-  ('0b000000-0000-4000-8000-0000000000b1', 'b0000000-0000-4000-8000-00000000000b', 'owner');
+  ('0b000000-0000-4000-8000-0000000000b1', 'b0000000-0000-4000-8000-00000000000b', 'owner'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'd0000000-0000-4000-8000-00000000000d', 'coach');

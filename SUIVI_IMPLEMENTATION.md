@@ -6,7 +6,7 @@
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
 | P0 Bootstrap | En cours : P0-01, P0-02, P0-03 faits ; P0-04 à P0-06 à faire | lint, typecheck, format:check, build, dev, db:reset x2, test trigger SQL | Commits P0-01 à P0-03, session du 19/10/2026 ci-dessous |
-| P1 Auth/organisations | En cours : P1-02, P1-03 et P1-04 faits ; P1-01 partiel (reset et vérification e-mail à faire) ; P1-05 à faire | db:test 21/21, contre-épreuve RLS, check, build, matrice d'accès HTTP coach/admin/anonyme | Sessions du 19 et 20/10/2026 |
+| P1 Auth/organisations | En cours : P1-01 (connexion + mot de passe oublié), P1-02, P1-03, P1-04 faits ; P1-05 invitation sportif à faire ; vérification e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 21/21, test:e2e 17/17 (x2 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | À faire | Aucun | - |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
@@ -18,6 +18,36 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P1-01b : mot de passe oublié et durcissement de la config Auth locale
+```
+Date : 2026-10-20
+Story : P1-01 (partie b) : réinitialisation du mot de passe par e-mail
+Fichiers créés/modifiés :
+  supabase/config.toml : [auth] enable_signup=false (FAILLE CORRIGÉE : l'inscription libre était ouverte via l'API
+    malgré l'absence de page) ; minimum_password_length 6 -> 10 ; site_url/additional_redirect_urls localhost:3000 et
+    :3100 ; rate limit e-mail local 2 -> 30/h
+  src/features/auth/password-actions.ts (requestPasswordReset : réponse identique compte existant ou non ;
+    updatePassword : session de récupération requise, Zod, redirection selon rôle)
+  src/features/auth/schemas.ts (newPasswordSchema, PASSWORD_MIN_LENGTH)
+  src/app/auth/confirm/route.ts (échange du code PKCE, liste fermée de destinations : pas d'open redirect)
+  src/app/(auth)/mot-de-passe-oublie/*, src/app/(auth)/nouveau-mot-de-passe/*, src/app/lien-invalide/page.tsx
+  src/components/ui/form-styles.ts, src/app/(auth)/login/login-form.tsx (lien « Mot de passe oublié ? »)
+  supabase/seed.sql (coach-reset@example.test, dédié au test E2E) ; tests/e2e/password-reset.spec.ts
+Commandes exécutées et résultats :
+  curl /auth/v1/signup -> signup_disabled ; curl /token coach A -> 200
+  npm run test:e2e -> 17 passés + 1 ignoré volontairement (parcours e-mail sur le seul profil ordinateur), 2 exécutions
+  consécutives stables ; check exit 0 ; db:test PASS
+Incidents rencontrés (transparence) :
+  - Ma 1re correction mettait aussi [auth.email] enable_signup=false, ce qui COUPE toute connexion par e-mail :
+    détecté par les tests Playwright, corrigé (seul [auth] enable_signup doit être à false)
+  - 2 défauts de test (course de navigation, fragment #error ajouté par Supabase), pas de défaut applicatif
+Points de sécurité vérifiés : pas d'énumération des comptes, lien à usage unique, lien falsifié refusé,
+  destination de redirection en liste fermée, mot de passe >= 10 caractères côté Zod ET côté Supabase
+Bugs/limites : la vérification d'e-mail à l'inscription est sans objet (pas d'inscription avant P8) ;
+  l'e-mail utilise le gabarit Supabase par défaut (en anglais) : à traduire avant la mise en ligne
+Prochaine story : P1-05 invitation sportif (décisions à prendre avec Antonino)
+```
 
 ### Story Playwright : premiers tests de parcours (P0-04 / P6-06 anticipé sur le parcours connexion)
 ```
@@ -200,6 +230,9 @@ Prochaine story : P0-04 (Vitest) / P0-05 (shell UI) ou P1-01
 ```
 
 ### Points à valider
+- **Configuration Auth de production** (à reprendre à la création des projets STAGING/PROD) : inscription désactivée
+  (`enable_signup=false` dans [auth], PAS dans [auth.email]), mot de passe >= 10, URLs de redirection limitées au
+  domaine réel, gabarits d'e-mails en français, SMTP réel.
 - `~/.npmrc` d'Antonino contient `prefix=~/.npm-global`, incompatible avec `nvm use`. Les commandes de cette session
   ont utilisé directement le binaire Node 24 de nvm. À régler par Antonino (voir compte rendu de session).
 
