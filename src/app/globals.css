@@ -107,8 +107,11 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Focus clavier visible partout, à l'orange de l'action. */
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+/* Focus clavier visible partout, à l'orange de l'action. Dans la couche « base » : les champs de formulaire
+   (classe outline-none + bordure orange au focus) gardent un seul contour, comme dans le design system. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 }

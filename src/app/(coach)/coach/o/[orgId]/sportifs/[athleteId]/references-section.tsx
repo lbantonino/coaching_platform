@@ -7,6 +7,7 @@ import { referenceKindLabels, referenceSourceLabels } from "@/features/reference
 import { formatDate } from "@/lib/format";
 
 import { AddReferenceForm } from "./add-reference-form";
+import { TestCalculator } from "./test-calculator";
 
 // Section « Allures & repères » de la fiche (P2-03). Serveur : lit l'historique, déjà filtré par la RLS.
 export async function ReferencesSection({
@@ -74,6 +75,15 @@ export async function ReferencesSection({
           <HistoryList organizationId={organizationId} athleteId={athleteId} entries={history} />
         </details>
       ) : null}
+
+      <details className="rounded-[14px] border border-line">
+        <summary className="cursor-pointer px-4 py-3 text-small font-medium hover:text-text">
+          Calculer les allures depuis un test (Cooper ou 5 km)
+        </summary>
+        <div className="border-t border-line p-4">
+          <TestCalculator organizationId={organizationId} athleteId={athleteId} today={today} />
+        </div>
+      </details>
 
       <AddReferenceForm organizationId={organizationId} athleteId={athleteId} today={today} />
     </section>

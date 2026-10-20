@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (P2-03 : repères datés, premier module de domaine).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (P2-03 : calcul des allures depuis un test).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -191,6 +191,11 @@ C'est aussi le premier code dans `src/domain/` : la lecture et l'écriture des a
 
 Piège découvert : avec React 19, un formulaire relié à une action **se vide après chaque envoi, même en cas d'erreur**. Le coach aurait perdu sa saisie au moindre faute de frappe. Les actions renvoient maintenant ce qui a été saisi, et un test vérifie que la saisie reste affichée.
 
+### Calcul des allures depuis un test (20/10)
+Décision du coach : les allures se déterminent par un **test de Cooper** (distance maximale en 12 minutes) ou un **test de 5 km**. On en déduit la **VMA** (vitesse maximale aérobie) : distance ÷ 200 pour Cooper, vitesse du 5 km ÷ 95 % pour le 5 km. Chaque allure est ensuite un **pourcentage de la VMA** (endurance 65–75 %, marathon 80 %, seuil 85 %, 10 km 90 %, 5 km 95 %).
+
+Trois choix à savoir expliquer. **Le calcul propose, le coach décide** : il voit l'aperçu en direct, décoche ce qu'il ne veut pas, puis valide. **Le serveur refait le calcul** à partir du résultat brut du test : il ne fait jamais confiance aux chiffres envoyés par le navigateur. Et **la même fonction** sert à l'aperçu (dans le navigateur) et à l'enregistrement (sur le serveur) : c'est l'intérêt d'avoir mis ces règles dans `src/domain/`, sans dépendance à la base. Chaque allure enregistrée garde une note qui dit d'où elle vient.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -207,7 +212,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 67 tests SQL, 34 tests unitaires et 35 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 68 tests SQL, 47 tests unitaires et 37 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment as-tu utilisé l'IA ? »** Claude Code écrit le code à partir d'un cahier des charges détaillé ; je valide chaque décision métier, je teste dans le navigateur, et tout est tracé dans un journal avec les preuves de tests.
@@ -228,6 +233,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Segment dynamique** : partie variable d'une adresse, comme `[orgId]`.
 - **Domaine (code de)** : les règles métier pures (calculs, validations), indépendantes de la base et de l'interface.
 - **Hash (empreinte)** : transformation à sens unique d'un texte. On peut vérifier qu'un lien correspond à l'empreinte, mais pas retrouver le lien à partir d'elle.
+- **VMA** : vitesse maximale aérobie, la vitesse de course à partir de laquelle on calcule les allures d'entraînement.
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
 - **ADR** : courte note qui documente une décision technique, ses alternatives et ses conséquences.
 - **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.

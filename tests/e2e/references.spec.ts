@@ -97,3 +97,47 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
   await expect(page.getByLabel("Nom du sportif")).toHaveValue(`${name} renommé`);
   await expect(page.getByLabel("Téléphone")).toHaveValue("appelle-moi");
 });
+
+test("le coach calcule les allures depuis un test de Cooper et valide avant enregistrement", async ({
+  page,
+}, testInfo) => {
+  const name = `Cooper ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  await openNewAthleteProfile(page, name);
+  const current = page.getByRole("list", { name: "Repères actuels" });
+
+  await page.getByText("Calculer les allures depuis un test").click();
+
+  // Test de 5 km mal saisi : erreur et enregistrement impossible.
+  await page.getByText("5 km", { exact: true }).click();
+  await page.getByLabel("Temps sur 5 km").fill("22:3");
+  await expect(page.getByRole("alert").filter({ hasText: "Temps invalide" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Enregistrer ces allures" })).toBeDisabled();
+
+  // Cooper 3000 m : aperçu en direct (VMA 15 km/h).
+  await page.getByText("Cooper (12 min)").click();
+  await page.getByLabel("Distance parcourue en 12 min (m)").fill("3000");
+  await expect(page.getByText("15 km/h", { exact: true })).toBeVisible();
+  await expect(page.getByText("5:20–6:09 min/km")).toBeVisible();
+
+  // Le coach décoche une zone, puis valide.
+  await page.getByRole("checkbox", { name: /Allure marathon/ }).uncheck();
+  await page.getByRole("button", { name: "Enregistrer ces allures" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Allures enregistrées" })).toBeVisible();
+
+  // Le formulaire repart de zéro (pas de double enregistrement).
+  await expect(page.getByLabel("Distance parcourue en 12 min (m)")).toHaveValue("");
+
+  await expect(current.getByText("15 km/h")).toBeVisible();
+  await expect(current.getByText("5:20–6:09 min/km")).toBeVisible();
+  await expect(current.getByText("4:13 min/km")).toBeVisible();
+  await expect(current.getByText("Allure marathon")).toHaveCount(0);
+
+  // L'origine du calcul est tracée dans l'historique.
+  await page.getByText(/Historique et corrections \(6 mesures\)/).click();
+  await expect(
+    page
+      .getByRole("list", { name: "Historique des repères" })
+      .getByText(/Test de Cooper : 3000 m en 12 min/)
+      .first(),
+  ).toBeVisible();
+});

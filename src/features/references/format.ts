@@ -16,6 +16,10 @@ const numberFr = new Intl.NumberFormat("fr-BE", { maximumFractionDigits: 2 });
 
 // Valeur principale d'un repère, avec son unité (docs/05 §4 : « 05:00 min/km », km/h dérivé si utile).
 export function formatReferenceValue(entry: Formattable): string {
+  // La VMA s'exprime en vitesse (km/h), même si elle est stockée comme une allure.
+  if (entry.kind === "pace_vma" && entry.paceMin !== null) {
+    return `${numberFr.format(paceToSpeedKmh(entry.paceMin))} km/h`;
+  }
   if (entry.paceMin !== null && entry.paceMax !== null) {
     return `${formatPaceRange(entry.paceMin, entry.paceMax)} min/km`;
   }
@@ -29,6 +33,9 @@ export function formatReferenceValue(entry: Formattable): string {
 
 // Information secondaire : vitesse dérivée pour une allure (milieu de plage), exercice pour une charge.
 export function formatReferenceDetail(entry: Formattable): string | null {
+  if (entry.kind === "pace_vma" && entry.paceMin !== null) {
+    return `${formatPaceRange(entry.paceMin, entry.paceMin)} min/km`;
+  }
   if (entry.paceMin !== null && entry.paceMax !== null) {
     const middle = (entry.paceMin + entry.paceMax) / 2;
     return `≈ ${numberFr.format(paceToSpeedKmh(middle))} km/h`;

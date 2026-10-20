@@ -4,6 +4,7 @@ import { parsePaceRange } from "@/domain/training/pace";
 
 // Types de repères (alignés sur la contrainte CHECK de *_reperes_sportifs.sql).
 export const referenceKindLabels = {
+  pace_vma: "VMA",
   pace_easy: "Endurance (zone 2)",
   pace_tempo: "Tempo",
   pace_threshold: "Seuil",

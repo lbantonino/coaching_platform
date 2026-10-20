@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(12);
+select plan(13);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -49,6 +49,12 @@ select throws_ok(
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'b1b1b1b1-0000-4000-8000-000000000001', 'hr_max', 190, 'test', '2026-10-01') $$,
   '23503', null,
   'Un repère ne peut pas viser une fiche d''une autre organisation'
+);
+
+select lives_ok(
+  $$ insert into public.athlete_reference_metrics (organization_id, athlete_id, kind, pace_min_sec_per_km, pace_max_sec_per_km, source, measured_on)
+     values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', 'pace_vma', 240, 240, 'test', '2026-10-01') $$,
+  'Le repère VMA (issu d''un test) est accepté'
 );
 
 -- ---------------------------------------------------------------------

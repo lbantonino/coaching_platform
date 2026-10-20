@@ -9,6 +9,7 @@ import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 import { parseReferenceForm, type ReferenceFormInput } from "./schemas";
+import { parseTestForm } from "./test-form";
 
 // `values` : saisie renvoyée en cas d'erreur, car React 19 vide le formulaire après chaque envoi.
 export type AddReferenceState = {
@@ -79,4 +80,49 @@ export async function deleteReference(
     .eq("organization_id", membership.organizationId);
 
   revalidatePath(`/coach/o/${membership.organizationId}/sportifs/${athleteId}`);
+}
+
+export type TestReferenceState = { error: string | null; saved: number };
+
+// Enregistre les allures calculées depuis un test (Cooper ou 5 km), après validation du coach.
+// Le serveur REFAIT le calcul depuis le résultat brut : il ne fait jamais confiance aux chiffres du navigateur.
+export async function addReferencesFromTest(
+  organizationId: string,
+  athleteId: string,
+  previous: TestReferenceState,
+  formData: FormData,
+): Promise<TestReferenceState> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const athlete = await getAthlete(membership.organizationId, athleteId);
+  if (!athlete) return { error: "Sportif introuvable.", saved: previous.saved };
+
+  const parsed = parseTestForm(
+    {
+      test: String(formData.get("test") ?? ""),
+      distance: String(formData.get("distance") ?? ""),
+      time: String(formData.get("time") ?? ""),
+      measuredOn: String(formData.get("measuredOn") ?? ""),
+      zones: formData.getAll("zones").map(String),
+    },
+    todayIsoInBrussels(),
+  );
+  if (!parsed.ok) return { error: parsed.error, saved: previous.saved };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("athlete_reference_metrics").insert(
+    parsed.rows.map((row) => ({
+      ...row,
+      organization_id: membership.organizationId,
+      athlete_id: athlete.id,
+      created_by: user.id,
+    })),
+  );
+  if (error)
+    return {
+      error: "Les allures n'ont pas pu être enregistrées. Réessaie.",
+      saved: previous.saved,
+    };
+
+  revalidatePath(`/coach/o/${membership.organizationId}/sportifs/${athlete.id}`);
+  return { error: null, saved: previous.saved + 1 };
 }

@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-03 fait pour les repères datés (allures, FC, charges) ; notes coach / notes visibles sportif, P2-02, P2-04, P2-05 à faire | test 34/34, db:test 67/67, test:e2e 35/35 (x3 stables) | Session du 20/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-02 (fiche enrichie selon OPEN-01 tranché), notes coach/sportif, P2-04, P2-05 à faire | test 47/47, db:test 68/68, test:e2e 37/37 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -18,6 +18,34 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P2-03b : calcul des allures depuis un test de Cooper ou de 5 km (OPEN-13 tranché)
+```
+Date : 2026-10-20
+Story : P2-03 (partie b) ; amorce de DIF-04 (allures par sportif)
+Décisions d'Antonino (20/10) : test de Cooper ou de 5 km ; table de % de VMA par défaut, modifiable par coach plus tard ;
+  le calcul propose, le coach valide ; pas de VO2max. Décisions consignées : docs/14 (OPEN-01, OPEN-13), 00_INDEX (D-14, D-15)
+Fichiers créés/modifiés :
+  supabase/migrations/20261020140212_repere_vma.sql (type « pace_vma » ajouté à la contrainte)
+  src/domain/training/vma.ts (vmaFromCooper = distance/200, vmaFrom5k = vitesse/95 %, parseDuration, proposePaces,
+    DEFAULT_PACE_ZONES : endurance 65–75 %, marathon 80, semi et seuil 85, 10 km 90, 5 km 95)
+  src/features/references/test-form.ts (lecture pure, recalcul complet côté serveur), actions.ts (addReferencesFromTest),
+    schemas.ts et format.ts (VMA affichée en km/h)
+  src/app/(coach)/coach/o/[orgId]/sportifs/[athleteId]/test-calculator.tsx (aperçu en direct, zones à décocher,
+    formulaire remis à zéro après enregistrement), references-section.tsx
+  src/app/globals.css : focus global rangé dans @layer base (un seul contour orange sur les champs, vérifié au navigateur)
+  tests/unit/{vma,test-form}.test.ts (13) ; supabase/tests/database/05 (+1) ; tests/e2e/references.spec.ts (+1 x 2 profils)
+Commandes exécutées et résultats :
+  npm run check -> exit 0 (Vitest 47/47) ; db:test 68/68 ; test:e2e 37 passés + 1 ignoré, 3 exécutions stables
+  Capture téléphone du calculateur ; mesure des styles de focus au clavier (champ : bordure #FF5A1F sans contour ;
+  lien : contour orange)
+Bugs/limites :
+  - Pourcentages dans une constante : réglage par coach à faire (story « réglages des zones »)
+  - Tempo et race pace Hyrox restent manuels ; pas d'ajustement selon le niveau
+  - Approximation Cooper (distance/200) et ratio 5 km/VMA (95 %) à faire relire par Gianluca
+Prochaine story : P2-02 (fiche enrichie : prénom/nom, objectifs et compétitions, disponibilités, contraintes,
+  blessures avec consentement, niveau, matériel, records, canal de contact)
+```
 
 ### Story P2-03a : repères datés (allures running, FC, charges de référence)
 ```
