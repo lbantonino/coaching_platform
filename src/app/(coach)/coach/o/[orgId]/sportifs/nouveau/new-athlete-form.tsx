@@ -21,7 +21,7 @@ export function NewAthleteForm({ organizationId }: { organizationId: string }) {
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="displayName" className="text-sm font-medium">
+        <label htmlFor="displayName" className="text-small font-medium">
           Nom du sportif
         </label>
         <input
@@ -38,8 +38,8 @@ export function NewAthleteForm({ organizationId }: { organizationId: string }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium">
-          Adresse e-mail <span className="font-normal text-zinc-500">(facultatif)</span>
+        <label htmlFor="email" className="text-small font-medium">
+          Adresse e-mail <span className="font-normal text-muted">(facultatif)</span>
         </label>
         <input
           id="email"
@@ -54,8 +54,8 @@ export function NewAthleteForm({ organizationId }: { organizationId: string }) {
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="phone" className="text-sm font-medium">
-          Téléphone <span className="font-normal text-zinc-500">(facultatif)</span>
+        <label htmlFor="phone" className="text-small font-medium">
+          Téléphone <span className="font-normal text-muted">(facultatif)</span>
         </label>
         <input
           id="phone"

@@ -14,7 +14,7 @@ export function LoginForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium">
+        <label htmlFor="email" className="text-small font-medium">
           Adresse e-mail
         </label>
         <input
@@ -33,10 +33,13 @@ export function LoginForm() {
 
       <div className="flex flex-col gap-1.5">
         <div className="flex items-baseline justify-between gap-4">
-          <label htmlFor="password" className="text-sm font-medium">
+          <label htmlFor="password" className="text-small font-medium">
             Mot de passe
           </label>
-          <Link href="/mot-de-passe-oublie" className="text-sm underline">
+          <Link
+            href="/mot-de-passe-oublie"
+            className="text-small text-muted underline underline-offset-4 hover:text-text"
+          >
             Mot de passe oublié ?
           </Link>
         </div>

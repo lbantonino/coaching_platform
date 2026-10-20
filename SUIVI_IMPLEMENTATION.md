@@ -5,7 +5,7 @@
 ## Statut des phases
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
-| P0 Bootstrap | En cours : P0-01, P0-02, P0-03 faits ; P0-04 à P0-06 à faire | lint, typecheck, format:check, build, dev, db:reset x2, test trigger SQL | Commits P0-01 à P0-03, session du 19/10/2026 ci-dessous |
+| P0 Bootstrap | En cours : P0-01, P0-02, P0-03, P0-05 faits ; P0-04 partiel (Playwright fait, Vitest à faire) ; P0-06 (ADR du socle) à faire | lint, typecheck, format, build, db:reset, test:e2e 27/27 après restyle, captures ordinateur/téléphone | Sessions du 19 et 20/10/2026 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | En cours : P2-01 partiel (fiche sportif minimale, liste, ajout) ; modification, recherche, filtres à faire | db:test 34/34, test:e2e 21/21 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
@@ -18,6 +18,37 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P0-05 : design system Athlix, navigation, pages d'erreur
+```
+Date : 2026-10-20
+Story : P0-05 (shell UI responsive, pages erreur/404, design tokens)
+Source : Design-system-Athlix.pdf fourni par Antonino (valeurs relevées sur le PDF rendu en haute définition ;
+  couleurs de statut et filets mesurées au pixel). Nom de travail : « Athlix », centralisé dans src/config/brand.ts.
+  Recherche : « Athleex » est déjà un logiciel concurrent pour coachs (Product Hunt, août 2026) ; « Athlix » est utilisé
+  par d'autres produits : vérification BOIP/EUIPO et nom de domaine à faire avant toute mise en ligne.
+Dépendance ajoutée (justification) : lucide-react 1.60.0 (icônes imposées par le design system, navigation)
+Fichiers créés/modifiés :
+  src/app/globals.css (tokens : neutres, texte, filets, accent, statuts, rayons, échelle typographique ; sombre seul)
+  src/app/layout.tsx (titre « %s · Athlix », Geist + Geist Mono, couleur de thème)
+  src/config/brand.ts ; src/components/ui/{button.ts,badge,card,logo,simple-shell,logout-button}.tsx, form-styles.ts
+  src/app/(coach)/{layout,coach-nav}.tsx (barre latérale ordinateur, onglets en bas téléphone, liens réels seulement)
+  src/app/(auth)/layout.tsx ; acces-refuse, lien-invalide, invitation déplacés dans (auth) (URL inchangées)
+  src/app/(athlete)/layout.tsx, src/app/(admin)/layout.tsx, src/app/not-found.tsx, src/app/error.tsx
+  Toutes les pages reprises (classes zinc provisoires -> tokens) ; tableau de bord coach avec chiffres RÉELS
+  (sportifs actifs, comptes activés, invitations en attente), liste des sportifs avec badges de statut
+  tests/e2e/auth.spec.ts et password-reset.spec.ts : sélecteur du nom d'organisation ciblé sur le lien
+Commandes exécutées et résultats :
+  npm run check -> exit 0 ; npm run build -> OK ; npm run test:e2e -> 27 passés + 1 ignoré, 2 exécutions
+  Captures Playwright ordinateur (1440 px) et téléphone (Pixel 7) : accueil, connexion, tableau de bord, sportifs,
+  ajout, 404 ; 3 ajustements mobiles faits après relecture (grille 2 colonnes, bouton compact, formulaire en haut)
+Bugs/limites :
+  - Thème clair du design system non fait (sombre uniquement)
+  - Navigation : une seule organisation gérée (la première) ; choix d'organisation à prévoir si besoin
+  - Exception de l'outil de contrôle design pour la police Geist (imposée par le design system), en local
+  - Composants « graphiques » du design system (courbes, calendrier, éditeur) non faits : ils arriveront avec leurs écrans
+Prochaine story : P0-04 (Vitest) et P0-06 (ADR du socle), puis P2-01 suite
+```
 
 ### Story P1-05 : invitation sportif par lien à copier
 ```

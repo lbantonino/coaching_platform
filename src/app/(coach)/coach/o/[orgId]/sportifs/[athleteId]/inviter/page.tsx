@@ -11,7 +11,7 @@ import { formatDateTime } from "@/lib/format";
 import { InviteForm } from "./invite-form";
 
 export const metadata: Metadata = {
-  title: "Inviter un sportif | Coaching Platform",
+  title: "Inviter un sportif",
   robots: { index: false },
 };
 
@@ -20,7 +20,7 @@ export default function InviteAthletePage({
 }: PageProps<"/coach/o/[orgId]/sportifs/[athleteId]/inviter">) {
   return (
     <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-10">
-      <Suspense fallback={<p className="text-zinc-500">Chargement…</p>}>
+      <Suspense fallback={<p className="text-muted">Chargement…</p>}>
         {params.then(({ orgId, athleteId }) => (
           <InviteSection orgId={orgId} athleteId={athleteId} />
         ))}
@@ -37,7 +37,7 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
   if (!target) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Sportif introuvable</h1>
+        <h1 className="text-h2 font-medium">Sportif introuvable</h1>
         <Link href={listPath} className="underline">
           Retour aux sportifs
         </Link>
@@ -47,13 +47,16 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href={listPath} className="text-sm underline">
+      <Link
+        href={listPath}
+        className="text-small text-muted underline underline-offset-4 hover:text-text"
+      >
         ← Retour aux sportifs
       </Link>
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-zinc-500">{membership.organizationName}</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Inviter {target.displayName}</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-small text-muted">{membership.organizationName}</p>
+        <h1 className="text-h2 font-medium">Inviter {target.displayName}</h1>
+        <p className="text-small text-muted">
           Le sportif ouvrira ce lien pour créer son accès avec l&apos;adresse{" "}
           <span className="font-medium text-current">{target.email ?? "(aucune)"}</span>. Le lien
           est valable {INVITATION_VALIDITY_DAYS} jours et ne sert qu&apos;une fois. Aucun message
@@ -62,13 +65,13 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
       </div>
 
       {target.hasAccount ? (
-        <p role="status" className="rounded-lg border border-zinc-300 p-4 dark:border-zinc-700">
+        <p role="status" className="rounded-[14px] border border-line bg-surface p-4">
           Ce sportif a déjà activé son compte.
         </p>
       ) : (
         <>
           {target.pendingInvite ? (
-            <div className="flex flex-col gap-3 rounded-lg border border-zinc-300 p-4 dark:border-zinc-700">
+            <div className="flex flex-col gap-3 rounded-[14px] border border-line bg-surface p-4">
               <p role="status">
                 {target.pendingInvite.expired
                   ? `Le dernier lien a expiré le ${formatDateTime(target.pendingInvite.expiresAt)}.`
@@ -77,7 +80,10 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
               <form
                 action={revokeInvitation.bind(null, membership.organizationId, target.athleteId)}
               >
-                <button type="submit" className="text-sm font-medium underline">
+                <button
+                  type="submit"
+                  className="text-small font-medium text-text underline underline-offset-4"
+                >
                   Révoquer ce lien
                 </button>
               </form>

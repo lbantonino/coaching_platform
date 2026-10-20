@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de P1-05, invitation des sportifs : P1 terminé).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de P0-05 : design system Athlix appliqué).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -24,7 +24,8 @@ Une application web SaaS pour coachs sportifs (Running, Musculation, Hyrox, Hybr
 | **Next.js 16** (App Router) | Le site ET le serveur, dans une seule application | Évite d'avoir un frontend et un backend séparés à maintenir. Le serveur Next exécute la logique métier. |
 | **React 19** | Les composants d'interface | Standard du marché, imposé par Next. |
 | **TypeScript strict** | Le langage | Les erreurs de type sont détectées avant d'exécuter le code. « Strict » = pas de raccourcis permissifs. |
-| **Tailwind CSS 4** | Le style | Styles écrits directement dans les composants, rapide, cohérent, responsive facile. |
+| **Tailwind CSS 4** | Le style | Styles écrits directement dans les composants, rapide, cohérent, responsive facile. Les couleurs et tailles du design system y sont déclarées une seule fois (tokens). |
+| **Lucide** | Les icônes | Imposées par le design system Athlix : traits fins, monochromes, sans emoji. |
 | **Supabase** | Base PostgreSQL + comptes (Auth) + fichiers (Storage) | Un seul service pour trois besoins. Et surtout la **RLS** de PostgreSQL (voir §5). |
 | **Zod** | Valider les données reçues | Tout ce qui vient du navigateur est vérifié côté serveur avant usage. |
 | **Docker** | Faire tourner Supabase sur le Mac | Développer hors ligne, gratuitement, et remettre la base à zéro en quelques secondes. Uniquement en développement. |
@@ -58,7 +59,8 @@ Coaching_Platform/
 │   ├── features/auth/              La logique « comptes » : actions, garde-fous, validations
 │   ├── features/athletes/          La logique « sportifs » : validation, lecture, création
 │   ├── features/invitations/       La logique « invitations » : jetons, création, acceptation
-│   ├── components/ui/              Petits composants réutilisables (bouton déconnexion, styles)
+│   ├── components/ui/              Composants du design system (bouton, badge, carte, logo…)
+│   ├── config/brand.ts             Le nom de la marque, à un seul endroit
 │   ├── lib/                        Outils techniques (clients Supabase, variables d'env, dates)
 │   └── proxy.ts                    S'exécute avant chaque requête (session, redirections)
 ├── supabase/
@@ -160,6 +162,13 @@ Comment le compte est créé. L'inscription libre est fermée, donc c'est le ser
 
 Côté droits, un sportif ne lit que sa propre fiche et le nom de son organisation, et ne peut jamais entrer dans `/coach`. Après connexion, chacun arrive au bon endroit : coach, sportif ou administrateur. **Avec cette story, P1 (comptes et sécurité multi-coachs) est terminé.**
 
+### Design system Athlix, P0-05 (20/10)
+Antonino a fourni son design system (« Sombre, précis, une seule couleur qui compte ») : graphite en base, orange `#FF5A1F` réservé à l'action, police Geist partout. On l'a traduit en **tokens** : des variables déclarées une seule fois dans `globals.css` (couleurs, rayons, tailles de texte). Les composants utilisent `bg-surface`, `text-muted` ou `bg-accent`, jamais une couleur en dur. Avantage : changer une teinte ou passer au thème clair se fait à un seul endroit.
+
+On a aussi créé la **navigation** : barre latérale sur ordinateur, onglets en bas sur téléphone, avec seulement les sections qui existent vraiment (pas de faux liens). Le tableau de bord affiche de **vrais chiffres** calculés depuis la base, avec une seule carte orange par ligne comme le veut le design system. Pages d'erreur et 404 propres, sans jamais afficher de détail technique.
+
+Méthode de vérification : les 27 tests Playwright ont confirmé que le changement de style ne cassait aucun parcours, puis des **captures d'écran automatiques** (ordinateur et téléphone) ont permis de repérer trois défauts visuels sur mobile, corrigés aussitôt. Le nom « Athlix » est centralisé dans `src/config/brand.ts` : une recherche a montré que « Athleex » est déjà un logiciel concurrent, et qu'« Athlix » est utilisé ailleurs. À vérifier côté marques avant le lancement.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -197,4 +206,5 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Segment dynamique** : partie variable d'une adresse, comme `[orgId]`.
 - **Hash (empreinte)** : transformation à sens unique d'un texte. On peut vérifier qu'un lien correspond à l'empreinte, mais pas retrouver le lien à partir d'elle.
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
+- **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.
 - **Clé secrète (service role)** : clé Supabase qui contourne la RLS ; réservée au serveur, à quelques procédures précises.

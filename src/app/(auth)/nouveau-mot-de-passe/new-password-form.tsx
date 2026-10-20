@@ -17,7 +17,7 @@ export function NewPasswordForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium">
+        <label htmlFor="password" className="text-small font-medium">
           Nouveau mot de passe
         </label>
         <input
@@ -31,13 +31,13 @@ export function NewPasswordForm() {
           {...errorProps}
           className={inputClass}
         />
-        <p id="password-hint" className="text-sm text-zinc-500">
+        <p id="password-hint" className="text-small text-muted">
           Au moins {PASSWORD_MIN_LENGTH} caractères.
         </p>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="confirmation" className="text-sm font-medium">
+        <label htmlFor="confirmation" className="text-small font-medium">
           Confirme le mot de passe
         </label>
         <input

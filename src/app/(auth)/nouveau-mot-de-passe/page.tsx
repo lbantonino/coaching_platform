@@ -6,15 +6,15 @@ import { requireUser } from "@/features/auth/session";
 import { NewPasswordForm } from "./new-password-form";
 
 export const metadata: Metadata = {
-  title: "Nouveau mot de passe | Coaching Platform",
+  title: "Nouveau mot de passe",
   robots: { index: false },
 };
 
 export default function NewPasswordPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-8 px-4 py-16">
-      <h1 className="text-2xl font-semibold tracking-tight">Nouveau mot de passe</h1>
-      <Suspense fallback={<p className="text-zinc-500">Vérification du lien…</p>}>
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-8 px-4 pt-6 pb-16 sm:justify-center sm:py-16">
+      <h1 className="text-h2 font-medium">Nouveau mot de passe</h1>
+      <Suspense fallback={<p className="text-muted">Vérification du lien…</p>}>
         <RecoverySession />
       </Suspense>
     </main>
@@ -26,7 +26,7 @@ async function RecoverySession() {
   const user = await requireUser();
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-small text-muted">
         Compte : <span className="font-medium text-current">{user.email}</span>
       </p>
       <NewPasswordForm />

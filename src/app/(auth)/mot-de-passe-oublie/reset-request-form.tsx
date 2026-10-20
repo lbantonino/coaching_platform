@@ -12,7 +12,7 @@ export function ResetRequestForm() {
 
   if (state.status === "sent") {
     return (
-      <p role="status" className="rounded-lg border border-zinc-300 p-4 dark:border-zinc-700">
+      <p role="status" className="rounded-[14px] border border-line bg-surface p-4">
         {state.message}
       </p>
     );
@@ -21,7 +21,7 @@ export function ResetRequestForm() {
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium">
+        <label htmlFor="email" className="text-small font-medium">
           Adresse e-mail
         </label>
         <input

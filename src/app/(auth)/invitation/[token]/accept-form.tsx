@@ -19,22 +19,16 @@ export function AcceptForm({ token, email, isSignedIn }: Props) {
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium">
+        <label htmlFor="email" className="text-small font-medium">
           Adresse e-mail (identifiant)
         </label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          readOnly
-          className={`${inputClass} bg-zinc-100 dark:bg-zinc-800`}
-        />
+        <input id="email" type="email" value={email} readOnly className={`${inputClass}`} />
       </div>
 
       {isSignedIn ? null : (
         <>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium">
+            <label htmlFor="password" className="text-small font-medium">
               Choisis un mot de passe
             </label>
             <input
@@ -47,12 +41,12 @@ export function AcceptForm({ token, email, isSignedIn }: Props) {
               aria-describedby="password-hint"
               className={inputClass}
             />
-            <p id="password-hint" className="text-sm text-zinc-500">
+            <p id="password-hint" className="text-small text-muted">
               Au moins {PASSWORD_MIN_LENGTH} caractères.
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="confirmation" className="text-sm font-medium">
+            <label htmlFor="confirmation" className="text-small font-medium">
               Confirme le mot de passe
             </label>
             <input
@@ -67,7 +61,7 @@ export function AcceptForm({ token, email, isSignedIn }: Props) {
         </>
       )}
 
-      <label className="flex items-start gap-3 text-sm">
+      <label className="flex items-start gap-3 text-small">
         <input type="checkbox" name="adult" required className="mt-0.5 size-5 shrink-0" />
         <span>J&apos;ai 18 ans ou plus</span>
       </label>
@@ -83,7 +77,7 @@ export function AcceptForm({ token, email, isSignedIn }: Props) {
       </button>
 
       {isSignedIn ? null : (
-        <p className="text-sm text-zinc-500">
+        <p className="text-small text-muted">
           Tu as déjà un compte (suivi par un autre coach) ? Connecte-toi d&apos;abord, puis rouvre
           ce lien.
         </p>

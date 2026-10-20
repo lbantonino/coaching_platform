@@ -35,7 +35,7 @@ export function InviteForm({ organizationId, athleteId, hasPendingInvite, hasEma
   if (state.link) {
     return (
       <div className="flex flex-col gap-3">
-        <label htmlFor="invite-link" className="text-sm font-medium">
+        <label htmlFor="invite-link" className="text-small font-medium">
           Lien d&apos;invitation (affiché une seule fois)
         </label>
         <input
@@ -43,12 +43,12 @@ export function InviteForm({ organizationId, athleteId, hasPendingInvite, hasEma
           readOnly
           value={state.link}
           onFocus={(event) => event.currentTarget.select()}
-          className={`${inputClass} font-mono text-sm`}
+          className={`${inputClass} font-mono text-small`}
         />
         <button type="button" onClick={copyLink} className={primaryButtonClass}>
           {copied ? "Lien copié" : "Copier le lien"}
         </button>
-        <p role="status" className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p role="status" className="text-small text-muted">
           {copied
             ? "Colle-le dans ton message au sportif (WhatsApp, e-mail…)."
             : "Copie ce lien maintenant : il ne pourra pas être réaffiché."}
