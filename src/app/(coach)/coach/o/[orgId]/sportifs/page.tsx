@@ -65,10 +65,25 @@ async function AthleteList({ orgId }: { orgId: string }) {
                   <span className="text-sm text-zinc-500">{athlete.email}</span>
                 ) : null}
               </div>
-              <span className="text-sm text-zinc-500">
-                {athleteStatusLabels[athlete.status]}
-                {athlete.hasAccount ? " · compte activé" : " · sans compte"}
-              </span>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-zinc-500">
+                  {athleteStatusLabels[athlete.status]}
+                  {athlete.hasAccount
+                    ? " · compte activé"
+                    : athlete.hasPendingInvite
+                      ? " · invitation en attente"
+                      : " · sans compte"}
+                </span>
+                {athlete.hasAccount ? null : (
+                  <Link
+                    href={`/coach/o/${membership.organizationId}/sportifs/${athlete.id}/inviter`}
+                    className="font-medium underline"
+                    aria-label={`Inviter ${athlete.displayName}`}
+                  >
+                    Inviter
+                  </Link>
+                )}
+              </div>
             </li>
           ))}
         </ul>

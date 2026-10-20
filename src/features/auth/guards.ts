@@ -6,8 +6,10 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 import {
+  getAthleteLinks,
   getCoachMemberships,
   requireUser,
+  type AthleteLink,
   type CoachMembership,
   type CurrentUser,
   type SupabaseServerClient,
@@ -65,9 +67,20 @@ export async function requirePlatformAdmin(): Promise<CurrentUser> {
   return user;
 }
 
+type AthleteContext = { user: CurrentUser; links: AthleteLink[] };
+
+// Sportif dont la fiche est liée à ce compte (invitation acceptée) dans au moins une organisation.
+export async function requireAthlete(): Promise<AthleteContext> {
+  const user = await requireUser();
+  const links = await getAthleteLinks(user.id);
+  if (links.length === 0) redirect(ACCESS_DENIED_PATH);
+  return { user, links };
+}
+
 // Espace d'arrivée après connexion, selon les rôles réellement détenus.
 export async function getHomePath(userId: string, client?: SupabaseServerClient): Promise<string> {
   if ((await getCoachMemberships(userId, client)).length > 0) return "/coach";
+  if ((await getAthleteLinks(userId, client)).length > 0) return "/app";
   if (await isPlatformAdmin(client)) return "/admin";
   return ACCESS_DENIED_PATH;
 }

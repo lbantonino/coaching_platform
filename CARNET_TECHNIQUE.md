@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de la story « fiche sportif », début de P2-01).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (fin de P1-05, invitation des sportifs : P1 terminé).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -49,14 +49,17 @@ Coaching_Platform/
 │   ├── app/                        Les pages et les routes (une URL = un dossier)
 │   │   ├── (auth)/                 Connexion, mot de passe oublié, nouveau mot de passe
 │   │   ├── (coach)/coach/          Espace coach
-│   │   │   └── o/[orgId]/sportifs/ Liste et ajout des sportifs d'une organisation
+│   │   │   └── o/[orgId]/sportifs/ Liste, ajout et invitation des sportifs d'une organisation
+│   │   ├── (athlete)/app/          Espace sportif
+│   │   ├── invitation/[token]/     Page publique où le sportif accepte son invitation
 │   │   ├── (admin)/admin/          Espace administrateur
 │   │   ├── auth/confirm/           Retour des liens reçus par e-mail
 │   │   └── espace/                 Aiguillage : envoie chacun vers son espace
 │   ├── features/auth/              La logique « comptes » : actions, garde-fous, validations
 │   ├── features/athletes/          La logique « sportifs » : validation, lecture, création
+│   ├── features/invitations/       La logique « invitations » : jetons, création, acceptation
 │   ├── components/ui/              Petits composants réutilisables (bouton déconnexion, styles)
-│   ├── lib/                        Outils techniques (connexion Supabase, variables d'env)
+│   ├── lib/                        Outils techniques (clients Supabase, variables d'env, dates)
 │   └── proxy.ts                    S'exécute avant chaque requête (session, redirections)
 ├── supabase/
 │   ├── migrations/                 L'historique du schéma de la base, en SQL
@@ -87,7 +90,7 @@ Next.js offre trois mécanismes, chacun pour un usage précis :
 Une requête traverse trois barrières successives. Si l'une a un bug, la suivante protège encore.
 
 1. **Le proxy** (`src/proxy.ts`) : avant chaque page, il rafraîchit la session et renvoie vers `/login` si on n'est pas connecté. C'est du confort, pas la vraie protection.
-2. **Les garde-fous serveur** (`src/features/auth/guards.ts`) : `requireCoach()`, `requirePlatformAdmin()`, `requireOrgAccess(id)`. Appelés en tête de chaque page ou action protégée. Ils vérifient le **rôle réel** dans la base.
+2. **Les garde-fous serveur** (`src/features/auth/guards.ts`) : `requireCoach()`, `requireAthlete()`, `requirePlatformAdmin()`, `requireOrgAccess(id)`. Appelés en tête de chaque page ou action protégée. Ils vérifient le **rôle réel** dans la base.
 3. **La RLS PostgreSQL** (Row Level Security, dans `supabase/migrations/`) : la base elle-même filtre chaque ligne. Même si le code oubliait une vérification, un coach ne recevrait jamais une ligne d'une autre organisation.
 
 Règles qui en découlent :
@@ -95,6 +98,8 @@ Règles qui en découlent :
 - Un rôle ne se lit **jamais** dans des données modifiables par l'utilisateur.
 - « Interdit » et « n'existe pas » donnent la même réponse : on ne révèle pas l'existence d'une donnée.
 - Les pages personnelles ne sont jamais mises en cache (`Cache-Control: private, no-store`).
+- La **clé secrète** Supabase (qui contourne la RLS) n'est utilisée que dans un fichier serveur isolé (`lib/supabase/admin.ts`), pour une seule procédure : créer le compte d'un sportif qui accepte une invitation valide. On a vérifié qu'elle n'apparaît dans aucun fichier envoyé au navigateur.
+- Dans un fichier `"use server"`, **chaque fonction exportée est une porte d'entrée publique**. On n'y exporte que les actions voulues, les autres restent internes.
 
 **Phrase pour un recruteur** : « Défense en profondeur : redirection optimiste au proxy, autorisation explicite dans chaque action serveur, et isolation finale par RLS PostgreSQL, testée automatiquement avec deux organisations. »
 
@@ -146,6 +151,15 @@ Trois choix de sécurité à retenir. L'**e-mail est unique par organisation** (
 
 Les champs restent volontairement minimaux : la fiche complète (objectifs, disponibilités, allures) attend la validation de Gianluca. On n'invente pas de règle métier.
 
+### Invitation des sportifs, P1-05 (20/10)
+Le coach clique sur « Inviter » à côté d'un sportif, génère un lien et le copie (un vrai bouton « Copier », testé). Il l'envoie lui-même par WhatsApp ou e-mail : pas de faux « message envoyé », les envois automatiques arriveront en P7. Le sportif ouvre le lien, choisit son mot de passe, coche « J'ai 18 ans ou plus » (les mineurs ne sont pas pris en charge pour l'instant), et arrive dans son espace `/app`, volontairement simple et honnête en attendant ses programmes.
+
+Ce qui rend le lien sûr. Il contient 32 octets aléatoires, impossibles à deviner. La base ne stocke **que son empreinte** (hash SHA-256) : même si la base fuitait, aucun lien ne serait utilisable. Il expire après 7 jours, ne sert qu'une fois, et le coach peut le révoquer. Générer un nouveau lien annule l'ancien.
+
+Comment le compte est créé. L'inscription libre est fermée, donc c'est le serveur qui crée le compte, avec la clé secrète, et uniquement pour l'e-mail inscrit sur la fiche par le coach. Puis une **fonction SQL unique et atomique** vérifie tout d'un coup (lien valide, non expiré, e-mail identique, âge confirmé) et relie la fiche au compte. « Atomique » veut dire : soit tout réussit, soit rien ne change.
+
+Côté droits, un sportif ne lit que sa propre fiche et le nom de son organisation, et ne peut jamais entrer dans `/coach`. Après connexion, chacun arrive au bon endroit : coach, sportif ou administrateur. **Avec cette story, P1 (comptes et sécurité multi-coachs) est terminé.**
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -162,7 +176,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 34 tests SQL et 21 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 54 tests SQL et 27 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment as-tu utilisé l'IA ? »** Claude Code écrit le code à partir d'un cahier des charges détaillé ; je valide chaque décision métier, je teste dans le navigateur, et tout est tracé dans un journal avec les preuves de tests.
@@ -181,3 +195,6 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **E2E (end-to-end)** : test d'un parcours complet, du clic à la base de données.
 - **IDOR** : attaque qui consiste à changer un identifiant dans l'adresse pour accéder aux données de quelqu'un d'autre.
 - **Segment dynamique** : partie variable d'une adresse, comme `[orgId]`.
+- **Hash (empreinte)** : transformation à sens unique d'un texte. On peut vérifier qu'un lien correspond à l'empreinte, mais pas retrouver le lien à partir d'elle.
+- **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
+- **Clé secrète (service role)** : clé Supabase qui contourne la RLS ; réservée au serveur, à quelques procédures précises.

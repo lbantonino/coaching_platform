@@ -59,3 +59,31 @@ export async function getCoachMemberships(
     role: row.role as CoachMembership["role"],
   }));
 }
+
+export type AthleteLink = {
+  athleteId: string;
+  organizationId: string;
+  organizationName: string;
+};
+
+// Fiches sportifs liées au compte connecté (une par organisation qui le suit).
+// La RLS ne laisse lire au sportif que SA fiche et le nom de SON organisation.
+export async function getAthleteLinks(
+  userId: string,
+  client?: SupabaseServerClient,
+): Promise<AthleteLink[]> {
+  const supabase = client ?? (await createClient());
+  const { data, error } = await supabase
+    .from("athlete_profiles")
+    .select("id, organization_id, organizations ( name )")
+    .eq("athlete_user_id", userId)
+    .neq("status", "archived");
+
+  if (error) throw new Error("Lecture de l'espace sportif impossible.");
+
+  return (data ?? []).map((row) => ({
+    athleteId: row.id,
+    organizationId: row.organization_id,
+    organizationName: row.organizations.name,
+  }));
+}

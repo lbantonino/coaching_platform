@@ -3,6 +3,67 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      athlete_invites: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          adult_confirmed_at: string | null;
+          athlete_id: string;
+          created_at: string;
+          created_by: string | null;
+          expires_at: string;
+          id: string;
+          organization_id: string;
+          revoked_at: string | null;
+          status: string;
+          token_hash: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          adult_confirmed_at?: string | null;
+          athlete_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          expires_at: string;
+          id?: string;
+          organization_id: string;
+          revoked_at?: string | null;
+          status?: string;
+          token_hash: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          adult_confirmed_at?: string | null;
+          athlete_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          expires_at?: string;
+          id?: string;
+          organization_id?: string;
+          revoked_at?: string | null;
+          status?: string;
+          token_hash?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_invites_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "athlete_invites_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       athlete_profiles: {
         Row: {
           athlete_user_id: string | null;
@@ -151,7 +212,21 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      accept_invitation: {
+        Args: { p_adult_confirmed: boolean; p_token_hash: string };
+        Returns: string;
+      };
       current_user_is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      get_invitation: {
+        Args: { p_token_hash: string };
+        Returns: {
+          athlete_name: string;
+          email: string;
+          expires_at: string;
+          invite_status: string;
+          organization_name: string;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;

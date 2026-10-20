@@ -1,0 +1,131 @@
+import { expect, test, type Browser, type Page } from "@playwright/test";
+
+// Parcours d'invitation (P1-05) : le coach invite, le sportif crée son accès dans un AUTRE navigateur.
+const DEMO_PASSWORD = "demo-coach-local";
+
+async function loginAsCoachA(page: Page) {
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill(DEMO_PASSWORD);
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+}
+
+// Crée un sportif unique dans l'organisation A et ouvre sa page d'invitation.
+async function createAthleteAndOpenInvite(page: Page, name: string, email: string) {
+  await page.getByRole("link", { name: /Organisation Démo A/ }).click();
+  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
+  await page.getByLabel("Nom du sportif").fill(name);
+  await page.getByLabel(/Adresse e-mail/).fill(email);
+  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
+  await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
+
+  await page.getByRole("link", { name: `Inviter ${name}` }).click();
+  await expect(page.getByRole("heading", { name: `Inviter ${name}` })).toBeVisible();
+}
+
+async function generateLink(page: Page): Promise<string> {
+  await page.getByRole("button", { name: /Générer/ }).click();
+  const field = page.getByLabel(/Lien d'invitation/);
+  await expect(field).toBeVisible();
+  return field.inputValue();
+}
+
+async function newAthletePage(browser: Browser): Promise<Page> {
+  const context = await browser.newContext();
+  return context.newPage();
+}
+
+test("le coach invite un sportif, qui crée son accès et arrive dans son espace", async ({
+  page,
+  browser,
+  context,
+}, testInfo) => {
+  const suffix = `${testInfo.project.name}-${Date.now()}`;
+  const name = `Invité ${suffix}`;
+  const email = `invite-${suffix}@example.test`;
+  const athletePassword = `sportif-${Date.now()}`;
+
+  // --- Coach : création de la fiche et génération du lien ---
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await loginAsCoachA(page);
+  await createAthleteAndOpenInvite(page, name, email);
+  const link = await generateLink(page);
+  expect(link).toMatch(/\/invitation\/[A-Za-z0-9_-]{43}$/);
+
+  // Le bouton « Copier » copie réellement le lien.
+  await page.getByRole("button", { name: "Copier le lien" }).click();
+  await expect(page.getByRole("button", { name: "Lien copié" })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
+
+  // --- Sportif : autre navigateur, ouverture du lien ---
+  const athlete = await newAthletePage(browser);
+  await athlete.goto(link);
+  await expect(athlete.getByRole("heading", { name: `Bienvenue ${name}` })).toBeVisible();
+  await expect(athlete.getByLabel("Adresse e-mail (identifiant)")).toHaveValue(email);
+
+  // Case « 18 ans ou plus » obligatoire.
+  await athlete.getByLabel("Choisis un mot de passe").fill(athletePassword);
+  await athlete.getByLabel("Confirme le mot de passe").fill(athletePassword);
+  await athlete.getByRole("button", { name: "Créer mon accès" }).click();
+  await expect(
+    athlete.getByRole("alert").filter({ hasText: "confirmer avoir 18 ans ou plus" }),
+  ).toBeVisible();
+
+  await athlete.getByLabel("J'ai 18 ans ou plus").check();
+  await athlete.getByLabel("Choisis un mot de passe").fill(athletePassword);
+  await athlete.getByLabel("Confirme le mot de passe").fill(athletePassword);
+  await athlete.getByRole("button", { name: "Créer mon accès" }).click();
+
+  await expect(athlete).toHaveURL(/\/app$/);
+  await expect(athlete.getByText("Ton coach (Organisation Démo A) t'a ajouté")).toBeVisible();
+
+  // Un sportif n'entre jamais dans l'espace coach (AUTH-01).
+  await athlete.goto("/coach");
+  await expect(athlete).toHaveURL(/\/acces-refuse$/);
+
+  // Le lien ne sert qu'une fois.
+  await athlete.goto(link);
+  await expect(athlete.getByText("Cette invitation a déjà été acceptée")).toBeVisible();
+
+  // Reconnexion classique : le sportif arrive dans son espace.
+  await athlete.goto("/app");
+  await athlete.getByRole("button", { name: "Se déconnecter" }).click();
+  await expect(athlete).toHaveURL(/\/login$/);
+  await athlete.getByLabel("Adresse e-mail").fill(email);
+  await athlete.getByLabel("Mot de passe", { exact: true }).fill(athletePassword);
+  await athlete.getByRole("button", { name: "Se connecter" }).click();
+  await expect(athlete).toHaveURL(/\/app$/);
+
+  // --- Coach : la fiche indique maintenant un compte activé ---
+  await page.goto(page.url().replace(/\/[^/]+\/inviter$/, ""));
+  const row = page.getByRole("listitem").filter({ hasText: name });
+  await expect(row.getByText("compte activé")).toBeVisible();
+  await expect(row.getByRole("link", { name: `Inviter ${name}` })).toHaveCount(0);
+});
+
+test("un lien révoqué par le coach n'est plus utilisable", async ({ page, browser }, testInfo) => {
+  const suffix = `${testInfo.project.name}-${Date.now()}`;
+  const name = `Révoqué ${suffix}`;
+
+  await loginAsCoachA(page);
+  await createAthleteAndOpenInvite(page, name, `revoque-${suffix}@example.test`);
+  const link = await generateLink(page);
+
+  await page.reload();
+  await expect(page.getByText(/Un lien est en attente jusqu'au/)).toBeVisible();
+  await page.getByRole("button", { name: "Révoquer ce lien" }).click();
+  await expect(page.getByText(/Un lien est en attente/)).toHaveCount(0);
+
+  const athlete = await newAthletePage(browser);
+  await athlete.goto(link);
+  await expect(athlete.getByText("Cette invitation a été annulée par ton coach")).toBeVisible();
+});
+
+test("un lien d'invitation inventé est refusé", async ({ page }) => {
+  await page.goto(`/invitation/${"x".repeat(43)}`);
+  await expect(page.getByRole("heading", { name: "Invitation indisponible" })).toBeVisible();
+  await page.goto("/invitation/trop-court");
+  await expect(page.getByText("Ce lien d'invitation n'est pas valide")).toBeVisible();
+});

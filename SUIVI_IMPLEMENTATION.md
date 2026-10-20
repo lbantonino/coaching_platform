@@ -6,7 +6,7 @@
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
 | P0 Bootstrap | En cours : P0-01, P0-02, P0-03 faits ; P0-04 à P0-06 à faire | lint, typecheck, format:check, build, dev, db:reset x2, test trigger SQL | Commits P0-01 à P0-03, session du 19/10/2026 ci-dessous |
-| P1 Auth/organisations | En cours : P1-01 (connexion + mot de passe oublié), P1-02, P1-03, P1-04 faits ; P1-05 invitation sportif à faire ; vérification e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 21/21, test:e2e 17/17 (x2 stables), check, build | Sessions du 19 et 20/10/2026 |
+| P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | En cours : P2-01 partiel (fiche sportif minimale, liste, ajout) ; modification, recherche, filtres à faire | db:test 34/34, test:e2e 21/21 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
@@ -18,6 +18,43 @@
 ## Dernière session
 - Date : 2026-10-20
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
+
+### Story P1-05 : invitation sportif par lien à copier
+```
+Date : 2026-10-20
+Story : P1-05 (+ requireAthlete de P1-04, + page /app minimale)
+Décisions d'Antonino : lien à copier (pas d'envoi auto avant P7), validité 7 jours, case obligatoire « J'ai 18 ans
+  ou plus » (OPEN-11 : mineurs bloqués), page /app honnête
+Objectif et fichiers specs lus : docs/02 §1, §5, §7 ; docs/11 §2 (jamais de jeton en clair) ; docs/12 §2
+Fichiers créés/modifiés :
+  supabase/migrations/20261020081355_invitations_sportifs.sql : athlete_invites (hash SHA-256, FK composite
+    fiche+organisation, une seule invitation en attente par fiche, 7 jours max, révocation seule côté client),
+    private.is_linked_athlete, policies sportif (sa fiche, son organisation), get_invitation (lecture par
+    empreinte), accept_invitation (atomique : validité, expiration, âge, e-mail identique, fiche non déjà liée)
+  supabase/tests/database/04_invitations.test.sql (20 tests)
+  src/lib/supabase/admin.ts (clé secrète, server-only, une seule procédure), src/lib/format.ts
+  src/features/invitations/{token,queries,actions}.ts ; src/features/auth/{guards,session}.ts (requireAthlete,
+    getAthleteLinks, aiguillage /app) ; src/proxy.ts (/app protégé)
+  src/app/(coach)/coach/o/[orgId]/sportifs/[athleteId]/inviter/{page,invite-form}.tsx,
+  src/app/invitation/[token]/{page,accept-form}.tsx, src/app/(athlete)/app/page.tsx, liste des sportifs (Inviter)
+  tests/e2e/invitation.spec.ts (3 scénarios x 2 profils)
+Commandes exécutées et résultats :
+  npm run db:test -> 54/54 PASS ; npm run check -> exit 0 ; npm run build -> OK
+  npm run test:e2e -> 27 passés + 1 ignoré volontairement, 3 exécutions stables
+  Clé secrète recherchée dans .next/static : 0 occurrence
+Scénarios E2E : coach crée la fiche, génère le lien, « Copier » vérifié dans le presse-papiers ; sportif dans un autre
+  navigateur : case 18 ans obligatoire, création d'accès, arrivée /app, refus /coach, lien à usage unique,
+  reconnexion -> /app ; coach voit « compte activé » ; lien révoqué inutilisable ; lien inventé refusé
+Points de sécurité vérifiés : jeton jamais stocké en clair, lien non réaffichable, invitation limitée à la même
+  organisation, acceptation atomique, sportif isolé (sa fiche et son organisation seulement), AUTH-01
+Bugs/limites :
+  - Fiche sans e-mail : invitation impossible tant que la modification de fiche n'existe pas (P2-01 suite)
+  - Sportif ayant déjà un compte : doit se connecter puis rouvrir le lien (pas de redirection automatique après login)
+  - Pas de limitation du nombre d'essais sur la page d'invitation (jeton de 256 bits, risque faible) : à revoir avant prod
+  - Défaut de test corrigé : fiche B ciblée avait déjà une invitation (le mauvais refus était testé)
+Décisions OPEN/ADR : clé secrète utilisée pour une procédure de confiance unique (création du compte invité)
+Prochaine story : P2-01 suite (modifier une fiche, recherche, filtres, archivage) ou P0-05 (shell UI / design)
+```
 
 ### Story P2-01a : fiche sportif minimale, liste et ajout (préalable à l'invitation P1-05)
 ```
