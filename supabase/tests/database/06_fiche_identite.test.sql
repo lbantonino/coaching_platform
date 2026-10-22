@@ -4,7 +4,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(14);
+select plan(16);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -79,6 +79,12 @@ select throws_ok(
   '23514', null,
   'L''expérience est limitée à 500 caractères'
 );
+select throws_ok(
+  $$ insert into public.athlete_profiles (organization_id, first_name, sex)
+     values ('aaaaaaaa-0000-4000-8000-000000000001', 'Max', 'robot') $$,
+  '23514', null,
+  'Le sexe appartient à la liste fermée (female, male, unspecified)'
+);
 select results_eq(
   $$ select training_places from public.athlete_profiles where id = 'a1a1a1a1-0000-4000-8000-000000000001' $$,
   $$ values ('{}'::text[]) $$,
@@ -103,6 +109,11 @@ select results_eq(
      from public.athlete_profiles where id = 'a1a1a1a1-0000-4000-8000-000000000001' $$,
   $$ values ('Léa Martin', 'whatsapp', 'intermediate', '{gym,outdoor}'::text[]) $$,
   'Les modifications sont enregistrées et le nom complet suit'
+);
+select lives_ok(
+  $$ update public.athlete_profiles set sex = 'female'
+     where id = 'a1a1a1a1-0000-4000-8000-000000000001' $$,
+  'Coach A renseigne le sexe d''un sportif de son organisation'
 );
 select throws_ok(
   $$ update public.athlete_profiles set display_name = 'Autre nom'

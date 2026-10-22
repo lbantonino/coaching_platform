@@ -11,7 +11,7 @@ import { athleteUpdateSchema, availabilitySchema, newAthleteSchema } from "./sch
 
 export type NewAthleteState = {
   error: string | null;
-  values: { firstName: string; lastName: string; email: string; phone: string };
+  values: { firstName: string; lastName: string; sex: string; email: string; phone: string };
 };
 
 // Server Action liée à une organisation (organizationId est fixé côté serveur par .bind dans la page).
@@ -26,6 +26,7 @@ export async function createAthlete(
   const values = {
     firstName: String(formData.get("firstName") ?? ""),
     lastName: String(formData.get("lastName") ?? ""),
+    sex: String(formData.get("sex") ?? ""),
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
   };
@@ -40,6 +41,7 @@ export async function createAthlete(
     organization_id: membership.organizationId,
     first_name: parsed.data.firstName,
     last_name: parsed.data.lastName,
+    sex: parsed.data.sex,
     email: parsed.data.email,
     phone: parsed.data.phone,
     created_by: user.id,
@@ -60,6 +62,7 @@ export async function createAthlete(
 export type AthleteFormValues = {
   firstName: string;
   lastName: string;
+  sex: string;
   email: string;
   phone: string;
   status: string;
@@ -101,6 +104,7 @@ export async function updateAthlete(
   const values: AthleteFormValues = {
     firstName: String(formData.get("firstName") ?? ""),
     lastName: String(formData.get("lastName") ?? ""),
+    sex: String(formData.get("sex") ?? ""),
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     status: String(formData.get("status") ?? ""),
@@ -140,6 +144,7 @@ export async function updateAthlete(
     .update({
       first_name: parsed.data.firstName,
       last_name: parsed.data.lastName,
+      sex: parsed.data.sex,
       email: parsed.data.email,
       phone: parsed.data.phone,
       status: parsed.data.status,

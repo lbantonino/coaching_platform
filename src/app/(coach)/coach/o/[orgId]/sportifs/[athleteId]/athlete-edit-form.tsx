@@ -20,6 +20,8 @@ import {
 import {
   ATHLETE_LEVELS,
   athleteLevelLabels,
+  SEXES,
+  sexLabels,
   CONTACT_CHANNELS,
   contactChannelLabels,
   TRAINING_PLACES,
@@ -91,6 +93,19 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
               defaultValue={shown.lastName}
               className={inputClass}
             />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="sex" className={labelClass}>
+              Sexe <span className="font-normal text-muted">(facultatif)</span>
+            </label>
+            <select id="sex" name="sex" defaultValue={shown.sex} className={inputClass}>
+              <option value="">Non renseigné</option>
+              {SEXES.map((sex) => (
+                <option key={sex} value={sex}>
+                  {sexLabels[sex]}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </Part>

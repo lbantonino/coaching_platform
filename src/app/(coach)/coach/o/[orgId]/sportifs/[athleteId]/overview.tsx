@@ -21,10 +21,12 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
+import { SexMark } from "@/components/ui/sex-mark";
 import type { ActivityEvent } from "@/features/activity/build";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
+  sexLabels,
   trainingPlaceLabels,
   WEEK_DAYS,
   weekDayLabels,
@@ -39,13 +41,12 @@ import {
   goalTypeLabels,
   hyroxCategoryLabels,
 } from "@/features/goals/schemas";
-import { formatReferenceDetail, formatReferenceValue } from "@/features/references/format";
 import type { ReferenceEntry } from "@/features/references/queries";
-import { referenceKindLabels, referenceSourceLabels } from "@/features/references/schemas";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 import { ActivityTimeline } from "./activity-timeline";
 import { GoalDisciplineBadge } from "./goal-discipline-badge";
+import { ReferenceTile } from "./reference-tile";
 
 // Vue d'ensemble de la fiche (P2-04) : tout en LECTURE. « Modifier » ouvre l'onglet qui contient le formulaire.
 // Pas de doublon avec les chiffres clés du haut (séances, durée, canal) : ils sont déjà visibles sur toute la fiche.
@@ -119,6 +120,16 @@ function ProfileCard({ athlete, editHref }: { athlete: AthleteDetail; editHref: 
         <Row icon={User} label="Nom complet">
           {athlete.displayName}
         </Row>
+        <Row icon={User} label="Sexe">
+          {athlete.sex ? (
+            <span className="inline-flex items-center gap-2">
+              <SexMark sex={athlete.sex} size="sm" />
+              {sexLabels[athlete.sex]}
+            </span>
+          ) : (
+            missing
+          )}
+        </Row>
         <Row icon={Mail} label="Adresse e-mail">
           {athlete.email ?? missing}
         </Row>
@@ -159,14 +170,14 @@ function GoalCard({
   const goal = goals.find((entry) => entry.priority === "main") ?? goals[0];
   const others = goals.length - (goal ? 1 : 0);
   const countdown = goal?.targetDate ? goalCountdown(today, goal.targetDate) : null;
-  // Liseré à la couleur de la discipline de l'objectif (D-24).
+  // Cadre à la couleur de la discipline de l'objectif (D-24, D-25).
   const discipline = goal ? goalDiscipline(goal.type) : null;
 
   return (
     <OverviewCard id="overview-goal" title="Objectif actuel" icon={Target} editHref={editHref}>
       {goal ? (
         <div
-          className={`flex flex-col gap-3 rounded-[14px] border border-line bg-bg p-4 ${discipline ? disciplineStyles[discipline].edge : ""}`}
+          className={`flex flex-col gap-3 rounded-[14px] border bg-bg p-4 ${discipline ? disciplineStyles[discipline].frame : "border-line"}`}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
@@ -289,24 +300,9 @@ function ReferencesCard({
         <p className="text-small text-muted">Aucun repère pour l&apos;instant.</p>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
-          {shown.map((entry) => {
-            const detail = formatReferenceDetail(entry);
-            return (
-              <li
-                key={entry.id}
-                className="flex flex-col gap-1 rounded-[14px] border border-line bg-bg p-4"
-              >
-                <span className="text-caption text-muted">{referenceKindLabels[entry.kind]}</span>
-                <span className="font-mono text-title font-medium tabular">
-                  {formatReferenceValue(entry)}
-                </span>
-                <span className="text-caption text-muted">
-                  {detail ? `${detail} · ` : ""}
-                  {referenceSourceLabels[entry.source]} · {formatDate(entry.measuredOn)}
-                </span>
-              </li>
-            );
-          })}
+          {shown.map((entry) => (
+            <ReferenceTile key={entry.id} entry={entry} size="compact" />
+          ))}
         </ul>
       )}
       {references.length > shown.length ? (

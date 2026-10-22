@@ -1,12 +1,13 @@
 import { Trash2 } from "lucide-react";
 
 import { deleteReference } from "@/features/references/actions";
-import { formatReferenceDetail, formatReferenceValue } from "@/features/references/format";
+import { formatReferenceValue } from "@/features/references/format";
 import { listReferences } from "@/features/references/queries";
-import { referenceKindLabels, referenceSourceLabels } from "@/features/references/schemas";
+import { referenceKindLabels } from "@/features/references/schemas";
 import { formatDate } from "@/lib/format";
 
 import { AddReferenceForm } from "./add-reference-form";
+import { ReferenceTile } from "./reference-tile";
 import { TestCalculator } from "./test-calculator";
 
 // Section « Allures & repères » de la fiche (P2-03). Serveur : lit l'historique, déjà filtré par la RLS.
@@ -46,24 +47,9 @@ export async function ReferencesSection({
         </p>
       ) : (
         <ul aria-label="Repères actuels" className="grid gap-3 sm:grid-cols-2">
-          {current.map((entry) => {
-            const detail = formatReferenceDetail(entry);
-            return (
-              <li
-                key={entry.id}
-                className="flex flex-col gap-1.5 rounded-[14px] border border-line bg-bg p-4"
-              >
-                <span className="text-small text-muted">{referenceKindLabels[entry.kind]}</span>
-                <span className="font-mono text-h3 font-medium tabular">
-                  {formatReferenceValue(entry)}
-                </span>
-                <span className="text-caption text-muted">
-                  {detail ? `${detail} · ` : ""}
-                  {referenceSourceLabels[entry.source]} · {formatDate(entry.measuredOn)}
-                </span>
-              </li>
-            );
-          })}
+          {current.map((entry) => (
+            <ReferenceTile key={entry.id} entry={entry} />
+          ))}
         </ul>
       )}
 

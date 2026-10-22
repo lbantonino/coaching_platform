@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-03 fini (notes coach / visibles sportif) ; P2-04 étapes 1 et 2 faites (onglets, vue d'ensemble, notes, historique) ; records personnels, graphique des repères (P2-04 étape 3), P2-05 à faire | test 74/74, db:test 133/133, test:e2e 55/55 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-03 fini (notes coach / visibles sportif) ; P2-04 étapes 1 et 2 faites (onglets, vue d'ensemble, notes, historique) ; records personnels, graphique des repères (P2-04 étape 3), P2-05 à faire | test 76/76, db:test 135/135, test:e2e 55/55 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,25 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### D-25 : sexe du sportif et app plus colorée
+```
+Date : 2026-10-22
+Demande d'Antonino : cercles autour des icônes des chiffres clés, chacun sa couleur ; objectif encadré en entier
+  (plus de liseré gauche) ; repères et mesures en couleur ; plus de couleurs dans le tableau de bord ;
+  distinguer femmes et hommes. Choix sur question : champ Sexe + symbole ♀/♂
+Fait : migration 20261022192309_sexe_sportif.sql (colonne sex facultative, CHECK female/male/unspecified,
+  droit de modification) ; Zod (SEXES, sexLabels), actions création/modification, sélecteur dans les deux
+  formulaires ; SexMark (♀ rose / ♂ bleu ciel, annoncé « Femme » / « Homme ») dans la liste, l'en-tête et la carte
+  Profil ; liste : avatar et badge de la discipline de l'objectif principal ; KeyFigure (pastille cerclée + valeur
+  colorée) ; cadre complet de discipline sur les objectifs ; ReferenceTile partagé (vue d'ensemble + onglet
+  Repères) ; StatCard(icon, tone) sur le tableau de bord ; jetons --female/--male (+ -soft) ; seed : sexe des
+  sportifs de démo (Manon non renseignée)
+Contrastes (script WCAG) : tuiles de repères OK dans les deux thèmes ; cartes teintées du tableau de bord
+  ramenées de 7 % à 5 % de teinte pour garder le texte gris ≥ 4,5:1 en clair
+Tests : check OK, Vitest 76/76, db:test 135/135 (+2 sur le sexe), test:e2e 55/55 + 3 ignorés (parcours fiche :
+  sexe choisi, retrouvé après rechargement, ♀ visible) ; db:reset final ; captures sombre, clair, téléphone
+```
 
 ### D-24 : graphite plus clair et touches de couleur sur la fiche
 ```

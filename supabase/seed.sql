@@ -143,6 +143,22 @@ update public.athlete_profiles
   set athlete_user_id = 'e0000000-0000-4000-8000-00000000000e'
   where id = 'da000000-0000-4000-8000-000000000002';
 
+-- Sexe déclaré (D-25). Manon reste non renseignée pour montrer le cas « facultatif ».
+update public.athlete_profiles as p
+  set sex = v.sex
+  from (values
+    ('da000000-0000-4000-8000-000000000001'::uuid, 'female'),
+    ('da000000-0000-4000-8000-000000000002'::uuid, 'male'),
+    ('da000000-0000-4000-8000-000000000003'::uuid, 'female'),
+    ('da000000-0000-4000-8000-000000000004'::uuid, 'male'),
+    ('da000000-0000-4000-8000-000000000005'::uuid, 'female'),
+    ('da000000-0000-4000-8000-000000000006'::uuid, 'male'),
+    ('da000000-0000-4000-8000-000000000008'::uuid, 'male'),
+    ('db000000-0000-4000-8000-000000000001'::uuid, 'female'),
+    ('db000000-0000-4000-8000-000000000002'::uuid, 'male')
+  ) as v (id, sex)
+  where p.id = v.id;
+
 insert into public.athlete_invites (
   organization_id, athlete_id, token_hash, status, expires_at, created_by, created_at,
   accepted_at, accepted_by, adult_confirmed_at

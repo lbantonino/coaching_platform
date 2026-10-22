@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import type { Discipline } from "@/domain/training/discipline";
+import { goalDiscipline, type GoalType } from "@/features/goals/schemas";
 import { createClient } from "@/lib/supabase/server";
 
 import type {
@@ -9,6 +11,7 @@ import type {
   AthleteListFilter,
   AthleteStatus,
   ContactChannel,
+  Sex,
   TrainingPlace,
   WeekDay,
 } from "./schemas";
@@ -20,9 +23,18 @@ export type AthleteListItem = {
   status: AthleteStatus;
   hasAccount: boolean;
   hasPendingInvite: boolean;
+  sex: Sex | null;
+  // Discipline de l'objectif principal en cours : couleur de l'avatar dans la liste (D-24).
+  mainDiscipline: Discipline | null;
 };
 
 const DEFAULT_FILTER: AthleteListFilter = { status: "active", q: "" };
+
+function mainGoalDiscipline(goals: { goal_type: string; priority: string; status: string }[]) {
+  const main = goals.find((goal) => goal.priority === "main" && goal.status === "active");
+  // La contrainte CHECK en base garantit la liste des types d'objectif.
+  return main ? goalDiscipline(main.goal_type as GoalType) : null;
+}
 
 // Sportifs d'une organisation. À appeler APRÈS requireOrgAccess(organizationId) ;
 // la RLS filtre de toute façon les fiches des autres organisations.
@@ -36,7 +48,7 @@ export async function listAthletes(
   let query = supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, display_name, email, status, athlete_user_id, athlete_invites ( status, expires_at )",
+      "id, first_name, display_name, email, status, sex, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status )",
     )
     .eq("organization_id", organizationId)
     .order("display_name");
@@ -58,6 +70,8 @@ export async function listAthletes(
       hasPendingInvite: row.athlete_invites.some(
         (invite) => invite.status === "pending" && new Date(invite.expires_at) > now,
       ),
+      sex: row.sex as Sex | null,
+      mainDiscipline: mainGoalDiscipline(row.athlete_goals),
     }))
     .filter(
       (athlete) =>
@@ -72,6 +86,7 @@ export type AthleteDetail = {
   displayName: string;
   firstName: string;
   lastName: string | null;
+  sex: Sex | null;
   email: string | null;
   phone: string | null;
   preferredContact: ContactChannel | null;
@@ -103,7 +118,7 @@ export async function getAthlete(
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, last_name, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, athlete_user_id, created_at",
+      "id, first_name, last_name, sex, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, athlete_user_id, created_at",
     )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
@@ -117,6 +132,7 @@ export async function getAthlete(
     displayName: data.display_name ?? data.first_name,
     firstName: data.first_name,
     lastName: data.last_name,
+    sex: data.sex as Sex | null,
     email: data.email,
     phone: data.phone,
     // Les contraintes CHECK en base garantissent ces listes fermées.

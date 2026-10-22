@@ -13,7 +13,13 @@ describe("newAthleteSchema (fiche sportif)", () => {
       email: "",
       phone: " ",
     });
-    expect(result).toEqual({ firstName: "Camille", lastName: null, email: null, phone: null });
+    expect(result).toEqual({
+      firstName: "Camille",
+      lastName: null,
+      email: null,
+      phone: null,
+      sex: null,
+    });
   });
 
   it("garde le nom de famille, sans espaces autour", () => {
@@ -34,6 +40,12 @@ describe("newAthleteSchema (fiche sportif)", () => {
   it("refuse un e-mail invalide mais accepte un e-mail valide", () => {
     expect(newAthleteSchema.safeParse({ ...base, email: "pas-un-email" }).success).toBe(false);
     expect(newAthleteSchema.safeParse({ ...base, email: "a@example.test" }).success).toBe(true);
+  });
+
+  it("accepte le sexe de la liste (ou non renseigné) et refuse le reste", () => {
+    expect(newAthleteSchema.parse({ ...base, sex: "female" }).sex).toBe("female");
+    expect(newAthleteSchema.parse({ ...base, sex: "" }).sex).toBeNull();
+    expect(newAthleteSchema.safeParse({ ...base, sex: "robot" }).success).toBe(false);
   });
 
   it("accepte un téléphone international et refuse des lettres", () => {

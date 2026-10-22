@@ -19,30 +19,37 @@ export const disciplineTones = {
 } as const satisfies Record<Discipline, string>;
 
 // Classes de couleur par discipline (D-24), écrites en entier pour que Tailwind les trouve :
-// teinte d'en-tête de fiche, fond d'avatar, liseré d'objectif, icône dans sa pastille.
+// teinte d'en-tête de fiche, fond d'avatar, cadre d'objectif, icône dans son cercle, texte coloré.
 export const disciplineStyles = {
   running: {
     header: "border-run/35 bg-[color-mix(in_srgb,var(--run)_9%,var(--surface))]",
     avatar: "bg-[color-mix(in_srgb,var(--run)_24%,var(--surface))]",
-    edge: "border-l-[3px] border-l-run",
-    icon: "bg-run-soft text-run",
+    frame: "border-run",
+    icon: "border border-run/50 bg-run-soft text-run",
+    text: "text-run",
   },
   strength: {
     header: "border-strength/35 bg-[color-mix(in_srgb,var(--strength)_9%,var(--surface))]",
     avatar: "bg-[color-mix(in_srgb,var(--strength)_24%,var(--surface))]",
-    edge: "border-l-[3px] border-l-strength",
-    icon: "bg-strength-soft text-strength",
+    frame: "border-strength",
+    icon: "border border-strength/50 bg-strength-soft text-strength",
+    text: "text-strength",
   },
   hyrox: {
     header: "border-hyrox/35 bg-[color-mix(in_srgb,var(--hyrox)_9%,var(--surface))]",
     avatar: "bg-[color-mix(in_srgb,var(--hyrox)_24%,var(--surface))]",
-    edge: "border-l-[3px] border-l-hyrox",
-    icon: "bg-hyrox-soft text-hyrox",
+    frame: "border-hyrox",
+    icon: "border border-hyrox/50 bg-hyrox-soft text-hyrox",
+    text: "text-hyrox",
   },
   hybrid: {
     header: "border-hybrid/35 bg-[color-mix(in_srgb,var(--hybrid)_9%,var(--surface))]",
     avatar: "bg-[color-mix(in_srgb,var(--hybrid)_24%,var(--surface))]",
-    edge: "border-l-[3px] border-l-hybrid",
-    icon: "bg-hybrid-soft text-hybrid",
+    frame: "border-hybrid",
+    icon: "border border-hybrid/50 bg-hybrid-soft text-hybrid",
+    text: "text-hybrid",
   },
-} as const satisfies Record<Discipline, Record<"header" | "avatar" | "edge" | "icon", string>>;
+} as const satisfies Record<
+  Discipline,
+  Record<"header" | "avatar" | "frame" | "icon" | "text", string>
+>;
