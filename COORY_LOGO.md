@@ -1,185 +1,139 @@
-# Coory — Logo (version rouge)
+# Coory — Logo (symbole infini, rouge)
 
-> Spécification complète du logo Coory, à placer dans le dossier du projet pour que Claude Code puisse l'intégrer fidèlement.
-> Couleur de marque : **Rouge signal `#FF3347`**. Typo : **Geist SemiBold (600)**.
-> Fichier compagnon : `COORY_DESIGN_SYSTEM.md`.
+> Spécification complète du logo Coory. À placer à la racine du projet Coory pour que Claude Code l'intègre fidèlement.
+> Remplace toute version précédente du logo (anneaux entrelacés, etc.).
+> Couleur de marque : **Rouge signal `#FF3347`** · Typo du logo : **Space Grotesk Bold (700)** · Fichier compagnon : `COORY_DESIGN_SYSTEM.md`.
 
 ---
 
 ## 1. Concept
 
-- Nom : **Coory**. Le wordmark s'écrit toujours en **minuscules** : `coory`.
-- Idée : les deux **o** sont remplacés par **deux anneaux entrelacés** (un maillon de chaîne). Un anneau = le coach, l'autre = le client : un lien solide.
-- L'anneau de gauche reprend la couleur du texte, l'anneau de droite porte l'accent rouge.
-- Au croisement du haut, l'anneau **rouge passe par-dessus** ; au croisement du bas, l'anneau **clair passe par-dessus**. Une coupure dans la couleur du fond sépare les deux traits à chaque croisement.
+- Wordmark : **`C∞ry`** — un **C majuscule**, puis les deux **o** fusionnés en **une seule boucle continue en forme d'infini**, puis **`ry`**.
+- L'infini = le lien continu coach ↔ client, le suivi qui ne s'arrête pas.
+- Les lettres sont en couleur texte, **seule la boucle est rouge**.
+- Le symbole seul (la boucle ∞) sert d'icône d'app, de favicon et d'avatar de marque.
 
 ---
 
 ## 2. Construction (cohérence typographique)
 
-Les anneaux sont redessinés à partir du « o » de **Geist SemiBold** pour se fondre dans le mot. Unités en /1000 em (taille du corps de la police) :
+Police : **Space Grotesk** (Google Fonts, licence libre OFL) — `<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">`.
 
-| Paramètre | Valeur | Explication |
-|---|---|---|
-| Contour d'un anneau | 525 × 558 u | Encre du « o » Geist 600, débords compris |
-| Épaisseur du trait | 128 u | Même fût que les lettres |
-| Rayons (axe du trait) | rx 198,5 · ry 215 | Ellipse = (525−128)/2 × (558−128)/2 |
-| Entraxe des deux anneaux | 230 u | Anneaux bien imbriqués |
-| Coupure aux croisements | 30 u de chaque côté | Halo de la couleur du fond, largeur 128 + 2×30 |
-| Ligne de base | 0 | Identique aux lettres (débord bas 12 u) |
-| Hauteur d'x | 534 u | Identique aux lettres (débord haut 12 u) |
-| Approche c → anneaux | 29 u | Approche naturelle de Geist |
-| Approche anneaux → r | −21 u | Crénage « or » de Geist |
-| Letter-spacing du mot | −0,05 em | Appliqué à tout le wordmark |
+La boucle est dessinée à partir du « o » de **Space Grotesk Bold** pour se fondre dans le mot. Unités en /1000 em (taille du texte) :
 
-Intégration dans le texte (le SVG remplace « oo ») :
+| Paramètre | Valeur |
+|---|---|
+| Hauteur de la boucle | 524 u (= encre du « o » Space Grotesk 700 : 510 au-dessus, 14 sous la ligne de base) |
+| Largeur de la boucle | 1132 u (= de l'encre du 1er « o » à celle du 2e ; o = 520 u d'encre, chasse 612) |
+| Épaisseur du trait | 124 u (= fût des lettres Space Grotesk Bold), `stroke-linejoin: round` |
+| Rayon de chaque anneau (axe du trait) | 200 u |
+| Entraxe des deux anneaux | 608 u |
+| Taille (pincement central) | axe du trait à ±96 u du centre → vide central ≈ 68 u |
+| Ligne de base / hauteur d'x | identiques aux lettres (débord 12 u en haut et en bas) |
+| Approche C → boucle | 46 u · boucle → r : 46 u (approches du « o », aucun crénage C-o / o-r dans la police) |
+| Letter-spacing du mot | −0,03 em (compensé dans la marge droite de la boucle : −14 u) |
+
+### Intégration HTML/CSS
 
 ```html
-<span class="coory-wordmark">c<svg class="coory-oo" viewBox="-4 -4 763 566" aria-hidden="true">…</svg>ry</span>
+<span class="coory-wordmark" role="img" aria-label="Coory">C<svg class="coory-loop" viewBox="-4 -4 1140 532" fill="none" aria-hidden="true"><path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" stroke="currentColor" stroke-width="124" stroke-linejoin="round"/></svg>ry</span>
 ```
 ```css
-.coory-wordmark { font: 600 1em/1 'Geist', sans-serif; letter-spacing: -0.05em; white-space: nowrap; }
-.coory-oo { height: 0.566em; width: 0.763em; vertical-align: -0.016em; margin: 0 -0.025em 0 0.025em; }
+.coory-wordmark { font: 700 1em/1 'Space Grotesk', system-ui, sans-serif; letter-spacing: -0.03em; white-space: nowrap; color: var(--text); }
+.coory-loop     { height: 0.532em; width: 1.140em; vertical-align: -0.018em; margin: 0 -0.018em 0 0.042em; color: var(--accent); }
 ```
-Ajouter `aria-label="Coory"` sur le conteneur (ou un texte masqué « Coory ») pour l'accessibilité.
+La taille du logo se règle uniquement avec `font-size` sur `.coory-wordmark`.
 
 ---
 
-## 3. Couleurs du logo
+## 3. Couleurs
 
 | Nom | Hex | Rôle |
 |---|---|---|
-| Rouge Coory (Rouge signal) | `#FF3347` | Anneau accent, fond de l'icône d'app |
-| Rouge foncé | `#D91E32` | Anneau accent sur fond clair (lisibilité) |
-| Graphite | `#0B0B0C` | Fond principal |
-| Papier | `#F4F2EF` | Texte et anneau gauche sur fond sombre |
-| Encre | `#141416` | Texte et anneau gauche sur fond clair |
-| Blanc | `#FFFFFF` | Logo monochrome sur fond rouge |
+| Rouge Coory | `#FF3347` | Boucle sur fond sombre, fond de l'icône rouge |
+| Rouge foncé | `#D91E32` | Boucle sur fond clair (lisibilité) |
+| Graphite | `#0B0B0C` | Fond principal, fond de l'icône d'app |
+| Papier | `#F4F2EF` | Lettres sur fond sombre |
+| Encre | `#141416` | Lettres sur fond clair |
+| Blanc | `#FFFFFF` | Tout le logo sur fond rouge |
 
-### Déclinaisons autorisées
-
-| Fond | Lettres + anneau gauche | Anneau droit | Couleur de coupure |
-|---|---|---|---|
-| **Sombre `#0B0B0C` (version principale)** | `#F4F2EF` | `#FF3347` | `#0B0B0C` |
-| Rouge `#FF3347` | `#FFFFFF` | `#FFFFFF` | `#FF3347` |
-| Clair `#F4F2EF` / blanc | `#141416` | `#D91E32` | couleur du fond |
-
-La **couleur de coupure doit toujours être exactement la couleur du fond** derrière le logo. Sur une photo ou un fond non uni, utiliser la version sur pastille (icône).
+| Fond | Lettres « C » « ry » | Boucle ∞ |
+|---|---|---|
+| **Sombre `#0B0B0C` (principale)** | `#F4F2EF` | `#FF3347` |
+| Rouge `#FF3347` | `#FFFFFF` | `#FFFFFF` |
+| Clair `#F4F2EF` / blanc | `#141416` | `#D91E32` |
 
 ---
 
 ## 4. Symbole — SVG de référence
 
-Le symbole (les deux anneaux seuls) sert d'icône d'app, de favicon et d'avatar. Copier ces SVG tels quels.
-
-### Fond sombre (principal)
+### Boucle seule, rouge (fond transparent)
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 763 566" fill="none">
-  <rect x="-4" y="-4" width="763" height="566" fill="#0B0B0C"/>
-  <defs>
-    <clipPath id="dka"><rect x="262.5" y="-200" width="1200" height="479"/></clipPath>
-    <clipPath id="dkb"><rect x="258.5" y="-200" width="1200" height="485"/></clipPath>
-  </defs>
-  <!-- 1. right ring (accent) -->
-  <ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FF3347" stroke-width="128"/>
-  <!-- 2. left ring: knock-out halo in background color, then ring -->
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#0B0B0C" stroke-width="188"/>
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#F4F2EF" stroke-width="128"/>
-  <!-- 3. right ring passes OVER the left ring at the top crossing -->
-  <g clip-path="url(#dka)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#0B0B0C" stroke-width="188"/></g>
-  <g clip-path="url(#dkb)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FF3347" stroke-width="128"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 1140 532" fill="none">
+  <path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" stroke="#FF3347" stroke-width="124" stroke-linejoin="round"/>
 </svg>
 ```
 
-### Fond rouge (icône d'app)
+### Boucle seule, thémable (React / Vue)
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 763 566" fill="none">
-  <rect x="-4" y="-4" width="763" height="566" fill="#FF3347"/>
-  <defs>
-    <clipPath id="rda"><rect x="262.5" y="-200" width="1200" height="479"/></clipPath>
-    <clipPath id="rdb"><rect x="258.5" y="-200" width="1200" height="485"/></clipPath>
-  </defs>
-  <!-- 1. right ring (accent) -->
-  <ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FFFFFF" stroke-width="128"/>
-  <!-- 2. left ring: knock-out halo in background color, then ring -->
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#FF3347" stroke-width="188"/>
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#FFFFFF" stroke-width="128"/>
-  <!-- 3. right ring passes OVER the left ring at the top crossing -->
-  <g clip-path="url(#rda)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FF3347" stroke-width="188"/></g>
-  <g clip-path="url(#rdb)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FFFFFF" stroke-width="128"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 1140 532" fill="none">
+  <path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" stroke="currentColor" stroke-width="124" stroke-linejoin="round"/>
 </svg>
 ```
 
-### Fond clair
+### Icône d'app principale — boucle rouge sur graphite (1024×1024)
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 763 566" fill="none">
-  <rect x="-4" y="-4" width="763" height="566" fill="#F4F2EF"/>
-  <defs>
-    <clipPath id="lta"><rect x="262.5" y="-200" width="1200" height="479"/></clipPath>
-    <clipPath id="ltb"><rect x="258.5" y="-200" width="1200" height="485"/></clipPath>
-  </defs>
-  <!-- 1. right ring (accent) -->
-  <ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#D91E32" stroke-width="128"/>
-  <!-- 2. left ring: knock-out halo in background color, then ring -->
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#F4F2EF" stroke-width="188"/>
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#141416" stroke-width="128"/>
-  <!-- 3. right ring passes OVER the left ring at the top crossing -->
-  <g clip-path="url(#lta)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#F4F2EF" stroke-width="188"/></g>
-  <g clip-path="url(#ltb)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#D91E32" stroke-width="128"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="236" fill="#0B0B0C"/>
+  <g transform="translate(164 350) scale(0.6108)">
+    <path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" fill="none" stroke="#FF3347" stroke-width="124" stroke-linejoin="round"/>
+  </g>
 </svg>
 ```
 
-### Version thémable (sans fond) pour React / Vue
+### Icône d'app alternative — boucle blanche sur rouge (1024×1024)
 ```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 763 566" fill="none">
-  <defs>
-    <clipPath id="tha"><rect x="262.5" y="-200" width="1200" height="479"/></clipPath>
-    <clipPath id="thb"><rect x="258.5" y="-200" width="1200" height="485"/></clipPath>
-  </defs>
-  <!-- 1. right ring (accent) -->
-  <ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="var(--accent)" stroke-width="128"/>
-  <!-- 2. left ring: knock-out halo in background color, then ring -->
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="var(--bg)" stroke-width="188"/>
-  <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="currentColor" stroke-width="128"/>
-  <!-- 3. right ring passes OVER the left ring at the top crossing -->
-  <g clip-path="url(#tha)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="var(--bg)" stroke-width="188"/></g>
-  <g clip-path="url(#thb)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="var(--accent)" stroke-width="128"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" rx="236" fill="#FF3347"/>
+  <g transform="translate(164 350) scale(0.6108)">
+    <path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" fill="none" stroke="#FFFFFF" stroke-width="124" stroke-linejoin="round"/>
+  </g>
 </svg>
 ```
-Dans un composant, donner un `id` unique aux `clipPath` (ex. `useId()` en React), sinon plusieurs logos sur la même page se marchent dessus.
 
 ---
 
 ## 5. Icône d'app & favicon
 
-- **Icône principale** : symbole blanc sur fond **`#FF3347`**, coins arrondis ≈ 23 % de la taille (iOS gère son propre masque : fournir un carré plein).
-- **Icône alternative** : symbole `#F4F2EF` + anneau rouge sur fond `#0B0B0C`.
-- Le symbole occupe ≈ 68 % de la largeur de l'icône, centré.
-- Tailles à exporter : 1024, 512, 192, 180 (apple-touch-icon), 32, 16 px. À 16 px, utiliser la version sur fond rouge.
-- `theme-color` : `#0B0B0C`.
+- **Icône principale** : boucle `#FF3347` sur fond `#0B0B0C`, coins arrondis ≈ 23 % (fournir un carré plein pour iOS, qui applique son propre masque). Sur fond d'écran sombre, un filet `rgba(255,255,255,.13)` de 1 px peut entourer l'icône.
+- **Icône alternative** : boucle blanche sur `#FF3347` (recommandée pour le favicon et les petites tailles).
+- La boucle occupe ≈ 68 % de la largeur de l'icône, centrée.
+- Exports : 1024, 512, 192, 180 (apple-touch-icon), 32, 16 px.
+- PWA : `theme_color` et `background_color` = `#0B0B0C`.
 
 ---
 
 ## 6. Règles d'usage
 
-- **Zone de protection** : la hauteur d'un « o » (≈ 0,56 × la taille du texte) libre tout autour.
-- **Taille minimale** : 16 px de haut pour le wordmark comme pour le symbole.
-- Wordmark dans l'app : 17–20 px dans la sidebar desktop, 22–26 px dans les écrans d'accueil / connexion.
-- **À ne pas faire** :
-  - déformer, incliner, faire pivoter ;
-  - ajouter une ombre, un contour, un dégradé ou un effet lumineux ;
-  - inverser l'ordre des anneaux ou les deux couleurs ;
-  - mettre l'anneau rouge sur un fond rouge ;
-  - écrire « Coory » en majuscules dans le logo ou changer de police ;
-  - remplacer les anneaux par des « o » de texte.
+- **Zone de protection** : la hauteur d'un « o » (≈ 0,56 × la taille du texte) tout autour.
+- **Taille minimale** : 16 px de haut.
+- Tailles dans l'app : 17–20 px (sidebar desktop), 22–28 px (connexion, onboarding, header mobile).
+- **Interdits** :
+  - déformer, incliner, faire pivoter la boucle ;
+  - séparer les deux boucles ou en faire deux « o » ;
+  - colorer les lettres en rouge ou la boucle en blanc sur fond sombre ;
+  - ajouter ombre, contour, dégradé, lueur ;
+  - écrire « COORY » en capitales ou utiliser une autre police que Space Grotesk Bold.
 
 ---
 
 ## 7. Intégration — à faire par Claude Code
 
-1. Créer `assets/logo/` avec `coory-symbol-dark.svg`, `coory-symbol-red.svg`, `coory-symbol-light.svg` (SVG du §4).
-2. Créer un composant `<CooryLogo variant="wordmark|symbol" tone="dark|red|light" size={…} />` :
-   - `wordmark` = « c » + SVG thémable + « ry » (§2) ;
-   - `tone` règle les trois couleurs du §3 (lettres, anneau droit, coupure).
-3. Remplacer l'ancien logo partout : sidebar coach, écran de connexion, header mobile, e-mails, favicon, manifest PWA.
-4. Générer les favicons / icônes (§5) depuis `coory-symbol-red.svg`.
+1. Créer `assets/logo/` avec : `coory-loop.svg` (§4, rouge), `coory-loop-current.svg` (thémable), `coory-icon-dark.svg` et `coory-icon-red.svg` (1024×1024).
+2. Créer un composant `<CooryLogo variant="wordmark" | "symbol" | "icon" tone="dark" | "red" | "light" size={…} />` :
+   - `wordmark` = « C » + boucle SVG + « ry » (§2) ; `size` = font-size en px ;
+   - `tone` applique le tableau du §3 (couleur des lettres + couleur de la boucle) ;
+   - `icon` = tuile carrée arrondie du §5.
+3. Remplacer l'ancien logo partout : sidebar coach, écran de connexion, header mobile, e-mails, splash screen.
+4. Générer favicon (`favicon.ico` 16/32), `apple-touch-icon.png` 180, icônes PWA 192/512 depuis `coory-icon-red.svg` (petites tailles) et `coory-icon-dark.svg` (grandes tailles).
+5. Vérifier en thème sombre et clair que le tableau du §3 est respecté.

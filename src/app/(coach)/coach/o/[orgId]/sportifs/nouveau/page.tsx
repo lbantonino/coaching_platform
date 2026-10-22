@@ -36,7 +36,7 @@ async function NewAthleteSection({ orgId }: { orgId: string }) {
       </Link>
       <div className="flex flex-col gap-2">
         <p className="text-small text-muted">{membership.organizationName}</p>
-        <h1 className="text-h2 font-medium">Nouveau sportif</h1>
+        <h1 className="font-display text-h2 font-medium">Nouveau sportif</h1>
         <p className="text-small text-muted">
           Seul le nom est obligatoire. L&apos;e-mail servira plus tard à l&apos;inviter dans son
           espace sportif.

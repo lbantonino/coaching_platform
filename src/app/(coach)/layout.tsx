@@ -9,8 +9,8 @@ import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { CoachSideNav, CoachTabBar } from "./coach-nav";
 
 // Coquille de l'espace coach : barre latérale de 232 px sur ordinateur, onglets en bas sur téléphone.
-// Logo (choix d'Antonino, 22/10) : le mot « coory » en grand dans la barre latérale (ordinateur),
-// le symbole seul (les deux anneaux) dans l'en-tête mobile.
+// Logo (choix d'Antonino, 22/10) : le mot « C∞ry » en grand dans la barre latérale (ordinateur),
+// la boucle infinie seule dans l'en-tête mobile.
 // La navigation lit la session : elle est derrière Suspense (Cache Components), le reste s'affiche aussitôt.
 // Ce n'est PAS une protection : chaque page appelle elle-même son garde-fou (requireCoach, requireOrgAccess).
 export default function CoachLayout({ children }: LayoutProps<"/">) {

@@ -14,7 +14,7 @@ export default function AccessDeniedPage() {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-6 px-5 pt-6 pb-16 sm:justify-center sm:py-16">
       <div className="flex flex-col gap-2">
-        <h1 className="text-h2 font-medium">Accès refusé</h1>
+        <h1 className="font-display text-h2 font-medium">Accès refusé</h1>
         <p className="text-muted">
           Ton compte n&apos;a pas accès à cette page. Si tu penses que c&apos;est une erreur,
           contacte l&apos;administrateur de la plateforme.

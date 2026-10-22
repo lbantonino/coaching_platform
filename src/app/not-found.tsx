@@ -11,7 +11,7 @@ export default function NotFound() {
       </header>
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-5 pb-24">
         <p className="font-mono text-data text-accent-text">ERREUR 404</p>
-        <h1 className="text-h2 font-medium">Page introuvable</h1>
+        <h1 className="font-display text-h2 font-medium">Page introuvable</h1>
         <p className="text-muted">
           Cette adresse n&apos;existe pas ou plus. Vérifie le lien, ou repars de l&apos;accueil.
         </p>

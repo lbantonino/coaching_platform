@@ -4,7 +4,7 @@ import { CooryLogo } from "./coory-logo";
 import { ThemeToggle } from "./theme-toggle";
 
 // Cadre minimal (espace sportif, administration) : logo, intitulé de l'espace et choix du thème en tête.
-// Même règle que l'espace coach : les deux anneaux sur téléphone, le mot « coory » à partir de md (768 px).
+// Même règle que l'espace coach : la boucle seule sur téléphone, le mot « C∞ry » à partir de md (768 px).
 export function SimpleShell({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-1 flex-col">

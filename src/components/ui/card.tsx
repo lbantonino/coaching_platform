@@ -35,7 +35,7 @@ export function StatCard({
       className={`flex flex-col gap-3 rounded-card border p-4 sm:gap-[18px] sm:p-5 ${box} ${className}`}
     >
       <p className="text-small font-medium">{label}</p>
-      <p className="text-h1 font-medium tabular sm:text-display">
+      <p className="font-display text-h1 font-medium tabular sm:text-display">
         {value}
         {unit ? <span className={`ml-1 text-[24px] ${secondary}`}>{unit}</span> : null}
       </p>

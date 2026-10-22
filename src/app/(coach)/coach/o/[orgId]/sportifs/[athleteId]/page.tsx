@@ -55,7 +55,9 @@ async function AthleteSection({ orgId, athleteId }: { orgId: string; athleteId: 
         <div className="flex min-w-0 items-center gap-4">
           <Avatar name={athlete.displayName} size="lg" />
           <div className="flex min-w-0 flex-col gap-1.5">
-            <h1 className="text-h2 font-medium break-words md:text-h1">{athlete.displayName}</h1>
+            <h1 className="font-display text-h2 font-medium break-words md:text-h1">
+              {athlete.displayName}
+            </h1>
             <div className="flex flex-wrap items-center gap-2">
               <Badge tone={statusTone[athlete.status]}>{athleteStatusLabels[athlete.status]}</Badge>
               <Badge tone={athlete.hasAccount ? "ok" : "neutral"}>

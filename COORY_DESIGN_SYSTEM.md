@@ -18,7 +18,7 @@
 
 ## 2. Brand / Logo
 
-- Name **Coory**, wordmark lowercase `coory` in Geist SemiBold, the **oo** drawn as two interlocked rings (left = text color, right = accent).
+- Name **Coory**, wordmark `C∞ry` in Space Grotesk Bold: capital **C**, the **oo** merged into one continuous **red infinity loop**, then **ry**. Letters in text color, only the loop is accent.
 - Accent: **Rouge signal `#FF3347`** (light theme fills `#E5283C`, red text on light `#D91E32`).
 - **Full spec, SVG code and usage rules → `COORY_LOGO.md`.**
 
@@ -82,18 +82,21 @@ Use **semantic tokens** in components, never raw hex.
 ## 4. Typography
 
 ```css
---font-sans:'Geist', system-ui, sans-serif;      /* everything */
---font-mono:'Geist Mono', ui-monospace, monospace; /* data */
+--font-display:'Space Grotesk', system-ui, sans-serif; /* logo, H1–H3, display numbers */
+--font-sans:'Geist', system-ui, sans-serif;            /* all UI text, labels, body, buttons */
+--font-mono:'Geist Mono', ui-monospace, monospace;     /* data */
 ```
-Load: `https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap`
+Load (Google Fonts, all OFL): `https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap`
+
+**Pairing rule:** Space Grotesk (futuristic, technical) only for the logo, page/section titles and big KPI numbers. Everything else — body, labels, buttons, nav, tables — stays in Geist for calm readability. Never use Space Grotesk below 18px.
 
 | Role | Size / weight | Tracking | Use |
 |---|---|---|---|
-| Display | 40–48 / 500 | -0.03em | KPI numbers |
-| H1 | 32 / 500 | -0.03em | Page title |
-| H2 | 28 / 500 | -0.03em | Section / program title |
-| H3 | 22 / 500 | -0.02em | Mobile card title |
-| Title | 15 / 500 | 0 | Card titles |
+| Display · **Space Grotesk** | 40–48 / 500 | -0.03em | KPI numbers |
+| H1 · **Space Grotesk** | 32 / 500 | -0.03em | Page title |
+| H2 · **Space Grotesk** | 28 / 500 | -0.03em | Section / program title |
+| H3 · **Space Grotesk** | 22 / 500 | -0.02em | Mobile card title |
+| Title · Geist | 15 / 500 | 0 | Card titles |
 | Body | 14 / 400, lh 1.5 | 0 | Default text |
 | Small | 13 / 400 | 0 | Secondary |
 | Caption | 12 / 400, `--muted` | 0 | Meta |
@@ -199,13 +202,13 @@ Lucide (outline, stroke ~1.7, round caps), monochrome `currentColor` (`--text` /
 
 ## 10. Redesign plan for Claude Code
 
-1. **Tokens first.** Create `src/styles/tokens.css` with the exact blocks of §3 + the font/spacing variables of §4–5, import it globally, load Geist + Geist Mono. If the project uses Tailwind, map tokens in `theme.extend`:
+1. **Tokens first.** Create `src/styles/tokens.css` with the exact blocks of §3 + the font/spacing variables of §4–5, import it globally, load Space Grotesk + Geist + Geist Mono. If the project uses Tailwind, map tokens in `theme.extend`:
    ```js
    colors: { page:'var(--page)', bg:'var(--bg)', surface:'var(--surface)', 'surface-2':'var(--surface-2)', chip:'var(--chip)', bar:'var(--bar)',
      line:'var(--line)', 'line-2':'var(--line-2)', text:'var(--text)', muted:'var(--muted)', faint:'var(--faint)',
      accent:{ DEFAULT:'var(--accent)', hover:'var(--accent-hover)', text:'var(--accent-text)', soft:'var(--accent-soft)', on:'var(--on-accent)' },
      ok:'var(--ok)', warn:'var(--warn)' },
-   fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['Geist Mono','ui-monospace','monospace'] },
+   fontFamily: { display:['Space Grotesk','system-ui','sans-serif'], sans:['Geist','system-ui','sans-serif'], mono:['Geist Mono','ui-monospace','monospace'] },
    borderRadius: { sm:'7px', md:'10px', card:'16px', pill:'20px' }
    ```
 2. **Theme.** Dark by default; toggle `data-theme="light"` on `<html>`, persist in `localStorage`.

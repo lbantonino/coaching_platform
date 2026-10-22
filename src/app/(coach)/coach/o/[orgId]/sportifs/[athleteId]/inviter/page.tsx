@@ -37,7 +37,7 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
   if (!target) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-h2 font-medium">Sportif introuvable</h1>
+        <h1 className="font-display text-h2 font-medium">Sportif introuvable</h1>
         <Link href={listPath} className="underline">
           Retour aux sportifs
         </Link>
@@ -55,7 +55,7 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
       </Link>
       <div className="flex flex-col gap-2">
         <p className="text-small text-muted">{membership.organizationName}</p>
-        <h1 className="text-h2 font-medium">Inviter {target.displayName}</h1>
+        <h1 className="font-display text-h2 font-medium">Inviter {target.displayName}</h1>
         <p className="text-small text-muted">
           Le sportif ouvrira ce lien pour créer son accès avec l&apos;adresse{" "}
           <span className="font-medium text-current">{target.email ?? "(aucune)"}</span>. Le lien
