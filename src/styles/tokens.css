@@ -1,5 +1,7 @@
 /*
- * Jetons de couleur Coory, recopiés tels quels depuis COORY_DESIGN_SYSTEM.md §3 (version rouge, 22/10/2026).
+ * Jetons de couleur Coory, d'après COORY_DESIGN_SYSTEM.md §3 (version rouge, 22/10/2026), avec les
+ * ajustements décidés par Antonino et mesurés (formule WCAG) : D-22 (contraste) et D-23 (fond graphite,
+ * couleurs par discipline).
  * Les composants n'écrivent JAMAIS ces valeurs en dur : ils passent par les classes Tailwind
  * (bg-surface, text-muted, bg-accent…) déclarées dans globals.css, qui lisent ces variables.
  * Sombre par défaut ; <html data-theme="light"> bascule tout le site en clair d'un coup.
@@ -7,28 +9,30 @@
  * l'onglet actif. Jamais en fond de page, jamais en texte long, jamais de texte sombre sur rouge.
  */
 :root {
-  /* Sombre (par défaut) */
-  --page: #050505; /* autour du cadre de l'app */
-  --bg: #0b0b0c; /* fond de l'app */
-  --surface: #141416; /* cartes */
-  --surface-2: #1c1c1f; /* survol, navigation active */
-  --chip: #26262a; /* pastilles, avatars */
-  --bar: #2a2a2e; /* pistes de progression, barres prévues */
-  /* Filets, texte secondaire et texte discret RENFORCÉS le 22/10/2026 (D-22) : les valeurs d'origine
-     (.07, .13, #8a8a90, #55555b) étaient trop faibles. Mesuré avec la formule WCAG, ces valeurs passent
-     toutes 4,5:1 pour le texte et 3:1 pour le contour des champs. */
+  /* Sombre (par défaut). Fond GRAPHITE (D-23) au lieu du quasi-noir d'origine (#0b0b0c, cartes #141416) :
+     les cartes se détachent mieux du fond, l'écran est moins « trou noir ». */
+  --page: #111114; /* autour du cadre de l'app */
+  --bg: #16161a; /* fond de l'app */
+  --surface: #1f1f24; /* cartes */
+  --surface-2: #28282e; /* survol, navigation active */
+  --chip: #323239; /* pastilles, avatars */
+  --bar: #38383f; /* pistes de progression, barres prévues */
+  /* Filets et textes secondaires renforcés (D-22), revérifiés sur le graphite (D-23) :
+     texte ≥ 4,5:1, contour des champs ≥ 3:1. */
   --line: rgba(255, 255, 255, 0.14); /* bordures de carte, séparateurs */
   --line-2: rgba(255, 255, 255, 0.36); /* contours de champs, zones d'ajout en pointillés */
   --text: #f4f2ef;
-  --muted: #a3a3aa; /* 7,3:1 sur une carte */
-  --faint: #828289; /* 4,8:1 sur une carte */
+  --muted: #ababb3; /* 7,2:1 sur une carte */
+  --faint: #8e8e97; /* 5,0:1 sur une carte */
 
   --accent: #ff3347; /* aplats : bouton principal, stat héro, segment actif */
   --accent-hover: #ff5c6c;
-  --accent-text: #ff3347; /* rouge utilisé comme texte ou trait */
-  /* Fond de pastille teintée : 0.11 et non 0.14 (D-22), pour que le texte rouge y atteigne 4,6:1. */
-  --accent-soft: rgba(255, 51, 71, 0.11);
+  /* Rouge utilisé comme texte : un cran plus clair que l'aplat (D-23), sinon 4,1:1 seulement sur
+     une pastille rouge. Le logo garde le rouge de marque exact via --logo-loop. */
+  --accent-text: #ff5c6c;
+  --accent-soft: rgba(255, 51, 71, 0.11); /* fond de pastille teintée */
   --on-accent: #ffffff; /* TOUJOURS du blanc sur le rouge */
+  --logo-loop: #ff3347; /* boucle du logo sur fond sombre (COORY_LOGO.md §3) */
 
   --inv: #f4f2ef; /* bouton inversé, pastille de filtre sélectionnée */
   --on-inv: #0b0b0c;
@@ -39,6 +43,17 @@
   --warn-soft: rgba(251, 191, 36, 0.12);
   --danger: #ffffff; /* alerte = pastille rouge pleine, texte blanc */
   --danger-soft: var(--accent);
+
+  /* Couleurs par discipline (D-23) : elles DISENT quelque chose (course, muscu, Hyrox, hybride),
+     jamais de la décoration. Texte ≥ 4,5:1 sur carte et sur sa pastille. */
+  --run: #60a5fa;
+  --run-soft: rgba(96, 165, 250, 0.12);
+  --strength: #a78bfa;
+  --strength-soft: rgba(167, 139, 250, 0.12);
+  --hyrox: #fb923c;
+  --hyrox-soft: rgba(251, 146, 60, 0.12);
+  --hybrid: #2dd4bf;
+  --hybrid-soft: rgba(45, 212, 191, 0.12);
 
   --shadow-frame: 0 30px 80px rgba(0, 0, 0, 0.55); /* seule ombre autorisée : le cadre extérieur */
 
@@ -63,6 +78,7 @@
   --accent-text: #d91e32; /* rouge en texte sur fond clair */
   --accent-soft: rgba(229, 40, 60, 0.1);
   --on-accent: #ffffff;
+  --logo-loop: #d91e32; /* boucle du logo sur fond clair (COORY_LOGO.md §3) */
 
   --inv: #141416;
   --on-inv: #ffffff;
@@ -73,6 +89,15 @@
   --warn-soft: rgba(183, 121, 31, 0.12);
   --danger: #ffffff;
   --danger-soft: var(--accent);
+
+  --run: #1d4ed8;
+  --run-soft: rgba(29, 78, 216, 0.1);
+  --strength: #6d28d9;
+  --strength-soft: rgba(109, 40, 217, 0.1);
+  --hyrox: #9a3412;
+  --hyrox-soft: rgba(154, 52, 18, 0.1);
+  --hybrid: #115e59;
+  --hybrid-soft: rgba(17, 94, 89, 0.1);
 
   --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
 

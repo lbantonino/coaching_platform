@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { Discipline } from "@/domain/training/discipline";
+
 // Objectifs et compétitions (P2-02 partie 2). Listes alignées sur les contraintes CHECK de
 // supabase/migrations/*_objectifs_sportifs.sql : ajouter une valeur = migration + libellé ici.
 export const GOAL_TYPES = [
@@ -27,6 +29,15 @@ export const goalTypeLabels: Record<GoalType, string> = {
   fitness: "Remise en forme / santé",
   personal: "Objectif personnel",
 };
+
+// Discipline d'un objectif, pour sa couleur (D-23). La remise en forme se fait en salle : elle suit la
+// musculation (D-18). Un objectif personnel n'a pas de discipline (pas de couleur).
+export function goalDiscipline(type: GoalType): Discipline | null {
+  if (type.startsWith("run_")) return "running";
+  if (type === "hyrox") return "hyrox";
+  if (type === "strength" || type === "body_composition" || type === "fitness") return "strength";
+  return null;
+}
 
 // Regroupement pour la liste déroulante du formulaire.
 export const goalTypeGroups: { label: string; types: GoalType[] }[] = [

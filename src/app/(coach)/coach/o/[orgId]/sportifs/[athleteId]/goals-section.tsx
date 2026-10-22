@@ -14,6 +14,7 @@ import {
 import { formatDate } from "@/lib/format";
 
 import { AddGoalForm } from "./add-goal-form";
+import { GoalDisciplineBadge } from "./goal-discipline-badge";
 
 // Titre d'un objectif : le nom de la compétition s'il y en a une, sinon le type d'objectif.
 function goalTitle(goal: GoalEntry): string {
@@ -74,6 +75,7 @@ function GoalCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
+            <GoalDisciplineBadge type={goal.type} />
             <Badge tone={goal.priority === "main" ? "live" : "neutral"}>
               {goalPriorityLabels[goal.priority]}
             </Badge>
@@ -196,6 +198,7 @@ export async function GoalsSection({
                     <Badge tone={goal.status === "achieved" ? "ok" : "neutral"}>
                       {goalStatusLabels[goal.status]}
                     </Badge>
+                    <GoalDisciplineBadge type={goal.type} />
                     {goalTitle(goal)}
                   </span>
                   <span className="text-caption text-muted">{goalDetails(goal)}</span>

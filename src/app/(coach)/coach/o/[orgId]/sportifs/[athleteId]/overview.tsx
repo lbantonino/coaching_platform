@@ -39,6 +39,7 @@ import { referenceKindLabels, referenceSourceLabels } from "@/features/reference
 import { formatDate, formatDateTime } from "@/lib/format";
 
 import { ActivityTimeline } from "./activity-timeline";
+import { GoalDisciplineBadge } from "./goal-discipline-badge";
 
 // Vue d'ensemble de la fiche (P2-04) : tout en LECTURE. « Modifier » ouvre l'onglet qui contient le formulaire.
 // Pas de doublon avec les chiffres clés du haut (séances, durée, canal) : ils sont déjà visibles sur toute la fiche.
@@ -160,6 +161,7 @@ function GoalCard({
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
+                <GoalDisciplineBadge type={goal.type} />
                 <Badge tone={goal.priority === "main" ? "live" : "neutral"}>
                   {goalPriorityLabels[goal.priority]}
                 </Badge>

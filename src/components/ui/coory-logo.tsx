@@ -8,8 +8,8 @@ import { BRAND } from "@/config/brand";
 type Tone = "theme" | "dark" | "red" | "light";
 
 const tones: Record<Tone, { ink: string; loop: string }> = {
-  // Dans l'app : suit le thème actif. accent-text = #FF3347 en sombre, #D91E32 en clair (COORY_LOGO.md §3).
-  theme: { ink: "var(--text)", loop: "var(--accent-text)" },
+  // Dans l'app : suit le thème actif. --logo-loop = #FF3347 en sombre, #D91E32 en clair (COORY_LOGO.md §3).
+  theme: { ink: "var(--text)", loop: "var(--logo-loop)" },
   // Couleurs fixes de la charte (e-mails, exports), indépendantes du thème.
   dark: { ink: "#F4F2EF", loop: "#FF3347" },
   red: { ink: "#FFFFFF", loop: "#FFFFFF" },

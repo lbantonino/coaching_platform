@@ -10,6 +10,11 @@ const tones = {
   warn: "bg-warn-soft text-warn",
   danger: "bg-danger-soft font-semibold text-danger",
   neutral: "bg-chip text-muted",
+  // Disciplines (D-23) : course, musculation, Hyrox, hybride.
+  run: "bg-run-soft text-run",
+  strength: "bg-strength-soft text-strength",
+  hyrox: "bg-hyrox-soft text-hyrox",
+  hybrid: "bg-hybrid-soft text-hybrid",
 } as const;
 
 export type BadgeTone = keyof typeof tones;

@@ -20,6 +20,21 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### D-23 : fond graphite et couleurs par discipline
+```
+Date : 2026-10-22
+Demande d'Antonino : « le dark est vraiment trop dark », « pourrait-on mettre des couleurs ? »
+Méthode : 4 aperçus de la fiche d'Inès (actuel, graphite, bleu nuit, icônes colorées) produits en injectant les
+  couleurs dans le navigateur de capture, sans toucher au code ; contrastes mesurés ; choix : graphite + couleurs
+  par discipline
+Fait : tokens.css (sombre graphite, --accent-text #ff5c6c, --logo-loop, --run/--strength/--hyrox/--hybrid + -soft
+  dans les deux thèmes), globals.css, logo (--logo-loop), themeColor #16161A, domain/training/discipline.ts,
+  goalDiscipline (fitness = musculation), tons de Badge, pastille de discipline sur les objectifs (liste, passés,
+  vue d'ensemble) ; COORY_DESIGN_SYSTEM.md mis à jour
+Tests : Vitest 75/75, check OK, test:e2e 55/55 + 3 ignorés, db:reset final ; captures sombre et clair
+Reste connu : thème clair, rouge sur pastille 3,9:1 et texte discret 2,6:1 (antérieur, non traité)
+```
+
 ### Correctif D-22 : contraste du thème sombre
 ```
 Date : 2026-10-22
