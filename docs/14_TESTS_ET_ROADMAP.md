@@ -40,7 +40,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [ ] `P2-01` Liste client responsive, création/édition, recherche, filtres, statut.
 - [ ] `P2-02` Objectifs et dates, nombre de séances par semaine, durées/disponibilités.
 - [ ] `P2-03` Repères running/charges datés, notes coach vs notes publiques.
-- [ ] `P2-04` Profil client onglets, historique programmes, dashboard KPIs vrais.
+- [ ] `P2-04` Profil client onglets, historique programmes, dashboard KPIs vrais. (22/10/2026 : fiche à onglets et vue d'ensemble faites, `P2-04a` ; les chiffres clés de la fiche sont provisoires, tirés du profil.)
 - [ ] `P2-05` Agenda de séances/slots, mobilité des dates (première vue simple).
 
 ### P3 — Catalogue/templates
@@ -74,6 +74,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [ ] `P6-02` Dashboard, semaine, séance mobile/desktop, rendu blocs.
 - [ ] `P6-03` Mode suivi simple, statuts done/partial/skipped et RPE/commentaire.
 - [ ] `P6-04` Feedback persisté+historique, visible coach, anti-double soumission.
+- [ ] `P6-04b` Remplacer les chiffres clés provisoires de la fiche sportif (profil) par des indicateurs de suivi réels : séances faites cette semaine, dernier RPE, régularité, programme en cours (décision du 22/10/2026).
 - [ ] `P6-05` Republication avec historiques et PDF vN cohérents.
 - [ ] `P6-06` Tests E2E parcours complet de 3 minutes ; mobile coach/sportif.
 

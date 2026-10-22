@@ -69,14 +69,12 @@ function KeyFigure({
   value,
   detail,
   href,
-  className = "",
 }: {
   icon: LucideIcon;
   label: string;
   value: ReactNode;
   detail?: ReactNode;
   href?: string;
-  className?: string;
 }) {
   const content = (
     <>
@@ -88,7 +86,8 @@ function KeyFigure({
       {detail ? <span className="text-caption text-muted">{detail}</span> : null}
     </>
   );
-  const box = `flex flex-col gap-1.5 rounded-card border border-line bg-surface p-4 ${className}`;
+  // Sur téléphone : cartes de largeur fixe dans un bandeau qui défile (on voit dépasser la suivante).
+  const box = `flex w-[44%] min-w-36 shrink-0 snap-start flex-col gap-1.5 rounded-card border border-line bg-surface p-4 md:w-auto md:min-w-0`;
   return href ? (
     <Link href={href} scroll={false} className={`${box} transition-colors hover:bg-surface-2`}>
       {content}
@@ -105,6 +104,7 @@ function countdownText(days: number): string {
 }
 
 // Chiffres clés, tous calculés depuis la fiche et les objectifs (aucune valeur inventée).
+// PROVISOIRES : en P6, ils deviendront des indicateurs de suivi (séances faites, dernier RPE, régularité).
 export function KeyFigures({
   athlete,
   goals,
@@ -127,7 +127,7 @@ export function KeyFigures({
   return (
     <section
       aria-label="Chiffres clés"
-      className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5"
+      className="-mx-5 flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-5"
     >
       <KeyFigure
         icon={Target}
@@ -141,7 +141,6 @@ export function KeyFigures({
         }
         detail={main ? (main.targetDate ? formatDate(main.targetDate) : "Sans date") : null}
         href={goalsHref}
-        className="col-span-2 md:col-span-1"
       />
       <KeyFigure
         icon={ChartNoAxesColumn}

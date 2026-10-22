@@ -8,7 +8,6 @@ import {
   HeartPulse,
   Mail,
   MapPin,
-  MessageCircle,
   Pencil,
   Phone,
   Target,
@@ -23,7 +22,6 @@ import { buttonClass } from "@/components/ui/button";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
-  contactChannelLabels,
   trainingPlaceLabels,
   WEEK_DAYS,
   weekDayLabels,
@@ -37,6 +35,7 @@ import { referenceKindLabels, referenceSourceLabels } from "@/features/reference
 import { formatDate } from "@/lib/format";
 
 // Vue d'ensemble de la fiche (P2-04) : tout en LECTURE. « Modifier » ouvre l'onglet qui contient le formulaire.
+// Pas de doublon avec les chiffres clés du haut (séances, durée, canal) : ils sont déjà visibles sur toute la fiche.
 
 function OverviewCard({
   id,
@@ -110,9 +109,6 @@ function ProfileCard({ athlete, editHref }: { athlete: AthleteDetail; editHref: 
         </Row>
         <Row icon={Phone} label="Téléphone">
           {athlete.phone ? <span className="font-mono">{athlete.phone}</span> : missing}
-        </Row>
-        <Row icon={MessageCircle} label="Canal préféré">
-          {athlete.preferredContact ? contactChannelLabels[athlete.preferredContact] : missing}
         </Row>
       </dl>
       <dl className="flex flex-col gap-3 border-t border-line pt-4 text-small">
@@ -218,18 +214,6 @@ function AvailabilityCard({ athlete, editHref }: { athlete: AthleteDetail; editH
       icon={Clock}
       editHref={editHref}
     >
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex flex-col gap-1 rounded-[14px] border border-line bg-bg p-4">
-          <span className="text-caption text-muted">Séances par semaine</span>
-          <span className="font-display text-h3 font-medium">{athlete.sessionsPerWeek ?? "–"}</span>
-        </div>
-        <div className="flex flex-col gap-1 rounded-[14px] border border-line bg-bg p-4">
-          <span className="text-caption text-muted">Durée maximale d&apos;une séance</span>
-          <span className="font-display text-h3 font-medium">
-            {athlete.maxSessionMinutes ? `${athlete.maxSessionMinutes} min` : "–"}
-          </span>
-        </div>
-      </div>
       <div className="flex flex-col gap-2">
         <span className="text-small font-medium">Jours disponibles</span>
         <ul aria-label="Jours disponibles" className="flex flex-wrap gap-2">
