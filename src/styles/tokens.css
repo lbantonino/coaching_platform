@@ -14,16 +14,20 @@
   --surface-2: #1c1c1f; /* survol, navigation active */
   --chip: #26262a; /* pastilles, avatars */
   --bar: #2a2a2e; /* pistes de progression, barres prévues */
-  --line: rgba(255, 255, 255, 0.07); /* bordures de carte, séparateurs */
-  --line-2: rgba(255, 255, 255, 0.13); /* contours de champs, zones d'ajout en pointillés */
+  /* Filets, texte secondaire et texte discret RENFORCÉS le 22/10/2026 (D-22) : les valeurs d'origine
+     (.07, .13, #8a8a90, #55555b) étaient trop faibles. Mesuré avec la formule WCAG, ces valeurs passent
+     toutes 4,5:1 pour le texte et 3:1 pour le contour des champs. */
+  --line: rgba(255, 255, 255, 0.14); /* bordures de carte, séparateurs */
+  --line-2: rgba(255, 255, 255, 0.36); /* contours de champs, zones d'ajout en pointillés */
   --text: #f4f2ef;
-  --muted: #8a8a90;
-  --faint: #55555b;
+  --muted: #a3a3aa; /* 7,3:1 sur une carte */
+  --faint: #828289; /* 4,8:1 sur une carte */
 
   --accent: #ff3347; /* aplats : bouton principal, stat héro, segment actif */
   --accent-hover: #ff5c6c;
   --accent-text: #ff3347; /* rouge utilisé comme texte ou trait */
-  --accent-soft: rgba(255, 51, 71, 0.14); /* fond de pastille teintée */
+  /* Fond de pastille teintée : 0.11 et non 0.14 (D-22), pour que le texte rouge y atteigne 4,6:1. */
+  --accent-soft: rgba(255, 51, 71, 0.11);
   --on-accent: #ffffff; /* TOUJOURS du blanc sur le rouge */
 
   --inv: #f4f2ef; /* bouton inversé, pastille de filtre sélectionnée */
