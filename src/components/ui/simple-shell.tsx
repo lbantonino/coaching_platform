@@ -8,7 +8,7 @@ export function SimpleShell({ label, children }: { label: string; children: Reac
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex items-center justify-between gap-4 border-b border-line px-5 py-3 sm:px-8">
-        <CooryLogo size={20} />
+        <CooryLogo variant="symbol" size={28} />
         <div className="flex items-center gap-3">
           <span className="font-mono text-data tracking-wide text-muted uppercase">{label}</span>
           <ThemeToggle size="sm" />

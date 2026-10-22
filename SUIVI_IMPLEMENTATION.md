@@ -54,6 +54,9 @@ Limites / points à valider :
   - E-mails Supabase non personnalisés (logo à ajouter quand on traduira les modèles).
   - Le thème est mémorisé par navigateur, pas par compte.
 Suite : P2-02 fiche enrichie (identité et contact d'abord).
+Correction demandée par Antonino (22/10) : dans l'app (barre latérale coach 32 px, en-têtes mobile, sportif et
+  admin 28 px), le logo est le SYMBOLE seul (les deux anneaux), plus grand ; le mot « coory » reste sur l'accueil,
+  la connexion et les autres pages d'accès. check OK, test:e2e 41/41 + 1 ignoré, captures sombre/clair vérifiées.
 ```
 
 ## Session du 20/10/2026
