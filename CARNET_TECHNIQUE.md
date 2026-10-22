@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (records personnels et agenda des compétitions).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (séances encadrées du coach : fin de P2).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -267,6 +267,11 @@ Incident instructif : en test, un Hyrox a été enregistré comme un 5 km. Aprè
 
 ### Agenda, première couche : les compétitions (22/10)
 Le coach a une page Agenda. Comme les séances n'existent pas encore, elle montre d'abord ce qui est réellement daté : les compétitions et objectifs des sportifs. Antonino a ensuite précisé sa vision : l'agenda est surtout celui de **ses séances encadrées** (collectives chaque semaine, individuelles), les compétitions restent comme calque. Le calcul du calendrier (grille du lundi au dimanche, changement de mois) est une fonction pure testée, faite en UTC pour éviter le piège du passage à l'heure d'hiver. Les filtres sont dans l'adresse, comme pour la liste des sportifs : partageables et utilisables sans JavaScript.
+
+### Séances encadrées du coach, fin de P2 (22/10)
+Antonino a précisé sa vision : l'agenda du coach, ce sont **ses séances en présentiel**. Une séance collective (« chaque mercredi à 19 h sur piste », avec ses inscrits) ou individuelle (avec un sportif). Choix technique à savoir défendre : on enregistre **la règle** (premier jour, heure, chaque semaine, date de fin éventuelle), **jamais la liste des dates**. Les dates sont calculées à l'affichage par une fonction pure et testée. Avantages : pas de milliers de lignes à générer, et changer l'heure ou arrêter la séance mi-décembre modifie toutes les dates d'un coup. La contrepartie est assumée et notée (`OPEN-18`) : annuler un seul mercredi demandera plus tard une table d'exceptions.
+
+Deux détails de sécurité : le serveur revérifie que chaque sportif inscrit appartient bien à l'organisation (on ne fait jamais confiance à la liste envoyée par le navigateur), et la base refuse de changer le type d'une séance ou son sportif (droit de modification colonne par colonne). L'heure est stockée en heure locale de Bruxelles : un agenda de salle se lit à l'heure du lieu, et le calcul des dates se fait en jours, donc le passage à l'heure d'hiver ne décale rien. Les séances que Gianluca prépare dans les programmes viendront s'ajouter à cet agenda avec P4 à P6.
 
 ---
 

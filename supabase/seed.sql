@@ -368,3 +368,37 @@ update public.athlete_goals as g
   from public.athlete_profiles as p
   where p.id = g.athlete_id;
 alter table public.athlete_goals enable trigger set_updated_at;
+
+-- Séances encadrées du coach (P2-05b, D-27), inventées : deux collectives chaque semaine avec leurs
+-- inscrits, un coaching individuel hebdomadaire (arrêté mi-décembre) et un test ponctuel.
+insert into public.coach_sessions (
+  id, organization_id, kind, title, discipline, location, athlete_id, starts_on, start_time,
+  duration_minutes, repeats_weekly, ends_on, notes, created_by
+)
+values
+  ('ca000000-0000-4000-8000-000000000001', '0a000000-0000-4000-8000-0000000000a1', 'group',
+   'Piste du mercredi', 'running', 'Piste d''athlétisme', null, '2026-09-02', '19:00', 90, true, null,
+   'Échauffement 20 min, fractionné, retour au calme.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000002', '0a000000-0000-4000-8000-0000000000a1', 'group',
+   'Circuit Hyrox du samedi', 'hyrox', 'Box Hyrox', null, '2026-09-05', '10:00', 75, true, null,
+   null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000003', '0a000000-0000-4000-8000-0000000000a1', 'individual',
+   'Coaching force', 'strength', 'Salle de sport', 'da000000-0000-4000-8000-000000000005', '2026-09-08',
+   '18:30', 60, true, '2026-12-15', 'Préparation du championnat régional.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000004', '0a000000-0000-4000-8000-0000000000a1', 'individual',
+   'Test VMA', 'running', 'Piste d''athlétisme', 'da000000-0000-4000-8000-000000000002', '2026-10-28',
+   '08:00', 45, false, null, null, 'a0000000-0000-4000-8000-00000000000a'),
+  -- Organisation B : invisible pour le coach A (tests d'isolation).
+  ('cb000000-0000-4000-8000-000000000001', '0b000000-0000-4000-8000-0000000000b1', 'group',
+   'Renfo du lundi', 'hybrid', 'Parc', null, '2026-09-07', '18:00', 60, true, null,
+   null, 'b0000000-0000-4000-8000-00000000000b');
+
+insert into public.coach_session_athletes (session_id, organization_id, athlete_id, created_by)
+values
+  ('ca000000-0000-4000-8000-000000000001', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000001', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000001', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000001', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000002', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'a0000000-0000-4000-8000-00000000000a'),
+  ('ca000000-0000-4000-8000-000000000002', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'a0000000-0000-4000-8000-00000000000a'),
+  ('cb000000-0000-4000-8000-000000000001', '0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-00000000000b');

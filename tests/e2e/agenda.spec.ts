@@ -21,7 +21,8 @@ test("le coach voit les compétitions de ses sportifs, filtre et ouvre la fiche"
   // L'agenda est dans la navigation (barre latérale ou onglets selon l'écran).
   await page.getByRole("link", { name: "Agenda", exact: true }).filter({ visible: true }).click();
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Prochaines échéances" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "7 prochains jours" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Prochaines compétitions" })).toBeVisible();
 
   // Mars 2027 : le Hyrox d'Inès ; jamais le 10 km de Sarah, sportive de l'organisation B.
   await page.goto(`/coach/o/${ORG_A}/agenda?mois=2027-03`);

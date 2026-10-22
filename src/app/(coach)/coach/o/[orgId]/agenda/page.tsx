@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, CircleCheck, Flag } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleCheck, Flag, Plus, User, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -18,30 +18,34 @@ import {
   shiftMonth,
   shortMonth,
 } from "@/features/agenda/calendar";
+import { addDays, buildAgendaItems, monthBounds, type AgendaItem } from "@/features/agenda/items";
 import { listAgendaEvents, type AgendaEvent } from "@/features/agenda/queries";
 import { listAthletes } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { goalCountdown } from "@/features/goals/format";
+import { listSessions } from "@/features/sessions/queries";
 import { todayIsoInBrussels } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Agenda",
 };
 
-// Filtre de discipline dans l'URL, en français : ?discipline=course|musculation|hyrox
+// Filtre de discipline dans l'URL, en français : ?discipline=course|musculation|hyrox|hybride
 const disciplineSlugs = {
   course: "running",
   musculation: "strength",
   hyrox: "hyrox",
+  hybride: "hybrid",
 } as const satisfies Record<string, Discipline>;
 type DisciplineSlug = keyof typeof disciplineSlugs;
 const disciplineSlugLabels: Record<DisciplineSlug, string> = {
   course: "Course à pied",
   musculation: "Musculation",
   hyrox: "Hyrox",
+  hybride: "Hybride",
 };
 
-// Pastille d'une échéance dans la grille : couleur de sa discipline (D-23), neutre sans discipline.
+// Pastille d'un élément dans la grille : couleur de sa discipline (D-23), neutre sans discipline.
 const chipClasses: Record<Discipline | "none", string> = {
   running: "bg-run-soft text-run",
   strength: "bg-strength-soft text-strength",
@@ -49,6 +53,7 @@ const chipClasses: Record<Discipline | "none", string> = {
   hybrid: "bg-hybrid-soft text-hybrid",
   none: "bg-chip text-text",
 };
+const neutralIcon = "border border-line-2 bg-chip text-muted";
 
 const weekDays = [
   ["lun.", "lundi"],
@@ -87,7 +92,8 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   const disciplineSlug = slug && slug in disciplineSlugs ? (slug as DisciplineSlug) : null;
   const discipline = disciplineSlug ? disciplineSlugs[disciplineSlug] : null;
 
-  const [events, athletes] = await Promise.all([
+  const [sessions, events, athletes] = await Promise.all([
+    listSessions(organizationId),
     listAgendaEvents(organizationId),
     listAthletes(organizationId, { status: "all", q: "" }),
   ]);
@@ -99,15 +105,20 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     selectable.some((a) => a.id === athleteParam)
       ? athleteParam
       : null;
+  const filter = { discipline, athleteId };
 
-  const filtered = events.filter(
-    (event) =>
-      (!discipline || event.discipline === discipline) &&
-      (!athleteId || event.athleteId === athleteId),
-  );
-  const upcoming = filtered.filter((event) => !event.achieved && event.date >= today).slice(0, 5);
-  const inMonth = filtered.filter((event) => event.date.startsWith(month));
-  const byDay = groupByDay(inMonth);
+  const week = groupByDay(buildAgendaItems(sessions, events, today, addDays(today, 6), filter));
+  const { from, to } = monthBounds(month);
+  const byDay = groupByDay(buildAgendaItems(sessions, events, from, to, filter));
+  const competitions = events
+    .filter(
+      (event) =>
+        !event.achieved &&
+        event.date >= today &&
+        (!discipline || event.discipline === discipline) &&
+        (!athleteId || event.athleteId === athleteId),
+    )
+    .slice(0, 5);
 
   const base = `/coach/o/${organizationId}/agenda`;
   const href = (changes: { mois?: string; discipline?: DisciplineSlug | null }) => {
@@ -120,18 +131,29 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     const text = search.toString();
     return text ? `${base}?${text}` : base;
   };
-  const goalHref = (event: AgendaEvent) =>
-    `/coach/o/${organizationId}/sportifs/${event.athleteId}?onglet=objectifs`;
+  const itemHref = (item: AgendaItem) =>
+    item.type === "session"
+      ? `${base}/seances/${item.sessionId}`
+      : `/coach/o/${organizationId}/sportifs/${item.athleteId}?onglet=objectifs`;
 
   return (
     <>
-      <div className="flex flex-col gap-1">
-        <p className="text-small text-muted">{membership.organizationName}</p>
-        <h1 className="font-display text-h2 font-medium md:text-h1">Agenda</h1>
-        <p className="text-small text-muted">
-          Compétitions et objectifs datés de tes sportifs. Les séances s&apos;ajouteront ici avec
-          les programmes.
-        </p>
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-1">
+          <p className="text-small text-muted">{membership.organizationName}</p>
+          <h1 className="font-display text-h2 font-medium md:text-h1">Agenda</h1>
+          <p className="text-small text-muted">
+            Tes séances encadrées et les compétitions de tes sportifs. Les séances de leurs
+            programmes s&apos;ajouteront avec les programmes.
+          </p>
+        </div>
+        <Link
+          href={`${base}/seances/nouvelle`}
+          className={buttonClass({ variant: "primary", size: "md", className: "shrink-0" })}
+        >
+          <Plus aria-hidden size={16} strokeWidth={2} />
+          Nouvelle séance
+        </Link>
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -173,21 +195,43 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
       </div>
 
       <section
-        aria-labelledby="upcoming-title"
+        aria-labelledby="week-title"
         className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
       >
-        <h2 id="upcoming-title" className="text-title font-medium">
-          Prochaines échéances
+        <h2 id="week-title" className="text-title font-medium">
+          7 prochains jours
         </h2>
-        {upcoming.length === 0 ? (
+        {week.size === 0 ? (
           <p role="status" className="text-small text-muted">
-            Aucune échéance à venir pour ce filtre.
+            {sessions.length === 0
+              ? "Aucune séance pour l'instant. Crée ta première séance encadrée avec « Nouvelle séance »."
+              : "Rien de prévu dans les 7 prochains jours pour ce filtre."}
+          </p>
+        ) : (
+          <DayList groups={week} today={today} itemHref={itemHref} />
+        )}
+      </section>
+
+      <section
+        aria-labelledby="competitions-title"
+        className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+      >
+        <h2 id="competitions-title" className="text-title font-medium">
+          Prochaines compétitions
+        </h2>
+        {competitions.length === 0 ? (
+          <p role="status" className="text-small text-muted">
+            Aucune compétition à venir pour ce filtre.
           </p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {upcoming.map((event) => (
+            {competitions.map((event) => (
               <li key={event.id}>
-                <UpcomingRow event={event} today={today} href={goalHref(event)} />
+                <CompetitionRow
+                  event={event}
+                  today={today}
+                  href={`/coach/o/${organizationId}/sportifs/${event.athleteId}?onglet=objectifs`}
+                />
               </li>
             ))}
           </ul>
@@ -228,7 +272,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
 
         {/* Ordinateur : grille du mois. */}
         <table className="hidden w-full table-fixed border-collapse md:table">
-          <caption className="sr-only">Échéances de {monthLabel(month)}</caption>
+          <caption className="sr-only">Agenda de {monthLabel(month)}</caption>
           <thead>
             <tr>
               {weekDays.map(([short, long]) => (
@@ -245,9 +289,9 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
             </tr>
           </thead>
           <tbody>
-            {monthGrid(month).map((week) => (
-              <tr key={week[0].iso}>
-                {week.map((day) => (
+            {monthGrid(month).map((weekRow) => (
+              <tr key={weekRow[0].iso}>
+                {weekRow.map((day) => (
                   <td
                     key={day.iso}
                     className={`h-24 border border-line p-1.5 align-top ${day.inMonth ? "" : "bg-bg/40"}`}
@@ -265,23 +309,26 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
                     </span>
                     {day.inMonth ? (
                       <ul className="mt-1 flex flex-col gap-1">
-                        {(byDay.get(day.iso) ?? []).map((event) => (
-                          <li key={event.id}>
+                        {(byDay.get(day.iso) ?? []).map((item) => (
+                          <li key={item.key}>
                             <Link
-                              href={goalHref(event)}
-                              title={`${event.title} · ${event.athleteName}`}
-                              className={`flex items-center gap-1 truncate rounded-[6px] px-1.5 py-0.5 text-micro font-medium hover:opacity-80 ${chipClasses[event.discipline ?? "none"]}`}
+                              href={itemHref(item)}
+                              title={
+                                item.type === "session"
+                                  ? `${item.time} ${item.title} · ${item.detail}`
+                                  : `${item.title} · ${item.athleteName}`
+                              }
+                              className={`flex items-center gap-1 truncate rounded-[6px] px-1.5 py-0.5 text-micro font-medium hover:opacity-80 ${chipClasses[item.discipline ?? "none"]}`}
                             >
-                              {event.achieved ? (
-                                <CircleCheck
-                                  aria-label="Atteint"
-                                  size={11}
-                                  strokeWidth={2}
-                                  className="shrink-0"
-                                />
-                              ) : null}
+                              {item.type === "event" ? (
+                                <Flag aria-hidden size={10} strokeWidth={2} className="shrink-0" />
+                              ) : (
+                                <span className="shrink-0 font-mono tabular">{item.time}</span>
+                              )}
                               <span className="truncate">
-                                {event.athleteName.split(" ")[0]} · {event.title}
+                                {item.type === "event"
+                                  ? `${item.athleteName.split(" ")[0]} · ${item.title}`
+                                  : item.title}
                               </span>
                             </Link>
                           </li>
@@ -295,29 +342,14 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
           </tbody>
         </table>
 
-        {/* Téléphone : liste des jours qui ont une échéance (une grille serait illisible). */}
+        {/* Téléphone : liste des jours qui ont quelque chose (une grille serait illisible). */}
         <div className="md:hidden">
-          {inMonth.length === 0 ? (
+          {byDay.size === 0 ? (
             <p role="status" className="text-small text-muted">
-              Aucune échéance ce mois-ci.
+              Rien de prévu ce mois-ci.
             </p>
           ) : (
-            <ul aria-label={`Échéances de ${monthLabel(month)}`} className="flex flex-col gap-4">
-              {[...byDay.entries()].map(([date, dayEvents]) => (
-                <li key={date} className="flex flex-col gap-2">
-                  <h3 className="text-small font-medium first-letter:uppercase">
-                    {dayLabel(date)}
-                  </h3>
-                  <ul className="flex flex-col gap-2">
-                    {dayEvents.map((event) => (
-                      <li key={event.id}>
-                        <UpcomingRow event={event} today={today} href={goalHref(event)} compact />
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
+            <DayList groups={byDay} today={today} itemHref={itemHref} />
           )}
         </div>
       </section>
@@ -325,57 +357,107 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   );
 }
 
-// Ligne d'une échéance : date, pastille de discipline, titre, sportif, compte à rebours.
-function UpcomingRow({
-  event,
+// Jours avec leurs éléments : séances (heure) et compétitions (journée entière).
+function DayList({
+  groups,
   today,
-  href,
-  compact = false,
+  itemHref,
 }: {
-  event: AgendaEvent;
+  groups: Map<string, AgendaItem[]>;
   today: string;
-  href: string;
-  compact?: boolean;
+  itemHref: (item: AgendaItem) => string;
 }) {
-  const icon = event.discipline
-    ? disciplineStyles[event.discipline].icon
-    : "border border-line-2 bg-chip text-muted";
-  const countdown = event.achieved ? null : goalCountdown(today, event.date);
+  return (
+    <ul className="flex flex-col gap-4">
+      {[...groups.entries()].map(([date, items]) => (
+        <li key={date} className="flex flex-col gap-2">
+          <h3 className="text-small font-medium first-letter:uppercase">
+            {date === today ? `Aujourd'hui, ${dayLabel(date)}` : dayLabel(date)}
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {items.map((item) => (
+              <li key={item.key}>
+                <ItemRow item={item} href={itemHref(item)} />
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ItemRow({ item, href }: { item: AgendaItem; href: string }) {
+  const icon = item.discipline ? disciplineStyles[item.discipline].icon : neutralIcon;
+  const Icon =
+    item.type === "session" ? (item.individual ? User : Users) : item.achieved ? CircleCheck : Flag;
   return (
     <Link
       href={href}
       className="flex items-center gap-3 rounded-[14px] border border-line bg-bg p-3 transition-colors hover:bg-surface-2"
     >
-      {compact ? null : (
-        <span className="flex w-11 shrink-0 flex-col items-center leading-none">
-          <span className="font-display text-[20px] font-medium tabular">
-            {Number(event.date.slice(8, 10))}
-          </span>
-          <span className="text-caption text-muted">{shortMonth(event.date)}</span>
-        </span>
-      )}
+      <span className="w-12 shrink-0 font-mono text-small tabular">
+        {item.type === "session" ? item.time : <span className="text-muted">Journée</span>}
+      </span>
       <span
         aria-hidden
         className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full ${icon}`}
       >
-        {event.achieved ? (
-          <CircleCheck size={16} strokeWidth={1.75} />
-        ) : (
-          <Flag size={16} strokeWidth={1.75} />
-        )}
+        <Icon size={16} strokeWidth={1.75} />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate font-medium">{item.title}</span>
+        <span className="truncate text-caption text-muted">
+          {item.type === "event"
+            ? [item.athleteName, item.detail].filter(Boolean).join(" · ")
+            : item.detail}
+        </span>
+      </span>
+      {item.type === "event" ? (
+        <Badge tone={item.achieved ? "ok" : "neutral"}>
+          {item.achieved ? "Atteint" : "Compétition"}
+        </Badge>
+      ) : null}
+    </Link>
+  );
+}
+
+// Ligne d'une prochaine compétition : date, pastille de discipline, titre, sportif, compte à rebours.
+function CompetitionRow({
+  event,
+  today,
+  href,
+}: {
+  event: AgendaEvent;
+  today: string;
+  href: string;
+}) {
+  const icon = event.discipline ? disciplineStyles[event.discipline].icon : neutralIcon;
+  const countdown = goalCountdown(today, event.date);
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 rounded-[14px] border border-line bg-bg p-3 transition-colors hover:bg-surface-2"
+    >
+      <span className="flex w-11 shrink-0 flex-col items-center leading-none">
+        <span className="font-display text-[20px] font-medium tabular">
+          {Number(event.date.slice(8, 10))}
+        </span>
+        <span className="text-caption text-muted">{shortMonth(event.date)}</span>
+      </span>
+      <span
+        aria-hidden
+        className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full ${icon}`}
+      >
+        <Flag size={16} strokeWidth={1.75} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate font-medium">{event.title}</span>
         <span className="truncate text-caption text-muted">
-          {event.athleteName}
-          {event.detail ? ` · ${event.detail}` : ""}
+          {[event.athleteName, event.detail].filter(Boolean).join(" · ")}
         </span>
       </span>
-      {event.achieved ? (
-        <Badge tone="ok">Atteint</Badge>
-      ) : countdown ? (
-        <Badge tone={countdown.overdue ? "warn" : "neutral"}>{countdown.label}</Badge>
-      ) : null}
+      <Badge tone={countdown.overdue ? "warn" : "neutral"}>{countdown.label}</Badge>
     </Link>
   );
 }
