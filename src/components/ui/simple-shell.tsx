@@ -13,7 +13,7 @@ export function SimpleShell({ label, children }: { label: string; children: Reac
           <CooryLogo variant="symbol" size={28} />
         </span>
         <span className="hidden md:inline-flex">
-          <CooryLogo size={28} />
+          <CooryLogo size={40} />
         </span>
         <div className="flex items-center gap-3">
           <span className="font-mono text-data tracking-wide text-muted uppercase">{label}</span>

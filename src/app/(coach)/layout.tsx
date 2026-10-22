@@ -19,7 +19,7 @@ export default function CoachLayout({ children }: LayoutProps<"/">) {
       <aside className="sticky top-0 hidden h-dvh w-58 shrink-0 flex-col justify-between border-r border-line bg-bg px-3 py-5 md:flex">
         <div className="flex flex-col gap-8">
           <Link href="/coach" aria-label="Tableau de bord" className="w-fit rounded-sm px-2.5">
-            <CooryLogo size={28} />
+            <CooryLogo size={40} />
           </Link>
           <nav aria-label="Navigation principale">
             <Suspense fallback={null}>
