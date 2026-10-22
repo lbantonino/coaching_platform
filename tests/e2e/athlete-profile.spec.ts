@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { fillAthleteName, openAthleteTab } from "./helpers";
+import { fillAthleteName, goToCoachSection, openAthleteTab } from "./helpers";
 
 // Fiche sportif (P2-01b) : modifier, archiver, restaurer, rechercher, et isolation par organisation.
 const DEMO_PASSWORD = "demo-coach-local";
@@ -16,7 +16,7 @@ async function login(page: Page, email: string) {
 
 // Crée un sportif et revient sur la liste ; renvoie le chemin de la liste.
 async function createAthlete(page: Page, name: string, email: string) {
-  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
+  await goToCoachSection(page, "Sportifs");
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
   await fillAthleteName(page, name);

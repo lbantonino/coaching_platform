@@ -13,7 +13,10 @@ import { listGoals } from "@/features/goals/queries";
 import { goalDiscipline } from "@/features/goals/schemas";
 import { getAthleteNotes } from "@/features/notes/queries";
 import { listReferences } from "@/features/references/queries";
+import { removeAthletePhoto, uploadAthletePhoto } from "@/features/photos/actions";
 import { todayIsoInBrussels } from "@/lib/format";
+
+import { PhotoForm } from "../../../../photo-form";
 
 import { AthleteEditForm } from "./athlete-edit-form";
 import { ActivityTimeline } from "./activity-timeline";
@@ -121,6 +124,22 @@ async function AthleteSection({
       ) : (
         // Les onglets de saisie gardent une largeur de lecture confortable.
         <div className="flex w-full max-w-3xl flex-col gap-6">
+          {tab === "profil" ? (
+            <section
+              aria-labelledby="photo-title"
+              className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+            >
+              <h2 id="photo-title" className="text-title font-medium">
+                Photo
+              </h2>
+              <PhotoForm
+                name={athlete.displayName}
+                photoPath={athlete.photoPath}
+                upload={uploadAthletePhoto.bind(null, organizationId, athlete.id)}
+                remove={removeAthletePhoto.bind(null, organizationId, athlete.id)}
+              />
+            </section>
+          ) : null}
           {tab === "profil" ? (
             <section
               aria-labelledby="infos-title"

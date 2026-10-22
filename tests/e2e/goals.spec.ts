@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { fillAthleteName, openAthleteTab } from "./helpers";
+import { fillAthleteName, goToCoachSection, openAthleteTab } from "./helpers";
 
 // Objectifs et compétitions (P2-02 partie 2) sur la fiche d'un sportif.
 async function login(page: Page) {
@@ -19,7 +19,7 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   const competition = `Hyrox ${suffix}`;
 
   await login(page);
-  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
+  await goToCoachSection(page, "Sportifs");
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await fillAthleteName(page, name);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();

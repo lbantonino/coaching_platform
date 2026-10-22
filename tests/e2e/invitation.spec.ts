@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { fillAthleteName, openAthleteTab } from "./helpers";
+import { fillAthleteName, goToCoachSection, openAthleteTab } from "./helpers";
 
 // Parcours d'invitation (P1-05) : le coach invite, le sportif crée son accès dans un AUTRE navigateur.
 const DEMO_PASSWORD = "demo-coach-local";
@@ -15,7 +15,7 @@ async function loginAsCoachA(page: Page) {
 
 // Crée un sportif unique dans l'organisation A et ouvre sa page d'invitation.
 async function createAthleteAndOpenInvite(page: Page, name: string, email: string) {
-  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
+  await goToCoachSection(page, "Sportifs");
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
   await fillAthleteName(page, name);

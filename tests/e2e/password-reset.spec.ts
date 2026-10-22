@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
+import { logoutCoach } from "./helpers";
+
 // Parcours « mot de passe oublié » de bout en bout, e-mail compris.
 // Les e-mails locaux sont capturés par Mailpit (http://127.0.0.1:54324), lu ici via son API.
 const MAILPIT = "http://127.0.0.1:54324/api/v1";
@@ -72,7 +74,7 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   await expect(page).toHaveURL(/\/coach$/);
 
   // 4. Le lien est à usage unique.
-  await page.getByRole("button", { name: "Se déconnecter" }).click();
+  await logoutCoach(page);
   // Attendre la fin de la déconnexion : naviguer trop tôt interromprait l'action.
   await expect(page).toHaveURL(/\/login$/);
   await page.goto(link);
@@ -86,7 +88,7 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   await page.getByLabel("Mot de passe", { exact: true }).fill(newPassword);
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
-  await expect(page.getByText("Organisation Démo A", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Bonjour/, level: 1 })).toBeVisible();
 });
 
 test("un lien falsifié mène à la page « lien invalide »", async ({ page }) => {

@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (séances encadrées du coach : fin de P2).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **23/10/2026** (D-28 : tableau de bord d'après la maquette, photos de profil, téléphone).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -272,6 +272,13 @@ Le coach a une page Agenda. Comme les séances n'existent pas encore, elle montr
 Antonino a précisé sa vision : l'agenda du coach, ce sont **ses séances en présentiel**. Une séance collective (« chaque mercredi à 19 h sur piste », avec ses inscrits) ou individuelle (avec un sportif). Choix technique à savoir défendre : on enregistre **la règle** (premier jour, heure, chaque semaine, date de fin éventuelle), **jamais la liste des dates**. Les dates sont calculées à l'affichage par une fonction pure et testée. Avantages : pas de milliers de lignes à générer, et changer l'heure ou arrêter la séance mi-décembre modifie toutes les dates d'un coup. La contrepartie est assumée et notée (`OPEN-18`) : annuler un seul mercredi demandera plus tard une table d'exceptions.
 
 Deux détails de sécurité : le serveur revérifie que chaque sportif inscrit appartient bien à l'organisation (on ne fait jamais confiance à la liste envoyée par le navigateur), et la base refuse de changer le type d'une séance ou son sportif (droit de modification colonne par colonne). L'heure est stockée en heure locale de Bruxelles : un agenda de salle se lit à l'heure du lieu, et le calcul des dates se fait en jours, donc le passage à l'heure d'hiver ne décale rien. Les séances que Gianluca prépare dans les programmes viendront s'ajouter à cet agenda avec P4 à P6.
+
+### Le tableau de bord de la maquette, sans faux chiffres (22-23/10)
+Antonino a fourni la maquette du tableau de bord qu'il veut. Difficulté : la moitié des cartes parle de modules qui n'existent pas encore (programmes, factures, revenus, tâches). Choix fait avec lui : la page prend **exactement la mise en page** de la maquette, ce qui existe affiche de vraies données (séances de la semaine, sportifs, agenda), et le reste est dessiné avec un badge « Bientôt » et sa phase. Un recruteur ou un coach voit tout de suite ce qui marche et ce qui arrive, sans être trompé par des chiffres inventés.
+
+Les **photos de profil** sont une vraie fonctionnalité de stockage. Les images vont dans un espace **privé** de Supabase Storage ; elles n'ont aucune adresse publique, l'app les sert par sa propre route après avoir vérifié la session, et ce sont les règles de la base (RLS) qui décident qui peut les voir : un coach de l'organisation B ne peut pas télécharger la photo d'un sportif de A, même en connaissant l'adresse (un test le vérifie). On ne fait pas confiance au nom du fichier ni au type annoncé : on lit les premiers octets pour reconnaître un vrai JPEG, PNG ou WebP. Les photos de démonstration sont libres de droits et ne sont chargées qu'en local, par un script qui refuse de tourner ailleurs.
+
+Sur téléphone, l'agenda reprend le principe du calendrier de l'iPhone : trois jours en colonnes qu'on fait défiler, en commençant par aujourd'hui. Petit point technique instructif : pour que la colonne des heures reste collée à gauche pendant le défilement, les largeurs sont exprimées en **unités de conteneur** (`cqw`, la largeur de la zone qui défile) plutôt qu'en pourcentages. Enfin, les tests ont révélé un vrai bug : sur téléphone, la liste de la semaine passait par-dessus la barre d'onglets du bas et volait les clics ; le menu hamburger a remplacé cette barre.
 
 ---
 

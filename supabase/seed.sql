@@ -402,3 +402,9 @@ values
   ('ca000000-0000-4000-8000-000000000002', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'a0000000-0000-4000-8000-00000000000a'),
   ('ca000000-0000-4000-8000-000000000002', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'a0000000-0000-4000-8000-00000000000a'),
   ('cb000000-0000-4000-8000-000000000001', '0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-00000000000b');
+
+-- Profils des coachs de démonstration (D-28) : prénoms inventés ; leurs photos (libres de droits) sont
+-- chargées par scripts/seed-photos.mjs, lancé par `npm run db:reset`.
+insert into public.coach_profiles (user_id, first_name, last_name, company_name) values
+  ('a0000000-0000-4000-8000-00000000000a', 'Marco', 'Bianchi', 'Bianchi Performance'),
+  ('b0000000-0000-4000-8000-00000000000b', 'Paul', 'Dumont', 'Dumont Coaching');

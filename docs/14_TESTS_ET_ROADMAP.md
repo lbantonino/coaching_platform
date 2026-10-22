@@ -44,6 +44,8 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [ ] `P2-05` Agenda de séances/slots, mobilité des dates (première vue simple). (22/10/2026, D-27 : agenda du coach = **séances encadrées en présentiel** (collectives récurrentes avec inscrits, individuelles avec un sportif) + calque des **compétitions et objectifs datés** (`P2-05a` fait) ; séances encadrées `P2-05b` faites le même jour (création, récurrence hebdomadaire calculée, inscrits, modification, suppression). Restent pour plus tard : présence réelle (avec P6) et annulation d'une seule date (`OPEN-18`). L'agenda du sportif avec les séances de ses programmes viendra avec P4 à P6, jamais simulé avant.)
 
 ### P3 — Catalogue/templates
+> **Maquettes cibles (D-28, 23/10/2026)** : chaque page de l'espace coach a une maquette (`docs/design/MAQUETTES.md`). Elle est construite à son image quand sa phase arrive : Bibliothèque et Séances (modèles) en P3, Programmes en P4, Documents (PDF) en P5, Séances (retours) en P6, Messages en P7, Facturation et Comptabilité après P6 (D-17), Tâches avec les modules qui les produisent. Faits : tableau de bord, fiche sportif, agenda (refonte visuelle à faire), Paramètres (profil coach).
+
 - [ ] `P3-01` Catalogue exercices, métriques permises, alias, recherche, favoris.
 - [ ] `P3-02` Constructeur blocs typés et validation schéma versionnée.
 - [ ] `P3-03` Modèles séances Running/Force/Hyrox/Hybride, édition et copie.

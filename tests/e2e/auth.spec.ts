@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { goToCoachSection, logoutCoach } from "./helpers";
+
 // Comptes du seed de démonstration (supabase/seed.sql), base locale uniquement.
 const DEMO_PASSWORD = "demo-coach-local";
 const COACH_A = "coach-a@example.test";
@@ -24,12 +26,14 @@ test("le coach A se connecte, voit uniquement son organisation, puis se déconne
   await login(page, COACH_A);
 
   await expect(page).toHaveURL(/\/coach$/);
-  await expect(page.getByText(`Connecté en tant que ${COACH_A}`)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Bonjour/, level: 1 })).toBeVisible();
+  // Le nom de l'organisation B n'apparaît nulle part ; celui de A est en tête de la liste des sportifs.
+  await expect(page.getByText("Organisation Démo B")).toHaveCount(0);
+  await goToCoachSection(page, "Sportifs");
   await expect(page.getByText("Organisation Démo A", { exact: true })).toBeVisible();
-  // Le nom de l'organisation B n'apparaît nulle part sur la page.
   await expect(page.getByText("Organisation Démo B")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Se déconnecter" }).click();
+  await logoutCoach(page);
   await expect(page).toHaveURL(/\/login$/);
 
   // Après déconnexion, l'espace coach n'est plus accessible.
