@@ -234,6 +234,30 @@ values
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', 'strength_load', null, null, null,
    'Soulevé de terre', 130, 1, 'test', '2026-06-20', null, 'a0000000-0000-4000-8000-00000000000a');
 
+-- Records personnels (P2-02 partie 4) : performances inventées, cohérentes avec les fiches.
+-- Le record d'une épreuve est calculé (meilleur temps) ; les anciennes performances restent.
+insert into public.athlete_personal_records (
+  organization_id, athlete_id, event, hyrox_category, time_seconds, achieved_on, race_name, created_by
+)
+values
+  -- Thomas (running) : 5 km de juin (le même que son repère), 10 km et semi plus anciens.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'run_5k', null, 1350,
+   '2026-06-15', 'Course de quartier', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'run_10k', null, 2830,
+   '2026-03-08', '10 km de printemps', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'run_half', null, 6290,
+   '2025-10-19', null, 'a0000000-0000-4000-8000-00000000000a'),
+  -- Inès (Hyrox) : ses deux Hyrox en Open (Anvers = son objectif atteint ; le second est le record) et un 5 km.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hyrox', 'open', 5280,
+   '2026-05-09', 'Hyrox Anvers', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hyrox', 'open', 4890,
+   '2026-09-26', 'Hyrox Rotterdam', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'run_5k', null, 1395,
+   '2026-05-03', null, 'a0000000-0000-4000-8000-00000000000a'),
+  -- Lucas (hybride, pas encore de Hyrox) : un 10 km.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'run_10k', null, 3160,
+   '2026-03-08', '10 km de printemps', 'a0000000-0000-4000-8000-00000000000a');
+
 -- Objectifs et compétitions (P2-02 partie 2), inventés eux aussi. Un objectif principal au plus par sportif ;
 -- les objectifs clos (atteint, abandonné) restent comme historique.
 insert into public.athlete_goals (
@@ -248,12 +272,18 @@ values
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'run_10k', 'secondary', 'active',
    '2027-02-14', '10 km de préparation', 'Bruxelles', null, 'Course de préparation, à l''allure du semi.',
    'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'run_other', 'secondary', 'active',
+   '2026-12-20', 'Corrida de Noël', 'Bruxelles', null, 'Pour le plaisir, sans objectif de temps.',
+   'a0000000-0000-4000-8000-00000000000a'),
   -- Inès : passer en catégorie Pro ; son premier Hyrox (Open) est dans l'historique.
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hyrox', 'main', 'active',
    '2027-03-20', 'Hyrox Bruxelles', 'Bruxelles', 'pro', 'Passer de la catégorie Open à Pro.',
    'a0000000-0000-4000-8000-00000000000a'),
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hyrox', 'main', 'achieved',
    '2026-05-09', 'Hyrox Anvers', 'Anvers', 'open', 'Premier Hyrox terminé en 1 h 28.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hyrox', 'secondary', 'active',
+   '2026-12-12', 'Hyrox Gent', 'Gand', 'open', 'Dernier test en Open avant Bruxelles.',
    'a0000000-0000-4000-8000-00000000000a'),
   -- Sophie : remise en forme, sans compétition.
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000001', 'fitness', 'main', 'active',

@@ -22,6 +22,7 @@ import { AvailabilitySection } from "./availability-section";
 import { GoalsSection } from "./goals-section";
 import { NotesSection } from "./notes-section";
 import { AthleteOverview } from "./overview";
+import { RecordsSection } from "./records-section";
 import { ReferencesSection } from "./references-section";
 
 export const metadata: Metadata = {
@@ -155,11 +156,18 @@ async function AthleteSection({
             <AvailabilitySection organizationId={organizationId} athlete={athlete} />
           ) : null}
           {tab === "reperes" ? (
-            <ReferencesSection
-              organizationId={organizationId}
-              athleteId={athlete.id}
-              today={today}
-            />
+            <>
+              <ReferencesSection
+                organizationId={organizationId}
+                athleteId={athlete.id}
+                today={today}
+              />
+              <RecordsSection
+                organizationId={organizationId}
+                athleteId={athlete.id}
+                today={today}
+              />
+            </>
           ) : null}
           {tab === "notes" ? (
             <NotesSection
