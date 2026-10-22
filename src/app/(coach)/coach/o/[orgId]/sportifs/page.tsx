@@ -36,7 +36,7 @@ export default function AthletesPage({
   searchParams,
 }: PageProps<"/coach/o/[orgId]/sportifs">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 md:px-8 md:py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-5 py-6 md:px-8 md:py-[22px]">
       {/* Identifiant d'organisation et filtres viennent de l'URL : données de requête, derrière Suspense. */}
       <Suspense fallback={<p className="text-muted">Chargement des sportifs…</p>}>
         {Promise.all([params, searchParams]).then(([{ orgId }, query]) => (
@@ -103,7 +103,7 @@ async function AthleteList({
         <form role="search" action={basePath} className="relative">
           <Search
             aria-hidden
-            size={17}
+            size={15}
             strokeWidth={1.7}
             className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted"
           />
@@ -116,7 +116,7 @@ async function AthleteList({
             type="search"
             defaultValue={filter.q}
             placeholder="Rechercher par nom ou e-mail…"
-            className="h-11 w-full rounded-[12px] border border-line bg-bg pr-3.5 pl-10 text-body text-text outline-none placeholder:text-faint focus:border-accent"
+            className="h-11 w-full rounded-md border border-line bg-surface pr-3 pl-10 text-body text-text outline-none placeholder:text-faint focus:border-accent sm:h-[38px] sm:text-small"
           />
           <input type="hidden" name="statut" value={slugByStatus[filter.status]} />
         </form>
@@ -131,10 +131,7 @@ async function AthleteList({
       </div>
 
       {athletes.length === 0 ? (
-        <p
-          role="status"
-          className="rounded-[14px] border border-dashed border-line-2 p-6 text-muted"
-        >
+        <p role="status" className="rounded-card border border-dashed border-line-2 p-6 text-muted">
           {filter.q
             ? `Aucun sportif ne correspond à « ${filter.q} ».`
             : filter.status === "active"
@@ -143,7 +140,7 @@ async function AthleteList({
         </p>
       ) : (
         <ul
-          className="flex flex-col overflow-hidden rounded-[14px] border border-line bg-surface"
+          className="flex flex-col overflow-hidden rounded-card border border-line bg-surface"
           aria-label="Liste des sportifs"
         >
           {athletes.map((athlete) => {

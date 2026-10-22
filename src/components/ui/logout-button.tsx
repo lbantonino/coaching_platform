@@ -14,7 +14,7 @@ export function LogoutButton({
   return (
     <form action={logout} className={className}>
       <button type="submit" className={buttonClass({ variant: "outline", size })}>
-        <LogOut aria-hidden size={16} strokeWidth={1.7} />
+        <LogOut aria-hidden size={15} strokeWidth={1.7} />
         Se déconnecter
       </button>
     </form>

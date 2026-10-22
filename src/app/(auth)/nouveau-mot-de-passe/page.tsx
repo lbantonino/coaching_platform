@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function NewPasswordPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-8 px-4 pt-6 pb-16 sm:justify-center sm:py-16">
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-8 px-5 pt-6 pb-16 sm:justify-center sm:py-16">
       <h1 className="text-h2 font-medium">Nouveau mot de passe</h1>
       <Suspense fallback={<p className="text-muted">Vérification du lien…</p>}>
         <RecoverySession />

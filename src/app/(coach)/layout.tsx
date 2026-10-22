@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { Logo } from "@/components/ui/logo";
+import { CooryLogo } from "@/components/ui/coory-logo";
 import { LogoutButton } from "@/components/ui/logout-button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 
 import { CoachSideNav, CoachTabBar } from "./coach-nav";
 
-// Coquille de l'espace coach : barre latérale sur ordinateur, onglets en bas sur téléphone.
+// Coquille de l'espace coach : barre latérale de 232 px sur ordinateur, onglets en bas sur téléphone.
 // La navigation lit la session : elle est derrière Suspense (Cache Components), le reste s'affiche aussitôt.
 // Ce n'est PAS une protection : chaque page appelle elle-même son garde-fou (requireCoach, requireOrgAccess).
 export default function CoachLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="flex flex-1">
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col justify-between border-r border-line bg-bg px-3 py-5 md:flex">
+      <aside className="sticky top-0 hidden h-dvh w-58 shrink-0 flex-col justify-between border-r border-line bg-bg px-3 py-5 md:flex">
         <div className="flex flex-col gap-8">
-          <Link href="/coach" aria-label="Tableau de bord" className="px-3">
-            <Logo size="sm" />
+          <Link href="/coach" aria-label="Tableau de bord" className="w-fit rounded-sm px-2.5">
+            <CooryLogo size={20} />
           </Link>
           <nav aria-label="Navigation principale">
             <Suspense fallback={null}>
@@ -24,13 +25,19 @@ export default function CoachLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </nav>
         </div>
-        <LogoutButton className="px-1" />
+        <div className="flex items-center gap-2 px-1">
+          <LogoutButton className="flex-1 [&>button]:w-full" />
+          <ThemeToggle />
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col pb-16 md:pb-0">
-        <header className="flex items-center justify-between border-b border-line px-4 py-3 md:hidden">
-          <Logo size="sm" />
-          <LogoutButton size="sm" />
+        <header className="flex items-center justify-between border-b border-line px-5 py-3 md:hidden">
+          <CooryLogo size={20} />
+          <div className="flex items-center gap-2">
+            <ThemeToggle size="sm" />
+            <LogoutButton size="sm" />
+          </div>
         </header>
         {children}
       </div>

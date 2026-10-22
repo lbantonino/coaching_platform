@@ -87,10 +87,11 @@ Chaque spec donne scénarios, règles et critère d'acceptation ; la roadmap les
 - D-09 (V1.1) : la liste des routes API indique des opérations métier, pas une obligation de créer une API REST pour chaque écran ; Server Actions/Functions et Route Handlers sont choisis au cas par cas.
 - D-10 (V1.1) : le paiement est **prévu en P8 mais non implémenté** ; facturation portée par l'organisation, Stripe candidat à confirmer, sans hypothèse de prix ni de plan.
 - D-11 (V1.1) : dépendances ajoutées à la phase utile, tests sécurité/RLS dès P1, suite E2E quand des parcours réels existent.
-- D-12 (20/10/2026) : nom commercial de travail **Coory** (remplace D-07 « nom différé ») ; marques et nom de domaine à vérifier avant lancement. Design system sombre graphite + orange (`src/app/globals.css`).
+- D-12 (20/10/2026) : nom commercial de travail **Coory** (remplace D-07 « nom différé ») ; marques et nom de domaine à vérifier avant lancement. Premier design system sombre graphite + orange, remplacé par D-16.
 - D-13 (20/10/2026) : pas de parité avec le concurrent Athleex ; dix différenciateurs retenus (`docs/16_POSITIONNEMENT.md`), insérés dans les phases existantes sans changer leur ordre.
 - D-14 (20/10/2026) : contenu de la fiche sportif et règle « blessures » (champ minimal + consentement tracé) : voir OPEN-01 tranché dans `docs/14`.
 - D-15 (20/10/2026) : allures par test de Cooper ou de 5 km, % de VMA par défaut modifiables : voir OPEN-13 tranché dans `docs/14`.
+- D-16 (22/10/2026) : charte visuelle définitive **Coory, version rouge** (`#FF3347`), logo aux deux anneaux entrelacés, thème sombre par défaut et thème clair au choix. Source de vérité : `COORY_DESIGN_SYSTEM.md` et `COORY_LOGO.md` (racine) ; jetons dans `src/styles/tokens.css`. Remplace la palette « corail » proposée dans `docs/10`.
 
 ## Questions ouvertes (avant production, pas nécessairement avant scaffolding)
 - OPEN-01 : **tranché le 20/10/2026** (D-14).

@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { formatPace } from "@/domain/training/pace";
 import { parseDuration, proposePaces, vmaFrom5k, vmaFromCooper } from "@/domain/training/vma";
 import { addReferencesFromTest, type TestReferenceState } from "@/features/references/actions";
@@ -69,14 +70,17 @@ function CalculatorForm({
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       <fieldset className="flex flex-col gap-1.5">
         <legend className={`${labelClass} mb-1.5`}>Test réalisé</legend>
-        <div className="inline-flex w-full rounded-[12px] border border-line bg-bg p-1 sm:w-fit">
+        <div className={segmentedGroupClass}>
           {(
             [
               ["cooper", "Cooper (12 min)"],
               ["5k", "5 km"],
             ] as const
           ).map(([value, label]) => (
-            <label key={value} className="flex-1 cursor-pointer sm:flex-none">
+            <label
+              key={value}
+              className="flex-1 cursor-pointer rounded-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent sm:flex-none"
+            >
               <input
                 type="radio"
                 name="test"
@@ -85,9 +89,7 @@ function CalculatorForm({
                 onChange={() => setTest(value)}
                 className="peer sr-only"
               />
-              <span className="flex h-9 items-center justify-center rounded-[9px] px-4 text-small text-muted transition-colors peer-checked:bg-chip peer-checked:text-text peer-focus-visible:outline-2 peer-focus-visible:outline-accent">
-                {label}
-              </span>
+              <span className={segmentedItemClass}>{label}</span>
             </label>
           ))}
         </div>
@@ -197,7 +199,7 @@ function CalculatorForm({
         <button
           type="submit"
           disabled={pending || !vma?.ok}
-          className={buttonClass({ variant: "primary", size: "md" })}
+          className={buttonClass({ variant: "inverse", size: "md" })}
         >
           {pending ? "Enregistrement…" : "Enregistrer ces allures"}
         </button>

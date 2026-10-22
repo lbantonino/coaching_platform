@@ -1,7 +1,8 @@
 import Link from "next/link";
 
-// Pastilles de filtre (design system : chips « Tous · Jambes · Pecs »). Ce sont de vrais liens :
+// Pastilles de filtre (design system §6 Chip). Ce sont de vrais liens :
 // le filtre est dans l'URL, donc partageable, et fonctionne même sans JavaScript.
+// Sélectionnée = couleurs inversées (jamais rouge). Plus hautes sur téléphone pour le doigt.
 export function FilterChips({
   label,
   options,
@@ -16,10 +17,10 @@ export function FilterChips({
           key={option.href}
           href={option.href}
           aria-current={option.active ? "true" : undefined}
-          className={`inline-flex h-9 shrink-0 items-center rounded-full border px-4 text-small transition-colors ${
+          className={`inline-flex h-9 shrink-0 items-center rounded-pill border px-3 text-caption transition-colors sm:h-7 sm:px-2.5 ${
             option.active
-              ? "border-text bg-text text-page"
-              : "border-line-2 text-muted hover:text-text"
+              ? "border-inv bg-inv text-on-inv"
+              : "border-line text-muted hover:bg-surface hover:text-text"
           }`}
         >
           {option.label}

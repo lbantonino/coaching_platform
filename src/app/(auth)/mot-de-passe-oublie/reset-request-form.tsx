@@ -12,7 +12,7 @@ export function ResetRequestForm() {
 
   if (state.status === "sent") {
     return (
-      <p role="status" className="rounded-[14px] border border-line bg-surface p-4">
+      <p role="status" className="rounded-card border border-line bg-surface p-4">
         {state.message}
       </p>
     );

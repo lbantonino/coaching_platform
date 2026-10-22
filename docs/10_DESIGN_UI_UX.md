@@ -1,5 +1,7 @@
 # 10 — Design system et inventaire exhaustif des écrans
 
+> **22/10/2026 (D-16)** : la charte visuelle appliquée est `COORY_DESIGN_SYSTEM.md` + `COORY_LOGO.md` (racine du projet). Elle remplace la palette « de départ proposée » ci-dessous ; l'inventaire des écrans et des composants de ce document reste valable.
+
 ## 1. Principes
 Design professionnel sportif, sobre, accessible, rapide. Nom commercial variable, logo/branding administrables. Palette de départ **proposée** : fond blanc/gris très clair, texte anthracite, accent corail, Running bleu/vert, Musculation gris profond, Hyrox corail ; ne pas se reposer seulement sur couleurs. Inspirations des maquettes créées dans la conversation : dashboards à cartes, éditeurs de blocs, interfaces mobiles avec navigation basse.
 

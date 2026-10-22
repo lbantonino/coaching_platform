@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { errorTextClass } from "@/components/ui/form-styles";
 import { LogoutButton } from "@/components/ui/logout-button";
 import { getCurrentUser } from "@/features/auth/session";
 import { getPublicInvitation } from "@/features/invitations/queries";
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 // Page publique : seule la possession du lien (jeton secret) donne accès à l'invitation.
 export default function InvitationPage({ params }: PageProps<"/invitation/[token]">) {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-6 px-4 pt-6 pb-16 sm:justify-center sm:py-16">
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-6 px-5 pt-6 pb-16 sm:justify-center sm:py-16">
       <Suspense fallback={<p className="text-muted">Vérification de l&apos;invitation…</p>}>
         {params.then(({ token }) => (
           <InvitationSection token={token} />
@@ -72,7 +73,7 @@ async function InvitationSection({ token }: { token: string }) {
 
       {user && !sameAccount ? (
         <div className="flex flex-col gap-4">
-          <p role="alert" className="text-small text-danger">
+          <p role="alert" className={errorTextClass}>
             Tu es connecté avec un autre compte ({user.email}). Déconnecte-toi, puis rouvre ce lien.
           </p>
           <LogoutButton />

@@ -236,7 +236,7 @@ function ReferenceFields({
         <button
           type="submit"
           disabled={pending}
-          className={buttonClass({ variant: "secondary", size: "md" })}
+          className={buttonClass({ variant: "inverse", size: "md" })}
         >
           {pending ? "Enregistrement…" : "Ajouter la mesure"}
         </button>
