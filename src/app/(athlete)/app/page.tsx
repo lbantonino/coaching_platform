@@ -10,6 +10,7 @@ import {
   withdrawHealthConsentByAthlete,
 } from "@/features/consents/actions";
 import { getOwnHealthConsents, type OwnHealthConsent } from "@/features/consents/queries";
+import { getOwnCoachMessages } from "@/features/notes/queries";
 import { formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ async function AthleteSession() {
   const { user, links } = await requireAthlete();
   const coaches = links.map((link) => link.organizationName).join(", ");
   const consents = await getOwnHealthConsents(user.id);
+  const messages = await getOwnCoachMessages();
 
   return (
     <div className="flex flex-col gap-6">
@@ -42,6 +44,24 @@ async function AthleteSession() {
         Ton coach ({coaches}) t&apos;a ajouté. Ton programme apparaîtra ici dès qu&apos;il sera
         publié.
       </p>
+      {consents.map((consent) => {
+        const message = messages.get(consent.athleteId);
+        return message ? (
+          <section
+            key={`message-${consent.athleteId}`}
+            aria-labelledby={`message-${consent.athleteId}`}
+            className="flex flex-col gap-2 rounded-card border border-line bg-surface p-5"
+          >
+            <h2 id={`message-${consent.athleteId}`} className="text-title font-medium">
+              Message de ton coach
+            </h2>
+            <p className="text-small whitespace-pre-line">{message.body}</p>
+            <p className="text-caption text-muted">
+              {consent.organizationName} · {formatDateTime(message.updatedAt)}
+            </p>
+          </section>
+        ) : null;
+      })}
       {consents.map((consent) => (
         <HealthConsentCard key={consent.athleteId} consent={consent} />
       ))}

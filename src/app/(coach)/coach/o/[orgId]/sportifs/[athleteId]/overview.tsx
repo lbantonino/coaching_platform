@@ -7,7 +7,9 @@ import {
   Gauge,
   HeartPulse,
   Mail,
+  History,
   MapPin,
+  NotebookPen,
   Pencil,
   Phone,
   Target,
@@ -19,6 +21,7 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
+import type { ActivityEvent } from "@/features/activity/build";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
@@ -28,11 +31,14 @@ import {
 } from "@/features/athletes/schemas";
 import { goalCountdown } from "@/features/goals/format";
 import type { GoalEntry } from "@/features/goals/queries";
+import type { AthleteNotes } from "@/features/notes/queries";
 import { goalPriorityLabels, goalTypeLabels, hyroxCategoryLabels } from "@/features/goals/schemas";
 import { formatReferenceDetail, formatReferenceValue } from "@/features/references/format";
 import type { ReferenceEntry } from "@/features/references/queries";
 import { referenceKindLabels, referenceSourceLabels } from "@/features/references/schemas";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
+
+import { ActivityTimeline } from "./activity-timeline";
 
 // Vue d'ensemble de la fiche (P2-04) : tout en LECTURE. « Modifier » ouvre l'onglet qui contient le formulaire.
 // Pas de doublon avec les chiffres clés du haut (séances, durée, canal) : ils sont déjà visibles sur toute la fiche.
@@ -42,12 +48,14 @@ function OverviewCard({
   title,
   icon: Icon,
   editHref,
+  actionLabel = "Modifier",
   children,
 }: {
   id: string;
   title: string;
   icon: LucideIcon;
   editHref: string;
+  actionLabel?: string;
   children: ReactNode;
 }) {
   return (
@@ -63,11 +71,11 @@ function OverviewCard({
         <Link
           href={editHref}
           scroll={false}
-          aria-label={`Modifier : ${title}`}
+          aria-label={`${actionLabel} : ${title}`}
           className={buttonClass({ variant: "outline", size: "sm" })}
         >
-          <Pencil aria-hidden size={13} strokeWidth={1.7} />
-          Modifier
+          {actionLabel === "Modifier" ? <Pencil aria-hidden size={13} strokeWidth={1.7} /> : null}
+          {actionLabel}
         </Link>
       </div>
       {children}
@@ -302,25 +310,73 @@ function ReferencesCard({
   );
 }
 
+function NotesCard({ notes, editHref }: { notes: AthleteNotes; editHref: string }) {
+  return (
+    <OverviewCard id="overview-notes" title="Notes du coach" icon={NotebookPen} editHref={editHref}>
+      {notes.coach ? (
+        <div className="flex flex-col gap-1.5 rounded-[14px] border border-line bg-bg p-4">
+          <p className="text-small whitespace-pre-line">{notes.coach.body}</p>
+          <p className="text-caption text-faint">
+            Note privée · mise à jour le {formatDateTime(notes.coach.updatedAt)}
+          </p>
+        </div>
+      ) : (
+        <p className="text-small text-muted">Aucune note privée.</p>
+      )}
+      {notes.athlete ? (
+        <div className="flex flex-col gap-1.5 rounded-[14px] border border-line bg-bg p-4">
+          <Badge tone="live">Visible par le sportif</Badge>
+          <p className="text-small whitespace-pre-line">{notes.athlete.body}</p>
+          <p className="text-caption text-faint">
+            Mis à jour le {formatDateTime(notes.athlete.updatedAt)}
+          </p>
+        </div>
+      ) : null}
+    </OverviewCard>
+  );
+}
+
+// Les 5 derniers événements ; l'onglet Historique montre tout.
+function ActivityCard({ events, allHref }: { events: ActivityEvent[]; allHref: string }) {
+  return (
+    <OverviewCard
+      id="overview-activity"
+      title="Historique récent"
+      icon={History}
+      editHref={allHref}
+      actionLabel="Voir tout"
+    >
+      <ActivityTimeline events={events.slice(0, 5)} label="Derniers événements" />
+    </OverviewCard>
+  );
+}
+
 export function AthleteOverview({
   athlete,
   goals,
   references,
+  notes,
+  activity,
   today,
   basePath,
 }: {
   athlete: AthleteDetail;
   goals: GoalEntry[];
   references: ReferenceEntry[];
+  notes: AthleteNotes;
+  activity: ActivityEvent[];
   today: string;
   basePath: string;
 }) {
+  // Ordre de la maquette : à gauche Profil, Disponibilités, Notes ; à droite Objectif, Repères, Historique.
   return (
     <div className="grid gap-[14px] lg:grid-cols-2">
       <ProfileCard athlete={athlete} editHref={`${basePath}?onglet=profil`} />
       <GoalCard goals={goals} today={today} editHref={`${basePath}?onglet=objectifs`} />
       <AvailabilityCard athlete={athlete} editHref={`${basePath}?onglet=disponibilites`} />
       <ReferencesCard references={references} editHref={`${basePath}?onglet=reperes`} />
+      <NotesCard notes={notes} editHref={`${basePath}?onglet=notes`} />
+      <ActivityCard events={activity} allHref={`${basePath}?onglet=historique`} />
     </div>
   );
 }

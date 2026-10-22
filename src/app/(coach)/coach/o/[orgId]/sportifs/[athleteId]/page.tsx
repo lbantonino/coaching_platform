@@ -6,16 +6,20 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { PageTabs } from "@/components/ui/page-tabs";
+import { listAthleteActivity } from "@/features/activity/queries";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { listGoals } from "@/features/goals/queries";
+import { getAthleteNotes } from "@/features/notes/queries";
 import { listReferences } from "@/features/references/queries";
 import { todayIsoInBrussels } from "@/lib/format";
 
 import { AthleteEditForm } from "./athlete-edit-form";
+import { ActivityTimeline } from "./activity-timeline";
 import { AthleteHeader, KeyFigures } from "./athlete-header";
 import { AvailabilitySection } from "./availability-section";
 import { GoalsSection } from "./goals-section";
+import { NotesSection } from "./notes-section";
 import { AthleteOverview } from "./overview";
 import { ReferencesSection } from "./references-section";
 
@@ -24,13 +28,15 @@ export const metadata: Metadata = {
 };
 
 // Onglets de la fiche (P2-04). L'onglet est dans l'adresse (?onglet=…) ; une valeur inconnue
-// retombe sur la vue d'ensemble. L'historique arrive avec l'étape suivante (notes et historique).
+// retombe sur la vue d'ensemble.
 const TABS = [
   { key: "vue", label: "Vue d'ensemble" },
   { key: "profil", label: "Profil" },
   { key: "objectifs", label: "Objectifs" },
   { key: "disponibilites", label: "Disponibilités" },
   { key: "reperes", label: "Repères" },
+  { key: "notes", label: "Notes" },
+  { key: "historique", label: "Historique" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 const tabSchema = z.enum(TABS.map((tab) => tab.key) as [TabKey, ...TabKey[]]).catch("vue");
@@ -100,6 +106,8 @@ async function AthleteSection({
           athlete={athlete}
           goals={goals}
           references={(await listReferences(organizationId, athlete.id)).current}
+          notes={await getAthleteNotes(organizationId, athlete.id)}
+          activity={await listAthleteActivity(organizationId, athlete)}
           today={today}
           basePath={basePath}
         />
@@ -145,6 +153,32 @@ async function AthleteSection({
               athleteId={athlete.id}
               today={today}
             />
+          ) : null}
+          {tab === "notes" ? (
+            <NotesSection
+              organizationId={organizationId}
+              athleteId={athlete.id}
+              hasAccount={athlete.hasAccount}
+            />
+          ) : null}
+          {tab === "historique" ? (
+            <section
+              aria-labelledby="history-title"
+              className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+            >
+              <div className="flex flex-col gap-1">
+                <h2 id="history-title" className="text-title font-medium">
+                  Historique
+                </h2>
+                <p className="text-small text-muted">
+                  Tout ce qui s&apos;est passé sur cette fiche, du plus récent au plus ancien.
+                </p>
+              </div>
+              <ActivityTimeline
+                events={await listAthleteActivity(organizationId, athlete)}
+                label="Historique de la fiche"
+              />
+            </section>
           ) : null}
         </div>
       )}

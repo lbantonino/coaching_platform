@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-04 étape 1 : fiche sportif à onglets).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-04 étape 2 : notes du coach et historique).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -245,6 +245,11 @@ Côté tests, une dizaine de parcours remplissaient les formulaires directement 
 
 Après coup, on a relu la maquette d'un œil critique. Deux défauts ont été corrigés : les mêmes informations apparaissaient deux fois (dans les chiffres clés et dans les cartes), et sur téléphone, les cinq chiffres clés repoussaient les onglets hors de l'écran. Ils forment maintenant un bandeau qui défile de côté. Autre constat honnête : ces chiffres clés sont provisoires. Ceux qu'un coach regarde vraiment (séances faites, dernier RPE, régularité) n'existeront qu'avec l'espace sportif (P6) ; c'est noté dans la roadmap.
 
+### Notes du coach et historique (22/10)
+Le coach a deux notes par sportif : une **privée**, et un **message** que le sportif lit dans son espace. Choix à savoir expliquer : elles sont dans une **table à part**, pas dans la fiche. Pourquoi ? Le sportif a le droit de lire sa propre fiche ; une note privée rangée dedans lui serait donc lisible. Dans leur propre table, la règle de sécurité (RLS) ne lui montre que le message qui lui est destiné. Un test SQL vérifie précisément qu'il ne voit jamais la note privée. Sous la note privée, un rappel dit de ne pas y écrire de blessures : les notes libres sont le chemin classique par lequel des données de santé fuient sans accord.
+
+L'**historique** est une frise construite à partir de ce qui existe déjà : la date de création de la fiche, des objectifs, des mesures, des accords, des invitations et des notes. On n'a ajouté aucune table « journal » : chaque événement est déjà daté là où il est enregistré. La fonction qui assemble et trie la frise est **pure** (sans base de données), donc testée en quelques millisecondes, y compris un piège : comparer des dates écrites dans des fuseaux différents.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -263,7 +268,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 119 tests SQL, 69 tests unitaires et 51 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 133 tests SQL, 74 tests unitaires et 55 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment gères-tu des données de santé ? »** Le moins possible : un champ court, sans diagnostic, qui n'existe que pendant un accord explicite du sportif. La base le garantit (contrainte + fonctions qui vérifient l'appelant), chaque accord est journalisé, et le retrait efface les données. Le sportif voit ce qui est noté sur lui.

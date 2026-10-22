@@ -169,6 +169,51 @@ export type Database = {
           },
         ];
       };
+      athlete_notes: {
+        Row: {
+          athlete_id: string;
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          organization_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          visibility: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id: string;
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          visibility: string;
+        };
+        Update: {
+          athlete_id?: string;
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_notes_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       athlete_profiles: {
         Row: {
           athlete_user_id: string | null;
