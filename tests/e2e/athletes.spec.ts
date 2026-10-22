@@ -24,7 +24,7 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   const email = `camille-${suffix}@example.test`;
 
   await loginAsCoachA(page);
-  await page.getByRole("link", { name: /Organisation Démo A/ }).click();
+  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
   await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
 
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();

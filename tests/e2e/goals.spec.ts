@@ -19,7 +19,7 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   const competition = `Hyrox ${suffix}`;
 
   await login(page);
-  await page.getByRole("link", { name: /Organisation Démo A/ }).click();
+  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await fillAthleteName(page, name);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();

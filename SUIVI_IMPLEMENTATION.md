@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 112/112, db:test 162/162, test:e2e 69/69 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 112/112, db:test 162/162, test:e2e 71/71 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,18 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### Revue d'Antonino, retouche 1 : tableau de bord
+```
+Date : 2026-10-22
+Demande : retirer « Ton organisation » (doublon du menu Sportifs) et mettre à la place une semaine
+  des coachings individuels du coach
+Fait : coaching-week.tsx (semaine en cours, lundi -> dimanche, séances individuelles seulement, dates
+  calculées ; sept colonnes sur ordinateur, liste sur téléphone ; lien « Voir l'agenda ») ; le nom de
+  l'organisation reste sur la carte « Sportifs actifs » ; tests e2e : accès à la liste par le menu
+  « Sportifs », nouveau test du bloc
+Tests : check OK, test:e2e 71/71 + 3 ignorés, db:reset final ; captures sombre, clair, téléphone
+```
 
 ### P2-05b : séances encadrées du coach (D-27)
 ```

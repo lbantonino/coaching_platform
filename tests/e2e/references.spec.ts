@@ -9,7 +9,7 @@ async function openNewAthleteProfile(page: Page, name: string) {
   await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
-  await page.getByRole("link", { name: /Organisation Démo A/ }).click();
+  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await fillAthleteName(page, name);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();

@@ -15,7 +15,7 @@ async function loginAsCoachA(page: Page) {
 
 // Crée un sportif unique dans l'organisation A et ouvre sa page d'invitation.
 async function createAthleteAndOpenInvite(page: Page, name: string, email: string) {
-  await page.getByRole("link", { name: /Organisation Démo A/ }).click();
+  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
   await fillAthleteName(page, name);

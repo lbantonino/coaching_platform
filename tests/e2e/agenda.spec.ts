@@ -57,6 +57,16 @@ test("le coach voit les compétitions de ses sportifs, filtre et ouvre la fiche"
   await expect(page.getByRole("heading", { name: "Inès Benali", level: 1 })).toBeVisible();
 });
 
+test("le tableau de bord montre les coachings individuels de la semaine", async ({ page }) => {
+  await loginAsCoachA(page);
+  const week = page.getByRole("region", { name: "Coachings individuels de la semaine" });
+  await expect(week).toBeVisible();
+  // Seules des séances individuelles y figurent : jamais la séance collective du mercredi.
+  await expect(week.getByText("Piste du mercredi")).toHaveCount(0);
+  await week.getByRole("link", { name: "Voir l'agenda" }).click();
+  await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
+});
+
 test("le coach A ne peut pas ouvrir l'agenda de l'organisation B", async ({ page }) => {
   await loginAsCoachA(page);
   await page.goto(`/coach/o/${ORG_B}/agenda`);
