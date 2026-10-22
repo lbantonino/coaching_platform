@@ -75,10 +75,10 @@ async function NavData({ variant }: { variant: "side" | "tabs" }) {
   const memberships = user ? await getCoachMemberships(user.id) : [];
   // Une organisation suffit au lancement ; le choix entre plusieurs organisations viendra plus tard.
   const first = memberships[0];
-  const athletesHref = first ? `/coach/o/${first.organizationId}/sportifs` : null;
+  const orgBase = first ? `/coach/o/${first.organizationId}` : null;
   return variant === "side" ? (
-    <CoachSideNav athletesHref={athletesHref} />
+    <CoachSideNav orgBase={orgBase} />
   ) : (
-    <CoachTabBar athletesHref={athletesHref} />
+    <CoachTabBar orgBase={orgBase} />
   );
 }

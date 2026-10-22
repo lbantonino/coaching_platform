@@ -1,24 +1,33 @@
 "use client";
 
-import { House, Users } from "lucide-react";
+import { CalendarDays, House, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // Navigation coach : seulement les sections qui EXISTENT (pas de faux liens vers des écrans futurs).
-type Props = { athletesHref: string | null };
+// `orgBase` : « /coach/o/<organisation> », absent tant que le coach n'a pas d'organisation.
+type Props = { orgBase: string | null };
 
-function useItems({ athletesHref }: Props) {
+function useItems({ orgBase }: Props) {
   const pathname = usePathname();
   const items = [
     { href: "/coach", label: "Tableau de bord", icon: House, active: pathname === "/coach" },
   ];
-  if (athletesHref) {
-    items.push({
-      href: athletesHref,
-      label: "Sportifs",
-      icon: Users,
-      active: pathname.startsWith("/coach/o/"),
-    });
+  if (orgBase) {
+    items.push(
+      {
+        href: `${orgBase}/sportifs`,
+        label: "Sportifs",
+        icon: Users,
+        active: pathname.startsWith(`${orgBase}/sportifs`),
+      },
+      {
+        href: `${orgBase}/agenda`,
+        label: "Agenda",
+        icon: CalendarDays,
+        active: pathname.startsWith(`${orgBase}/agenda`),
+      },
+    );
   }
   return items;
 }

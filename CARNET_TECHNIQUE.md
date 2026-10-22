@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-04 étape 3 : graphique d'évolution des repères).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (records personnels et agenda des compétitions).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -259,6 +259,14 @@ Pour les couleurs, un réflexe à retenir : quand deux écrans affichent la mêm
 Dernière étape de la fiche à onglets : une courbe montre comment un repère évolue (la VMA de Thomas, la race pace d'Inès, le squat de Nadia). Choix à savoir défendre : **aucune bibliothèque de graphiques**. Une courbe, quelques graduations et une bulle au survol tiennent en un composant SVG ; ajouter Recharts ou Chart.js aurait alourdi l'app pour un seul écran, contre la règle « pas d'outil sans besoin démontré ».
 
 Le travail est séparé en deux. La **préparation des données** (regrouper les mesures par repère, choisir des graduations rondes, écrire « 0,9 km/h de plus depuis le 14 avril ») est une fonction pure, testée par Vitest. Le **dessin** est un petit composant navigateur qui ne reçoit que le résultat. Quelques règles de lecture : jamais deux unités sur un même axe (une courbe à la fois), l'écart entre deux points respecte le temps réellement écoulé, et pour une allure l'axe est inversé, pour que « monter » veuille toujours dire « progresser ». Accessibilité : les mêmes informations qu'au survol s'obtiennent au clavier, et un tableau donne toutes les valeurs sans graphique.
+
+### Records personnels (22/10)
+Dernier morceau de la fiche demandée par le coach. Même philosophie que les repères : on n'écrase jamais une performance, on en ajoute une nouvelle avec sa date, et le **record se calcule** (le meilleur temps). Pour Hyrox, la base refuse un temps sans catégorie, car un chrono en Pro ne se compare pas à un chrono en Open. Les bornes de vraisemblance attrapent les fautes de frappe : « 3:15 » pour un marathon veut dire 3 minutes 15, donc la saisie est refusée avec un exemple au bon format.
+
+Incident instructif : en test, un Hyrox a été enregistré comme un 5 km. Après une erreur, React 19 remet les champs du formulaire à leur valeur de départ ; le menu « Épreuve » revenait sur « 5 km » alors que l'écran affichait encore les champs Hyrox. Correctif : reconstruire le formulaire après chaque réponse du serveur. Leçon : un test de bout en bout qui **vérifie le résultat enregistré**, pas seulement le message « ajouté », attrape ce genre de bug silencieux.
+
+### Agenda, première couche : les compétitions (22/10)
+Le coach a une page Agenda. Comme les séances n'existent pas encore, elle montre d'abord ce qui est réellement daté : les compétitions et objectifs des sportifs. Antonino a ensuite précisé sa vision : l'agenda est surtout celui de **ses séances encadrées** (collectives chaque semaine, individuelles), les compétitions restent comme calque. Le calcul du calendrier (grille du lundi au dimanche, changement de mois) est une fonction pure testée, faite en UTC pour éviter le piège du passage à l'heure d'hiver. Les filtres sont dans l'adresse, comme pour la liste des sportifs : partageables et utilisables sans JavaScript.
 
 ---
 
