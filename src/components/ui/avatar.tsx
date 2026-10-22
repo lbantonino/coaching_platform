@@ -7,12 +7,21 @@ export function initials(name: string): string {
   return letters.toUpperCase();
 }
 
-export function Avatar({ name, size = "md" }: { name: string; size?: "md" | "lg" }) {
+// `colorClass` : fond teinté (ex. couleur de la discipline, D-24) ; les initiales restent en couleur texte.
+export function Avatar({
+  name,
+  size = "md",
+  colorClass = "bg-chip",
+}: {
+  name: string;
+  size?: "md" | "lg";
+  colorClass?: string;
+}) {
   const box = size === "lg" ? "size-16 text-[22px]" : "size-[34px] text-caption";
   return (
     <span
       aria-hidden
-      className={`${box} inline-flex shrink-0 items-center justify-center rounded-full bg-chip font-semibold text-text`}
+      className={`${box} ${colorClass} inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-text`}
     >
       {initials(name)}
     </span>

@@ -5,7 +5,9 @@ import { buttonClass } from "@/components/ui/button";
 import { deleteGoal, makeGoalMain, setGoalStatus } from "@/features/goals/actions";
 import { goalCountdown } from "@/features/goals/format";
 import { listGoals, type GoalEntry } from "@/features/goals/queries";
+import { disciplineStyles } from "@/domain/training/discipline";
 import {
+  goalDiscipline,
   goalPriorityLabels,
   goalStatusLabels,
   goalTypeLabels,
@@ -69,9 +71,12 @@ function GoalCard({
 }) {
   const title = goalTitle(goal);
   const countdown = goal.targetDate ? goalCountdown(today, goal.targetDate) : null;
+  const discipline = goalDiscipline(goal.type);
 
   return (
-    <article className="flex flex-col gap-3 rounded-[14px] border border-line bg-bg p-4">
+    <article
+      className={`flex flex-col gap-3 rounded-[14px] border border-line bg-bg p-4 ${discipline ? disciplineStyles[discipline].edge : ""}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">

@@ -20,6 +20,21 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### D-24 : graphite plus clair et touches de couleur sur la fiche
+```
+Date : 2026-10-22
+Demande d'Antonino : « sur la fiche du sportif, tout est trop sombre, il n'y a pas de couleurs »
+Méthode : 4 aperçus (actuel ; couleurs sur graphite ; couleurs + sombre plus clair ; couleurs en clair), CSS injecté
+  seulement dans le navigateur de capture ; choix : couleurs + sombre plus clair
+Contrastes (script WCAG) : 31 paires OK ; initiales colorées dans l'avatar teinté refusées (3,7 à 4,2:1) →
+  initiales en couleur texte sur avatar teinté
+Fait : tokens (graphite clair, --accent-text #ff6b79, --blue/--amber/--green + -soft), disciplineStyles
+  (domain/training/discipline.ts), Avatar(colorClass), AthleteHeader(discipline), KeyFigure (pastille d'icône,
+  valeur rouge), icônes de cartes rouges, liseré de discipline (vue d'ensemble + onglet Objectifs),
+  themeColor #1C1C21, COORY_DESIGN_SYSTEM.md
+Tests : Vitest 75/75, check OK, test:e2e 55/55 + 3 ignorés, db:reset final ; captures sombre, clair, téléphone
+```
+
 ### D-23 : fond graphite et couleurs par discipline
 ```
 Date : 2026-10-22

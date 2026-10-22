@@ -30,21 +30,21 @@ Use **semantic tokens** in components, never raw hex.
 
 ```css
 :root {                      /* DARK — default */
-  --page:#111114;            /* outer page (graphite, D-23 ; was #050505) */
-  --bg:#16161A;              /* app background (graphite, D-23 ; was #0B0B0C) */
-  --surface:#1F1F24;         /* cards (D-23 ; was #141416) */
-  --surface-2:#28282E;       /* hover, active nav (D-23 ; was #1C1C1F) */
-  --chip:#323239;            /* chips, avatars, neutral pills (D-23 ; was #26262A) */
-  --bar:#38383F;             /* progress tracks, planned bars (D-23 ; was #2A2A2E) */
+  --page:#17171B;            /* outer page (light graphite, D-24 ; was #050505) */
+  --bg:#1C1C21;              /* app background (light graphite, D-24 ; was #0B0B0C) */
+  --surface:#26262C;         /* cards (D-24 ; was #141416) */
+  --surface-2:#303037;       /* hover, active nav (D-24 ; was #1C1C1F) */
+  --chip:#3A3A42;            /* chips, avatars, neutral pills (D-24 ; was #26262A) */
+  --bar:#41414A;             /* progress tracks, planned bars (D-24 ; was #2A2A2E) */
   --line:rgba(255,255,255,.14);   /* card borders, dividers (was .07, D-22) */
   --line-2:rgba(255,255,255,.36); /* control outlines, dashed drop zones (was .13, D-22) */
   --text:#F4F2EF;
-  --muted:#ABABB3;              /* was #8A8A90 (D-22, D-23) */
-  --faint:#8E8E97;              /* was #55555B (D-22, D-23) */
+  --muted:#B0B0B8;              /* was #8A8A90 (D-22 to D-24) */
+  --faint:#9C9CA6;              /* was #55555B (D-22 to D-24) */
 
   --accent:#FF3347;          /* fills: primary button, hero stat, active segment */
   --accent-hover:#FF5C6C;
-  --accent-text:#FF5C6C;     /* accent used as text/lines (D-23 ; was #FF3347, 4.1:1 on a red pill over graphite) */
+  --accent-text:#FF6B79;     /* accent used as text/lines (D-24 ; was #FF3347) */
   --logo-loop:#FF3347;       /* logo loop keeps the exact brand red (D-23) */
   --accent-soft:rgba(255,51,71,.11); /* tinted pill bg, completed set cells (was .14, D-22) */
   --on-accent:#FFFFFF;       /* ALWAYS white text on red */
@@ -88,6 +88,12 @@ Use **semantic tokens** in components, never raw hex.
 | Hybride | `#2DD4BF` | `#115E59` | `--hybrid` / `--hybrid-soft` |
 
 Soft = same color at 12 % (dark) / 10 % (light) opacity. Text on card and on its soft pill ≥ 4.5:1 in both themes.
+
+> **Ajustement du 22/10/2026 (D-24, choix d'Antonino sur aperçus : « tout est trop sombre, il n'y a pas de couleurs »)** : graphite **plus clair** (fond #1C1C21, cartes #26262C) et **touches de couleur sur la fiche sportif**, en écart assumé avec la règle « un seul accent, rarement » :
+> - en-tête et avatar teintés par la discipline de l'objectif principal (`color-mix` 9 % / 24 % sur la carte, initiales en couleur texte) ;
+> - icônes des chiffres clés dans une pastille ronde : objectif = couleur de discipline, séances = `--blue`, durée = `--amber`, prochaine compétition = rouge (et sa valeur en `--accent-text`), canal = `--green` ;
+> - icônes des titres de cartes en `--accent-text` ; liseré gauche de 3 px à la couleur de discipline sur les objectifs.
+> Tokens `--blue`, `--amber`, `--green` (+ `-soft`) ajoutés dans les deux thèmes. Toutes les paires revérifiées : texte ≥ 4,5:1, icônes ≥ 3:1.
 
 **Where red is allowed:** primary CTA (max 1 per view), one hero stat card per row, current week/segment, active mobile tab, active page-tab underline, completed set check, notification dot, nav counters, current bar in charts.
 **Never:** page backgrounds, large text blocks, raw `#FF3347` text on light theme (use `--accent-text`), dark text on red.

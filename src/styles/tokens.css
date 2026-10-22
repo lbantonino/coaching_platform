@@ -1,7 +1,7 @@
 /*
  * Jetons de couleur Coory, d'après COORY_DESIGN_SYSTEM.md §3 (version rouge, 22/10/2026), avec les
- * ajustements décidés par Antonino et mesurés (formule WCAG) : D-22 (contraste) et D-23 (fond graphite,
- * couleurs par discipline).
+ * ajustements décidés par Antonino et mesurés (formule WCAG) : D-22 (contraste), D-23 (fond graphite,
+ * couleurs par discipline) et D-24 (graphite plus clair, touches de couleur sur la fiche).
  * Les composants n'écrivent JAMAIS ces valeurs en dur : ils passent par les classes Tailwind
  * (bg-surface, text-muted, bg-accent…) déclarées dans globals.css, qui lisent ces variables.
  * Sombre par défaut ; <html data-theme="light"> bascule tout le site en clair d'un coup.
@@ -9,27 +9,27 @@
  * l'onglet actif. Jamais en fond de page, jamais en texte long, jamais de texte sombre sur rouge.
  */
 :root {
-  /* Sombre (par défaut). Fond GRAPHITE (D-23) au lieu du quasi-noir d'origine (#0b0b0c, cartes #141416) :
-     les cartes se détachent mieux du fond, l'écran est moins « trou noir ». */
-  --page: #111114; /* autour du cadre de l'app */
-  --bg: #16161a; /* fond de l'app */
-  --surface: #1f1f24; /* cartes */
-  --surface-2: #28282e; /* survol, navigation active */
-  --chip: #323239; /* pastilles, avatars */
-  --bar: #38383f; /* pistes de progression, barres prévues */
+  /* Sombre (par défaut). Graphite CLAIR (D-24, après D-23) au lieu du quasi-noir d'origine (#0b0b0c,
+     cartes #141416) : choisi par Antonino sur aperçus, les cartes ressortent bien du fond. */
+  --page: #17171b; /* autour du cadre de l'app */
+  --bg: #1c1c21; /* fond de l'app */
+  --surface: #26262c; /* cartes */
+  --surface-2: #303037; /* survol, navigation active */
+  --chip: #3a3a42; /* pastilles, avatars */
+  --bar: #41414a; /* pistes de progression, barres prévues */
   /* Filets et textes secondaires renforcés (D-22), revérifiés sur le graphite (D-23) :
      texte ≥ 4,5:1, contour des champs ≥ 3:1. */
   --line: rgba(255, 255, 255, 0.14); /* bordures de carte, séparateurs */
   --line-2: rgba(255, 255, 255, 0.36); /* contours de champs, zones d'ajout en pointillés */
   --text: #f4f2ef;
-  --muted: #ababb3; /* 7,2:1 sur une carte */
-  --faint: #8e8e97; /* 5,0:1 sur une carte */
+  --muted: #b0b0b8; /* ≥ 4,5:1 sur carte, survol, pastille et en-tête teinté */
+  --faint: #9c9ca6; /* ≥ 4,5:1 sur carte et survol */
 
   --accent: #ff3347; /* aplats : bouton principal, stat héro, segment actif */
   --accent-hover: #ff5c6c;
-  /* Rouge utilisé comme texte : un cran plus clair que l'aplat (D-23), sinon 4,1:1 seulement sur
-     une pastille rouge. Le logo garde le rouge de marque exact via --logo-loop. */
-  --accent-text: #ff5c6c;
+  /* Rouge utilisé comme texte : plus clair que l'aplat (D-23, D-24) pour rester ≥ 4,5:1 sur les cartes
+     et les pastilles rouges. Le logo garde le rouge de marque exact via --logo-loop. */
+  --accent-text: #ff6b79;
   --accent-soft: rgba(255, 51, 71, 0.11); /* fond de pastille teintée */
   --on-accent: #ffffff; /* TOUJOURS du blanc sur le rouge */
   --logo-loop: #ff3347; /* boucle du logo sur fond sombre (COORY_LOGO.md §3) */
@@ -54,6 +54,14 @@
   --hyrox-soft: rgba(251, 146, 60, 0.12);
   --hybrid: #2dd4bf;
   --hybrid-soft: rgba(45, 212, 191, 0.12);
+
+  /* Teintes des icônes de chiffres clés (D-24) : séances (bleu), durée (ambre), canal de contact (vert). */
+  --blue: #60a5fa;
+  --blue-soft: rgba(96, 165, 250, 0.18);
+  --amber: #fbbf24;
+  --amber-soft: rgba(251, 191, 36, 0.18);
+  --green: #4ade80;
+  --green-soft: rgba(74, 222, 128, 0.18);
 
   --shadow-frame: 0 30px 80px rgba(0, 0, 0, 0.55); /* seule ombre autorisée : le cadre extérieur */
 
@@ -98,6 +106,13 @@
   --hyrox-soft: rgba(154, 52, 18, 0.1);
   --hybrid: #115e59;
   --hybrid-soft: rgba(17, 94, 89, 0.1);
+
+  --blue: #1d4ed8;
+  --blue-soft: rgba(29, 78, 216, 0.12);
+  --amber: #b45309;
+  --amber-soft: rgba(180, 83, 9, 0.12);
+  --green: #15803d;
+  --green-soft: rgba(21, 128, 61, 0.12);
 
   --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
 

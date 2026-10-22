@@ -10,6 +10,7 @@ import { listAthleteActivity } from "@/features/activity/queries";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { listGoals } from "@/features/goals/queries";
+import { goalDiscipline } from "@/features/goals/schemas";
 import { getAthleteNotes } from "@/features/notes/queries";
 import { listReferences } from "@/features/references/queries";
 import { todayIsoInBrussels } from "@/lib/format";
@@ -75,6 +76,7 @@ async function AthleteSection({
   const basePath = `${listPath}/${athlete.id}`;
   const today = todayIsoInBrussels();
   const { current: goals } = await listGoals(organizationId, athlete.id);
+  const mainGoal = goals.find((goal) => goal.priority === "main");
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,7 +91,11 @@ async function AthleteSection({
         </span>
       </nav>
 
-      <AthleteHeader athlete={athlete} invitePath={`${basePath}/inviter`} />
+      <AthleteHeader
+        athlete={athlete}
+        invitePath={`${basePath}/inviter`}
+        discipline={mainGoal ? goalDiscipline(mainGoal.type) : null}
+      />
       <KeyFigures athlete={athlete} goals={goals} today={today} basePath={basePath} />
 
       <PageTabs
