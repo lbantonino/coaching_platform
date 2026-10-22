@@ -71,9 +71,12 @@ export type AthleteFormValues = {
 };
 
 // `values` : saisie renvoyée en cas d'erreur, car React 19 vide le formulaire après chaque envoi.
+// `attempt` augmente à chaque réponse : le formulaire est reconstruit avec ces valeurs (listes
+// déroulantes et cases comprises, que la remise à zéro de React ne mettrait pas à jour sinon).
 export type UpdateAthleteState = {
   error: string | null;
   saved: boolean;
+  attempt: number;
   values: AthleteFormValues | null;
 };
 
@@ -82,12 +85,18 @@ export type UpdateAthleteState = {
 export async function updateAthlete(
   organizationId: string,
   athleteId: string,
-  _previous: UpdateAthleteState,
+  previous: UpdateAthleteState,
   formData: FormData,
 ): Promise<UpdateAthleteState> {
   const { membership } = await requireOrgAccess(organizationId);
   const current = await getAthlete(membership.organizationId, athleteId);
-  if (!current) return { error: "Sportif introuvable.", saved: false, values: null };
+  if (!current)
+    return {
+      error: "Sportif introuvable.",
+      saved: false,
+      attempt: previous.attempt + 1,
+      values: null,
+    };
 
   const values: AthleteFormValues = {
     firstName: String(formData.get("firstName") ?? ""),
@@ -107,6 +116,7 @@ export async function updateAthlete(
     return {
       error: parsed.error.issues[0]?.message ?? "Formulaire invalide.",
       saved: false,
+      attempt: previous.attempt + 1,
       values,
     };
   }
@@ -119,6 +129,7 @@ export async function updateAthlete(
     return {
       error: "Le sportif a activé son compte : son adresse e-mail ne peut plus être modifiée ici.",
       saved: false,
+      attempt: previous.attempt + 1,
       values,
     };
   }
@@ -148,10 +159,11 @@ export async function updateAthlete(
           ? "Un sportif de ton organisation utilise déjà cette adresse e-mail."
           : "Les modifications n'ont pas pu être enregistrées. Réessaie.",
       saved: false,
+      attempt: previous.attempt + 1,
       values,
     };
   }
 
   revalidatePath(`/coach/o/${membership.organizationId}/sportifs`, "layout");
-  return { error: null, saved: true, values: null };
+  return { error: null, saved: true, attempt: previous.attempt + 1, values: null };
 }

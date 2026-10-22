@@ -12,6 +12,7 @@ import { requireOrgAccess } from "@/features/auth/guards";
 import { formatDateTime, todayIsoInBrussels } from "@/lib/format";
 
 import { AthleteEditForm } from "./athlete-edit-form";
+import { GoalsSection } from "./goals-section";
 import { ReferencesSection } from "./references-section";
 
 export const metadata: Metadata = {
@@ -104,6 +105,12 @@ async function AthleteSection({ orgId, athleteId }: { orgId: string; athleteId: 
           }}
         />
       </section>
+
+      <GoalsSection
+        organizationId={membership.organizationId}
+        athleteId={athlete.id}
+        today={todayIsoInBrussels()}
+      />
 
       <ReferencesSection
         organizationId={membership.organizationId}

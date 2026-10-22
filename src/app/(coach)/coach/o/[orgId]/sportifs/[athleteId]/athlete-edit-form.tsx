@@ -29,7 +29,7 @@ type Props = {
   values: AthleteFormValues;
 };
 
-const initialState: UpdateAthleteState = { error: null, saved: false, values: null };
+const initialState: UpdateAthleteState = { error: null, saved: false, attempt: 0, values: null };
 
 // Intertitre d'une partie du formulaire (micro-libellé du design system).
 function Part({ title, children }: { title: string; children: ReactNode }) {
@@ -53,7 +53,8 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
   const shown = state.values ?? values;
 
   return (
-    <form action={formAction} className="flex flex-col gap-7" noValidate>
+    // Reconstruit après chaque réponse : la saisie renvoyée (ou enregistrée) s'affiche partout.
+    <form key={state.attempt} action={formAction} className="flex flex-col gap-7" noValidate>
       <Part title="Identité">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">

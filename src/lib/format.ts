@@ -20,3 +20,11 @@ export function formatDate(isoDay: string): string {
 export function todayIsoInBrussels(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
 }
+
+// Nombre de jours entre deux dates AAAA-MM-JJ (négatif si `to` est avant `from`). Calcul en UTC :
+// pas de décalage d'une heure au passage à l'heure d'été.
+export function daysBetween(fromIsoDay: string, toIsoDay: string): number {
+  const from = Date.parse(`${fromIsoDay}T00:00:00Z`);
+  const to = Date.parse(`${toIsoDay}T00:00:00Z`);
+  return Math.round((to - from) / 86_400_000);
+}
