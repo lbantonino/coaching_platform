@@ -3,6 +3,66 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      athlete_goals: {
+        Row: {
+          athlete_id: string;
+          competition_location: string | null;
+          competition_name: string | null;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          goal_type: string;
+          hyrox_category: string | null;
+          id: string;
+          organization_id: string;
+          priority: string;
+          status: string;
+          target_date: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id: string;
+          competition_location?: string | null;
+          competition_name?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          goal_type: string;
+          hyrox_category?: string | null;
+          id?: string;
+          organization_id: string;
+          priority?: string;
+          status?: string;
+          target_date?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          athlete_id?: string;
+          competition_location?: string | null;
+          competition_name?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          goal_type?: string;
+          hyrox_category?: string | null;
+          id?: string;
+          organization_id?: string;
+          priority?: string;
+          status?: string;
+          target_date?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_goals_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       athlete_invites: {
         Row: {
           accepted_at: string | null;

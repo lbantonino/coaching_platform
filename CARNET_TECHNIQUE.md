@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-02 partie 1 : identité, contact et profil sportif).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-02 partie 2 : objectifs et compétitions).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -222,6 +222,13 @@ Pour qu'Antonino puisse « voir » le produit, la base de démo contient mainten
 
 Petit défaut trouvé sur les captures, pas par les tests : une pastille cochée perdait son contraste quand la souris passait dessus. Corrigé en limitant l'effet de survol aux pastilles non cochées. Les tests vérifient que ça marche ; les captures vérifient que c'est lisible.
 
+### Objectifs et compétitions (22/10)
+Chaque sportif peut maintenant avoir plusieurs **objectifs** (un semi, un Hyrox, de la force, une remise en forme…), dont **un seul principal**. Une **compétition** est simplement un objectif qui a un nom, un lieu et une date ; pour un Hyrox, on note la catégorie (Open, Pro, Doubles, Relay). Un objectif atteint ou abandonné ne disparaît pas : il passe dans l'historique, comme le premier Hyrox d'Inès. La fiche affiche un compte à rebours (« J-149 »), calculé chaque jour à partir de la date de Bruxelles.
+
+Deux règles sont garanties **par la base**, pas seulement par l'écran : une compétition a forcément une date, et il n'y a jamais deux objectifs principaux en cours (un **index unique partiel** : unique seulement parmi les objectifs principaux en cours). Quand le coach choisit un nouvel objectif principal, le serveur fait d'abord passer l'ancien en secondaire. Autre choix volontaire : le coach peut seulement changer la priorité et le statut d'un objectif ; pour corriger une erreur de saisie, il le supprime et le recrée. C'est plus simple, et la base refuse toute autre modification.
+
+Le nouveau test navigateur a trouvé un vrai défaut, présent aussi dans la fiche de la partie 1. Après un envoi refusé, React remet le formulaire à ses valeurs de départ : les champs texte retrouvaient bien la saisie, mais pas les **listes déroulantes** ni les **cases à cocher**. Un coach qui changeait le niveau puis se trompait de téléphone perdait son choix de niveau. Correction : après chaque réponse du serveur, le formulaire est reconstruit avec la saisie renvoyée. Un test vérifie désormais aussi les listes et les cases.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -233,13 +240,14 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **L'inscription libre était ouverte** : sans page d'inscription, l'API de Supabase acceptait quand même de créer des comptes. Fermé dans la configuration et vérifié.
 - **Des tests « chanceux »** : deux fois, un test cliquait puis naviguait sans attendre la fin de l'action (déconnexion, changement de page). Il passait par chance de timing, puis a échoué plus tard. Leçon : toujours attendre un signe visible (nouvelle adresse, nouveau titre) avant l'étape suivante, et relancer la suite plusieurs fois pour vérifier sa stabilité.
 - **« styleText n'existe pas »** : Vitest refusait de démarrer. Le terminal utilisait une ancienne version de Node, pas la version 24 du projet. Leçon : quand un outil plante dès le démarrage sur une fonction de Node, vérifier d'abord `node -v`.
+- **Une liste déroulante qui oubliait la saisie** : après une erreur, React remettait les listes déroulantes et les cases à cocher à leur valeur de départ (les champs texte, eux, étaient bien conservés). Trouvé par un test, corrigé dans les deux formulaires concernés. Leçon : tester la conservation de la saisie pour chaque **sorte** de champ, pas seulement pour les champs texte.
 - **Une correction qui a tout cassé** : en fermant l'inscription, un deuxième réglage a coupé toute connexion. Les tests l'ont attrapé immédiatement. Leçon : c'est exactement pour ça qu'on a des tests automatiques.
 
 ---
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 82 tests SQL, 54 tests unitaires et 43 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 98 tests SQL, 63 tests unitaires et 45 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment gères-tu le thème sombre et clair ? »** Toutes les couleurs sont des variables CSS. Un attribut sur `<html>` change leur valeur, donc aucun composant n'a besoin de savoir quel thème est actif. Un script lancé avant l'affichage évite le flash.
@@ -265,6 +273,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
 - **ADR** : courte note qui documente une décision technique, ses alternatives et ses conséquences.
 - **Colonne calculée** : colonne dont la base calcule elle-même la valeur à partir d'autres colonnes (ici le nom complet) ; on ne peut pas l'écrire.
+- **Index unique partiel** : règle de la base qui interdit les doublons seulement pour certaines lignes (ici : un seul objectif principal parmi ceux en cours).
 - **Liste fermée** : ensemble de valeurs autorisées (ex. Débutant, Intermédiaire, Confirmé, Compétiteur), vérifié par le serveur et par la base.
 - **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.
 - **Thème / data-theme** : attribut posé sur `<html>` qui fait basculer toutes les variables de couleur d'un coup.

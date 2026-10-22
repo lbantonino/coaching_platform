@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-02 partie 1 faite (identité, contact, profil sportif) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-02 parties 2 et 3 (objectifs, disponibilités, blessures), notes coach/sportif, P2-04, P2-05 à faire | test 54/54, db:test 82/82, test:e2e 43/43 + 1 ignoré (x2 stables, dont 1 après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 et 2 faites (identité, contact, profil sportif ; objectifs et compétitions) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-02 partie 3 (disponibilités, contraintes, blessures), notes coach/sportif, P2-04, P2-05 à faire | test 63/63, db:test 98/98, test:e2e 45/45 + 1 ignoré (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,35 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### Story P2-02b : objectifs et compétitions
+```
+Date : 2026-10-22
+Story : P2-02 partie 2 ; sources : OPEN-01 tranché (D-14), docs/03 §2, D-18
+Base : supabase/migrations/20261022164902_objectifs_sportifs.sql, table athlete_goals
+  - type (10 valeurs : 5 km, 10 km, semi, marathon, autre course, Hyrox, force, composition corporelle,
+    remise en forme, personnel), description, date cible, priorité (main / secondary), statut
+    (active / achieved / dropped), compétition (nom, lieu), catégorie Hyrox (open, pro, doubles, relay)
+  - contraintes : compétition => date ; lieu => compétition ; catégorie => objectif Hyrox ;
+    index unique : un seul objectif principal EN COURS par sportif ; fiche de la même organisation (FK)
+  - RLS coachs de l'organisation ; modification limitée à priority et status (corriger = supprimer et recréer)
+Code : features/goals (schemas + parseGoalForm, queries listGoals, actions addGoal / setGoalStatus /
+  makeGoalMain / deleteGoal, format goalCountdown), lib/format daysBetween ; fiche : carte
+  « Objectifs & compétitions » (compte à rebours J-n, Atteint, Abandonné, Rendre principal, Supprimer,
+  objectifs passés) et formulaire d'ajout (champs de compétition et catégorie Hyrox affichés au besoin)
+Un nouvel objectif principal fait passer l'ancien en secondaire (et l'index unique le garantit en base).
+Défaut corrigé (trouvé par le nouveau test) : après un envoi refusé, React remettait listes déroulantes et
+  cases à cocher à leur valeur de départ ; les formulaires (objectifs ET fiche) sont maintenant reconstruits
+  après chaque réponse avec la saisie renvoyée (compteur `attempt`). Test de régression ajouté (references.spec).
+Seed : 11 objectifs de démo (dont un Hyrox atteint pour Inès, un trail abandonné pour Kevin)
+Tests : Vitest 63/63 (9 nouveaux) ; pgTAP 98/98 (07_objectifs : 16 nouveaux) ; Playwright 45/45 + 1 ignoré
+  (goals.spec x2 profils) ; db:reset final pour retirer les fiches de test
+Limites / points à valider :
+  - Types d'objectif, priorités (principal / secondaire) et catégories Hyrox : à faire relire par Gianluca
+  - Pas de modification d'un objectif existant (supprimer puis recréer) ; pas de confirmation avant suppression
+  - Le sportif ne voit pas encore ses objectifs (P6)
+Suite : P2-02 partie 3 (disponibilités, contraintes, blessures avec consentement)
+```
 
 ### Story P2-02a : fiche enrichie, partie 1 (identité, contact, profil sportif)
 ```

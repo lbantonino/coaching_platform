@@ -91,11 +91,16 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
 
   await fillAthleteName(page, `${name} renommé`);
   await page.getByLabel("Téléphone").fill("appelle-moi");
+  await page.getByLabel("Niveau").selectOption({ label: "Confirmé" });
+  await page.getByText("Domicile", { exact: true }).click();
   await page.getByRole("button", { name: "Enregistrer" }).click();
 
   await expect(
     page.getByRole("alert").filter({ hasText: "Numéro de téléphone invalide" }),
   ).toBeVisible();
+  // Les listes déroulantes et les cases cochées gardent aussi la saisie.
+  await expect(page.getByLabel("Niveau")).toHaveValue("advanced");
+  await expect(page.getByLabel("Domicile")).toBeChecked();
   await expect(page.getByLabel("Prénom")).toHaveValue("Saisie");
   await expect(page.getByLabel("Nom de famille")).toHaveValue(
     `${name.slice("Saisie ".length)} renommé`,

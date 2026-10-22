@@ -199,3 +199,50 @@ values
    'Développé couché', 80, 5, 'observed', '2026-10-12', null, 'a0000000-0000-4000-8000-00000000000a'),
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'pace_easy', 360, 400, null,
    null, null, null, 'coach_estimate', '2026-10-12', 'À confirmer par un test de 5 km.', 'a0000000-0000-4000-8000-00000000000a');
+
+-- Objectifs et compétitions (P2-02 partie 2), inventés eux aussi. Un objectif principal au plus par sportif ;
+-- les objectifs clos (atteint, abandonné) restent comme historique.
+insert into public.athlete_goals (
+  organization_id, athlete_id, goal_type, priority, status, target_date,
+  competition_name, competition_location, hyrox_category, description, created_by
+)
+values
+  -- Thomas : un semi en objectif principal, un 10 km de préparation avant.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'run_half', 'main', 'active',
+   '2027-04-11', 'Semi-marathon de printemps', 'Bruxelles', null, 'Finir sous 1 h 45.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'run_10k', 'secondary', 'active',
+   '2027-02-14', '10 km de préparation', 'Bruxelles', null, 'Course de préparation, à l''allure du semi.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  -- Inès : passer en catégorie Pro ; son premier Hyrox (Open) est dans l'historique.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hyrox', 'main', 'active',
+   '2027-03-20', 'Hyrox Bruxelles', 'Bruxelles', 'pro', 'Passer de la catégorie Open à Pro.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hyrox', 'main', 'achieved',
+   '2026-05-09', 'Hyrox Anvers', 'Anvers', 'open', 'Premier Hyrox terminé en 1 h 28.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  -- Sophie : remise en forme, sans compétition.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000001', 'fitness', 'main', 'active',
+   '2027-01-31', null, null, null, 'Tenir 45 min de cardio sans pause et reprendre confiance en salle.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  -- Lucas : un premier Hyrox en Doubles, et de la masse musculaire sans date.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'hyrox', 'main', 'active',
+   '2027-05-15', 'Premier Hyrox', null, 'doubles', 'En duo avec un ami de la salle.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'body_composition', 'secondary', 'active',
+   null, null, null, null, 'Prendre de la masse musculaire en gardant le cardio.',
+   'a0000000-0000-4000-8000-00000000000a'),
+  -- Nadia : une compétition de force.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', 'strength', 'main', 'active',
+   '2027-02-06', 'Championnat régional de force athlétique', 'Liège', null,
+   'Total visé : 330 kg (squat, développé couché, soulevé de terre).', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Julien (en pause) : reprendre, sans date.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000006', 'fitness', 'main', 'active',
+   null, null, null, null, 'Reprendre une activité physique régulière.', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Kevin (archivé) : un trail abandonné à l'arrêt du suivi.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000008', 'run_other', 'main', 'dropped',
+   '2026-09-20', 'Trail d''automne', 'Spa', null, 'Arrêt du suivi (déménagement).',
+   'a0000000-0000-4000-8000-00000000000a'),
+  -- Organisation B.
+  ('0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', 'run_10k', 'main', 'active',
+   '2027-03-01', null, null, null, 'Courir 10 km en moins de 55 min.', 'b0000000-0000-4000-8000-00000000000b');
