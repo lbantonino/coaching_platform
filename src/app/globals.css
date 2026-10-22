@@ -42,6 +42,13 @@
   --color-hyrox-soft: var(--hyrox-soft);
   --color-hybrid: var(--hybrid);
   --color-hybrid-soft: var(--hybrid-soft);
+  /* Teintes des icônes de chiffres clés (D-24) */
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-green: var(--green);
+  --color-green-soft: var(--green-soft);
 
   --font-display:
     var(--font-space-grotesk), system-ui, sans-serif; /* logo, titres H1–H3, grands chiffres */

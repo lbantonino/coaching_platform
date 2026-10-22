@@ -19,23 +19,32 @@ import {
   contactChannelLabels,
 } from "@/features/athletes/schemas";
 import type { GoalEntry } from "@/features/goals/queries";
-import { goalTypeLabels } from "@/features/goals/schemas";
+import { disciplineStyles, type Discipline } from "@/domain/training/discipline";
+import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { daysBetween, formatDate, formatDay } from "@/lib/format";
 
 const statusTone = { active: "ok", paused: "warn", archived: "neutral" } as const;
 
-// En-tête de la fiche : identité, statuts et action « Inviter ». Aplat, sans dégradé (design system).
+// En-tête de la fiche : identité, statuts et action « Inviter ». Aplat sans dégradé, teinté par la
+// discipline de l'objectif principal (D-24) : orange pour un Hyrox, bleu pour la course…
 export function AthleteHeader({
   athlete,
   invitePath,
+  discipline,
 }: {
   athlete: AthleteDetail;
   invitePath: string;
+  discipline: Discipline | null;
 }) {
+  const tint = discipline ? disciplineStyles[discipline] : null;
   return (
-    <header className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:flex-row md:items-center md:justify-between md:p-[22px]">
+    <header
+      className={`flex flex-col gap-5 rounded-card border p-5 md:flex-row md:items-center md:justify-between md:p-[22px] ${
+        tint ? tint.header : "border-line bg-surface"
+      }`}
+    >
       <div className="flex min-w-0 items-center gap-4 md:gap-5">
-        <Avatar name={athlete.displayName} size="lg" />
+        <Avatar name={athlete.displayName} size="lg" colorClass={tint?.avatar} />
         <div className="flex min-w-0 flex-col gap-2">
           <h1 className="font-display text-h2 font-medium break-words md:text-h1">
             {athlete.displayName}
@@ -63,24 +72,41 @@ export function AthleteHeader({
   );
 }
 
+// Teinte de l'icône de chaque chiffre clé (D-24), dans une pastille ronde.
+const iconTints = {
+  neutral: "bg-chip text-muted",
+  red: "bg-accent-soft text-accent-text",
+  blue: "bg-blue-soft text-blue",
+  amber: "bg-amber-soft text-amber",
+  green: "bg-green-soft text-green",
+} as const;
+
 function KeyFigure({
   icon: Icon,
+  tint,
   label,
   value,
+  valueClassName = "",
   detail,
   href,
 }: {
   icon: LucideIcon;
+  tint: string;
   label: string;
   value: ReactNode;
+  valueClassName?: string;
   detail?: ReactNode;
   href?: string;
 }) {
   const content = (
     <>
-      <Icon aria-hidden size={17} strokeWidth={1.7} className="text-muted" />
+      <span className={`inline-flex size-8 items-center justify-center rounded-full ${tint}`}>
+        <Icon aria-hidden size={16} strokeWidth={1.7} />
+      </span>
       <span className="text-caption text-muted">{label}</span>
-      <span className="font-display text-[20px] leading-tight font-medium break-words">
+      <span
+        className={`font-display text-[20px] leading-tight font-medium break-words ${valueClassName}`}
+      >
         {value}
       </span>
       {detail ? <span className="text-caption text-muted">{detail}</span> : null}
@@ -117,6 +143,7 @@ export function KeyFigures({
   basePath: string;
 }) {
   const main = goals.find((goal) => goal.priority === "main");
+  const mainDiscipline = main ? goalDiscipline(main.type) : null;
   // Prochaine compétition : la plus proche parmi les objectifs en cours qui en sont une.
   const nextCompetition = goals
     .filter((goal) => goal.competitionName && goal.targetDate && goal.targetDate >= today)
@@ -131,6 +158,7 @@ export function KeyFigures({
     >
       <KeyFigure
         icon={Target}
+        tint={mainDiscipline ? disciplineStyles[mainDiscipline].icon : iconTints.neutral}
         label="Objectif principal"
         value={
           main ? (
@@ -144,18 +172,22 @@ export function KeyFigures({
       />
       <KeyFigure
         icon={ChartNoAxesColumn}
+        tint={iconTints.blue}
         label="Séances / semaine"
         value={athlete.sessionsPerWeek ?? empty}
         detail={athlete.sessionsPerWeek ? "souhaitées" : null}
       />
       <KeyFigure
         icon={Clock}
+        tint={iconTints.amber}
         label="Durée max / séance"
         value={athlete.maxSessionMinutes ? `${athlete.maxSessionMinutes} min` : empty}
       />
       <KeyFigure
         icon={Flag}
+        tint={iconTints.red}
         label="Prochaine compétition"
+        valueClassName={nextCompetition ? "text-accent-text" : ""}
         value={
           nextCompetition?.targetDate ? (
             countdownText(daysBetween(today, nextCompetition.targetDate))
@@ -168,6 +200,7 @@ export function KeyFigures({
       />
       <KeyFigure
         icon={MessageCircle}
+        tint={iconTints.green}
         label="Canal préféré"
         value={athlete.preferredContact ? contactChannelLabels[athlete.preferredContact] : empty}
       />

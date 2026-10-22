@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#16161A", // fond graphite (D-23)
+  themeColor: "#1C1C21", // fond graphite clair (D-24)
   colorScheme: "dark",
 };
 

@@ -32,7 +32,13 @@ import {
 import { goalCountdown } from "@/features/goals/format";
 import type { GoalEntry } from "@/features/goals/queries";
 import type { AthleteNotes } from "@/features/notes/queries";
-import { goalPriorityLabels, goalTypeLabels, hyroxCategoryLabels } from "@/features/goals/schemas";
+import { disciplineStyles } from "@/domain/training/discipline";
+import {
+  goalDiscipline,
+  goalPriorityLabels,
+  goalTypeLabels,
+  hyroxCategoryLabels,
+} from "@/features/goals/schemas";
 import { formatReferenceDetail, formatReferenceValue } from "@/features/references/format";
 import type { ReferenceEntry } from "@/features/references/queries";
 import { referenceKindLabels, referenceSourceLabels } from "@/features/references/schemas";
@@ -66,7 +72,7 @@ function OverviewCard({
     >
       <div className="flex items-center justify-between gap-3">
         <h2 id={id} className="flex items-center gap-2.5 text-title font-medium">
-          <Icon aria-hidden size={17} strokeWidth={1.7} className="text-muted" />
+          <Icon aria-hidden size={17} strokeWidth={1.7} className="text-accent-text" />
           {title}
         </h2>
         <Link
@@ -153,11 +159,15 @@ function GoalCard({
   const goal = goals.find((entry) => entry.priority === "main") ?? goals[0];
   const others = goals.length - (goal ? 1 : 0);
   const countdown = goal?.targetDate ? goalCountdown(today, goal.targetDate) : null;
+  // Liseré à la couleur de la discipline de l'objectif (D-24).
+  const discipline = goal ? goalDiscipline(goal.type) : null;
 
   return (
     <OverviewCard id="overview-goal" title="Objectif actuel" icon={Target} editHref={editHref}>
       {goal ? (
-        <div className="flex flex-col gap-3 rounded-[14px] border border-line bg-bg p-4">
+        <div
+          className={`flex flex-col gap-3 rounded-[14px] border border-line bg-bg p-4 ${discipline ? disciplineStyles[discipline].edge : ""}`}
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1.5">
               <div className="flex flex-wrap items-center gap-2">
