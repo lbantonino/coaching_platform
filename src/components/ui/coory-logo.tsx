@@ -64,8 +64,9 @@ function Rings({
   );
 }
 
-// wordmark = « c » + anneaux + « ry » (17–20 px dans l'app, 22–26 px sur les écrans d'accueil)
-// symbol = les anneaux seuls (icône, avatar). `size` = taille du texte, ou hauteur du symbole.
+// wordmark = « c » + anneaux + « ry » : accueil, connexion et autres pages d'accès (22–26 px).
+// symbol = les anneaux seuls : en-têtes et barre latérale de l'app, choix d'Antonino le 22/10 pour un logo
+// plus visible. `size` = taille du texte (wordmark) ou hauteur du symbole, en pixels.
 export function CooryLogo({
   variant = "wordmark",
   tone = "theme",
