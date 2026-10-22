@@ -13,7 +13,7 @@ import {
   type ReferenceKind,
 } from "@/features/references/schemas";
 
-const initialState: AddReferenceState = { error: null, saved: 0, values: null };
+const initialState: AddReferenceState = { error: null, saved: 0, attempt: 0, values: null };
 
 const groups: { label: string; kinds: ReferenceKind[] }[] = [
   {
@@ -44,9 +44,9 @@ export function AddReferenceForm({ organizationId, athleteId, today }: Props) {
   return (
     <div className="flex flex-col gap-3 border-t border-line pt-5">
       <h3 className="text-small font-medium">Ajouter une mesure</h3>
-      {/* La clé change après chaque ajout réussi : le formulaire se vide pour la saisie suivante. */}
+      {/* Reconstruit après chaque réponse : vide après un ajout, saisie renvoyée après une erreur. */}
       <ReferenceFields
-        key={state.saved}
+        key={state.attempt}
         formAction={formAction}
         pending={pending}
         today={today}
@@ -73,9 +73,12 @@ function ReferenceFields({
   values: ReferenceFormInput | null;
   justSaved: boolean;
 }) {
-  const [kind, setKind] = useState<ReferenceKind>("pace_easy");
-  // Après une erreur, on réaffiche la saisie (React 19 vide le formulaire après chaque envoi).
+  // Après une erreur, on réaffiche la saisie (React 19 vide le formulaire après chaque envoi),
+  // y compris le type choisi : sinon la mesure suivante partirait sous un autre type.
   const v = values;
+  const [kind, setKind] = useState<ReferenceKind>(
+    v && v.kind in referenceKindLabels ? (v.kind as ReferenceKind) : "pace_easy",
+  );
   const group = referenceGroup(kind);
 
   return (

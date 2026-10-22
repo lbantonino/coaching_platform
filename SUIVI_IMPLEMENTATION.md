@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouverts : OPEN-18 (séances), défaut du formulaire « Ajouter une mesure » signalé à Antonino | test 112/112, db:test 162/162, test:e2e 69/69 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 112/112, db:test 162/162, test:e2e 69/69 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -74,7 +74,8 @@ Incident : après une erreur, React 19 remettait le menu « Épreuve » sur « 5
   montrait encore Hyrox : un Hyrox a été enregistré comme 5 km en test. Corrigé en reconstruisant le
   formulaire après CHAQUE réponse (compteur attempt). Même défaut REPRODUIT sur « Ajouter une mesure »
   des repères (Allure 5 km en erreur, puis renvoi : enregistrée en Endurance) : non corrigé, signalé à
-  Antonino pour décision
+  Antonino, puis CORRIGÉ avec son accord (même compteur attempt ; Playwright vérifie que le type reste
+  « Allure 5 km » après l'erreur)
 Tests : pgTAP 10_records (13), Vitest records (8) + activité (1), test:e2e records.spec.ts ; sélecteur du
   calculateur de test limité à son groupe (le texte « 5 km » existe désormais deux fois)
 ```

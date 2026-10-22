@@ -12,9 +12,11 @@ import { parseReferenceForm, type ReferenceFormInput } from "./schemas";
 import { parseTestForm } from "./test-form";
 
 // `values` : saisie renvoyée en cas d'erreur, car React 19 vide le formulaire après chaque envoi.
+// `attempt` change à CHAQUE réponse : le formulaire est reconstruit, menu « Type de repère » compris.
 export type AddReferenceState = {
   error: string | null;
   saved: number;
+  attempt: number;
   values: ReferenceFormInput | null;
 };
 
@@ -26,7 +28,13 @@ export async function addReference(
 ): Promise<AddReferenceState> {
   const { user, membership } = await requireOrgAccess(organizationId);
   const athlete = await getAthlete(membership.organizationId, athleteId);
-  if (!athlete) return { error: "Sportif introuvable.", saved: previous.saved, values: null };
+  if (!athlete)
+    return {
+      error: "Sportif introuvable.",
+      saved: previous.saved,
+      attempt: previous.attempt + 1,
+      values: null,
+    };
 
   const field = (name: string) => String(formData.get(name) ?? "");
   const input: ReferenceFormInput = {
@@ -41,7 +49,13 @@ export async function addReference(
     note: field("note"),
   };
   const parsed = parseReferenceForm(input, todayIsoInBrussels());
-  if (!parsed.ok) return { error: parsed.error, saved: previous.saved, values: input };
+  if (!parsed.ok)
+    return {
+      error: parsed.error,
+      saved: previous.saved,
+      attempt: previous.attempt + 1,
+      values: input,
+    };
 
   const supabase = await createClient();
   const { error } = await supabase.from("athlete_reference_metrics").insert({
@@ -54,12 +68,13 @@ export async function addReference(
     return {
       error: "Le repère n'a pas pu être enregistré. Réessaie.",
       saved: previous.saved,
+      attempt: previous.attempt + 1,
       values: input,
     };
 
   revalidatePath(`/coach/o/${membership.organizationId}/sportifs/${athlete.id}`);
   // `saved` s'incrémente : le formulaire s'en sert pour se vider après chaque ajout réussi.
-  return { error: null, saved: previous.saved + 1, values: null };
+  return { error: null, saved: previous.saved + 1, attempt: previous.attempt + 1, values: null };
 }
 
 // Suppression d'une mesure erronée (l'historique ne se modifie pas : on supprime puis on ressaisit).
