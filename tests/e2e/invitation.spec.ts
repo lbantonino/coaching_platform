@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { fillAthleteName } from "./helpers";
+import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Parcours d'invitation (P1-05) : le coach invite, le sportif crée son accès dans un AUTRE navigateur.
 const DEMO_PASSWORD = "demo-coach-local";
@@ -108,6 +108,7 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
 
   // Sur la fiche, l'e-mail (identifiant de connexion) est verrouillé.
   await row.getByRole("link", { name: new RegExp(`^${name}`) }).click();
+  await openAthleteTab(page, "Profil");
   await expect(page.getByLabel("Adresse e-mail")).toHaveAttribute("readonly", "");
   await expect(page.getByText("Identifiant de connexion du sportif")).toBeVisible();
 });
