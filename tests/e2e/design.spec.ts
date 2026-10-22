@@ -37,3 +37,23 @@ test("le thème sombre est le défaut, le clair se choisit et reste après recha
   await page.reload();
   await expect(html).not.toHaveAttribute("data-theme", "light");
 });
+
+test("sur téléphone, le menu hamburger remplace la barre du bas et contient la déconnexion", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "telephone", "Menu propre au téléphone");
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+  await expect(
+    page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+  const menu = page.getByRole("dialog", { name: "Menu" });
+  await expect(menu.getByRole("link", { name: "Agenda", exact: true })).toBeVisible();
+  await expect(menu.getByRole("button", { name: "Se déconnecter" })).toBeVisible();
+  await menu.getByRole("button", { name: "Fermer le menu" }).click();
+  await expect(menu).toBeHidden();
+});

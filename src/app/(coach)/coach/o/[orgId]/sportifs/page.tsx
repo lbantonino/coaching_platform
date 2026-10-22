@@ -164,6 +164,7 @@ async function AthleteList({
                         ? disciplineStyles[athlete.mainDiscipline].avatar
                         : undefined
                     }
+                    photoPath={athlete.photoPath}
                   />
                   <span className="flex min-w-0 flex-col">
                     <span className="flex min-w-0 items-center gap-2">

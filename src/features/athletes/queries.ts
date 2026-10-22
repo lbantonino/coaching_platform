@@ -24,6 +24,8 @@ export type AthleteListItem = {
   hasAccount: boolean;
   hasPendingInvite: boolean;
   sex: Sex | null;
+  // Chemin de la photo de profil dans le stockage privé (D-28), servie par /photos.
+  photoPath: string | null;
   // Discipline de l'objectif principal en cours : couleur de l'avatar dans la liste (D-24).
   mainDiscipline: Discipline | null;
 };
@@ -48,7 +50,7 @@ export async function listAthletes(
   let query = supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, display_name, email, status, sex, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status )",
+      "id, first_name, display_name, email, status, sex, photo_path, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status )",
     )
     .eq("organization_id", organizationId)
     .order("display_name");
@@ -71,6 +73,7 @@ export async function listAthletes(
         (invite) => invite.status === "pending" && new Date(invite.expires_at) > now,
       ),
       sex: row.sex as Sex | null,
+      photoPath: row.photo_path,
       mainDiscipline: mainGoalDiscipline(row.athlete_goals),
     }))
     .filter(
@@ -87,6 +90,8 @@ export type AthleteDetail = {
   firstName: string;
   lastName: string | null;
   sex: Sex | null;
+  // Chemin de la photo de profil dans le stockage privé (D-28), servie par /photos.
+  photoPath: string | null;
   email: string | null;
   phone: string | null;
   preferredContact: ContactChannel | null;
@@ -118,7 +123,7 @@ export async function getAthlete(
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, last_name, sex, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, athlete_user_id, created_at",
+      "id, first_name, last_name, sex, photo_path, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, athlete_user_id, created_at",
     )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
@@ -133,6 +138,7 @@ export async function getAthlete(
     firstName: data.first_name,
     lastName: data.last_name,
     sex: data.sex as Sex | null,
+    photoPath: data.photo_path,
     email: data.email,
     phone: data.phone,
     // Les contraintes CHECK en base garantissent ces listes fermées.

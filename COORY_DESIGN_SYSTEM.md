@@ -102,6 +102,12 @@ Soft = same color at 12 % (dark) / 10 % (light) opacity. Text on card and on its
 > - **Repères** (`ReferenceTile`) : allures `--run`, race pace `--hyrox`, FC `--accent-text`, charges `--strength` ; filet à 40 %, fond teinté à 6–7 % sur `--bg`, valeur colorée.
 > - **Tableau de bord** (`StatCard` `tone`) : la stat héro reste rouge ; les autres cartes prennent un filet à 35 % et un fond teinté à 5 % (`--green`, `--amber`, `--blue`), icône cerclée et grand chiffre colorés.
 
+> **Ajustement du 23/10/2026 (D-28, maquettes d'Antonino, `docs/design/MAQUETTES.md`)** :
+> - **Navigation** : l'élément actif du menu est sur fond rouge teinté (`color-mix` 16 % de `--accent`) avec un filet rouge, comme sur la maquette (écart assumé avec « actif jamais rouge ») ; modules futurs avec un badge « Bientôt » ; sur téléphone, menu hamburger (`<dialog>`) à la place de la barre d'onglets.
+> - **Agenda** : blocs de séance à teinte franche de la discipline (34 % sur `--surface`), texte en couleur de texte ; colonne du jour teintée de rouge ; jour courant en pastille rouge dans la vue Mois.
+> - **Photos** : avatar rond, photo recadrée (`object-cover`), initiales si aucune photo.
+> - **Cartes « Bientôt »** : filet en pointillés `--line-2`, badge neutre « Bientôt · phase ».
+
 **Where red is allowed:** primary CTA (max 1 per view), one hero stat card per row, current week/segment, active mobile tab, active page-tab underline, completed set check, notification dot, nav counters, current bar in charts.
 **Never:** page backgrounds, large text blocks, raw `#FF3347` text on light theme (use `--accent-text`), dark text on red.
 

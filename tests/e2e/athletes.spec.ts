@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { fillAthleteName } from "./helpers";
+import { fillAthleteName, goToCoachSection } from "./helpers";
 
 const DEMO_PASSWORD = "demo-coach-local";
 // Identifiants fixes du seed (supabase/seed.sql).
@@ -24,7 +24,7 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   const email = `camille-${suffix}@example.test`;
 
   await loginAsCoachA(page);
-  await page.getByRole("link", { name: "Sportifs", exact: true }).filter({ visible: true }).click();
+  await goToCoachSection(page, "Sportifs");
   await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
 
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();

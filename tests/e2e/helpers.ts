@@ -16,3 +16,22 @@ export async function openAthleteTab(page: Page, label: string) {
   await tab.click();
   await expect(tab).toHaveAttribute("aria-current", "page");
 }
+
+// Navigation de l'espace coach : barre latérale sur ordinateur, menu hamburger sur téléphone.
+// Le bouton du menu s'affiche avec la session (derrière Suspense) : on décide d'après la largeur
+// d'écran (seuil md de Tailwind) et on laisse Playwright attendre le bouton.
+async function openCoachMenuIfNeeded(page: Page) {
+  if ((page.viewportSize()?.width ?? 1280) < 768) {
+    await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+  }
+}
+
+export async function goToCoachSection(page: Page, name: string) {
+  await openCoachMenuIfNeeded(page);
+  await page.getByRole("link", { name, exact: true }).filter({ visible: true }).click();
+}
+
+export async function logoutCoach(page: Page) {
+  await openCoachMenuIfNeeded(page);
+  await page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }).click();
+}

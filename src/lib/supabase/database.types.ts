@@ -281,6 +281,7 @@ export type Database = {
           max_session_minutes: number | null;
           organization_id: string;
           phone: string | null;
+          photo_path: string | null;
           preferred_contact: string | null;
           schedule_constraints: string | null;
           sessions_per_week: number | null;
@@ -308,6 +309,7 @@ export type Database = {
           max_session_minutes?: number | null;
           organization_id: string;
           phone?: string | null;
+          photo_path?: string | null;
           preferred_contact?: string | null;
           schedule_constraints?: string | null;
           sessions_per_week?: number | null;
@@ -334,6 +336,7 @@ export type Database = {
           max_session_minutes?: number | null;
           organization_id?: string;
           phone?: string | null;
+          photo_path?: string | null;
           preferred_contact?: string | null;
           schedule_constraints?: string | null;
           sessions_per_week?: number | null;
@@ -414,6 +417,37 @@ export type Database = {
             referencedColumns: ["id", "organization_id"];
           },
         ];
+      };
+      coach_profiles: {
+        Row: {
+          company_name: string | null;
+          created_at: string;
+          first_name: string | null;
+          last_name: string | null;
+          photo_path: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          company_name?: string | null;
+          created_at?: string;
+          first_name?: string | null;
+          last_name?: string | null;
+          photo_path?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          company_name?: string | null;
+          created_at?: string;
+          first_name?: string | null;
+          last_name?: string | null;
+          photo_path?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       coach_session_athletes: {
         Row: {

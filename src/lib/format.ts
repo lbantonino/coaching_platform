@@ -38,3 +38,13 @@ const dayFormatter = new Intl.DateTimeFormat("fr-BE", {
 export function formatDay(isoTimestamp: string): string {
   return dayFormatter.format(new Date(isoTimestamp));
 }
+
+// Heure actuelle à Bruxelles (« 14:05 »). À appeler uniquement dans du code exécuté à la requête.
+export function nowTimeInBrussels(): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Europe/Brussels",
+  }).format(new Date());
+}

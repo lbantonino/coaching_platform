@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { goToCoachSection } from "./helpers";
+
 // Agenda du coach (P2-05) : lecture seule sur les objectifs datés du seed (supabase/seed.sql).
 // Les mois sont fixés dans l'adresse pour que le test ne dépende pas de la date du jour.
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
@@ -19,7 +21,7 @@ test("le coach voit les compétitions de ses sportifs, filtre et ouvre la fiche"
   await loginAsCoachA(page);
 
   // L'agenda est dans la navigation (barre latérale ou onglets selon l'écran).
-  await page.getByRole("link", { name: "Agenda", exact: true }).filter({ visible: true }).click();
+  await goToCoachSection(page, "Agenda");
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: "7 prochains jours" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Prochaines compétitions" })).toBeVisible();
@@ -57,14 +59,53 @@ test("le coach voit les compétitions de ses sportifs, filtre et ouvre la fiche"
   await expect(page.getByRole("heading", { name: "Inès Benali", level: 1 })).toBeVisible();
 });
 
-test("le tableau de bord montre les coachings individuels de la semaine", async ({ page }) => {
+test("le tableau de bord montre la semaine du coach avec ses vraies séances", async ({ page }) => {
   await loginAsCoachA(page);
-  const week = page.getByRole("region", { name: "Coachings individuels de la semaine" });
-  await expect(week).toBeVisible();
-  // Seules des séances individuelles y figurent : jamais la séance collective du mercredi.
-  await expect(week.getByText("Piste du mercredi")).toHaveCount(0);
-  await week.getByRole("link", { name: "Voir l'agenda" }).click();
+  await expect(page.getByRole("heading", { name: /^Bonjour/, level: 1 })).toBeVisible();
+  // Semaine fixée dans l'adresse : le mercredi 6 janvier 2027 a la piste collective (19:00).
+  await page.goto("/coach?date=2027-01-06");
+  const week = page.getByRole("region", { name: "Agenda de la semaine" });
+  await expect(
+    week.getByRole("link", { name: /Piste du mercredi/ }).filter({ visible: true }),
+  ).toHaveCount(1);
+  // Les modules pas encore construits sont annoncés, jamais simulés.
+  await expect(page.getByText("Bientôt · P4").first()).toBeVisible();
+  await week.getByRole("link", { name: "Filtres" }).click();
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
+});
+
+test("l'agenda du tableau de bord passe du jour à la semaine et au mois sans quitter la page", async ({
+  page,
+}) => {
+  await loginAsCoachA(page);
+  const views = page.getByRole("navigation", { name: "Vue de l'agenda" });
+  await views.getByRole("link", { name: "Mois" }).click();
+  await expect(page.getByRole("heading", { name: "Agenda du mois" })).toBeVisible();
+  await expect(page).toHaveURL(/\/coach\?vue=mois/);
+  // Un jour du mois ouvre sa journée, toujours sur le tableau de bord.
+  await page.getByRole("link", { name: /^15 :/ }).click();
+  await expect(page.getByRole("heading", { name: "Agenda du jour" })).toBeVisible();
+  await views.getByRole("link", { name: "Semaine" }).click();
+  await expect(page.getByRole("heading", { name: "Agenda de la semaine" })).toBeVisible();
+  await views.getByRole("link", { name: "Aujourd'hui" }).click();
+  await expect(page.getByRole("heading", { name: "Agenda du jour" })).toBeVisible();
+});
+
+test("le menu « Créer » mène aux vraies créations, et « Bientôt » pour le reste", async ({
+  page,
+}) => {
+  await loginAsCoachA(page);
+  await page.getByText("Créer", { exact: true }).click();
+  await page.getByRole("list", { name: "Créer" }).getByRole("link", { name: "Séance" }).click();
+  await expect(page.getByRole("heading", { name: "Nouvelle séance", level: 1 })).toBeVisible();
+  await page.goto("/coach");
+  await page.getByText("Créer", { exact: true }).click();
+  await page
+    .getByRole("list", { name: "Créer" })
+    .getByRole("link", { name: /Programme/ })
+    .click();
+  await expect(page.getByRole("heading", { name: "Programmes", level: 1 })).toBeVisible();
+  await expect(page.getByRole("main").getByText("Bientôt · P4")).toBeVisible();
 });
 
 test("le coach A ne peut pas ouvrir l'agenda de l'organisation B", async ({ page }) => {
