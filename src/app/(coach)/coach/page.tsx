@@ -1,17 +1,18 @@
-import { Building2, ChevronRight, MailOpen, UserCheck, Users } from "lucide-react";
+import { MailOpen, UserCheck, Users } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 
 import { StatCard } from "@/components/ui/card";
 import { listAthletes } from "@/features/athletes/queries";
 import { requireCoach } from "@/features/auth/guards";
+import { listSessions } from "@/features/sessions/queries";
+import { todayIsoInBrussels } from "@/lib/format";
+
+import { CoachingWeek } from "./coaching-week";
 
 export const metadata: Metadata = {
   title: "Tableau de bord",
 };
-
-const roleLabels = { owner: "Propriétaire", coach: "Coach" } as const;
 
 export default function CoachHomePage() {
   return (
@@ -29,7 +30,10 @@ async function Dashboard() {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
   const { user, memberships } = await requireCoach();
   const current = memberships[0];
-  const athletes = await listAthletes(current.organizationId);
+  const [athletes, sessions] = await Promise.all([
+    listAthletes(current.organizationId),
+    listSessions(current.organizationId),
+  ]);
 
   // Chiffres RÉELS, calculés depuis la base (aucune statistique inventée).
   const active = athletes.filter((a) => a.status === "active").length;
@@ -65,37 +69,11 @@ async function Dashboard() {
         />
       </section>
 
-      <section aria-labelledby="orgs-title" className="flex flex-col gap-3">
-        <h2 id="orgs-title" className="text-title font-medium">
-          {memberships.length > 1 ? "Tes organisations" : "Ton organisation"}
-        </h2>
-        <ul className="flex flex-col gap-2">
-          {memberships.map((membership) => (
-            <li key={membership.organizationId}>
-              <Link
-                href={`/coach/o/${membership.organizationId}/sportifs`}
-                className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-4 transition-colors hover:bg-surface-2"
-              >
-                <span className="flex items-center gap-3">
-                  <span
-                    aria-hidden
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-blue/50 bg-blue-soft text-blue"
-                  >
-                    <Building2 size={17} strokeWidth={1.75} />
-                  </span>
-                  <span className="flex flex-col">
-                    <span className="font-medium">{membership.organizationName}</span>
-                    <span className="text-small text-muted">
-                      {roleLabels[membership.role]} · Voir les sportifs
-                    </span>
-                  </span>
-                </span>
-                <ChevronRight aria-hidden size={17} strokeWidth={1.7} className="text-muted" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <CoachingWeek
+        sessions={sessions}
+        today={todayIsoInBrussels()}
+        agendaHref={`/coach/o/${current.organizationId}/agenda`}
+      />
     </div>
   );
 }
