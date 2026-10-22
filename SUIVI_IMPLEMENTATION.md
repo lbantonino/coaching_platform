@@ -57,6 +57,9 @@ Suite : P2-02 fiche enrichie (identité et contact d'abord).
 Correction demandée par Antonino (22/10) : dans l'app (barre latérale coach 32 px, en-têtes mobile, sportif et
   admin 28 px), le logo est le SYMBOLE seul (les deux anneaux), plus grand ; le mot « coory » reste sur l'accueil,
   la connexion et les autres pages d'accès. check OK, test:e2e 41/41 + 1 ignoré, captures sombre/clair vérifiées.
+Ajustement final d'Antonino (22/10) : sur ORDINATEUR, le mot « coory » en 28 px (au lieu de 20) dans la barre
+  latérale coach et l'en-tête sportif/admin ; sur TÉLÉPHONE (< 768 px), les deux anneaux en 28 px. 28 px dépasse les
+  17–20 px conseillés par COORY_LOGO.md : choix assumé. check OK, test:e2e 41/41 + 1 ignoré, captures vérifiées.
 ```
 
 ## Session du 20/10/2026
