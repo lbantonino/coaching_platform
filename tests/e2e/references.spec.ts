@@ -93,7 +93,7 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
   await page.getByLabel("Téléphone").fill("appelle-moi");
   await page.getByLabel("Niveau").selectOption({ label: "Confirmé" });
   await page.getByText("Domicile", { exact: true }).click();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
 
   await expect(
     page.getByRole("alert").filter({ hasText: "Numéro de téléphone invalide" }),

@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-02 partie 2 : objectifs et compétitions).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-02 partie 3 : disponibilités et accord pour les données de santé).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -229,6 +229,13 @@ Deux règles sont garanties **par la base**, pas seulement par l'écran : une co
 
 Le nouveau test navigateur a trouvé un vrai défaut, présent aussi dans la fiche de la partie 1. Après un envoi refusé, React remet le formulaire à ses valeurs de départ : les champs texte retrouvaient bien la saisie, mais pas les **listes déroulantes** ni les **cases à cocher**. Un coach qui changeait le niveau puis se trompait de téléphone perdait son choix de niveau. Correction : après chaque réponse du serveur, le formulaire est reconstruit avec la saisie renvoyée. Un test vérifie désormais aussi les listes et les cases.
 
+### Disponibilités et données de santé avec accord (22/10)
+La fiche indique maintenant le temps dont le sportif dispose : séances par semaine, jours, durée maximale, contraintes d'organisation. Plus délicat : les **blessures et contraintes physiques**. Ce sont des **données de santé**, protégées par l'article 9 du RGPD : on ne peut les noter qu'avec l'**accord explicite** de la personne. Antonino a choisi que cet accord puisse venir de deux côtés : du sportif lui-même, depuis son espace (« J'accepte »), ou du coach qui note l'accord reçu en précisant comment (oral, écrit, formulaire signé).
+
+Ce qui rend la règle solide, c'est qu'elle est garantie **par la base**, pas par l'écran. Une contrainte de la table refuse tout texte de santé sans accord en cours. La date d'accord ne peut être écrite par personne directement : seulement par deux **fonctions** en base qui vérifient qui appelle (le sportif concerné ou un coach de son organisation), puis écrivent la fiche et le **journal** dans la même transaction. Le journal ne se modifie jamais : on y ajoute seulement « accord donné » ou « accord retiré », avec la date et qui l'a fait. C'est ce qu'on appelle une **piste d'audit**. Retirer l'accord **efface** ce qui avait été noté, et le sportif voit toujours ce que son coach a écrit sur lui.
+
+Les 21 tests SQL de cette partie essaient justement de contourner la règle : écrire la date d'accord à la main, écrire dans le journal, donner l'accord pour quelqu'un d'autre, depuis une autre organisation, sans être connecté. Tout est refusé.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -247,9 +254,10 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 98 tests SQL, 63 tests unitaires et 45 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 119 tests SQL, 69 tests unitaires et 48 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
+- **« Comment gères-tu des données de santé ? »** Le moins possible : un champ court, sans diagnostic, qui n'existe que pendant un accord explicite du sportif. La base le garantit (contrainte + fonctions qui vérifient l'appelant), chaque accord est journalisé, et le retrait efface les données. Le sportif voit ce qui est noté sur lui.
 - **« Comment gères-tu le thème sombre et clair ? »** Toutes les couleurs sont des variables CSS. Un attribut sur `<html>` change leur valeur, donc aucun composant n'a besoin de savoir quel thème est actif. Un script lancé avant l'affichage évite le flash.
 - **« Comment as-tu utilisé l'IA ? »** Claude Code écrit le code à partir d'un cahier des charges détaillé ; je valide chaque décision métier, je teste dans le navigateur, et tout est tracé dans un journal avec les preuves de tests.
 
@@ -273,6 +281,9 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
 - **ADR** : courte note qui documente une décision technique, ses alternatives et ses conséquences.
 - **Colonne calculée** : colonne dont la base calcule elle-même la valeur à partir d'autres colonnes (ici le nom complet) ; on ne peut pas l'écrire.
+- **Données de santé (RGPD art. 9)** : catégorie de données sensibles ; on ne peut les traiter qu'avec un accord explicite (ou une autre base légale précise).
+- **Fonction SECURITY DEFINER** : fonction de la base qui s'exécute avec des droits élevés ; elle doit donc vérifier elle-même qui l'appelle avant d'agir.
+- **Piste d'audit (journal)** : liste d'événements datés qu'on ne peut que compléter, jamais modifier, pour prouver ce qui s'est passé.
 - **Index unique partiel** : règle de la base qui interdit les doublons seulement pour certaines lignes (ici : un seul objectif principal parmi ceux en cours).
 - **Liste fermée** : ensemble de valeurs autorisées (ex. Débutant, Intermédiaire, Confirmé, Compétiteur), vérifié par le serveur et par la base.
 - **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.

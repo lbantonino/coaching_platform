@@ -45,7 +45,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   await expect(page.getByRole("heading", { name })).toBeVisible();
   await fillAthleteName(page, renamed);
   await page.getByLabel("Téléphone").fill("+32 470 12 34 56");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
   ).toBeVisible();
@@ -53,7 +53,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
 
   // Téléphone invalide : refusé avec un message clair.
   await page.getByLabel("Téléphone").fill("appelle-moi");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByRole("alert").filter({ hasText: "Numéro de téléphone invalide" }),
   ).toBeVisible();
@@ -61,7 +61,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
 
   // Archivage : disparaît des actifs, apparaît dans « Archivés ».
   await page.getByText("Archivé", { exact: true }).click();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
   ).toBeVisible();
@@ -77,7 +77,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   // Restauration.
   await list.getByRole("link", { name: new RegExp(`^${renamed}`) }).click();
   await page.getByText("Actif", { exact: true }).click();
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
   ).toBeVisible();
@@ -108,7 +108,7 @@ test("le coach renseigne l'identité et le profil sportif, retrouvés après rec
   await page.getByText("Salle de sport", { exact: true }).click();
   await page.getByText("Extérieur (route, trail)", { exact: true }).click();
   await page.getByLabel("Matériel disponible").fill("Haltères jusqu'à 20 kg");
-  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
   ).toBeVisible();

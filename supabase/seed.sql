@@ -246,3 +246,35 @@ values
   -- Organisation B.
   ('0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', 'run_10k', 'main', 'active',
    '2027-03-01', null, null, null, 'Courir 10 km en moins de 55 min.', 'b0000000-0000-4000-8000-00000000000b');
+
+-- Disponibilités et contraintes (P2-02 partie 3), inventées.
+update public.athlete_profiles as p
+set sessions_per_week = d.sessions, available_days = d.days, max_session_minutes = d.minutes,
+    schedule_constraints = d.note
+from (values
+  ('da000000-0000-4000-8000-000000000001'::uuid, 2, '{tue,thu}'::text[], 60, 'Après le travail, entre 18 h et 20 h.'),
+  ('da000000-0000-4000-8000-000000000002'::uuid, 4, '{tue,thu,sat,sun}'::text[], 75,
+   'Sortie longue le dimanche matin ; déplacements professionnels un mercredi sur deux.'),
+  ('da000000-0000-4000-8000-000000000003'::uuid, 5, '{mon,tue,thu,fri,sat}'::text[], 90,
+   'Box ouverte tôt le matin ; jamais de séance le mercredi.'),
+  ('da000000-0000-4000-8000-000000000004'::uuid, 4, '{mon,wed,fri,sun}'::text[], 75, null),
+  ('da000000-0000-4000-8000-000000000005'::uuid, 4, '{mon,tue,thu,sat}'::text[], 120,
+   'Compétitions certains samedis.'),
+  ('da000000-0000-4000-8000-000000000006'::uuid, 2, '{sat,sun}'::text[], 45, 'Disponible surtout le week-end.')
+) as d (id, sessions, days, minutes, note)
+where p.id = d.id;
+
+-- Contraintes physiques : seulement avec un accord. Inès a donné le sien sur un formulaire signé, noté par
+-- le coach (journal + date d'accord, comme le ferait grant_health_consent). Thomas n'a pas encore donné
+-- d'accord : il peut le faire depuis son espace sportif.
+insert into public.athlete_consents (
+  organization_id, athlete_id, action, source, coach_proof, recorded_by, recorded_at
+)
+values
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'granted', 'coach',
+   'signed_form', 'a0000000-0000-4000-8000-00000000000a', '2026-09-16 09:30+02');
+
+update public.athlete_profiles
+  set health_consent_at = '2026-09-16 09:30+02',
+      health_constraints = 'Épaule gauche sensible au-dessus de la tête (wall balls, développé militaire).'
+  where id = 'da000000-0000-4000-8000-000000000003';

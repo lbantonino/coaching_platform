@@ -4,7 +4,13 @@ import { Check } from "lucide-react";
 import { useActionState, type ReactNode } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import {
+  checkboxChipClass,
+  errorTextClass,
+  hintClass,
+  inputClass,
+  labelClass,
+} from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import {
   updateAthlete,
@@ -184,10 +190,7 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
           <legend className={`${labelClass} mb-2`}>Lieux d&apos;entraînement</legend>
           <div className="flex flex-wrap gap-2">
             {TRAINING_PLACES.map((place) => (
-              <label
-                key={place}
-                className="group inline-flex h-11 cursor-pointer items-center gap-2 rounded-pill border border-line-2 px-3.5 text-small text-muted transition-colors not-has-checked:hover:text-text has-checked:border-inv has-checked:bg-inv has-checked:text-on-inv has-focus-visible:outline-2 has-focus-visible:outline-accent sm:h-9"
-              >
+              <label key={place} className={checkboxChipClass}>
                 <input
                   type="checkbox"
                   name="trainingPlaces"
