@@ -35,7 +35,7 @@
 **Ajouts après la V1.1** : `docs/16_POSITIONNEMENT.md` (nom Coory, concurrent Athleex, différenciateurs `DIF-01` à `DIF-10` et leur phase), `CARNET_TECHNIQUE.md` (explication des choix techniques, mis à jour à chaque story).
 
 ## 3 espaces applicatifs et 4 surfaces
-1. **Coach** : desktop complet + mobile complet pour créer/éditer ; la facturation SaaS n'est pas une fonctionnalité du coach sportif.
+1. **Coach** : desktop complet + mobile complet pour créer/éditer ; la facturation SaaS n'est pas une fonctionnalité du coach sportif ; le **suivi de facturation de ses propres clients** (forfaits, paiements reçus, factures) est en revanche prévu (D-17), sans aucun encaissement par la plateforme.
 2. **Sportif / client** : desktop + mobile orienté consultation, exécution et feedback ; pas de droit de modifier les prescriptions du coach.
 3. **Admin plateforme** : gestion organisation, compte, support autorisé, état des abonnements, audit de la plateforme ; jamais accès arbitraire aux données sensibles des sportifs.
 
@@ -92,6 +92,8 @@ Chaque spec donne scénarios, règles et critère d'acceptation ; la roadmap les
 - D-14 (20/10/2026) : contenu de la fiche sportif et règle « blessures » (champ minimal + consentement tracé) : voir OPEN-01 tranché dans `docs/14`.
 - D-15 (20/10/2026) : allures par test de Cooper ou de 5 km, % de VMA par défaut modifiables : voir OPEN-13 tranché dans `docs/14`.
 - D-16 (22/10/2026) : charte visuelle définitive **Coory, version rouge** (`#FF3347`), logo aux deux anneaux entrelacés, thème sombre par défaut et thème clair au choix. Source de vérité : `COORY_DESIGN_SYSTEM.md` et `COORY_LOGO.md` (racine) ; jetons dans `src/styles/tokens.css`. Remplace la palette « corail » proposée dans `docs/10`.
+- D-17 (22/10/2026) : module **Business du coach**, pour que le coach n'ait besoin d'aucun autre outil pour suivre son activité. **Étape A, suivi** : offres et forfaits (carnet de séances, abonnement mensuel, programme en ligne), forfait de chaque client, séances restantes, échéances, statut payé / en attente / en retard, saisie manuelle d'un paiement reçu (espèces, virement, Bancontact sur place), relances, tableau de bord calculé sur des données réelles. **Étape B, factures** : PDF conformes (numérotation continue, mentions légales, TVA ou franchise) et export comptable. **Exclu : aucun paiement d'un client au coach ne transite par Coory** (pas d'encaissement en ligne pour le compte du coach). Distinct de P8 (abonnement du coach à Coory). Placement proposé : après P6, **à confirmer** ; l'étape B réutilise le moteur PDF de P5 et attend `OPEN-17`. Backlog `BIZ-01` à `BIZ-06` dans `docs/14`.
+- D-18 (22/10/2026) : confirmation que la **musculation seule** est une discipline à part entière, au même niveau que Running, Hyrox et Hybride (déjà prévu par `docs/01` et `docs/06`). Un client de salle en remise en forme (cas des clients réguliers de Gianluca) reçoit un programme 100 % musculation et cardio de salle, sans élément running ni Hyrox. Les quatre disciplines sont indépendantes ou combinables.
 
 ## Questions ouvertes (avant production, pas nécessairement avant scaffolding)
 - OPEN-01 : **tranché le 20/10/2026** (D-14).
@@ -106,6 +108,7 @@ Chaque spec donne scénarios, règles et critère d'acceptation ; la roadmap les
 - OPEN-10 : partage du suivi d'entraînement et éventuelles intégrations Garmin/Strava (hors MVP).
 - OPEN-11 : politique de récupération de compte, suppression d'organisation, comptes mineurs (bloquer les mineurs au démarrage tant que non cadré).
 - OPEN-13 à OPEN-16 : voir `docs/16_POSITIONNEMENT.md` §6 (formules d'allures, groupes, API Strava/Garmin, fournisseur d'IA).
+- OPEN-17 : règles de facturation du coach (mentions légales, TVA ou régime de franchise, numérotation, Peppol pour les clients entreprises) ; **Antonino les fait vérifier par un comptable**, avant l'étape B de D-17.
 
 ## Critère de fin du cadrage et premier développement
 Une fois les décisions bloquantes de phase 1 validées : initialiser dépôt, configurer environnement, schéma organisation/membership et RLS, parcours authentification, CRUD client et test d'isolation entre deux organisations. **Ne pas coder l'éditeur complet avant ce socle.**

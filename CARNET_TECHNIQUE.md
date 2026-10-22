@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (design system Coory rouge, logo et thème clair).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (design system Coory rouge, logo, thème clair ; décisions business du coach).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -207,6 +207,9 @@ Le **logo** n'est pas une image mais un composant React qui dessine les deux ann
 Le **thème clair** se choisit avec un bouton soleil/lune. Il change un seul attribut (`data-theme="light"` sur la balise `<html>`) et toutes les couleurs suivent, puisque les composants ne lisent que des variables. Le choix est gardé dans le navigateur (`localStorage`), et un petit script s'exécute **avant** l'affichage pour éviter un « flash » sombre puis clair au chargement. Un test Playwright vérifie que le choix survit à un rechargement.
 
 Point d'attention noté honnêtement : le texte blanc sur le rouge vif a un contraste de 3,6 pour 1. C'est suffisant pour les gros chiffres et les boutons, mais en dessous de la norme (4,5) pour les petits textes de la carte rouge du tableau de bord. C'est un choix de la charte, à rediscuter si l'accessibilité devient une exigence.
+
+### Décision produit : le business du coach, sans encaisser l'argent (22/10)
+Antonino veut que le coach n'ait besoin d'aucun autre outil. Coory suivra donc son activité : forfaits, séances restantes, paiements reçus, relances, puis factures et export pour le comptable. Mais **aucun paiement ne passera par Coory**. Pourquoi ? Encaisser de l'argent pour le compte de quelqu'un d'autre est une activité réglementée : il faut un prestataire de paiement spécialisé, vérifier l'identité de chaque coach, gérer remboursements et litiges. Le suivi et les factures couvrent le vrai besoin, sans ce risque. C'est différent de l'abonnement que le coach paiera à Coory (P8). Les règles de facturation (mentions, TVA, numérotation) seront vérifiées par un comptable avant d'écrire la moindre ligne de code.
 
 ---
 
