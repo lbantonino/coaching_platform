@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1122 1122" fill="none">
+  <rect width="1122" height="1122" rx="258" fill="#FF3347"/>
+  <defs>
+    <clipPath id="ia"><rect x="262.5" y="-200" width="1200" height="479"/></clipPath>
+    <clipPath id="ib"><rect x="258.5" y="-200" width="1200" height="485"/></clipPath>
+  </defs>
+  <g transform="translate(183.5 282)">
+    <ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FFFFFF" stroke-width="128"/>
+    <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#FF3347" stroke-width="188"/>
+    <ellipse cx="262.5" cy="279" rx="198.5" ry="215" stroke="#FFFFFF" stroke-width="128"/>
+    <g clip-path="url(#ia)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FF3347" stroke-width="188"/></g>
+    <g clip-path="url(#ib)"><ellipse cx="492.5" cy="279" rx="198.5" ry="215" stroke="#FFFFFF" stroke-width="128"/></g>
+  </g>
+</svg>

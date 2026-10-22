@@ -57,6 +57,9 @@ Construire progressivement une application web responsive/PWA de programmation e
 **Exploitation :** PWA signifie ici application *responsive installable si validée plus tard*, pas offline garanti. Pas de cron/worker tant qu'aucun traitement asynchrone réel ne le nécessite. Les e-mails/WhatsApp sont des intégrations ultérieures, pas des envois simulés présentés comme réussis. Aucune clé de service privilégiée dans le navigateur.
 
 
+## Charte visuelle (D-16, 22/10/2026)
+`COORY_DESIGN_SYSTEM.md` et `COORY_LOGO.md` (racine) sont la source de vérité du style : jetons uniquement (jamais de couleur en dur), un seul bouton rouge par écran, sombre par défaut et clair via `data-theme="light"`, logo via `<CooryLogo />`. Vérifier chaque écran modifié en sombre ET en clair, sur ordinateur ET téléphone.
+
 ## Conventions de code
 - `src/domain/` = règles et types indépendants de l'UI ; `src/features/` = cas d'usage ; `src/app/` = pages ; `src/components/` = UI réutilisable ; `supabase/migrations/` = SQL.
 - `organization_id` pour la séparation des locataires ; `coach_id` pour le responsable ; `athlete_user_id` pour le compte sportif si activé.

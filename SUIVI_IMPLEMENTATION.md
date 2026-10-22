@@ -5,7 +5,7 @@
 ## Statut des phases
 | Phase | État | Tests exécutés | Preuve |
 |---|---|---|---|
-| P0 Bootstrap | **Fait** : P0-01 à P0-06 | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
+| P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | En cours : P2-01 fait ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-02 (fiche enrichie selon OPEN-01 tranché), notes coach/sportif, P2-04, P2-05 à faire | test 47/47, db:test 68/68, test:e2e 37/37 (x3 stables) | Session du 20/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
@@ -16,7 +16,47 @@
 | P8 SaaS commercial | À faire | Aucun | - |
 
 ## Dernière session
-- Date : 2026-10-20
+- Date : 2026-10-22
+- Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
+
+### Story P0-05b : design system Coory rouge, logo aux anneaux, thème clair
+```
+Date : 2026-10-22
+Story : P0-05 (suite) ; source : COORY_DESIGN_SYSTEM.md et COORY_LOGO.md (fournis par Antonino, à la racine)
+Décision : l'accent orange #FF5A1F (PDF « Athlix ») est remplacé par le rouge signal #FF3347 ; D-16 dans 00_INDEX
+Fichiers créés :
+  COORY_DESIGN_SYSTEM.md, COORY_LOGO.md (spécifications, recopiées telles quelles)
+  src/styles/tokens.css (jetons sombre + [data-theme="light"], valeurs exactes du §3)
+  src/components/ui/coory-logo.tsx (<CooryLogo variant tone size>, useId pour les clipPath)
+  src/components/ui/theme-toggle.tsx (bouton soleil/lune, useSyncExternalStore, localStorage)
+  src/lib/theme.ts (clé de stockage + script anti-flash exécuté dans <head>)
+  src/app/icon.svg (favicon : symbole blanc sur rouge, coins 23 %), src/app/apple-icon.png (180 px, carré plein)
+  public/logo/coory-symbol-{dark,red,light}.svg (SVG du §4, pour e-mails et exports futurs)
+  tests/e2e/design.spec.ts (logo annoncé « Coory », favicon, thème clair retenu après rechargement)
+Fichiers supprimés : src/components/ui/logo.tsx (ancien carré « C »), src/app/favicon.ico (icône Next par défaut)
+Fichiers modifiés :
+  globals.css (import des jetons, @theme inline : accent-text, accent-soft, on-accent, inv, on-inv, *-soft ;
+    rayons sm 7 / md 10 / card 16 / pill 20 ; text-micro 11 px ; fond de page = --bg)
+  composants ui : button (variante secondary -> inverse, rayons 8/10/14, appui scale .98, iconButtonClass),
+    badge (tons ok/live/warn/danger/neutral, 11 px ; danger = rouge plein texte blanc), card/StatCard (rayon 16,
+    héro tout en blanc), form-styles (champs 44 px mobile / 38 px ordinateur ; erreurs en accent-text),
+    filter-chips (sélection inversée), segmented (classes partagées), avatar (fond chip, 34/64 px)
+  layout racine (script de thème, themeColor #0B0B0C, suppressHydrationWarning), cadres coach/accès/sportif/admin
+    (nouveau logo + bouton de thème), navigation (barre 232 px, onglet actif en accent-text)
+  écrans : un seul bouton rouge par vue (calculateur et « Ajouter la mesure » en inversé), cartes rayon 16,
+    marges 20 px mobile / 32 × 22 px ordinateur, brand.ts sans « initial »
+Commandes : npm run check ; npm run test:e2e ; captures sombre/clair × ordinateur/téléphone (script Playwright jetable)
+Résultats : lint OK, typecheck OK, format OK, Vitest 47/47, test:e2e 41/41 + 1 ignoré (dont 4 nouveaux)
+Limites / points à valider :
+  - Texte blanc sur #FF3347 = contraste 3,6:1 : conforme pour les grands chiffres et les boutons (texte gras), pas
+    pour les petits textes de la carte héro (13 et 12 px). Choix du design system, à rediscuter si besoin.
+  - Pas encore de manifeste PWA ni d'icônes 192/512/1024 : à faire quand l'app deviendra installable.
+  - E-mails Supabase non personnalisés (logo à ajouter quand on traduira les modèles).
+  - Le thème est mémorisé par navigateur, pas par compte.
+Suite : P2-02 fiche enrichie (identité et contact d'abord).
+```
+
+## Session du 20/10/2026
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
 
 ### Story P2-03b : calcul des allures depuis un test de Cooper ou de 5 km (OPEN-13 tranché)

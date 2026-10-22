@@ -1,42 +1,12 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
 
 /*
- * Design system Athlix v1.0 (Design-system-Athlix.pdf, fourni par Antonino).
- * « Graphite en base, orange pour l'action, Geist partout. Aplats uniquement, aucun dégradé. »
- * Thème sombre uniquement pour l'instant ; le thème clair (accent #F0501A) viendra plus tard.
- * Règle de l'orange : rare. Action principale, une seule stat héro par ligne, onglet actif,
- * séries validées, pastilles. Jamais en fond de page, jamais en dégradé.
+ * Design system Coory, version rouge (COORY_DESIGN_SYSTEM.md, à la racine du projet).
+ * Les couleurs vivent dans src/styles/tokens.css ; ici, on les rend utilisables comme classes Tailwind
+ * (bg-surface, text-accent-text, bg-inv…), avec les rayons et l'échelle typographique.
+ * « inline » : la classe lit la variable CSS au moment de l'affichage, donc le thème clair s'applique partout.
  */
-:root {
-  /* Neutres */
-  --page: #050505;
-  --bg: #0b0b0c;
-  --surface: #141416;
-  --surface-2: #1c1c1f;
-  --chip: #26262a;
-  --bar: #2a2a2e;
-  /* Texte */
-  --text: #f4f2ef;
-  --muted: #8a8a90;
-  --faint: #55555b;
-  /* Filets : séparateurs et bordures de carte / contours de contrôles et zones d'ajout */
-  --line: #242426;
-  --line-2: #323234;
-  /* Accent */
-  --accent: #ff5a1f;
-  --accent-hover: #ff7a45;
-  --accent-tint: color-mix(in srgb, var(--accent) 14%, var(--surface));
-  /* Statuts (texte + fond teinté) */
-  --ok: #4ade80;
-  --ok-tint: #1a2c22;
-  --warn: #fbbf24;
-  --warn-tint: #302817;
-  --danger: #f87171;
-  --danger-tint: #2f1f21;
-
-  color-scheme: dark;
-}
-
 @theme inline {
   --color-page: var(--page);
   --color-bg: var(--bg);
@@ -44,32 +14,36 @@
   --color-surface-2: var(--surface-2);
   --color-chip: var(--chip);
   --color-bar: var(--bar);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-faint: var(--faint);
-  --color-line: var(--line);
-  --color-line-2: var(--line-2);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
-  --color-accent-tint: var(--accent-tint);
+  --color-accent-text: var(--accent-text);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-inv: var(--inv);
+  --color-on-inv: var(--on-inv);
   --color-ok: var(--ok);
-  --color-ok-tint: var(--ok-tint);
+  --color-ok-soft: var(--ok-soft);
   --color-warn: var(--warn);
-  --color-warn-tint: var(--warn-tint);
+  --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
-  --color-danger-tint: var(--danger-tint);
+  --color-danger-soft: var(--danger-soft);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  /* Rayons : 5 kbd & chips mono · 7–10 contrôles · 14–16 cartes · 20 pills & héro mobile */
+  /* Rayons : 5 kbd & chips mono · 7 / 10 contrôles · 16 cartes · 20 pastilles */
   --radius-kbd: 5px;
-  --radius-control: 9px;
-  --radius-card: 14px;
-  --radius-card-lg: 16px;
+  --radius-sm: 7px;
+  --radius-md: 10px;
+  --radius-card: 16px;
   --radius-pill: 20px;
 
-  /* Échelle typographique (taille / poids / interlettrage) */
+  /* Échelle typographique (taille / interligne / interlettrage). Titres en 500 maximum, jamais en gras. */
   --text-display: 40px;
   --text-display--line-height: 1.1;
   --text-display--letter-spacing: -0.03em;
@@ -92,10 +66,13 @@
   --text-caption--line-height: 1.4;
   --text-data: 12px;
   --text-data--line-height: 1.4;
+  /* Pastilles de statut, libellés d'onglets mobiles, compteurs */
+  --text-micro: 11px;
+  --text-micro--line-height: 1.3;
 }
 
 body {
-  background: var(--page);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-size: 14px;
@@ -107,8 +84,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Focus clavier visible partout, à l'orange de l'action. Dans la couche « base » : les champs de formulaire
-   (classe outline-none + bordure orange au focus) gardent un seul contour, comme dans le design system. */
+/* Focus clavier visible partout, au rouge de l'action (2 px, décalé de 2 px). Dans la couche « base » :
+   les champs de formulaire (classe outline-none + bordure rouge au focus) gardent un seul contour. */
 @layer base {
   :focus-visible {
     outline: 2px solid var(--accent);

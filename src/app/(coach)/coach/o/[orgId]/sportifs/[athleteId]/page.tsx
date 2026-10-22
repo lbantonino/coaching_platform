@@ -22,7 +22,7 @@ export default function AthletePage({
   params,
 }: PageProps<"/coach/o/[orgId]/sportifs/[athleteId]">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 md:px-8 md:py-10">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-6 md:px-8 md:py-[22px]">
       <Suspense fallback={<p className="text-muted">Chargement de la fiche…</p>}>
         {params.then(({ orgId, athleteId }) => (
           <AthleteSection orgId={orgId} athleteId={athleteId} />
@@ -70,7 +70,7 @@ async function AthleteSection({ orgId, athleteId }: { orgId: string; athleteId: 
         {athlete.hasAccount || athlete.status === "archived" ? null : (
           <Link
             href={`${listPath}/${athlete.id}/inviter`}
-            className={buttonClass({ variant: "secondary", size: "md" })}
+            className={buttonClass({ variant: "inverse", size: "md" })}
           >
             Inviter dans son espace
           </Link>
@@ -79,7 +79,7 @@ async function AthleteSection({ orgId, athleteId }: { orgId: string; athleteId: 
 
       <section
         aria-labelledby="infos-title"
-        className="flex flex-col gap-5 rounded-[16px] border border-line bg-surface p-5 md:p-6"
+        className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
       >
         <h2 id="infos-title" className="text-title font-medium">
           Informations

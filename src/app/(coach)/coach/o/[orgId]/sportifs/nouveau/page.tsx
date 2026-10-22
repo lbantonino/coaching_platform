@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function NewAthletePage({ params }: PageProps<"/coach/o/[orgId]/sportifs/nouveau">) {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col gap-6 px-5 py-10">
       <Suspense fallback={<p className="text-muted">Chargement…</p>}>
         {params.then(({ orgId }) => (
           <NewAthleteSection orgId={orgId} />

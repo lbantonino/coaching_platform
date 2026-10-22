@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 // ne jamais révéler l'existence d'une donnée à laquelle on n'a pas droit.
 export default function AccessDeniedPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-6 px-4 pt-6 pb-16 sm:justify-center sm:py-16">
+    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-6 px-5 pt-6 pb-16 sm:justify-center sm:py-16">
       <div className="flex flex-col gap-2">
         <h1 className="text-h2 font-medium">Accès refusé</h1>
         <p className="text-muted">

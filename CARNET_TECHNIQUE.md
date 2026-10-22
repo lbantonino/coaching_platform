@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **20/10/2026** (P2-03 : calcul des allures depuis un test).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (design system Coory rouge, logo et thème clair).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -27,7 +27,7 @@ Une application web SaaS pour coachs sportifs (Running, Musculation, Hyrox, Hybr
 | **React 19** | Les composants d'interface | Standard du marché, imposé par Next. |
 | **TypeScript strict** | Le langage | Les erreurs de type sont détectées avant d'exécuter le code. « Strict » = pas de raccourcis permissifs. |
 | **Tailwind CSS 4** | Le style | Styles écrits directement dans les composants, rapide, cohérent, responsive facile. Les couleurs et tailles du design system y sont déclarées une seule fois (tokens). |
-| **Lucide** | Les icônes | Imposées par le design system Athlix : traits fins, monochromes, sans emoji. |
+| **Lucide** | Les icônes | Imposées par le design system Coory : traits fins, monochromes, sans emoji. |
 | **Supabase** | Base PostgreSQL + comptes (Auth) + fichiers (Storage) | Un seul service pour trois besoins. Et surtout la **RLS** de PostgreSQL (voir §5). |
 | **Zod** | Valider les données reçues | Tout ce qui vient du navigateur est vérifié côté serveur avant usage. |
 | **Docker** | Faire tourner Supabase sur le Mac | Développer hors ligne, gratuitement, et remettre la base à zéro en quelques secondes. Uniquement en développement. |
@@ -49,6 +49,7 @@ Coaching_Platform/
 ├── CLAUDE.md, 00_INDEX.md, docs/   Le cahier des charges : ce qu'on veut construire
 ├── SUIVI_IMPLEMENTATION.md         Le journal : ce qui est RÉELLEMENT fait et prouvé
 ├── CARNET_TECHNIQUE.md             Ce document
+├── COORY_DESIGN_SYSTEM.md, COORY_LOGO.md   La charte visuelle et le logo (source de vérité du style)
 ├── src/
 │   ├── app/                        Les pages et les routes (une URL = un dossier)
 │   │   ├── (auth)/                 Connexion, mot de passe oublié, nouveau mot de passe
@@ -64,10 +65,12 @@ Coaching_Platform/
 │   ├── features/athletes/          La logique « sportifs » : validation, lecture, création
 │   ├── features/references/        La logique « repères » (allures, FC, charges)
 │   ├── features/invitations/       La logique « invitations » : jetons, création, acceptation
-│   ├── components/ui/              Composants du design system (bouton, badge, carte, logo…)
+│   ├── components/ui/              Composants du design system (bouton, badge, carte, logo, thème…)
+│   ├── styles/tokens.css           Les couleurs du design system, en sombre et en clair
 │   ├── config/brand.ts             Le nom de la marque, à un seul endroit
 │   ├── lib/                        Outils techniques (clients Supabase, variables d'env, dates)
 │   └── proxy.ts                    S'exécute avant chaque requête (session, redirections)
+├── public/logo/                    Les symboles du logo en SVG (pour les e-mails et exports à venir)
 ├── supabase/
 │   ├── migrations/                 L'historique du schéma de la base, en SQL
 │   ├── seed.sql                    Les données de démonstration (fictives)
@@ -167,7 +170,7 @@ Comment le compte est créé. L'inscription libre est fermée, donc c'est le ser
 
 Côté droits, un sportif ne lit que sa propre fiche et le nom de son organisation, et ne peut jamais entrer dans `/coach`. Après connexion, chacun arrive au bon endroit : coach, sportif ou administrateur. **Avec cette story, P1 (comptes et sécurité multi-coachs) est terminé.**
 
-### Design system Athlix, P0-05 (20/10)
+### Premier design system (« Athlix », orange), P0-05 (20/10)
 Antonino a fourni son design system (« Sombre, précis, une seule couleur qui compte ») : graphite en base, orange `#FF5A1F` réservé à l'action, police Geist partout. On l'a traduit en **tokens** : des variables déclarées une seule fois dans `globals.css` (couleurs, rayons, tailles de texte). Les composants utilisent `bg-surface`, `text-muted` ou `bg-accent`, jamais une couleur en dur. Avantage : changer une teinte ou passer au thème clair se fait à un seul endroit.
 
 On a aussi créé la **navigation** : barre latérale sur ordinateur, onglets en bas sur téléphone, avec seulement les sections qui existent vraiment (pas de faux liens). Le tableau de bord affiche de **vrais chiffres** calculés depuis la base, avec une seule carte orange par ligne comme le veut le design system. Pages d'erreur et 404 propres, sans jamais afficher de détail technique.
@@ -196,6 +199,15 @@ Décision du coach : les allures se déterminent par un **test de Cooper** (dist
 
 Trois choix à savoir expliquer. **Le calcul propose, le coach décide** : il voit l'aperçu en direct, décoche ce qu'il ne veut pas, puis valide. **Le serveur refait le calcul** à partir du résultat brut du test : il ne fait jamais confiance aux chiffres envoyés par le navigateur. Et **la même fonction** sert à l'aperçu (dans le navigateur) et à l'enregistrement (sur le serveur) : c'est l'intérêt d'avoir mis ces règles dans `src/domain/`, sans dépendance à la base. Chaque allure enregistrée garde une note qui dit d'où elle vient.
 
+### Design system Coory rouge, logo et thème clair (22/10)
+Antonino a fourni la version finale de la charte, en deux fichiers rangés à la racine : `COORY_DESIGN_SYSTEM.md` et `COORY_LOGO.md`. Le rouge signal `#FF3347` remplace l'orange. Grâce aux **tokens** posés le 20/10, le changement de couleur s'est fait à un seul endroit (`src/styles/tokens.css`) ; le reste du travail a consisté à aligner les composants sur les nouvelles mesures (rayons, tailles, pastilles) et à appliquer une règle plus stricte : **un seul bouton rouge par écran**. Sur la fiche sportif, seul « Enregistrer » reste rouge ; les autres actions passent en bouton « inversé » (clair sur sombre).
+
+Le **logo** n'est pas une image mais un composant React qui dessine les deux anneaux en SVG. Avantages : il reste net à toutes les tailles, il prend automatiquement les couleurs du thème, et un lecteur d'écran l'annonce « Coory ». Les anneaux se croisent grâce à des **masques** (`clipPath`) ; chaque logo reçoit des identifiants uniques (`useId`), sinon deux logos sur la même page se mélangeraient. Le favicon est le même dessin en fichier `icon.svg` : Next.js le détecte tout seul et ajoute la balise dans chaque page. L'icône Apple, qui doit être un PNG, a été produite en faisant afficher le SVG par le Chromium de Playwright, déjà installé : aucun outil de plus.
+
+Le **thème clair** se choisit avec un bouton soleil/lune. Il change un seul attribut (`data-theme="light"` sur la balise `<html>`) et toutes les couleurs suivent, puisque les composants ne lisent que des variables. Le choix est gardé dans le navigateur (`localStorage`), et un petit script s'exécute **avant** l'affichage pour éviter un « flash » sombre puis clair au chargement. Un test Playwright vérifie que le choix survit à un rechargement.
+
+Point d'attention noté honnêtement : le texte blanc sur le rouge vif a un contraste de 3,6 pour 1. C'est suffisant pour les gros chiffres et les boutons, mais en dessous de la norme (4,5) pour les petits textes de la carte rouge du tableau de bord. C'est un choix de la charte, à rediscuter si l'accessibilité devient une exigence.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -206,15 +218,17 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **L'adresse restait sur `/espace` après connexion** : la page affichée était bonne, mais l'URL non. Trouvé par Playwright, corrigé en redirigeant directement au bon endroit.
 - **L'inscription libre était ouverte** : sans page d'inscription, l'API de Supabase acceptait quand même de créer des comptes. Fermé dans la configuration et vérifié.
 - **Des tests « chanceux »** : deux fois, un test cliquait puis naviguait sans attendre la fin de l'action (déconnexion, changement de page). Il passait par chance de timing, puis a échoué plus tard. Leçon : toujours attendre un signe visible (nouvelle adresse, nouveau titre) avant l'étape suivante, et relancer la suite plusieurs fois pour vérifier sa stabilité.
+- **« styleText n'existe pas »** : Vitest refusait de démarrer. Le terminal utilisait une ancienne version de Node, pas la version 24 du projet. Leçon : quand un outil plante dès le démarrage sur une fonction de Node, vérifier d'abord `node -v`.
 - **Une correction qui a tout cassé** : en fermant l'inscription, un deuxième réglage a coupé toute connexion. Les tests l'ont attrapé immédiatement. Leçon : c'est exactement pour ça qu'on a des tests automatiques.
 
 ---
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 68 tests SQL, 47 tests unitaires et 37 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 68 tests SQL, 47 tests unitaires et 41 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
+- **« Comment gères-tu le thème sombre et clair ? »** Toutes les couleurs sont des variables CSS. Un attribut sur `<html>` change leur valeur, donc aucun composant n'a besoin de savoir quel thème est actif. Un script lancé avant l'affichage évite le flash.
 - **« Comment as-tu utilisé l'IA ? »** Claude Code écrit le code à partir d'un cahier des charges détaillé ; je valide chaque décision métier, je teste dans le navigateur, et tout est tracé dans un journal avec les preuves de tests.
 
 ---
@@ -237,4 +251,8 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
 - **ADR** : courte note qui documente une décision technique, ses alternatives et ses conséquences.
 - **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.
+- **Thème / data-theme** : attribut posé sur `<html>` qui fait basculer toutes les variables de couleur d'un coup.
+- **Flash (FOUC)** : bref affichage dans le mauvais style avant que le bon s'applique ; évité ici par un script dans `<head>`.
+- **SVG / clipPath** : dessin vectoriel écrit en code ; un clipPath est un masque qui ne laisse voir qu'une partie du dessin (le croisement des anneaux).
+- **Contraste** : rapport de luminosité entre un texte et son fond ; la norme d'accessibilité demande 4,5 pour 1 pour un texte normal.
 - **Clé secrète (service role)** : clé Supabase qui contourne la RLS ; réservée au serveur, à quelques procédures précises.

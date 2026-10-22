@@ -19,7 +19,7 @@ export default function InviteAthletePage({
   params,
 }: PageProps<"/coach/o/[orgId]/sportifs/[athleteId]/inviter">) {
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-5 py-10">
       <Suspense fallback={<p className="text-muted">Chargement…</p>}>
         {params.then(({ orgId, athleteId }) => (
           <InviteSection orgId={orgId} athleteId={athleteId} />
@@ -65,13 +65,13 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
       </div>
 
       {target.hasAccount ? (
-        <p role="status" className="rounded-[14px] border border-line bg-surface p-4">
+        <p role="status" className="rounded-card border border-line bg-surface p-4">
           Ce sportif a déjà activé son compte.
         </p>
       ) : (
         <>
           {target.pendingInvite ? (
-            <div className="flex flex-col gap-3 rounded-[14px] border border-line bg-surface p-4">
+            <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
               <p role="status">
                 {target.pendingInvite.expired
                   ? `Le dernier lien a expiré le ${formatDateTime(target.pendingInvite.expiresAt)}.`

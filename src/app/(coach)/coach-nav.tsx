@@ -23,7 +23,7 @@ function useItems({ athletesHref }: Props) {
   return items;
 }
 
-// Barre latérale (ordinateur).
+// Barre latérale (ordinateur). L'élément actif n'est JAMAIS rouge : fond surface-2, texte clair.
 export function CoachSideNav(props: Props) {
   const items = useItems(props);
   return (
@@ -33,7 +33,7 @@ export function CoachSideNav(props: Props) {
           <Link
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`flex h-10 items-center gap-3 rounded-[10px] px-3 text-body transition-colors ${
+            className={`flex items-center gap-3 rounded-[9px] px-2.5 py-[9px] text-body transition-colors ${
               active ? "bg-surface-2 text-text" : "text-muted hover:bg-surface hover:text-text"
             }`}
           >
@@ -46,7 +46,7 @@ export function CoachSideNav(props: Props) {
   );
 }
 
-// Barre d'onglets en bas d'écran (téléphone).
+// Barre d'onglets en bas d'écran (téléphone) : seul l'onglet actif est rouge.
 export function CoachTabBar(props: Props) {
   const items = useItems(props);
   return (
@@ -56,8 +56,8 @@ export function CoachTabBar(props: Props) {
           <Link
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`flex h-16 flex-col items-center justify-center gap-1 text-caption ${
-              active ? "text-accent" : "text-muted"
+            className={`flex h-16 flex-col items-center justify-center gap-1 text-micro ${
+              active ? "text-accent-text" : "text-muted"
             }`}
           >
             <Icon aria-hidden size={21} strokeWidth={1.7} />

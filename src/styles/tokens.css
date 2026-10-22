@@ -1,0 +1,76 @@
+/*
+ * Jetons de couleur Coory, recopiés tels quels depuis COORY_DESIGN_SYSTEM.md §3 (version rouge, 22/10/2026).
+ * Les composants n'écrivent JAMAIS ces valeurs en dur : ils passent par les classes Tailwind
+ * (bg-surface, text-muted, bg-accent…) déclarées dans globals.css, qui lisent ces variables.
+ * Sombre par défaut ; <html data-theme="light"> bascule tout le site en clair d'un coup.
+ * Règle du rouge : rare. Un seul bouton principal par écran, une seule stat héro par ligne,
+ * l'onglet actif. Jamais en fond de page, jamais en texte long, jamais de texte sombre sur rouge.
+ */
+:root {
+  /* Sombre (par défaut) */
+  --page: #050505; /* autour du cadre de l'app */
+  --bg: #0b0b0c; /* fond de l'app */
+  --surface: #141416; /* cartes */
+  --surface-2: #1c1c1f; /* survol, navigation active */
+  --chip: #26262a; /* pastilles, avatars */
+  --bar: #2a2a2e; /* pistes de progression, barres prévues */
+  --line: rgba(255, 255, 255, 0.07); /* bordures de carte, séparateurs */
+  --line-2: rgba(255, 255, 255, 0.13); /* contours de champs, zones d'ajout en pointillés */
+  --text: #f4f2ef;
+  --muted: #8a8a90;
+  --faint: #55555b;
+
+  --accent: #ff3347; /* aplats : bouton principal, stat héro, segment actif */
+  --accent-hover: #ff5c6c;
+  --accent-text: #ff3347; /* rouge utilisé comme texte ou trait */
+  --accent-soft: rgba(255, 51, 71, 0.14); /* fond de pastille teintée */
+  --on-accent: #ffffff; /* TOUJOURS du blanc sur le rouge */
+
+  --inv: #f4f2ef; /* bouton inversé, pastille de filtre sélectionnée */
+  --on-inv: #0b0b0c;
+
+  --ok: #4ade80;
+  --ok-soft: rgba(74, 222, 128, 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.12);
+  --danger: #ffffff; /* alerte = pastille rouge pleine, texte blanc */
+  --danger-soft: var(--accent);
+
+  --shadow-frame: 0 30px 80px rgba(0, 0, 0, 0.55); /* seule ombre autorisée : le cadre extérieur */
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --page: #e6e4e0;
+  --bg: #ffffff;
+  --surface: #f5f4f2;
+  --surface-2: #ecebe8;
+  --chip: #e6e5e2;
+  --bar: #deddd9;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-2: rgba(0, 0, 0, 0.14);
+  --text: #141416;
+  --muted: #6a6a70;
+  --faint: #a3a3a8;
+
+  --accent: #e5283c; /* un peu plus profond : meilleur contraste avec le texte blanc */
+  --accent-hover: #ff3347;
+  --accent-text: #d91e32; /* rouge en texte sur fond clair */
+  --accent-soft: rgba(229, 40, 60, 0.1);
+  --on-accent: #ffffff;
+
+  --inv: #141416;
+  --on-inv: #ffffff;
+
+  --ok: #16a34a;
+  --ok-soft: rgba(22, 163, 74, 0.1);
+  --warn: #b7791f;
+  --warn-soft: rgba(183, 121, 31, 0.12);
+  --danger: #ffffff;
+  --danger-soft: var(--accent);
+
+  --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
+
+  color-scheme: light;
+}

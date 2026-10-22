@@ -24,7 +24,7 @@ export async function ReferencesSection({
   return (
     <section
       aria-labelledby="references-title"
-      className="flex flex-col gap-5 rounded-[16px] border border-line bg-surface p-5 md:p-6"
+      className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
     >
       <div className="flex flex-col gap-1">
         <h2 id="references-title" className="text-title font-medium">
@@ -120,7 +120,7 @@ function HistoryList({
             <button
               type="submit"
               aria-label={`Supprimer la mesure ${referenceKindLabels[entry.kind]} du ${formatDate(entry.measuredOn)}`}
-              className="inline-flex size-8 items-center justify-center rounded-[7px] text-muted hover:bg-surface-2 hover:text-danger"
+              className="inline-flex size-8 items-center justify-center rounded-[7px] text-muted hover:bg-surface-2 hover:text-accent-text"
             >
               <Trash2 aria-hidden size={15} strokeWidth={1.7} />
             </button>

@@ -15,7 +15,7 @@ const roleLabels = { owner: "Propriétaire", coach: "Coach" } as const;
 
 export default function CoachHomePage() {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-8 md:px-8 md:py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-6 md:px-8 md:py-[22px]">
       <h1 className="text-h2 font-medium md:text-h1">Tableau de bord</h1>
       {/* La session se lit à la requête : avec Cache Components, elle doit être derrière Suspense. */}
       <Suspense fallback={<p className="text-muted">Chargement de ton espace…</p>}>
@@ -69,7 +69,7 @@ async function Dashboard() {
             <li key={membership.organizationId}>
               <Link
                 href={`/coach/o/${membership.organizationId}/sportifs`}
-                className="flex items-center justify-between gap-4 rounded-[14px] border border-line bg-surface p-4 transition-colors hover:bg-surface-2"
+                className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-4 transition-colors hover:bg-surface-2"
               >
                 <span className="flex flex-col">
                   <span className="font-medium">{membership.organizationName}</span>
