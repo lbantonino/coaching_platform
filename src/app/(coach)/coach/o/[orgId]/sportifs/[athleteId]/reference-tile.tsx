@@ -2,15 +2,11 @@ import { Dumbbell, HeartPulse, Timer, type LucideIcon } from "lucide-react";
 
 import { formatReferenceDetail, formatReferenceValue } from "@/features/references/format";
 import type { ReferenceEntry } from "@/features/references/queries";
-import {
-  referenceKindLabels,
-  referenceSourceLabels,
-  type ReferenceKind,
-} from "@/features/references/schemas";
+import { referenceKindLabels, referenceSourceLabels } from "@/features/references/schemas";
+import { referenceTone, type ReferenceTone } from "@/features/references/series";
 import { formatDate } from "@/lib/format";
 
-// Couleur d'un repère (D-25) : allures en bleu Running, race pace en orange Hyrox,
-// fréquences cardiaques en rouge, charges en violet Musculation.
+// Classes de chaque couleur de repère (la règle de couleur est dans referenceTone, D-25).
 const tileTones = {
   run: {
     tile: "border-run/40 bg-[color-mix(in_srgb,var(--run)_7%,var(--bg))]",
@@ -32,14 +28,14 @@ const tileTones = {
     icon: "border border-strength/50 bg-strength-soft text-strength",
     text: "text-strength",
   },
-} as const;
+} as const satisfies Record<ReferenceTone, Record<string, string>>;
 
-function tileStyle(kind: ReferenceKind): { tone: keyof typeof tileTones; icon: LucideIcon } {
-  if (kind === "pace_race") return { tone: "hyrox", icon: Timer };
-  if (kind.startsWith("pace_")) return { tone: "run", icon: Timer };
-  if (kind.startsWith("hr_")) return { tone: "heart", icon: HeartPulse };
-  return { tone: "strength", icon: Dumbbell };
-}
+const tileIcons: Record<ReferenceTone, LucideIcon> = {
+  run: Timer,
+  hyrox: Timer,
+  heart: HeartPulse,
+  strength: Dumbbell,
+};
 
 // Tuile d'un repère actuel, partagée par la vue d'ensemble (« compact ») et l'onglet Repères.
 export function ReferenceTile({
@@ -49,7 +45,8 @@ export function ReferenceTile({
   entry: ReferenceEntry;
   size?: "compact" | "md";
 }) {
-  const { tone, icon: Icon } = tileStyle(entry.kind);
+  const tone = referenceTone(entry.kind);
+  const Icon = tileIcons[tone];
   const colors = tileTones[tone];
   const detail = formatReferenceDetail(entry);
   return (

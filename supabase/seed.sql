@@ -214,7 +214,25 @@ values
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'strength_load', null, null, null,
    'Développé couché', 80, 5, 'observed', '2026-10-12', null, 'a0000000-0000-4000-8000-00000000000a'),
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'pace_easy', 360, 400, null,
-   null, null, null, 'coach_estimate', '2026-10-12', 'À confirmer par un test de 5 km.', 'a0000000-0000-4000-8000-00000000000a');
+   null, null, null, 'coach_estimate', '2026-10-12', 'À confirmer par un test de 5 km.', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Mesures plus anciennes (P2-04 étape 3) : de quoi tracer une évolution réaliste sur la fiche.
+  -- Thomas : deux tests de Cooper avant celui d'octobre (VMA 13,6 puis 14,0 km/h).
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'pace_vma', 265, 265, null,
+   null, null, null, 'test', '2026-04-14', 'Test de Cooper : 2720 m en 12 min.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'pace_vma', 257, 257, null,
+   null, null, null, 'test', '2026-07-10', 'Test de Cooper : 2800 m en 12 min.', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Inès : race pace estimée avant ses deux derniers blocs Hyrox.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_race', 305, 320, null,
+   null, null, null, 'coach_estimate', '2026-06-02', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_race', 298, 312, null,
+   null, null, null, 'observed', '2026-08-11', 'Simulation Hyrox complète.', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Nadia : maximums des deux tests précédents.
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', 'strength_load', null, null, null,
+   'Squat', 100, 1, 'test', '2026-06-20', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', 'strength_load', null, null, null,
+   'Squat', 105, 1, 'test', '2026-08-15', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', 'strength_load', null, null, null,
+   'Soulevé de terre', 130, 1, 'test', '2026-06-20', null, 'a0000000-0000-4000-8000-00000000000a');
 
 -- Objectifs et compétitions (P2-02 partie 2), inventés eux aussi. Un objectif principal au plus par sportif ;
 -- les objectifs clos (atteint, abandonné) restent comme historique.

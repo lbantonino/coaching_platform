@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (D-25 : sexe du sportif et app plus colorée).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-04 étape 3 : graphique d'évolution des repères).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -254,6 +254,11 @@ L'**historique** est une frise construite à partir de ce qui existe déjà : la
 Antonino voulait une app plus intuitive : distinguer d'un coup d'œil les femmes et les hommes, et plus de couleur partout. Pour le sexe, on n'a pas « deviné » à partir du prénom : on a ajouté un vrai champ, **facultatif**, avec trois valeurs (Femme, Homme, Non précisé), contrôlé par la base comme par Zod. Il a une utilité métier (les catégories Hyrox), ce qui justifie de le demander. L'affichage est un petit symbole ♀ rose ou ♂ bleu ciel à côté du nom ; pour un lecteur d'écran, il est annoncé « Femme » ou « Homme », car un symbole seul ne se lit pas. L'avatar, lui, garde la couleur de la discipline : une couleur = une seule signification.
 
 Pour les couleurs, un réflexe à retenir : quand deux écrans affichent la même chose (les repères dans la vue d'ensemble et dans l'onglet Repères), on crée **un seul composant partagé**. La règle « allure = bleu, race pace = orange, FC = rouge, charge = violet » n'existe donc qu'à un endroit. Le script de contraste a encore servi : en thème clair, le texte gris des cartes teintées du tableau de bord passait juste sous le seuil ; on a baissé la teinte de 7 % à 5 % plutôt que de renoncer à la couleur.
+
+### Graphique d'évolution des repères (22/10)
+Dernière étape de la fiche à onglets : une courbe montre comment un repère évolue (la VMA de Thomas, la race pace d'Inès, le squat de Nadia). Choix à savoir défendre : **aucune bibliothèque de graphiques**. Une courbe, quelques graduations et une bulle au survol tiennent en un composant SVG ; ajouter Recharts ou Chart.js aurait alourdi l'app pour un seul écran, contre la règle « pas d'outil sans besoin démontré ».
+
+Le travail est séparé en deux. La **préparation des données** (regrouper les mesures par repère, choisir des graduations rondes, écrire « 0,9 km/h de plus depuis le 14 avril ») est une fonction pure, testée par Vitest. Le **dessin** est un petit composant navigateur qui ne reçoit que le résultat. Quelques règles de lecture : jamais deux unités sur un même axe (une courbe à la fois), l'écart entre deux points respecte le temps réellement écoulé, et pour une allure l'axe est inversé, pour que « monter » veuille toujours dire « progresser ». Accessibilité : les mêmes informations qu'au survol s'obtiennent au clavier, et un tableau donne toutes les valeurs sans graphique.
 
 ---
 

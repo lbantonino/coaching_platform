@@ -4,9 +4,11 @@ import { deleteReference } from "@/features/references/actions";
 import { formatReferenceValue } from "@/features/references/format";
 import { listReferences } from "@/features/references/queries";
 import { referenceKindLabels } from "@/features/references/schemas";
+import { buildReferenceSeries } from "@/features/references/series";
 import { formatDate } from "@/lib/format";
 
 import { AddReferenceForm } from "./add-reference-form";
+import { ReferenceChart } from "./reference-chart";
 import { ReferenceTile } from "./reference-tile";
 import { TestCalculator } from "./test-calculator";
 
@@ -52,6 +54,15 @@ export async function ReferencesSection({
           ))}
         </ul>
       )}
+
+      {current.length > 0 ? (
+        <section aria-labelledby="evolution-title" className="flex flex-col gap-3">
+          <h3 id="evolution-title" className="text-small font-medium text-muted">
+            Évolution
+          </h3>
+          <ReferenceChart series={buildReferenceSeries(history)} />
+        </section>
+      ) : null}
 
       {history.length > 0 ? (
         <details className="rounded-[14px] border border-line">
