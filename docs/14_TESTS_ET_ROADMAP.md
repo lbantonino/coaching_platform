@@ -41,7 +41,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [ ] `P2-02` Objectifs et dates, nombre de séances par semaine, durées/disponibilités.
 - [ ] `P2-03` Repères running/charges datés, notes coach vs notes publiques. (22/10/2026 : fait ; repères `P2-03a/b`, notes `P2-04b`.)
 - [ ] `P2-04` Profil client onglets, historique programmes, dashboard KPIs vrais. (22/10/2026 : fiche à onglets et vue d'ensemble `P2-04a`, notes et historique `P2-04b`, graphique d'évolution des repères `P2-04c` ; les chiffres clés de la fiche sont provisoires, tirés du profil ; historique des programmes et KPI du tableau de bord attendent P4 à P6.)
-- [ ] `P2-05` Agenda de séances/slots, mobilité des dates (première vue simple). (22/10/2026, D-27 : agenda du coach = **séances encadrées en présentiel** (collectives récurrentes avec inscrits, individuelles avec un sportif) + calque des **compétitions et objectifs datés** (`P2-05a` fait) ; séances encadrées `P2-05b` en cours. L'agenda du sportif avec les séances de ses programmes viendra avec P4 à P6, jamais simulé avant.)
+- [ ] `P2-05` Agenda de séances/slots, mobilité des dates (première vue simple). (22/10/2026, D-27 : agenda du coach = **séances encadrées en présentiel** (collectives récurrentes avec inscrits, individuelles avec un sportif) + calque des **compétitions et objectifs datés** (`P2-05a` fait) ; séances encadrées `P2-05b` faites le même jour (création, récurrence hebdomadaire calculée, inscrits, modification, suppression). Restent pour plus tard : présence réelle (avec P6) et annulation d'une seule date (`OPEN-18`). L'agenda du sportif avec les séances de ses programmes viendra avec P4 à P6, jamais simulé avant.)
 
 ### P3 — Catalogue/templates
 - [ ] `P3-01` Catalogue exercices, métriques permises, alias, recherche, favoris.
@@ -149,6 +149,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-15` Conditions actuelles des API Strava et Garmin (avant `DIF-09` étape 2).
 - `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08`).
 - `OPEN-17` Règles de facturation du coach (D-17 étape B) : mentions obligatoires, TVA ou régime de franchise, numérotation, conservation, Peppol pour les clients entreprises. **En cours de vérification par un comptable** (Antonino, 22/10/2026).
+- `OPEN-18` Séances encadrées (D-27) : annuler ou déplacer **une seule date** d'une séance récurrente (exception), visibilité des séances et inscriptions côté sportif (P6), pointage des présences, conflit avec les disponibilités du sportif (avertissement docs/03 §3). À trancher avec Gianluca.
 
 **Différenciateurs `DIF-01` à `DIF-10`** (décision du 20/10/2026) : voir `docs/16_POSITIONNEMENT.md` §4–5 pour leur phase d'insertion. Ils ne modifient pas l'ordre P2 → P6.
 

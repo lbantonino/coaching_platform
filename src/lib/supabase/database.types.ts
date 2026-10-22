@@ -415,6 +415,119 @@ export type Database = {
           },
         ];
       };
+      coach_session_athletes: {
+        Row: {
+          athlete_id: string;
+          created_at: string;
+          created_by: string | null;
+          organization_id: string;
+          session_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          organization_id: string;
+          session_id: string;
+        };
+        Update: {
+          athlete_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          organization_id?: string;
+          session_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_session_athletes_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "coach_session_athletes_session_id_organization_id_fkey";
+            columns: ["session_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "coach_sessions";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
+      coach_sessions: {
+        Row: {
+          athlete_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          discipline: string | null;
+          duration_minutes: number;
+          ends_on: string | null;
+          id: string;
+          kind: string;
+          location: string | null;
+          notes: string | null;
+          organization_id: string;
+          repeats_weekly: boolean;
+          start_time: string;
+          starts_on: string;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          discipline?: string | null;
+          duration_minutes: number;
+          ends_on?: string | null;
+          id?: string;
+          kind: string;
+          location?: string | null;
+          notes?: string | null;
+          organization_id: string;
+          repeats_weekly?: boolean;
+          start_time: string;
+          starts_on: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          athlete_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          discipline?: string | null;
+          duration_minutes?: number;
+          ends_on?: string | null;
+          id?: string;
+          kind?: string;
+          location?: string | null;
+          notes?: string | null;
+          organization_id?: string;
+          repeats_weekly?: boolean;
+          start_time?: string;
+          starts_on?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_sessions_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "coach_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       organization_members: {
         Row: {
           created_at: string;
