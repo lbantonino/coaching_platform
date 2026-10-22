@@ -278,3 +278,29 @@ update public.athlete_profiles
   set health_consent_at = '2026-09-16 09:30+02',
       health_constraints = 'Épaule gauche sensible au-dessus de la tête (wall balls, développé militaire).'
   where id = 'da000000-0000-4000-8000-000000000003';
+
+-- Notes du coach (P2-03 fin), inventées. Inès : une note privée. Thomas : un message visible dans son espace.
+-- Pas de donnée de santé dans une note libre : elles ont leur champ, protégé par l'accord du sportif.
+insert into public.athlete_notes (organization_id, athlete_id, visibility, body, created_by, updated_by, created_at, updated_at)
+values
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'coach',
+   'Sportive très sérieuse et investie. Bonne progression sur les séances longues. Objectif : passer en Pro.',
+   'a0000000-0000-4000-8000-00000000000a', 'a0000000-0000-4000-8000-00000000000a',
+   '2026-09-18 19:00+02', '2026-09-18 19:00+02'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', 'athlete',
+   'Semaine de reprise : garde l''endurance vraiment facile, tu dois pouvoir parler en courant.',
+   'a0000000-0000-4000-8000-00000000000a', 'a0000000-0000-4000-8000-00000000000a',
+   '2026-10-06 20:00+02', '2026-10-06 20:00+02');
+
+-- Dates réalistes pour l'historique de démo (sans cela, tout daterait du jour du reset) :
+-- les mesures sont saisies le soir du jour mesuré ; les objectifs le lendemain de la création de la fiche.
+update public.athlete_reference_metrics set created_at = measured_on + time '19:00';
+
+alter table public.athlete_goals disable trigger set_updated_at;
+update public.athlete_goals as g
+  set created_at = p.created_at + interval '1 day',
+      updated_at = case when g.status = 'active' then p.created_at + interval '1 day'
+                        else greatest(g.target_date::timestamptz + interval '1 day', p.created_at + interval '1 day') end
+  from public.athlete_profiles as p
+  where p.id = g.athlete_id;
+alter table public.athlete_goals enable trigger set_updated_at;

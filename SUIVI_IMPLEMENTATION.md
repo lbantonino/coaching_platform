@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-04 étape 1 faite (fiche à onglets, vue d'ensemble) ; records personnels, notes coach/sportif et historique (P2-04 étape 2), graphique des repères (étape 3), P2-05 à faire | test 69/69, db:test 119/119, test:e2e 51/51 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-03 fini (notes coach / visibles sportif) ; P2-04 étapes 1 et 2 faites (onglets, vue d'ensemble, notes, historique) ; records personnels, graphique des repères (P2-04 étape 3), P2-05 à faire | test 74/74, db:test 133/133, test:e2e 55/55 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,29 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### Story P2-04b : notes du coach et historique (étape 2 sur 3, fin de P2-03)
+```
+Date : 2026-10-22
+Story : P2-03 (notes coach vs notes visibles du sportif) + P2-04 étape 2 (historique) ; sources : docs/03 §2, D-21
+Base : supabase/migrations/20261022184531_notes_coach.sql, table athlete_notes (visibility coach | athlete,
+  une note de chaque sorte par sportif, texte 1–2000) ; table À PART (pas des colonnes de la fiche, que le
+  sportif peut lire) ; RLS : coachs de l'organisation pour tout, le sportif lit SEULEMENT la note « athlete »
+  de sa fiche ; modification limitée à body / updated_by
+Code : features/notes (schemas, queries getAthleteNotes / getOwnCoachMessages, action saveNote : crée, met à jour,
+  ou supprime si vide), features/activity (build.ts PUR : frise depuis création, objectifs créés / atteints /
+  abandonnés, mesures, accords, invitations, activation du compte, notes ; queries.ts : 5 lectures en
+  parallèle) ; fiche : onglets Notes et Historique, cartes « Notes du coach » et « Historique récent » (5 derniers,
+  « Voir tout ») ; espace sportif : carte « Message de ton coach »
+Rappel sous la note privée : pas de données de santé dans une note libre (champ dédié avec accord)
+Seed : note privée d'Inès, message visible de Thomas ; dates réalistes des mesures et objectifs pour l'historique
+Tests : Vitest 74/74 (5 nouveaux) ; pgTAP 133/133 (09_notes : 14 nouveaux, dont « le sportif ne lit jamais la note
+  privée ») ; Playwright 55/55 + 3 ignorés (notes.spec : 2 tests x 2 profils) ; un test SQL restreint à son propre
+  sportif (il voyait la note de démo de Thomas) ; db:reset final
+Limites : note unique de chaque sorte (pas d'historique des versions) ; « Lien d'invitation créé » et non « envoyé »
+  (le coach copie le lien lui-même)
+Suite : étape 3 (graphique d'évolution des repères), puis records personnels et P2-05 (agenda)
+```
 
 ### Story P2-04a : fiche sportif à onglets et vue d'ensemble (étape 1 sur 3)
 ```

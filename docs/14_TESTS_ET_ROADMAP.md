@@ -39,7 +39,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 ### P2 — CRM et planning
 - [ ] `P2-01` Liste client responsive, création/édition, recherche, filtres, statut.
 - [ ] `P2-02` Objectifs et dates, nombre de séances par semaine, durées/disponibilités.
-- [ ] `P2-03` Repères running/charges datés, notes coach vs notes publiques.
+- [ ] `P2-03` Repères running/charges datés, notes coach vs notes publiques. (22/10/2026 : fait ; repères `P2-03a/b`, notes `P2-04b`.)
 - [ ] `P2-04` Profil client onglets, historique programmes, dashboard KPIs vrais. (22/10/2026 : fiche à onglets et vue d'ensemble faites, `P2-04a` ; les chiffres clés de la fiche sont provisoires, tirés du profil.)
 - [ ] `P2-05` Agenda de séances/slots, mobilité des dates (première vue simple).
 
