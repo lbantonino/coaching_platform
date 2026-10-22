@@ -84,6 +84,35 @@ test("le coach enregistre des repères datés et conserve l'historique", async (
   await expect(page.getByText("Historique et corrections (4 mesures)")).toBeVisible();
 });
 
+test("le graphique montre l'évolution d'un repère dès deux mesures", async ({ page }, testInfo) => {
+  const name = `Courbe ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  await openNewAthleteProfile(page, name);
+  const evolution = page.getByRole("region", { name: "Évolution" });
+  const squat = (load: string) => async (p: Page) => {
+    await p.getByLabel("Exercice").fill("Squat");
+    await p.getByLabel("Charge (kg)").fill(load);
+  };
+
+  // Une seule mesure : pas de courbe, une explication.
+  await addMeasure(page, "Charge de référence", squat("100"), "2026-09-01");
+  await expect(evolution.getByRole("status")).toContainText("au moins deux mesures");
+
+  // Deux mesures à des dates différentes : la courbe apparaît avec le progrès en mots.
+  await addMeasure(page, "Charge de référence", squat("110"));
+  await expect(evolution.getByText("10 kg de plus depuis le 1 septembre 2026")).toBeVisible();
+
+  // Au clavier : chaque mesure s'affiche, comme au survol.
+  await evolution.getByRole("group", { name: /Évolution : Squat/ }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(evolution.getByText("1 septembre 2026 · Test")).toBeVisible();
+
+  // Les valeurs restent lisibles sans graphique, dans un tableau.
+  await evolution.getByText("Voir les valeurs en tableau").click();
+  const table = evolution.getByRole("table", { name: "Mesures : Squat" });
+  await expect(table.getByRole("row")).toHaveCount(3);
+  await expect(table.getByRole("cell", { name: "100 kg" })).toBeVisible();
+});
+
 test("une erreur de saisie sur la fiche conserve les autres champs saisis", async ({
   page,
 }, testInfo) => {

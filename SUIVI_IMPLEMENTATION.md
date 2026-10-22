@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-03 fini (notes coach / visibles sportif) ; P2-04 étapes 1 et 2 faites (onglets, vue d'ensemble, notes, historique) ; records personnels, graphique des repères (P2-04 étape 3), P2-05 à faire | test 76/76, db:test 135/135, test:e2e 55/55 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-03 fini (notes coach / visibles sportif) ; P2-04 étapes 1 à 3 faites (onglets, vue d'ensemble, notes, historique, graphique d'évolution des repères) ; records personnels, P2-05 à faire | test 85/85, db:test 135/135, test:e2e 57/57 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,25 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### P2-04c : graphique d'évolution des repères (étape 3 sur 3, D-21)
+```
+Date : 2026-10-22
+Objectif : voir la progression d'un repère dans l'onglet Repères (section « Évolution »)
+Choix : SVG dessiné à la main, sans bibliothèque (stack V1.1 : pas d'outil sans besoin démontré) ; une
+  courbe à la fois, choisie par pastilles (jamais deux unités sur un même axe) ; position horizontale
+  proportionnelle au temps ; allures sur axe inversé (le progrès monte), VMA en km/h ; ligne verticale +
+  bulle au survol, au doigt et au clavier (flèches), annonce aux lecteurs d'écran, tableau des valeurs
+Fait : features/references/series.ts (module pur : séries par repère / par exercice, une mesure par jour,
+  graduations rondes, progrès en mots, referenceTone partagé avec les tuiles), reference-chart.tsx
+  (composant navigateur, n'importe que des types), section « Évolution » dans references-section.tsx ;
+  seed : mesures anciennes pour Thomas (VMA), Inès (race pace), Nadia (squat, soulevé de terre)
+Tests : Vitest 85/85 (+9 séries/graduations), db:test 135/135, test:e2e 57/57 + 3 ignorés (nouveau parcours :
+  une mesure = explication, deux = courbe + progrès, clavier, tableau) ; check OK ; db:reset final ;
+  captures sombre, clair, téléphone
+Limite : pas de filtre de période (inutile avec quelques mesures par an) ; à revoir si les données
+  viennent un jour d'une montre (OPEN-16)
+```
 
 ### D-25 : sexe du sportif et app plus colorée
 ```
