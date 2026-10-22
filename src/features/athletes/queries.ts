@@ -4,7 +4,13 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 
-import type { AthleteListFilter, AthleteStatus } from "./schemas";
+import type {
+  AthleteLevel,
+  AthleteListFilter,
+  AthleteStatus,
+  ContactChannel,
+  TrainingPlace,
+} from "./schemas";
 
 export type AthleteListItem = {
   id: string;
@@ -29,7 +35,7 @@ export async function listAthletes(
   let query = supabase
     .from("athlete_profiles")
     .select(
-      "id, display_name, email, status, athlete_user_id, athlete_invites ( status, expires_at )",
+      "id, first_name, display_name, email, status, athlete_user_id, athlete_invites ( status, expires_at )",
     )
     .eq("organization_id", organizationId)
     .order("display_name");
@@ -42,7 +48,8 @@ export async function listAthletes(
   return (data ?? [])
     .map((row) => ({
       id: row.id,
-      displayName: row.display_name,
+      // display_name est calculé par la base (prénom + nom) : jamais vide, le repli ne sert qu'au typage.
+      displayName: row.display_name ?? row.first_name,
       email: row.email,
       // La contrainte CHECK en base garantit active | paused | archived.
       status: row.status as AthleteStatus,
@@ -62,8 +69,15 @@ export async function listAthletes(
 export type AthleteDetail = {
   id: string;
   displayName: string;
+  firstName: string;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
+  preferredContact: ContactChannel | null;
+  level: AthleteLevel | null;
+  experience: string | null;
+  trainingPlaces: TrainingPlace[];
+  equipment: string | null;
   status: AthleteStatus;
   hasAccount: boolean;
   createdAt: string;
@@ -80,7 +94,9 @@ export async function getAthlete(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("athlete_profiles")
-    .select("id, display_name, email, phone, status, athlete_user_id, created_at")
+    .select(
+      "id, first_name, last_name, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, status, athlete_user_id, created_at",
+    )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
     .maybeSingle();
@@ -90,9 +106,17 @@ export async function getAthlete(
 
   return {
     id: data.id,
-    displayName: data.display_name,
+    displayName: data.display_name ?? data.first_name,
+    firstName: data.first_name,
+    lastName: data.last_name,
     email: data.email,
     phone: data.phone,
+    // Les contraintes CHECK en base garantissent ces listes fermées.
+    preferredContact: data.preferred_contact as ContactChannel | null,
+    level: data.level as AthleteLevel | null,
+    experience: data.experience,
+    trainingPlaces: data.training_places as TrainingPlace[],
+    equipment: data.equipment,
     status: data.status as AthleteStatus,
     hasAccount: data.athlete_user_id !== null,
     createdAt: data.created_at,

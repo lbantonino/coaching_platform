@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (design system Coory rouge, logo, thème clair ; décisions business du coach).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-02 partie 1 : identité, contact et profil sportif).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -213,6 +213,13 @@ Point d'attention noté honnêtement : le texte blanc sur le rouge vif a un cont
 ### Décision produit : le business du coach, sans encaisser l'argent (22/10)
 Antonino veut que le coach n'ait besoin d'aucun autre outil. Coory suivra donc son activité : forfaits, séances restantes, paiements reçus, relances, puis factures et export pour le comptable. Mais **aucun paiement ne passera par Coory**. Pourquoi ? Encaisser de l'argent pour le compte de quelqu'un d'autre est une activité réglementée : il faut un prestataire de paiement spécialisé, vérifier l'identité de chaque coach, gérer remboursements et litiges. Le suivi et les factures couvrent le vrai besoin, sans ce risque. C'est différent de l'abonnement que le coach paiera à Coory (P8). Les règles de facturation (mentions, TVA, numérotation) seront vérifiées par un comptable avant d'écrire la moindre ligne de code.
 
+### Fiche enrichie, partie 1 : identité, contact et profil sportif (22/10)
+La fiche a maintenant un **prénom** et un **nom** séparés, un **canal de contact préféré**, un **niveau**, l'**expérience**, les **lieux d'entraînement** et le **matériel**. C'est la première fois qu'on transforme des données déjà existantes : chaque fiche avait un seul « nom ». La migration le coupe au premier espace (« Camille Test » donne « Camille » et « Test »). Avant de l'appliquer, on a sauvegardé les 128 noms de la base locale, puis comparé après : identiques. C'est la bonne habitude pour toute migration qui touche des données : **prouver qu'on n'a rien perdu**, pas le supposer.
+
+Choix technique à savoir expliquer : le nom complet est devenu une **colonne calculée** par la base (prénom + nom). Personne ne peut l'écrire directement, donc il ne peut jamais contredire le prénom et le nom. Et tout ce qui le lisait déjà (liste, tri, recherche, page d'invitation) a continué de marcher sans modification. Les choix proposés (canaux, niveaux, lieux) sont des **listes fermées** vérifiées deux fois : par Zod dans le serveur, et par une contrainte dans la base. Un formulaire bricolé qui enverrait « pigeon » comme canal est refusé aux deux endroits. Les lieux se cochent comme des pastilles, mais restent de vraies cases à cocher pour le clavier et les lecteurs d'écran.
+
+Petit défaut trouvé sur les captures, pas par les tests : une pastille cochée perdait son contraste quand la souris passait dessus. Corrigé en limitant l'effet de survol aux pastilles non cochées. Les tests vérifient que ça marche ; les captures vérifient que c'est lisible.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -230,7 +237,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 68 tests SQL, 47 tests unitaires et 41 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 82 tests SQL, 54 tests unitaires et 43 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment gères-tu le thème sombre et clair ? »** Toutes les couleurs sont des variables CSS. Un attribut sur `<html>` change leur valeur, donc aucun composant n'a besoin de savoir quel thème est actif. Un script lancé avant l'affichage évite le flash.
@@ -255,6 +262,8 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **VMA** : vitesse maximale aérobie, la vitesse de course à partir de laquelle on calcule les allures d'entraînement.
 - **Atomique** : une opération qui réussit entièrement ou ne change rien du tout.
 - **ADR** : courte note qui documente une décision technique, ses alternatives et ses conséquences.
+- **Colonne calculée** : colonne dont la base calcule elle-même la valeur à partir d'autres colonnes (ici le nom complet) ; on ne peut pas l'écrire.
+- **Liste fermée** : ensemble de valeurs autorisées (ex. Débutant, Intermédiaire, Confirmé, Compétiteur), vérifié par le serveur et par la base.
 - **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.
 - **Thème / data-theme** : attribut posé sur `<html>` qui fait basculer toutes les variables de couleur d'un coup.
 - **Flash (FOUC)** : bref affichage dans le mauvais style avant que le bon s'applique ; évité ici par un script dans `<head>`.

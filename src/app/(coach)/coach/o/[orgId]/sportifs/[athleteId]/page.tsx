@@ -88,13 +88,19 @@ async function AthleteSection({ orgId, athleteId }: { orgId: string; athleteId: 
         </h2>
         <AthleteEditForm
           organizationId={membership.organizationId}
-          athlete={{
-            id: athlete.id,
-            displayName: athlete.displayName,
+          athleteId={athlete.id}
+          hasAccount={athlete.hasAccount}
+          values={{
+            firstName: athlete.firstName,
+            lastName: athlete.lastName ?? "",
             email: athlete.email ?? "",
             phone: athlete.phone ?? "",
             status: athlete.status,
-            hasAccount: athlete.hasAccount,
+            preferredContact: athlete.preferredContact ?? "",
+            level: athlete.level ?? "",
+            experience: athlete.experience ?? "",
+            trainingPlaces: athlete.trainingPlaces,
+            equipment: athlete.equipment ?? "",
           }}
         />
       </section>

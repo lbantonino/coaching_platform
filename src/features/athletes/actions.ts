@@ -11,7 +11,7 @@ import { athleteUpdateSchema, newAthleteSchema } from "./schemas";
 
 export type NewAthleteState = {
   error: string | null;
-  values: { displayName: string; email: string; phone: string };
+  values: { firstName: string; lastName: string; email: string; phone: string };
 };
 
 // Server Action liée à une organisation (organizationId est fixé côté serveur par .bind dans la page).
@@ -24,7 +24,8 @@ export async function createAthlete(
   const { user, membership } = await requireOrgAccess(organizationId);
 
   const values = {
-    displayName: String(formData.get("displayName") ?? ""),
+    firstName: String(formData.get("firstName") ?? ""),
+    lastName: String(formData.get("lastName") ?? ""),
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
   };
@@ -37,7 +38,8 @@ export async function createAthlete(
   const supabase = await createClient();
   const { error } = await supabase.from("athlete_profiles").insert({
     organization_id: membership.organizationId,
-    display_name: parsed.data.displayName,
+    first_name: parsed.data.firstName,
+    last_name: parsed.data.lastName,
     email: parsed.data.email,
     phone: parsed.data.phone,
     created_by: user.id,
@@ -54,14 +56,29 @@ export async function createAthlete(
   redirect(`/coach/o/${membership.organizationId}/sportifs`);
 }
 
+// Saisie telle que reçue du formulaire (chaînes brutes), renvoyée en cas d'erreur.
+export type AthleteFormValues = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  status: string;
+  preferredContact: string;
+  level: string;
+  experience: string;
+  trainingPlaces: string[];
+  equipment: string;
+};
+
 // `values` : saisie renvoyée en cas d'erreur, car React 19 vide le formulaire après chaque envoi.
 export type UpdateAthleteState = {
   error: string | null;
   saved: boolean;
-  values: { displayName: string; email: string; phone: string; status: string } | null;
+  values: AthleteFormValues | null;
 };
 
-// Modification d'une fiche (nom, contact, statut). Archiver = statut « archived » : rien n'est effacé.
+// Modification d'une fiche : identité, contact, statut et profil sportif.
+// Archiver = statut « archived » : rien n'est effacé.
 export async function updateAthlete(
   organizationId: string,
   athleteId: string,
@@ -72,11 +89,18 @@ export async function updateAthlete(
   const current = await getAthlete(membership.organizationId, athleteId);
   if (!current) return { error: "Sportif introuvable.", saved: false, values: null };
 
-  const values = {
-    displayName: String(formData.get("displayName") ?? ""),
+  const values: AthleteFormValues = {
+    firstName: String(formData.get("firstName") ?? ""),
+    lastName: String(formData.get("lastName") ?? ""),
     email: String(formData.get("email") ?? ""),
     phone: String(formData.get("phone") ?? ""),
     status: String(formData.get("status") ?? ""),
+    preferredContact: String(formData.get("preferredContact") ?? ""),
+    level: String(formData.get("level") ?? ""),
+    experience: String(formData.get("experience") ?? ""),
+    // Plusieurs cases cochées portent le même nom : getAll les récupère toutes.
+    trainingPlaces: formData.getAll("trainingPlaces").map(String),
+    equipment: String(formData.get("equipment") ?? ""),
   };
   const parsed = athleteUpdateSchema.safeParse(values);
   if (!parsed.success) {
@@ -103,10 +127,16 @@ export async function updateAthlete(
   const { error } = await supabase
     .from("athlete_profiles")
     .update({
-      display_name: parsed.data.displayName,
+      first_name: parsed.data.firstName,
+      last_name: parsed.data.lastName,
       email: parsed.data.email,
       phone: parsed.data.phone,
       status: parsed.data.status,
+      preferred_contact: parsed.data.preferredContact,
+      level: parsed.data.level,
+      experience: parsed.data.experience,
+      training_places: parsed.data.trainingPlaces,
+      equipment: parsed.data.equipment,
     })
     .eq("id", current.id)
     .eq("organization_id", membership.organizationId);
