@@ -1,105 +1,101 @@
-import { useId, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 import { BRAND } from "@/config/brand";
 
-// Logo Coory (COORY_LOGO.md) : « coory » en minuscules, les deux « o » remplacés par deux anneaux
-// entrelacés (le coach et le sportif). Anneau gauche = couleur du texte, anneau droit = rouge.
-// La « coupure » aux croisements doit être EXACTEMENT la couleur du fond derrière le logo.
+// Logo Coory (COORY_LOGO.md) : « C∞ry » en Space Grotesk Bold. Les deux « o » sont fusionnés en une seule
+// boucle infinie, le lien continu entre le coach et son sportif. Lettres en couleur texte, SEULE la boucle
+// est rouge.
 type Tone = "theme" | "dark" | "red" | "light";
 
-const tones: Record<Tone, { ink: string; ring: string; cut: string }> = {
-  // Dans l'app : suit le thème actif. Le logo est toujours posé sur bg-bg (en-têtes, barre latérale).
-  // accent-text = #FF3347 en sombre, #D91E32 en clair, comme le prévoit COORY_LOGO.md §3.
-  theme: { ink: "currentColor", ring: "var(--accent-text)", cut: "var(--bg)" },
+const tones: Record<Tone, { ink: string; loop: string }> = {
+  // Dans l'app : suit le thème actif. accent-text = #FF3347 en sombre, #D91E32 en clair (COORY_LOGO.md §3).
+  theme: { ink: "var(--text)", loop: "var(--accent-text)" },
   // Couleurs fixes de la charte (e-mails, exports), indépendantes du thème.
-  dark: { ink: "#F4F2EF", ring: "#FF3347", cut: "#0B0B0C" },
-  red: { ink: "#FFFFFF", ring: "#FFFFFF", cut: "#FF3347" },
-  light: { ink: "#141416", ring: "#D91E32", cut: "#F4F2EF" },
+  dark: { ink: "#F4F2EF", loop: "#FF3347" },
+  red: { ink: "#FFFFFF", loop: "#FFFFFF" },
+  light: { ink: "#141416", loop: "#D91E32" },
 };
 
-// Géométrie du §4 (unités de 1/1000 em, tirées du « o » de Geist SemiBold).
-const LEFT = { cx: 262.5, cy: 279, rx: 198.5, ry: 215 } as const;
-const RIGHT = { cx: 492.5, cy: 279, rx: 198.5, ry: 215 } as const;
+// Tracé de la boucle (§4), dessiné d'après le « o » de Space Grotesk Bold (unités de 1/1000 em) :
+// deux arcs de 200 u reliés par deux courbes qui se pincent au centre.
+const LOOP_PATH =
+  "M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z";
 
-function Rings({
-  ink,
-  ring,
-  cut,
+function Loop({
+  color,
   className,
   style,
 }: {
-  ink: string;
-  ring: string;
-  cut: string;
+  color: string;
   className?: string;
   style?: CSSProperties;
 }) {
-  // Identifiants uniques : sans eux, deux logos sur la même page partageraient le même masque.
-  const id = useId();
-  const top = `${id}-top`;
-  const over = `${id}-over`;
   return (
-    <svg viewBox="-4 -4 763 566" fill="none" aria-hidden className={className} style={style}>
-      <defs>
-        <clipPath id={top}>
-          <rect x="262.5" y="-200" width="1200" height="479" />
-        </clipPath>
-        <clipPath id={over}>
-          <rect x="258.5" y="-200" width="1200" height="485" />
-        </clipPath>
-      </defs>
-      {/* 1. anneau droit (rouge) */}
-      <ellipse {...RIGHT} stroke={ring} strokeWidth={128} />
-      {/* 2. anneau gauche : halo de coupure dans la couleur du fond, puis l'anneau */}
-      <ellipse {...LEFT} stroke={cut} strokeWidth={188} />
-      <ellipse {...LEFT} stroke={ink} strokeWidth={128} />
-      {/* 3. au croisement du haut, l'anneau droit repasse PAR-DESSUS l'anneau gauche */}
-      <g clipPath={`url(#${top})`}>
-        <ellipse {...RIGHT} stroke={cut} strokeWidth={188} />
-      </g>
-      <g clipPath={`url(#${over})`}>
-        <ellipse {...RIGHT} stroke={ring} strokeWidth={128} />
-      </g>
+    <svg viewBox="-4 -4 1140 532" fill="none" aria-hidden className={className} style={style}>
+      <path d={LOOP_PATH} stroke={color} strokeWidth={124} strokeLinejoin="round" />
     </svg>
   );
 }
 
-// wordmark = « c » + anneaux + « ry » : pages d'accès (24–26 px) et app sur ordinateur (40 px).
-// symbol = les anneaux seuls : en-têtes de l'app sur téléphone (28 px). Choix d'Antonino le 22/10, plus
-// grand que les 17–20 px conseillés par COORY_LOGO.md. `size` = taille du texte ou hauteur du symbole, en px.
+// Tuiles d'icône (§5) : boucle rouge sur graphite (principale), boucle blanche sur rouge (petites tailles).
+const iconTiles = {
+  dark: { background: "#0B0B0C", loop: "#FF3347" },
+  red: { background: "#FF3347", loop: "#FFFFFF" },
+};
+
+// wordmark = « C » + boucle + « ry » ; `size` = taille du texte en px.
+// symbol = la boucle seule ; `size` = sa hauteur en px.
+// icon = tuile carrée arrondie (boucle sur graphite, ou sur rouge avec tone="red") ; `size` = son côté en px.
 export function CooryLogo({
   variant = "wordmark",
   tone = "theme",
   size = 20,
 }: {
-  variant?: "wordmark" | "symbol";
+  variant?: "wordmark" | "symbol" | "icon";
   tone?: Tone;
   size?: number;
 }) {
   const colors = tones[tone];
-  const color = tone === "theme" ? undefined : colors.ink;
+
+  if (variant === "icon") {
+    const tile = tone === "red" ? iconTiles.red : iconTiles.dark;
+    return (
+      <svg role="img" aria-label={BRAND.name} viewBox="0 0 1024 1024" width={size} height={size}>
+        <rect width="1024" height="1024" rx="236" fill={tile.background} />
+        <g transform="translate(164 350) scale(0.6108)">
+          <path
+            d={LOOP_PATH}
+            fill="none"
+            stroke={tile.loop}
+            strokeWidth={124}
+            strokeLinejoin="round"
+          />
+        </g>
+      </svg>
+    );
+  }
 
   if (variant === "symbol") {
     return (
-      <span role="img" aria-label={BRAND.name} className="inline-flex text-text" style={{ color }}>
-        <Rings {...colors} style={{ height: size, width: "auto" }} />
+      <span role="img" aria-label={BRAND.name} className="inline-flex">
+        <Loop color={colors.loop} style={{ height: size, width: "auto" }} />
       </span>
     );
   }
 
-  // role="img" + aria-label : un lecteur d'écran annonce « Coory », pas « c… r y ».
+  // role="img" + aria-label : un lecteur d'écran annonce « Coory », pas « C… r y ».
   return (
     <span
       role="img"
       aria-label={BRAND.name}
-      className="inline-block leading-none font-semibold tracking-[-0.05em] whitespace-nowrap text-text"
-      style={{ fontSize: size, color }}
+      className="inline-block font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap"
+      style={{ fontSize: size, color: colors.ink }}
     >
-      c
-      <Rings
-        {...colors}
-        className="inline-block h-[0.566em] w-[0.763em] align-[-0.016em]"
-        style={{ margin: "0 -0.025em 0 0.025em" }}
+      C
+      <Loop
+        color={colors.loop}
+        className="inline-block h-[0.532em] w-[1.14em] align-[-0.018em]"
+        style={{ margin: "0 -0.018em 0 0.042em" }}
       />
       ry
     </span>

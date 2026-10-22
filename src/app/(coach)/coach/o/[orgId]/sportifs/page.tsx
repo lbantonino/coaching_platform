@@ -87,7 +87,7 @@ async function AthleteList({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-small text-muted">{membership.organizationName}</p>
-          <h1 className="text-h2 font-medium md:text-h1">Sportifs</h1>
+          <h1 className="font-display text-h2 font-medium md:text-h1">Sportifs</h1>
         </div>
         <Link
           href={`${basePath}/nouveau`}

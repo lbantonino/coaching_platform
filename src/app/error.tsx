@@ -15,7 +15,7 @@ export default function ErrorPage({
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-5 py-24">
       <p className="font-mono text-data text-accent-text">ERREUR</p>
-      <h1 className="text-h2 font-medium">Un problème est survenu</h1>
+      <h1 className="font-display text-h2 font-medium">Un problème est survenu</h1>
       <p className="text-muted">
         La page n&apos;a pas pu s&apos;afficher. Réessaie dans un instant ; si le problème persiste,
         contacte l&apos;administrateur de la plateforme.

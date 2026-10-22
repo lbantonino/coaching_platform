@@ -6,7 +6,7 @@ test("le logo Coory est annoncé par son nom et le favicon est le symbole rouge"
   page,
 }) => {
   await page.goto("/");
-  // Le wordmark « c + anneaux + ry » est lu « Coory » par un lecteur d'écran.
+  // Le wordmark « C + boucle infinie + ry » est lu « Coory » par un lecteur d'écran.
   await expect(page.getByRole("img", { name: "Coory" })).toBeVisible();
   await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute(
     "href",

@@ -43,7 +43,7 @@ async function InvitationSection({ token }: { token: string }) {
   if (!invitation || invitation.status !== "pending") {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-h2 font-medium">Invitation indisponible</h1>
+        <h1 className="font-display text-h2 font-medium">Invitation indisponible</h1>
         <p className="text-muted">
           {invitation && invitation.status !== "pending"
             ? unavailableMessages[invitation.status]
@@ -64,7 +64,7 @@ async function InvitationSection({ token }: { token: string }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <p className="text-small text-muted">{invitation.organizationName}</p>
-        <h1 className="text-h2 font-medium">Bienvenue {invitation.athleteName}</h1>
+        <h1 className="font-display text-h2 font-medium">Bienvenue {invitation.athleteName}</h1>
         <p className="text-small text-muted">
           Ton coach t&apos;invite à rejoindre ton espace sportif. Invitation valable jusqu&apos;au{" "}
           {formatDateTime(invitation.expiresAt)}.

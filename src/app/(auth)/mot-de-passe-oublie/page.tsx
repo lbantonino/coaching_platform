@@ -11,7 +11,7 @@ export default function ForgotPasswordPage() {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-8 px-5 pt-6 pb-16 sm:justify-center sm:py-16">
       <div className="flex flex-col gap-2">
-        <h1 className="text-h2 font-medium">Mot de passe oublié</h1>
+        <h1 className="font-display text-h2 font-medium">Mot de passe oublié</h1>
         <p className="text-small text-muted">
           Indique l&apos;adresse e-mail de ton compte : tu recevras un lien pour choisir un nouveau
           mot de passe.

@@ -33,6 +33,8 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
 
+  --font-display:
+    var(--font-space-grotesk), system-ui, sans-serif; /* logo, titres H1–H3, grands chiffres */
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
@@ -43,7 +45,8 @@
   --radius-card: 16px;
   --radius-pill: 20px;
 
-  /* Échelle typographique (taille / interligne / interlettrage). Titres en 500 maximum, jamais en gras. */
+  /* Échelle typographique (taille / interligne / interlettrage). Titres en 500 maximum, jamais en gras ;
+     H1–H3 et display s'écrivent en Space Grotesk (classe font-display), jamais sous 18 px. */
   --text-display: 40px;
   --text-display--line-height: 1.1;
   --text-display--letter-spacing: -0.03em;

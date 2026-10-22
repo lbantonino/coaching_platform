@@ -63,6 +63,22 @@ Ajustement final d'Antonino (22/10) : sur ORDINATEUR, le mot « coory » en 40 p
   17–20 px conseillés par COORY_LOGO.md : choix assumé. check OK, test:e2e 41/41 + 1 ignoré, captures vérifiées.
 ```
 
+### Story P0-05c : logo « C∞ry » (boucle infinie) et police Space Grotesk
+```
+Date : 2026-10-22
+Source : nouvelles versions de COORY_LOGO.md et COORY_DESIGN_SYSTEM.md fournies par Antonino (décision D-19)
+Fichiers modifiés : COORY_LOGO.md, COORY_DESIGN_SYSTEM.md (§2, §4, §10), src/components/ui/coory-logo.tsx
+  (variantes wordmark / symbol / icon, tons theme / dark / red / light, plus de clipPath ni d'useId),
+  src/app/layout.tsx (Space_Grotesk via next/font), globals.css (font-display), 19 titres H1/H2 et la valeur
+  des StatCard en font-display, commentaires des cadres coach / sportif / admin
+Icônes : src/app/icon.svg (boucle blanche sur rouge), src/app/favicon.ico (16 + 32 px, nouveau),
+  src/app/apple-icon.png (180 px, boucle rouge sur graphite, carré plein) ; public/logo : coory-loop.svg,
+  coory-loop-current.svg, coory-icon-dark.svg, coory-icon-red.svg (les trois coory-symbol-* supprimés)
+Tailles conservées : mot 40 px sur ordinateur, boucle 28 px de haut sur téléphone, mot 24–26 px sur les pages d'accès
+Résultats : check OK (Vitest 47/47), test:e2e 41/41 + 1 ignoré ; captures sombre / clair, ordinateur / téléphone
+Limites : icônes PWA 192 / 512 / 1024 non générées tant qu'il n'y a pas de manifeste ; e-mails sans logo.
+```
+
 ## Session du 20/10/2026
 - Objectif : finir P1, dans l'ordre choisi par Antonino : P1-04 guards -> Playwright -> mot de passe oublié -> P1-05 invitation.
 

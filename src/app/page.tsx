@@ -12,7 +12,7 @@ export default function Home() {
         <CooryLogo size={26} />
       </header>
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center gap-6 px-5 pb-24">
-        <h1 className="text-h1 font-medium sm:text-display">
+        <h1 className="font-display text-h1 font-medium sm:text-display">
           Programmer, publier et suivre tes sportifs.
         </h1>
         <p className="max-w-lg text-title text-muted">{BRAND.tagline}</p>
