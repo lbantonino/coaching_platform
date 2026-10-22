@@ -19,3 +19,10 @@ export const primaryButtonClass = buttonClass({
 // Message d'erreur : rouge en TEXTE (accent-text), lisible en sombre comme en clair (contraste ≥ 4,5:1).
 // Le rouge plein + texte blanc est réservé aux pastilles d'alerte (Badge « danger »).
 export const errorTextClass = "text-small font-medium text-accent-text";
+
+// Case à cocher en forme de pastille (lieux, jours…) : c'est le <label> qui porte ce style, la vraie case
+// reste dans la page (classe sr-only) pour le clavier et les lecteurs d'écran. Cochée = couleurs inversées ;
+// le survol ne change que les pastilles non cochées (sinon le texte coché devenait illisible).
+// Mettre une icône Check avec la classe « hidden group-has-checked:block » à l'intérieur.
+export const checkboxChipClass =
+  "group inline-flex h-11 cursor-pointer items-center gap-2 rounded-pill border border-line-2 px-3.5 text-small text-muted transition-colors not-has-checked:hover:text-text has-checked:border-inv has-checked:bg-inv has-checked:text-on-inv has-focus-visible:outline-2 has-focus-visible:outline-accent sm:h-9";

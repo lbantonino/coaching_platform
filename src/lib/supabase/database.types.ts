@@ -3,6 +3,51 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      athlete_consents: {
+        Row: {
+          action: string;
+          athlete_id: string;
+          coach_proof: string | null;
+          id: string;
+          organization_id: string;
+          purpose: string;
+          recorded_at: string;
+          recorded_by: string | null;
+          source: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: string;
+          athlete_id: string;
+          coach_proof?: string | null;
+          id?: string;
+          organization_id: string;
+          purpose?: string;
+          recorded_at?: string;
+          recorded_by?: string | null;
+          source: string;
+        };
+        Update: {
+          action?: string;
+          athlete_id?: string;
+          coach_proof?: string | null;
+          id?: string;
+          organization_id?: string;
+          purpose?: string;
+          recorded_at?: string;
+          recorded_by?: string | null;
+          source?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_consents_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       athlete_goals: {
         Row: {
           athlete_id: string;
@@ -127,6 +172,7 @@ export type Database = {
       athlete_profiles: {
         Row: {
           athlete_user_id: string | null;
+          available_days: string[];
           created_at: string;
           created_by: string | null;
           display_name: string | null;
@@ -134,12 +180,17 @@ export type Database = {
           equipment: string | null;
           experience: string | null;
           first_name: string;
+          health_consent_at: string | null;
+          health_constraints: string | null;
           id: string;
           last_name: string | null;
           level: string | null;
+          max_session_minutes: number | null;
           organization_id: string;
           phone: string | null;
           preferred_contact: string | null;
+          schedule_constraints: string | null;
+          sessions_per_week: number | null;
           status: string;
           training_places: string[];
           updated_at: string;
@@ -147,6 +198,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           athlete_user_id?: string | null;
+          available_days?: string[];
           created_at?: string;
           created_by?: string | null;
           display_name?: never;
@@ -154,18 +206,24 @@ export type Database = {
           equipment?: string | null;
           experience?: string | null;
           first_name: string;
+          health_consent_at?: string | null;
+          health_constraints?: string | null;
           id?: string;
           last_name?: string | null;
           level?: string | null;
+          max_session_minutes?: number | null;
           organization_id: string;
           phone?: string | null;
           preferred_contact?: string | null;
+          schedule_constraints?: string | null;
+          sessions_per_week?: number | null;
           status?: string;
           training_places?: string[];
           updated_at?: string;
         };
         Update: {
           athlete_user_id?: string | null;
+          available_days?: string[];
           created_at?: string;
           created_by?: string | null;
           display_name?: never;
@@ -173,12 +231,17 @@ export type Database = {
           equipment?: string | null;
           experience?: string | null;
           first_name?: string;
+          health_consent_at?: string | null;
+          health_constraints?: string | null;
           id?: string;
           last_name?: string | null;
           level?: string | null;
+          max_session_minutes?: number | null;
           organization_id?: string;
           phone?: string | null;
           preferred_contact?: string | null;
+          schedule_constraints?: string | null;
+          sessions_per_week?: number | null;
           status?: string;
           training_places?: string[];
           updated_at?: string;
@@ -371,6 +434,11 @@ export type Database = {
           organization_name: string;
         }[];
       };
+      grant_health_consent: {
+        Args: { p_athlete_id: string; p_coach_proof?: string };
+        Returns: undefined;
+      };
+      withdraw_health_consent: { Args: { p_athlete_id: string }; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;

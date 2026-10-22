@@ -93,6 +93,46 @@ export const athleteUpdateSchema = newAthleteSchema.extend({
 
 export type AthleteUpdateInput = z.infer<typeof athleteUpdateSchema>;
 
+// Disponibilités (P2-02 partie 3). Jours dans l'ordre de la semaine, alignés sur la contrainte CHECK.
+export const WEEK_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+export type WeekDay = (typeof WEEK_DAYS)[number];
+export const weekDayLabels: Record<WeekDay, string> = {
+  mon: "Lundi",
+  tue: "Mardi",
+  wed: "Mercredi",
+  thu: "Jeudi",
+  fri: "Vendredi",
+  sat: "Samedi",
+  sun: "Dimanche",
+};
+
+// Nombre entier facultatif saisi dans un champ texte : « » devient null.
+const optionalInt = (min: number, max: number, error: string) =>
+  z.preprocess(
+    (value) => (typeof value === "string" ? (value.trim() === "" ? null : Number(value)) : value),
+    z.number({ error }).int({ error }).min(min, { error }).max(max, { error }).nullable(),
+  );
+
+export const availabilitySchema = z.object({
+  sessionsPerWeek: optionalInt(1, 14, "Séances par semaine : un nombre entre 1 et 14."),
+  maxSessionMinutes: optionalInt(10, 300, "Durée maximale d'une séance : entre 10 et 300 minutes."),
+  // Remis dans l'ordre de la semaine, sans doublon, quel que soit l'ordre reçu.
+  availableDays: z
+    .array(z.enum(WEEK_DAYS, { error: "Jour invalide." }))
+    .transform((days) => WEEK_DAYS.filter((day) => days.includes(day))),
+  scheduleConstraints: optionalText(
+    z
+      .string()
+      .max(500, { error: "Les contraintes d'organisation sont limitées à 500 caractères." }),
+  ),
+  // Donnée de santé : courte et sans diagnostic. Acceptée seulement si un accord est en cours (serveur + base).
+  healthConstraints: optionalText(
+    z.string().max(300, { error: "Les contraintes physiques sont limitées à 300 caractères." }),
+  ),
+});
+
+export type AvailabilityInput = z.infer<typeof availabilitySchema>;
+
 // Filtres de la liste des sportifs (valeurs venant de l'URL, donc validées).
 export const athleteListFilterSchema = z.object({
   status: z.enum([...ATHLETE_STATUSES, "all"]).catch("active"),

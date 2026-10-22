@@ -10,6 +10,7 @@ import type {
   AthleteStatus,
   ContactChannel,
   TrainingPlace,
+  WeekDay,
 } from "./schemas";
 
 export type AthleteListItem = {
@@ -78,6 +79,13 @@ export type AthleteDetail = {
   experience: string | null;
   trainingPlaces: TrainingPlace[];
   equipment: string | null;
+  sessionsPerWeek: number | null;
+  availableDays: WeekDay[];
+  maxSessionMinutes: number | null;
+  scheduleConstraints: string | null;
+  // Donnée de santé : n'existe que pendant qu'un accord est en cours (healthConsentAt non nul).
+  healthConstraints: string | null;
+  healthConsentAt: string | null;
   status: AthleteStatus;
   hasAccount: boolean;
   createdAt: string;
@@ -95,7 +103,7 @@ export async function getAthlete(
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, last_name, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, status, athlete_user_id, created_at",
+      "id, first_name, last_name, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, athlete_user_id, created_at",
     )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
@@ -117,6 +125,12 @@ export async function getAthlete(
     experience: data.experience,
     trainingPlaces: data.training_places as TrainingPlace[],
     equipment: data.equipment,
+    sessionsPerWeek: data.sessions_per_week,
+    availableDays: data.available_days as WeekDay[],
+    maxSessionMinutes: data.max_session_minutes,
+    scheduleConstraints: data.schedule_constraints,
+    healthConstraints: data.health_constraints,
+    healthConsentAt: data.health_consent_at,
     status: data.status as AthleteStatus,
     hasAccount: data.athlete_user_id !== null,
     createdAt: data.created_at,

@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 et 2 faites (identité, contact, profil sportif ; objectifs et compétitions) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-02 partie 3 (disponibilités, contraintes, blessures), notes coach/sportif, P2-04, P2-05 à faire | test 63/63, db:test 98/98, test:e2e 45/45 + 1 ignoré (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; records personnels, notes coach/sportif, P2-04, P2-05 à faire | test 69/69, db:test 119/119, test:e2e 48/48 + 2 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,35 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### Story P2-02c : disponibilités, contraintes et accord pour les données de santé
+```
+Date : 2026-10-22
+Story : P2-02 partie 3 ; sources : OPEN-01 tranché (D-14), docs/03 §2, RGPD art. 9 ; décision D-20 (Antonino :
+  « les deux, dès maintenant » : accord par le sportif dans son espace OU noté par le coach)
+Base : supabase/migrations/20261022170925_disponibilites_consentement.sql
+  - athlete_profiles : sessions_per_week (1–14), available_days (lun → dim), max_session_minutes (10–300),
+    schedule_constraints (≤ 500), health_constraints (≤ 300) et health_consent_at ;
+    CHECK : health_constraints exige un accord en cours ; health_consent_at n'est modifiable par personne
+  - athlete_consents : journal en ajout seul (accord / retrait, source sportif ou coach, preuve du coach),
+    aucune écriture directe ; lecture par les coachs de l'organisation et par le sportif concerné
+  - fonctions SECURITY DEFINER grant_health_consent / withdraw_health_consent : vérifient l'appelant (sportif lié
+    ou coach membre), écrivent journal + fiche dans la même transaction ; le retrait efface la contrainte notée
+Code : features/athletes (availabilitySchema, updateAvailability), features/consents (preuves, libellés du journal,
+  erreurs, lecture, actions coach et sportif), components/ui/confirm-submit-button (confirmation avant
+  effacement), form-styles checkboxChipClass (pastilles partagées) ; fiche : carte « Disponibilités & contraintes »
+  (formulaire, accord, historique) ; espace sportif : carte « Tes contraintes physiques » (J'accepte / Retirer)
+Seed : disponibilités de 6 sportifs ; Inès : accord noté par le coach (formulaire signé) + contrainte ;
+  Thomas : sans accord (à donner depuis son espace)
+Tests : Vitest 69/69 (6 nouveaux) ; pgTAP 119/119 (08 : 21 nouveaux) ; Playwright 48/48 + 2 ignorés (parcours
+  coach x2 profils ; parcours sportif sur ordinateur seulement, compte de démo partagé) ; 6 anciens tests
+  précisés (bouton « Enregistrer » exact, d'autres boutons « Enregistrer … » existant désormais) ; db:reset final
+Limites / points à valider :
+  - Le texte d'information présenté au sportif et la liste des preuves sont à faire relire (Gianluca, juriste)
+  - Pas encore de politique de conservation/suppression globale (OPEN-04) ni d'export des données (P8)
+  - Le parcours sportif n'est testé que sur ordinateur (compte de démo unique)
+Suite : records personnels (fin d'OPEN-01) ou notes coach / notes visibles du sportif (fin de P2-03)
+```
 
 ### Story P2-02b : objectifs et compétitions
 ```

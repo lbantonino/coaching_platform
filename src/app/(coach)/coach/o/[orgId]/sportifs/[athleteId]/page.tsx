@@ -12,6 +12,7 @@ import { requireOrgAccess } from "@/features/auth/guards";
 import { formatDateTime, todayIsoInBrussels } from "@/lib/format";
 
 import { AthleteEditForm } from "./athlete-edit-form";
+import { AvailabilitySection } from "./availability-section";
 import { GoalsSection } from "./goals-section";
 import { ReferencesSection } from "./references-section";
 
@@ -111,6 +112,8 @@ async function AthleteSection({ orgId, athleteId }: { orgId: string; athleteId: 
         athleteId={athlete.id}
         today={todayIsoInBrussels()}
       />
+
+      <AvailabilitySection organizationId={membership.organizationId} athlete={athlete} />
 
       <ReferencesSection
         organizationId={membership.organizationId}
