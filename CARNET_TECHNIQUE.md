@@ -243,6 +243,8 @@ La fiche a maintenant une **vue d'ensemble en lecture** (profil, objectif actuel
 
 Côté tests, une dizaine de parcours remplissaient les formulaires directement sur la fiche. Il a suffi d'une petite fonction partagée, « ouvrir l'onglet », ajoutée aux bons endroits. C'est l'intérêt d'écrire les tests comme un humain qui cherche un bouton par son nom, et non par sa position dans la page.
 
+Après coup, on a relu la maquette d'un œil critique. Deux défauts ont été corrigés : les mêmes informations apparaissaient deux fois (dans les chiffres clés et dans les cartes), et sur téléphone, les cinq chiffres clés repoussaient les onglets hors de l'écran. Ils forment maintenant un bandeau qui défile de côté. Autre constat honnête : ces chiffres clés sont provisoires. Ceux qu'un coach regarde vraiment (séances faites, dernier RPE, régularité) n'existeront qu'avec l'espace sportif (P6) ; c'est noté dans la roadmap.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris

@@ -41,6 +41,10 @@ Fichiers : components/ui/page-tabs.tsx, lib/format formatDay, (coach)/coach-sear
   [athleteId]/page.tsx (onglets), athlete-header.tsx, overview.tsx
 Tests : Playwright 51/51 + 3 ignorés (nouveau athlete-overview.spec : vue d'ensemble, « Modifier », recherche ;
   tests existants : ouverture de l'onglet voulu via tests/e2e/helpers.ts openAthleteTab) ; check OK ; db:reset final
+Retouches validées par Antonino (22/10) : (1) plus de doublons entre chiffres clés et vue d'ensemble (tuiles
+  séances / durée et ligne « canal » retirées des cartes) ; (2) sur téléphone, chiffres clés en bandeau qui
+  défile horizontalement (cartes de 44 %, aimantation alignée sur la marge), onglets visibles sans défiler.
+  Note roadmap : chiffres clés PROVISOIRES, à remplacer en P6 par des indicateurs de suivi.
 ```
 
 ### Story P2-02c : disponibilités, contraintes et accord pour les données de santé
