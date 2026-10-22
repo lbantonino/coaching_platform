@@ -218,6 +218,8 @@ La fiche a maintenant un **prénom** et un **nom** séparés, un **canal de cont
 
 Choix technique à savoir expliquer : le nom complet est devenu une **colonne calculée** par la base (prénom + nom). Personne ne peut l'écrire directement, donc il ne peut jamais contredire le prénom et le nom. Et tout ce qui le lisait déjà (liste, tri, recherche, page d'invitation) a continué de marcher sans modification. Les choix proposés (canaux, niveaux, lieux) sont des **listes fermées** vérifiées deux fois : par Zod dans le serveur, et par une contrainte dans la base. Un formulaire bricolé qui enverrait « pigeon » comme canal est refusé aux deux endroits. Les lieux se cochent comme des pastilles, mais restent de vraies cases à cocher pour le clavier et les lecteurs d'écran.
 
+Pour qu'Antonino puisse « voir » le produit, la base de démo contient maintenant des **sportifs inventés mais crédibles** (Sophie en remise en forme, Thomas coureur avec ses allures, Inès en Hyrox, Nadia en force athlétique…) au lieu des fiches « Camille Test 1792… » laissées par les tests automatiques. Ils sont dans le **seed** : ils reviennent à l'identique à chaque `npm run db:reset`, sans aucune donnée réelle. Les tests, eux, créent leurs fiches temporaires et on remet la base au propre après.
+
 Petit défaut trouvé sur les captures, pas par les tests : une pastille cochée perdait son contraste quand la souris passait dessus. Corrigé en limitant l'effet de survol aux pastilles non cochées. Les tests vérifient que ça marche ; les captures vérifient que c'est lisible.
 
 ---
