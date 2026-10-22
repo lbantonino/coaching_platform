@@ -9,8 +9,8 @@ import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { CoachSideNav, CoachTabBar } from "./coach-nav";
 
 // Coquille de l'espace coach : barre latérale de 232 px sur ordinateur, onglets en bas sur téléphone.
-// Dans l'app, le logo est le symbole seul (les deux anneaux), plus grand ;
-// le mot « coory » reste sur les pages d'accès.
+// Logo (choix d'Antonino, 22/10) : le mot « coory » en grand dans la barre latérale (ordinateur),
+// le symbole seul (les deux anneaux) dans l'en-tête mobile.
 // La navigation lit la session : elle est derrière Suspense (Cache Components), le reste s'affiche aussitôt.
 // Ce n'est PAS une protection : chaque page appelle elle-même son garde-fou (requireCoach, requireOrgAccess).
 export default function CoachLayout({ children }: LayoutProps<"/">) {
@@ -19,7 +19,7 @@ export default function CoachLayout({ children }: LayoutProps<"/">) {
       <aside className="sticky top-0 hidden h-dvh w-58 shrink-0 flex-col justify-between border-r border-line bg-bg px-3 py-5 md:flex">
         <div className="flex flex-col gap-8">
           <Link href="/coach" aria-label="Tableau de bord" className="w-fit rounded-sm px-2.5">
-            <CooryLogo variant="symbol" size={32} />
+            <CooryLogo size={28} />
           </Link>
           <nav aria-label="Navigation principale">
             <Suspense fallback={null}>
