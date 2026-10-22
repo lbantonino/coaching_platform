@@ -6,6 +6,7 @@ const empty: ActivitySources = {
   profile: { id: "p1", createdAt: "2026-09-15T08:00:00+00:00" },
   goals: [],
   references: [],
+  records: [],
   consents: [],
   invites: [],
   notes: [],
@@ -108,6 +109,28 @@ describe("buildActivity (historique de la fiche)", () => {
       ["account", "Compte activé par le sportif"],
       ["invite", "Lien d'invitation créé"],
     ]);
+  });
+
+  it("raconte une performance ajoutée, avec son temps et sa course", () => {
+    const [event] = buildActivity({
+      ...empty,
+      records: [
+        {
+          id: "r1",
+          event: "hyrox",
+          hyroxCategory: "open",
+          timeSeconds: 4720,
+          achievedOn: "2025-12-14",
+          raceName: "Hyrox Gent",
+          createdAt: "2026-10-01T10:00:00+00:00",
+        },
+      ],
+    });
+    expect(event).toMatchObject({
+      kind: "record",
+      title: "Performance ajoutée : Hyrox Open",
+      detail: "1:18:40 · Hyrox Gent · le 14 décembre 2025",
+    });
   });
 
   it("trie par date réelle, même si les dates sont écrites dans des fuseaux différents", () => {

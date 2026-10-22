@@ -8,6 +8,8 @@ import { goalTypeLabels, type GoalStatus, type GoalType } from "@/features/goals
 import type { NoteVisibility } from "@/features/notes/schemas";
 import { formatReferenceValue } from "@/features/references/format";
 import { referenceKindLabels, type ReferenceKind } from "@/features/references/schemas";
+import type { HyroxCategory } from "@/features/goals/schemas";
+import { formatRaceTime, recordTitle, type RecordEvent } from "@/features/records/schemas";
 import { formatDate } from "@/lib/format";
 
 // Historique d'une fiche (P2-04 étape 2) : une frise construite UNIQUEMENT à partir d'événements réels
@@ -20,6 +22,7 @@ export type ActivityKind =
   | "goal_achieved"
   | "goal_dropped"
   | "reference"
+  | "record"
   | "consent"
   | "invite"
   | "account"
@@ -53,6 +56,15 @@ export type ActivitySources = {
     loadKg: number | null;
     reps: number | null;
     measuredOn: string;
+    createdAt: string;
+  }[];
+  records: {
+    id: string;
+    event: RecordEvent;
+    hyroxCategory: HyroxCategory | null;
+    timeSeconds: number;
+    achievedOn: string;
+    raceName: string | null;
     createdAt: string;
   }[];
   consents: {
@@ -109,6 +121,22 @@ export function buildActivity(sources: ActivitySources): ActivityEvent[] {
         formatReferenceValue(reference),
         reference.exercise,
         `mesurée le ${formatDate(reference.measuredOn)}`,
+      ]
+        .filter(Boolean)
+        .join(" · "),
+    });
+  }
+
+  for (const record of sources.records) {
+    events.push({
+      id: `record-${record.id}`,
+      kind: "record",
+      at: record.createdAt,
+      title: `Performance ajoutée : ${recordTitle(record.event, record.hyroxCategory)}`,
+      detail: [
+        formatRaceTime(record.timeSeconds),
+        record.raceName,
+        `le ${formatDate(record.achievedOn)}`,
       ]
         .filter(Boolean)
         .join(" · "),

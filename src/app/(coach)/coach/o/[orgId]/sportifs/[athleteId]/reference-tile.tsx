@@ -7,7 +7,7 @@ import { referenceTone, type ReferenceTone } from "@/features/references/series"
 import { formatDate } from "@/lib/format";
 
 // Classes de chaque couleur de repère (la règle de couleur est dans referenceTone, D-25).
-const tileTones = {
+export const tileTones = {
   run: {
     tile: "border-run/40 bg-[color-mix(in_srgb,var(--run)_7%,var(--bg))]",
     icon: "border border-run/50 bg-run-soft text-run",

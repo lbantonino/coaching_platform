@@ -149,13 +149,15 @@ test("le coach calcule les allures depuis un test de Cooper et valide avant enre
   await page.getByText("Calculer les allures depuis un test").click();
 
   // Test de 5 km mal saisi : erreur et enregistrement impossible.
-  await page.getByText("5 km", { exact: true }).click();
+  // Limité au calculateur : « 5 km » existe aussi dans la section Records personnels.
+  const testKind = page.getByRole("group", { name: "Test réalisé" });
+  await testKind.getByText("5 km", { exact: true }).click();
   await page.getByLabel("Temps sur 5 km").fill("22:3");
   await expect(page.getByRole("alert").filter({ hasText: "Temps invalide" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Enregistrer ces allures" })).toBeDisabled();
 
   // Cooper 3000 m : aperçu en direct (VMA 15 km/h).
-  await page.getByText("Cooper (12 min)").click();
+  await testKind.getByText("Cooper (12 min)").click();
   await page.getByLabel("Distance parcourue en 12 min (m)").fill("3000");
   await expect(page.getByText("15 km/h", { exact: true })).toBeVisible();
   await expect(page.getByText("5:20–6:09 min/km")).toBeVisible();

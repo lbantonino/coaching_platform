@@ -214,6 +214,54 @@ export type Database = {
           },
         ];
       };
+      athlete_personal_records: {
+        Row: {
+          achieved_on: string;
+          athlete_id: string;
+          created_at: string;
+          created_by: string | null;
+          event: string;
+          hyrox_category: string | null;
+          id: string;
+          organization_id: string;
+          race_name: string | null;
+          time_seconds: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          achieved_on: string;
+          athlete_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          event: string;
+          hyrox_category?: string | null;
+          id?: string;
+          organization_id: string;
+          race_name?: string | null;
+          time_seconds: number;
+        };
+        Update: {
+          achieved_on?: string;
+          athlete_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          event?: string;
+          hyrox_category?: string | null;
+          id?: string;
+          organization_id?: string;
+          race_name?: string | null;
+          time_seconds?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_personal_records_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       athlete_profiles: {
         Row: {
           athlete_user_id: string | null;
