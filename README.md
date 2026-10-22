@@ -48,7 +48,7 @@ Prérequis : **Docker Desktop lancé**. Le CLI Supabase est une dépendance du p
 | `npm run db:types` | Régénère `src/lib/supabase/database.types.ts` depuis le schéma local (après chaque migration) |
 | `npm run db:stop` | Arrête les conteneurs (les données locales sont conservées) |
 
-Comptes de démonstration locaux (créés par le seed, mot de passe `demo-coach-local`) : `coach-a@example.test` (Organisation Démo A), `coach-b@example.test` (Organisation Démo B) et `admin@example.test` (administrateur de la plateforme, sans organisation).
+Comptes de démonstration locaux (créés par le seed, mot de passe `demo-coach-local`) : `coach-a@example.test` (Organisation Démo A), `coach-b@example.test` (Organisation Démo B) `admin@example.test` (administrateur de la plateforme, sans organisation) et `thomas.peeters@example.test` (sportif de l'Organisation Démo A, ouvre l'espace sportif). Le seed crée aussi 8 sportifs inventés dans l'Organisation Démo A et 2 dans la B, avec profils et repères. Les tests navigateur ajoutent leurs propres fiches temporaires : `npm run db:reset` remet ensuite la base de démo au propre.
 
 URL locales utiles : Studio http://127.0.0.1:54323, boîte mail de test (Mailpit) http://127.0.0.1:54324.
 

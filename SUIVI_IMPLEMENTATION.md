@@ -44,6 +44,12 @@ Limites / points à valider :
   - Le matériel est un texte libre ; une liste structurée viendra si l'éditeur (P4) en a besoin
   - Le sportif ne voit ni ne modifie encore ces informations depuis son espace
 Suite : P2-02 partie 2 (objectifs et compétitions)
+Données de démo (demande d'Antonino, 22/10) : supabase/seed.sql contient désormais 8 sportifs INVENTÉS dans
+  l'Organisation Démo A (Sophie Lambert, Thomas Peeters, Inès Benali, Lucas Janssens, Nadia El Amrani,
+  Julien Dubois en pause, Manon prénom seul, Kevin Mertens archivé) et 2 dans la B ; 16 repères datés ;
+  compte sportif thomas.peeters@example.test (invitation acceptée) ; invitation en attente pour Inès.
+  Fiches de test effacées par db:reset. db:test 82/82, check OK, test:e2e 43/43 + 1 ignoré avec ces données,
+  puis db:reset pour retirer les fiches temporaires créées par les tests.
 ```
 
 ### Story P0-05b : design system Coory rouge, logo aux anneaux, thème clair
