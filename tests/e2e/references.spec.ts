@@ -52,6 +52,8 @@ test("le coach enregistre des repères datés et conserve l'historique", async (
   await addMeasure(page, "Allure 5 km", (p) => p.getByLabel("Allure (min/km)").fill("4:5"));
   await expect(page.getByRole("alert").filter({ hasText: "4:05 ou 4:50" })).toBeVisible();
   await expect(page.getByLabel("Allure (min/km)")).toHaveValue("4:5");
+  // Le type choisi reste sélectionné : la correction part bien en « Allure 5 km ».
+  await expect(page.getByLabel("Type de repère")).toHaveValue("pace_5k");
 
   // Deux mesures datées du même repère : la plus récente fait foi, l'ancienne reste dans l'historique.
   await addMeasure(
