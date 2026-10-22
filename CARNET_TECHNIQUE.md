@@ -261,6 +261,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **L'inscription libre était ouverte** : sans page d'inscription, l'API de Supabase acceptait quand même de créer des comptes. Fermé dans la configuration et vérifié.
 - **Des tests « chanceux »** : deux fois, un test cliquait puis naviguait sans attendre la fin de l'action (déconnexion, changement de page). Il passait par chance de timing, puis a échoué plus tard. Leçon : toujours attendre un signe visible (nouvelle adresse, nouveau titre) avant l'étape suivante, et relancer la suite plusieurs fois pour vérifier sa stabilité.
 - **« styleText n'existe pas »** : Vitest refusait de démarrer. Le terminal utilisait une ancienne version de Node, pas la version 24 du projet. Leçon : quand un outil plante dès le démarrage sur une fonction de Node, vérifier d'abord `node -v`.
+- **« On ne lit pas très bien en sombre »** : Antonino avait raison, et les chiffres l'ont confirmé. Le texte « discret » n'atteignait que 2,5:1 de contraste, alors que la norme d'accessibilité (WCAG) demande 4,5:1. Plutôt que d'éclaircir au jugé, on a mesuré chaque couple texte / fond avec la formule officielle, avant et après. Grâce aux jetons, la correction a tenu en cinq valeurs dans un seul fichier. On a même évité un effet de bord : le rouge du logo utilise le même jeton que le texte rouge, on l'a donc laissé intact et corrigé le fond de la pastille à la place.
 - **Une liste déroulante qui oubliait la saisie** : après une erreur, React remettait les listes déroulantes et les cases à cocher à leur valeur de départ (les champs texte, eux, étaient bien conservés). Trouvé par un test, corrigé dans les deux formulaires concernés. Leçon : tester la conservation de la saisie pour chaque **sorte** de champ, pas seulement pour les champs texte.
 - **Une correction qui a tout cassé** : en fermant l'inscription, un deuxième réglage a coupé toute connexion. Les tests l'ont attrapé immédiatement. Leçon : c'est exactement pour ça qu'on a des tests automatiques.
 
@@ -298,6 +299,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Données de santé (RGPD art. 9)** : catégorie de données sensibles ; on ne peut les traiter qu'avec un accord explicite (ou une autre base légale précise).
 - **Fonction SECURITY DEFINER** : fonction de la base qui s'exécute avec des droits élevés ; elle doit donc vérifier elle-même qui l'appelle avant d'agir.
 - **Piste d'audit (journal)** : liste d'événements datés qu'on ne peut que compléter, jamais modifier, pour prouver ce qui s'est passé.
+- **Contraste (ratio WCAG)** : rapport de luminosité entre un texte et son fond, de 1:1 (invisible) à 21:1 (noir sur blanc) ; 4,5:1 minimum pour un texte normal.
 - **Index unique partiel** : règle de la base qui interdit les doublons seulement pour certaines lignes (ici : un seul objectif principal parmi ceux en cours).
 - **Liste fermée** : ensemble de valeurs autorisées (ex. Débutant, Intermédiaire, Confirmé, Compétiteur), vérifié par le serveur et par la base.
 - **Token (design)** : une valeur de design nommée (couleur, rayon, taille) définie une fois et réutilisée partout.

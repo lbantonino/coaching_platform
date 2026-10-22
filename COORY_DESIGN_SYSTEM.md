@@ -36,16 +36,16 @@ Use **semantic tokens** in components, never raw hex.
   --surface-2:#1C1C1F;       /* hover, active nav */
   --chip:#26262A;            /* chips, avatars, neutral pills */
   --bar:#2A2A2E;             /* progress tracks, planned bars */
-  --line:rgba(255,255,255,.07);   /* card borders, dividers */
-  --line-2:rgba(255,255,255,.13); /* control outlines, dashed drop zones */
+  --line:rgba(255,255,255,.14);   /* card borders, dividers (was .07, D-22) */
+  --line-2:rgba(255,255,255,.36); /* control outlines, dashed drop zones (was .13, D-22) */
   --text:#F4F2EF;
-  --muted:#8A8A90;
-  --faint:#55555B;
+  --muted:#A3A3AA;              /* was #8A8A90, D-22 */
+  --faint:#828289;              /* was #55555B, D-22 */
 
   --accent:#FF3347;          /* fills: primary button, hero stat, active segment */
   --accent-hover:#FF5C6C;
   --accent-text:#FF3347;     /* accent used as text/lines */
-  --accent-soft:rgba(255,51,71,.14); /* tinted pill bg, completed set cells */
+  --accent-soft:rgba(255,51,71,.11); /* tinted pill bg, completed set cells (was .14, D-22) */
   --on-accent:#FFFFFF;       /* ALWAYS white text on red */
 
   --inv:#F4F2EF; --on-inv:#0B0B0C;   /* inverse button / selected filter chip */
@@ -71,6 +71,8 @@ Use **semantic tokens** in components, never raw hex.
   --shadow-frame:0 30px 70px rgba(0,0,0,.10);
 }
 ```
+
+> **Ajustement du 22/10/2026 (D-22, demande d'Antonino : « on ne lit pas très bien en sombre »)** : en thème sombre, `--faint` était à 2,5:1 et `--muted` à 4,4:1 sur les pastilles, sous le minimum WCAG de 4,5:1 ; les filets étaient presque invisibles. Valeurs relevées ci-dessus, toutes vérifiées : texte ≥ 4,5:1, contour des champs ≥ 3:1. Le rouge de marque `#FF3347` (et donc le logo) ne change pas. Thème clair inchangé.
 
 **Where red is allowed:** primary CTA (max 1 per view), one hero stat card per row, current week/segment, active mobile tab, active page-tab underline, completed set check, notification dot, nav counters, current bar in charts.
 **Never:** page backgrounds, large text blocks, raw `#FF3347` text on light theme (use `--accent-text`), dark text on red.

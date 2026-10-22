@@ -20,6 +20,18 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### Correctif D-22 : contraste du thème sombre
+```
+Date : 2026-10-22
+Demande d'Antonino : « dans le thème sombre, on ne lit pas très bien, le contraste est trop faible »
+Mesure (formule WCAG, script jetable) AVANT : faint 2,49:1 sur carte, muted 4,39:1 sur pastille neutre, rouge sur
+  pastille « Principal » 4,48:1, bordure de carte 1,19:1, contour de champ 1,39:1
+Correctif (src/styles/tokens.css + COORY_DESIGN_SYSTEM.md, thème sombre seulement) : muted #a3a3aa (7,3:1),
+  faint #828289 (4,8:1), line .14 (1,5:1), line-2 .36 (3,3:1), accent-soft .11 (rouge sur pastille 4,6:1)
+Non modifié : rouge #FF3347 (le logo l'utilise), thème clair. Captures avant / après comparées.
+Tests : check OK, test:e2e verts, db:reset final
+```
+
 ### Story P2-04b : notes du coach et historique (étape 2 sur 3, fin de P2-03)
 ```
 Date : 2026-10-22
