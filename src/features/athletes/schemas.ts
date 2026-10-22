@@ -38,9 +38,21 @@ export const trainingPlaceLabels: Record<TrainingPlace, string> = {
   box: "Box Hyrox / CrossFit",
 };
 
-// Choix facultatif dans une liste fermée : « » (non précisé) devient null.
+// Sexe déclaré (D-25) : sert aux catégories Hyrox (Women / Men / Mixed) et au repère ♀ / ♂.
+export const SEXES = ["female", "male", "unspecified"] as const;
+export type Sex = (typeof SEXES)[number];
+export const sexLabels: Record<Sex, string> = {
+  female: "Femme",
+  male: "Homme",
+  unspecified: "Non précisé",
+};
+
+// Choix facultatif dans une liste fermée : « » (ou absent) devient null.
 const optionalChoice = <T extends readonly [string, ...string[]]>(values: T, error: string) =>
-  z.preprocess((value) => (value === "" ? null : value), z.enum(values, { error }).nullable());
+  z.preprocess(
+    (value) => (value === "" || value === undefined ? null : value),
+    z.enum(values, { error }).nullable(),
+  );
 
 // Identité et contact : création ET modification. Aligné sur les contraintes CHECK de la base.
 export const newAthleteSchema = z.object({
@@ -58,6 +70,7 @@ export const newAthleteSchema = z.object({
       error: "Numéro de téléphone invalide (format international conseillé : +32 …).",
     }),
   ),
+  sex: optionalChoice(SEXES, "Sexe invalide."),
 });
 
 export type NewAthleteInput = z.infer<typeof newAthleteSchema>;

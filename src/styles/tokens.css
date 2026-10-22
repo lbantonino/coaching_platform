@@ -63,6 +63,12 @@
   --green: #4ade80;
   --green-soft: rgba(74, 222, 128, 0.18);
 
+  /* Repère ♀ / ♂ à côté du nom (D-25). Le symbole porte le sens, la couleur aide à le repérer. */
+  --female: #f472b6;
+  --female-soft: rgba(244, 114, 182, 0.12);
+  --male: #38bdf8;
+  --male-soft: rgba(56, 189, 248, 0.12);
+
   --shadow-frame: 0 30px 80px rgba(0, 0, 0, 0.55); /* seule ombre autorisée : le cadre extérieur */
 
   color-scheme: dark;
@@ -113,6 +119,11 @@
   --amber-soft: rgba(180, 83, 9, 0.12);
   --green: #15803d;
   --green-soft: rgba(21, 128, 61, 0.12);
+
+  --female: #be185d;
+  --female-soft: rgba(190, 24, 93, 0.1);
+  --male: #0369a1;
+  --male-soft: rgba(3, 105, 161, 0.1);
 
   --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
 

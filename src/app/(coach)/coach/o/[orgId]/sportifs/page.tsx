@@ -7,6 +7,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { FilterChips } from "@/components/ui/filter-chips";
+import { SexMark } from "@/components/ui/sex-mark";
+import { disciplineLabels, disciplineStyles, disciplineTones } from "@/domain/training/discipline";
 import { listAthletes, type AthleteListItem } from "@/features/athletes/queries";
 import {
   athleteListFilterSchema,
@@ -154,16 +156,32 @@ async function AthleteList({
                   href={`${basePath}/${athlete.id}`}
                   className="flex min-w-0 items-center gap-3 rounded-[10px] hover:text-text"
                 >
-                  <Avatar name={athlete.displayName} />
+                  {/* Avatar à la couleur de la discipline de l'objectif principal (D-24, D-25). */}
+                  <Avatar
+                    name={athlete.displayName}
+                    colorClass={
+                      athlete.mainDiscipline
+                        ? disciplineStyles[athlete.mainDiscipline].avatar
+                        : undefined
+                    }
+                  />
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate font-medium">{athlete.displayName}</span>
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="truncate font-medium">{athlete.displayName}</span>
+                      <SexMark sex={athlete.sex} size="sm" />
+                    </span>
                     <span className="truncate text-small text-muted">
                       {athleteStatusLabels[athlete.status]}
                       {athlete.email ? ` · ${athlete.email}` : ""}
                     </span>
                   </span>
                 </Link>
-                <div className="flex items-center gap-3 pl-12 sm:pl-0">
+                <div className="flex flex-wrap items-center gap-3 pl-12 sm:pl-0">
+                  {athlete.mainDiscipline ? (
+                    <Badge tone={disciplineTones[athlete.mainDiscipline]}>
+                      {disciplineLabels[athlete.mainDiscipline]}
+                    </Badge>
+                  ) : null}
                   <Badge tone={badge.tone}>{badge.label}</Badge>
                   {athlete.hasAccount || athlete.status === "archived" ? null : (
                     <Link

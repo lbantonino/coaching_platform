@@ -7,6 +7,7 @@ describe("athleteUpdateSchema", () => {
   const base = {
     firstName: "Camille",
     lastName: "Test",
+    sex: "",
     email: "",
     phone: "",
     status: "active",

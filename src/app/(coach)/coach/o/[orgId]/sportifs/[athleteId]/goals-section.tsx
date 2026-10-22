@@ -75,7 +75,7 @@ function GoalCard({
 
   return (
     <article
-      className={`flex flex-col gap-3 rounded-[14px] border border-line bg-bg p-4 ${discipline ? disciplineStyles[discipline].edge : ""}`}
+      className={`flex flex-col gap-3 rounded-[14px] border bg-bg p-4 ${discipline ? disciplineStyles[discipline].frame : "border-line"}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1.5">

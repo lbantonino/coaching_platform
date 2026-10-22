@@ -49,6 +49,11 @@
   --color-amber-soft: var(--amber-soft);
   --color-green: var(--green);
   --color-green-soft: var(--green-soft);
+  /* Repère ♀ / ♂ (D-25) */
+  --color-female: var(--female);
+  --color-female-soft: var(--female-soft);
+  --color-male: var(--male);
+  --color-male-soft: var(--male-soft);
 
   --font-display:
     var(--font-space-grotesk), system-ui, sans-serif; /* logo, titres H1–H3, grands chiffres */

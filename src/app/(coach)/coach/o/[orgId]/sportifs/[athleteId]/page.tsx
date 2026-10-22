@@ -135,6 +135,7 @@ async function AthleteSection({
                 values={{
                   firstName: athlete.firstName,
                   lastName: athlete.lastName ?? "",
+                  sex: athlete.sex ?? "",
                   email: athlete.email ?? "",
                   phone: athlete.phone ?? "",
                   status: athlete.status,

@@ -108,6 +108,7 @@ test("le coach renseigne l'identité et le profil sportif, retrouvés après rec
   await expect(page.getByLabel("Prénom")).toHaveValue("Profil");
   await expect(page.getByLabel("Nom de famille")).toHaveValue(suffix);
 
+  await page.getByLabel("Sexe").selectOption({ label: "Femme" });
   await page.getByLabel("Canal de contact préféré").selectOption({ label: "WhatsApp" });
   await page.getByLabel("Niveau").selectOption({ label: "Intermédiaire" });
   await page.getByLabel("Expérience").fill("Course depuis 3 ans, un Hyrox en Open");
@@ -121,6 +122,9 @@ test("le coach renseigne l'identité et le profil sportif, retrouvés après rec
 
   // Après rechargement, tout vient de la base.
   await page.reload();
+  await expect(page.getByLabel("Sexe")).toHaveValue("female");
+  // Le symbole ♀ s'affiche à côté du nom, annoncé « Femme » aux lecteurs d'écran.
+  await expect(page.getByRole("img", { name: "Femme" }).first()).toBeVisible();
   await expect(page.getByLabel("Canal de contact préféré")).toHaveValue("whatsapp");
   await expect(page.getByLabel("Niveau")).toHaveValue("intermediate");
   await expect(page.getByLabel("Expérience")).toHaveValue("Course depuis 3 ans, un Hyrox en Open");

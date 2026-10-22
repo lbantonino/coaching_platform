@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
+import { SexMark } from "@/components/ui/sex-mark";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
@@ -46,9 +47,12 @@ export function AthleteHeader({
       <div className="flex min-w-0 items-center gap-4 md:gap-5">
         <Avatar name={athlete.displayName} size="lg" colorClass={tint?.avatar} />
         <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="font-display text-h2 font-medium break-words md:text-h1">
-            {athlete.displayName}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="font-display text-h2 font-medium break-words md:text-h1">
+              {athlete.displayName}
+            </h1>
+            <SexMark sex={athlete.sex} />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={statusTone[athlete.status]}>{athleteStatusLabels[athlete.status]}</Badge>
             {athlete.level ? (
@@ -72,40 +76,44 @@ export function AthleteHeader({
   );
 }
 
-// Teinte de l'icône de chaque chiffre clé (D-24), dans une pastille ronde.
-const iconTints = {
-  neutral: "bg-chip text-muted",
-  red: "bg-accent-soft text-accent-text",
-  blue: "bg-blue-soft text-blue",
-  amber: "bg-amber-soft text-amber",
-  green: "bg-green-soft text-green",
+// Couleur de chaque chiffre clé (D-24, D-25) : icône dans un cercle bordé, et valeur dans la même couleur.
+const figureColors = {
+  neutral: { icon: "border border-line-2 bg-chip text-muted", text: "" },
+  red: {
+    icon: "border border-accent/50 bg-accent-soft text-accent-text",
+    text: "text-accent-text",
+  },
+  blue: { icon: "border border-blue/50 bg-blue-soft text-blue", text: "text-blue" },
+  amber: { icon: "border border-amber/50 bg-amber-soft text-amber", text: "text-amber" },
+  green: { icon: "border border-green/50 bg-green-soft text-green", text: "text-green" },
 } as const;
 
 function KeyFigure({
   icon: Icon,
-  tint,
+  color,
   label,
   value,
-  valueClassName = "",
+  filled,
   detail,
   href,
 }: {
   icon: LucideIcon;
-  tint: string;
+  color: { icon: string; text: string };
   label: string;
   value: ReactNode;
-  valueClassName?: string;
+  // La valeur prend la couleur seulement si elle est renseignée (pas « Non renseigné »).
+  filled: boolean;
   detail?: ReactNode;
   href?: string;
 }) {
   const content = (
     <>
-      <span className={`inline-flex size-8 items-center justify-center rounded-full ${tint}`}>
+      <span className={`inline-flex size-9 items-center justify-center rounded-full ${color.icon}`}>
         <Icon aria-hidden size={16} strokeWidth={1.7} />
       </span>
       <span className="text-caption text-muted">{label}</span>
       <span
-        className={`font-display text-[20px] leading-tight font-medium break-words ${valueClassName}`}
+        className={`font-display text-[20px] leading-tight font-medium break-words ${filled ? color.text : ""}`}
       >
         {value}
       </span>
@@ -158,7 +166,8 @@ export function KeyFigures({
     >
       <KeyFigure
         icon={Target}
-        tint={mainDiscipline ? disciplineStyles[mainDiscipline].icon : iconTints.neutral}
+        color={mainDiscipline ? disciplineStyles[mainDiscipline] : figureColors.neutral}
+        filled={Boolean(main)}
         label="Objectif principal"
         value={
           main ? (
@@ -172,22 +181,24 @@ export function KeyFigures({
       />
       <KeyFigure
         icon={ChartNoAxesColumn}
-        tint={iconTints.blue}
+        color={figureColors.blue}
+        filled={athlete.sessionsPerWeek !== null}
         label="Séances / semaine"
         value={athlete.sessionsPerWeek ?? empty}
         detail={athlete.sessionsPerWeek ? "souhaitées" : null}
       />
       <KeyFigure
         icon={Clock}
-        tint={iconTints.amber}
+        color={figureColors.amber}
+        filled={athlete.maxSessionMinutes !== null}
         label="Durée max / séance"
         value={athlete.maxSessionMinutes ? `${athlete.maxSessionMinutes} min` : empty}
       />
       <KeyFigure
         icon={Flag}
-        tint={iconTints.red}
+        color={figureColors.red}
+        filled={Boolean(nextCompetition)}
         label="Prochaine compétition"
-        valueClassName={nextCompetition ? "text-accent-text" : ""}
         value={
           nextCompetition?.targetDate ? (
             countdownText(daysBetween(today, nextCompetition.targetDate))
@@ -200,7 +211,8 @@ export function KeyFigures({
       />
       <KeyFigure
         icon={MessageCircle}
-        tint={iconTints.green}
+        color={figureColors.green}
+        filled={athlete.preferredContact !== null}
         label="Canal préféré"
         value={athlete.preferredContact ? contactChannelLabels[athlete.preferredContact] : empty}
       />

@@ -236,6 +236,7 @@ export type Database = {
           preferred_contact: string | null;
           schedule_constraints: string | null;
           sessions_per_week: number | null;
+          sex: string | null;
           status: string;
           training_places: string[];
           updated_at: string;
@@ -262,6 +263,7 @@ export type Database = {
           preferred_contact?: string | null;
           schedule_constraints?: string | null;
           sessions_per_week?: number | null;
+          sex?: string | null;
           status?: string;
           training_places?: string[];
           updated_at?: string;
@@ -287,6 +289,7 @@ export type Database = {
           preferred_contact?: string | null;
           schedule_constraints?: string | null;
           sessions_per_week?: number | null;
+          sex?: string | null;
           status?: string;
           training_places?: string[];
           updated_at?: string;

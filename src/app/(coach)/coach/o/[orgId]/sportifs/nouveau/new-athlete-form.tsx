@@ -4,10 +4,11 @@ import { useActionState } from "react";
 
 import { errorTextClass, inputClass, primaryButtonClass } from "@/components/ui/form-styles";
 import { createAthlete, type NewAthleteState } from "@/features/athletes/actions";
+import { SEXES, sexLabels } from "@/features/athletes/schemas";
 
 const initialState: NewAthleteState = {
   error: null,
-  values: { firstName: "", lastName: "", email: "", phone: "" },
+  values: { firstName: "", lastName: "", sex: "", email: "", phone: "" },
 };
 
 export function NewAthleteForm({ organizationId }: { organizationId: string }) {
@@ -52,6 +53,20 @@ export function NewAthleteForm({ organizationId }: { organizationId: string }) {
             className={inputClass}
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="sex" className="text-small font-medium">
+          Sexe <span className="font-normal text-muted">(facultatif)</span>
+        </label>
+        <select id="sex" name="sex" defaultValue={state.values.sex} className={inputClass}>
+          <option value="">Non renseigné</option>
+          {SEXES.map((sex) => (
+            <option key={sex} value={sex}>
+              {sexLabels[sex]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex flex-col gap-1.5">

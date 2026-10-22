@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-04 étape 2 : notes du coach et historique).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (D-25 : sexe du sportif et app plus colorée).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -249,6 +249,11 @@ Après coup, on a relu la maquette d'un œil critique. Deux défauts ont été c
 Le coach a deux notes par sportif : une **privée**, et un **message** que le sportif lit dans son espace. Choix à savoir expliquer : elles sont dans une **table à part**, pas dans la fiche. Pourquoi ? Le sportif a le droit de lire sa propre fiche ; une note privée rangée dedans lui serait donc lisible. Dans leur propre table, la règle de sécurité (RLS) ne lui montre que le message qui lui est destiné. Un test SQL vérifie précisément qu'il ne voit jamais la note privée. Sous la note privée, un rappel dit de ne pas y écrire de blessures : les notes libres sont le chemin classique par lequel des données de santé fuient sans accord.
 
 L'**historique** est une frise construite à partir de ce qui existe déjà : la date de création de la fiche, des objectifs, des mesures, des accords, des invitations et des notes. On n'a ajouté aucune table « journal » : chaque événement est déjà daté là où il est enregistré. La fonction qui assemble et trie la frise est **pure** (sans base de données), donc testée en quelques millisecondes, y compris un piège : comparer des dates écrites dans des fuseaux différents.
+
+### Sexe du sportif et une app plus colorée (22/10)
+Antonino voulait une app plus intuitive : distinguer d'un coup d'œil les femmes et les hommes, et plus de couleur partout. Pour le sexe, on n'a pas « deviné » à partir du prénom : on a ajouté un vrai champ, **facultatif**, avec trois valeurs (Femme, Homme, Non précisé), contrôlé par la base comme par Zod. Il a une utilité métier (les catégories Hyrox), ce qui justifie de le demander. L'affichage est un petit symbole ♀ rose ou ♂ bleu ciel à côté du nom ; pour un lecteur d'écran, il est annoncé « Femme » ou « Homme », car un symbole seul ne se lit pas. L'avatar, lui, garde la couleur de la discipline : une couleur = une seule signification.
+
+Pour les couleurs, un réflexe à retenir : quand deux écrans affichent la même chose (les repères dans la vue d'ensemble et dans l'onglet Repères), on crée **un seul composant partagé**. La règle « allure = bleu, race pace = orange, FC = rouge, charge = violet » n'existe donc qu'à un endroit. Le script de contraste a encore servi : en thème clair, le texte gris des cartes teintées du tableau de bord passait juste sous le seuil ; on a baissé la teinte de 7 % à 5 % plutôt que de renoncer à la couleur.
 
 ---
 

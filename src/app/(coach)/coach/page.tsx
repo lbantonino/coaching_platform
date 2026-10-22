@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { Building2, ChevronRight, MailOpen, UserCheck, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -45,16 +45,21 @@ async function Dashboard() {
           hero
           className="col-span-2 sm:col-span-1"
           label="Sportifs actifs"
+          icon={Users}
           value={active}
           hint={current.organizationName}
         />
         <StatCard
           label="Comptes activés"
+          icon={UserCheck}
+          tone="green"
           value={withAccount}
           hint="Sportifs ayant rejoint leur espace"
         />
         <StatCard
           label="Invitations en attente"
+          icon={MailOpen}
+          tone="amber"
           value={pending}
           hint="Liens valides non utilisés"
         />
@@ -71,10 +76,18 @@ async function Dashboard() {
                 href={`/coach/o/${membership.organizationId}/sportifs`}
                 className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface p-4 transition-colors hover:bg-surface-2"
               >
-                <span className="flex flex-col">
-                  <span className="font-medium">{membership.organizationName}</span>
-                  <span className="text-small text-muted">
-                    {roleLabels[membership.role]} · Voir les sportifs
+                <span className="flex items-center gap-3">
+                  <span
+                    aria-hidden
+                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-blue/50 bg-blue-soft text-blue"
+                  >
+                    <Building2 size={17} strokeWidth={1.75} />
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="font-medium">{membership.organizationName}</span>
+                    <span className="text-small text-muted">
+                      {roleLabels[membership.role]} · Voir les sportifs
+                    </span>
                   </span>
                 </span>
                 <ChevronRight aria-hidden size={17} strokeWidth={1.7} className="text-muted" />

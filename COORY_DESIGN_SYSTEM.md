@@ -95,6 +95,13 @@ Soft = same color at 12 % (dark) / 10 % (light) opacity. Text on card and on its
 > - icônes des titres de cartes en `--accent-text` ; liseré gauche de 3 px à la couleur de discipline sur les objectifs.
 > Tokens `--blue`, `--amber`, `--green` (+ `-soft`) ajoutés dans les deux thèmes. Toutes les paires revérifiées : texte ≥ 4,5:1, icônes ≥ 3:1.
 
+> **Ajustement du 22/10/2026 (D-25, demande d'Antonino : « plus coloré, plus intuitif »)** :
+> - **Sexe** : `--female` (#F472B6 sombre / #BE185D clair) et `--male` (#38BDF8 / #0369A1), + `-soft`. Uniquement pour le symbole ♀/♂ (`<SexMark />`, rond teinté à côté du nom, `aria-label` « Femme » / « Homme »). L'avatar reste à la couleur de la discipline.
+> - **Chiffres clés** : icône dans une pastille ronde **cerclée** (filet à 50 % de la couleur) et valeur à la couleur de la carte.
+> - **Objectifs** : cadre complet de 1 px à la couleur de la discipline (remplace le liseré gauche).
+> - **Repères** (`ReferenceTile`) : allures `--run`, race pace `--hyrox`, FC `--accent-text`, charges `--strength` ; filet à 40 %, fond teinté à 6–7 % sur `--bg`, valeur colorée.
+> - **Tableau de bord** (`StatCard` `tone`) : la stat héro reste rouge ; les autres cartes prennent un filet à 35 % et un fond teinté à 5 % (`--green`, `--amber`, `--blue`), icône cerclée et grand chiffre colorés.
+
 **Where red is allowed:** primary CTA (max 1 per view), one hero stat card per row, current week/segment, active mobile tab, active page-tab underline, completed set check, notification dot, nav counters, current bar in charts.
 **Never:** page backgrounds, large text blocks, raw `#FF3347` text on light theme (use `--accent-text`), dark text on red.
 
