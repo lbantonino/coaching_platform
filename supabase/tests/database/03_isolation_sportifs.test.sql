@@ -17,23 +17,23 @@ insert into public.organization_members (organization_id, user_id, role) values
   ('aaaaaaaa-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111', 'owner'),
   ('bbbbbbbb-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'owner');
 
-insert into public.athlete_profiles (id, organization_id, display_name, email) values
+insert into public.athlete_profiles (id, organization_id, first_name, email) values
   ('a1a1a1a1-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'Sportif A', 'sportif@example.test'),
   ('b1b1b1b1-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002', 'Sportif B', 'sportif@example.test');
 
 select pass('Le même e-mail peut exister dans deux organisations différentes');
 
 select throws_ok(
-  $$ insert into public.athlete_profiles (organization_id, display_name, email)
+  $$ insert into public.athlete_profiles (organization_id, first_name, email)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'Doublon', 'SPORTIF@example.test') $$,
   '23505', null,
   'Un e-mail est unique par organisation, sans tenir compte des majuscules'
 );
 
 select throws_ok(
-  $$ insert into public.athlete_profiles (organization_id, display_name) values ('aaaaaaaa-0000-4000-8000-000000000001', '   ') $$,
+  $$ insert into public.athlete_profiles (organization_id, first_name) values ('aaaaaaaa-0000-4000-8000-000000000001', '   ') $$,
   '23514', null,
-  'Un nom vide est refusé par la base'
+  'Un prénom vide est refusé par la base'
 );
 
 -- ---------------------------------------------------------------------
@@ -53,33 +53,33 @@ select is_empty(
 );
 
 select lives_ok(
-  $$ insert into public.athlete_profiles (organization_id, display_name, created_by)
+  $$ insert into public.athlete_profiles (organization_id, first_name, created_by)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'Nouveau A', '11111111-1111-4111-8111-111111111111') $$,
   'Coach A peut créer un sportif dans son organisation'
 );
 
 select lives_ok(
-  $$ update public.athlete_profiles set display_name = 'Sportif A modifié', status = 'archived'
+  $$ update public.athlete_profiles set first_name = 'Sportif A modifié', status = 'archived'
      where id = 'a1a1a1a1-0000-4000-8000-000000000001' $$,
   'Coach A peut modifier et archiver un sportif de son organisation'
 );
 
 select throws_ok(
-  $$ insert into public.athlete_profiles (organization_id, display_name, created_by)
+  $$ insert into public.athlete_profiles (organization_id, first_name, created_by)
      values ('bbbbbbbb-0000-4000-8000-000000000002', 'Intrus', '11111111-1111-4111-8111-111111111111') $$,
   '42501', null,
   'Coach A ne peut pas créer un sportif dans l''organisation B'
 );
 
 select throws_ok(
-  $$ insert into public.athlete_profiles (organization_id, display_name, created_by)
+  $$ insert into public.athlete_profiles (organization_id, first_name, created_by)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'Usurpé', '22222222-2222-4222-8222-222222222222') $$,
   '42501', null,
   'created_by ne peut pas être attribué à quelqu''un d''autre'
 );
 
 select throws_ok(
-  $$ insert into public.athlete_profiles (organization_id, display_name, created_by, athlete_user_id)
+  $$ insert into public.athlete_profiles (organization_id, first_name, created_by, athlete_user_id)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'Lié', '11111111-1111-4111-8111-111111111111',
              '22222222-2222-4222-8222-222222222222') $$,
   '42501', null,
@@ -87,7 +87,7 @@ select throws_ok(
 );
 
 -- La mise à jour d'une fiche de B ne touche aucune ligne (invisible pour A).
-update public.athlete_profiles set display_name = 'Piraté' where id = 'b1b1b1b1-0000-4000-8000-000000000001';
+update public.athlete_profiles set first_name = 'Piraté' where id = 'b1b1b1b1-0000-4000-8000-000000000001';
 reset role;
 select results_eq(
   $$ select display_name from public.athlete_profiles where id = 'b1b1b1b1-0000-4000-8000-000000000001' $$,

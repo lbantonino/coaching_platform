@@ -4,13 +4,76 @@ import { initials } from "@/components/ui/avatar";
 import { athleteListFilterSchema, athleteUpdateSchema } from "@/features/athletes/schemas";
 
 describe("athleteUpdateSchema", () => {
-  const base = { displayName: "Camille Test", email: "", phone: "" };
+  const base = {
+    firstName: "Camille",
+    lastName: "Test",
+    email: "",
+    phone: "",
+    status: "active",
+    preferredContact: "",
+    level: "",
+    experience: "",
+    trainingPlaces: [],
+    equipment: "",
+  };
 
   it("accepte les trois statuts et refuse les autres", () => {
     for (const status of ["active", "paused", "archived"]) {
       expect(athleteUpdateSchema.safeParse({ ...base, status }).success).toBe(true);
     }
     expect(athleteUpdateSchema.safeParse({ ...base, status: "deleted" }).success).toBe(false);
+  });
+
+  it("transforme les choix non précisés en null", () => {
+    const result = athleteUpdateSchema.parse(base);
+    expect(result.preferredContact).toBeNull();
+    expect(result.level).toBeNull();
+    expect(result.experience).toBeNull();
+    expect(result.equipment).toBeNull();
+    expect(result.trainingPlaces).toEqual([]);
+  });
+
+  it("accepte le profil sportif complet", () => {
+    const result = athleteUpdateSchema.parse({
+      ...base,
+      preferredContact: "whatsapp",
+      level: "intermediate",
+      experience: " Course depuis 3 ans ",
+      trainingPlaces: ["gym", "outdoor"],
+      equipment: "Haltères 20 kg",
+    });
+    expect(result).toMatchObject({
+      preferredContact: "whatsapp",
+      level: "intermediate",
+      experience: "Course depuis 3 ans",
+      trainingPlaces: ["gym", "outdoor"],
+      equipment: "Haltères 20 kg",
+    });
+  });
+
+  it("refuse une valeur hors des listes (formulaire bricolé)", () => {
+    expect(athleteUpdateSchema.safeParse({ ...base, preferredContact: "pigeon" }).success).toBe(
+      false,
+    );
+    expect(athleteUpdateSchema.safeParse({ ...base, level: "légende" }).success).toBe(false);
+    expect(
+      athleteUpdateSchema.safeParse({ ...base, trainingPlaces: ["gym", "lune"] }).success,
+    ).toBe(false);
+  });
+
+  it("ne compte qu'une fois un lieu coché deux fois", () => {
+    expect(
+      athleteUpdateSchema.parse({ ...base, trainingPlaces: ["gym", "gym"] }).trainingPlaces,
+    ).toEqual(["gym"]);
+  });
+
+  it("limite l'expérience et le matériel à 500 caractères", () => {
+    expect(athleteUpdateSchema.safeParse({ ...base, experience: "x".repeat(501) }).success).toBe(
+      false,
+    );
+    expect(athleteUpdateSchema.safeParse({ ...base, equipment: "x".repeat(501) }).success).toBe(
+      false,
+    );
   });
 });
 

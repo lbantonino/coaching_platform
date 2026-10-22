@@ -14,7 +14,7 @@ insert into public.organizations (id, name, slug) values
 insert into public.organization_members (organization_id, user_id, role) values
   ('aaaaaaaa-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111', 'owner'),
   ('bbbbbbbb-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222', 'owner');
-insert into public.athlete_profiles (id, organization_id, display_name) values
+insert into public.athlete_profiles (id, organization_id, first_name) values
   ('a1a1a1a1-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'Sportif A'),
   ('b1b1b1b1-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002', 'Sportif B');
 

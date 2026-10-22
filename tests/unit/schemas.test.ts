@@ -4,38 +4,41 @@ import { newAthleteSchema } from "@/features/athletes/schemas";
 import { loginSchema, newPasswordSchema, PASSWORD_MIN_LENGTH } from "@/features/auth/schemas";
 
 describe("newAthleteSchema (fiche sportif)", () => {
-  it("accepte un nom seul et transforme les champs vides en null", () => {
+  const base = { firstName: "Camille", lastName: "", email: "", phone: "" };
+
+  it("accepte un prénom seul et transforme les champs vides en null", () => {
     const result = newAthleteSchema.parse({
-      displayName: "  Camille Test  ",
+      firstName: "  Camille  ",
+      lastName: " ",
       email: "",
       phone: " ",
     });
-    expect(result).toEqual({ displayName: "Camille Test", email: null, phone: null });
+    expect(result).toEqual({ firstName: "Camille", lastName: null, email: null, phone: null });
   });
 
-  it("refuse un nom vide", () => {
-    const result = newAthleteSchema.safeParse({ displayName: "   ", email: "", phone: "" });
+  it("garde le nom de famille, sans espaces autour", () => {
+    expect(newAthleteSchema.parse({ ...base, lastName: "  De Smet " }).lastName).toBe("De Smet");
+  });
+
+  it("refuse un prénom vide", () => {
+    const result = newAthleteSchema.safeParse({ ...base, firstName: "   " });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.message).toBe("Le nom est obligatoire.");
+    expect(result.error?.issues[0]?.message).toBe("Le prénom est obligatoire.");
+  });
+
+  it("refuse un prénom ou un nom de plus de 80 caractères", () => {
+    expect(newAthleteSchema.safeParse({ ...base, firstName: "x".repeat(81) }).success).toBe(false);
+    expect(newAthleteSchema.safeParse({ ...base, lastName: "x".repeat(81) }).success).toBe(false);
   });
 
   it("refuse un e-mail invalide mais accepte un e-mail valide", () => {
-    expect(
-      newAthleteSchema.safeParse({ displayName: "A", email: "pas-un-email", phone: "" }).success,
-    ).toBe(false);
-    expect(
-      newAthleteSchema.safeParse({ displayName: "A", email: "a@example.test", phone: "" }).success,
-    ).toBe(true);
+    expect(newAthleteSchema.safeParse({ ...base, email: "pas-un-email" }).success).toBe(false);
+    expect(newAthleteSchema.safeParse({ ...base, email: "a@example.test" }).success).toBe(true);
   });
 
   it("accepte un téléphone international et refuse des lettres", () => {
-    expect(
-      newAthleteSchema.safeParse({ displayName: "A", email: "", phone: "+32 470 12 34 56" })
-        .success,
-    ).toBe(true);
-    expect(
-      newAthleteSchema.safeParse({ displayName: "A", email: "", phone: "appelle-moi" }).success,
-    ).toBe(false);
+    expect(newAthleteSchema.safeParse({ ...base, phone: "+32 470 12 34 56" }).success).toBe(true);
+    expect(newAthleteSchema.safeParse({ ...base, phone: "appelle-moi" }).success).toBe(false);
   });
 });
 

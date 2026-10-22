@@ -25,7 +25,9 @@ export async function getInviteTarget(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("athlete_profiles")
-    .select("id, display_name, email, athlete_user_id, athlete_invites ( status, expires_at )")
+    .select(
+      "id, first_name, display_name, email, athlete_user_id, athlete_invites ( status, expires_at )",
+    )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
     .maybeSingle();
@@ -36,7 +38,7 @@ export async function getInviteTarget(
   const pending = data.athlete_invites.find((invite) => invite.status === "pending");
   return {
     athleteId: data.id,
-    displayName: data.display_name,
+    displayName: data.display_name ?? data.first_name,
     email: data.email,
     hasAccount: data.athlete_user_id !== null,
     pendingInvite: pending

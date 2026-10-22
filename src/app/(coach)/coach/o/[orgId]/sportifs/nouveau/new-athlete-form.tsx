@@ -7,7 +7,7 @@ import { createAthlete, type NewAthleteState } from "@/features/athletes/actions
 
 const initialState: NewAthleteState = {
   error: null,
-  values: { displayName: "", email: "", phone: "" },
+  values: { firstName: "", lastName: "", email: "", phone: "" },
 };
 
 export function NewAthleteForm({ organizationId }: { organizationId: string }) {
@@ -20,21 +20,38 @@ export function NewAthleteForm({ organizationId }: { organizationId: string }) {
 
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="displayName" className="text-small font-medium">
-          Nom du sportif
-        </label>
-        <input
-          id="displayName"
-          name="displayName"
-          type="text"
-          autoComplete="off"
-          required
-          maxLength={120}
-          defaultValue={state.values.displayName}
-          {...errorProps}
-          className={inputClass}
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="firstName" className="text-small font-medium">
+            Prénom
+          </label>
+          <input
+            id="firstName"
+            name="firstName"
+            type="text"
+            autoComplete="off"
+            required
+            maxLength={80}
+            defaultValue={state.values.firstName}
+            {...errorProps}
+            className={inputClass}
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="lastName" className="text-small font-medium">
+            Nom de famille <span className="font-normal text-muted">(facultatif)</span>
+          </label>
+          <input
+            id="lastName"
+            name="lastName"
+            type="text"
+            autoComplete="off"
+            maxLength={80}
+            defaultValue={state.values.lastName}
+            {...errorProps}
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">

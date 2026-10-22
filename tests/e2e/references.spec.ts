@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { fillAthleteName } from "./helpers";
+
 // Repères datés (P2-03) : allures, FC, charges ; historique ; correction d'une mesure erronée.
 async function openNewAthleteProfile(page: Page, name: string) {
   await page.goto("/login");
@@ -9,7 +11,7 @@ async function openNewAthleteProfile(page: Page, name: string) {
   await expect(page).toHaveURL(/\/coach$/);
   await page.getByRole("link", { name: /Organisation Démo A/ }).click();
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
-  await page.getByLabel("Nom du sportif").fill(name);
+  await fillAthleteName(page, name);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await page
     .getByRole("list", { name: "Liste des sportifs" })
@@ -87,14 +89,17 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
   const name = `Saisie ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   await openNewAthleteProfile(page, name);
 
-  await page.getByLabel("Nom du sportif").fill(`${name} renommé`);
+  await fillAthleteName(page, `${name} renommé`);
   await page.getByLabel("Téléphone").fill("appelle-moi");
   await page.getByRole("button", { name: "Enregistrer" }).click();
 
   await expect(
     page.getByRole("alert").filter({ hasText: "Numéro de téléphone invalide" }),
   ).toBeVisible();
-  await expect(page.getByLabel("Nom du sportif")).toHaveValue(`${name} renommé`);
+  await expect(page.getByLabel("Prénom")).toHaveValue("Saisie");
+  await expect(page.getByLabel("Nom de famille")).toHaveValue(
+    `${name.slice("Saisie ".length)} renommé`,
+  );
   await expect(page.getByLabel("Téléphone")).toHaveValue("appelle-moi");
 });
 

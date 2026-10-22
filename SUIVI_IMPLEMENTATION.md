@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-02 (fiche enrichie selon OPEN-01 tranché), notes coach/sportif, P2-04, P2-05 à faire | test 47/47, db:test 68/68, test:e2e 37/37 (x3 stables) | Session du 20/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 partie 1 faite (identité, contact, profil sportif) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-02 parties 2 et 3 (objectifs, disponibilités, blessures), notes coach/sportif, P2-04, P2-05 à faire | test 54/54, db:test 82/82, test:e2e 43/43 + 1 ignoré (x2 stables, dont 1 après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,32 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### Story P2-02a : fiche enrichie, partie 1 (identité, contact, profil sportif)
+```
+Date : 2026-10-22
+Story : P2-02 partie 1 ; source : OPEN-01 tranché (docs/14), D-14
+Base : supabase/migrations/20261022113433_fiche_identite_profil.sql
+  - first_name (obligatoire, 1–80) et last_name (facultatif, 1–80) ; reprise des fiches existantes coupées au
+    premier espace ; display_name devient une colonne CALCULÉE (prénom + nom), lecture seule
+  - preferred_contact (email, phone, sms, whatsapp), level (beginner, intermediate, advanced, competitor),
+    experience (≤ 500), training_places text[] (gym, outdoor, track, home, box ; jamais nul), equipment (≤ 500)
+  - droits de modification accordés sur les nouvelles colonnes ; display_name ne s'écrit jamais
+  - reprise vérifiée sur la base locale AVANT reset : 128 fiches, noms complets identiques avant/après (diff vide)
+Code : features/athletes (schemas : listes fermées + libellés, optionalChoice ; queries ; actions create/update),
+  invitations/queries, formulaire de création (prénom + nom), formulaire de fiche en trois parties
+  (Identité, Contact, Profil sportif : listes déroulantes, pastilles à cocher pour les lieux, zones de texte)
+Tests : Vitest 54/54 (7 nouveaux) ; pgTAP 82/82 (06_fiche_identite : 14 nouveaux ; 03, 04, 05 adaptés à first_name) ;
+  Playwright 43/43 + 1 ignoré (nouveau test profil sportif x2 profils ; helper tests/e2e/helpers.ts
+  fillAthleteName) ; db:reset puis toute la suite à nouveau verte
+Correctif visuel : une pastille cochée survolée perdait son contraste (survol limité aux pastilles non cochées)
+Limites / points à valider :
+  - Les listes (canaux, niveaux, lieux) sont une proposition : à faire relire par Gianluca
+  - Prénom composé sans trait d'union mal coupé à la reprise (« Marie Claire Durand ») : correction manuelle
+  - Le matériel est un texte libre ; une liste structurée viendra si l'éditeur (P4) en a besoin
+  - Le sportif ne voit ni ne modifie encore ces informations depuis son espace
+Suite : P2-02 partie 2 (objectifs et compétitions)
+```
 
 ### Story P0-05b : design system Coory rouge, logo aux anneaux, thème clair
 ```

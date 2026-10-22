@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { fillAthleteName } from "./helpers";
+
 const DEMO_PASSWORD = "demo-coach-local";
 // Identifiants fixes du seed (supabase/seed.sql).
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
@@ -28,13 +30,13 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
 
-  // Nom manquant : erreur claire, rien n'est enregistré.
+  // Prénom manquant : erreur claire, rien n'est enregistré.
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await expect(
-    page.getByRole("alert").filter({ hasText: "Le nom est obligatoire." }),
+    page.getByRole("alert").filter({ hasText: "Le prénom est obligatoire." }),
   ).toBeVisible();
 
-  await page.getByLabel("Nom du sportif").fill(name);
+  await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
 
@@ -45,7 +47,7 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
 
   // Même e-mail une seconde fois : refusé avec un message compréhensible.
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
-  await page.getByLabel("Nom du sportif").fill(`${name} bis`);
+  await fillAthleteName(page, `${name} bis`);
   await page.getByLabel(/Adresse e-mail/).fill(email.toUpperCase());
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await expect(

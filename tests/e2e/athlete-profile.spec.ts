@@ -1,5 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
+import { fillAthleteName } from "./helpers";
+
 // Fiche sportif (P2-01b) : modifier, archiver, restaurer, rechercher, et isolation par organisation.
 const DEMO_PASSWORD = "demo-coach-local";
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
@@ -17,7 +19,7 @@ async function createAthlete(page: Page, name: string, email: string) {
   await page.getByRole("link", { name: /Organisation Démo/ }).click();
   await page.getByRole("link", { name: "Ajouter un sportif" }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
-  await page.getByLabel("Nom du sportif").fill(name);
+  await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
@@ -41,7 +43,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   // Fiche : modification du nom et du téléphone.
   await list.getByRole("link", { name: new RegExp(`^${name}`) }).click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
-  await page.getByLabel("Nom du sportif").fill(renamed);
+  await fillAthleteName(page, renamed);
   await page.getByLabel("Téléphone").fill("+32 470 12 34 56");
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(
@@ -81,6 +83,45 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   ).toBeVisible();
   await page.goto(`/coach/o/${ORG_A}/sportifs?q=${encodeURIComponent(suffix)}`);
   await expect(list.getByText(renamed)).toBeVisible();
+});
+
+test("le coach renseigne l'identité et le profil sportif, retrouvés après rechargement", async ({
+  page,
+}, testInfo) => {
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const name = `Profil ${suffix}`;
+  await login(page, "coach-a@example.test");
+  await createAthlete(page, name, `profil-${suffix}@example.test`);
+  await page
+    .getByRole("list", { name: "Liste des sportifs" })
+    .getByRole("link", { name: new RegExp(`^${name}`) })
+    .click();
+  await expect(page.getByRole("heading", { name })).toBeVisible();
+
+  // Prénom et nom sont enregistrés séparément ; le titre affiche le nom complet.
+  await expect(page.getByLabel("Prénom")).toHaveValue("Profil");
+  await expect(page.getByLabel("Nom de famille")).toHaveValue(suffix);
+
+  await page.getByLabel("Canal de contact préféré").selectOption({ label: "WhatsApp" });
+  await page.getByLabel("Niveau").selectOption({ label: "Intermédiaire" });
+  await page.getByLabel("Expérience").fill("Course depuis 3 ans, un Hyrox en Open");
+  await page.getByText("Salle de sport", { exact: true }).click();
+  await page.getByText("Extérieur (route, trail)", { exact: true }).click();
+  await page.getByLabel("Matériel disponible").fill("Haltères jusqu'à 20 kg");
+  await page.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
+  ).toBeVisible();
+
+  // Après rechargement, tout vient de la base.
+  await page.reload();
+  await expect(page.getByLabel("Canal de contact préféré")).toHaveValue("whatsapp");
+  await expect(page.getByLabel("Niveau")).toHaveValue("intermediate");
+  await expect(page.getByLabel("Expérience")).toHaveValue("Course depuis 3 ans, un Hyrox en Open");
+  await expect(page.getByLabel("Salle de sport")).toBeChecked();
+  await expect(page.getByLabel("Extérieur (route, trail)")).toBeChecked();
+  await expect(page.getByLabel("Domicile")).not.toBeChecked();
+  await expect(page.getByLabel("Matériel disponible")).toHaveValue("Haltères jusqu'à 20 kg");
 });
 
 async function createAthleteAsCoachB(browser: Browser, suffix: string): Promise<string> {
