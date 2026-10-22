@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; records personnels, notes coach/sportif, P2-04, P2-05 à faire | test 69/69, db:test 119/119, test:e2e 48/48 + 2 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-04 étape 1 faite (fiche à onglets, vue d'ensemble) ; records personnels, notes coach/sportif et historique (P2-04 étape 2), graphique des repères (étape 3), P2-05 à faire | test 69/69, db:test 119/119, test:e2e 51/51 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,29 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### Story P2-04a : fiche sportif à onglets et vue d'ensemble (étape 1 sur 3)
+```
+Date : 2026-10-22
+Story : P2-04 (profil client à onglets) ; source : maquette fournie par Antonino ; décision D-21
+Choix d'Antonino : design system plutôt que copie exacte ; ne pas afficher ce qui n'existe pas ; 3 étapes
+Fait :
+  - en-tête en aplat : avatar, nom (Space Grotesk), statut, niveau, compte, date d'ajout, « Inviter »
+  - 5 chiffres clés calculés : objectif principal, séances / semaine (souhaitées), durée max, prochaine
+    compétition (« Dans N jours »), canal préféré
+  - onglets (composant PageTabs du design system) dans l'adresse : ?onglet=profil|objectifs|disponibilites|
+    reperes, valeur inconnue = vue d'ensemble ; fil d'Ariane « Sportifs › Nom »
+  - vue d'ensemble en LECTURE : Profil du sportif, Objectif actuel (+ autres en cours), Disponibilités &
+    contraintes (jours en pastilles, contraintes physiques seulement si accord), Repères & mesures (4 au plus) ;
+    « Modifier » ouvre l'onglet qui contient le formulaire existant
+  - barre du haut (ordinateur) : recherche de sportif tous statuts, raccourci ⌘K / Ctrl+K ; pas de cloche (P7)
+Non affiché (D-21) : Créer un programme, menus Programmes / Séances / Bibliothèque, cloche, phases, photo ;
+  pas encore fait : menu « ⋮ », barre latérale repliable, onglet Historique et notes (étape 2), graphique (étape 3)
+Fichiers : components/ui/page-tabs.tsx, lib/format formatDay, (coach)/coach-search.tsx, layout (barre du haut),
+  [athleteId]/page.tsx (onglets), athlete-header.tsx, overview.tsx
+Tests : Playwright 51/51 + 3 ignorés (nouveau athlete-overview.spec : vue d'ensemble, « Modifier », recherche ;
+  tests existants : ouverture de l'onglet voulu via tests/e2e/helpers.ts openAthleteTab) ; check OK ; db:reset final
+```
 
 ### Story P2-02c : disponibilités, contraintes et accord pour les données de santé
 ```

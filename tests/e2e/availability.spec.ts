@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { fillAthleteName } from "./helpers";
+import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Disponibilités et contraintes physiques avec accord du sportif (P2-02 partie 3, D-20).
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
@@ -27,6 +27,7 @@ test("le coach renseigne les disponibilités et gère l'accord pour les contrain
     .getByRole("list", { name: "Liste des sportifs" })
     .getByRole("link", { name: new RegExp(`^${name}`) })
     .click();
+  await openAthleteTab(page, "Disponibilités");
   const section = page.getByRole("region", { name: "Disponibilités & contraintes" });
   const saved = section.getByRole("status").filter({ hasText: "Disponibilités enregistrées." });
 
@@ -99,7 +100,7 @@ test("le sportif donne son accord depuis son espace, voit ce que le coach note, 
   const coach = await coachContext.newPage();
   await login(coach, "coach-a@example.test");
   await expect(coach).toHaveURL(/\/coach$/);
-  await coach.goto(`/coach/o/${ORG_A}/sportifs/${THOMAS_PROFILE}`);
+  await coach.goto(`/coach/o/${ORG_A}/sportifs/${THOMAS_PROFILE}?onglet=disponibilites`);
   const section = coach.getByRole("region", { name: "Disponibilités & contraintes" });
   await expect(
     section

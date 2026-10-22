@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { fillAthleteName } from "./helpers";
+import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Objectifs et compétitions (P2-02 partie 2) sur la fiche d'un sportif.
 async function login(page: Page) {
@@ -27,6 +27,7 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
     .getByRole("list", { name: "Liste des sportifs" })
     .getByRole("link", { name: new RegExp(`^${name}`) })
     .click();
+  await openAthleteTab(page, "Objectifs");
   await expect(page.getByRole("heading", { name: "Objectifs & compétitions" })).toBeVisible();
   const current = page.getByRole("list", { name: "Objectifs en cours" });
 

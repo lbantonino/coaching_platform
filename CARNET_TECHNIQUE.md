@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-02 partie 3 : disponibilités et accord pour les données de santé).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **22/10/2026** (P2-04 étape 1 : fiche sportif à onglets).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -236,6 +236,13 @@ Ce qui rend la règle solide, c'est qu'elle est garantie **par la base**, pas pa
 
 Les 21 tests SQL de cette partie essaient justement de contourner la règle : écrire la date d'accord à la main, écrire dans le journal, donner l'accord pour quelqu'un d'autre, depuis une autre organisation, sans être connecté. Tout est refusé.
 
+### La fiche à onglets, d'après la maquette d'Antonino (22/10)
+Antonino a dessiné la fiche qu'il voulait. On l'a reproduite en gardant deux règles du projet. D'abord le **design system** : pas de dégradé dans l'en-tête, des icônes neutres, un seul rouge par écran. Ensuite **pas de fausse interface** : le bouton « Créer un programme », les menus Programmes ou Séances, la cloche et les phases d'entraînement n'apparaîtront qu'avec les phases qui les rendent réels. Un recruteur qui clique partout ne doit jamais tomber sur un bouton qui ne fait rien.
+
+La fiche a maintenant une **vue d'ensemble en lecture** (profil, objectif actuel, disponibilités, repères) et des **onglets** pour modifier. Chaque bouton « Modifier » ouvre l'onglet qui contient le formulaire. Comme pour les filtres de la liste, l'onglet ouvert est **dans l'adresse** (`?onglet=objectifs`) : un lien peut ouvrir directement la bonne partie de la fiche, et le bouton retour du navigateur fonctionne. Les chiffres clés en haut (prochaine compétition dans 149 jours, séances souhaitées…) sont **calculés** à partir des données déjà saisies : rien n'est stocké en double.
+
+Côté tests, une dizaine de parcours remplissaient les formulaires directement sur la fiche. Il a suffi d'une petite fonction partagée, « ouvrir l'onglet », ajoutée aux bons endroits. C'est l'intérêt d'écrire les tests comme un humain qui cherche un bouton par son nom, et non par sa position dans la page.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
@@ -254,7 +261,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 
 ## 9. Questions probables d'un recruteur
 
-- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 119 tests SQL, 69 tests unitaires et 48 tests navigateur qui le prouvent avec deux organisations.
+- **« Comment garantis-tu qu'un coach ne voit pas les clients d'un autre ? »** Trois couches (proxy, garde-fous serveur, RLS), et 119 tests SQL, 69 tests unitaires et 51 tests navigateur qui le prouvent avec deux organisations.
 - **« Pourquoi pas un backend séparé ? »** Next.js exécute déjà du code serveur. Un second backend doublerait le travail et les risques, sans bénéfice à cette échelle.
 - **« Comment tu testes ? »** Trois niveaux : pgTAP pour la base, vérifications HTTP, Playwright pour les parcours sur ordinateur et téléphone.
 - **« Comment gères-tu des données de santé ? »** Le moins possible : un champ court, sans diagnostic, qui n'existe que pendant un accord explicite du sportif. La base le garantit (contrainte + fonctions qui vérifient l'appelant), chaque accord est journalisé, et le retrait efface les données. Le sportif voit ce qui est noté sur lui.

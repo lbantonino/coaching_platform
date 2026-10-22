@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { fillAthleteName } from "./helpers";
+import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Repères datés (P2-03) : allures, FC, charges ; historique ; correction d'une mesure erronée.
 async function openNewAthleteProfile(page: Page, name: string) {
@@ -17,6 +17,7 @@ async function openNewAthleteProfile(page: Page, name: string) {
     .getByRole("list", { name: "Liste des sportifs" })
     .getByRole("link", { name: new RegExp(`^${name}`) })
     .click();
+  await openAthleteTab(page, "Repères");
   await expect(page.getByRole("heading", { name: "Allures & repères" })).toBeVisible();
 }
 
@@ -88,6 +89,7 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
 }, testInfo) => {
   const name = `Saisie ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   await openNewAthleteProfile(page, name);
+  await openAthleteTab(page, "Profil");
 
   await fillAthleteName(page, `${name} renommé`);
   await page.getByLabel("Téléphone").fill("appelle-moi");

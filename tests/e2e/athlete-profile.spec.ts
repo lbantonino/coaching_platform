@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { fillAthleteName } from "./helpers";
+import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Fiche sportif (P2-01b) : modifier, archiver, restaurer, rechercher, et isolation par organisation.
 const DEMO_PASSWORD = "demo-coach-local";
@@ -43,6 +43,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   // Fiche : modification du nom et du téléphone.
   await list.getByRole("link", { name: new RegExp(`^${name}`) }).click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
+  await openAthleteTab(page, "Profil");
   await fillAthleteName(page, renamed);
   await page.getByLabel("Téléphone").fill("+32 470 12 34 56");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
@@ -66,7 +67,10 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "← Sportifs" }).click();
+  await page
+    .getByRole("navigation", { name: "Fil d'Ariane" })
+    .getByRole("link", { name: "Sportifs" })
+    .click();
   await page.getByLabel("Rechercher un sportif").fill(suffix);
   await page.getByLabel("Rechercher un sportif").press("Enter");
   await expect(page.getByText(/Aucun sportif ne correspond/)).toBeVisible();
@@ -76,6 +80,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
 
   // Restauration.
   await list.getByRole("link", { name: new RegExp(`^${renamed}`) }).click();
+  await openAthleteTab(page, "Profil");
   await page.getByText("Actif", { exact: true }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
@@ -97,6 +102,7 @@ test("le coach renseigne l'identité et le profil sportif, retrouvés après rec
     .getByRole("link", { name: new RegExp(`^${name}`) })
     .click();
   await expect(page.getByRole("heading", { name })).toBeVisible();
+  await openAthleteTab(page, "Profil");
 
   // Prénom et nom sont enregistrés séparément ; le titre affiche le nom complet.
   await expect(page.getByLabel("Prénom")).toHaveValue("Profil");

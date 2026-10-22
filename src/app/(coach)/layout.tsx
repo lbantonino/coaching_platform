@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 
 import { CoachSideNav, CoachTabBar } from "./coach-nav";
+import { CoachSearch } from "./coach-search";
 
 // Coquille de l'espace coach : barre latérale de 232 px sur ordinateur, onglets en bas sur téléphone.
 // Logo (choix d'Antonino, 22/10) : le mot « C∞ry » en grand dans la barre latérale (ordinateur),
@@ -41,6 +42,12 @@ export default function CoachLayout({ children }: LayoutProps<"/">) {
             <LogoutButton size="sm" />
           </div>
         </header>
+        {/* Barre du haut (ordinateur) : recherche de sportif. Pas de cloche tant que les notifications (P7) n'existent pas. */}
+        <div className="hidden h-[62px] shrink-0 items-center justify-end border-b border-line px-8 md:flex">
+          <Suspense fallback={null}>
+            <SearchData />
+          </Suspense>
+        </div>
         {children}
       </div>
 
@@ -54,6 +61,13 @@ export default function CoachLayout({ children }: LayoutProps<"/">) {
       </nav>
     </div>
   );
+}
+
+async function SearchData() {
+  const user = await getCurrentUser();
+  const memberships = user ? await getCoachMemberships(user.id) : [];
+  const first = memberships[0];
+  return first ? <CoachSearch athletesHref={`/coach/o/${first.organizationId}/sportifs`} /> : null;
 }
 
 async function NavData({ variant }: { variant: "side" | "tabs" }) {

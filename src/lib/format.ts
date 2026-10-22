@@ -28,3 +28,13 @@ export function daysBetween(fromIsoDay: string, toIsoDay: string): number {
   const to = Date.parse(`${toIsoDay}T00:00:00Z`);
   return Math.round((to - from) / 86_400_000);
 }
+
+// Date seule (« 15 septembre 2026 ») d'un horodatage, au fuseau de Bruxelles.
+const dayFormatter = new Intl.DateTimeFormat("fr-BE", {
+  dateStyle: "long",
+  timeZone: "Europe/Brussels",
+});
+
+export function formatDay(isoTimestamp: string): string {
+  return dayFormatter.format(new Date(isoTimestamp));
+}
