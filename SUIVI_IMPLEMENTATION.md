@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-03 fini (notes coach / visibles sportif) ; P2-04 étapes 1 à 3 faites (onglets, vue d'ensemble, notes, historique, graphique d'évolution des repères) ; records personnels, P2-05 à faire | test 85/85, db:test 135/135, test:e2e 57/57 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | En cours : P2-01 fait ; P2-02 parties 1 à 3 faites (identité, contact, profil sportif ; objectifs et compétitions ; disponibilités et contraintes physiques avec accord) ; P2-03 fait (repères datés + calcul des allures depuis un test) ; P2-03 fini (notes coach / visibles sportif) ; P2-04 étapes 1 à 3 faites (onglets, vue d'ensemble, notes, historique, graphique d'évolution des repères) ; records personnels faits (P2-02d, OPEN-01 terminé) ; P2-05 : agenda des compétitions fait (P2-05a), séances encadrées en cours (P2-05b, D-27) | test 100/100, db:test 148/148, test:e2e 63/63 + 3 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,41 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### P2-05a : agenda du coach, calque des compétitions (D-27)
+```
+Date : 2026-10-22
+Choix d'Antonino : l'agenda montre d'abord ce qui est daté et réel (les séances n'existent pas encore) ;
+  puis, précisé ensuite (D-27) : l'agenda est surtout celui des séances encadrées du coach, les
+  compétitions y restent comme calque
+Fait : page /coach/o/[orgId]/agenda (entrée « Agenda » dans la navigation, ordinateur et téléphone) ;
+  « Prochaines échéances » (J-n) ; mois en grille sur ordinateur, liste par jour sur téléphone ; filtres
+  dans l'adresse (?mois=, ?discipline=, ?sportif=) sans JavaScript ; lien vers l'onglet Objectifs de la
+  fiche ; features/agenda/calendar.ts (pur : mois, grille du lundi au dimanche en UTC, regroupement par
+  jour, libellés) ; queries.ts (objectifs datés en cours ou atteints, sportifs non archivés) ; seed :
+  deux échéances de décembre, records d'Inès et de Lucas rendus cohérents avec leurs fiches
+Tests : Vitest +6, test:e2e agenda.spec.ts (mois fixés dans l'adresse, filtres, isolation org B)
+```
+
+### P2-02d : records personnels (D-26, fin d'OPEN-01)
+```
+Date : 2026-10-22
+Choix d'Antonino : historique de performances datées + meilleur temps calculé ; liste fermée
+  (5 km, 10 km, semi, marathon, Hyrox avec catégorie)
+Fait : migration 20261022195844_records_personnels.sql (table athlete_personal_records, catégorie
+  obligatoire pour Hyrox et interdite sinon, RLS coachs de l'organisation, pas de mise à jour) ;
+  features/records (schemas pur : temps mm:ss ou h:mm:ss, bornes de vraisemblance par épreuve,
+  allure moyenne, bestRecords ; queries ; actions add/delete) ; section « Records personnels » dans
+  l'onglet Repères (tuiles bleu course / orange Hyrox, badge « Record », historique avec suppression) ;
+  événement « Performance ajoutée » dans l'historique de la fiche ; seed : performances de démo
+Incident : après une erreur, React 19 remettait le menu « Épreuve » sur « 5 km » alors que l'écran
+  montrait encore Hyrox : un Hyrox a été enregistré comme 5 km en test. Corrigé en reconstruisant le
+  formulaire après CHAQUE réponse (compteur attempt). Même défaut REPRODUIT sur « Ajouter une mesure »
+  des repères (Allure 5 km en erreur, puis renvoi : enregistrée en Endurance) : non corrigé, signalé à
+  Antonino pour décision
+Tests : pgTAP 10_records (13), Vitest records (8) + activité (1), test:e2e records.spec.ts ; sélecteur du
+  calculateur de test limité à son groupe (le texte « 5 km » existe désormais deux fois)
+```
 
 ### P2-04c : graphique d'évolution des repères (étape 3 sur 3, D-21)
 ```
