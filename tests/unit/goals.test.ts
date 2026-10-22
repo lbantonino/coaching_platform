@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { goalCountdown } from "@/features/goals/format";
-import { parseGoalForm, type GoalFormInput } from "@/features/goals/schemas";
+import { goalDiscipline, parseGoalForm, type GoalFormInput } from "@/features/goals/schemas";
 import { daysBetween } from "@/lib/format";
 
 const TODAY = "2026-10-22";
@@ -140,5 +140,17 @@ describe("compte à rebours", () => {
     expect(goalCountdown(TODAY, "2026-12-06")).toEqual({ label: "J-45", overdue: false });
     expect(goalCountdown(TODAY, TODAY)).toEqual({ label: "Aujourd'hui", overdue: false });
     expect(goalCountdown(TODAY, "2026-10-01")).toEqual({ label: "Date passée", overdue: true });
+  });
+});
+
+describe("goalDiscipline (couleur d'un objectif)", () => {
+  it("rattache chaque type d'objectif à sa discipline", () => {
+    expect(goalDiscipline("run_half")).toBe("running");
+    expect(goalDiscipline("run_other")).toBe("running");
+    expect(goalDiscipline("hyrox")).toBe("hyrox");
+    expect(goalDiscipline("strength")).toBe("strength");
+    // La remise en forme se fait en salle : elle suit la musculation (D-18).
+    expect(goalDiscipline("fitness")).toBe("strength");
+    expect(goalDiscipline("personal")).toBeNull();
   });
 });

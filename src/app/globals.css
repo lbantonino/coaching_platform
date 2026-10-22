@@ -32,6 +32,16 @@
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-logo-loop: var(--logo-loop);
+  /* Couleurs par discipline (D-23) */
+  --color-run: var(--run);
+  --color-run-soft: var(--run-soft);
+  --color-strength: var(--strength);
+  --color-strength-soft: var(--strength-soft);
+  --color-hyrox: var(--hyrox);
+  --color-hyrox-soft: var(--hyrox-soft);
+  --color-hybrid: var(--hybrid);
+  --color-hybrid-soft: var(--hybrid-soft);
 
   --font-display:
     var(--font-space-grotesk), system-ui, sans-serif; /* logo, titres H1–H3, grands chiffres */

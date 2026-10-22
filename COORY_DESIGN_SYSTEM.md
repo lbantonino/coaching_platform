@@ -30,21 +30,22 @@ Use **semantic tokens** in components, never raw hex.
 
 ```css
 :root {                      /* DARK — default */
-  --page:#050505;            /* outer page */
-  --bg:#0B0B0C;              /* app background */
-  --surface:#141416;         /* cards */
-  --surface-2:#1C1C1F;       /* hover, active nav */
-  --chip:#26262A;            /* chips, avatars, neutral pills */
-  --bar:#2A2A2E;             /* progress tracks, planned bars */
+  --page:#111114;            /* outer page (graphite, D-23 ; was #050505) */
+  --bg:#16161A;              /* app background (graphite, D-23 ; was #0B0B0C) */
+  --surface:#1F1F24;         /* cards (D-23 ; was #141416) */
+  --surface-2:#28282E;       /* hover, active nav (D-23 ; was #1C1C1F) */
+  --chip:#323239;            /* chips, avatars, neutral pills (D-23 ; was #26262A) */
+  --bar:#38383F;             /* progress tracks, planned bars (D-23 ; was #2A2A2E) */
   --line:rgba(255,255,255,.14);   /* card borders, dividers (was .07, D-22) */
   --line-2:rgba(255,255,255,.36); /* control outlines, dashed drop zones (was .13, D-22) */
   --text:#F4F2EF;
-  --muted:#A3A3AA;              /* was #8A8A90, D-22 */
-  --faint:#828289;              /* was #55555B, D-22 */
+  --muted:#ABABB3;              /* was #8A8A90 (D-22, D-23) */
+  --faint:#8E8E97;              /* was #55555B (D-22, D-23) */
 
   --accent:#FF3347;          /* fills: primary button, hero stat, active segment */
   --accent-hover:#FF5C6C;
-  --accent-text:#FF3347;     /* accent used as text/lines */
+  --accent-text:#FF5C6C;     /* accent used as text/lines (D-23 ; was #FF3347, 4.1:1 on a red pill over graphite) */
+  --logo-loop:#FF3347;       /* logo loop keeps the exact brand red (D-23) */
   --accent-soft:rgba(255,51,71,.11); /* tinted pill bg, completed set cells (was .14, D-22) */
   --on-accent:#FFFFFF;       /* ALWAYS white text on red */
 
@@ -63,6 +64,7 @@ Use **semantic tokens** in components, never raw hex.
   --text:#141416; --muted:#6A6A70; --faint:#A3A3A8;
   --accent:#E5283C; --accent-hover:#FF3347;  /* slightly deeper for contrast with white text */
   --accent-text:#D91E32;     /* red as text/lines on light */
+  --logo-loop:#D91E32;
   --accent-soft:rgba(229,40,60,.10); --on-accent:#FFFFFF;
   --inv:#141416; --on-inv:#FFFFFF;
   --ok:#16A34A; --ok-soft:rgba(22,163,74,.10);
@@ -73,6 +75,19 @@ Use **semantic tokens** in components, never raw hex.
 ```
 
 > **Ajustement du 22/10/2026 (D-22, demande d'Antonino : « on ne lit pas très bien en sombre »)** : en thème sombre, `--faint` était à 2,5:1 et `--muted` à 4,4:1 sur les pastilles, sous le minimum WCAG de 4,5:1 ; les filets étaient presque invisibles. Valeurs relevées ci-dessus, toutes vérifiées : texte ≥ 4,5:1, contour des champs ≥ 3:1. Le rouge de marque `#FF3347` (et donc le logo) ne change pas. Thème clair inchangé.
+
+> **Ajustement du 22/10/2026 (D-23, choix d'Antonino sur aperçus)** : thème sombre en **graphite** au lieu du quasi-noir (cartes mieux détachées, moins « trou noir ») ; rouge texte un cran plus clair (#FF5C6C) pour rester ≥ 4,5:1 sur le graphite, le logo gardant #FF3347 via `--logo-loop`. Toutes les paires texte / fond revérifiées (WCAG AA).
+
+**Discipline colors (D-23)** — color that *means* something, never decoration. One per native discipline, used on goal pills now, then on sessions, programs and calendar. Icons stay neutral.
+
+| Discipline | Dark | Light | Token |
+|---|---|---|---|
+| Running | `#60A5FA` | `#1D4ED8` | `--run` / `--run-soft` |
+| Musculation (incl. remise en forme) | `#A78BFA` | `#6D28D9` | `--strength` / `--strength-soft` |
+| Hyrox | `#FB923C` | `#9A3412` | `--hyrox` / `--hyrox-soft` |
+| Hybride | `#2DD4BF` | `#115E59` | `--hybrid` / `--hybrid-soft` |
+
+Soft = same color at 12 % (dark) / 10 % (light) opacity. Text on card and on its soft pill ≥ 4.5:1 in both themes.
 
 **Where red is allowed:** primary CTA (max 1 per view), one hero stat card per row, current week/segment, active mobile tab, active page-tab underline, completed set check, notification dot, nav counters, current bar in charts.
 **Never:** page backgrounds, large text blocks, raw `#FF3347` text on light theme (use `--accent-text`), dark text on red.
