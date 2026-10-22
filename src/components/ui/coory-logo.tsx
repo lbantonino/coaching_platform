@@ -64,7 +64,7 @@ function Rings({
   );
 }
 
-// wordmark = « c » + anneaux + « ry » : pages d'accès (24–26 px) et app sur ordinateur (28 px).
+// wordmark = « c » + anneaux + « ry » : pages d'accès (24–26 px) et app sur ordinateur (40 px).
 // symbol = les anneaux seuls : en-têtes de l'app sur téléphone (28 px). Choix d'Antonino le 22/10, plus
 // grand que les 17–20 px conseillés par COORY_LOGO.md. `size` = taille du texte ou hauteur du symbole, en px.
 export function CooryLogo({
