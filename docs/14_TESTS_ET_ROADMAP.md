@@ -14,6 +14,7 @@
 | P5 Publication / PDF | Snapshots, versions, visualisation et PDF private storage | P4 | élevé |
 | P6 Espace sportif | Accès publié, lecture mobile, complétion/RPE, retour coach | P5 | élevé |
 | P7 Communication / suivi | Messages interne, notifications, enquêtes après N séances | P6 | élevé |
+| BIZ Business du coach (D-17) | Forfaits, paiements reçus, tableau de bord, factures PDF, export comptable ; **sans encaissement en ligne** | Étape A : P2 ; étape B : P5 + `OPEN-17` ; placement proposé après P6, à confirmer | modéré |
 | P8 Commercialisation SaaS | Onboarding autonome, paiement, plan, équipe, support, DPA | P7 + compliance | très élevé |
 | P9 Extensions | intégrations, statistiques avancées, mobile offline réel, IA assistive | après validation usages | variable |
 
@@ -76,6 +77,19 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [ ] `P6-05` Republication avec historiques et PDF vN cohérents.
 - [ ] `P6-06` Tests E2E parcours complet de 3 minutes ; mobile coach/sportif.
 
+### BIZ — Business du coach (D-17 ; placement proposé après P6, à confirmer)
+Étape A, suivi :
+- [ ] `BIZ-01` Offres du coach : carnet de N séances, abonnement mensuel, programme en ligne ; prix saisis par le coach ; archivage sans suppression.
+- [ ] `BIZ-02` Forfait attribué à un client : dates, séances incluses / consommées / restantes, échéance ; visible sur la fiche (visibilité par le sportif à décider).
+- [ ] `BIZ-03` Paiements reçus saisis par le coach (espèces, virement, Bancontact sur place) ; statuts payé / en attente / en retard ; relance préparée, jamais de faux « envoyé ».
+- [ ] `BIZ-04` Tableau de bord business calculé uniquement sur les données saisies : encaissé du mois, impayés, forfaits qui expirent, clients actifs.
+
+Étape B, factures (après P5 et `OPEN-17`) :
+- [ ] `BIZ-05` Factures et reçus PDF : numérotation continue sans trou ni doublon, mentions légales, TVA ou franchise ; une facture émise ne se modifie jamais (correction par avoir).
+- [ ] `BIZ-06` Export comptable (CSV) ; factures électroniques Peppol pour les clients entreprises si le comptable le confirme.
+
+**Hors périmètre (décision du 22/10/2026)** : tout encaissement en ligne d'un client au profit du coach (carte, Bancontact, prélèvement). Le paiement en ligne de P8 concerne uniquement l'abonnement du coach à Coory. Tests attendus : isolation entre organisations (RLS), numérotation des factures robuste aux envois simultanés, tableau de bord égal à la somme des paiements saisis.
+
 ### P7 — Communication et suivi (après validation)
 - [ ] `P7-01` Messages internes sécurisés et vues mobiles.
 - [ ] `P7-02` Notifications préférences et relances non intrusives.
@@ -133,6 +147,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-14` Définition d'un groupe (club, salle) et droits associés (avant `DIF-05`).
 - `OPEN-15` Conditions actuelles des API Strava et Garmin (avant `DIF-09` étape 2).
 - `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08`).
+- `OPEN-17` Règles de facturation du coach (D-17 étape B) : mentions obligatoires, TVA ou régime de franchise, numérotation, conservation, Peppol pour les clients entreprises. **En cours de vérification par un comptable** (Antonino, 22/10/2026).
 
 **Différenciateurs `DIF-01` à `DIF-10`** (décision du 20/10/2026) : voir `docs/16_POSITIONNEMENT.md` §4–5 pour leur phase d'insertion. Ils ne modifient pas l'ordre P2 → P6.
 

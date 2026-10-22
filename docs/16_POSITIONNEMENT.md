@@ -1,6 +1,6 @@
 # 16 — Positionnement de Coory face à la concurrence et différenciateurs retenus
 
-**Statut** : décisions produit validées par Antonino le 20/10/2026. **Ce document décrit des objectifs, pas des fonctionnalités développées** : l'état réel du code est dans `SUIVI_IMPLEMENTATION.md`. Chaque différenciateur reste soumis aux règles de `CLAUDE.md` (tranche verticale, tests, pas de faux écran, IA jamais prescriptrice).
+**Statut** : décisions produit validées par Antonino le 20/10/2026, comparatif corrigé le 22/10/2026 (D-17 business du coach, D-18 musculation). **Ce document décrit des objectifs, pas des fonctionnalités développées** : l'état réel du code est dans `SUIVI_IMPLEMENTATION.md`. Chaque différenciateur reste soumis aux règles de `CLAUDE.md` (tranche verticale, tests, pas de faux écran, IA jamais prescriptrice).
 
 ## 1. Nom
 
@@ -17,20 +17,41 @@ Logiciel pour coachs sportifs lancé en août 2026 (Product Hunt), slogan « Per
 - messagerie, facturation multi-devises, tableau de bord business (MRR, ARR, ARPU, LTV, churn) ;
 - « Churn Radar » (score de risque de départ sur 9 signaux), « Athlete Twin » (prédiction de 1RM, de risque de récupération, de date d'objectif), « Athleex Score » (note de 0 à 100).
 
-## 3. Stratégie : le même socle, des différences assumées
+## 3. Stratégie : un outil tout-en-un, des différences assumées
 
-Coory **ne cherche pas la parité fonctionnelle** avec Athleex : une petite équipe ne rattrape pas un produit généraliste plus avancé. Coory prend le socle commun attendu par tout coach (programmes, fiches, suivi, messagerie en P7, facturation en P8) et se différencie là où Athleex est généraliste.
+Coory vise un outil **tout-en-un** : le coach ne doit avoir besoin d'aucun autre logiciel pour programmer, suivre ses sportifs et suivre son activité (forfaits, paiements reçus, factures : D-17). Coory couvre **quatre disciplines natives, indépendantes ou combinables** : Musculation (y compris remise en forme et cardio de salle, D-18), Running, Hyrox et Hybride. Il ne copie pas Athleex fonction par fonction : il se différencie par la précision par sportif, les groupes, le PDF, la transparence des indicateurs et l'ancrage local (français, Belgique, données en UE).
 
 **Écarté volontairement** : recommandations de compléments alimentaires, prédictions de « risque de récupération » ou de blessure, scores opaques sans base vérifiable. Raisons : responsabilité santé (Belgique/UE), règle du projet « pas de statistiques inventées », volume de données insuffisant.
 
 | | Athleex | Coory |
 |---|---|---|
-| Cœur | Coaching généraliste, musculation (séries / répétitions) | **Running, Hyrox, Hybride** : allures, zones, stations, circuits, AMRAP, time cap |
+| Disciplines | Coaching généraliste, surtout musculation (séries / répétitions) | **Musculation, Running, Hyrox, Hybride**, chacune seule ou combinée ; musculation complète (supersets, dropsets, tempo, RPE / RIR, machines) |
+| Précision par sportif | Non relevé | **Allures et charges calculées pour chaque sportif** à partir de ses repères datés (test Cooper / 5 km, charges de référence) |
+| Business du coach | Facturation multi-devises, paiements, tableau de bord MRR / ARR / churn | Suivi des forfaits et paiements reçus, factures PDF, export comptable (D-17) ; **aucun encaissement en ligne** |
+| Nutrition | Plans de nutrition et de compléments | Non (responsabilité santé) |
 | Programmes | Constructeur d'entraînements | Modèles de semaines et de cycles, copie et progression **validée par le coach** |
 | Livrable sportif | Application | Application **et PDF identiques**, issus d'une version publiée figée |
 | Coach sur téléphone | Non vérifié | Édition complète sur téléphone (exigence du cahier des charges) |
 | Indicateurs | Scores et prédictions propriétaires | **Uniquement des données réelles**, règles d'alerte lisibles |
-| Cible | Coachs individuels, international | Coachs, **run clubs et salles Hyrox**, francophone (BE/FR) d'abord, données hébergées en UE |
+| Cible | Coachs individuels, international | Coachs en salle (remise en forme, musculation), coachs running et Hyrox, **run clubs et salles Hyrox** ; francophone (BE/FR) d'abord, données hébergées en UE |
+
+### Forces et faiblesses de Coory face à Athleex (22/10/2026)
+
+**Plus fort** :
+- précision par sportif (allures en running, kilos en musculation), là où un coach pense en allures et en pourcentages ;
+- séances de groupe personnalisées (run club, salle), quand Athleex est pensé pour le 1 à 1 ;
+- PDF identique à l'application et import des programmes Sheets / PDF existants : le coach change d'outil sans tout ressaisir ;
+- indicateurs lisibles (la règle de chaque alerte est visible), IA qui propose sans décider ;
+- prudence santé (ni compléments ni prédiction de blessure) et ancrage local.
+
+**Plus faible** :
+- Coory n'est pas encore en production, quand Athleex est en ligne (applications iOS et Android, 6 langues, gratuit jusqu'à 3 sportifs) ;
+- le business du coach arrive après P6, sans encaissement en ligne ni tableaux MRR ;
+- pas de nutrition, messagerie seulement en P7 ;
+- moyens d'une seule personne ; au 22/10/2026, seuls les repères datés et le calcul des allures existent parmi les différenciateurs ;
+- pas de scores prédictifs, argument commercial auquel Coory renonce volontairement.
+
+**À vérifier** : ouvrir un compte gratuit Athleex et y programmer une vraie semaine, pour contrôler la gestion des allures et l'édition sur téléphone (deux points non vérifiés ci-dessus).
 
 ## 4. Différenciateurs retenus
 
@@ -41,7 +62,7 @@ Identifiants stables `DIF-xx`, à reporter dans les stories correspondantes.
 | DIF-01 | **Import Google Sheets / PDF** | Le coach reprend ses programmes existants au lieu de tout ressaisir | Après P4 | Modèle de séance structuré stable (P3–P4) ; l'import propose, le coach valide chaque séance avant enregistrement |
 | DIF-02 | **Boîte à outils Hyrox** | Calculateur d'allures et de temps de passage par station, simulation de course, compte à rebours et affûtage | P4 (calculs) puis P6 | Calculs déterministes et testés ; aucune valeur présentée comme une prescription |
 | DIF-03 | **File « retours à traiter »** (radar transparent) | Tous les retours sportifs (RPE, douleur, commentaires, séances manquées) au même endroit, triés par urgence, avec la **règle** qui a déclenché chaque alerte | P6 (file) puis P7 (règles configurables) | Règles lisibles et paramétrables (ex. « RPE ≥ 9 trois fois », « aucune séance depuis 7 jours ») ; jamais de score opaque |
-| DIF-04 | **Allures calculées par sportif** | Le coach écrit « 4 × 1000 m allure seuil », chaque sportif reçoit SES allures en min/km | P4 | Repères datés par sportif (P2-03 : test 5 km, VMA…) ; formules documentées ; le coach peut corriger |
+| DIF-04 | **Allures et charges calculées par sportif** | Running : le coach écrit « 4 × 1000 m allure seuil », chaque sportif reçoit SES allures en min/km. Musculation : « 4 × 8 à 75 % du 1RM », chaque sportif reçoit SES kilos | P4 | Repères datés par sportif (P2-03 fait : allures, VMA, charges de référence) ; formules documentées ; le coach peut corriger |
 | DIF-05 | **Mode groupe / club** | Une séance envoyée à un groupe (run club, salle), personnalisée par sportif (allures, charges) | P4 (assignation) et P6 (vue sportif) | Notion de groupe dans l'organisation ; publication par sportif conservée (immutabilité) |
 | DIF-06 | **Minuteur intégré à la séance** | EMOM, AMRAP, intervalles et récupérations enchaînés automatiquement pendant l'entraînement | P6 | Blocs structurés ; écran actif (Wake Lock) ; utilisable d'une main |
 | DIF-07 | **Coory aux couleurs du coach** (marque blanche) | Logo et couleurs du coach dans l'espace sportif et dans les PDF | P5 | `branding_json` déjà prévu sur `organizations` ; contraste et accessibilité vérifiés |
@@ -60,6 +81,7 @@ L'ordre des phases du cahier des charges ne change pas : **P2 → P6 d'abord** (
 - **Après P4** : DIF-01 (import Sheets / PDF), dès que le modèle de séance est stable.
 - **P7** : DIF-03 (règles d'alerte configurables).
 - **P9 / V3** : DIF-08 (IA d'assistance), DIF-09 (fichiers puis API), DIF-10 (hors ligne).
+- **Business du coach (D-17)** : étape A (suivi) proposée après P6, placement à confirmer ; étape B (factures) après P5 et `OPEN-17`.
 
 ## 6. Questions ouvertes liées
 
@@ -67,3 +89,4 @@ L'ordre des phases du cahier des charges ne change pas : **P2 → P6 d'abord** (
 - `OPEN-14` : définition d'un groupe (club, salle) et droits associés, avant DIF-05.
 - `OPEN-15` : conditions actuelles des API Strava et Garmin, à vérifier sur leurs portails officiels avant DIF-09 étape 2.
 - `OPEN-16` : fournisseur d'IA, coûts, hébergement des données et consentement, avant DIF-08.
+- `OPEN-17` : règles de facturation du coach, en vérification chez un comptable, avant l'étape B de D-17.
