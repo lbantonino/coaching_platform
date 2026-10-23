@@ -77,10 +77,36 @@ export async function requireAthlete(): Promise<AthleteContext> {
   return { user, links };
 }
 
-// Espace d'arrivée après connexion, selon les rôles réellement détenus.
+// Type de compte choisi à l'inscription libre (D-30), ou null si le compte n'a pas été finalisé.
+async function getSignupKind(
+  userId: string,
+  client?: SupabaseServerClient,
+): Promise<"coach" | "athlete" | null> {
+  const supabase = client ?? (await createClient());
+  const { data } = await supabase
+    .from("account_signups")
+    .select("kind")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.kind === "coach" || data?.kind === "athlete" ? data.kind : null;
+}
+
+// Espace d'arrivée après connexion, selon les rôles réellement détenus. Un compte tout juste créé
+// (inscription ou Google / Facebook / Apple) sans rôle termine son inscription sur « Bienvenue ».
 export async function getHomePath(userId: string, client?: SupabaseServerClient): Promise<string> {
   if ((await getCoachMemberships(userId, client)).length > 0) return "/coach";
   if ((await getAthleteLinks(userId, client)).length > 0) return "/app";
   if (await isPlatformAdmin(client)) return "/admin";
-  return ACCESS_DENIED_PATH;
+  const kind = await getSignupKind(userId, client);
+  if (kind === "athlete") return "/app";
+  return kind === "coach" ? ACCESS_DENIED_PATH : "/bienvenue";
+}
+
+// Espace sportif : fiche liée par un coach, ou sportif inscrit seul qui attend l'invitation d'un coach.
+export async function requireAthleteAccount(): Promise<AthleteContext & { waiting: boolean }> {
+  const user = await requireUser();
+  const links = await getAthleteLinks(user.id);
+  if (links.length > 0) return { user, links, waiting: false };
+  if ((await getSignupKind(user.id)) === "athlete") return { user, links, waiting: true };
+  redirect(ACCESS_DENIED_PATH);
 }

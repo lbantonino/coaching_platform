@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **23/10/2026** (D-29 : couleurs des maquettes, bleu nuit).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **23/10/2026** (D-30 : inscription libre).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -282,6 +282,11 @@ Sur téléphone, l'agenda reprend le principe du calendrier de l'iPhone : trois 
 
 ### Les couleurs de la maquette, mesurées plutôt que devinées (23/10)
 Pour coller aux maquettes, on n'a pas choisi les couleurs à l'œil : un petit script lit la couleur exacte des pixels sur les images (fond bleu nuit #0B1019, panneaux #121821, blocs d'agenda…), puis un second calcule le contraste de chaque texte sur chaque fond **avant** de toucher au code. Grâce aux jetons de couleur, le changement tient en quelques lignes et s'applique à toute l'app. Un piège évité : des teintes plus fortes rendaient le gris illisible en thème clair ; l'intensité des teintes est donc devenue elle-même un jeton, différent pour chaque thème.
+
+### L'inscription libre (23/10)
+Jusqu'ici, les comptes étaient créés à la main. Désormais, un coach ou un sportif s'inscrit seul. Trois choix à savoir expliquer. **Confirmation de l'e-mail obligatoire** : sans elle, n'importe qui pourrait créer des espaces au nom d'une adresse qui n'est pas la sienne. **Un message identique** que l'adresse soit nouvelle ou déjà inscrite : sinon, le formulaire servirait à découvrir qui utilise Coory. **La création de l'organisation passe par une fonction de la base** (`complete_signup`) : le navigateur ne peut jamais s'attribuer le rôle de propriétaire lui-même, et la fonction refuse un compte non confirmé ou déjà finalisé.
+
+Google, Facebook et Apple sont **préparés mais pas activés** : il faut des clés chez chacun. Plutôt que d'afficher des boutons qui ne marchent pas, un bouton n'apparaît que si son fournisseur est déclaré configuré. Leçon au passage : un test qui modifie un compte de démonstration partagé finit par abîmer les données de quelqu'un ; chaque test doit utiliser un compte qui lui est réservé.
 
 ---
 

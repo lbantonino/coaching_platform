@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { buttonClass } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { LogoutButton } from "@/components/ui/logout-button";
-import { requireAthlete } from "@/features/auth/guards";
+import { requireAthleteAccount } from "@/features/auth/guards";
 import {
   grantHealthConsentByAthlete,
   withdrawHealthConsentByAthlete,
@@ -30,7 +30,31 @@ export default function AthleteHomePage() {
 
 // Espace sportif volontairement minimal et honnête : les programmes arrivent en P5/P6.
 async function AthleteSession() {
-  const { user, links } = await requireAthlete();
+  const { user, links, waiting } = await requireAthleteAccount();
+  // Sportif inscrit seul (D-30) : son compte existe, aucun coach ne l'a encore rattaché.
+  if (waiting) {
+    return (
+      <div className="flex flex-col gap-6">
+        <p className="text-muted">
+          Connecté en tant que <span className="font-medium text-current">{user.email}</span>
+        </p>
+        <section
+          aria-labelledby="waiting-title"
+          className="flex flex-col gap-2 rounded-card border border-line bg-surface p-5"
+        >
+          <h2 id="waiting-title" className="text-title font-medium">
+            Ton compte est prêt
+          </h2>
+          <p className="text-small text-muted">
+            Pour voir tes séances, ton coach doit te rattacher à son espace. Donne-lui ton adresse
+            e-mail ({user.email}) : il t&apos;enverra un lien d&apos;invitation. Ouvre-le en étant
+            connecté, et ta fiche sera liée à ce compte.
+          </p>
+        </section>
+        <LogoutButton />
+      </div>
+    );
+  }
   const coaches = links.map((link) => link.organizationName).join(", ");
   const consents = await getOwnHealthConsents(user.id);
   const messages = await getOwnCoachMessages();

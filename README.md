@@ -33,6 +33,7 @@ cp .env.example .env.local   # puis remplir avec les valeurs de `npx supabase st
 
 - `.env.local` et tous les `.env*` sont ignorés par Git ; seul `.env.example` (noms sans valeurs) est versionné.
 - Seules les variables `NEXT_PUBLIC_*` atteignent le navigateur. La clé secrète Supabase reste côté serveur.
+- `AUTH_PROVIDERS` (serveur) liste les connexions sociales réellement configurées (`google`, `facebook`, `apple`) ; vide = aucun bouton. Marche à suivre : [docs/AUTH_FOURNISSEURS.md](docs/AUTH_FOURNISSEURS.md).
 
 ## Base de données locale (DEV)
 
@@ -42,13 +43,15 @@ Prérequis : **Docker Desktop lancé**. Le CLI Supabase est une dépendance du p
 |---|---|
 | `npm run db:start` | Démarre Supabase en local (Postgres, Auth, Storage, Studio). Le premier lancement télécharge les images Docker (plusieurs Go) |
 | `npm run db:status` | Affiche les URL et les clés locales (à recopier dans `.env.local`) |
-| `npm run db:reset` | Recrée la base locale de zéro : toutes les migrations puis `supabase/seed.sql` |
+| `npm run db:reset` | Recrée la base locale de zéro : toutes les migrations, `supabase/seed.sql`, puis les photos de démonstration (`scripts/seed-photos.mjs`) |
 | `npm run db:new <nom>` | Crée un fichier de migration horodaté dans `supabase/migrations/` |
 | `npm run db:test` | Lance les tests SQL/RLS (pgTAP) de `supabase/tests/` sur la base locale |
 | `npm run db:types` | Régénère `src/lib/supabase/database.types.ts` depuis le schéma local (après chaque migration) |
 | `npm run db:stop` | Arrête les conteneurs (les données locales sont conservées) |
 
 Comptes de démonstration locaux (créés par le seed, mot de passe `demo-coach-local`) : `coach-a@example.test` (Organisation Démo A), `coach-b@example.test` (Organisation Démo B) `admin@example.test` (administrateur de la plateforme, sans organisation) et `thomas.peeters@example.test` (sportif de l'Organisation Démo A, ouvre l'espace sportif). Le seed crée aussi 8 sportifs inventés dans l'Organisation Démo A et 2 dans la B, avec profils et repères. Les tests navigateur ajoutent leurs propres fiches temporaires : `npm run db:reset` remet ensuite la base de démo au propre.
+
+**Inscription** (D-30) : `/inscription` crée un compte coach ou sportif. En local, l'e-mail de confirmation arrive dans Mailpit ; son lien ouvre la page « Bienvenue », qui crée l'espace du coach (son organisation) ou finalise le compte sportif. Après une modification de `supabase/config.toml` : `npm run db:stop` puis `npm run db:start`.
 
 URL locales utiles : Studio http://127.0.0.1:54323, boîte mail de test (Mailpit) http://127.0.0.1:54324.
 

@@ -2,10 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
-// Retour d'un lien e-mail Supabase (réinitialisation de mot de passe) : échange le code
-// à usage unique contre une session, puis envoie vers l'étape suivante.
+// Retour d'un lien Supabase (réinitialisation de mot de passe, confirmation d'inscription, connexion
+// Google / Facebook / Apple) : échange le code à usage unique contre une session, puis envoie vers
+// l'étape suivante.
 // Liste fermée de destinations : jamais de redirection vers une adresse fournie librement (open redirect).
-const ALLOWED_NEXT = new Set(["/nouveau-mot-de-passe"]);
+const ALLOWED_NEXT = new Set(["/nouveau-mot-de-passe", "/bienvenue", "/espace"]);
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

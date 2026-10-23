@@ -3,6 +3,40 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export type Database = {
   public: {
     Tables: {
+      account_signups: {
+        Row: {
+          created_at: string;
+          first_name: string;
+          kind: string;
+          last_name: string;
+          phone: string | null;
+          terms_accepted_at: string;
+          terms_version: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          first_name: string;
+          kind: string;
+          last_name: string;
+          phone?: string | null;
+          terms_accepted_at?: string;
+          terms_version: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          first_name?: string;
+          kind?: string;
+          last_name?: string;
+          phone?: string | null;
+          terms_accepted_at?: string;
+          terms_version?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       athlete_consents: {
         Row: {
           action: string;
@@ -424,6 +458,7 @@ export type Database = {
           created_at: string;
           first_name: string | null;
           last_name: string | null;
+          phone: string | null;
           photo_path: string | null;
           updated_at: string;
           user_id: string;
@@ -434,6 +469,7 @@ export type Database = {
           created_at?: string;
           first_name?: string | null;
           last_name?: string | null;
+          phone?: string | null;
           photo_path?: string | null;
           updated_at?: string;
           user_id: string;
@@ -443,6 +479,7 @@ export type Database = {
           created_at?: string;
           first_name?: string | null;
           last_name?: string | null;
+          phone?: string | null;
           photo_path?: string | null;
           updated_at?: string;
           user_id?: string;
@@ -664,6 +701,17 @@ export type Database = {
     Functions: {
       accept_invitation: {
         Args: { p_adult_confirmed: boolean; p_token_hash: string };
+        Returns: string;
+      };
+      complete_signup: {
+        Args: {
+          p_first_name: string;
+          p_kind: string;
+          p_last_name: string;
+          p_organization_name: string;
+          p_phone: string;
+          p_terms_version: string;
+        };
         Returns: string;
       };
       current_user_is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
