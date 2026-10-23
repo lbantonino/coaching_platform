@@ -313,19 +313,19 @@ async function Dashboard({
 
 const kpiTones = {
   red: {
-    box: "border-accent/30 bg-[color-mix(in_srgb,var(--accent)_9%,var(--surface))]",
+    box: "border-accent/40 bg-[color-mix(in_srgb,var(--accent)_var(--tint-card),var(--surface))]",
     icon: "border border-accent/50 bg-accent-soft text-accent-text",
   },
   blue: {
-    box: "border-blue/30 bg-[color-mix(in_srgb,var(--blue)_7%,var(--surface))]",
+    box: "border-blue/40 bg-[color-mix(in_srgb,var(--blue)_var(--tint-card),var(--surface))]",
     icon: "border border-blue/50 bg-blue-soft text-blue",
   },
   indigo: {
-    box: "border-strength/30 bg-[color-mix(in_srgb,var(--strength)_7%,var(--surface))]",
+    box: "border-strength/40 bg-[color-mix(in_srgb,var(--strength)_var(--tint-card),var(--surface))]",
     icon: "border border-strength/50 bg-strength-soft text-strength",
   },
   green: {
-    box: "border-green/30 bg-[color-mix(in_srgb,var(--green)_6%,var(--surface))]",
+    box: "border-green/40 bg-[color-mix(in_srgb,var(--green)_var(--tint-card),var(--surface))]",
     icon: "border border-green/50 bg-green-soft text-green",
   },
 } as const;

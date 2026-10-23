@@ -20,6 +20,19 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### D-29 : couleurs des maquettes (thème sombre bleu nuit)
+```
+Date : 2026-10-23
+Demande : « ajuster les couleurs par rapport à la maquette »
+Méthode : couleurs mesurées au pixel (PIL) sur tableau-de-bord.png et agenda.png ; contrastes WCAG
+  calculés avant d'appliquer (script) : textes ≥ 4,5:1 partout, texte des blocs d'agenda ≥ 6:1
+Fait : tokens.css (sombre : --page #070b12, --bg #0b1019, --surface #121821, --surface-2 #1a2331,
+  --chip #243044, --bar #2b3648, --text #f1f4f8, --muted #9ba6b5, --faint #97a2b2 ; jetons --tint-card,
+  --tint-nav, --tint-block par thème) ; cartes chiffrées, menu actif, blocs d'agenda (barre de 3 px à
+  gauche) ; themeColor #0B1019 ; COORY_DESIGN_SYSTEM.md ; maquettes déposées par Antonino ajoutées au dépôt
+Tests : check OK, test:e2e design.spec.ts OK ; captures sombre et clair
+```
+
 ### D-28 : tableau de bord d'après la maquette, photos de profil, menu complet, téléphone
 ```
 Date : 2026-10-22 et 23

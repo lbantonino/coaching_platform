@@ -15,14 +15,18 @@ export type AgendaView = "semaine" | "jour" | "mois";
 
 const HOUR = 50;
 
-// Bloc d'une séance : teinte franche de sa discipline, texte en couleur de texte (lisible dans les
-// deux thèmes).
+// Bloc d'une séance (maquettes, D-29) : fond sombre teinté de sa discipline et barre de couleur à
+// gauche ; texte en couleur de texte (≥ 6:1 mesuré sur chaque teinte, dans les deux thèmes).
 const blockClasses: Record<Discipline | "none", string> = {
-  running: "bg-[color-mix(in_srgb,var(--run)_34%,var(--surface))] border-run/50",
-  strength: "bg-[color-mix(in_srgb,var(--strength)_34%,var(--surface))] border-strength/50",
-  hyrox: "bg-[color-mix(in_srgb,var(--hyrox)_34%,var(--surface))] border-hyrox/50",
-  hybrid: "bg-[color-mix(in_srgb,var(--hybrid)_34%,var(--surface))] border-hybrid/50",
-  none: "bg-chip border-line-2",
+  running:
+    "border-l-[3px] border-l-run bg-[color-mix(in_srgb,var(--run)_var(--tint-block),var(--surface))]",
+  strength:
+    "border-l-[3px] border-l-strength bg-[color-mix(in_srgb,var(--strength)_var(--tint-block),var(--surface))]",
+  hyrox:
+    "border-l-[3px] border-l-hyrox bg-[color-mix(in_srgb,var(--hyrox)_var(--tint-block),var(--surface))]",
+  hybrid:
+    "border-l-[3px] border-l-hybrid bg-[color-mix(in_srgb,var(--hybrid)_var(--tint-block),var(--surface))]",
+  none: "border-l-[3px] border-l-line-2 bg-chip",
 };
 const dotClasses: Record<Discipline | "none", string> = {
   running: "bg-run",
@@ -231,7 +235,7 @@ function TimeGrid({
                       key={block.key}
                       href={sessionHref(block.sessionId)}
                       title={`${block.label} · ${block.title} · ${block.subtitle}`}
-                      className={`absolute flex flex-col justify-center overflow-hidden rounded-[8px] border px-2 py-1 transition-[filter] hover:brightness-110 ${
+                      className={`absolute flex flex-col justify-center overflow-hidden rounded-[8px] px-2 py-1 transition-[filter] hover:brightness-110 ${
                         blockClasses[block.discipline ?? "none"]
                       }`}
                       style={{
@@ -318,7 +322,7 @@ function MonthGrid({
                     {blocks.slice(0, 2).map((block) => (
                       <span
                         key={block.key}
-                        className={`truncate rounded-[5px] border px-1 text-micro ${
+                        className={`truncate rounded-[5px] px-1 text-micro ${
                           blockClasses[block.discipline ?? "none"]
                         }`}
                       >
