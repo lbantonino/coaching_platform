@@ -27,6 +27,35 @@ function EntryFooter() {
   );
 }
 
+// Accroche de la marque : panneau de marque sur ordinateur, carte de la connexion sur téléphone.
+export function BrandPitch({ size }: { size: "panel" | "card" }) {
+  const panel = size === "panel";
+  return (
+    <>
+      <p
+        className={`font-display leading-[0.98] font-semibold tracking-[-0.045em] ${
+          panel ? "text-[64px]" : "text-[34px]"
+        }`}
+      >
+        Programmer,
+        <br />
+        publier et suivre
+        <br />
+        <span className="text-accent-text">tes sportifs.</span>
+      </p>
+      <p
+        className={
+          panel
+            ? "max-w-[460px] text-[17px] leading-[1.55] text-muted"
+            : "text-[15px] leading-[1.5] text-muted"
+        }
+      >
+        Programmation et suivi d&apos;entraînements Running, Musculation, Hyrox et Hybride.
+      </p>
+    </>
+  );
+}
+
 export function EntryShell({ children }: { children: ReactNode }) {
   return (
     <div className="group/auth flex min-h-dvh flex-1">
@@ -37,19 +66,7 @@ export function EntryShell({ children }: { children: ReactNode }) {
           <Suspense fallback={<DefaultEyebrow />}>
             <EntryEyebrow />
           </Suspense>
-          <p
-            aria-hidden
-            className="font-display text-[64px] leading-[0.98] font-semibold tracking-[-0.045em]"
-          >
-            Programmer,
-            <br />
-            publier et suivre
-            <br />
-            <span className="text-accent-text">tes sportifs.</span>
-          </p>
-          <p className="max-w-[460px] text-[17px] leading-[1.55] text-muted">
-            Programmation et suivi d&apos;entraînements Running, Musculation, Hyrox et Hybride.
-          </p>
+          <BrandPitch size="panel" />
         </div>
         <span className="relative text-[13px] text-muted">© 2026 Coory · Bruxelles</span>
       </aside>
@@ -63,7 +80,11 @@ export function EntryShell({ children }: { children: ReactNode }) {
           <ThemeToggle />
         </div>
         <main className="flex flex-1 flex-col justify-start pt-4 pb-2 lg:justify-center lg:py-8">
-          <div className="mx-auto w-full max-w-[440px]">{children}</div>
+          {/* Une page marquée data-mobile-fill (la connexion) reçoit toute la hauteur sur téléphone,
+              pour y centrer son formulaire. Les autres pages restent alignées en haut. */}
+          <div className="mx-auto w-full max-w-[440px] max-lg:has-[[data-mobile-fill]]:flex max-lg:has-[[data-mobile-fill]]:flex-1 max-lg:has-[[data-mobile-fill]]:flex-col">
+            {children}
+          </div>
         </main>
         <EntryFooter />
       </div>

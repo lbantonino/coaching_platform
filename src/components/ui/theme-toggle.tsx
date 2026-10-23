@@ -8,7 +8,7 @@ import { THEME_STORAGE_KEY, type Theme } from "@/lib/theme";
 import { iconButtonClass } from "./button";
 
 // Le thème actif est l'attribut data-theme de <html> (posé avant l'affichage par themeInitScript).
-// useSyncExternalStore lit cette valeur hors de React ; côté serveur, on suppose « sombre ».
+// useSyncExternalStore lit cette valeur hors de React ; côté serveur, on suppose « clair » (D-33).
 // Plusieurs boutons peuvent coexister (barre latérale + en-tête mobile) : ils restent synchronisés.
 const listeners = new Set<() => void>();
 
@@ -20,11 +20,11 @@ function subscribe(listener: () => void) {
 }
 
 function readTheme(): Theme {
-  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 }
 
 function applyTheme(theme: Theme) {
-  if (theme === "light") document.documentElement.dataset.theme = "light";
+  if (theme === "dark") document.documentElement.dataset.theme = "dark";
   else delete document.documentElement.dataset.theme;
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
@@ -35,7 +35,7 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeToggle({ size = "md" }: { size?: "sm" | "md" }) {
-  const theme = useSyncExternalStore(subscribe, readTheme, (): Theme => "dark");
+  const theme = useSyncExternalStore(subscribe, readTheme, (): Theme => "light");
   const next: Theme = theme === "light" ? "dark" : "light";
   const label = next === "light" ? "Passer au thème clair" : "Passer au thème sombre";
   const Icon = theme === "light" ? Moon : Sun;

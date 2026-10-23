@@ -32,11 +32,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0B1019", // fond bleu nuit des maquettes (D-29)
-  colorScheme: "dark",
+  themeColor: "#FFFFFF", // fond du thème clair, le défaut depuis D-33
+  colorScheme: "light",
 };
 
-// suppressHydrationWarning sur <html> : themeInitScript peut y poser data-theme="light" avant React,
+// suppressHydrationWarning sur <html> : themeInitScript peut y poser data-theme="dark" avant React,
 // c'est voulu ; sans cette option, React signalerait une différence entre le serveur et le navigateur.
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
