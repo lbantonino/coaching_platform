@@ -9,6 +9,7 @@ import {
   errorTextClass,
   hintClass,
   inputClass,
+  textareaClass,
   labelClass,
 } from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
@@ -197,7 +198,7 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
             maxLength={500}
             placeholder="Ex. : course depuis 3 ans, un Hyrox en Open, musculation régulière"
             defaultValue={shown.experience}
-            className={`${inputClass} h-auto py-3`}
+            className={textareaClass}
           />
         </div>
 
@@ -236,7 +237,7 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
             maxLength={500}
             placeholder="Ex. : haltères jusqu'à 20 kg, kettlebell 16 kg, rameur"
             defaultValue={shown.equipment}
-            className={`${inputClass} h-auto py-3`}
+            className={textareaClass}
           />
         </div>
       </Part>

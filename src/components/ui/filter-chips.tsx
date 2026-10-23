@@ -1,8 +1,11 @@
 import Link from "next/link";
 
-// Pastilles de filtre (design system §6 Chip). Ce sont de vrais liens :
-// le filtre est dans l'URL, donc partageable, et fonctionne même sans JavaScript.
-// Sélectionnée = couleurs inversées (jamais rouge). Plus hautes sur téléphone pour le doigt.
+import { chipActiveClass, chipClass, chipIdleClass } from "./chip";
+
+// Pastilles de filtre (prompt Claude Design §4 « Chip / filtre »). Sur téléphone, une rangée qui
+// défile sans retour à la ligne ; sur ordinateur, retour à la ligne.
+// Ce sont de vrais liens : le filtre est dans l'URL, donc partageable, et fonctionne sans JavaScript.
+
 export function FilterChips({
   label,
   options,
@@ -11,17 +14,16 @@ export function FilterChips({
   options: { href: string; label: string; active: boolean }[];
 }) {
   return (
-    <nav aria-label={label} className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+    <nav
+      aria-label={label}
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
+    >
       {options.map((option) => (
         <Link
           key={option.href}
           href={option.href}
           aria-current={option.active ? "true" : undefined}
-          className={`inline-flex h-9 shrink-0 items-center rounded-pill border px-3 text-caption transition-colors sm:h-7 sm:px-2.5 ${
-            option.active
-              ? "border-inv bg-inv text-on-inv"
-              : "border-line text-muted hover:bg-surface hover:text-text"
-          }`}
+          className={`${chipClass} ${option.active ? chipActiveClass : chipIdleClass}`}
         >
           {option.label}
         </Link>

@@ -25,7 +25,7 @@ export function PhotoForm({ name, photoPath, upload, remove }: Props) {
   });
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-      <Avatar name={name} size="lg" photoPath={photoPath} />
+      <Avatar name={name} size="xl" photoPath={photoPath} />
       <div className="flex flex-col gap-2">
         {/* Reconstruit après chaque réponse : le champ fichier se vide. */}
         <form key={state.attempt} action={formAction} className="flex flex-wrap items-center gap-2">

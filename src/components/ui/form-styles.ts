@@ -1,14 +1,19 @@
 import { buttonClass } from "./button";
 
-// Styles communs des formulaires, alignés sur le design system Coory (§6 Input).
-// 44 px sur téléphone (cible tactile minimale), 38 px sur ordinateur. Dans une carte, le champ
-// est posé sur bg-bg (profondeur inversée) et cerné par line-2 (contour des contrôles).
-export const inputClass =
-  "h-11 w-full rounded-md border border-line-2 bg-bg px-3 text-body text-text placeholder:text-faint outline-none transition-colors focus:border-accent read-only:text-muted sm:h-[38px] sm:text-small";
+// Styles communs des formulaires (prompt Claude Design §4 « Input ») : champ de 50 px, rayon 12,
+// fond surface, contour line-2, contour rouge au focus et en erreur. Texte en 16 px partout : en
+// dessous, iOS zoome sur le champ quand on le touche.
+const fieldBase =
+  "w-full rounded-control border border-line-2 bg-surface text-[16px] text-text placeholder:text-faint outline-none transition-colors duration-150 focus:border-accent aria-[invalid=true]:border-accent read-only:text-muted";
 
-export const labelClass = "text-small font-medium text-text";
+export const inputClass = `${fieldBase} h-[50px] px-4`;
 
-export const hintClass = "text-caption text-muted";
+// Zone de texte : même habillage, hauteur libre (3 lignes par défaut).
+export const textareaClass = `${fieldBase} min-h-[96px] px-4 py-3 leading-normal`;
+
+export const labelClass = "text-[14px] font-medium text-text";
+
+export const hintClass = "text-[13px] text-muted";
 
 export const primaryButtonClass = buttonClass({
   variant: "primary",
@@ -17,12 +22,11 @@ export const primaryButtonClass = buttonClass({
 });
 
 // Message d'erreur : rouge en TEXTE (accent-text), lisible en sombre comme en clair (contraste ≥ 4,5:1).
-// Le rouge plein + texte blanc est réservé aux pastilles d'alerte (Badge « danger »).
-export const errorTextClass = "text-small font-medium text-accent-text";
+// Le composant FieldError (field.tsx) y ajoute l'icône « circle-alert ».
+export const errorTextClass = "text-[13px] font-medium text-accent-text";
 
-// Case à cocher en forme de pastille (lieux, jours…) : c'est le <label> qui porte ce style, la vraie case
-// reste dans la page (classe sr-only) pour le clavier et les lecteurs d'écran. Cochée = couleurs inversées ;
-// le survol ne change que les pastilles non cochées (sinon le texte coché devenait illisible).
-// Mettre une icône Check avec la classe « hidden group-has-checked:block » à l'intérieur.
+// Pastille cochable (lieux, jours, disciplines…) : c'est le <label> qui porte ce style, la vraie case
+// reste dans la page (classe sr-only) pour le clavier et les lecteurs d'écran. Cochée = couleurs
+// inversées et « ✓ » devant. Mettre une icône Check avec la classe « hidden group-has-checked:block ».
 export const checkboxChipClass =
-  "group inline-flex h-11 cursor-pointer items-center gap-2 rounded-pill border border-line-2 px-3.5 text-small text-muted transition-colors not-has-checked:hover:text-text has-checked:border-inv has-checked:bg-inv has-checked:text-on-inv has-focus-visible:outline-2 has-focus-visible:outline-accent sm:h-9";
+  "group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-pill border border-line-2 px-3.5 text-[14px] font-medium whitespace-nowrap text-text transition-colors duration-150 not-has-checked:hover:bg-surface has-checked:border-inv has-checked:bg-inv has-checked:text-on-inv has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent";

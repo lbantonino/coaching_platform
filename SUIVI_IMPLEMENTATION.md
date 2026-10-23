@@ -15,10 +15,53 @@
 | P7 Communication | À faire | Aucun | - |
 | P8 SaaS commercial | À faire | Aucun | - |
 
+**Depuis le 23/10/2026 (D-32)**, la construction suit les 7 étapes du prompt Claude Design
+(`COORY_PROMPT_CLAUDE_CODE.md`) ; le tableau des phases ci-dessus reste la référence de contenu.
+
+| Étape du prompt | État |
+|---|---|
+| 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
+| 2. Coquilles de navigation | À faire |
+| 3. Pages d'entrée | À faire |
+| 4. Espace coach | À faire |
+| 5. Espace sportif | À faire |
+| 6. Administration | À faire |
+| 7. Recette finale | À faire |
+
 ## Dernière session
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### D-32, étape 1 du prompt Claude Design : jetons et composants
+```
+Date : 2026-10-23
+Demande : suivre COORY_PROMPT_CLAUDE_CODE.md étape par étape (option a : vraies fonctionnalités) ;
+  étape 1 = jetons + composants, au pixel près des prototypes (docs/design/prototypes/)
+Fait :
+  - jetons : couleurs existantes gardées (règle 2), ajout --panel, --accent-line, --ok-line ; rayons
+    control 12 / wide 14 / kpi 18 / card 20 / sheet 22 ; échelle page 28-34, entry 32-40, block 18,
+    corps 15 ; teintes 10 % (cartes chiffrées) et 12 % (blocs d'agenda) ; mouvement (ease-coory,
+    pulsation des squelettes, rotation du spinner, prefers-reduced-motion)
+  - composants mis à jour : Button (44 / 54 px, rayon 12-14), IconButton 44, champs 50 px en 16 px,
+    zone de texte (textareaClass), pastilles 40 px (chip.ts), Badge 12 px + point de discipline +
+    statusTone, Avatar (xs à xl, pastille ♀ / ♂), Segmented (option choisie en rouge), PageTabs
+    (soulignés sur ordinateur, pastilles sur téléphone)
+  - composants créés : Field + FieldError (icône circle-alert), PasswordInput + PasswordGauge
+    (4 segments, score du prompt, test unitaire), Checkbox, Toggle, KpiCard + KpiGrid, Card,
+    MicroLabel, Stepper, Sheet / ActionMenu / ConfirmDialog (<dialog> natif : focus piégé, Échap,
+    fond), ToastProvider + useToast, EmptyState, ErrorState, SkeletonLines, Spinner, navItemClass
+  - ConfirmSubmitButton passe par la fenêtre de confirmation (plus de window.confirm) : titre,
+    texte, bouton d'action ; 3 usages et 4 tests e2e adaptés
+  - vitrine /design/composants (introuvable en production) pour comparer avec Coory Composants
+  - prototypes ignorés par ESLint et Prettier (code exporté de Claude Design)
+Écarts assumés : œil barré quand le mot de passe est caché (demande d'Antonino) ; libellé « Afficher
+  les caractères saisis » (sinon getByLabel « Mot de passe » trouve deux éléments) ; thème clair
+  aux gris chauds du projet et filets plus marqués (contraste D-22) au lieu des valeurs du prompt ;
+  zone du toast en aria-live sans role="status" (sinon confondue avec les statuts des formulaires)
+Tests : check OK (Vitest 130), test:e2e 88 + 4 ignorés ; db:reset puis profil d'Antonino restauré ;
+  captures de la vitrine 390 et 1440, sombre et clair, feuille, menu, confirmation, toast
+```
 
 ### D-31 : pages Connexion et Inscription d'après COORY_AUTH_PAGES.md, plus de page d'accueil
 ```

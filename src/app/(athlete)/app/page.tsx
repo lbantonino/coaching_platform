@@ -119,7 +119,9 @@ function HealthConsentCard({ consent }: { consent: OwnHealthConsent }) {
           </div>
           <form action={withdrawHealthConsentByAthlete.bind(null, consent.athleteId)}>
             <ConfirmSubmitButton
-              message="Retirer ton accord efface ce que ton coach a noté. Continuer ?"
+              title="Retirer ton accord ?"
+              message="Ce que ton coach a noté sur tes contraintes physiques sera effacé."
+              confirmLabel="Retirer mon accord"
               className={buttonClass({ variant: "outline", size: "md" })}
             >
               Retirer mon accord

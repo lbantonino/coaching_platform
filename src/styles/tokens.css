@@ -7,12 +7,15 @@
  * Sombre par défaut ; <html data-theme="light"> bascule tout le site en clair d'un coup.
  * Règle du rouge : rare. Un seul bouton principal par écran, une seule stat héro par ligne,
  * l'onglet actif. Jamais en fond de page, jamais en texte long, jamais de texte sombre sur rouge.
+ * Prompt Claude Design (COORY_PROMPT_CLAUDE_CODE.md §2, 23/10/2026) : « garde les couleurs existantes » ;
+ * seuls les jetons qui manquaient sont ajoutés (--panel, --accent-line, --ok-line).
  */
 :root {
   /* Sombre (par défaut). BLEU NUIT des maquettes d'Antonino (D-29, couleurs mesurées sur les images),
      après le graphite de D-23/D-24 : fond #0b1019, panneaux #121821, cartes teintées par couleur. */
   --page: #070b12; /* autour du cadre de l'app */
   --bg: #0b1019; /* fond de l'app */
+  --panel: #0f1520; /* panneau de marque des pages d'entrée */
   --surface: #121821; /* cartes, panneaux */
   --surface-2: #1a2331; /* survol, en-têtes de tableau */
   --chip: #243044; /* pastilles, avatars */
@@ -33,6 +36,7 @@
      et les pastilles rouges. Le logo garde le rouge de marque exact via --logo-loop. */
   --accent-text: #ff6b79;
   --accent-soft: rgba(255, 51, 71, 0.11); /* fond de pastille teintée */
+  --accent-line: rgba(255, 51, 71, 0.35); /* bordure de l'élément actif, bandeau d'erreur */
   --on-accent: #ffffff; /* TOUJOURS du blanc sur le rouge */
   --logo-loop: #ff3347; /* boucle du logo sur fond sombre (COORY_LOGO.md §3) */
 
@@ -41,6 +45,7 @@
 
   --ok: #4ade80;
   --ok-soft: rgba(74, 222, 128, 0.12);
+  --ok-line: rgba(74, 222, 128, 0.3);
   --warn: #fbbf24;
   --warn-soft: rgba(251, 191, 36, 0.12);
   --danger: #ffffff; /* alerte = pastille rouge pleine, texte blanc */
@@ -75,9 +80,11 @@
 
   /* Intensité des teintes de couleur (D-29), propre à chaque thème : franche en sombre comme les
      maquettes, plus légère en clair pour garder le texte gris ≥ 4,5:1. */
-  --tint-card: 14%; /* cartes chiffrées teintées */
+  /* Prompt §2 (23/10/2026) : cartes chiffrées 10 %, blocs d'agenda 12 %, dans les deux thèmes
+     (texte gris mesuré ≥ 4,5:1 sur ces teintes en clair). */
+  --tint-card: 10%; /* cartes chiffrées teintées */
   --tint-nav: 24%; /* élément actif du menu */
-  --tint-block: 28%; /* blocs de séance dans l'agenda */
+  --tint-block: 12%; /* blocs de séance dans l'agenda */
 
   color-scheme: dark;
 }
@@ -85,6 +92,7 @@
 [data-theme="light"] {
   --page: #e6e4e0;
   --bg: #ffffff;
+  --panel: #f9f8f6;
   --surface: #f5f4f2;
   --surface-2: #ecebe8;
   --chip: #e6e5e2;
@@ -101,6 +109,7 @@
   --accent-hover: #ff3347;
   --accent-text: #bb1529; /* rouge en texte sur fond clair */
   --accent-soft: rgba(217, 31, 52, 0.1);
+  --accent-line: rgba(217, 31, 52, 0.3);
   --on-accent: #ffffff;
   --logo-loop: #d91e32; /* boucle du logo sur fond clair (COORY_LOGO.md §3) */
 
@@ -109,6 +118,7 @@
 
   --ok: #166534;
   --ok-soft: rgba(22, 101, 52, 0.1);
+  --ok-line: rgba(22, 101, 52, 0.3);
   --warn: #8a4b06;
   --warn-soft: rgba(138, 75, 6, 0.12);
   --danger: #ffffff;
@@ -137,9 +147,9 @@
 
   --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
 
-  --tint-card: 5%;
+  --tint-card: 10%;
   --tint-nav: 16%;
-  --tint-block: 34%;
+  --tint-block: 12%;
 
   color-scheme: light;
 }

@@ -9,6 +9,7 @@ import {
   errorTextClass,
   hintClass,
   inputClass,
+  textareaClass,
   labelClass,
 } from "@/components/ui/form-styles";
 import {
@@ -113,7 +114,7 @@ export function AvailabilityForm({ organizationId, athleteId, hasConsent, values
           maxLength={500}
           placeholder="Ex. : déplacements le jeudi ; séances avant 8 h en semaine"
           defaultValue={shown.scheduleConstraints}
-          className={`${inputClass} h-auto py-3`}
+          className={textareaClass}
         />
       </div>
 
@@ -130,7 +131,7 @@ export function AvailabilityForm({ organizationId, athleteId, hasConsent, values
             aria-describedby="health-hint"
             placeholder="Ex. : genou droit sensible en descente ; éviter les sauts"
             defaultValue={shown.healthConstraints}
-            className={`${inputClass} h-auto py-3`}
+            className={textareaClass}
           />
           <p id="health-hint" className={hintClass}>
             Seulement ce qui change l&apos;entraînement : pas de diagnostic, pas de traitement.
