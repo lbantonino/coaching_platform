@@ -33,6 +33,20 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### Retouches après l'étape 3 (demandes d'Antonino)
+```
+Date : 2026-10-23
+Demande : page d'invitation du coach centrée au milieu de l'écran sur ordinateur (téléphone
+  inchangé) ; pastilles Conditions / Confidentialité / Mentions légales sur une ligne au téléphone
+Fait : invitation : contenu dans une colonne de 600 px centrée en largeur et en hauteur, recherche,
+  assistant et cloche gardés en haut à droite (PageHeader tools={false}) ; enveloppes en classes
+  lg: seulement, téléphone identique au pixel près ; pastilles légales : 12 px et marges réduites
+  sous 1024 px, elles tiennent sur une ligne à 390, 375 et 360 px, ordinateur inchangé
+Constat : le serveur de dev d'Antonino servait l'ancien cadre des pages d'accès (pages collées aux
+  bords) ; relancé avec son cache vidé (rm -rf .next/dev), toutes les pages contrôlées ensuite
+Tests : check OK (Vitest 132), test:e2e 90 + 4 ignorés ; db:reset puis profil d'Antonino restauré
+```
+
 ### D-34, étape 3 du prompt Claude Design : pages d'entrée
 ```
 Date : 2026-10-23

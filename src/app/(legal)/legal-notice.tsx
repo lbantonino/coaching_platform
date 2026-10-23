@@ -31,16 +31,18 @@ export function LegalDocument({
   return (
     <div className="flex flex-col gap-[22px]">
       <LegalBackLink />
+      {/* Téléphone (demande d'Antonino) : texte 12 px et marges réduites, pour que les trois
+          pastilles tiennent sur une ligne jusqu'à 360 px de large. Ordinateur : inchangé. */}
       <nav
         aria-label="Documents légaux"
-        className="-mx-0.5 flex gap-2 overflow-x-auto px-0.5 [scrollbar-width:none]"
+        className="-mx-0.5 flex gap-2 overflow-x-auto px-0.5 [scrollbar-width:none] max-lg:gap-1.5"
       >
         {documents.map((document) => (
           <Link
             key={document.href}
             href={document.href}
             aria-current={document.href === href ? "page" : undefined}
-            className={`${chipClass} ${document.href === href ? chipActiveClass : chipIdleClass}`}
+            className={`${chipClass} ${document.href === href ? chipActiveClass : chipIdleClass} max-lg:px-2.5 max-lg:text-[12px]`}
           >
             {document.label}
           </Link>

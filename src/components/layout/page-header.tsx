@@ -16,6 +16,7 @@ export function PageHeader({
   subtitle,
   back,
   actions,
+  tools = true,
 }: {
   title: ReactNode;
   // À côté du titre (ex. repère ♀ / ♂ d'un sportif)
@@ -23,6 +24,8 @@ export function PageHeader({
   subtitle?: ReactNode;
   back?: { href: string; label: string };
   actions?: ReactNode;
+  // false : la page affiche elle-même la recherche, l'assistant et la cloche (page centrée).
+  tools?: boolean;
 }) {
   return (
     <header className="flex flex-wrap items-end gap-x-4 gap-y-3.5 px-4 pt-4 pb-1 lg:px-8 lg:pt-7">
@@ -45,7 +48,7 @@ export function PageHeader({
         {subtitle ? <p className="text-[15px] leading-[1.45] text-muted">{subtitle}</p> : null}
       </div>
       <div className="flex flex-[1_1_100%] flex-wrap items-center gap-2 lg:flex-none [&>*]:flex-[1_1_auto] lg:[&>*]:flex-none">
-        <HeaderTools />
+        {tools ? <HeaderTools /> : null}
         {actions}
       </div>
     </header>
