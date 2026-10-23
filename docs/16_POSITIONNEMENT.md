@@ -69,6 +69,7 @@ Identifiants stables `DIF-xx`, à reporter dans les stories correspondantes.
 | DIF-08 | **Saisie en langage courant (IA d'assistance)** | Le coach tape une séance en une phrase, l'IA propose une séance structurée **que le coach valide** | P9 (démo possible plus tôt) | Jamais d'enregistrement ni de publication sans validation ; pas de notes privées envoyées sans accord ; fournisseur et coûts à choisir |
 | DIF-09 | **Sorties réelles importées** (Strava / Garmin) | Les séances réellement faites remontent automatiquement, comparées au prévu | P9 | **Étape 1 : import de fichiers .FIT / .GPX / .TCX** (aucune dépendance à une API). Étape 2 : API **seulement après vérification des conditions** : Strava limite depuis nov. 2024 l'affichage des données d'un utilisateur à d'autres personnes (cas du coach contesté) et interdit l'usage IA ; Garmin aurait suspendu les nouvelles demandes d'accès (à confirmer sur son portail) |
 | DIF-10 | **Mode hors ligne pendant la séance** | La séance du jour reste lisible sans réseau ; le retour (RPE, fait/non fait) est mis en attente puis envoyé au retour du réseau | V3 / P9 | PWA : mise en cache de la version publiée + file d'envoi locale ; limites de synchronisation en arrière-plan sur iOS ; jamais de faux « envoyé » tant que le serveur n'a pas confirmé |
+| DIF-11 | **Agent IA dans l'app (assistant qui agit)** | Une petite fenêtre de discussion, présente partout dans l'espace coach. L'agent connaît le contexte (sportifs, repères, objectifs, agenda) et **fait les choses à la place du coach** quand on le lui demande en langage courant. Exemples d'Antonino : « Crée le sportif M. Valentin Dupont, musculation, disponible mardi, mercredi et jeudi à 19 h » (il crée la fiche avec ses disponibilités, **sans programmer de séance** : c'est le coach qui le fait) ; « Les allures de Thomas se sont améliorées, mets-les à jour » (il modifie **seulement** les allures dans les repères **de ce sportif**, rien d'autre) | P9 / V3, après DIF-08 | Mêmes actions et mêmes contrôles que l'interface : l'agent appelle les actions serveur existantes avec les droits du coach connecté (RLS, organisation, validation Zod), jamais un accès direct à la base ; **il montre ce qu'il va faire et le coach confirme avant toute modification** (règle « l'IA ne modifie jamais rien sans validation ») ; périmètre limité à l'action demandée ; chaque action journalisée dans l'historique de la fiche ; annulation possible ; consentement et hébergement des données à régler (`OPEN-16`) |
 
 ## 5. Ordre de réalisation
 
@@ -80,7 +81,7 @@ L'ordre des phases du cahier des charges ne change pas : **P2 → P6 d'abord** (
 - **P6** : DIF-06 (minuteur), DIF-03 (file de retours), DIF-02 (simulation, compte à rebours).
 - **Après P4** : DIF-01 (import Sheets / PDF), dès que le modèle de séance est stable.
 - **P7** : DIF-03 (règles d'alerte configurables).
-- **P9 / V3** : DIF-08 (IA d'assistance), DIF-09 (fichiers puis API), DIF-10 (hors ligne).
+- **P9 / V3** : DIF-08 (IA d'assistance), DIF-11 (agent IA qui agit dans l'app, demandé par Antonino le 23/10/2026), DIF-09 (fichiers puis API), DIF-10 (hors ligne).
 - **Business du coach (D-17)** : étape A (suivi) proposée après P6, placement à confirmer ; étape B (factures) après P5 et `OPEN-17`.
 
 ## 6. Questions ouvertes liées
@@ -88,5 +89,5 @@ L'ordre des phases du cahier des charges ne change pas : **P2 → P6 d'abord** (
 - `OPEN-13` : **tranché le 20/10/2026** (test de Cooper ou de 5 km, % de VMA par défaut modifiables) : voir `docs/14`.
 - `OPEN-14` : définition d'un groupe (club, salle) et droits associés, avant DIF-05.
 - `OPEN-15` : conditions actuelles des API Strava et Garmin, à vérifier sur leurs portails officiels avant DIF-09 étape 2.
-- `OPEN-16` : fournisseur d'IA, coûts, hébergement des données et consentement, avant DIF-08.
+- `OPEN-16` : fournisseur d'IA, coûts, hébergement des données et consentement, avant DIF-08 et DIF-11.
 - `OPEN-17` : règles de facturation du coach, en vérification chez un comptable, avant l'étape B de D-17.

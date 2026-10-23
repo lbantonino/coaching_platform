@@ -149,7 +149,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-13` **Tranché le 20/10/2026** : allures issues d'un **test de Cooper** (VMA ≈ distance en 12 min ÷ 200) **ou d'un test de 5 km** (allure 5 km mesurée, VMA estimée = vitesse 5 km ÷ 95 %). Allures = % de VMA, **table par défaut modifiable par chaque coach**, à faire relire par Gianluca : endurance 65–75 %, marathon 80 %, seuil et semi 85 %, 10 km 90 %, 5 km 95 %. Tempo et race pace Hyrox restent saisis à la main. Le calcul **propose**, le coach **valide** avant enregistrement ; pas de VO2max affichée.
 - `OPEN-14` Définition d'un groupe (club, salle) et droits associés (avant `DIF-05`).
 - `OPEN-15` Conditions actuelles des API Strava et Garmin (avant `DIF-09` étape 2).
-- `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08`).
+- `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08` et `DIF-11`, l'agent IA qui agit dans l'app).
 - `OPEN-17` Règles de facturation du coach (D-17 étape B) : mentions obligatoires, TVA ou régime de franchise, numérotation, conservation, Peppol pour les clients entreprises. **En cours de vérification par un comptable** (Antonino, 22/10/2026).
 - `OPEN-18` Séances encadrées (D-27) : annuler ou déplacer **une seule date** d'une séance récurrente (exception), visibilité des séances et inscriptions côté sportif (P6), pointage des présences, conflit avec les disponibilités du sportif (avertissement docs/03 §3). À trancher avec Gianluca.
 
