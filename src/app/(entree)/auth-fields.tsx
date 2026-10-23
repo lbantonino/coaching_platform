@@ -1,6 +1,6 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Eye, EyeOff } from "lucide-react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 
 // Champs des pages d'accès (COORY_AUTH_PAGES.md §5) : couleurs du projet uniquement.
@@ -36,7 +36,7 @@ export function Field({
       <div className="flex items-baseline justify-between gap-4">
         <label htmlFor={id} className={authLabelClass}>
           {label}
-          {optional ? <span className="font-normal text-faint"> facultatif</span> : null}
+          {optional ? <span className="font-normal text-faint italic"> (facultatif)</span> : null}
         </label>
         {aside}
       </div>
@@ -50,7 +50,7 @@ export function Field({
   );
 }
 
-// Mot de passe avec bouton AFFICHER / MASQUER dans le champ (un seul état partagé avec la confirmation).
+// Mot de passe avec bouton œil dans le champ (un seul état partagé avec la confirmation).
 export function PasswordInput({
   shown,
   onToggle,
@@ -65,16 +65,21 @@ export function PasswordInput({
 }) {
   return (
     <div className="relative">
-      <input {...props} type={shown ? "text" : "password"} className={`${className} pr-[84px]`} />
+      <input {...props} type={shown ? "text" : "password"} className={`${className} pr-12`} />
       {withToggle ? (
         <button
           type="button"
           onClick={onToggle}
           aria-label={shown ? "Masquer les caractères saisis" : "Afficher les caractères saisis"}
           aria-pressed={shown}
-          className="absolute inset-y-0 right-0 flex w-[76px] items-center justify-center font-mono text-[12px] text-muted hover:text-text"
+          className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted hover:text-text"
         >
-          {shown ? "MASQUER" : "AFFICHER"}
+          {/* Œil barré : caractères cachés ; œil ouvert : caractères visibles (demande d'Antonino). */}
+          {shown ? (
+            <Eye aria-hidden size={18} strokeWidth={1.7} />
+          ) : (
+            <EyeOff aria-hidden size={18} strokeWidth={1.7} />
+          )}
         </button>
       ) : null}
     </div>
