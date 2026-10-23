@@ -6,7 +6,7 @@ import {
   Clock,
   FileText,
   ListChecks,
-  MessageSquare,
+  Euro,
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -14,7 +14,6 @@ import Link from "next/link";
 import { Suspense, type CSSProperties } from "react";
 
 import { ListRow } from "@/components/blocks/list-row";
-import { ReplyList } from "@/components/blocks/reply-list";
 import { MonthGrid } from "@/components/blocks/month-grid";
 import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
@@ -25,6 +24,7 @@ import { CheckList } from "@/components/ui/check-list";
 import { KpiCard, KpiGrid, KpiListCard } from "@/components/ui/kpi-card";
 import { SegmentedNav } from "@/components/ui/segmented";
 import { formatEuros, monthActivity } from "@/domain/billing/invoices";
+import { paymentTotals } from "@/domain/billing/payments";
 import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
@@ -38,20 +38,14 @@ import {
   type WeekBlock,
 } from "@/features/agenda/week";
 import { requireCoach } from "@/features/auth/guards";
+import { listPayments } from "@/features/billing/payment-queries";
 import { listMonthInvoices } from "@/features/billing/queries";
 import { getCoachProfile } from "@/features/coach/profile";
-import { getDashboardMessages } from "@/features/messages/queries";
 import { moveSession } from "@/features/sessions/actions";
 import { listSessions } from "@/features/sessions/queries";
 import { setTaskDone } from "@/features/tasks/actions";
 import { getDashboardTasks } from "@/features/tasks/queries";
-import {
-  dayShortLabel,
-  dueLabel,
-  messageTime,
-  nowTimeInBrussels,
-  todayIsoInBrussels,
-} from "@/lib/format";
+import { dayShortLabel, dueLabel, nowTimeInBrussels, todayIsoInBrussels } from "@/lib/format";
 
 import { CreateMenu } from "./create-menu";
 
@@ -60,8 +54,9 @@ export const metadata: Metadata = {
 };
 
 // Tableau de bord du coach (prompt Claude Design §7.2, retouché par Antonino le 23/10), avec les
-// VRAIES données : coachings du jour, heures de la semaine, tâches à cocher, messages non lus (D-35),
-// agenda à la hauteur de l'écran, séances à venir, activité financière du mois. Les modules pas encore
+// VRAIES données : coachings du jour, heures de la semaine, tâches à cocher (D-35), CA de la semaine
+// (paiements reçus, D-36), agenda, séances à venir, activité financière du mois. Les messages non lus
+// sont une pastille sur « Messages » et sur la cloche. Les modules pas encore
 // construits (programmes) affichent ce qu'ils contiennent réellement : rien pour l'instant (D-32).
 export default function CoachHomePage({ searchParams }: PageProps<"/coach">) {
   return (
@@ -119,13 +114,18 @@ async function Dashboard({
   const current = memberships[0];
   const orgBase = `/coach/o/${current.organizationId}`;
   const today = todayIsoInBrussels();
-  const [profile, sessions, tasks, messages, invoices] = await Promise.all([
+  // Paiements depuis le lundi ou le 1er du mois (le plus ancien des deux) : semaine et mois.
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const weekStart = mondayOf(today);
+  const [profile, sessions, tasks, invoices, payments] = await Promise.all([
     getCoachProfile(user),
     listSessions(current.organizationId),
     getDashboardTasks(current.organizationId),
-    getDashboardMessages(current.organizationId),
     listMonthInvoices(current.organizationId, today),
+    listPayments(current.organizationId, weekStart < monthStart ? weekStart : monthStart),
   ]);
+  const weekIncome = paymentTotals(payments, weekStart, addDays(weekStart, 6));
+  const monthIncome = paymentTotals(payments, monthStart, today);
 
   const now = nowTimeInBrussels();
   const nowMinutes = toMinutes(now);
@@ -229,24 +229,16 @@ async function Dashboard({
                 removeOnToggle
               />
             </KpiListCard>
-            <KpiListCard
-              href="/coach/messages"
+            {/* CA de la semaine (D-36) : l'argent réellement reçu, à la date du paiement. */}
+            <KpiCard
+              href="/coach/comptabilite"
               color="ok"
-              icon={MessageSquare}
-              value={String(messages.unreadCount)}
-              label={messages.unreadCount > 1 ? "messages non lus" : "message non lu"}
-            >
-              <ReplyList
-                items={messages.items.map((conversation) => ({
-                  href: `/coach/messages?sportif=${conversation.athlete.id}`,
-                  name: conversation.athlete.name,
-                  preview: conversation.lastBody,
-                  time: messageTime(conversation.lastAt, today),
-                  unread: conversation.unread,
-                }))}
-                empty="Aucun message non lu"
-              />
-            </KpiListCard>
+              icon={Euro}
+              value={formatEuros(weekIncome.inclCents)}
+              label="encaissés cette semaine"
+              detail={`${formatEuros(weekIncome.exclCents)} HTVA · ${plural(weekIncome.count, "paiement")}`}
+              wide
+            />
           </KpiGrid>
         </div>
 
@@ -409,9 +401,9 @@ async function Dashboard({
             />
             <ListRow
               leading={<FinanceIcon icon={Check} color="ok" />}
-              title={`${activity.received.count} ${activity.received.count > 1 ? "paiements reçus" : "paiement reçu"}`}
+              title={`${monthIncome.count} ${monthIncome.count > 1 ? "paiements reçus" : "paiement reçu"}`}
               sub="Ce mois-ci"
-              trailing={<FinanceAmount cents={activity.received.cents} />}
+              trailing={<FinanceAmount cents={monthIncome.inclCents} />}
             />
             <ListRow
               leading={<FinanceIcon icon={Clock} color="amber" />}

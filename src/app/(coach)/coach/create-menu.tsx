@@ -1,9 +1,18 @@
 "use client";
 
-import { CalendarPlus, ClipboardList, FilePlus, Plus, ReceiptText, UserPlus } from "lucide-react";
+import {
+  CalendarPlus,
+  ClipboardList,
+  Euro,
+  FilePlus,
+  Plus,
+  ReceiptText,
+  UserPlus,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useOpenNewPayment } from "@/components/blocks/new-payment-sheet";
 import { useOpenNewSession } from "@/components/blocks/new-session-sheet";
 import { buttonClass } from "@/components/ui/button";
 import { ActionMenu } from "@/components/ui/overlay";
@@ -16,6 +25,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const openNewSession = useOpenNewSession();
+  const openNewPayment = useOpenNewPayment();
   const go = (href: string) => () => router.push(href);
   return (
     <>
@@ -35,6 +45,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
             onSelect: () => openNewSession?.(),
           },
           { label: "Sportif", icon: UserPlus, onSelect: go(`${orgBase}/sportifs/nouveau`) },
+          { label: "Paiement reçu", icon: Euro, onSelect: () => openNewPayment?.() },
           { label: "Facture", icon: ReceiptText, onSelect: go("/coach/facturation") },
           { label: "Tâche", icon: ClipboardList, onSelect: go("/coach/taches") },
         ]}

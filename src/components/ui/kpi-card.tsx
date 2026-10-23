@@ -15,6 +15,7 @@ export function KpiCard({
   color,
   icon: Icon,
   href,
+  wide = false,
 }: {
   value: string;
   label: string;
@@ -22,6 +23,8 @@ export function KpiCard({
   color: KpiColor;
   icon?: LucideIcon;
   href?: string;
+  // Pleine largeur sur téléphone (seule sur sa ligne), une colonne sur ordinateur.
+  wide?: boolean;
 }) {
   // Les chiffres longs (« 3 240 € ») passent un cran en dessous pour tenir dans la carte.
   const size =
@@ -51,8 +54,9 @@ export function KpiCard({
       {detail ? <span className="text-[12px] leading-snug text-muted">{detail}</span> : null}
     </>
   );
-  const className =
-    "flex min-w-0 flex-col gap-1.5 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text";
+  const className = `flex min-w-0 flex-col gap-1.5 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text ${
+    wide ? "col-span-2 lg:col-span-1" : ""
+  }`;
   const style = { "--kpi": `var(--${color})` } as CSSProperties;
   return href ? (
     <Link

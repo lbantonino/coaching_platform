@@ -158,7 +158,7 @@ test("une tâche cochée quitte la carte du tableau de bord et passe dans « Ter
   await expect(checkbox).toHaveAttribute("aria-checked", "false");
 });
 
-test("« Répondre » ouvre la conversation du sportif, la marque lue, et le coach répond", async ({
+test("les messages non lus : pastille sur la cloche ; ouvrir le fil les marque lus, et le coach répond", async ({
   page,
 }, testInfo) => {
   const phone = testInfo.project.name === "telephone";
@@ -166,30 +166,33 @@ test("« Répondre » ouvre la conversation du sportif, la marque lue, et le coa
   const reply = `Réponse ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   await loginAsCoachA(page);
 
-  await expect(page.getByRole("link", { name: /messages? non lus?/ })).toHaveAttribute(
-    "href",
-    "/coach/messages",
-  );
-  const replyLink = page.getByRole("link", { name: new RegExp(`^Répondre à ${sender}`) });
-  if ((await replyLink.count()) > 0) {
-    await replyLink.click();
-  } else {
-    // Déjà lu (passage précédent sans reset) : on ouvre le fil depuis la liste des conversations.
-    await page.goto("/coach/messages");
-    await page.getByRole("link", { name: new RegExp(sender) }).click();
+  // La cloche annonce les messages non lus (pastille rouge, D-36).
+  await page.goto("/coach/messages");
+  const conversation = page
+    .getByRole("list")
+    .getByRole("link", { name: new RegExp(sender) })
+    .first();
+  if (/non lu/.test(await conversation.innerText())) {
+    await expect(
+      page.getByRole("link", { name: /^Notifications, \d+ messages? non lus?$/ }),
+    ).toBeVisible();
   }
+  await conversation.click();
   await expect(page).toHaveURL(/\/coach\/messages\?sportif=/);
   await expect(page.getByRole("heading", { name: sender, level: 2 })).toBeVisible();
   const thread = page.url();
 
-  // Ouvert : ses messages sont lus, il quitte la carte du tableau de bord.
+  // Ouvert : ses messages sont lus, la conversation n'a plus de pastille « non lu ».
   await expect
     .poll(async () => {
-      await page.goto("/coach");
-      await expect(page.getByRole("link", { name: /messages? non lus?/ })).toBeVisible();
-      return replyLink.count();
+      await page.goto("/coach/messages");
+      return page
+        .getByRole("list")
+        .getByRole("link", { name: new RegExp(sender) })
+        .first()
+        .innerText();
     })
-    .toBe(0);
+    .not.toMatch(/non lu/);
 
   // Réponse enregistrée dans le fil (sans e-mail ni WhatsApp, et la page le dit).
   await page.goto(thread);

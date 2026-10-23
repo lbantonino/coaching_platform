@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Avatar } from "@/components/ui/avatar";
+import { CountBadge } from "@/components/ui/count-badge";
 import { navItemClass } from "@/components/ui/nav-item";
 
 import { navFor, type NavEntry } from "./navigation";
@@ -15,6 +16,10 @@ import { useShell } from "./shell-context";
 
 function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
   const pathname = usePathname();
+  const { space, unreadMessages = 0 } = useShell();
+  // Pastille rouge des messages non lus (D-36), sur l'entrée « Messages » du coach.
+  const countFor = (href: string) =>
+    space === "coach" && href === "/coach/messages" ? unreadMessages : 0;
   return (
     <ul className="flex flex-col gap-0.5">
       {entries.map(({ href, label, icon: Icon, match }) => {
@@ -27,7 +32,13 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
               className={`${navItemClass(active)} ${large ? "text-[16px]" : ""}`}
             >
               <Icon aria-hidden size={19} strokeWidth={1.7} className="shrink-0" />
-              <span className="flex-1 truncate">{label}</span>
+              <span className="flex-1 truncate">
+                {label}
+                {countFor(href) > 0 ? (
+                  <span className="sr-only">, {countFor(href)} non lus</span>
+                ) : null}
+              </span>
+              <CountBadge count={countFor(href)} />
             </Link>
           </li>
         );

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import { iconButtonClass } from "@/components/ui/button";
+import { CountBadge } from "@/components/ui/count-badge";
 
 import { notificationsHref } from "./navigation";
 import { useShell } from "./shell-context";
@@ -28,14 +29,27 @@ export function HeaderTools() {
           <Sparkles aria-hidden size={18} strokeWidth={1.8} />
         </Link>
       ) : null}
-      <Link
-        href={notificationsHref[space]}
-        aria-label="Notifications"
-        className={iconButtonClass()}
-      >
-        <Bell aria-hidden size={18} strokeWidth={1.8} />
-      </Link>
+      <NotificationBell />
     </div>
+  );
+}
+
+// Cloche des notifications, avec la pastille rouge des messages non lus (D-36).
+export function NotificationBell() {
+  const { space, unreadMessages = 0 } = useShell();
+  return (
+    <Link
+      href={notificationsHref[space]}
+      aria-label={
+        unreadMessages > 0
+          ? `Notifications, ${unreadMessages} message${unreadMessages > 1 ? "s" : ""} non lu${unreadMessages > 1 ? "s" : ""}`
+          : "Notifications"
+      }
+      className={iconButtonClass()}
+    >
+      <Bell aria-hidden size={18} strokeWidth={1.8} />
+      <CountBadge count={unreadMessages} className="absolute -top-1.5 -right-1.5" />
+    </Link>
   );
 }
 
