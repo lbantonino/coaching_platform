@@ -106,6 +106,10 @@ La logique métier n'est écrite qu'une fois, dans `domain/` et `features/` ; le
 - Interface en français, unités explicites (min/km, bpm, kg, m, km, s, répétitions).
 - Aucune donnée personnelle réelle dans le code, les seeds ou les commits.
 
+## Idées pour la suite
+
+- **Agent IA dans l'app** (`DIF-11`, demandé le 23/10/2026) : une fenêtre de discussion dans l'espace coach. L'agent connaît le contexte et fait les actions à la place du coach. Par exemple : « crée le sportif Valentin Dupont, musculation, disponible mardi, mercredi et jeudi à 19 h », ou « mets à jour les allures de Thomas ». Il ne touche qu'à ce qui est demandé, passe par les mêmes contrôles que l'interface, et **montre ce qu'il va faire avant que le coach confirme**. Prévu après les phases cœur (P9), détail dans [docs/16_POSITIONNEMENT.md](docs/16_POSITIONNEMENT.md).
+
 ## Documentation
 
 Règles d'engagement : [CLAUDE.md](CLAUDE.md). Carte des spécifications : [00_INDEX.md](00_INDEX.md). Feuille de route et critères de recette : [docs/14_TESTS_ET_ROADMAP.md](docs/14_TESTS_ET_ROADMAP.md).
