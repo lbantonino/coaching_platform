@@ -3,12 +3,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
 
+import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { listAthletes } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { updateSession } from "@/features/sessions/actions";
 import { getSession } from "@/features/sessions/queries";
 
-import { AgendaBreadcrumb } from "../../breadcrumb";
 import { SessionForm } from "../../session-form";
 
 export const metadata: Metadata = {
@@ -19,8 +19,8 @@ export default function EditSessionPage({
   params,
 }: PageProps<"/coach/o/[orgId]/agenda/seances/[sessionId]/modifier">) {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-6 md:px-8 md:py-[22px]">
-      <Suspense fallback={<p className="text-muted">Chargement…</p>}>
+    <main className={pageMainClass}>
+      <Suspense fallback={<PageLoading />}>
         {params.then(({ orgId, sessionId }) => (
           <EditSession orgId={orgId} sessionId={sessionId} />
         ))}
@@ -47,37 +47,37 @@ async function EditSession({ orgId, sessionId }: { orgId: string; sessionId: str
     .map((athlete) => ({ id: athlete.id, name: athlete.displayName }));
 
   return (
-    <div className="flex flex-col gap-6">
-      <AgendaBreadcrumb
-        items={[
-          { href: agendaPath, label: "Agenda" },
-          { href: `${agendaPath}/seances/${session.id}`, label: session.title },
-          { href: "", label: "Modifier" },
-        ]}
+    <>
+      <PageHeader
+        title="Modifier la séance"
+        back={{ href: `${agendaPath}/seances/${session.id}`, label: session.title }}
       />
-      <h1 className="font-display text-h2 font-medium">Modifier la séance</h1>
-      <section className="rounded-card border border-line bg-surface p-5 md:p-[22px]">
-        <SessionForm
-          action={updateSession.bind(null, organizationId, session.id)}
-          athletes={choices}
-          initial={{
-            kind: session.kind,
-            title: session.title,
-            discipline: session.discipline ?? "",
-            location: session.location ?? "",
-            startsOn: session.startsOn,
-            startTime: session.startTime,
-            durationMinutes: String(session.durationMinutes),
-            repeatsWeekly: session.repeatsWeekly,
-            endsOn: session.endsOn ?? "",
-            athleteId: session.kind === "individual" ? (session.athletes[0]?.id ?? "") : "",
-            athleteIds: session.kind === "group" ? [...enrolledIds] : [],
-            notes: session.notes ?? "",
-          }}
-          locked
-          submitLabel="Enregistrer"
-        />
-      </section>
-    </div>
+      <PageBody>
+        <div className="flex w-full max-w-3xl flex-col gap-6">
+          <section className="rounded-card border border-line bg-surface p-5 md:p-[22px]">
+            <SessionForm
+              action={updateSession.bind(null, organizationId, session.id)}
+              athletes={choices}
+              initial={{
+                kind: session.kind,
+                title: session.title,
+                discipline: session.discipline ?? "",
+                location: session.location ?? "",
+                startsOn: session.startsOn,
+                startTime: session.startTime,
+                durationMinutes: String(session.durationMinutes),
+                repeatsWeekly: session.repeatsWeekly,
+                endsOn: session.endsOn ?? "",
+                athleteId: session.kind === "individual" ? (session.athletes[0]?.id ?? "") : "",
+                athleteIds: session.kind === "group" ? [...enrolledIds] : [],
+                notes: session.notes ?? "",
+              }}
+              locked
+              submitLabel="Enregistrer"
+            />
+          </section>
+        </div>
+      </PageBody>
+    </>
   );
 }

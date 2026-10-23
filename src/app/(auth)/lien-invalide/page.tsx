@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function InvalidLinkPage() {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-6 px-5 pt-6 pb-16 sm:justify-center sm:py-16">
+    <div className="flex w-full flex-col gap-6">
       <div className="flex flex-col gap-2">
         <h1 className="font-display text-h2 font-medium">Lien invalide ou expiré</h1>
         <p className="text-muted">
@@ -22,6 +22,6 @@ export default function InvalidLinkPage() {
       >
         Demander un nouveau lien
       </Link>
-    </main>
+    </div>
   );
 }

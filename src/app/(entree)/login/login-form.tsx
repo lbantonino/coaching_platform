@@ -5,7 +5,7 @@ import { useActionState, useState } from "react";
 
 import { login, type LoginState } from "@/features/auth/actions";
 
-import { authInputClass, authLinkClass, Field, PasswordInput, SubmitButton } from "../auth-fields";
+import { authInputClass, Field, PasswordInput, SubmitButton } from "../auth-fields";
 
 const initialState: LoginState = { error: null, email: "" };
 
@@ -15,7 +15,7 @@ export function LoginForm() {
   const [shown, setShown] = useState(false);
 
   return (
-    <form action={formAction} className="flex flex-1 flex-col gap-4 lg:flex-none" noValidate>
+    <form action={formAction} className="flex flex-col gap-4" noValidate>
       <Field id="email" label="Adresse e-mail">
         <input
           id="email"
@@ -55,15 +55,9 @@ export function LoginForm() {
         />
       </Field>
 
-      {/* Téléphone : bouton et lien « Créer un compte » en bas de l'écran. */}
-      <div className="mt-auto flex flex-col gap-5 pt-6 lg:mt-4 lg:pt-0">
+      {/* Le lien « Créer un compte » est sous le titre de la page, sur téléphone comme sur ordinateur. */}
+      <div className="mt-2 flex flex-col">
         <SubmitButton disabled={pending}>{pending ? "Connexion…" : "Se connecter"}</SubmitButton>
-        <p className="text-center text-[14px] text-muted lg:hidden">
-          Pas encore de compte ?{" "}
-          <Link href="/inscription" className={authLinkClass}>
-            Créer un compte
-          </Link>
-        </p>
       </div>
     </form>
   );

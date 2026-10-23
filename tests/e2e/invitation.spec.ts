@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { fillAthleteName, goToCoachSection, openAthleteTab } from "./helpers";
+import { fillAthleteName, goToCoachSection, logoutAthlete, openAthleteTab } from "./helpers";
 
 // Parcours d'invitation (P1-05) : le coach invite, le sportif crée son accès dans un AUTRE navigateur.
 const DEMO_PASSWORD = "demo-coach-local";
@@ -93,7 +93,7 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
 
   // Reconnexion classique : le sportif arrive dans son espace.
   await athlete.goto("/app");
-  await athlete.getByRole("button", { name: "Se déconnecter" }).click();
+  await logoutAthlete(athlete);
   await expect(athlete).toHaveURL(/\/login$/);
   await athlete.getByLabel("Adresse e-mail").fill(email);
   await athlete.getByLabel("Mot de passe", { exact: true }).fill(athletePassword);

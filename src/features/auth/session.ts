@@ -64,6 +64,10 @@ export type AthleteLink = {
   athleteId: string;
   organizationId: string;
   organizationName: string;
+  // Identité de la fiche, pour la carte du menu de l'espace sportif.
+  displayName: string | null;
+  sex: string | null;
+  photoPath: string | null;
 };
 
 // Fiches sportifs liées au compte connecté (une par organisation qui le suit).
@@ -75,7 +79,7 @@ export async function getAthleteLinks(
   const supabase = client ?? (await createClient());
   const { data, error } = await supabase
     .from("athlete_profiles")
-    .select("id, organization_id, organizations ( name )")
+    .select("id, organization_id, display_name, sex, photo_path, organizations ( name )")
     .eq("athlete_user_id", userId)
     .neq("status", "archived");
 
@@ -85,5 +89,8 @@ export async function getAthleteLinks(
     athleteId: row.id,
     organizationId: row.organization_id,
     organizationName: row.organizations.name,
+    displayName: row.display_name,
+    sex: row.sex,
+    photoPath: row.photo_path,
   }));
 }

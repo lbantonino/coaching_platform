@@ -19,9 +19,13 @@ export async function openAthleteTab(page: Page, label: string) {
 
 // Navigation de l'espace coach : barre latérale sur ordinateur, menu hamburger sur téléphone.
 // Le bouton du menu s'affiche avec la session (derrière Suspense) : on décide d'après la largeur
-// d'écran (seuil md de Tailwind) et on laisse Playwright attendre le bouton.
+// d'écran (seuil lg de Tailwind, 1024 px, prompt Claude Design §1) et on laisse Playwright attendre.
+function isPhone(page: Page) {
+  return (page.viewportSize()?.width ?? 1280) < 1024;
+}
+
 async function openCoachMenuIfNeeded(page: Page) {
-  if ((page.viewportSize()?.width ?? 1280) < 768) {
+  if (isPhone(page)) {
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   }
 }
@@ -33,5 +37,17 @@ export async function goToCoachSection(page: Page, name: string) {
 
 export async function logoutCoach(page: Page) {
   await openCoachMenuIfNeeded(page);
+  await page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }).click();
+}
+
+// Déconnexion du sportif : barre latérale sur ordinateur ; sur téléphone, onglet « Profil » de la
+// barre du bas (comme dans le prototype).
+export async function logoutAthlete(page: Page) {
+  if (isPhone(page)) {
+    await page
+      .getByRole("navigation", { name: "Navigation du sportif" })
+      .getByRole("link", { name: "Profil" })
+      .click();
+  }
   await page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }).click();
 }

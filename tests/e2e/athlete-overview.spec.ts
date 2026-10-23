@@ -55,8 +55,8 @@ test("la recherche du haut trouve un sportif, quel que soit son statut", async (
   await expect(page).toHaveURL(/\/coach$/);
 
   // Kevin Mertens est archivé : la recherche du haut couvre tous les statuts.
-  await page.getByLabel("Trouver un sportif").fill("mertens");
-  await page.getByLabel("Trouver un sportif").press("Enter");
+  await page.getByLabel("Rechercher dans Coory (sportifs)").fill("mertens");
+  await page.getByLabel("Rechercher dans Coory (sportifs)").press("Enter");
   await expect(page).toHaveURL(/statut=tous/);
   await expect(page.getByRole("list", { name: "Liste des sportifs" })).toContainText(
     "Kevin Mertens",

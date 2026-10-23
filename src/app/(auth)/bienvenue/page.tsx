@@ -17,11 +17,11 @@ export const metadata: Metadata = {
 // Facebook / Apple : le compte existe, il reste à choisir coach ou sportif et à accepter les conditions.
 export default function WelcomePage() {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-start gap-8 px-5 pt-6 pb-16 sm:py-12">
+    <div className="flex w-full flex-col gap-8">
       <Suspense fallback={<p className="text-muted">Chargement…</p>}>
         <Welcome />
       </Suspense>
-    </main>
+    </div>
   );
 }
 

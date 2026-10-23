@@ -15,11 +15,11 @@ import { buttonClass } from "@/components/ui/button";
 // Les entrées dont le module n'existe pas encore mènent à leur page « Bientôt ».
 export function CreateMenu({ orgBase }: { orgBase: string }) {
   const items = [
-    { href: "/coach/bientot/programmes", label: "Programme", icon: FileText, soon: true },
+    { href: "/coach/programmes", label: "Programme", icon: FileText, soon: true },
     { href: `${orgBase}/agenda/seances/nouvelle`, label: "Séance", icon: Timer, soon: false },
     { href: `${orgBase}/sportifs/nouveau`, label: "Sportif", icon: UserPlus, soon: false },
-    { href: "/coach/bientot/facturation", label: "Facture", icon: ReceiptText, soon: true },
-    { href: "/coach/bientot/taches", label: "Tâche", icon: ClipboardList, soon: true },
+    { href: "/coach/facturation", label: "Facture", icon: ReceiptText, soon: true },
+    { href: "/coach/taches", label: "Tâche", icon: ClipboardList, soon: true },
   ];
   return (
     <details className="group relative">

@@ -67,9 +67,7 @@ test("l'admin arrive dans l'administration et ne peut pas entrer dans l'espace c
 }) => {
   await login(page, ADMIN);
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(
-    page.getByRole("heading", { name: "Administration de la plateforme" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Administration", exact: true })).toBeVisible();
 
   await page.goto("/coach");
   await expect(page).toHaveURL(/\/acces-refuse$/);

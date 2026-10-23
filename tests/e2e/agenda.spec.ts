@@ -91,7 +91,7 @@ test("l'agenda du tableau de bord passe du jour à la semaine et au mois sans qu
   await expect(page.getByRole("heading", { name: "Agenda du jour" })).toBeVisible();
 });
 
-test("le menu « Créer » mène aux vraies créations, et « Bientôt » pour le reste", async ({
+test("le menu « Créer » mène aux vraies créations, et à la page vide du module pour le reste", async ({
   page,
 }) => {
   await loginAsCoachA(page);
@@ -105,7 +105,9 @@ test("le menu « Créer » mène aux vraies créations, et « Bientôt » pour l
     .getByRole("link", { name: /Programme/ })
     .click();
   await expect(page.getByRole("heading", { name: "Programmes", level: 1 })).toBeVisible();
-  await expect(page.getByRole("main").getByText("Bientôt · P4")).toBeVisible();
+  // Module pas encore construit (D-32) : sa page, vide et honnête, sans badge « Bientôt ».
+  await expect(page.getByRole("main").getByText("Aucun programme pour l'instant")).toBeVisible();
+  await expect(page.getByRole("main").getByText(/Bientôt/)).toHaveCount(0);
 });
 
 test("le coach A ne peut pas ouvrir l'agenda de l'organisation B", async ({ page }) => {

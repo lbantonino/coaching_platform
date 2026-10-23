@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 
+import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { revokeInvitation } from "@/features/invitations/actions";
 import { getInviteTarget } from "@/features/invitations/queries";
@@ -19,8 +19,8 @@ export default function InviteAthletePage({
   params,
 }: PageProps<"/coach/o/[orgId]/sportifs/[athleteId]/inviter">) {
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-5 py-10">
-      <Suspense fallback={<p className="text-muted">Chargement…</p>}>
+    <main className={pageMainClass}>
+      <Suspense fallback={<PageLoading />}>
         {params.then(({ orgId, athleteId }) => (
           <InviteSection orgId={orgId} athleteId={athleteId} />
         ))}
@@ -35,68 +35,64 @@ async function InviteSection({ orgId, athleteId }: { orgId: string; athleteId: s
   const target = await getInviteTarget(membership.organizationId, athleteId);
 
   if (!target) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1 className="font-display text-h2 font-medium">Sportif introuvable</h1>
-        <Link href={listPath} className="underline">
-          Retour aux sportifs
-        </Link>
-      </div>
-    );
+    return <PageHeader title="Sportif introuvable" back={{ href: listPath, label: "Sportifs" }} />;
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <Link
-        href={listPath}
-        className="text-small text-muted underline underline-offset-4 hover:text-text"
-      >
-        ← Retour aux sportifs
-      </Link>
-      <div className="flex flex-col gap-2">
-        <p className="text-small text-muted">{membership.organizationName}</p>
-        <h1 className="font-display text-h2 font-medium">Inviter {target.displayName}</h1>
-        <p className="text-small text-muted">
-          Le sportif ouvrira ce lien pour créer son accès avec l&apos;adresse{" "}
-          <span className="font-medium text-current">{target.email ?? "(aucune)"}</span>. Le lien
-          est valable {INVITATION_VALIDITY_DAYS} jours et ne sert qu&apos;une fois. Aucun message
-          n&apos;est envoyé automatiquement : copie le lien et transmets-le toi-même.
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title={`Inviter ${target.displayName}`}
+        back={{ href: `${listPath}/${target.athleteId}`, label: "Fiche sportif" }}
+        subtitle="Génère un lien personnel et envoie-le toi-même (WhatsApp, e-mail, SMS)."
+      />
+      <PageBody>
+        <div className="flex w-full max-w-lg flex-col gap-6">
+          <p className="text-small text-muted">
+            Le sportif ouvrira ce lien pour créer son accès avec l&apos;adresse{" "}
+            <span className="font-medium text-current">{target.email ?? "(aucune)"}</span>. Le lien
+            est valable {INVITATION_VALIDITY_DAYS} jours et ne sert qu&apos;une fois. Aucun message
+            n&apos;est envoyé automatiquement : copie le lien et transmets-le toi-même.
+          </p>
 
-      {target.hasAccount ? (
-        <p role="status" className="rounded-card border border-line bg-surface p-4">
-          Ce sportif a déjà activé son compte.
-        </p>
-      ) : (
-        <>
-          {target.pendingInvite ? (
-            <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
-              <p role="status">
-                {target.pendingInvite.expired
-                  ? `Le dernier lien a expiré le ${formatDateTime(target.pendingInvite.expiresAt)}.`
-                  : `Un lien est en attente jusqu'au ${formatDateTime(target.pendingInvite.expiresAt)}. Pour des raisons de sécurité, il ne peut pas être réaffiché : génère un nouveau lien si besoin.`}
-              </p>
-              <form
-                action={revokeInvitation.bind(null, membership.organizationId, target.athleteId)}
-              >
-                <button
-                  type="submit"
-                  className="text-small font-medium text-text underline underline-offset-4"
-                >
-                  Révoquer ce lien
-                </button>
-              </form>
-            </div>
-          ) : null}
-          <InviteForm
-            organizationId={membership.organizationId}
-            athleteId={target.athleteId}
-            hasPendingInvite={target.pendingInvite !== null}
-            hasEmail={target.email !== null}
-          />
-        </>
-      )}
-    </div>
+          {target.hasAccount ? (
+            <p role="status" className="rounded-card border border-line bg-surface p-4">
+              Ce sportif a déjà activé son compte.
+            </p>
+          ) : (
+            <>
+              {target.pendingInvite ? (
+                <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
+                  <p role="status">
+                    {target.pendingInvite.expired
+                      ? `Le dernier lien a expiré le ${formatDateTime(target.pendingInvite.expiresAt)}.`
+                      : `Un lien est en attente jusqu'au ${formatDateTime(target.pendingInvite.expiresAt)}. Pour des raisons de sécurité, il ne peut pas être réaffiché : génère un nouveau lien si besoin.`}
+                  </p>
+                  <form
+                    action={revokeInvitation.bind(
+                      null,
+                      membership.organizationId,
+                      target.athleteId,
+                    )}
+                  >
+                    <button
+                      type="submit"
+                      className="text-small font-medium text-text underline underline-offset-4"
+                    >
+                      Révoquer ce lien
+                    </button>
+                  </form>
+                </div>
+              ) : null}
+              <InviteForm
+                organizationId={membership.organizationId}
+                athleteId={target.athleteId}
+                hasPendingInvite={target.pendingInvite !== null}
+                hasEmail={target.email !== null}
+              />
+            </>
+          )}
+        </div>
+      </PageBody>
+    </>
   );
 }
