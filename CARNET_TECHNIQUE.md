@@ -291,6 +291,13 @@ Google, Facebook et Apple sont **préparés mais pas activés** : il faut des cl
 ### Les pages d'accès redessinées (23/10)
 Antonino a fourni un brief précis (`COORY_AUTH_PAGES.md`). La règle : changer la présentation sans toucher à la logique. Les actions serveur de connexion et d'inscription sont restées les mêmes ; seule l'inscription renvoie en plus le nom du champ en erreur, pour afficher le message au bon endroit. Petite astuce CSS : le sur-titre « Espace coach / Espace sportif » du panneau de gauche suit le choix fait dans le formulaire sans une ligne de JavaScript, grâce au sélecteur `:has()` (« si la case sportif est cochée quelque part dans la page »). La page d'accueil a disparu : un coach ou un sportif arrive directement sur la connexion.
 
+### Un nouveau cap : construire d'après les prototypes de Claude Design (23/10)
+Antonino a fait dessiner toute l'app par Claude Design (prototypes interactifs téléphone et ordinateur, planche de 57 pages), puis a fourni un prompt de développement. La construction suit désormais ses 7 étapes ; les phases restent la référence du contenu. Choix important : chaque page reste **branchée sur les vraies données** (pas de fausses données dans l'app), l'apparence suit le prototype.
+
+Étape 1 : les **jetons et les composants**. Les couleurs du projet sont gardées (le prompt le demande), seuls les jetons manquants sont ajoutés. Chaque composant de base est réécrit d'après les mesures du prototype : boutons de 44 px, champs de 50 px en 16 px (en dessous, l'iPhone zoome sur le champ), pastilles de 40 px. Les fenêtres (feuille du bas, menu « ••• », confirmation) reposent sur l'élément HTML natif `<dialog>` : le navigateur fournit gratuitement le focus piégé, la touche Échap et l'annonce aux lecteurs d'écran. Une **vitrine** (`/design/composants`, en développement seulement) affiche tous les composants en sombre et en clair, pour les comparer au prototype côte à côte.
+
+Deux leçons. Une zone de message toujours présente avec `role="status"` se confond avec les messages de statut des formulaires : les tests qui cherchaient « le » statut en trouvaient deux. Et le serveur de développement peut garder une ancienne version d'un module : une constante nouvellement exportée arrivait `undefined` ; la déplacer dans un nouveau fichier a suffi.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris

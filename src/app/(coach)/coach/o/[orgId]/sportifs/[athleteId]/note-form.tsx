@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import { errorTextClass, hintClass, labelClass, textareaClass } from "@/components/ui/form-styles";
 import { saveNote, type SaveNoteState } from "@/features/notes/actions";
 import { NOTE_MAX_LENGTH, type NoteVisibility } from "@/features/notes/schemas";
 
@@ -48,7 +48,7 @@ export function NoteForm({
           aria-describedby={`${id}-hint`}
           placeholder={placeholder}
           defaultValue={state.body ?? body}
-          className={`${inputClass} h-auto py-3`}
+          className={textareaClass}
         />
         <p id={`${id}-hint`} className={hintClass}>
           {hint}

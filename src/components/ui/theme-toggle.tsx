@@ -47,7 +47,7 @@ export function ThemeToggle({ size = "md" }: { size?: "sm" | "md" }) {
       title={label}
       className={iconButtonClass({ size })}
     >
-      <Icon aria-hidden size={16} strokeWidth={1.7} />
+      <Icon aria-hidden size={18} strokeWidth={1.7} />
     </button>
   );
 }

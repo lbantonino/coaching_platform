@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // Rapports Playwright générés
     "playwright-report/**",
     "test-results/**",
+    // Prototypes exportés de Claude Design : référence visuelle, pas du code de l'app
+    "docs/design/prototypes/**",
   ]),
 ]);
 

@@ -1,10 +1,12 @@
-// Sélecteur segmenté (design system §6 : « Semaine · Mois · Trimestre »).
+// Sélecteur segmenté (« Jour · Semaine · Mois »).
 // Accessible : c'est un groupe de boutons radio natifs, utilisable au clavier et dans un formulaire.
 // Classes partagées avec le sélecteur contrôlé du calculateur de test.
+// Prompt Claude Design §4 : groupe sur fond surface, filet fin, rayon 12, marge 4 ; options de 36 px,
+// rayon 9, 14/500. Option choisie = aplat rouge (comme les prototypes).
 export const segmentedGroupClass =
-  "inline-flex w-full gap-1 rounded-[11px] border border-line bg-bg p-1 sm:w-fit";
+  "inline-flex w-full gap-1.5 rounded-control border border-line bg-surface p-1 sm:w-fit";
 export const segmentedItemClass =
-  "flex h-9 items-center justify-center rounded-sm px-3 text-caption text-muted transition-colors peer-checked:bg-chip peer-checked:text-text sm:h-[30px]";
+  "flex h-9 items-center justify-center rounded-[9px] px-3.5 text-[14px] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text peer-checked:bg-accent peer-checked:text-on-accent";
 
 export function Segmented<T extends string>({
   name,
@@ -19,12 +21,12 @@ export function Segmented<T extends string>({
 }) {
   return (
     <fieldset className="flex flex-col gap-1.5">
-      <legend className="mb-1.5 text-small font-medium">{legend}</legend>
+      <legend className="mb-2 text-[14px] font-medium">{legend}</legend>
       <div className={segmentedGroupClass}>
         {options.map((option) => (
           <label
             key={option.value}
-            className="flex-1 cursor-pointer rounded-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent sm:flex-none"
+            className="flex-1 cursor-pointer rounded-[9px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent sm:flex-none"
           >
             <input
               type="radio"

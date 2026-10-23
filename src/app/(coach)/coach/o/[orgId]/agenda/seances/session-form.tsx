@@ -9,6 +9,7 @@ import {
   errorTextClass,
   hintClass,
   inputClass,
+  textareaClass,
   labelClass,
 } from "@/components/ui/form-styles";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
@@ -292,7 +293,7 @@ function SessionFields({
           maxLength={500}
           placeholder="Ex. : prévoir chronos et plots"
           defaultValue={v.notes}
-          className={`${inputClass} h-auto py-3`}
+          className={textareaClass}
         />
       </div>
 

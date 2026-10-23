@@ -75,7 +75,9 @@ export async function AvailabilitySection({
             </p>
             <form action={withdrawHealthConsentByCoach.bind(null, organizationId, athlete.id)}>
               <ConfirmSubmitButton
-                message="Retirer l'accord efface les contraintes physiques notées. Continuer ?"
+                title="Retirer l'accord ?"
+                message="Les contraintes physiques notées seront effacées."
+                confirmLabel="Retirer l'accord"
                 className={buttonClass({ variant: "outline", size: "sm" })}
               >
                 Retirer l&apos;accord

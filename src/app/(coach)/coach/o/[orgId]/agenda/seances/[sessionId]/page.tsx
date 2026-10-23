@@ -138,11 +138,13 @@ async function SessionDetail({
           </Link>
           <form action={deleteSession.bind(null, organizationId, session.id)}>
             <ConfirmSubmitButton
+              title="Supprimer cette séance ?"
               message={
                 session.repeatsWeekly
-                  ? "Supprimer cette séance et toutes ses dates ? Pour l'arrêter à une date, utilise plutôt « Modifier »."
-                  : "Supprimer cette séance ?"
+                  ? "Toutes ses dates seront supprimées. Pour l'arrêter à une date, utilise plutôt « Modifier »."
+                  : "Elle disparaîtra de l'agenda et des sportifs inscrits."
               }
+              confirmLabel="Supprimer"
               className={buttonClass({ variant: "outline", size: "md" })}
             >
               <Trash2 aria-hidden size={15} strokeWidth={1.8} />

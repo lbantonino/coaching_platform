@@ -47,7 +47,7 @@ export function AthleteHeader({
       <div className="flex min-w-0 items-center gap-4 md:gap-5">
         <Avatar
           name={athlete.displayName}
-          size="lg"
+          size="xl"
           colorClass={tint?.avatar}
           photoPath={athlete.photoPath}
         />

@@ -78,8 +78,8 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   await expect(page.getByRole("heading", { name: "Sportifs inscrits (1)" })).toBeVisible();
 
   // Suppression après confirmation : retour à l'agenda, la séance n'y est plus.
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Supprimer" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Supprimer" }).click();
   await expect(page).toHaveURL(new RegExp(`/coach/o/${ORG_A}/agenda$`));
   await page.goto(`/coach/o/${ORG_A}/agenda?mois=2027-01`);
   await expect(month.getByRole("link", { name: new RegExp(title) })).toHaveCount(0);

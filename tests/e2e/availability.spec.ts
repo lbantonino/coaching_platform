@@ -67,8 +67,8 @@ test("le coach renseigne les disponibilités et gère l'accord pour les contrain
   );
 
   // Retrait (après confirmation) : la contrainte est effacée, le journal garde les deux événements.
-  page.once("dialog", (dialog) => dialog.accept());
   await section.getByRole("button", { name: "Retirer l'accord" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Retirer l'accord" }).click();
   await expect(section.getByLabel("Contraintes physiques", { exact: true })).toHaveCount(0);
   await section.getByText("Historique de l'accord (2)").click();
   await expect(section.getByRole("list", { name: "Historique de l'accord" })).toContainText(
@@ -88,8 +88,8 @@ test("le sportif donne son accord depuis son espace, voit ce que le coach note, 
   const card = page.getByRole("region", { name: "Tes contraintes physiques" });
   // Repart d'un état propre si un essai précédent a été interrompu.
   if (await card.getByRole("button", { name: "Retirer mon accord" }).isVisible()) {
-    page.once("dialog", (dialog) => dialog.accept());
     await card.getByRole("button", { name: "Retirer mon accord" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Retirer mon accord" }).click();
   }
   await card.getByRole("button", { name: "J'accepte" }).click();
   await expect(card.getByText(/Tu as donné ton accord le/)).toBeVisible();
@@ -119,8 +119,8 @@ test("le sportif donne son accord depuis son espace, voit ce que le coach note, 
   // Le sportif voit ce qui a été noté sur lui, puis retire son accord (effacement).
   await page.reload();
   await expect(card.getByText("Tendon d'Achille à surveiller")).toBeVisible();
-  page.once("dialog", (dialog) => dialog.accept());
   await card.getByRole("button", { name: "Retirer mon accord" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Retirer mon accord" }).click();
   await expect(card.getByRole("button", { name: "J'accepte" })).toBeVisible();
   await expect(card.getByText("Tendon d'Achille à surveiller")).toHaveCount(0);
 });

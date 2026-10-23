@@ -3,7 +3,13 @@
 import { useActionState, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import {
+  errorTextClass,
+  hintClass,
+  inputClass,
+  textareaClass,
+  labelClass,
+} from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import { addGoal, type AddGoalState } from "@/features/goals/actions";
 import {
@@ -208,7 +214,7 @@ function GoalFields({
           maxLength={500}
           placeholder="Ex. : finir sous 1 h 45 ; tenir 45 min de cardio ; squat à 100 kg"
           defaultValue={v?.description}
-          className={`${inputClass} h-auto py-3`}
+          className={textareaClass}
         />
       </div>
 

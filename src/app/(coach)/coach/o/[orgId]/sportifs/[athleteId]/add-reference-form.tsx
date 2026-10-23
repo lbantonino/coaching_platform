@@ -3,7 +3,13 @@
 import { useActionState, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import {
+  errorTextClass,
+  hintClass,
+  inputClass,
+  textareaClass,
+  labelClass,
+} from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import { addReference, type AddReferenceState } from "@/features/references/actions";
 import {
@@ -231,7 +237,7 @@ function ReferenceFields({
           rows={2}
           maxLength={500}
           defaultValue={v?.note}
-          className={`${inputClass} h-auto py-3`}
+          className={textareaClass}
         />
       </div>
 
