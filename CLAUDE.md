@@ -57,6 +57,9 @@ Construire progressivement une application web responsive/PWA de programmation e
 **Exploitation :** PWA signifie ici application *responsive installable si validée plus tard*, pas offline garanti. Pas de cron/worker tant qu'aucun traitement asynchrone réel ne le nécessite. Les e-mails/WhatsApp sont des intégrations ultérieures, pas des envois simulés présentés comme réussis. Aucune clé de service privilégiée dans le navigateur.
 
 
+## Mobile first (demande d'Antonino, 23/10/2026, priorité haute)
+Tout nouvel écran ou toute retouche se conçoit **d'abord pour le téléphone** (≈ 390 px), puis s'élargit vers la tablette et l'ordinateur. Concrètement : écrire les classes de base pour le mobile et ajouter `md:` / `lg:` pour les grands écrans ; cibles tactiles ≥ 44 px ; pas de tableau ou de grille illisible sur téléphone (liste, colonnes défilantes ou cartes à la place) ; chaque story est vérifiée et capturée **en premier sur téléphone**, puis sur ordinateur, en sombre et en clair.
+
 ## Charte visuelle (D-16 et D-19, 22/10/2026)
 `COORY_DESIGN_SYSTEM.md` et `COORY_LOGO.md` (racine) sont la source de vérité du style : jetons uniquement (jamais de couleur en dur), un seul bouton rouge par écran, sombre par défaut et clair via `data-theme="light"`, logo « C∞ry » via `<CooryLogo />` ; trois polices : Space Grotesk (`font-display`) pour les titres H1–H3 et les grands chiffres, jamais sous 18 px, Geist pour l'interface, Geist Mono pour les données. Vérifier chaque écran modifié en sombre ET en clair, sur ordinateur ET téléphone.
 
