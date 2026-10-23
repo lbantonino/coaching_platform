@@ -3,7 +3,7 @@ import "server-only";
 import type { Discipline } from "@/domain/training/discipline";
 import { createClient } from "@/lib/supabase/server";
 
-import type { SessionKind } from "./schemas";
+import type { SessionException, SessionKind } from "./schemas";
 
 export type SessionAthlete = { id: string; name: string };
 
@@ -20,16 +20,21 @@ export type CoachSession = {
   repeatsWeekly: boolean;
   endsOn: string | null;
   notes: string | null;
+  // Séance individuelle sans fiche sportif : le nom du nouveau client, s'il a été noté.
+  prospectName: string | null;
   // Séance individuelle : son sportif. Séance collective : ses inscrits.
   athletes: SessionAthlete[];
+  // Dates déplacées (séance hebdomadaire seulement).
+  exceptions: SessionException[];
 };
 
 // Le sportif direct (séance individuelle) et les inscrits (collective) passent par deux relations
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
 const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes,
-  repeats_weekly, ends_on, notes,
+  repeats_weekly, ends_on, notes, prospect_name,
   individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name ),
-  enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name ) )`;
+  enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name ) ),
+  exceptions:coach_session_exceptions ( original_date, new_date, new_start_time )`;
 
 type Profile = { id: string; first_name: string; display_name: string | null } | null;
 type Row = {
@@ -44,8 +49,10 @@ type Row = {
   repeats_weekly: boolean;
   ends_on: string | null;
   notes: string | null;
+  prospect_name: string | null;
   individual: Profile;
   enrolled: { athlete: Profile }[];
+  exceptions: { original_date: string; new_date: string; new_start_time: string }[];
 };
 
 // display_name est calculé par la base : jamais vide, le repli ne sert qu'au typage.
@@ -73,7 +80,13 @@ function toSession(row: Row): CoachSession {
     repeatsWeekly: row.repeats_weekly,
     endsOn: row.ends_on,
     notes: row.notes,
+    prospectName: row.prospect_name,
     athletes,
+    exceptions: row.exceptions.map((e) => ({
+      originalDate: e.original_date,
+      newDate: e.new_date,
+      newStartTime: e.new_start_time.slice(0, 5),
+    })),
   };
 }
 

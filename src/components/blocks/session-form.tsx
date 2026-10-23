@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
   labelClass,
 } from "@/components/ui/form-styles";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
-import { DISCIPLINES, disciplineLabels } from "@/domain/training/discipline";
+import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
 import {
   SESSION_KINDS,
@@ -21,6 +21,9 @@ import {
   type SessionFormInput,
   type SessionKind,
 } from "@/features/sessions/schemas";
+
+// Ordre du menu Discipline (demande d'Antonino, 23/10) : les séances encadrées ont surtout lieu en salle.
+const SESSION_DISCIPLINES: Discipline[] = ["strength", "hyrox", "running", "hybrid"];
 
 type Action = (previous: SessionFormState, formData: FormData) => Promise<SessionFormState>;
 
@@ -31,14 +34,20 @@ type Props = {
   // Modification : le type (et le sportif d'une séance individuelle) ne changent pas.
   locked: boolean;
   submitLabel: string;
+  // Fenêtre de l'agenda : la création reste sur la page et prévient la fenêtre (sinon : page de la séance).
+  onCreated?: (created: { id: string; title: string }) => void;
 };
 
-export function SessionForm({ action, athletes, initial, locked, submitLabel }: Props) {
+export function SessionForm({ action, athletes, initial, locked, submitLabel, onCreated }: Props) {
   const [state, formAction, pending] = useActionState(action, {
     error: null,
     attempt: 0,
     values: null,
   });
+  const created = state.created ?? null;
+  useEffect(() => {
+    if (created) onCreated?.(created);
+  }, [created, onCreated]);
   return (
     // Reconstruit après chaque réponse : la saisie renvoyée s'affiche partout, menus compris.
     <SessionFields
@@ -50,6 +59,7 @@ export function SessionForm({ action, athletes, initial, locked, submitLabel }: 
       athletes={athletes}
       locked={locked}
       submitLabel={submitLabel}
+      stay={Boolean(onCreated)}
     />
   );
 }
@@ -62,6 +72,7 @@ function SessionFields({
   athletes,
   locked,
   submitLabel,
+  stay,
 }: {
   formAction: (formData: FormData) => void;
   pending: boolean;
@@ -70,17 +81,23 @@ function SessionFields({
   athletes: { id: string; name: string }[];
   locked: boolean;
   submitLabel: string;
+  stay: boolean;
 }) {
   const [kind, setKind] = useState<SessionKind>(v.kind === "individual" ? "individual" : "group");
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
+  const [newClient, setNewClient] = useState(v.newClient);
   const individualName = athletes.find((athlete) => athlete.id === v.athleteId)?.name;
+  // Séance déjà rattachée à un sportif : il ne change plus. Nouveau client : rattachable une fois.
+  const athleteLocked = locked && v.athleteId !== "";
 
   return (
     <form action={formAction} className="flex flex-col gap-6" noValidate>
+      {stay ? <input type="hidden" name="stay" value="1" /> : null}
       {locked ? (
         <p className="text-small text-muted">
           Séance {sessionKindLabels[kind].toLowerCase()}
-          {kind === "individual" && individualName ? ` avec ${individualName}` : ""}. Pour changer
+          {kind === "individual" && individualName ? ` avec ${individualName}` : ""}
+          {kind === "individual" && !athleteLocked ? " avec un nouveau client" : ""}. Pour changer
           de type ou de sportif, supprime la séance et crée-en une nouvelle.
         </p>
       ) : (
@@ -133,7 +150,7 @@ function SessionFields({
             className={inputClass}
           >
             <option value="">Non précisée</option>
-            {DISCIPLINES.map((discipline) => (
+            {SESSION_DISCIPLINES.map((discipline) => (
               <option key={discipline} value={discipline}>
                 {disciplineLabels[discipline]}
               </option>
@@ -230,24 +247,58 @@ function SessionFields({
       </div>
 
       {kind === "individual" ? (
-        locked ? null : (
-          <div className="flex flex-col gap-1.5 md:w-1/2">
-            <label htmlFor="session-athlete" className={labelClass}>
-              Sportif
+        athleteLocked ? null : (
+          <div className="flex flex-col gap-3 md:w-1/2">
+            {newClient ? (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="session-prospect" className={labelClass}>
+                  Nom du nouveau client <span className="font-normal text-muted">(facultatif)</span>
+                </label>
+                <input
+                  id="session-prospect"
+                  name="prospectName"
+                  defaultValue={v.prospectName}
+                  maxLength={80}
+                  placeholder="Ex. : Marc"
+                  className={inputClass}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="session-athlete" className={labelClass}>
+                  Sportif
+                </label>
+                <select
+                  id="session-athlete"
+                  name="athleteId"
+                  defaultValue={v.athleteId}
+                  className={inputClass}
+                >
+                  <option value="">Choisir…</option>
+                  {athletes.map((athlete) => (
+                    <option key={athlete.id} value={athlete.id}>
+                      {athlete.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {/* Première rencontre (D-35) : une date tout de suite, la fiche du sportif plus tard. */}
+            <label className="inline-flex w-fit cursor-pointer items-start gap-2.5 text-small">
+              <input
+                type="checkbox"
+                name="newClient"
+                checked={newClient}
+                onChange={(event) => setNewClient(event.target.checked)}
+                className="mt-0.5 size-4 shrink-0 accent-[var(--text)]"
+              />
+              <span>
+                Nouveau sportif, pas encore créé
+                <span className="block text-muted">
+                  Crée sa fiche plus tard, puis rattache-lui la séance depuis « Modifier ».
+                </span>
+              </span>
             </label>
-            <select
-              id="session-athlete"
-              name="athleteId"
-              defaultValue={v.athleteId}
-              className={inputClass}
-            >
-              <option value="">Choisir…</option>
-              {athletes.map((athlete) => (
-                <option key={athlete.id} value={athlete.id}>
-                  {athlete.name}
-                </option>
-              ))}
-            </select>
           </div>
         )
       ) : (

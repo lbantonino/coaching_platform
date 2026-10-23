@@ -203,6 +203,99 @@ export type Database = {
           },
         ];
       };
+      athlete_invoices: {
+        Row: {
+          amount_cents: number;
+          athlete_id: string;
+          created_at: string;
+          created_by: string | null;
+          due_on: string;
+          id: string;
+          issued_on: string;
+          label: string;
+          organization_id: string;
+          paid_on: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          athlete_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          due_on: string;
+          id?: string;
+          issued_on: string;
+          label: string;
+          organization_id: string;
+          paid_on?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount_cents?: number;
+          athlete_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          due_on?: string;
+          id?: string;
+          issued_on?: string;
+          label?: string;
+          organization_id?: string;
+          paid_on?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_invoices_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
+      athlete_messages: {
+        Row: {
+          athlete_id: string;
+          body: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          organization_id: string;
+          read_at: string | null;
+          sender: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id: string;
+          body: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id: string;
+          read_at?: string | null;
+          sender: string;
+        };
+        Update: {
+          athlete_id?: string;
+          body?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          organization_id?: string;
+          read_at?: string | null;
+          sender?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_messages_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       athlete_notes: {
         Row: {
           athlete_id: string;
@@ -526,6 +619,48 @@ export type Database = {
           },
         ];
       };
+      coach_session_exceptions: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          new_date: string;
+          new_start_time: string;
+          organization_id: string;
+          original_date: string;
+          session_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          new_date: string;
+          new_start_time: string;
+          organization_id: string;
+          original_date: string;
+          session_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          new_date?: string;
+          new_start_time?: string;
+          organization_id?: string;
+          original_date?: string;
+          session_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_session_exceptions_session_id_organization_id_fkey";
+            columns: ["session_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "coach_sessions";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       coach_sessions: {
         Row: {
           athlete_id: string | null;
@@ -539,6 +674,7 @@ export type Database = {
           location: string | null;
           notes: string | null;
           organization_id: string;
+          prospect_name: string | null;
           repeats_weekly: boolean;
           start_time: string;
           starts_on: string;
@@ -558,6 +694,7 @@ export type Database = {
           location?: string | null;
           notes?: string | null;
           organization_id: string;
+          prospect_name?: string | null;
           repeats_weekly?: boolean;
           start_time: string;
           starts_on: string;
@@ -576,6 +713,7 @@ export type Database = {
           location?: string | null;
           notes?: string | null;
           organization_id?: string;
+          prospect_name?: string | null;
           repeats_weekly?: boolean;
           start_time?: string;
           starts_on?: string;
@@ -592,6 +730,64 @@ export type Database = {
           },
           {
             foreignKeyName: "coach_sessions_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      coach_tasks: {
+        Row: {
+          athlete_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          done_at: string | null;
+          done_by: string | null;
+          due_on: string | null;
+          id: string;
+          organization_id: string;
+          priority: string;
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          done_at?: string | null;
+          done_by?: string | null;
+          due_on?: string | null;
+          id?: string;
+          organization_id: string;
+          priority?: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          athlete_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          done_at?: string | null;
+          done_by?: string | null;
+          due_on?: string | null;
+          id?: string;
+          organization_id?: string;
+          priority?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_tasks_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "coach_tasks_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -727,6 +923,10 @@ export type Database = {
       };
       grant_health_consent: {
         Args: { p_athlete_id: string; p_coach_proof?: string };
+        Returns: undefined;
+      };
+      move_session_series: {
+        Args: { p_session_id: string; p_shift_days: number; p_start_time: string };
         Returns: undefined;
       };
       withdraw_health_consent: { Args: { p_athlete_id: string }; Returns: undefined };

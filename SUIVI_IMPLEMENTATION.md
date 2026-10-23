@@ -23,14 +23,70 @@
 | 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
 | 2. Coquilles de navigation | **Fait** le 23/10 (coach, sportif, admin, entrée, pages légales) |
 | 3. Pages d'entrée | **Fait** le 23/10 (connexion, inscription, vérification, bienvenue, mot de passe, invitation, erreurs, pages légales) |
-| 4. Espace coach | À faire |
+| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; reste en 4a : liste des sportifs, nouveau sportif, fiche sportif, paramètres ; puis 4b à 4g |
 | 5. Espace sportif | À faire |
 | 6. Administration | À faire |
 | 7. Recette finale | À faire |
 
 ## Dernière session
-- Date : 2026-10-22
-- Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
+- Date : 2026-10-23
+- Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+
+### D-35, étape 4a partie 1 : tableau de bord, agenda interactif, Séances, Tâches, Messages, Facturation
+```
+Date : 2026-10-23
+Demandes d'Antonino (une à une, au fil de ses essais) :
+  - agenda du tableau de bord sur toute la largeur et à la hauteur de l'écran ; cartes du haut :
+    coachings du jour, heures de la semaine, Tâches (au lieu de « programmes à livrer »), Messages
+    (au lieu de « paiements en attente ») ; sous l'agenda : Programmes en cours, Séances à venir,
+    puis une carte « Activité financière » (factures envoyées, paiements reçus, en attente)
+  - Tâches façon widget Rappels de l'iPhone (rond à cocher) ; une tâche cochée quitte la carte et
+    reste dans la page Tâches (« Terminées ») ; Messages : bouton Répondre qui ouvre la conversation
+  - « invente 2 tâches et 3 messages » : choix « vraies tables + démo » (pas de fausses données)
+  - agenda cliquable (créneau vide = nouvelle séance pré-remplie) et glisser-déposer au doigt ou à
+    la souris ; séance hebdomadaire : demander « seulement cette date » ou « toute la série » ;
+    téléphone : appui long ; ordinateur : 40 px par heure, l'agenda défile dans sa carte
+  - fenêtre « Nouvelle séance » partout (Créer, Agenda, Séances), plus de page à part ; type
+    Individuelle d'abord ; disciplines Musculation, Hyrox, Running, Hybride ; sportif facultatif
+    (« Nouveau sportif, pas encore créé ») ; page Séances = toutes les séances à venir
+Fait (base) : 5 migrations, chacune avec RLS et tests pgTAP (14 à 17, 11 complété) :
+  - coach_tasks (done_at, « qui a coché » posé par un déclencheur, jamais par le navigateur)
+  - athlete_messages (fil = un sportif ; coach : lire, marquer lu, répondre ; read_at et
+    created_at non inscriptibles ; aucun accès sportif pour l'instant, P7)
+  - athlete_invoices (suivi D-17 étape A, lecture seule ; montants en centimes ; statut calculé)
+  - coach_session_exceptions (dates déplacées, contrôle « vraie date de la série ») + fonction
+    move_session_series (série décalée de -3 à +3 jours avec ses dates déplacées, une transaction)
+  - coach_sessions : séance individuelle sans sportif (prospect_name facultatif), rattachement
+    une seule fois, puis le sportif ne change plus (déclencheur)
+  - seed : 2 tâches, 3 messages non lus + 1 réponse, 3 factures (450 €, 300 € reçus, 150 € en
+    retard), dates relatives au reset ; tout est inventé
+Fait (app) :
+  - domaine : billing/invoices (statut, activité du mois, euros), tasks/buckets (onglets) ;
+    sessions/schemas.sessionOccurrences (dates déplacées comprises), utilisé par la grille, la
+    liste du jour, les séances à venir, la fiche de séance et les chiffres du tableau de bord
+  - composants : KpiListCard, CheckList (useOptimistic, toast, retrait de la carte), ReplyList,
+    NewSessionSheet + NewSessionButton (dans la coquille coach, sportifs lus à l'ouverture),
+    SlotLayer (créneau au survol, demi-heure), GridInteractions (DraggableBlock, DropPreview,
+    menu « seulement cette date / toute la série », défilement près des bords), SessionForm
+    déplacé dans components/blocks (mode « rester sur la page », nouveau client)
+  - pages : tableau de bord retouché ; /coach/seances, /coach/taches, /coach/messages
+    (?sportif= ouvre le fil, MarkThreadRead après affichage), /coach/facturation ; page
+    « Nouvelle séance » supprimée ; fiche de séance : dates déplacées et nouveau client
+  - grille : téléphone inchangé (mesures identiques) ; ordinateur 40 px/h, zone qui défile à la
+    hauteur de l'écran (mesurée au navigateur), en-tête des jours collé, ouverture vers l'heure
+    actuelle ; noms des cases du mois avec leurs séances (lecteurs d'écran, tests)
+Écarts assumés : la page Séances réservée par le prompt aux séances des programmes et aux retours
+  (P6) liste pour l'instant les séances encadrées (onglet à ajouter en P6) ; un fil s'ouvre sans
+  « Nouveau message » ni recherche ; le sportif ne lit pas encore les réponses (la page le dit,
+  aucun e-mail ni WhatsApp n'est envoyé) ; modifier le jour d'une série par « Modifier » laisse
+  ses dates déplacées sans effet (ignorées) ; glisser-déposer sans alternative au clavier autre
+  que « Modifier » ; sur un écran de 768 à 800 px de haut, la carte agenda dépasse de 65 à 97 px
+  (au moins 380 px de grille gardés, accepté par Antonino) ; iPhone SE : 84 px de défilement
+Tests : check OK (Vitest 147), db:test 251/251, test:e2e 103 + 5 ignorés (nouveaux : tâches et
+  messages du tableau de bord, Répondre, créneau → fenêtre, glisser souris et appui long au doigt
+  par événements tactiles, série « seulement cette date » / « toute la série », nouveau client,
+  page Séances) ; db:reset puis profil d'Antonino restauré
+```
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
 ### Retouches après l'étape 3 (demandes d'Antonino)

@@ -4,12 +4,11 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
+import { SessionForm } from "@/components/blocks/session-form";
 import { listAthletes } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { updateSession } from "@/features/sessions/actions";
 import { getSession } from "@/features/sessions/queries";
-
-import { SessionForm } from "../../session-form";
 
 export const metadata: Metadata = {
   title: "Modifier la séance",
@@ -70,6 +69,9 @@ async function EditSession({ orgId, sessionId }: { orgId: string; sessionId: str
                 endsOn: session.endsOn ?? "",
                 athleteId: session.kind === "individual" ? (session.athletes[0]?.id ?? "") : "",
                 athleteIds: session.kind === "group" ? [...enrolledIds] : [],
+                // Séance d'un nouveau client : rattachable à sa fiche une fois créée (D-35).
+                newClient: session.kind === "individual" && session.athletes.length === 0,
+                prospectName: session.prospectName ?? "",
                 notes: session.notes ?? "",
               }}
               locked

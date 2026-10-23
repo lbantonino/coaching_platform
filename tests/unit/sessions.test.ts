@@ -7,6 +7,7 @@ import {
   occurrencesBetween,
   parseSessionForm,
   type SessionFormInput,
+  sessionOccurrences,
 } from "@/features/sessions/schemas";
 
 const ATHLETE = "da000000-0000-4000-8000-000000000002";
@@ -23,6 +24,8 @@ const base: SessionFormInput = {
   endsOn: "",
   athleteId: "",
   athleteIds: [ATHLETE, OTHER, ATHLETE],
+  newClient: false,
+  prospectName: "",
   notes: "",
 };
 
@@ -37,6 +40,7 @@ describe("parseSessionForm", () => {
         discipline: "running",
         location: "Stade",
         athlete_id: null,
+        prospect_name: null,
         starts_on: "2026-09-02",
         start_time: "19:00",
         duration_minutes: 90,
@@ -47,10 +51,30 @@ describe("parseSessionForm", () => {
     });
   });
 
+  it("accepte un nouveau client sans fiche sportif, nommé ou non (D-35)", () => {
+    expect(
+      parseSessionForm({
+        ...base,
+        kind: "individual",
+        newClient: true,
+        prospectName: "  Marc ",
+        athleteId: ATHLETE,
+      }),
+    ).toMatchObject({ ok: true, values: { athlete_id: null, prospect_name: "Marc" } });
+    expect(
+      parseSessionForm({ ...base, kind: "individual", newClient: true, prospectName: " " }),
+    ).toMatchObject({ ok: true, values: { athlete_id: null, prospect_name: null } });
+    // Une séance collective n'a jamais de « nouveau client ».
+    expect(parseSessionForm({ ...base, newClient: true, prospectName: "Marc" })).toMatchObject({
+      ok: true,
+      values: { prospect_name: null },
+    });
+  });
+
   it("exige le sportif d'une séance individuelle et ignore la liste d'inscrits", () => {
     expect(parseSessionForm({ ...base, kind: "individual" })).toEqual({
       ok: false,
-      error: "Choisis le sportif de la séance individuelle.",
+      error: "Choisis le sportif de la séance, ou coche « Nouveau sportif, pas encore créé ».",
     });
     expect(parseSessionForm({ ...base, kind: "individual", athleteId: ATHLETE })).toMatchObject({
       ok: true,
@@ -142,5 +166,42 @@ describe("descriptions", () => {
     expect(
       describePeriod({ startsOn: "2026-09-02", repeatsWeekly: true, endsOn: "2026-12-16" }),
     ).toBe("Depuis le 2 septembre 2026, jusqu'au 16 décembre 2026");
+  });
+});
+
+describe("dates déplacées d'une séance hebdomadaire (glisser-déposer, D-35)", () => {
+  // Chaque mercredi à 19:00 depuis le 7 octobre 2026.
+  const piste = {
+    startsOn: "2026-10-07",
+    repeatsWeekly: true,
+    endsOn: null,
+    startTime: "19:00",
+    exceptions: [{ originalDate: "2026-10-21", newDate: "2026-10-22", newStartTime: "18:00" }],
+  };
+
+  it("quitte sa place et apparaît à sa nouvelle date, à sa nouvelle heure", () => {
+    expect(sessionOccurrences(piste, "2026-10-19", "2026-10-25")).toEqual([
+      { date: "2026-10-22", startTime: "18:00", originalDate: "2026-10-21", moved: true },
+    ]);
+  });
+  it("apparaît dans une autre semaine que la sienne", () => {
+    const later = {
+      ...piste,
+      exceptions: [{ originalDate: "2026-10-21", newDate: "2026-10-30", newStartTime: "10:00" }],
+    };
+    expect(sessionOccurrences(later, "2026-10-26", "2026-11-01").map((o) => o.date)).toEqual([
+      "2026-10-28",
+      "2026-10-30",
+    ]);
+    expect(sessionOccurrences(later, "2026-10-19", "2026-10-25")).toEqual([]);
+  });
+  it("ignore un déplacement devenu orphelin (la série a changé de jour depuis)", () => {
+    const orphan = {
+      ...piste,
+      exceptions: [{ originalDate: "2026-10-20", newDate: "2026-10-22", newStartTime: "18:00" }],
+    };
+    expect(sessionOccurrences(orphan, "2026-10-19", "2026-10-25")).toEqual([
+      { date: "2026-10-21", startTime: "19:00", originalDate: "2026-10-21", moved: false },
+    ]);
   });
 });

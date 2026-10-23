@@ -32,7 +32,12 @@ async function openCoachMenuIfNeeded(page: Page) {
 
 export async function goToCoachSection(page: Page, name: string) {
   await openCoachMenuIfNeeded(page);
-  await page.getByRole("link", { name, exact: true }).filter({ visible: true }).click();
+  // Dans la navigation seulement : les pages ont aussi des liens du même nom (« Agenda » d'une carte).
+  await page
+    .getByRole("navigation", { name: "Navigation principale" })
+    .getByRole("link", { name, exact: true })
+    .filter({ visible: true })
+    .click();
 }
 
 export async function logoutCoach(page: Page) {
