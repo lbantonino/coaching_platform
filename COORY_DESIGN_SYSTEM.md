@@ -19,7 +19,7 @@
 ## 2. Brand / Logo
 
 - Name **Coory**, wordmark `C∞ry` in Space Grotesk Bold: capital **C**, the **oo** merged into one continuous **red infinity loop**, then **ry**. Letters in text color, only the loop is accent.
-- Accent: **Rouge signal `#FF3347`** (light theme fills `#E5283C`, red text on light `#D91E32`).
+- Accent: **Rouge signal `#FF3347`** (light theme fills `#D91F34`, red text on light `#BB1529`, since the 23/10/2026 contrast audit).
 - **Full spec, SVG code and usage rules → `COORY_LOGO.md`.**
 
 ---
@@ -61,14 +61,14 @@ Use **semantic tokens** in components, never raw hex.
   --page:#E6E4E0; --bg:#FFFFFF; --surface:#F5F4F2; --surface-2:#ECEBE8;
   --chip:#E6E5E2; --bar:#DEDDD9;
   --line:rgba(0,0,0,.08); --line-2:rgba(0,0,0,.14);
-  --text:#141416; --muted:#6A6A70; --faint:#A3A3A8;
-  --accent:#E5283C; --accent-hover:#FF3347;  /* slightly deeper for contrast with white text */
-  --accent-text:#D91E32;     /* red as text/lines on light */
-  --logo-loop:#D91E32;
+  --text:#141416; --muted:#5D5D64; --faint:#62626A;   /* audit 23/10 : ≥ 4.5:1 everywhere (was #6A6A70 / #A3A3A8) */
+  --accent:#D91F34; --accent-hover:#FF3347;  /* white text at 5:1 (was #E5283C, 4.47:1) */
+  --accent-text:#BB1529;     /* red as text/lines on light (was #D91E32) */
+  --logo-loop:#D91E32;       /* logo graphic, unchanged */
   --accent-soft:rgba(229,40,60,.10); --on-accent:#FFFFFF;
   --inv:#141416; --on-inv:#FFFFFF;
-  --ok:#16A34A; --ok-soft:rgba(22,163,74,.10);
-  --warn:#B7791F; --warn-soft:rgba(183,121,31,.12);
+  --ok:#166534; --ok-soft:rgba(22,101,52,.10);    /* was #16A34A (3.3:1) */
+  --warn:#8A4B06; --warn-soft:rgba(138,75,6,.12); /* was #B7791F (3.6:1) */
   --danger:#FFFFFF; --danger-soft:var(--accent);
   --shadow-frame:0 30px 70px rgba(0,0,0,.10);
 }

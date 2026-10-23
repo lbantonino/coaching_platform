@@ -21,16 +21,6 @@ export function mondayOf(day: string): string {
   return addDays(day, -((weekday + 6) % 7));
 }
 
-// Semaine demandée dans l'adresse (?semaine=AAAA-MM-JJ, n'importe quel jour), sinon celle d'aujourd'hui.
-export function parseWeek(param: string | undefined, today: string): string {
-  const valid =
-    param &&
-    /^\d{4}-\d{2}-\d{2}$/.test(param) &&
-    !Number.isNaN(Date.parse(param)) &&
-    param >= "2000-01-01";
-  return mondayOf(valid ? param : today);
-}
-
 const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 const toTime = (minutes: number) =>
   `${String(Math.floor(minutes / 60) % 24).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
@@ -153,40 +143,6 @@ export function formatHours(minutes: number): string {
   const rest = minutes % 60;
   if (hours === 0) return `${rest} min`;
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, "0")}`;
-}
-
-// Heures de la journée occupées par au moins une séance (barres du résumé « coachings aujourd'hui »).
-export function busyHours(sessions: WeekSession[], day: string): Set<number> {
-  const hours = new Set<number>();
-  for (const session of sessions) {
-    if (occurrencesBetween(session, day, day).length === 0) continue;
-    const start = toMinutes(session.startTime);
-    const end = start + session.durationMinutes;
-    for (let hour = Math.floor(start / 60); hour * 60 < end; hour += 1) hours.add(hour);
-  }
-  return hours;
-}
-
-// Prochaine séance d'un sportif (inscrit ou sportif d'une séance individuelle) à partir de `now`
-// (jour + heure locale), dans les 60 prochains jours.
-export function nextSessionFor(
-  athleteId: string,
-  sessions: WeekSession[],
-  today: string,
-  nowTime: string,
-): { date: string; time: string } | null {
-  let best: { date: string; time: string } | null = null;
-  for (const session of sessions) {
-    if (!session.athletes.some((athlete) => athlete.id === athleteId)) continue;
-    for (const date of occurrencesBetween(session, today, addDays(today, 60))) {
-      if (date === today && session.startTime < nowTime) continue;
-      if (!best || date < best.date || (date === best.date && session.startTime < best.time)) {
-        best = { date, time: session.startTime };
-      }
-      break;
-    }
-  }
-  return best;
 }
 
 // Dernière séance passée d'un sportif (jusqu'à `now` inclus), dans les 60 derniers jours.
