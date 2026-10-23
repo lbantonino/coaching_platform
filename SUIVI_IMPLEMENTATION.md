@@ -32,6 +32,38 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### D-36 : paiements reçus, CA de la semaine, Comptabilité ; messages non lus en pastille
+```
+Date : 2026-10-24
+Demande (retour de Gianluca, via Antonino) : savoir combien il gagne par semaine ; montants avec et
+  sans TVA ; savoir s'il est payé en espèces ou par virement ; une page Comptabilité assez complète ;
+  la carte « messages non lus » remplacée, les non lus en pastille rouge sur Messages et la cloche
+Réponses : CA = argent REÇU (un forfait de 3 000 € compte le jour du paiement) ; séance annulée d'un
+  forfait = reportée (pour les forfaits, prochaine tranche) ; Gianluca est assujetti à la TVA
+Fait :
+  - migration 20261024090000 : athlete_payments (sportif, date, montant TVAC en centimes, taux 0 /
+    6 / 12 / 21, mode espèces / virement / Bancontact / autre, libellé) ; RLS coachs seulement,
+    sportif non modifiable ; tests pgTAP 18 ; seed : 3 paiements (200 € virement, 100 € espèces,
+    1 500 € Bancontact) + 1 pour l'organisation B
+  - domain/billing/payments : HTVA et TVA déduits du TVAC (au centime, total exact), totaux d'une
+    période, saisie « 3 000,50 », compte bancaire = virement ou Bancontact
+  - fenêtre « Nouveau paiement » (NewPaymentSheet, dans la coquille coach comme « Nouvelle
+    séance ») : Créer → Paiement reçu et bouton de la Comptabilité ; HTVA affiché en direct ; 21 %
+    par défaut ; saisie gardée après une erreur
+  - tableau de bord : carte « encaissés cette semaine » (TVAC, HTVA, nombre de paiements) à la
+    place de Messages ; « paiements reçus » de l'Activité financière lus dans les paiements
+  - /coach/comptabilite : semaine, mois, TVA du mois, compte bancaire ; liste filtrable (Tous /
+    Compte bancaire / Espèces et autres) ; suppression d'un paiement noté par erreur
+  - pastille rouge chiffrée (CountBadge) sur « Messages » dans le menu et sur la cloche (ordinateur
+    et téléphone), nombre lu dans la coquille ; carte et liste « Répondre » retirées
+Écarts assumés : taux de 21 % par défaut à confirmer par le comptable (OPEN-17) ; pas encore de lien
+  paiement ↔ facture ni de forfait (séances comprises, restantes, reportées) : tranche suivante ;
+  la Comptabilité n'est pas une comptabilité légale (la page le dit)
+Tests : check OK (Vitest 153), db:test 259/259, test:e2e 107 + 5 ignorés (nouveaux : paiement en
+  espèces jusqu'à la Comptabilité, filtre, suppression, erreur de montant ; pastille de la cloche) ;
+  db:reset puis profil d'Antonino restauré
+```
+
 ### D-35 (retouche) : un nouveau sportif a tout de suite sa fiche, signalée « à compléter »
 ```
 Date : 2026-10-23

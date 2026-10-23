@@ -461,6 +461,22 @@ values
    'db000000-0000-4000-8000-000000000001', 'Forfait 10 km', 9000,
    current_date - 3, current_date + 11, null, 'b0000000-0000-4000-8000-00000000000b');
 
+-- Paiements reçus (D-36), inventés : les deux factures payées (virement, espèces) et un forfait de
+-- trois mois réglé hier par Inès. Montants TVA comprise (21 %), dates relatives au reset.
+insert into public.athlete_payments (
+  organization_id, athlete_id, received_on, amount_cents, vat_rate, method, label, created_by
+)
+values
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000002', current_date - 5,
+   20000, 21, 'transfer', 'Suivi running mensuel', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', current_date - 2,
+   10000, 21, 'cash', 'Coaching force · 2 séances', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', current_date - 1,
+   150000, 21, 'bancontact', 'Forfait Hyrox 3 mois', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Organisation B.
+  ('0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', current_date - 1,
+   9000, 21, 'cash', 'Forfait 10 km', 'b0000000-0000-4000-8000-00000000000b');
+
 -- Profils des coachs de démonstration (D-28) : prénoms inventés ; leurs photos (libres de droits) sont
 -- chargées par scripts/seed-photos.mjs, lancé par `npm run db:reset`.
 insert into public.coach_profiles (user_id, first_name, last_name, company_name) values

@@ -16,7 +16,13 @@ export type ShellUser = {
   settingsHref: string | null;
 };
 
-export type ShellValue = { space: Space; orgBase: string | null; user: ShellUser | null };
+export type ShellValue = {
+  space: Space;
+  orgBase: string | null;
+  user: ShellUser | null;
+  // Messages reçus non lus (coach, D-36) : pastille rouge sur « Messages » et sur la cloche.
+  unreadMessages?: number;
+};
 
 const ShellContext = createContext<ShellValue>({ space: "coach", orgBase: null, user: null });
 

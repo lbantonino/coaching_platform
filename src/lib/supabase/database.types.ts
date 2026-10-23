@@ -341,6 +341,57 @@ export type Database = {
           },
         ];
       };
+      athlete_payments: {
+        Row: {
+          amount_cents: number;
+          athlete_id: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          label: string | null;
+          method: string;
+          organization_id: string;
+          received_on: string;
+          updated_at: string;
+          vat_rate: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          athlete_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          method: string;
+          organization_id: string;
+          received_on: string;
+          updated_at?: string;
+          vat_rate?: number;
+        };
+        Update: {
+          amount_cents?: number;
+          athlete_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          label?: string | null;
+          method?: string;
+          organization_id?: string;
+          received_on?: string;
+          updated_at?: string;
+          vat_rate?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "athlete_payments_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       athlete_personal_records: {
         Row: {
           achieved_on: string;

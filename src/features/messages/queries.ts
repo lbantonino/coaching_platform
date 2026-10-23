@@ -74,28 +74,6 @@ function toConversations(rows: Row[]): Conversation[] {
   return [...byAthlete.values()];
 }
 
-// Carte Messages du tableau de bord, pour une organisation DÉJÀ vérifiée (requireOrgAccess) : le nombre
-// de messages reçus non lus et les `limit` conversations qui en ont, les plus récentes d'abord.
-export async function getDashboardMessages(
-  organizationId: string,
-  limit = 3,
-): Promise<{ unreadCount: number; items: Conversation[] }> {
-  const supabase = await createClient();
-  const { data, count, error } = await supabase
-    .from("athlete_messages")
-    .select(SELECT, { count: "exact" })
-    .eq("organization_id", organizationId)
-    .eq("sender", "athlete")
-    .is("read_at", null)
-    .order("created_at", { ascending: false })
-    .limit(100);
-  if (error) throw new Error("Lecture des messages impossible.");
-  return {
-    unreadCount: count ?? 0,
-    items: toConversations((data ?? []) as unknown as Row[]).slice(0, limit),
-  };
-}
-
 // Page Messages : les conversations de l'organisation, la plus récente d'abord. Calculées sur les
 // derniers messages (bornés) : suffisant tant qu'il n'y a pas de table de conversations.
 export async function listConversations(organizationId: string): Promise<Conversation[]> {
@@ -132,4 +110,17 @@ export async function getThread(
       createdAt: row.created_at,
     }))
     .reverse();
+}
+
+// Nombre de messages reçus des sportifs et pas encore lus (pastille du menu et de la cloche).
+export async function countUnreadMessages(organizationId: string): Promise<number> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("athlete_messages")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", organizationId)
+    .eq("sender", "athlete")
+    .is("read_at", null);
+  if (error) return 0;
+  return count ?? 0;
 }

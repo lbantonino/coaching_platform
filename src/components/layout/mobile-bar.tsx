@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -10,7 +10,8 @@ import { CooryLogo } from "@/components/ui/coory-logo";
 import { LogoutButton } from "@/components/ui/logout-button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-import { athleteTabs, homeHref, notificationsHref, pageTitle } from "./navigation";
+import { NotificationBell } from "./header-tools";
+import { athleteTabs, homeHref, pageTitle } from "./navigation";
 import { SideNav, UserCard } from "./side-nav";
 import { useShell } from "./shell-context";
 
@@ -28,13 +29,7 @@ export function MobileTopBar() {
         {pageTitle(space, pathname)}
       </span>
       <div className="flex justify-end gap-1.5">
-        <Link
-          href={notificationsHref[space]}
-          aria-label="Notifications"
-          className={iconButtonClass()}
-        >
-          <Bell aria-hidden size={18} strokeWidth={1.8} />
-        </Link>
+        <NotificationBell />
         {space === "athlete" ? null : <MobileMenu />}
       </div>
     </header>
