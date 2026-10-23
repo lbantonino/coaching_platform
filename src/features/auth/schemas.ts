@@ -28,5 +28,3 @@ export const newPasswordSchema = z
     error: "Les deux mots de passe ne correspondent pas.",
     path: ["confirmation"],
   });
-
-export type LoginInput = z.infer<typeof loginSchema>;

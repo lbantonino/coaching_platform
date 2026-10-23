@@ -73,8 +73,6 @@ export const newAthleteSchema = z.object({
   sex: optionalChoice(SEXES, "Sexe invalide."),
 });
 
-export type NewAthleteInput = z.infer<typeof newAthleteSchema>;
-
 export const athleteStatusLabels = {
   active: "Actif",
   paused: "En pause",
@@ -103,8 +101,6 @@ export const athleteUpdateSchema = newAthleteSchema.extend({
       .max(500, { error: "La description du matériel est trop longue (500 caractères maximum)." }),
   ),
 });
-
-export type AthleteUpdateInput = z.infer<typeof athleteUpdateSchema>;
 
 // Disponibilités (P2-02 partie 3). Jours dans l'ordre de la semaine, alignés sur la contrainte CHECK.
 export const WEEK_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -143,8 +139,6 @@ export const availabilitySchema = z.object({
     z.string().max(300, { error: "Les contraintes physiques sont limitées à 300 caractères." }),
   ),
 });
-
-export type AvailabilityInput = z.infer<typeof availabilitySchema>;
 
 // Filtres de la liste des sportifs (valeurs venant de l'URL, donc validées).
 export const athleteListFilterSchema = z.object({

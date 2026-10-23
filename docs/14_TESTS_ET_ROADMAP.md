@@ -22,26 +22,26 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 
 ## 3. Backlog priorisé opérationnel
 ### P0 — Projet et qualité
-- [ ] `P0-01` Dépôt, Next.js TS strict, lint, format, conventions modules, pre-commit facultatif.
-- [ ] `P0-02` `.env.example`, instructions locales, config Supabase projet DEV distinct de PROD.
-- [ ] `P0-03` Migrations versionnées, seeds anonymisés et script reset DEV.
-- [ ] `P0-04` Configurer lint + `typecheck` et formatage léger ; préparer Vitest pour les premiers services métier. **N’ajouter Playwright qu’à l’arrivée d’un premier parcours E2E**, la CI au stade pertinent ; éviter des dépendances non utilisées.
-- [ ] `P0-05` Shell UI responsive, page erreur/auth/404, design tokens.
-- [ ] `P0-06` Valider le socle unique Next.js/React/TypeScript/Supabase. ADR obligatoire avant d’ajouter backend, ORM, file Redis, paiement, dépendance UI redondante ou moteur PDF ; documenter pourquoi les outils déjà choisis ne suffisent pas.
+- [x] `P0-01` Dépôt, Next.js TS strict, lint, format, conventions modules, pre-commit facultatif.
+- [x] `P0-02` `.env.example`, instructions locales, config Supabase projet DEV distinct de PROD. (Fait : DEV local ; le projet PROD sera créé au déploiement, P8.)
+- [x] `P0-03` Migrations versionnées, seeds anonymisés et script reset DEV.
+- [x] `P0-04` Configurer lint + `typecheck` et formatage léger ; préparer Vitest pour les premiers services métier. **N’ajouter Playwright qu’à l’arrivée d’un premier parcours E2E**, la CI au stade pertinent ; éviter des dépendances non utilisées.
+- [x] `P0-05` Shell UI responsive, page erreur/auth/404, design tokens.
+- [x] `P0-06` Valider le socle unique Next.js/React/TypeScript/Supabase. ADR obligatoire avant d’ajouter backend, ORM, file Redis, paiement, dépendance UI redondante ou moteur PDF ; documenter pourquoi les outils déjà choisis ne suffisent pas.
 
 ### P1 — Auth et multi-tenancy
-- [ ] `P1-01` Connexion email, session, reset, logout, email vérifié.
-- [ ] `P1-02` Organisation et memberships coach, rôle admin plateforme indépendant.
-- [ ] `P1-03` RLS et policy tests 2 organisations, 2 sportifs.
-- [ ] `P1-04` Guards serveur `requireCoach`, `requireAthlete`, `requirePlatformAdmin`, `requireOrgAccess`.
-- [ ] `P1-05` Invitation sportif token expirant/révocable ; création sans compte préalable.
+- [x] `P1-01` Connexion email, session, reset, logout, email vérifié. (Fait ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription libre.)
+- [x] `P1-02` Organisation et memberships coach, rôle admin plateforme indépendant.
+- [x] `P1-03` RLS et policy tests 2 organisations, 2 sportifs.
+- [x] `P1-04` Guards serveur `requireCoach`, `requireAthlete`, `requirePlatformAdmin`, `requireOrgAccess`.
+- [x] `P1-05` Invitation sportif token expirant/révocable ; création sans compte préalable.
 
 ### P2 — CRM et planning
-- [ ] `P2-01` Liste client responsive, création/édition, recherche, filtres, statut.
-- [ ] `P2-02` Objectifs et dates, nombre de séances par semaine, durées/disponibilités.
-- [ ] `P2-03` Repères running/charges datés, notes coach vs notes publiques. (22/10/2026 : fait ; repères `P2-03a/b`, notes `P2-04b`.)
-- [ ] `P2-04` Profil client onglets, historique programmes, dashboard KPIs vrais. (22/10/2026 : fiche à onglets et vue d'ensemble `P2-04a`, notes et historique `P2-04b`, graphique d'évolution des repères `P2-04c` ; les chiffres clés de la fiche sont provisoires, tirés du profil ; historique des programmes et KPI du tableau de bord attendent P4 à P6.)
-- [ ] `P2-05` Agenda de séances/slots, mobilité des dates (première vue simple). (22/10/2026, D-27 : agenda du coach = **séances encadrées en présentiel** (collectives récurrentes avec inscrits, individuelles avec un sportif) + calque des **compétitions et objectifs datés** (`P2-05a` fait) ; séances encadrées `P2-05b` faites le même jour (création, récurrence hebdomadaire calculée, inscrits, modification, suppression). Restent pour plus tard : présence réelle (avec P6) et annulation d'une seule date (`OPEN-18`). L'agenda du sportif avec les séances de ses programmes viendra avec P4 à P6, jamais simulé avant.)
+- [x] `P2-01` Liste client responsive, création/édition, recherche, filtres, statut.
+- [x] `P2-02` Objectifs et dates, nombre de séances par semaine, durées/disponibilités.
+- [x] `P2-03` Repères running/charges datés, notes coach vs notes publiques. (22/10/2026 : fait ; repères `P2-03a/b`, notes `P2-04b`.)
+- [x] `P2-04` Profil client onglets, historique programmes, dashboard KPIs vrais. (22/10/2026 : fiche à onglets et vue d'ensemble `P2-04a`, notes et historique `P2-04b`, graphique d'évolution des repères `P2-04c` ; les chiffres clés de la fiche sont provisoires, tirés du profil ; historique des programmes et KPI du tableau de bord attendent P4 à P6.) Reste, avec P4 : l'historique des programmes.
+- [x] `P2-05` Agenda de séances/slots, mobilité des dates (première vue simple). (22/10/2026, D-27 : agenda du coach = **séances encadrées en présentiel** (collectives récurrentes avec inscrits, individuelles avec un sportif) + calque des **compétitions et objectifs datés** (`P2-05a` fait) ; séances encadrées `P2-05b` faites le même jour (création, récurrence hebdomadaire calculée, inscrits, modification, suppression). Restent pour plus tard : présence réelle (avec P6) et annulation d'une seule date (`OPEN-18`). L'agenda du sportif avec les séances de ses programmes viendra avec P4 à P6, jamais simulé avant.) Reste : déplacer une seule date d'une séance récurrente (`OPEN-18`).
 
 ### P3 — Catalogue/templates
 > **Maquettes cibles (D-28, 23/10/2026)** : chaque page de l'espace coach a une maquette (`docs/design/MAQUETTES.md`). Elle est construite à son image quand sa phase arrive : Bibliothèque et Séances (modèles) en P3, Programmes en P4, Documents (PDF) en P5, Séances (retours) en P6, Messages en P7, Facturation et Comptabilité après P6 (D-17), Tâches avec les modules qui les produisent. Faits : tableau de bord, fiche sportif, agenda (refonte visuelle à faire), Paramètres (profil coach).

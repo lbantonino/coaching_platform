@@ -20,6 +20,21 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### Correctifs de l'audit du 23/10 (contraste du thème clair, code mort, roadmap)
+```
+Date : 2026-10-23
+Demande : après l'audit, corriger le contraste du thème clair, le code mort et les cases de la roadmap
+Contraste (thème clair, mesuré au script sur fond, panneau, survol, pastille, cartes teintées, menu
+  actif) : plus de défauts que les deux connus. Corrigés : gris (--muted #5d5d64, --faint #62626a),
+  rouge (--accent #d91f34 : texte blanc du bouton 4,47 → 5:1 ; --accent-text #bb1529), badges de
+  statut (--ok #166534, --warn #8a4b06), --amber #924207, --green #166534 ; tout ≥ 4,5:1. Logo inchangé
+Code mort (recherche des exports jamais utilisés) : supprimés components/ui/card.tsx (Card,
+  StatCard), types NewAthleteInput, AthleteUpdateInput, AvailabilityInput, LoginInput, fonctions
+  parseWeek, busyHours, nextSessionFor (et leurs tests) ; plus aucun export inutilisé
+Roadmap : P0-01 à P2-05 cochés, avec ce qui reste pour P0-02, P1-01, P2-04, P2-05
+Tests : check OK (typage, lint, format), Vitest 120/120, test:e2e design.spec.ts OK ; captures en clair
+```
+
 ### D-29 : couleurs des maquettes (thème sombre bleu nuit)
 ```
 Date : 2026-10-23

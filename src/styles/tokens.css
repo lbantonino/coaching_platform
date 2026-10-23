@@ -92,23 +92,25 @@
   --line: rgba(0, 0, 0, 0.08);
   --line-2: rgba(0, 0, 0, 0.14);
   --text: #141416;
-  --muted: #6a6a70;
-  --faint: #a3a3a8;
+  /* Gris, rouge texte et couleurs de statut assombris le 23/10/2026 (audit) : chaque texte mesuré
+     ≥ 4,5:1 sur fond, panneau, survol, pastille, cartes teintées et menu actif. */
+  --muted: #5d5d64;
+  --faint: #62626a;
 
-  --accent: #e5283c; /* un peu plus profond : meilleur contraste avec le texte blanc */
+  --accent: #d91f34; /* plus profond : texte blanc du bouton à 5:1 (4,47 avant l'audit) */
   --accent-hover: #ff3347;
-  --accent-text: #d91e32; /* rouge en texte sur fond clair */
-  --accent-soft: rgba(229, 40, 60, 0.1);
+  --accent-text: #bb1529; /* rouge en texte sur fond clair */
+  --accent-soft: rgba(217, 31, 52, 0.1);
   --on-accent: #ffffff;
   --logo-loop: #d91e32; /* boucle du logo sur fond clair (COORY_LOGO.md §3) */
 
   --inv: #141416;
   --on-inv: #ffffff;
 
-  --ok: #16a34a;
-  --ok-soft: rgba(22, 163, 74, 0.1);
-  --warn: #b7791f;
-  --warn-soft: rgba(183, 121, 31, 0.12);
+  --ok: #166534;
+  --ok-soft: rgba(22, 101, 52, 0.1);
+  --warn: #8a4b06;
+  --warn-soft: rgba(138, 75, 6, 0.12);
   --danger: #ffffff;
   --danger-soft: var(--accent);
 
@@ -123,10 +125,10 @@
 
   --blue: #1d4ed8;
   --blue-soft: rgba(29, 78, 216, 0.12);
-  --amber: #b45309;
-  --amber-soft: rgba(180, 83, 9, 0.12);
-  --green: #15803d;
-  --green-soft: rgba(21, 128, 61, 0.12);
+  --amber: #924207;
+  --amber-soft: rgba(146, 66, 7, 0.12);
+  --green: #166534;
+  --green-soft: rgba(22, 101, 52, 0.12);
 
   --female: #be185d;
   --female-soft: rgba(190, 24, 93, 0.1);
