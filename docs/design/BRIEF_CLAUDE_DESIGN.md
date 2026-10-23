@@ -422,22 +422,54 @@ fort contraste, rien qui dépend du survol.
 
 ---
 
-## 8. Ordre de travail souhaité
+## 8. Format du rendu : deux prototypes interactifs + une planche
 
-1. **Composants** : boutons, champs (avec « (facultatif) », œil, jauge), pastilles, badges de
-   statut et de discipline, avatar (photo ou initiales, ♀/♂), carte chiffrée, onglets, menu
-   latéral, menu hamburger, feuille du bas, états vides / chargement / erreur. Sombre + clair.
-2. **Espace sportif téléphone** (7.2), car c'est l'usage principal.
-3. **Pages coach existantes** (section 6) en téléphone puis ordinateur.
-4. **Bibliothèque, programmes, éditeur, séances** (7.1).
-5. Documents, messages, tâches, facturation, comptabilité, admin.
+### 8.1 Deux prototypes cliquables
+1. **Prototype téléphone** (cadre 390 px) **totalement interactif**.
+2. **Prototype ordinateur** (1440 px) **totalement interactif**.
 
-## 9. Livrables attendus pour chaque page
+Dans chacun, **toutes les pages de l'app sont réunies dans un seul fichier / une seule page** et
+reliées entre elles : on navigue comme dans la vraie app.
+- Les menus (latéral, hamburger, barre du bas sportif), onglets, filtres, boutons, liens, feuilles
+  du bas, menus « ••• » et fenêtres de confirmation fonctionnent.
+- Les formulaires réagissent : saisie, œil du mot de passe, jauge, erreurs sous les champs, envoi
+  qui mène à l'écran suivant.
+- Un sélecteur permet de passer du **thème sombre au thème clair**.
+- On peut basculer entre **espace coach**, **espace sportif** et **admin** (sélecteur de rôle de
+  démonstration, discret).
 
-- **Téléphone 390 px** (obligatoire, en premier) et **ordinateur 1440 px**.
+### 8.2 Parcours à suivre, dans cet ordre
+1. **Connexion** → lien « Créer un compte » → **Inscription** (choix Coach / Sportif) → « Vérifie ta
+   boîte mail » → **Bienvenue**.
+2. Mot de passe oublié → nouveau mot de passe ; invitation d'un sportif ; lien invalide ; accès
+   refusé ; conditions, confidentialité, mentions légales.
+3. Coach : tableau de bord → sportifs (liste, nouveau, fiche et ses 7 onglets, invitation) →
+   agenda (vues, nouvelle séance, détail) → programmes (liste, assistant, éditeur, aperçu,
+   publication, PDF) → séances et retours → bibliothèque → facturation → comptabilité → tâches →
+   documents → messages → notifications → recherche → paramètres → assistant IA.
+4. Sportif : Aujourd'hui → programme → détail de séance (running, musculation, Hyrox) → mode
+   actif → fin de séance → historique → progression → objectifs → documents → messages →
+   notifications → profil.
+5. Admin : toutes ses pages.
+
+### 8.3 La planche
+Une **planche d'ensemble** qui montre **toutes les pages côte à côte**, rangées dans l'ordre du
+parcours ci-dessus (une rangée par espace : entrée, coach, sportif, admin), téléphone et
+ordinateur, avec le nom de chaque page. Un clic sur une page de la planche ouvre le prototype à cet
+endroit.
+
+### 8.4 Bases communes
+Avant les pages, poser les **composants** : boutons, champs (avec « (facultatif) », œil, jauge),
+pastilles, badges de statut et de discipline, avatar (photo ou initiales, ♀/♂), carte chiffrée,
+onglets, menu latéral, menu hamburger, feuille du bas, états vides / chargement / erreur. Sombre
+et clair.
+
+## 9. Exigences pour chaque page
+
+- **Téléphone 390 px** (conçu en premier) et **ordinateur 1440 px**.
 - **Thème sombre** et **thème clair**.
-- États : rempli, **vide**, **chargement**, **erreur** (et succès pour les formulaires).
-- Annotations : composants utilisés, comportement des éléments interactifs.
+- États : rempli, **vide**, **chargement**, **erreur** (et succès pour les formulaires),
+  accessibles dans le prototype.
 - Contrastes ≥ 4,5:1, zones tactiles ≥ 44 px, une seule action rouge par écran.
 
 ## 10. Fichiers à joindre avec ce brief
