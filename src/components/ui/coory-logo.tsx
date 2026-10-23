@@ -101,3 +101,9 @@ export function CooryLogo({
     </span>
   );
 }
+
+// Filigrane des pages d'accès (COORY_AUTH_PAGES.md) : la boucle seule, couleur du texte très atténuée
+// (via la classe passée), décorative. Même tracé que le logo.
+export function CooryWatermark({ className }: { className: string }) {
+  return <Loop color="currentColor" className={`pointer-events-none ${className}`} />;
+}

@@ -17,7 +17,9 @@ async function login(page: Page, email: string, password = DEMO_PASSWORD) {
 test("un visiteur non connecté est renvoyé vers la connexion", async ({ page }) => {
   await page.goto("/coach");
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("heading", { name: "Connexion" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /^(Bon retour\.|Connexion)$/ }).filter({ visible: true }),
+  ).toBeVisible();
 });
 
 test("le coach A se connecte, voit uniquement son organisation, puis se déconnecte", async ({
