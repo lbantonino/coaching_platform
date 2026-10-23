@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { z } from "zod";
 
+import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass, iconButtonClass } from "@/components/ui/button";
 import { FilterChips } from "@/components/ui/filter-chips";
@@ -70,9 +71,9 @@ const single = (value: string | string[] | undefined) => (Array.isArray(value) ?
 
 export default function AgendaPage({ params, searchParams }: PageProps<"/coach/o/[orgId]/agenda">) {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-5 py-6 md:px-8 md:py-[22px]">
+    <main className={pageMainClass}>
       {/* Organisation, mois et filtres viennent de l'URL : données de requête, derrière Suspense. */}
-      <Suspense fallback={<p className="text-muted">Chargement de l&apos;agenda…</p>}>
+      <Suspense fallback={<PageLoading label="Chargement de l'agenda…" />}>
         {Promise.all([params, searchParams]).then(([{ orgId }, query]) => (
           <Agenda orgId={orgId} query={query} />
         ))}
@@ -138,221 +139,222 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
 
   return (
     <>
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div className="flex flex-col gap-1">
-          <p className="text-small text-muted">{membership.organizationName}</p>
-          <h1 className="font-display text-h2 font-medium md:text-h1">Agenda</h1>
-          <p className="text-small text-muted">
-            Tes séances encadrées et les compétitions de tes sportifs. Les séances de leurs
-            programmes s&apos;ajouteront avec les programmes.
-          </p>
-        </div>
-        <Link
-          href={`${base}/seances/nouvelle`}
-          className={buttonClass({ variant: "primary", size: "md", className: "shrink-0" })}
-        >
-          <Plus aria-hidden size={16} strokeWidth={2} />
-          Nouvelle séance
-        </Link>
-      </div>
-
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <FilterChips
-          label="Filtrer par discipline"
-          options={[
-            { href: href({ discipline: null }), label: "Toutes", active: !disciplineSlug },
-            ...(Object.keys(disciplineSlugs) as DisciplineSlug[]).map((key) => ({
-              href: href({ discipline: key }),
-              label: disciplineSlugLabels[key],
-              active: disciplineSlug === key,
-            })),
-          ]}
-        />
-        {/* Formulaire GET : le filtre reste dans l'adresse et fonctionne sans JavaScript. */}
-        <form method="get" action={base} className="flex items-center gap-2">
-          {month !== today.slice(0, 7) ? <input type="hidden" name="mois" value={month} /> : null}
-          {disciplineSlug ? <input type="hidden" name="discipline" value={disciplineSlug} /> : null}
-          <label htmlFor="agenda-athlete" className="sr-only">
-            Sportif
-          </label>
-          <select
-            id="agenda-athlete"
-            name="sportif"
-            defaultValue={athleteId ?? ""}
-            className={`${inputClass} h-9 w-full md:w-56`}
-          >
-            <option value="">Tous les sportifs</option>
-            {selectable.map((athlete) => (
-              <option key={athlete.id} value={athlete.id}>
-                {athlete.displayName}
-              </option>
-            ))}
-          </select>
-          <button type="submit" className={buttonClass({ variant: "outline", size: "sm" })}>
-            Filtrer
-          </button>
-        </form>
-      </div>
-
-      <section
-        aria-labelledby="week-title"
-        className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-      >
-        <h2 id="week-title" className="text-title font-medium">
-          7 prochains jours
-        </h2>
-        {week.size === 0 ? (
-          <p role="status" className="text-small text-muted">
-            {sessions.length === 0
-              ? "Aucune séance pour l'instant. Crée ta première séance encadrée avec « Nouvelle séance »."
-              : "Rien de prévu dans les 7 prochains jours pour ce filtre."}
-          </p>
-        ) : (
-          <DayList groups={week} today={today} itemHref={itemHref} />
-        )}
-      </section>
-
-      <section
-        aria-labelledby="competitions-title"
-        className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-      >
-        <h2 id="competitions-title" className="text-title font-medium">
-          Prochaines compétitions
-        </h2>
-        {competitions.length === 0 ? (
-          <p role="status" className="text-small text-muted">
-            Aucune compétition à venir pour ce filtre.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {competitions.map((event) => (
-              <li key={event.id}>
-                <CompetitionRow
-                  event={event}
-                  today={today}
-                  href={`/coach/o/${organizationId}/sportifs/${event.athleteId}?onglet=objectifs`}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section
-        aria-labelledby="month-title"
-        className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="month-title" className="text-title font-medium first-letter:uppercase">
-            {monthLabel(month)}
-          </h2>
-          <nav aria-label="Changer de mois" className="flex items-center gap-2">
-            <Link
-              href={href({ mois: shiftMonth(month, -1) })}
-              aria-label="Mois précédent"
-              className={iconButtonClass({ size: "sm" })}
+      <PageHeader
+        title="Agenda"
+        subtitle="Tes séances encadrées, collectives et individuelles, et les compétitions de tes sportifs."
+        actions={
+          <Link href={`${base}/seances/nouvelle`} className={buttonClass()}>
+            <Plus aria-hidden size={16} strokeWidth={2} />
+            Nouvelle séance
+          </Link>
+        }
+      />
+      <PageBody>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <FilterChips
+            label="Filtrer par discipline"
+            options={[
+              { href: href({ discipline: null }), label: "Toutes", active: !disciplineSlug },
+              ...(Object.keys(disciplineSlugs) as DisciplineSlug[]).map((key) => ({
+                href: href({ discipline: key }),
+                label: disciplineSlugLabels[key],
+                active: disciplineSlug === key,
+              })),
+            ]}
+          />
+          {/* Formulaire GET : le filtre reste dans l'adresse et fonctionne sans JavaScript. */}
+          <form method="get" action={base} className="flex items-center gap-2">
+            {month !== today.slice(0, 7) ? <input type="hidden" name="mois" value={month} /> : null}
+            {disciplineSlug ? (
+              <input type="hidden" name="discipline" value={disciplineSlug} />
+            ) : null}
+            <label htmlFor="agenda-athlete" className="sr-only">
+              Sportif
+            </label>
+            <select
+              id="agenda-athlete"
+              name="sportif"
+              defaultValue={athleteId ?? ""}
+              className={`${inputClass} h-9 w-full md:w-56`}
             >
-              <ChevronLeft aria-hidden size={16} strokeWidth={1.8} />
-            </Link>
-            <Link
-              href={href({ mois: today.slice(0, 7) })}
-              className={buttonClass({ variant: "outline", size: "sm" })}
-            >
-              Aujourd&apos;hui
-            </Link>
-            <Link
-              href={href({ mois: shiftMonth(month, 1) })}
-              aria-label="Mois suivant"
-              className={iconButtonClass({ size: "sm" })}
-            >
-              <ChevronRight aria-hidden size={16} strokeWidth={1.8} />
-            </Link>
-          </nav>
-        </div>
-
-        {/* Ordinateur : grille du mois. */}
-        <table className="hidden w-full table-fixed border-collapse md:table">
-          <caption className="sr-only">Agenda de {monthLabel(month)}</caption>
-          <thead>
-            <tr>
-              {weekDays.map(([short, long]) => (
-                <th
-                  key={long}
-                  scope="col"
-                  className="px-1.5 pb-2 text-left text-caption font-normal text-muted"
-                >
-                  <abbr title={long} className="no-underline">
-                    {short}
-                  </abbr>
-                </th>
+              <option value="">Tous les sportifs</option>
+              {selectable.map((athlete) => (
+                <option key={athlete.id} value={athlete.id}>
+                  {athlete.displayName}
+                </option>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {monthGrid(month).map((weekRow) => (
-              <tr key={weekRow[0].iso}>
-                {weekRow.map((day) => (
-                  <td
-                    key={day.iso}
-                    className={`h-24 border border-line p-1.5 align-top ${day.inMonth ? "" : "bg-bg/40"}`}
-                  >
-                    <span
-                      className={`inline-flex size-6 items-center justify-center rounded-full text-caption tabular ${
-                        day.iso === today
-                          ? "bg-accent font-semibold text-on-accent"
-                          : day.inMonth
-                            ? "text-text"
-                            : "text-faint"
-                      }`}
-                    >
-                      {day.inMonth ? day.day : ""}
-                    </span>
-                    {day.inMonth ? (
-                      <ul className="mt-1 flex flex-col gap-1">
-                        {(byDay.get(day.iso) ?? []).map((item) => (
-                          <li key={item.key}>
-                            <Link
-                              href={itemHref(item)}
-                              title={
-                                item.type === "session"
-                                  ? `${item.time} ${item.title} · ${item.detail}`
-                                  : `${item.title} · ${item.athleteName}`
-                              }
-                              className={`flex items-center gap-1 truncate rounded-[6px] px-1.5 py-0.5 text-micro font-medium hover:opacity-80 ${chipClasses[item.discipline ?? "none"]}`}
-                            >
-                              {item.type === "event" ? (
-                                <Flag aria-hidden size={10} strokeWidth={2} className="shrink-0" />
-                              ) : (
-                                <span className="shrink-0 font-mono tabular">{item.time}</span>
-                              )}
-                              <span className="truncate">
-                                {item.type === "event"
-                                  ? `${item.athleteName.split(" ")[0]} · ${item.title}`
-                                  : item.title}
-                              </span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </select>
+            <button type="submit" className={buttonClass({ variant: "outline", size: "sm" })}>
+              Filtrer
+            </button>
+          </form>
+        </div>
 
-        {/* Téléphone : liste des jours qui ont quelque chose (une grille serait illisible). */}
-        <div className="md:hidden">
-          {byDay.size === 0 ? (
+        <section
+          aria-labelledby="week-title"
+          className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+        >
+          <h2 id="week-title" className="text-title font-medium">
+            7 prochains jours
+          </h2>
+          {week.size === 0 ? (
             <p role="status" className="text-small text-muted">
-              Rien de prévu ce mois-ci.
+              {sessions.length === 0
+                ? "Aucune séance pour l'instant. Crée ta première séance encadrée avec « Nouvelle séance »."
+                : "Rien de prévu dans les 7 prochains jours pour ce filtre."}
             </p>
           ) : (
-            <DayList groups={byDay} today={today} itemHref={itemHref} />
+            <DayList groups={week} today={today} itemHref={itemHref} />
           )}
-        </div>
-      </section>
+        </section>
+
+        <section
+          aria-labelledby="competitions-title"
+          className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+        >
+          <h2 id="competitions-title" className="text-title font-medium">
+            Prochaines compétitions
+          </h2>
+          {competitions.length === 0 ? (
+            <p role="status" className="text-small text-muted">
+              Aucune compétition à venir pour ce filtre.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {competitions.map((event) => (
+                <li key={event.id}>
+                  <CompetitionRow
+                    event={event}
+                    today={today}
+                    href={`/coach/o/${organizationId}/sportifs/${event.athleteId}?onglet=objectifs`}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section
+          aria-labelledby="month-title"
+          className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="month-title" className="text-title font-medium first-letter:uppercase">
+              {monthLabel(month)}
+            </h2>
+            <nav aria-label="Changer de mois" className="flex items-center gap-2">
+              <Link
+                href={href({ mois: shiftMonth(month, -1) })}
+                aria-label="Mois précédent"
+                className={iconButtonClass({ size: "sm" })}
+              >
+                <ChevronLeft aria-hidden size={16} strokeWidth={1.8} />
+              </Link>
+              <Link
+                href={href({ mois: today.slice(0, 7) })}
+                className={buttonClass({ variant: "outline", size: "sm" })}
+              >
+                Aujourd&apos;hui
+              </Link>
+              <Link
+                href={href({ mois: shiftMonth(month, 1) })}
+                aria-label="Mois suivant"
+                className={iconButtonClass({ size: "sm" })}
+              >
+                <ChevronRight aria-hidden size={16} strokeWidth={1.8} />
+              </Link>
+            </nav>
+          </div>
+
+          {/* Ordinateur : grille du mois. */}
+          <table className="hidden w-full table-fixed border-collapse md:table">
+            <caption className="sr-only">Agenda de {monthLabel(month)}</caption>
+            <thead>
+              <tr>
+                {weekDays.map(([short, long]) => (
+                  <th
+                    key={long}
+                    scope="col"
+                    className="px-1.5 pb-2 text-left text-caption font-normal text-muted"
+                  >
+                    <abbr title={long} className="no-underline">
+                      {short}
+                    </abbr>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {monthGrid(month).map((weekRow) => (
+                <tr key={weekRow[0].iso}>
+                  {weekRow.map((day) => (
+                    <td
+                      key={day.iso}
+                      className={`h-24 border border-line p-1.5 align-top ${day.inMonth ? "" : "bg-bg/40"}`}
+                    >
+                      <span
+                        className={`inline-flex size-6 items-center justify-center rounded-full text-caption tabular ${
+                          day.iso === today
+                            ? "bg-accent font-semibold text-on-accent"
+                            : day.inMonth
+                              ? "text-text"
+                              : "text-faint"
+                        }`}
+                      >
+                        {day.inMonth ? day.day : ""}
+                      </span>
+                      {day.inMonth ? (
+                        <ul className="mt-1 flex flex-col gap-1">
+                          {(byDay.get(day.iso) ?? []).map((item) => (
+                            <li key={item.key}>
+                              <Link
+                                href={itemHref(item)}
+                                title={
+                                  item.type === "session"
+                                    ? `${item.time} ${item.title} · ${item.detail}`
+                                    : `${item.title} · ${item.athleteName}`
+                                }
+                                className={`flex items-center gap-1 truncate rounded-[6px] px-1.5 py-0.5 text-micro font-medium hover:opacity-80 ${chipClasses[item.discipline ?? "none"]}`}
+                              >
+                                {item.type === "event" ? (
+                                  <Flag
+                                    aria-hidden
+                                    size={10}
+                                    strokeWidth={2}
+                                    className="shrink-0"
+                                  />
+                                ) : (
+                                  <span className="shrink-0 font-mono tabular">{item.time}</span>
+                                )}
+                                <span className="truncate">
+                                  {item.type === "event"
+                                    ? `${item.athleteName.split(" ")[0]} · ${item.title}`
+                                    : item.title}
+                                </span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Téléphone : liste des jours qui ont quelque chose (une grille serait illisible). */}
+          <div className="md:hidden">
+            {byDay.size === 0 ? (
+              <p role="status" className="text-small text-muted">
+                Rien de prévu ce mois-ci.
+              </p>
+            ) : (
+              <DayList groups={byDay} today={today} itemHref={itemHref} />
+            )}
+          </div>
+        </section>
+      </PageBody>
     </>
   );
 }

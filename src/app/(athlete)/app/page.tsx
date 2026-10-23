@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
-import { LogoutButton } from "@/components/ui/logout-button";
 import { requireAthleteAccount } from "@/features/auth/guards";
 import {
   grantHealthConsentByAthlete,
@@ -19,9 +19,8 @@ export const metadata: Metadata = {
 
 export default function AthleteHomePage() {
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-5 py-10">
-      <h1 className="font-display text-h2 font-medium">Mon espace sportif</h1>
-      <Suspense fallback={<p className="text-muted">Chargement de ton espace…</p>}>
+    <main className={pageMainClass}>
+      <Suspense fallback={<PageLoading label="Chargement de ton espace…" />}>
         <AthleteSession />
       </Suspense>
     </main>
@@ -31,28 +30,36 @@ export default function AthleteHomePage() {
 // Espace sportif volontairement minimal et honnête : les programmes arrivent en P5/P6.
 async function AthleteSession() {
   const { user, links, waiting } = await requireAthleteAccount();
+  const firstName = links[0]?.displayName?.split(" ")[0];
+  const header = (
+    <PageHeader
+      title={firstName ? `Salut ${firstName}` : "Mon espace sportif"}
+      subtitle={`Connecté en tant que ${user.email ?? "sportif"}`}
+    />
+  );
   // Sportif inscrit seul (D-30) : son compte existe, aucun coach ne l'a encore rattaché.
   if (waiting) {
     return (
-      <div className="flex flex-col gap-6">
-        <p className="text-muted">
-          Connecté en tant que <span className="font-medium text-current">{user.email}</span>
-        </p>
-        <section
-          aria-labelledby="waiting-title"
-          className="flex flex-col gap-2 rounded-card border border-line bg-surface p-5"
-        >
-          <h2 id="waiting-title" className="text-title font-medium">
-            Ton compte est prêt
-          </h2>
-          <p className="text-small text-muted">
-            Pour voir tes séances, ton coach doit te rattacher à son espace. Donne-lui ton adresse
-            e-mail ({user.email}) : il t&apos;enverra un lien d&apos;invitation. Ouvre-le en étant
-            connecté, et ta fiche sera liée à ce compte.
-          </p>
-        </section>
-        <LogoutButton />
-      </div>
+      <>
+        {header}
+        <PageBody>
+          <div className="flex w-full max-w-lg flex-col gap-6">
+            <section
+              aria-labelledby="waiting-title"
+              className="flex flex-col gap-2 rounded-card border border-line bg-surface p-5"
+            >
+              <h2 id="waiting-title" className="text-title font-medium">
+                Ton compte est prêt
+              </h2>
+              <p className="text-small text-muted">
+                Pour voir tes séances, ton coach doit te rattacher à son espace. Donne-lui ton
+                adresse e-mail ({user.email}) : il t&apos;enverra un lien d&apos;invitation.
+                Ouvre-le en étant connecté, et ta fiche sera liée à ce compte.
+              </p>
+            </section>
+          </div>
+        </PageBody>
+      </>
     );
   }
   const coaches = links.map((link) => link.organizationName).join(", ");
@@ -60,37 +67,38 @@ async function AthleteSession() {
   const messages = await getOwnCoachMessages();
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-muted">
-        Connecté en tant que <span className="font-medium text-current">{user.email}</span>
-      </p>
-      <p role="status" className="rounded-card border border-line bg-surface p-4">
-        Ton coach ({coaches}) t&apos;a ajouté. Ton programme apparaîtra ici dès qu&apos;il sera
-        publié.
-      </p>
-      {consents.map((consent) => {
-        const message = messages.get(consent.athleteId);
-        return message ? (
-          <section
-            key={`message-${consent.athleteId}`}
-            aria-labelledby={`message-${consent.athleteId}`}
-            className="flex flex-col gap-2 rounded-card border border-line bg-surface p-5"
-          >
-            <h2 id={`message-${consent.athleteId}`} className="text-title font-medium">
-              Message de ton coach
-            </h2>
-            <p className="text-small whitespace-pre-line">{message.body}</p>
-            <p className="text-caption text-muted">
-              {consent.organizationName} · {formatDateTime(message.updatedAt)}
-            </p>
-          </section>
-        ) : null;
-      })}
-      {consents.map((consent) => (
-        <HealthConsentCard key={consent.athleteId} consent={consent} />
-      ))}
-      <LogoutButton />
-    </div>
+    <>
+      {header}
+      <PageBody>
+        <div className="flex w-full max-w-lg flex-col gap-6">
+          <p role="status" className="rounded-card border border-line bg-surface p-4">
+            Ton coach ({coaches}) t&apos;a ajouté. Ton programme apparaîtra ici dès qu&apos;il sera
+            publié.
+          </p>
+          {consents.map((consent) => {
+            const message = messages.get(consent.athleteId);
+            return message ? (
+              <section
+                key={`message-${consent.athleteId}`}
+                aria-labelledby={`message-${consent.athleteId}`}
+                className="flex flex-col gap-2 rounded-card border border-line bg-surface p-5"
+              >
+                <h2 id={`message-${consent.athleteId}`} className="text-title font-medium">
+                  Message de ton coach
+                </h2>
+                <p className="text-small whitespace-pre-line">{message.body}</p>
+                <p className="text-caption text-muted">
+                  {consent.organizationName} · {formatDateTime(message.updatedAt)}
+                </p>
+              </section>
+            ) : null;
+          })}
+          {consents.map((consent) => (
+            <HealthConsentCard key={consent.athleteId} consent={consent} />
+          ))}
+        </div>
+      </PageBody>
+    </>
   );
 }
 

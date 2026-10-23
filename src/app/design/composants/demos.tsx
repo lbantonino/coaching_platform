@@ -14,7 +14,8 @@ import { Stepper } from "@/components/ui/page-tabs";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { SkeletonLines } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
-import { EmptyState, ErrorState } from "@/components/ui/states";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
 
 // Parties interactives de la vitrine : champs, contrôles, onglets et fenêtres (feuille du bas,

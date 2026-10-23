@@ -21,7 +21,7 @@
 | Étape du prompt | État |
 |---|---|
 | 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
-| 2. Coquilles de navigation | À faire |
+| 2. Coquilles de navigation | **Fait** le 23/10 (coach, sportif, admin, entrée, pages légales) |
 | 3. Pages d'entrée | À faire |
 | 4. Espace coach | À faire |
 | 5. Espace sportif | À faire |
@@ -32,6 +32,36 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### D-32, étape 2 du prompt Claude Design : coquilles de navigation
+```
+Date : 2026-10-23
+Demande : étape 2 du prompt (§5) : entrée, coach et admin, sportif
+Fait :
+  - components/layout : AppShell (barre latérale 252 px collante ≥ 1024 px : logo, menu
+    PRINCIPAL / PLUS, carte de la personne, déconnexion, thème), MobileTopBar (logo, titre centré
+    lu dans l'adresse, cloche, hamburger plein écran pour coach et admin), AthleteTabBar (5 onglets
+    du sportif), PageHeader (retour, H1 28 / 34, phrase, outils ordinateur : recherche ⌘K,
+    Assistant IA, cloche, puis actions ; pleine largeur sur téléphone), PageBody, PageLoading,
+    navigation.ts (menus des 3 espaces, parent allumé pour les sous-pages), modules.ts
+  - modules pas encore construits (D-32) : /coach/<module>, /app/<module>, /admin/<module>, page
+    du module avec état vide honnête, sans badge ; /coach/bientot supprimé ; profil du sportif
+    porte la déconnexion sur téléphone
+  - en-têtes des pages existantes passés sur PageHeader (tableau de bord, sportifs, nouveau
+    sportif, fiche, invitation, agenda, séances, paramètres, espace sportif, admin) ; fils
+    d'Ariane remplacés par le lien retour ; emoji retiré du tableau de bord
+  - EntryShell (layout des groupes (entree) et (auth)) : panneau de marque 44 % du prototype,
+    sur-titre INVITATION / ESPACE COACH / ESPACE SPORTIF / PLATEFORME DE COACHING, pied
+    Conditions · Confidentialité · Mentions légales ; LegalShell (groupe (legal), 720 px) ;
+    page /mentions-legales provisoire
+  - getAthleteLinks renvoie aussi le nom, le sexe et la photo de la fiche (carte du menu)
+Écarts assumés : pas de pastilles de compteur (Tâches 2, Messages 3) ni de point rouge sur la
+  cloche tant qu'aucune donnée réelle ne les alimente ; recherche du coach = sportifs (vraie liste)
+  en attendant la recherche globale ; contenus des pages (formulaires, cartes) : étapes 3 à 5
+Tests : check OK (Vitest 130), build OK, test:e2e 88 + 4 ignorés (aides et 6 tests adaptés :
+  seuil 1024 px, déconnexion du sportif, lien retour, titre « Administration », recherche,
+  page vide du module) ; db:reset puis profil d'Antonino restauré ; captures 390 et 1440
+```
 
 ### D-32, étape 1 du prompt Claude Design : jetons et composants
 ```

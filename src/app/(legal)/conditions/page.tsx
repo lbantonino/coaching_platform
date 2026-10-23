@@ -8,8 +8,10 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-5 py-8 sm:py-12">
-      <h1 className="font-display text-h2 font-medium">Conditions d&apos;utilisation</h1>
+    <article className="flex flex-col gap-6">
+      <h1 className="font-display text-heading font-semibold lg:text-heading-lg">
+        Conditions d&apos;utilisation
+      </h1>
       <ProvisionalNotice />
       <LegalSection title="1. Objet">
         <p>
@@ -57,6 +59,6 @@ export default function TermsPage() {
           suppression des données à définir, voir la politique de confidentialité.]
         </p>
       </LegalSection>
-    </main>
+    </article>
   );
 }

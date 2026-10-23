@@ -19,13 +19,13 @@ export const metadata: Metadata = {
 // Page publique : seule la possession du lien (jeton secret) donne accès à l'invitation.
 export default function InvitationPage({ params }: PageProps<"/invitation/[token]">) {
   return (
-    <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-start gap-6 px-5 pt-6 pb-16 sm:justify-center sm:py-16">
+    <div className="flex w-full flex-col gap-6">
       <Suspense fallback={<p className="text-muted">Vérification de l&apos;invitation…</p>}>
         {params.then(({ token }) => (
           <InvitationSection token={token} />
         ))}
       </Suspense>
-    </main>
+    </div>
   );
 }
 

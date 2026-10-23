@@ -67,10 +67,8 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
   ).toBeVisible();
 
-  await page
-    .getByRole("navigation", { name: "Fil d'Ariane" })
-    .getByRole("link", { name: "Sportifs" })
-    .click();
+  // Lien retour de l'en-tête de page (le menu latéral a aussi un lien « Sportifs », hors de <main>).
+  await page.getByRole("main").getByRole("link", { name: "Sportifs", exact: true }).click();
   await page.getByLabel("Rechercher un sportif").fill(suffix);
   await page.getByLabel("Rechercher un sportif").press("Enter");
   await expect(page.getByText(/Aucun sportif ne correspond/)).toBeVisible();

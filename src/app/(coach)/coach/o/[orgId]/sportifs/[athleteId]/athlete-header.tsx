@@ -9,7 +9,7 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Avatar } from "@/components/ui/avatar";
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { SexMark } from "@/components/ui/sex-mark";
@@ -20,64 +20,48 @@ import {
   contactChannelLabels,
 } from "@/features/athletes/schemas";
 import type { GoalEntry } from "@/features/goals/queries";
-import { disciplineStyles, type Discipline } from "@/domain/training/discipline";
+import { disciplineStyles } from "@/domain/training/discipline";
 import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { daysBetween, formatDate, formatDay } from "@/lib/format";
 
 const statusTone = { active: "ok", paused: "warn", archived: "neutral" } as const;
 
-// En-tête de la fiche : identité, statuts et action « Inviter ». Aplat sans dégradé, teinté par la
-// discipline de l'objectif principal (D-24) : orange pour un Hyrox, bleu pour la course…
+// En-tête de la fiche (prompt Claude Design §5.2, en-tête de page) : retour vers la liste, nom et
+// repère ♀ / ♂, statuts, action « Inviter dans son espace ».
 export function AthleteHeader({
   athlete,
+  listPath,
   invitePath,
-  discipline,
 }: {
   athlete: AthleteDetail;
+  listPath: string;
   invitePath: string;
-  discipline: Discipline | null;
 }) {
-  const tint = discipline ? disciplineStyles[discipline] : null;
   return (
-    <header
-      className={`flex flex-col gap-5 rounded-card border p-5 md:flex-row md:items-center md:justify-between md:p-[22px] ${
-        tint ? tint.header : "border-line bg-surface"
-      }`}
-    >
-      <div className="flex min-w-0 items-center gap-4 md:gap-5">
-        <Avatar
-          name={athlete.displayName}
-          size="xl"
-          colorClass={tint?.avatar}
-          photoPath={athlete.photoPath}
-        />
-        <div className="flex min-w-0 flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <h1 className="font-display text-h2 font-medium break-words md:text-h1">
-              {athlete.displayName}
-            </h1>
-            <SexMark sex={athlete.sex} />
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={statusTone[athlete.status]}>{athleteStatusLabels[athlete.status]}</Badge>
-            {athlete.level ? (
-              <Badge>Niveau {athleteLevelLabels[athlete.level].toLowerCase()}</Badge>
-            ) : null}
-            <Badge tone={athlete.hasAccount ? "ok" : "neutral"}>
-              {athlete.hasAccount ? "Compte activé" : "Sans compte"}
-            </Badge>
-            <span className="text-caption text-muted">
-              Ajouté le {formatDay(athlete.createdAt)}
-            </span>
-          </div>
-        </div>
-      </div>
-      {athlete.hasAccount || athlete.status === "archived" ? null : (
-        <Link href={invitePath} className={buttonClass({ variant: "inverse", size: "md" })}>
-          Inviter dans son espace
-        </Link>
-      )}
-    </header>
+    <PageHeader
+      back={{ href: listPath, label: "Sportifs" }}
+      title={athlete.displayName}
+      titleAside={<SexMark sex={athlete.sex} />}
+      subtitle={
+        <span className="flex flex-wrap items-center gap-2">
+          <Badge tone={statusTone[athlete.status]}>{athleteStatusLabels[athlete.status]}</Badge>
+          {athlete.level ? (
+            <Badge>Niveau {athleteLevelLabels[athlete.level].toLowerCase()}</Badge>
+          ) : null}
+          <Badge tone={athlete.hasAccount ? "ok" : "neutral"}>
+            {athlete.hasAccount ? "Compte activé" : "Sans compte"}
+          </Badge>
+          <span className="text-[13px] text-muted">Ajouté le {formatDay(athlete.createdAt)}</span>
+        </span>
+      }
+      actions={
+        athlete.hasAccount || athlete.status === "archived" ? null : (
+          <Link href={invitePath} className={buttonClass({ variant: "outline" })}>
+            Inviter dans son espace
+          </Link>
+        )
+      }
+    />
   );
 }
 
@@ -167,7 +151,7 @@ export function KeyFigures({
   return (
     <section
       aria-label="Chiffres clés"
-      className="-mx-5 flex snap-x scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-5"
+      className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-5"
     >
       <KeyFigure
         icon={Target}

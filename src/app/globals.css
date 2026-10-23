@@ -79,12 +79,12 @@
      Space Grotesk (classe font-display), jamais sous 18 px.
      Prompt §2 (23/10/2026) : titres en 600 ; H1 de page 28 px (téléphone) / 34 px (ordinateur),
      H1 des pages d'entrée 32 / 40, titre de bloc 18, corps 15, secondaire 13–14, micro 11–12. */
-  --text-page: 28px;
-  --text-page--line-height: 1.15;
-  --text-page--letter-spacing: -0.035em;
-  --text-page-lg: 34px;
-  --text-page-lg--line-height: 1.1;
-  --text-page-lg--letter-spacing: -0.035em;
+  --text-heading: 28px;
+  --text-heading--line-height: 1.15;
+  --text-heading--letter-spacing: -0.035em;
+  --text-heading-lg: 34px;
+  --text-heading-lg--line-height: 1.1;
+  --text-heading-lg--letter-spacing: -0.035em;
   --text-entry: 32px;
   --text-entry--line-height: 1.1;
   --text-entry--letter-spacing: -0.035em;

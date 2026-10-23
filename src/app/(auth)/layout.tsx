@@ -1,19 +1,7 @@
-import Link from "next/link";
+import { EntryShell } from "@/components/layout/entry-shell";
 
-import { CooryLogo } from "@/components/ui/coory-logo";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-
-// Pages d'accès (connexion, mot de passe, invitation, refus) : colonne centrée, logo en tête.
+// Pages d'accès (bienvenue, mot de passe, invitation, refus) : même coquille que la connexion
+// (prompt Claude Design §5.1).
 export default function AuthLayout({ children }: LayoutProps<"/">) {
-  return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between px-5 py-5 sm:px-8">
-        <Link href="/" aria-label="Accueil" className="inline-flex rounded-sm">
-          <CooryLogo size={24} />
-        </Link>
-        <ThemeToggle />
-      </header>
-      {children}
-    </div>
-  );
+  return <EntryShell>{children}</EntryShell>;
 }

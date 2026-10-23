@@ -8,8 +8,10 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-5 py-8 sm:py-12">
-      <h1 className="font-display text-h2 font-medium">Politique de confidentialité</h1>
+    <article className="flex flex-col gap-6">
+      <h1 className="font-display text-heading font-semibold lg:text-heading-lg">
+        Politique de confidentialité
+      </h1>
       <ProvisionalNotice />
       <LegalSection title="Responsable du traitement">
         <p>
@@ -52,6 +54,6 @@ export default function PrivacyPage() {
           données (Belgique). Pour les exercer : [adresse de contact].
         </p>
       </LegalSection>
-    </main>
+    </article>
   );
 }

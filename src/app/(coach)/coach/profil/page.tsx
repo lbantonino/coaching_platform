@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { PageBody, PageHeader, pageMainClass } from "@/components/layout/page-header";
+import { SkeletonLines } from "@/components/ui/skeleton";
 import { requireCoach } from "@/features/auth/guards";
 import { getCoachProfile } from "@/features/coach/profile";
 import { removeCoachPhoto, uploadCoachPhoto } from "@/features/photos/actions";
@@ -14,12 +16,18 @@ export const metadata: Metadata = {
 
 export default function CoachProfilePage() {
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-5 py-6 md:px-8 md:py-[22px]">
-      <h1 className="font-display text-h2 font-medium md:text-h1">Paramètres</h1>
-      <p className="-mt-3 text-muted">Ton profil de coach : photo, identité et entreprise.</p>
-      <Suspense fallback={<p className="text-muted">Chargement…</p>}>
-        <Profile />
-      </Suspense>
+    <main className={pageMainClass}>
+      <PageHeader
+        title="Paramètres"
+        subtitle="Ton profil de coach : photo, identité et entreprise."
+      />
+      <PageBody>
+        <div className="flex w-full max-w-2xl flex-col gap-6">
+          <Suspense fallback={<SkeletonLines />}>
+            <Profile />
+          </Suspense>
+        </div>
+      </PageBody>
     </main>
   );
 }
