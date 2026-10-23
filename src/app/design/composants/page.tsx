@@ -46,7 +46,8 @@ export default function ComponentsPage() {
           Composants Coory
         </h1>
         <p className="text-[14px] text-[#9ba6b5]">
-          Sombre (défaut) et clair côte à côte · mêmes composants que dans les prototypes.
+          Sombre et clair côte à côte (le clair est le thème par défaut) · mêmes composants que dans
+          les prototypes.
         </p>
       </header>
       <div className="flex flex-col items-start gap-7 xl:flex-row">

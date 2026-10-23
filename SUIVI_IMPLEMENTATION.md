@@ -33,6 +33,27 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### D-33 : thème clair par défaut, carte de marque sur la connexion (téléphone)
+```
+Date : 2026-10-23
+Demande : « l'étape ne me convient pas sur mobile » : ajouter la carte de marque avec
+  l'illustration sur la page de connexion, formulaire centré, TÉLÉPHONE uniquement, inscription
+  à ne pas toucher ; puis « mettre le mode clair par défaut »
+Fait :
+  - tokens.css : `:root, [data-theme="light"]` = clair, `[data-theme="dark"]` = sombre, placé après
+    (il l'emporte quand il est choisi) ; themeInitScript applique « dark » s'il est retenu ;
+    ThemeToggle (serveur : clair) ; barre du navigateur blanche (themeColor, colorScheme light)
+  - connexion : carte lg:hidden (BrandPitch partagé avec le panneau de l'ordinateur, boucle ∞ en
+    filigrane), formulaire en my-auto ; la coquille donne toute la hauteur à une page marquée
+    data-mobile-fill (sélecteur :has), les autres pages ne changent pas
+Vérification : captures avant / après comparées au pixel en thème sombre : inscription,
+  mot de passe oublié, lien invalide et connexion sur ordinateur identiques (seule l'icône du
+  bouton de thème diffère pendant le chargement) ; connexion sur téléphone : carte + formulaire
+  centré (390 × 844), carte puis formulaire avec un léger défilement sur iPhone SE (375 × 667)
+Tests : check OK (Vitest 130), test:e2e 88 + 4 ignorés (test du thème inversé : clair par
+  défaut, sombre au choix) ; db:reset puis profil d'Antonino restauré
+```
+
 ### D-32, étape 2 du prompt Claude Design : coquilles de navigation
 ```
 Date : 2026-10-23

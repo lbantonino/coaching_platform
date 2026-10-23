@@ -4,14 +4,84 @@
  * couleurs par discipline), D-24 (touches de couleur sur la fiche) et D-29 (fond bleu nuit des maquettes).
  * Les composants n'écrivent JAMAIS ces valeurs en dur : ils passent par les classes Tailwind
  * (bg-surface, text-muted, bg-accent…) déclarées dans globals.css, qui lisent ces variables.
- * Sombre par défaut ; <html data-theme="light"> bascule tout le site en clair d'un coup.
+ * CLAIR par défaut depuis le 23/10/2026 (D-33, demande d'Antonino) ; <html data-theme="dark"> bascule
+ * tout le site en sombre d'un coup. data-theme="light" / "dark" fonctionne aussi sur une partie de page
+ * (vitrine des composants).
  * Règle du rouge : rare. Un seul bouton principal par écran, une seule stat héro par ligne,
  * l'onglet actif. Jamais en fond de page, jamais en texte long, jamais de texte sombre sur rouge.
  * Prompt Claude Design (COORY_PROMPT_CLAUDE_CODE.md §2, 23/10/2026) : « garde les couleurs existantes » ;
  * seuls les jetons qui manquaient sont ajoutés (--panel, --accent-line, --ok-line).
  */
-:root {
-  /* Sombre (par défaut). BLEU NUIT des maquettes d'Antonino (D-29, couleurs mesurées sur les images),
+:root,
+[data-theme="light"] {
+  /* Clair (par défaut, D-33). */
+  --page: #e6e4e0;
+  --bg: #ffffff;
+  --panel: #f9f8f6;
+  --surface: #f5f4f2;
+  --surface-2: #ecebe8;
+  --chip: #e6e5e2;
+  --bar: #deddd9;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-2: rgba(0, 0, 0, 0.14);
+  --text: #141416;
+  /* Gris, rouge texte et couleurs de statut assombris le 23/10/2026 (audit) : chaque texte mesuré
+     ≥ 4,5:1 sur fond, panneau, survol, pastille, cartes teintées et menu actif. */
+  --muted: #5d5d64;
+  --faint: #62626a;
+
+  --accent: #d91f34; /* plus profond : texte blanc du bouton à 5:1 (4,47 avant l'audit) */
+  --accent-hover: #ff3347;
+  --accent-text: #bb1529; /* rouge en texte sur fond clair */
+  --accent-soft: rgba(217, 31, 52, 0.1);
+  --accent-line: rgba(217, 31, 52, 0.3);
+  --on-accent: #ffffff;
+  --logo-loop: #d91e32; /* boucle du logo sur fond clair (COORY_LOGO.md §3) */
+
+  --inv: #141416;
+  --on-inv: #ffffff;
+
+  --ok: #166534;
+  --ok-soft: rgba(22, 101, 52, 0.1);
+  --ok-line: rgba(22, 101, 52, 0.3);
+  --warn: #8a4b06;
+  --warn-soft: rgba(138, 75, 6, 0.12);
+  --danger: #ffffff;
+  --danger-soft: var(--accent);
+
+  --run: #1d4ed8;
+  --run-soft: rgba(29, 78, 216, 0.1);
+  --strength: #6d28d9;
+  --strength-soft: rgba(109, 40, 217, 0.1);
+  --hyrox: #9a3412;
+  --hyrox-soft: rgba(154, 52, 18, 0.1);
+  --hybrid: #115e59;
+  --hybrid-soft: rgba(17, 94, 89, 0.1);
+
+  --blue: #1d4ed8;
+  --blue-soft: rgba(29, 78, 216, 0.12);
+  --amber: #924207;
+  --amber-soft: rgba(146, 66, 7, 0.12);
+  --green: #166534;
+  --green-soft: rgba(22, 101, 52, 0.12);
+
+  --female: #be185d;
+  --female-soft: rgba(190, 24, 93, 0.1);
+  --male: #0369a1;
+  --male-soft: rgba(3, 105, 161, 0.1);
+
+  --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
+
+  --tint-card: 10%;
+  --tint-nav: 16%;
+  --tint-block: 12%;
+
+  color-scheme: light;
+}
+
+/* Après le bloc clair : à spécificité égale avec :root, le sombre l'emporte quand il est choisi. */
+[data-theme="dark"] {
+  /* Sombre (au choix). BLEU NUIT des maquettes d'Antonino (D-29, couleurs mesurées sur les images),
      après le graphite de D-23/D-24 : fond #0b1019, panneaux #121821, cartes teintées par couleur. */
   --page: #070b12; /* autour du cadre de l'app */
   --bg: #0b1019; /* fond de l'app */
@@ -87,69 +157,4 @@
   --tint-block: 12%; /* blocs de séance dans l'agenda */
 
   color-scheme: dark;
-}
-
-[data-theme="light"] {
-  --page: #e6e4e0;
-  --bg: #ffffff;
-  --panel: #f9f8f6;
-  --surface: #f5f4f2;
-  --surface-2: #ecebe8;
-  --chip: #e6e5e2;
-  --bar: #deddd9;
-  --line: rgba(0, 0, 0, 0.08);
-  --line-2: rgba(0, 0, 0, 0.14);
-  --text: #141416;
-  /* Gris, rouge texte et couleurs de statut assombris le 23/10/2026 (audit) : chaque texte mesuré
-     ≥ 4,5:1 sur fond, panneau, survol, pastille, cartes teintées et menu actif. */
-  --muted: #5d5d64;
-  --faint: #62626a;
-
-  --accent: #d91f34; /* plus profond : texte blanc du bouton à 5:1 (4,47 avant l'audit) */
-  --accent-hover: #ff3347;
-  --accent-text: #bb1529; /* rouge en texte sur fond clair */
-  --accent-soft: rgba(217, 31, 52, 0.1);
-  --accent-line: rgba(217, 31, 52, 0.3);
-  --on-accent: #ffffff;
-  --logo-loop: #d91e32; /* boucle du logo sur fond clair (COORY_LOGO.md §3) */
-
-  --inv: #141416;
-  --on-inv: #ffffff;
-
-  --ok: #166534;
-  --ok-soft: rgba(22, 101, 52, 0.1);
-  --ok-line: rgba(22, 101, 52, 0.3);
-  --warn: #8a4b06;
-  --warn-soft: rgba(138, 75, 6, 0.12);
-  --danger: #ffffff;
-  --danger-soft: var(--accent);
-
-  --run: #1d4ed8;
-  --run-soft: rgba(29, 78, 216, 0.1);
-  --strength: #6d28d9;
-  --strength-soft: rgba(109, 40, 217, 0.1);
-  --hyrox: #9a3412;
-  --hyrox-soft: rgba(154, 52, 18, 0.1);
-  --hybrid: #115e59;
-  --hybrid-soft: rgba(17, 94, 89, 0.1);
-
-  --blue: #1d4ed8;
-  --blue-soft: rgba(29, 78, 216, 0.12);
-  --amber: #924207;
-  --amber-soft: rgba(146, 66, 7, 0.12);
-  --green: #166534;
-  --green-soft: rgba(22, 101, 52, 0.12);
-
-  --female: #be185d;
-  --female-soft: rgba(190, 24, 93, 0.1);
-  --male: #0369a1;
-  --male-soft: rgba(3, 105, 161, 0.1);
-
-  --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
-
-  --tint-card: 10%;
-  --tint-nav: 16%;
-  --tint-block: 12%;
-
-  color-scheme: light;
 }

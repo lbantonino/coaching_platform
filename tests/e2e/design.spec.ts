@@ -18,24 +18,24 @@ test("le logo Coory est annoncé par son nom et le favicon est le symbole rouge"
   );
 });
 
-test("le thème sombre est le défaut, le clair se choisit et reste après rechargement", async ({
+test("le thème clair est le défaut, le sombre se choisit et reste après rechargement", async ({
   page,
 }) => {
   const html = page.locator("html");
   await page.goto("/login");
-  await expect(html).not.toHaveAttribute("data-theme", "light");
+  await expect(html).not.toHaveAttribute("data-theme", "dark");
 
-  await page.getByRole("button", { name: "Passer au thème clair" }).click();
-  await expect(html).toHaveAttribute("data-theme", "light");
+  await page.getByRole("button", { name: "Passer au thème sombre" }).click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
 
   // Le choix est retenu dans ce navigateur et appliqué avant l'affichage.
   await page.reload();
-  await expect(html).toHaveAttribute("data-theme", "light");
+  await expect(html).toHaveAttribute("data-theme", "dark");
 
-  await page.getByRole("button", { name: "Passer au thème sombre" }).click();
-  await expect(html).not.toHaveAttribute("data-theme", "light");
+  await page.getByRole("button", { name: "Passer au thème clair" }).click();
+  await expect(html).not.toHaveAttribute("data-theme", "dark");
   await page.reload();
-  await expect(html).not.toHaveAttribute("data-theme", "light");
+  await expect(html).not.toHaveAttribute("data-theme", "dark");
 });
 
 test("sur téléphone, le menu hamburger remplace la barre du bas et contient la déconnexion", async ({
