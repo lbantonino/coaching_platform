@@ -1,70 +1,67 @@
-import { ChevronLeft, ChevronRight, CircleCheck, Flag, Plus, User, Users } from "lucide-react";
+import {
+  CalendarCheck,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Flag,
+  Users,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
-import { z } from "zod";
+import { Suspense, type ReactNode } from "react";
 
+import { ListRow } from "@/components/blocks/list-row";
+import { MonthGrid } from "@/components/blocks/month-grid";
+import { NewSessionButton } from "@/components/blocks/new-session-sheet";
+import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
-import { buttonClass, iconButtonClass } from "@/components/ui/button";
+import { Badge, StatusBadge } from "@/components/ui/badge";
+import { iconButtonClass } from "@/components/ui/button";
+import { CardEmpty } from "@/components/ui/card";
 import { FilterChips } from "@/components/ui/filter-chips";
-import { inputClass } from "@/components/ui/form-styles";
-import { disciplineStyles, type Discipline } from "@/domain/training/discipline";
-import {
-  dayLabel,
-  groupByDay,
-  monthGrid,
-  monthLabel,
-  parseMonth,
-  shiftMonth,
-  shortMonth,
-} from "@/features/agenda/calendar";
-import { addDays, buildAgendaItems, monthBounds, type AgendaItem } from "@/features/agenda/items";
+import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
+import { PageTabs } from "@/components/ui/page-tabs";
+import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
+import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
+import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
 import { listAgendaEvents, type AgendaEvent } from "@/features/agenda/queries";
-import { listAthletes } from "@/features/athletes/queries";
+import {
+  formatHours,
+  isoWeek,
+  layoutDays,
+  layoutWeek,
+  mondayOf,
+  parseDay,
+  type WeekBlock,
+} from "@/features/agenda/week";
 import { requireOrgAccess } from "@/features/auth/guards";
-import { goalCountdown } from "@/features/goals/format";
-import { listSessions } from "@/features/sessions/queries";
-import { todayIsoInBrussels } from "@/lib/format";
+import { moveSession } from "@/features/sessions/actions";
+import { listSessions, type CoachSession } from "@/features/sessions/queries";
+import { nowTimeInBrussels, todayIsoInBrussels } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Agenda",
 };
 
-// Filtre de discipline dans l'URL, en français : ?discipline=course|musculation|hyrox|hybride
-const disciplineSlugs = {
-  course: "running",
-  musculation: "strength",
-  hyrox: "hyrox",
-  hybride: "hybrid",
-} as const satisfies Record<string, Discipline>;
-type DisciplineSlug = keyof typeof disciplineSlugs;
-const disciplineSlugLabels: Record<DisciplineSlug, string> = {
-  course: "Course à pied",
-  musculation: "Musculation",
-  hyrox: "Hyrox",
-  hybride: "Hybride",
-};
+// Agenda du coach (prompt Claude Design §6 et §7.2) : séances encadrées, collectives et
+// individuelles, et calque des compétitions de ses sportifs (objectifs datés, D-27).
+// Adresse : ?vue=semaine|jour|mois|aujourdhui, ?date=AAAA-MM-JJ, ?type=collectives|individuelles|competitions.
+type View = "semaine" | "jour" | "mois" | "aujourdhui";
+type Kind = "toutes" | "collectives" | "individuelles" | "competitions";
 
-// Pastille d'un élément dans la grille : couleur de sa discipline (D-23), neutre sans discipline.
-const chipClasses: Record<Discipline | "none", string> = {
-  running: "bg-run-soft text-run",
-  strength: "bg-strength-soft text-strength",
-  hyrox: "bg-hyrox-soft text-hyrox",
-  hybrid: "bg-hybrid-soft text-hybrid",
-  none: "bg-chip text-text",
-};
-const neutralIcon = "border border-line-2 bg-chip text-muted";
-
-const weekDays = [
-  ["lun.", "lundi"],
-  ["mar.", "mardi"],
-  ["mer.", "mercredi"],
-  ["jeu.", "jeudi"],
-  ["ven.", "vendredi"],
-  ["sam.", "samedi"],
-  ["dim.", "dimanche"],
-] as const;
+const views: { key: View; label: string }[] = [
+  { key: "semaine", label: "Semaine" },
+  { key: "jour", label: "Jour" },
+  { key: "mois", label: "Mois" },
+  { key: "aujourdhui", label: "Aujourd'hui" },
+];
+const kinds: { key: Kind; label: string }[] = [
+  { key: "toutes", label: "Toutes" },
+  { key: "collectives", label: "Collectives" },
+  { key: "individuelles", label: "Individuelles" },
+  { key: "competitions", label: "Compétitions" },
+];
 
 type Query = Record<string, string | string[] | undefined>;
 const single = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -72,7 +69,7 @@ const single = (value: string | string[] | undefined) => (Array.isArray(value) ?
 export default function AgendaPage({ params, searchParams }: PageProps<"/coach/o/[orgId]/agenda">) {
   return (
     <main className={pageMainClass}>
-      {/* Organisation, mois et filtres viennent de l'URL : données de requête, derrière Suspense. */}
+      {/* Organisation, vue et filtres viennent de l'URL : données de requête, derrière Suspense. */}
       <Suspense fallback={<PageLoading label="Chargement de l'agenda…" />}>
         {Promise.all([params, searchParams]).then(([{ orgId }, query]) => (
           <Agenda orgId={orgId} query={query} />
@@ -82,384 +79,393 @@ export default function AgendaPage({ params, searchParams }: PageProps<"/coach/o
   );
 }
 
+const utc = (day: string) => new Date(`${day}T00:00:00Z`);
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+const longDay = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+const dayAndMonth = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+const shortWeekday = new Intl.DateTimeFormat("fr-BE", { weekday: "short", timeZone: "UTC" });
+const shortDate = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
+const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+
+function weekTitle(monday: string): string {
+  const sunday = addDays(monday, 6);
+  const sameMonth = monday.slice(0, 7) === sunday.slice(0, 7);
+  const from = sameMonth ? String(utc(monday).getUTCDate()) : dayAndMonth.format(utc(monday));
+  return `Semaine du ${from} au ${dayAndMonth.format(utc(sunday))}`;
+}
+
+// « Jeu. et dim. », « Lun., mar. et ven. »
+function dayNames(dates: string[]): string {
+  const names = dates.map((date) => shortWeekday.format(utc(date)));
+  if (names.length === 0) return "";
+  const text =
+    names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} et ${names.at(-1)}`;
+  return capitalize(text);
+}
+
 async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   // Garde-fou serveur : membre de CETTE organisation, sinon redirection.
   const { membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
+  const base = `/coach/o/${organizationId}/agenda`;
   const today = todayIsoInBrussels();
-  const month = parseMonth(single(query.mois), today);
+  const now = nowTimeInBrussels();
 
-  const slug = single(query.discipline);
-  const disciplineSlug = slug && slug in disciplineSlugs ? (slug as DisciplineSlug) : null;
-  const discipline = disciplineSlug ? disciplineSlugs[disciplineSlug] : null;
+  // Ancienne adresse ?mois=AAAA-MM : la vue Mois de ce mois.
+  const legacyMonth = single(query.mois);
+  const viewParam = single(query.vue);
+  const view: View = /^\d{4}-\d{2}$/.test(legacyMonth ?? "")
+    ? "mois"
+    : views.some((v) => v.key === viewParam)
+      ? (viewParam as View)
+      : "semaine";
+  const kindParam = single(query.type);
+  const kind: Kind = kinds.some((k) => k.key === kindParam) ? (kindParam as Kind) : "toutes";
+  const date =
+    view === "aujourdhui"
+      ? today
+      : parseDay(legacyMonth ? `${legacyMonth}-01` : single(query.date), today);
+  const monday = mondayOf(date);
+  const month = date.slice(0, 7);
 
-  const [sessions, events, athletes] = await Promise.all([
+  const [sessions, events] = await Promise.all([
     listSessions(organizationId),
     listAgendaEvents(organizationId),
-    listAthletes(organizationId, { status: "all", q: "" }),
   ]);
-  const selectable = athletes.filter((athlete) => athlete.status !== "archived");
-  const athleteParam = single(query.sportif);
-  const athleteId =
-    athleteParam &&
-    z.uuid().safeParse(athleteParam).success &&
-    selectable.some((a) => a.id === athleteParam)
-      ? athleteParam
-      : null;
-  const filter = { discipline, athleteId };
+  const shownSessions: CoachSession[] =
+    kind === "competitions"
+      ? []
+      : sessions.filter(
+          (session) =>
+            kind === "toutes" ||
+            (kind === "collectives" ? session.kind === "group" : session.kind === "individual"),
+        );
+  const shownEvents: AgendaEvent[] = kind === "toutes" || kind === "competitions" ? events : [];
 
-  const week = groupByDay(buildAgendaItems(sessions, events, today, addDays(today, 6), filter));
-  const { from, to } = monthBounds(month);
-  const byDay = groupByDay(buildAgendaItems(sessions, events, from, to, filter));
-  const competitions = events
-    .filter(
-      (event) =>
-        !event.achieved &&
-        event.date >= today &&
-        (!discipline || event.discipline === discipline) &&
-        (!athleteId || event.athleteId === athleteId),
-    )
-    .slice(0, 5);
-
-  const base = `/coach/o/${organizationId}/agenda`;
-  const href = (changes: { mois?: string; discipline?: DisciplineSlug | null }) => {
+  const href = (changes: { vue?: View; date?: string; type?: Kind }) => {
     const search = new URLSearchParams();
-    const nextMonth = changes.mois ?? month;
-    if (nextMonth !== today.slice(0, 7)) search.set("mois", nextMonth);
-    const nextDiscipline = changes.discipline === undefined ? disciplineSlug : changes.discipline;
-    if (nextDiscipline) search.set("discipline", nextDiscipline);
-    if (athleteId) search.set("sportif", athleteId);
+    const nextView = changes.vue ?? view;
+    if (nextView !== "semaine") search.set("vue", nextView);
+    const nextDate = changes.date ?? date;
+    if (nextView !== "aujourdhui" && nextDate !== today) search.set("date", nextDate);
+    const nextKind = changes.type ?? kind;
+    if (nextKind !== "toutes") search.set("type", nextKind);
     const text = search.toString();
     return text ? `${base}?${text}` : base;
   };
-  const itemHref = (item: AgendaItem) =>
-    item.type === "session"
-      ? `${base}/seances/${item.sessionId}`
-      : `/coach/o/${organizationId}/sportifs/${item.athleteId}?onglet=objectifs`;
+  const step = (direction: 1 | -1) =>
+    view === "mois"
+      ? `${shiftMonth(month, direction)}-01`
+      : view === "semaine"
+        ? addDays(monday, 7 * direction)
+        : addDays(date, direction);
+
+  // Chiffres de la semaine affichée, toutes séances confondues.
+  const week = layoutWeek(sessions, monday);
+  const weekCount = week.days.reduce((sum, day) => sum + day.blocks.length, 0);
+  const busyDays = week.days.filter((day) => day.blocks.length > 0);
+  const freeDays = week.days.filter((day) => day.blocks.length === 0).map((day) => day.date);
+  const groupBlocks = week.days.flatMap((day) => day.blocks.filter((block) => !block.individual));
+  const groupDetail = groupBlocks
+    .slice(0, 2)
+    .map((block) => `${shortWeekday.format(utc(block.date))} ${block.label.slice(0, 5)}`)
+    .join(" · ");
+
+  const sessionHref = (id: string) => `${base}/seances/${id}`;
+  const eventHref = (event: { athleteId: string }) =>
+    `/coach/o/${organizationId}/sportifs/${event.athleteId}?onglet=objectifs`;
+
+  let title: string;
+  let subtitle: string;
+  let content: ReactNode;
+  if (view === "semaine") {
+    const layout = layoutWeek(shownSessions, monday);
+    const count = layout.days.reduce((sum, day) => sum + day.blocks.length, 0);
+    const weekEvents = shownEvents.filter(
+      (event) => event.date >= monday && event.date <= addDays(monday, 6),
+    );
+    title = weekTitle(monday);
+    subtitle =
+      kind === "competitions"
+        ? plural(weekEvents.length, "compétition")
+        : `${plural(count, "séance")} · ${formatHours(layout.totalMinutes)} planifiées`;
+    content = (
+      <>
+        {weekEvents.length > 0 ? (
+          <EventList events={weekEvents} href={eventHref} label="Compétitions de la semaine" />
+        ) : kind === "competitions" ? (
+          <CardEmpty icon={Flag}>Aucune compétition cette semaine.</CardEmpty>
+        ) : null}
+        {kind === "competitions" ? null : (
+          <WeekTimeGrid
+            layout={layout}
+            today={today}
+            now={now}
+            sessionHref={sessionHref}
+            creatable
+            onMove={moveSession.bind(null, organizationId)}
+          />
+        )}
+      </>
+    );
+  } else if (view === "mois") {
+    const dates = monthGrid(month)
+      .flat()
+      .filter((day) => day.inMonth)
+      .map((day) => day.iso);
+    const monthLayout = layoutDays(shownSessions, dates);
+    const monthBlocks = new Map<string, WeekBlock[]>(
+      monthLayout.days.map((day) => [day.date, day.blocks]),
+    );
+    const monthEvents = shownEvents.filter((event) => event.date.startsWith(month));
+    const count = monthLayout.days.reduce((sum, day) => sum + day.blocks.length, 0);
+    title = capitalize(monthLabel(month));
+    subtitle = `${plural(count, "séance")} · ${plural(monthEvents.length, "compétition")}`;
+    content = (
+      <>
+        <MonthGrid
+          month={month}
+          monthBlocks={monthBlocks}
+          today={today}
+          dayHref={(day) => href({ vue: "jour", date: day })}
+        />
+        {monthEvents.length > 0 ? (
+          <EventList events={monthEvents} href={eventHref} label="Compétitions du mois" />
+        ) : null}
+      </>
+    );
+  } else {
+    // Jour ou Aujourd'hui : la liste de la journée, par heure ; les compétitions d'abord.
+    const items = buildAgendaItems(shownSessions, shownEvents, date, date, {
+      discipline: null,
+      athleteId: null,
+    });
+    const sessionCount = items.filter((item) => item.type === "session").length;
+    title =
+      view === "aujourdhui"
+        ? `Aujourd'hui · ${plural(sessionCount, "séance")}`
+        : capitalize(longDay.format(utc(date)));
+    subtitle =
+      view === "aujourdhui"
+        ? capitalize(longDay.format(utc(date)))
+        : plural(sessionCount, "séance");
+    content =
+      items.length === 0 ? (
+        <CardEmpty icon={CalendarDays}>Rien de prévu ce jour-là.</CardEmpty>
+      ) : (
+        <div className="flex flex-col">
+          {items.map((item) => (
+            <DayRow
+              key={item.key}
+              item={item}
+              href={item.type === "session" ? sessionHref(item.sessionId) : eventHref(item)}
+              status={
+                view === "aujourdhui" && item.type === "session"
+                  ? sessionStatus(item, sessions, now)
+                  : null
+              }
+            />
+          ))}
+        </div>
+      );
+  }
 
   return (
     <>
       <PageHeader
         title="Agenda"
-        subtitle="Tes séances encadrées, collectives et individuelles, et les compétitions de tes sportifs."
-        actions={
-          <Link href={`${base}/seances/nouvelle`} className={buttonClass()}>
-            <Plus aria-hidden size={16} strokeWidth={2} />
-            Nouvelle séance
-          </Link>
-        }
+        subtitle="Tes séances encadrées, collectives et individuelles."
+        actions={<NewSessionButton date={view === "jour" ? date : undefined} />}
       />
       <PageBody>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <FilterChips
-            label="Filtrer par discipline"
-            options={[
-              { href: href({ discipline: null }), label: "Toutes", active: !disciplineSlug },
-              ...(Object.keys(disciplineSlugs) as DisciplineSlug[]).map((key) => ({
-                href: href({ discipline: key }),
-                label: disciplineSlugLabels[key],
-                active: disciplineSlug === key,
-              })),
-            ]}
+        <PageTabs
+          label="Vue de l'agenda"
+          items={views.map((item) => ({
+            href: href({ vue: item.key, date: item.key === "aujourdhui" ? today : date }),
+            label: item.label,
+            active: item.key === view,
+          }))}
+        />
+        <KpiGrid label="Chiffres de la semaine">
+          <KpiCard
+            color="run"
+            icon={Clock}
+            value={week.totalMinutes > 0 ? formatHours(week.totalMinutes) : "0 h"}
+            label="de coaching planifiées"
+            detail={`Semaine ${isoWeek(monday)}`}
           />
-          {/* Formulaire GET : le filtre reste dans l'adresse et fonctionne sans JavaScript. */}
-          <form method="get" action={base} className="flex items-center gap-2">
-            {month !== today.slice(0, 7) ? <input type="hidden" name="mois" value={month} /> : null}
-            {disciplineSlug ? (
-              <input type="hidden" name="discipline" value={disciplineSlug} />
-            ) : null}
-            <label htmlFor="agenda-athlete" className="sr-only">
-              Sportif
-            </label>
-            <select
-              id="agenda-athlete"
-              name="sportif"
-              defaultValue={athleteId ?? ""}
-              className={`${inputClass} h-9 w-full md:w-56`}
-            >
-              <option value="">Tous les sportifs</option>
-              {selectable.map((athlete) => (
-                <option key={athlete.id} value={athlete.id}>
-                  {athlete.displayName}
-                </option>
-              ))}
-            </select>
-            <button type="submit" className={buttonClass({ variant: "outline", size: "sm" })}>
-              Filtrer
-            </button>
-          </form>
-        </div>
+          <KpiCard
+            color="accent"
+            icon={CalendarDays}
+            value={String(weekCount)}
+            label={weekCount > 1 ? "séances programmées" : "séance programmée"}
+            detail={
+              busyDays.length > 0
+                ? `Sur ${plural(busyDays.length, "jour")}`
+                : "Aucune cette semaine"
+            }
+          />
+          <KpiCard
+            color="ok"
+            icon={CalendarCheck}
+            value={String(freeDays.length)}
+            label={freeDays.length > 1 ? "jours libres" : "jour libre"}
+            detail={freeDays.length === 7 ? "Toute la semaine" : dayNames(freeDays)}
+          />
+          <KpiCard
+            color="strength"
+            icon={Users}
+            value={String(groupBlocks.length)}
+            label={groupBlocks.length > 1 ? "séances collectives" : "séance collective"}
+            detail={groupDetail ? capitalize(groupDetail) : "Aucune cette semaine"}
+          />
+        </KpiGrid>
 
         <section
-          aria-labelledby="week-title"
-          className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+          aria-labelledby="agenda-title"
+          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px]"
         >
-          <h2 id="week-title" className="text-title font-medium">
-            7 prochains jours
-          </h2>
-          {week.size === 0 ? (
-            <p role="status" className="text-small text-muted">
-              {sessions.length === 0
-                ? "Aucune séance pour l'instant. Crée ta première séance encadrée avec « Nouvelle séance »."
-                : "Rien de prévu dans les 7 prochains jours pour ce filtre."}
-            </p>
-          ) : (
-            <DayList groups={week} today={today} itemHref={itemHref} />
-          )}
-        </section>
-
-        <section
-          aria-labelledby="competitions-title"
-          className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-        >
-          <h2 id="competitions-title" className="text-title font-medium">
-            Prochaines compétitions
-          </h2>
-          {competitions.length === 0 ? (
-            <p role="status" className="text-small text-muted">
-              Aucune compétition à venir pour ce filtre.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {competitions.map((event) => (
-                <li key={event.id}>
-                  <CompetitionRow
-                    event={event}
-                    today={today}
-                    href={`/coach/o/${organizationId}/sportifs/${event.athleteId}?onglet=objectifs`}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section
-          aria-labelledby="month-title"
-          className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="month-title" className="text-title font-medium first-letter:uppercase">
-              {monthLabel(month)}
-            </h2>
-            <nav aria-label="Changer de mois" className="flex items-center gap-2">
-              <Link
-                href={href({ mois: shiftMonth(month, -1) })}
-                aria-label="Mois précédent"
-                className={iconButtonClass({ size: "sm" })}
-              >
-                <ChevronLeft aria-hidden size={16} strokeWidth={1.8} />
-              </Link>
-              <Link
-                href={href({ mois: today.slice(0, 7) })}
-                className={buttonClass({ variant: "outline", size: "sm" })}
-              >
-                Aujourd&apos;hui
-              </Link>
-              <Link
-                href={href({ mois: shiftMonth(month, 1) })}
-                aria-label="Mois suivant"
-                className={iconButtonClass({ size: "sm" })}
-              >
-                <ChevronRight aria-hidden size={16} strokeWidth={1.8} />
-              </Link>
-            </nav>
-          </div>
-
-          {/* Ordinateur : grille du mois. */}
-          <table className="hidden w-full table-fixed border-collapse md:table">
-            <caption className="sr-only">Agenda de {monthLabel(month)}</caption>
-            <thead>
-              <tr>
-                {weekDays.map(([short, long]) => (
-                  <th
-                    key={long}
-                    scope="col"
-                    className="px-1.5 pb-2 text-left text-caption font-normal text-muted"
-                  >
-                    <abbr title={long} className="no-underline">
-                      {short}
-                    </abbr>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {monthGrid(month).map((weekRow) => (
-                <tr key={weekRow[0].iso}>
-                  {weekRow.map((day) => (
-                    <td
-                      key={day.iso}
-                      className={`h-24 border border-line p-1.5 align-top ${day.inMonth ? "" : "bg-bg/40"}`}
-                    >
-                      <span
-                        className={`inline-flex size-6 items-center justify-center rounded-full text-caption tabular ${
-                          day.iso === today
-                            ? "bg-accent font-semibold text-on-accent"
-                            : day.inMonth
-                              ? "text-text"
-                              : "text-faint"
-                        }`}
-                      >
-                        {day.inMonth ? day.day : ""}
-                      </span>
-                      {day.inMonth ? (
-                        <ul className="mt-1 flex flex-col gap-1">
-                          {(byDay.get(day.iso) ?? []).map((item) => (
-                            <li key={item.key}>
-                              <Link
-                                href={itemHref(item)}
-                                title={
-                                  item.type === "session"
-                                    ? `${item.time} ${item.title} · ${item.detail}`
-                                    : `${item.title} · ${item.athleteName}`
-                                }
-                                className={`flex items-center gap-1 truncate rounded-[6px] px-1.5 py-0.5 text-micro font-medium hover:opacity-80 ${chipClasses[item.discipline ?? "none"]}`}
-                              >
-                                {item.type === "event" ? (
-                                  <Flag
-                                    aria-hidden
-                                    size={10}
-                                    strokeWidth={2}
-                                    className="shrink-0"
-                                  />
-                                ) : (
-                                  <span className="shrink-0 font-mono tabular">{item.time}</span>
-                                )}
-                                <span className="truncate">
-                                  {item.type === "event"
-                                    ? `${item.athleteName.split(" ")[0]} · ${item.title}`
-                                    : item.title}
-                                </span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Téléphone : liste des jours qui ont quelque chose (une grille serait illisible). */}
-          <div className="md:hidden">
-            {byDay.size === 0 ? (
-              <p role="status" className="text-small text-muted">
-                Rien de prévu ce mois-ci.
-              </p>
-            ) : (
-              <DayList groups={byDay} today={today} itemHref={itemHref} />
+          <header className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-1">
+              <h2 id="agenda-title" className="font-display text-block font-semibold">
+                {title}
+              </h2>
+              <p className="text-[13px] text-muted">{subtitle}</p>
+            </div>
+            {view === "aujourdhui" ? null : (
+              <nav aria-label="Changer de période" className="flex shrink-0 items-center gap-1.5">
+                <Link
+                  href={href({ date: step(-1) })}
+                  scroll={false}
+                  aria-label="Période précédente"
+                  className={iconButtonClass()}
+                >
+                  <ChevronLeft aria-hidden size={18} strokeWidth={1.8} />
+                </Link>
+                <Link
+                  href={href({ date: step(1) })}
+                  scroll={false}
+                  aria-label="Période suivante"
+                  className={iconButtonClass()}
+                >
+                  <ChevronRight aria-hidden size={18} strokeWidth={1.8} />
+                </Link>
+              </nav>
             )}
-          </div>
+          </header>
+          <FilterChips
+            label="Filtrer l'agenda"
+            options={kinds.map((item) => ({
+              href: href({ type: item.key }),
+              label: item.label,
+              active: item.key === kind,
+            }))}
+          />
+          {content}
         </section>
       </PageBody>
     </>
   );
 }
 
-// Jours avec leurs éléments : séances (heure) et compétitions (journée entière).
-function DayList({
-  groups,
-  today,
-  itemHref,
-}: {
-  groups: Map<string, AgendaItem[]>;
-  today: string;
-  itemHref: (item: AgendaItem) => string;
-}) {
-  return (
-    <ul className="flex flex-col gap-4">
-      {[...groups.entries()].map(([date, items]) => (
-        <li key={date} className="flex flex-col gap-2">
-          <h3 className="text-small font-medium first-letter:uppercase">
-            {date === today ? `Aujourd'hui, ${dayLabel(date)}` : dayLabel(date)}
-          </h3>
-          <ul className="flex flex-col gap-2">
-            {items.map((item) => (
-              <li key={item.key}>
-                <ItemRow item={item} href={itemHref(item)} />
-              </li>
-            ))}
-          </ul>
-        </li>
-      ))}
-    </ul>
-  );
+// Statut d'une séance d'aujourd'hui selon l'heure : Terminée, En cours ou À venir.
+function sessionStatus(
+  item: Extract<AgendaItem, { type: "session" }>,
+  sessions: CoachSession[],
+  now: string,
+): string {
+  const session = sessions.find((s) => s.id === item.sessionId);
+  const start = toMinutes(item.time);
+  const end = start + (session?.durationMinutes ?? 0);
+  const current = toMinutes(now);
+  return current >= end ? "Terminée" : current >= start ? "En cours" : "À venir";
 }
 
-function ItemRow({ item, href }: { item: AgendaItem; href: string }) {
-  const icon = item.discipline ? disciplineStyles[item.discipline].icon : neutralIcon;
-  const Icon =
-    item.type === "session" ? (item.individual ? User : Users) : item.achieved ? CircleCheck : Flag;
+function DayRow({ item, href, status }: { item: AgendaItem; href: string; status: string | null }) {
   return (
-    <Link
+    <ListRow
       href={href}
-      className="flex items-center gap-3 rounded-[14px] border border-line bg-bg p-3 transition-colors hover:bg-surface-2"
-    >
-      <span className="w-12 shrink-0 font-mono text-small tabular">
-        {item.type === "session" ? item.time : <span className="text-muted">Journée</span>}
-      </span>
-      <span
-        aria-hidden
-        className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full ${icon}`}
-      >
-        <Icon size={16} strokeWidth={1.75} />
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate font-medium">{item.title}</span>
-        <span className="truncate text-caption text-muted">
-          {item.type === "event"
-            ? [item.athleteName, item.detail].filter(Boolean).join(" · ")
-            : item.detail}
+      leading={
+        <span className="w-12 shrink-0 font-mono text-[14px] font-medium tabular">
+          {item.type === "session" ? (
+            item.time.slice(0, 5)
+          ) : (
+            <Flag
+              aria-label="Compétition"
+              size={16}
+              strokeWidth={1.8}
+              className="text-accent-text"
+            />
+          )}
         </span>
-      </span>
-      {item.type === "event" ? (
-        <Badge tone={item.achieved ? "ok" : "neutral"}>
-          {item.achieved ? "Atteint" : "Compétition"}
-        </Badge>
-      ) : null}
-    </Link>
+      }
+      title={item.type === "session" ? item.title : `${item.title} · ${item.athleteName}`}
+      sub={item.detail || (item.type === "event" ? "Compétition" : undefined)}
+      trailing={
+        <>
+          {item.discipline ? (
+            <Badge tone={disciplineTones[item.discipline]}>
+              {disciplineLabels[item.discipline]}
+            </Badge>
+          ) : null}
+          {status ? <StatusBadge label={status} /> : null}
+        </>
+      }
+    />
   );
 }
 
-// Ligne d'une prochaine compétition : date, pastille de discipline, titre, sportif, compte à rebours.
-function CompetitionRow({
-  event,
-  today,
+function EventList({
+  events,
   href,
+  label,
 }: {
-  event: AgendaEvent;
-  today: string;
-  href: string;
+  events: AgendaEvent[];
+  href: (event: AgendaEvent) => string;
+  label: string;
 }) {
-  const icon = event.discipline ? disciplineStyles[event.discipline].icon : neutralIcon;
-  const countdown = goalCountdown(today, event.date);
   return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 rounded-[14px] border border-line bg-bg p-3 transition-colors hover:bg-surface-2"
-    >
-      <span className="flex w-11 shrink-0 flex-col items-center leading-none">
-        <span className="font-display text-[20px] font-medium tabular">
-          {Number(event.date.slice(8, 10))}
-        </span>
-        <span className="text-caption text-muted">{shortMonth(event.date)}</span>
-      </span>
-      <span
-        aria-hidden
-        className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full ${icon}`}
-      >
-        <Flag size={16} strokeWidth={1.75} />
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate font-medium">{event.title}</span>
-        <span className="truncate text-caption text-muted">
-          {[event.athleteName, event.detail].filter(Boolean).join(" · ")}
-        </span>
-      </span>
-      <Badge tone={countdown.overdue ? "warn" : "neutral"}>{countdown.label}</Badge>
-    </Link>
+    <div className="flex flex-col">
+      <p className="pb-1 font-mono text-[11px] font-medium tracking-[0.08em] text-muted uppercase">
+        {label}
+      </p>
+      {events.map((event) => (
+        <ListRow
+          key={event.id}
+          href={href(event)}
+          leading={
+            <span className="w-14 shrink-0 font-mono text-[13px] font-medium tabular">
+              {shortDate.format(utc(event.date))}
+            </span>
+          }
+          title={`${event.title} · ${event.athleteName}`}
+          sub={event.detail || "Compétition"}
+          trailing={
+            <>
+              {event.discipline ? (
+                <Badge tone={disciplineTones[event.discipline]}>
+                  {disciplineLabels[event.discipline]}
+                </Badge>
+              ) : null}
+              {event.achieved ? <StatusBadge label="Atteint" /> : null}
+            </>
+          }
+        />
+      ))}
+    </div>
   );
 }

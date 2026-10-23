@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // Sélecteur segmenté (« Jour · Semaine · Mois »).
 // Accessible : c'est un groupe de boutons radio natifs, utilisable au clavier et dans un formulaire.
 // Classes partagées avec le sélecteur contrôlé du calculateur de test.
@@ -40,5 +42,32 @@ export function Segmented<T extends string>({
         ))}
       </div>
     </fieldset>
+  );
+}
+
+// Variante en liens (la vue choisie est dans l'adresse) : même habillage, option active en rouge.
+export function SegmentedNav({
+  label,
+  items,
+}: {
+  label: string;
+  items: { href: string; label: string; active: boolean }[];
+}) {
+  return (
+    <nav aria-label={label} className={`${segmentedGroupClass} w-auto`}>
+      {items.map((item) => (
+        <Link
+          key={item.label}
+          href={item.href}
+          scroll={false}
+          aria-current={item.active ? "page" : undefined}
+          className={`flex h-9 items-center justify-center rounded-[9px] px-3 text-[14px] font-medium whitespace-nowrap transition-colors duration-150 ${
+            item.active ? "bg-accent text-on-accent" : "text-muted hover:text-text"
+          }`}
+        >
+          {item.label}
+        </Link>
+      ))}
+    </nav>
   );
 }

@@ -69,6 +69,52 @@ export function KpiCard({
   );
 }
 
+// Carte chiffrée avec sa liste (Tâches, Messages du tableau de bord), façon widget de l'iPhone.
+// Téléphone : pleine largeur, pastille en haut à gauche, chiffre et libellé en bas, liste à droite.
+// Ordinateur : une colonne de la grille, chiffre et pastille en haut, liste en dessous. Seul le bloc
+// chiffré est un lien vers le module : la liste a ses propres boutons (CheckList).
+export function KpiListCard({
+  value,
+  label,
+  color,
+  icon: Icon,
+  href,
+  children,
+}: {
+  value: string;
+  label: string;
+  color: KpiColor;
+  icon: LucideIcon;
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      style={{ "--kpi": `var(--${color})` } as CSSProperties}
+      className="col-span-2 flex min-w-0 gap-3 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text lg:col-span-1 lg:flex-col lg:gap-1"
+    >
+      <Link
+        href={href}
+        className="flex w-[92px] shrink-0 flex-col gap-1.5 transition-[scale] duration-150 active:scale-[.98] lg:w-auto"
+      >
+        <span className="flex flex-1 flex-col-reverse items-start justify-between gap-3 lg:flex-row lg:gap-2">
+          <span className="font-display text-[24px] leading-[1.05] font-semibold tracking-[-0.03em] tabular md:text-[30px]">
+            {value}
+          </span>
+          <span
+            aria-hidden
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--kpi)_16%,transparent)] text-[var(--kpi)]"
+          >
+            <Icon size={16} strokeWidth={1.8} />
+          </span>
+        </span>
+        <span className="text-[14px] leading-snug font-medium">{label}</span>
+      </Link>
+      {children}
+    </div>
+  );
+}
+
 export function KpiGrid({
   label,
   columns = 4,

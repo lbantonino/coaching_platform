@@ -1,5 +1,9 @@
 import type { Discipline } from "@/domain/training/discipline";
-import { occurrencesBetween, type ScheduleLike } from "@/features/sessions/schemas";
+import {
+  sessionOccurrences,
+  type ScheduleLike,
+  type SessionException,
+} from "@/features/sessions/schemas";
 
 import { addDays } from "./items";
 
@@ -13,6 +17,8 @@ export type WeekSession = ScheduleLike & {
   startTime: string;
   durationMinutes: number;
   athletes: { id: string; name: string }[];
+  prospectName?: string | null;
+  exceptions?: SessionException[];
 };
 
 // Lundi de la semaine qui contient `day` (AAAA-MM-JJ, calcul en UTC).
@@ -37,6 +43,10 @@ export type WeekBlock = {
   subtitle: string;
   discipline: Discipline | null;
   individual: boolean;
+  // Glisser-déposer (D-35) : la date de la série dont vient le bloc, s'il se répète, s'il a été déplacé.
+  originalDate: string;
+  recurring: boolean;
+  moved: boolean;
   // Colonne occupée parmi `lanes` quand des séances se chevauchent le même jour.
   lane: number;
   lanes: number;
@@ -45,7 +55,8 @@ export type WeekBlock = {
 export type WeekLayout = {
   days: { date: string; minutes: number; blocks: WeekBlock[] }[];
   totalMinutes: number;
-  // Plage horaire affichée : au moins 08:00 - 20:00, élargie pour ne couper aucune séance.
+  // Plage horaire affichée : au moins 06:00 - 22:00 (prompt Claude Design §6, toute la journée
+  // visible), élargie pour ne couper aucune séance.
   firstHour: number;
   lastHour: number;
 };
@@ -70,21 +81,31 @@ export function parseDay(param: string | undefined, today: string): string {
 // Même calcul pour une liste de jours consécutifs : une journée, une semaine ou un mois.
 export function layoutDays(sessions: WeekSession[], dates: string[]): WeekLayout {
   const blocks: WeekBlock[] = sessions.flatMap((session) =>
-    occurrencesBetween(session, dates[0], dates[dates.length - 1]).map((date) => {
-      const start = toMinutes(session.startTime);
+    sessionOccurrences(session, dates[0], dates[dates.length - 1]).map((occurrence) => {
+      const { date } = occurrence;
+      const start = toMinutes(occurrence.startTime);
       const end = start + session.durationMinutes;
       const individual = session.kind === "individual";
+      const person = session.athletes[0]?.name ?? null;
       return {
-        key: `${session.id}:${date}`,
+        key: `${session.id}:${occurrence.originalDate}`,
         sessionId: session.id,
         date,
+        originalDate: occurrence.originalDate,
+        recurring: session.repeatsWeekly,
+        moved: occurrence.moved,
         start,
         end,
         label: `${toTime(start)} - ${toTime(end)}`,
-        title: individual ? (session.athletes[0]?.name ?? session.title) : session.title,
-        subtitle: individual
-          ? session.title
-          : `${session.athletes.length} inscrit${session.athletes.length > 1 ? "s" : ""}`,
+        // Individuelle : le nom du sportif, ou du nouveau client pas encore créé (D-35).
+        title: individual ? (person ?? session.prospectName ?? session.title) : session.title,
+        subtitle: !individual
+          ? `${session.athletes.length} inscrit${session.athletes.length > 1 ? "s" : ""}`
+          : person
+            ? session.title
+            : session.prospectName
+              ? `Nouveau client · ${session.title}`
+              : "Nouveau client",
         discipline: session.discipline,
         individual,
         lane: 0,
@@ -110,8 +131,8 @@ export function layoutDays(sessions: WeekSession[], dates: string[]): WeekLayout
   return {
     days,
     totalMinutes: days.reduce((sum, day) => sum + day.minutes, 0),
-    firstHour: Math.min(8, ...starts.map((m) => Math.floor(m / 60))),
-    lastHour: Math.min(24, Math.max(20, ...ends.map((m) => Math.ceil(m / 60)))),
+    firstHour: Math.min(6, ...starts.map((m) => Math.floor(m / 60))),
+    lastHour: Math.min(24, Math.max(22, ...ends.map((m) => Math.ceil(m / 60)))),
   };
 }
 
@@ -145,6 +166,30 @@ export function formatHours(minutes: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, "0")}`;
 }
 
+// Heures en nombre décimal pour les en-têtes de jour : « 2,5 h », « 3,75 h » ; rien sans séance.
+const decimalHours = new Intl.NumberFormat("fr-BE", { maximumFractionDigits: 2 });
+
+export function formatHoursShort(minutes: number): string {
+  return minutes > 0 ? `${decimalHours.format(minutes / 60)} h` : "";
+}
+
+// Numéro de semaine ISO 8601 (la semaine 1 contient le premier jeudi de l'année).
+export function isoWeek(day: string): number {
+  const date = new Date(`${day}T00:00:00Z`);
+  const thursday = new Date(date);
+  thursday.setUTCDate(date.getUTCDate() + 3 - ((date.getUTCDay() + 6) % 7));
+  const firstThursday = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 4));
+  return (
+    1 +
+    Math.round(
+      ((thursday.getTime() - firstThursday.getTime()) / 86_400_000 -
+        3 +
+        ((firstThursday.getUTCDay() + 6) % 7)) /
+        7,
+    )
+  );
+}
+
 // Dernière séance passée d'un sportif (jusqu'à `now` inclus), dans les 60 derniers jours.
 export function lastSessionFor(
   athleteId: string,
@@ -155,13 +200,12 @@ export function lastSessionFor(
   let best: { date: string; time: string } | null = null;
   for (const session of sessions) {
     if (!session.athletes.some((athlete) => athlete.id === athleteId)) continue;
-    const dates = occurrencesBetween(session, addDays(today, -60), today).filter(
-      (date) => date < today || session.startTime <= nowTime,
-    );
-    const date = dates.at(-1);
-    if (!date) continue;
-    if (!best || date > best.date || (date === best.date && session.startTime > best.time)) {
-      best = { date, time: session.startTime };
+    const last = sessionOccurrences(session, addDays(today, -60), today)
+      .filter((o) => o.date < today || o.startTime <= nowTime)
+      .at(-1);
+    if (!last) continue;
+    if (!best || last.date > best.date || (last.date === best.date && last.startTime > best.time)) {
+      best = { date: last.date, time: last.startTime };
     }
   }
   return best;
@@ -171,6 +215,6 @@ export function lastSessionFor(
 export function weekCounts(sessions: WeekSession[], monday: string): number[] {
   return Array.from({ length: 7 }, (_, i) => {
     const day = addDays(monday, i);
-    return sessions.filter((session) => occurrencesBetween(session, day, day).length > 0).length;
+    return sessions.filter((session) => sessionOccurrences(session, day, day).length > 0).length;
   });
 }

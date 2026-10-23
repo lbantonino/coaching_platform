@@ -48,3 +48,55 @@ export function nowTimeInBrussels(): string {
     timeZone: "Europe/Brussels",
   }).format(new Date());
 }
+
+// Minuit aujourd'hui à Bruxelles, en horodatage (« 2026-10-23T00:00:00+02:00 »), pour filtrer ce qui
+// s'est passé aujourd'hui. À appeler uniquement dans du code exécuté à la requête.
+export function startOfTodayInBrussels(): string {
+  const offset =
+    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Brussels", timeZoneName: "longOffset" })
+      .formatToParts(new Date())
+      .find((part) => part.type === "timeZoneName")
+      ?.value.replace("GMT", "") || "+00:00";
+  return `${todayIsoInBrussels()}T00:00:00${offset}`;
+}
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+const shortDay = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
+// Jour court d'une date AAAA-MM-JJ : « Aujourd'hui », « Demain », « Hier », sinon « Mar 27 ».
+export function dayShortLabel(isoDay: string, today: string): string {
+  const gap = daysBetween(today, isoDay);
+  if (gap === 0) return "Aujourd'hui";
+  if (gap === 1) return "Demain";
+  if (gap === -1) return "Hier";
+  return capitalize(shortDay.format(new Date(`${isoDay}T00:00:00Z`)).replace(".", ""));
+}
+
+// Échéance d'une tâche : rien, « En retard », ou le jour court.
+export function dueLabel(isoDay: string | null, today: string): string | null {
+  if (isoDay === null) return null;
+  return isoDay < today ? "En retard" : dayShortLabel(isoDay, today);
+}
+
+const brusselsDay = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" });
+const brusselsTime = new Intl.DateTimeFormat("fr-BE", {
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Europe/Brussels",
+});
+
+// Jour (AAAA-MM-JJ) d'un horodatage, au fuseau de Bruxelles.
+export function brusselsDayOf(isoTimestamp: string): string {
+  return brusselsDay.format(new Date(isoTimestamp));
+}
+
+// Heure d'un message : « 09:12 » aujourd'hui, sinon le jour court (« Hier », « Mar 20 »), à Bruxelles.
+export function messageTime(isoTimestamp: string, today: string): string {
+  const date = new Date(isoTimestamp);
+  const day = brusselsDay.format(date);
+  return day === today ? brusselsTime.format(date) : dayShortLabel(day, today);
+}

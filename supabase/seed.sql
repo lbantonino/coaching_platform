@@ -403,6 +403,64 @@ values
   ('ca000000-0000-4000-8000-000000000002', '0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004', 'a0000000-0000-4000-8000-00000000000a'),
   ('cb000000-0000-4000-8000-000000000001', '0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', 'b0000000-0000-4000-8000-00000000000b');
 
+-- Tâches du coach (4a, D-35), inventées : une urgente pour aujourd'hui, une normale dans trois jours.
+-- Dates relatives au jour du reset, pour que la carte du tableau de bord reste parlante.
+insert into public.coach_tasks (id, organization_id, title, priority, due_on, athlete_id, created_by)
+values
+  ('7a000000-0000-4000-8000-0000000000a1', '0a000000-0000-4000-8000-0000000000a1',
+   'Finaliser le programme Hyrox de Lucas', 'high', current_date, 'da000000-0000-4000-8000-000000000004',
+   'a0000000-0000-4000-8000-00000000000a'),
+  ('7a000000-0000-4000-8000-0000000000a2', '0a000000-0000-4000-8000-0000000000a1',
+   'Relancer Sophie pour la facture d''octobre', 'normal', current_date + 3,
+   'da000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Organisation B : invisible pour le coach A (isolation).
+  ('7b000000-0000-4000-8000-0000000000b1', '0b000000-0000-4000-8000-0000000000b1',
+   'Préparer le renfo du lundi', 'normal', current_date + 1, null, 'b0000000-0000-4000-8000-00000000000b');
+
+-- Messages des sportifs (4a, D-35), inventés : trois non lus pour le coach A, et une ancienne réponse du
+-- coach. Inès et Nadia n'ont pas encore de compte : en vrai, seul un sportif connecté écrira (P7) ; ici,
+-- c'est la démo de la carte Messages. Heures relatives au reset.
+insert into public.athlete_messages (id, organization_id, athlete_id, sender, body, read_at, created_at, created_by)
+values
+  ('3a000000-0000-4000-8000-0000000000a1', '0a000000-0000-4000-8000-0000000000a1',
+   'da000000-0000-4000-8000-000000000002', 'athlete',
+   'Salut coach, je peux décaler le test VMA de mercredi à jeudi matin ?', null,
+   now() - interval '25 minutes', 'e0000000-0000-4000-8000-00000000000e'),
+  ('3a000000-0000-4000-8000-0000000000a2', '0a000000-0000-4000-8000-0000000000a1',
+   'da000000-0000-4000-8000-000000000003', 'athlete',
+   'Circuit de samedi bouclé, je suis prête pour la suite !', null, now() - interval '3 hours', null),
+  ('3a000000-0000-4000-8000-0000000000a3', '0a000000-0000-4000-8000-0000000000a1',
+   'da000000-0000-4000-8000-000000000005', 'athlete',
+   'Je confirme pour mardi 18 h 30, j''apporte ma ceinture.', null, now() - interval '26 hours', null),
+  ('3a000000-0000-4000-8000-0000000000a4', '0a000000-0000-4000-8000-0000000000a1',
+   'da000000-0000-4000-8000-000000000005', 'coach',
+   'Mardi, on fait le point sur le squat avant le championnat.', now() - interval '27 hours',
+   now() - interval '2 days', 'a0000000-0000-4000-8000-00000000000a'),
+  -- Organisation B.
+  ('3b000000-0000-4000-8000-0000000000b1', '0b000000-0000-4000-8000-0000000000b1',
+   'db000000-0000-4000-8000-000000000001', 'athlete', 'Bonjour, la séance de lundi est maintenue ?', null,
+   now() - interval '1 hour', null);
+
+-- Suivi des factures (4a, D-35 / D-17 étape A), inventé : trois factures envoyées ces deux dernières
+-- semaines (450 €), deux payées (300 €), celle de Sophie en retard (150 €). Dates relatives au reset.
+insert into public.athlete_invoices (
+  id, organization_id, athlete_id, label, amount_cents, issued_on, due_on, paid_on, created_by
+)
+values
+  ('fa000000-0000-4000-8000-0000000000a1', '0a000000-0000-4000-8000-0000000000a1',
+   'da000000-0000-4000-8000-000000000001', 'Forfait 8 séances', 15000,
+   current_date - 14, current_date - 1, null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('fa000000-0000-4000-8000-0000000000a2', '0a000000-0000-4000-8000-0000000000a1',
+   'da000000-0000-4000-8000-000000000002', 'Suivi running mensuel', 20000,
+   current_date - 12, current_date + 2, current_date - 5, 'a0000000-0000-4000-8000-00000000000a'),
+  ('fa000000-0000-4000-8000-0000000000a3', '0a000000-0000-4000-8000-0000000000a1',
+   'da000000-0000-4000-8000-000000000005', 'Coaching force · 2 séances', 10000,
+   current_date - 8, current_date + 6, current_date - 2, 'a0000000-0000-4000-8000-00000000000a'),
+  -- Organisation B : invisible pour le coach A (isolation).
+  ('fb000000-0000-4000-8000-0000000000b1', '0b000000-0000-4000-8000-0000000000b1',
+   'db000000-0000-4000-8000-000000000001', 'Forfait 10 km', 9000,
+   current_date - 3, current_date + 11, null, 'b0000000-0000-4000-8000-00000000000b');
+
 -- Profils des coachs de démonstration (D-28) : prénoms inventés ; leurs photos (libres de droits) sont
 -- chargées par scripts/seed-photos.mjs, lancé par `npm run db:reset`.
 insert into public.coach_profiles (user_id, first_name, last_name, company_name) values

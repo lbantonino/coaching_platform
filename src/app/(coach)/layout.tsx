@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 
+import { NewSessionSheet } from "@/components/blocks/new-session-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { getCoachProfile } from "@/features/coach/profile";
+import { createSession, listSessionAthletes } from "@/features/sessions/actions";
 
 // Coquille de l'espace coach (prompt Claude Design §5.2). Elle lit la session (organisation, carte
 // du coach) : tout passe derrière Suspense (Cache Components).
@@ -37,7 +39,18 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
           : null,
       }}
     >
-      {children}
+      {/* La fenêtre « Nouvelle séance », la même sur toutes les pages coach (D-35). Les actions
+          revérifient elles-mêmes l'accès à l'organisation. */}
+      {first ? (
+        <NewSessionSheet
+          action={createSession.bind(null, first.organizationId)}
+          loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
+        >
+          {children}
+        </NewSessionSheet>
+      ) : (
+        children
+      )}
     </AppShell>
   );
 }

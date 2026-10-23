@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { listAthletes } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 import { getSession } from "./queries";
-import { parseSessionForm, type SessionFormInput } from "./schemas";
+import { occursOn, parseSessionForm, type SessionFormInput } from "./schemas";
 
 // `attempt` change à CHAQUE réponse : le formulaire est reconstruit avec la saisie renvoyée
 // (React 19 remet sinon les menus déroulants et les cases à leur valeur de départ).
@@ -16,6 +17,8 @@ export type SessionFormState = {
   error: string | null;
   attempt: number;
   values: SessionFormInput | null;
+  // Création depuis la fenêtre de l'agenda (champ « stay ») : la séance créée, sans changer de page.
+  created?: { id: string; title: string } | null;
 };
 
 function readForm(formData: FormData, kind: string): SessionFormInput {
@@ -32,6 +35,8 @@ function readForm(formData: FormData, kind: string): SessionFormInput {
     endsOn: field("endsOn"),
     athleteId: field("athleteId"),
     athleteIds: formData.getAll("athleteIds").map(String),
+    newClient: formData.get("newClient") === "on",
+    prospectName: field("prospectName"),
     notes: field("notes"),
   };
 }
@@ -90,6 +95,16 @@ export async function createSession(
   }
 
   revalidatePath(`/coach/o/${orgId}/agenda`);
+  // Fenêtre « Nouvelle séance » de l'agenda (clic sur un créneau) : on reste sur la page.
+  if (formData.get("stay") === "1") {
+    revalidatePath("/coach");
+    return {
+      error: null,
+      attempt: previous.attempt + 1,
+      values: null,
+      created: { id: data.id, title: parsed.values.title },
+    };
+  }
   redirect(`/coach/o/${orgId}/agenda/seances/${data.id}`);
 }
 
@@ -105,14 +120,20 @@ export async function updateSession(
   if (!session)
     return { error: "Séance introuvable.", attempt: previous.attempt + 1, values: null };
 
-  // Le type et le sportif d'une séance individuelle ne changent pas (droit refusé en base aussi).
+  // Le type ne change pas, ni le sportif une fois rattaché (refusé en base aussi). Une séance d'un
+  // nouveau client (sans sportif) peut, elle, être rattachée à sa fiche une fois créée.
   const input = readForm(formData, session.kind);
-  if (session.kind === "individual") input.athleteId = session.athletes[0]?.id ?? "";
+  const attached = session.athletes[0]?.id;
+  if (session.kind === "individual" && attached) {
+    input.athleteId = attached;
+    input.newClient = false;
+  }
   const fail = (error: string) => ({ error, attempt: previous.attempt + 1, values: input });
 
   const parsed = parseSessionForm(input);
   if (!parsed.ok) return fail(parsed.error);
-  if (!(await allBelongToOrg(orgId, parsed.athleteIds))) {
+  const linking = session.kind === "individual" && !attached ? parsed.values.athlete_id : null;
+  if (!(await allBelongToOrg(orgId, linking ? [linking] : parsed.athleteIds))) {
     return fail("Sportif introuvable dans ton organisation.");
   }
 
@@ -129,6 +150,10 @@ export async function updateSession(
     repeats_weekly: v.repeats_weekly,
     ends_on: v.ends_on,
     notes: v.notes,
+    // Nouveau client : son nom, ou son rattachement à une fiche (une seule fois).
+    ...(session.kind === "individual" && !attached
+      ? { athlete_id: v.athlete_id, prospect_name: v.prospect_name }
+      : {}),
   };
   const { error } = await supabase
     .from("coach_sessions")
@@ -183,4 +208,104 @@ export async function deleteSession(organizationId: string, sessionId: string) {
 
   revalidatePath(`/coach/o/${orgId}/agenda`);
   redirect(`/coach/o/${orgId}/agenda`);
+}
+
+// Glisser-déposer dans l'agenda (D-35). `originalDate` : la date de la série dont vient le bloc.
+// Séance unique : elle change de date et d'heure. Séance hebdomadaire : « single » déplace seulement
+// cette date (ligne de coach_session_exceptions), « series » décale toute la série (fonction SQL
+// move_session_series, en une transaction). Tout est revérifié ici : le navigateur ne décide de rien.
+const moveSchema = z.object({
+  originalDate: z.iso.date(),
+  newDate: z.iso.date().refine((day) => day >= "2000-01-01"),
+  // Quart d'heure, comme la grille.
+  newTime: z.string().regex(/^([01]\d|2[0-3]):(00|15|30|45)$/),
+  scope: z.enum(["single", "series"]),
+});
+
+export type MoveSessionInput = z.input<typeof moveSchema> & { sessionId: string };
+
+const DAY_MS = 86_400_000;
+const dayGap = (from: string, to: string) =>
+  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS);
+
+export async function moveSession(
+  organizationId: string,
+  input: MoveSessionInput,
+): Promise<{ ok: boolean; error?: string }> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
+  const parsed = moveSchema.safeParse(input);
+  const session =
+    parsed.success && z.uuid().safeParse(input.sessionId).success
+      ? await getSession(orgId, input.sessionId)
+      : null;
+  if (!parsed.success || !session) return { ok: false, error: "Séance introuvable." };
+  const { originalDate, newDate, newTime, scope } = parsed.data;
+
+  const [hours, minutes] = newTime.split(":").map(Number);
+  if (hours * 60 + minutes + session.durationMinutes > 24 * 60) {
+    return { ok: false, error: "La séance finirait après minuit." };
+  }
+  if (session.repeatsWeekly && !occursOn(session, originalDate)) {
+    return { ok: false, error: "Cette date ne fait pas partie de la série." };
+  }
+
+  const supabase = await createClient();
+  let error;
+  if (!session.repeatsWeekly) {
+    ({ error } = await supabase
+      .from("coach_sessions")
+      .update({ starts_on: newDate, start_time: newTime })
+      .eq("id", session.id)
+      .eq("organization_id", orgId));
+  } else if (scope === "series") {
+    // Même jour de la semaine visé, au plus près : de -3 à +3 jours (la base refuse au-delà).
+    const shift = (((dayGap(originalDate, newDate) % 7) + 10) % 7) - 3;
+    ({ error } = await supabase.rpc("move_session_series", {
+      p_session_id: session.id,
+      p_shift_days: shift,
+      p_start_time: newTime,
+    }));
+  } else if (newDate === originalDate && newTime === session.startTime) {
+    // Remise à sa place d'origine : ce n'est plus une date déplacée.
+    ({ error } = await supabase
+      .from("coach_session_exceptions")
+      .delete()
+      .eq("session_id", session.id)
+      .eq("original_date", originalDate));
+  } else if (session.exceptions.some((e) => e.originalDate === originalDate)) {
+    // Déjà déplacée : nouvelle place (pas d'upsert, qui réécrirait aussi les colonnes fixes).
+    ({ error } = await supabase
+      .from("coach_session_exceptions")
+      .update({ new_date: newDate, new_start_time: newTime })
+      .eq("session_id", session.id)
+      .eq("original_date", originalDate));
+  } else {
+    ({ error } = await supabase.from("coach_session_exceptions").insert({
+      session_id: session.id,
+      organization_id: orgId,
+      original_date: originalDate,
+      new_date: newDate,
+      new_start_time: newTime,
+      created_by: user.id,
+    }));
+  }
+  if (error) return { ok: false, error: "La séance n'a pas pu être déplacée. Réessaie." };
+
+  revalidatePath("/coach");
+  revalidatePath(`/coach/o/${orgId}/agenda`);
+  revalidatePath(`/coach/o/${orgId}/agenda/seances/${session.id}`);
+  return { ok: true };
+}
+
+// Sportifs proposés dans la fenêtre « Nouvelle séance » (ouverte depuis n'importe quelle page) : les
+// fiches non archivées de l'organisation, lues à l'ouverture.
+export async function listSessionAthletes(
+  organizationId: string,
+): Promise<{ id: string; name: string }[]> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const athletes = await listAthletes(membership.organizationId, { status: "all", q: "" });
+  return athletes
+    .filter((athlete) => athlete.status !== "archived")
+    .map((athlete) => ({ id: athlete.id, name: athlete.displayName }));
 }

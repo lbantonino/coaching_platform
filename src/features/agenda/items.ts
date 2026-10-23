@@ -1,5 +1,10 @@
 import type { Discipline } from "@/domain/training/discipline";
-import { formatDuration, occurrencesBetween, type ScheduleLike } from "@/features/sessions/schemas";
+import {
+  formatDuration,
+  sessionOccurrences,
+  type ScheduleLike,
+  type SessionException,
+} from "@/features/sessions/schemas";
 
 // Fusion des deux calques de l'agenda (D-27) : séances encadrées (dates calculées) et compétitions.
 // Module PUR : reçoit des données déjà lues, testé par Vitest.
@@ -13,6 +18,8 @@ export type AgendaSessionSource = ScheduleLike & {
   startTime: string;
   durationMinutes: number;
   athletes: { id: string; name: string }[];
+  prospectName?: string | null;
+  exceptions?: SessionException[];
 };
 
 export type AgendaEventSource = {
@@ -57,7 +64,9 @@ export type AgendaFilter = { discipline: Discipline | null; athleteId: string | 
 function sessionDetail(session: AgendaSessionSource): string {
   const who =
     session.kind === "individual"
-      ? `Avec ${session.athletes[0]?.name ?? "un sportif"}`
+      ? session.athletes[0]
+        ? `Avec ${session.athletes[0].name}`
+        : `Avec ${session.prospectName ?? "un nouveau client"} (nouveau client)`
       : `${session.athletes.length} inscrit${session.athletes.length > 1 ? "s" : ""}`;
   return [
     session.kind === "individual" ? who : null,
@@ -85,12 +94,12 @@ export function buildAgendaItems(
   for (const session of sessions) {
     if (!keep(session.discipline)) continue;
     if (filter.athleteId && !session.athletes.some((a) => a.id === filter.athleteId)) continue;
-    for (const date of occurrencesBetween(session, from, to)) {
+    for (const { date, startTime, originalDate } of sessionOccurrences(session, from, to)) {
       items.push({
         type: "session",
-        key: `${session.id}:${date}`,
+        key: `${session.id}:${originalDate}`,
         date,
-        time: session.startTime,
+        time: startTime,
         sessionId: session.id,
         individual: session.kind === "individual",
         title: session.title,

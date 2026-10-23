@@ -1,65 +1,44 @@
-import {
-  ChevronDown,
-  ClipboardList,
-  FileText,
-  Plus,
-  ReceiptText,
-  Timer,
-  UserPlus,
-} from "lucide-react";
-import Link from "next/link";
+"use client";
 
+import { CalendarPlus, ClipboardList, FilePlus, Plus, ReceiptText, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+import { useOpenNewSession } from "@/components/blocks/new-session-sheet";
 import { buttonClass } from "@/components/ui/button";
+import { ActionMenu } from "@/components/ui/overlay";
 
-// Bouton « Créer » de la maquette (D-28). Menu natif <details> : il s'ouvre au clavier et sans JavaScript.
-// Les entrées dont le module n'existe pas encore mènent à leur page « Bientôt ».
+// Bouton « + Créer » du tableau de bord (prompt Claude Design §7.2) : menu « ••• » en feuille du bas
+// sur téléphone, fenêtre centrée sur ordinateur. Séance ouvre la fenêtre « Nouvelle séance » sans
+// quitter la page (D-35), Sportif sa page de création ; Programme, Facture et Tâche ouvrent la page
+// de leur module (D-32).
 export function CreateMenu({ orgBase }: { orgBase: string }) {
-  const items = [
-    { href: "/coach/programmes", label: "Programme", icon: FileText, soon: true },
-    { href: `${orgBase}/agenda/seances/nouvelle`, label: "Séance", icon: Timer, soon: false },
-    { href: `${orgBase}/sportifs/nouveau`, label: "Sportif", icon: UserPlus, soon: false },
-    { href: "/coach/facturation", label: "Facture", icon: ReceiptText, soon: true },
-    { href: "/coach/taches", label: "Tâche", icon: ClipboardList, soon: true },
-  ];
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const openNewSession = useOpenNewSession();
+  const go = (href: string) => () => router.push(href);
   return (
-    <details className="group relative">
-      <summary
-        className={buttonClass({
-          variant: "primary",
-          size: "md",
-          className: "cursor-pointer list-none [&::-webkit-details-marker]:hidden",
-        })}
-      >
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={buttonClass()}>
         <Plus aria-hidden size={16} strokeWidth={2} />
         Créer
-        <ChevronDown
-          aria-hidden
-          size={15}
-          strokeWidth={2}
-          className="transition-transform group-open:rotate-180"
-        />
-      </summary>
-      <ul
-        aria-label="Créer"
-        className="absolute right-0 z-20 mt-2 flex w-56 flex-col gap-0.5 rounded-[14px] border border-line-2 bg-surface p-1.5"
-      >
-        {items.map(({ href, label, icon: Icon, soon }) => (
-          <li key={label}>
-            <Link
-              href={href}
-              className="flex items-center gap-3 rounded-[9px] px-3 py-2 text-small hover:bg-surface-2"
-            >
-              <Icon aria-hidden size={16} strokeWidth={1.7} className="text-muted" />
-              <span className="flex-1">{label}</span>
-              {soon ? (
-                <span className="rounded-pill bg-chip px-1.5 py-0.5 text-[10px] text-muted">
-                  Bientôt
-                </span>
-              ) : null}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </details>
+      </button>
+      <ActionMenu
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Créer"
+        items={[
+          { label: "Programme", icon: FilePlus, onSelect: go("/coach/programmes") },
+          {
+            label: "Séance",
+            icon: CalendarPlus,
+            onSelect: () => openNewSession?.(),
+          },
+          { label: "Sportif", icon: UserPlus, onSelect: go(`${orgBase}/sportifs/nouveau`) },
+          { label: "Facture", icon: ReceiptText, onSelect: go("/coach/facturation") },
+          { label: "Tâche", icon: ClipboardList, onSelect: go("/coach/taches") },
+        ]}
+      />
+    </>
   );
 }

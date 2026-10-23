@@ -4,7 +4,8 @@ import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { formatDate } from "@/lib/format";
 
 // Séances encadrées du coach, en présentiel (P2-05b, D-27). Règles PURES, testées par Vitest.
-export const SESSION_KINDS = ["group", "individual"] as const;
+// Individuelle d'abord (demande d'Antonino, 23/10) : un coach fait surtout du coaching individuel.
+export const SESSION_KINDS = ["individual", "group"] as const;
 export type SessionKind = (typeof SESSION_KINDS)[number];
 export const sessionKindLabels: Record<SessionKind, string> = {
   group: "Collective",
@@ -23,6 +24,9 @@ export type SessionFormInput = {
   endsOn: string;
   athleteId: string;
   athleteIds: string[];
+  // Séance individuelle avec un nouveau client, pas encore créé (D-35), et son nom facultatif.
+  newClient: boolean;
+  prospectName: string;
   notes: string;
 };
 
@@ -33,6 +37,7 @@ export type SessionValues = {
   discipline: Discipline | null;
   location: string | null;
   athlete_id: string | null;
+  prospect_name: string | null;
   starts_on: string;
   start_time: string;
   duration_minutes: number;
@@ -92,10 +97,19 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
   if (notes.length > 500) return { ok: false, error: "Note trop longue (500 caractères maximum)." };
 
   let athleteId: string | null = null;
+  let prospectName: string | null = null;
   let athleteIds: string[] = [];
-  if (kind === "individual") {
+  if (kind === "individual" && input.newClient) {
+    // Nouveau client : pas de fiche sportif pour l'instant, son nom seulement s'il est donné.
+    const name = input.prospectName.trim();
+    if (name.length > 80) return { ok: false, error: "Nom trop long (80 caractères maximum)." };
+    prospectName = name === "" ? null : name;
+  } else if (kind === "individual") {
     if (!z.uuid().safeParse(input.athleteId).success) {
-      return { ok: false, error: "Choisis le sportif de la séance individuelle." };
+      return {
+        ok: false,
+        error: "Choisis le sportif de la séance, ou coche « Nouveau sportif, pas encore créé ».",
+      };
     }
     athleteId = input.athleteId;
   } else {
@@ -114,6 +128,7 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
       discipline,
       location: location === "" ? null : location,
       athlete_id: athleteId,
+      prospect_name: prospectName,
       starts_on: startsOn,
       start_time: `${time[1]}:${time[2]}`,
       duration_minutes: duration,
@@ -125,6 +140,18 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
 }
 
 export type ScheduleLike = { startsOn: string; repeatsWeekly: boolean; endsOn: string | null };
+
+// Date déplacée d'une séance hebdomadaire (*_seances_dates_deplacees.sql) : l'occurrence du
+// `originalDate` a lieu le `newDate` à `newStartTime` (« 18:00 »).
+export type SessionException = { originalDate: string; newDate: string; newStartTime: string };
+
+export type Occurrence = {
+  date: string;
+  startTime: string;
+  // Date de la série dont vient l'occurrence (= `date` si elle n'a pas été déplacée).
+  originalDate: string;
+  moved: boolean;
+};
 
 const DAY_MS = 86_400_000;
 const dayNumber = (iso: string) => Math.round(Date.parse(`${iso}T00:00:00Z`) / DAY_MS);
@@ -147,6 +174,38 @@ export function occurrencesBetween(session: ScheduleLike, from: string, to: stri
   const dates: string[] = [];
   for (let day = start + weeksToSkip * 7; day <= last; day += 7) dates.push(isoFromDay(day));
   return dates;
+}
+
+// Vraie date de la série ?
+export function occursOn(session: ScheduleLike, date: string): boolean {
+  return occurrencesBetween(session, date, date).length === 1;
+}
+
+// Dates d'une séance entre `from` et `to`, déplacements compris : une date déplacée quitte sa place
+// et apparaît à sa nouvelle date (même venant d'une autre semaine). Les déplacements devenus
+// orphelins (série modifiée depuis) sont ignorés. Triées par date puis heure.
+export function sessionOccurrences(
+  session: ScheduleLike & { startTime: string; exceptions?: SessionException[] },
+  from: string,
+  to: string,
+): Occurrence[] {
+  const exceptions = (session.exceptions ?? []).filter((e) => occursOn(session, e.originalDate));
+  const moved = new Set(exceptions.map((e) => e.originalDate));
+  const result: Occurrence[] = occurrencesBetween(session, from, to)
+    .filter((date) => !moved.has(date))
+    .map((date) => ({ date, startTime: session.startTime, originalDate: date, moved: false }));
+  for (const exception of exceptions) {
+    if (exception.newDate < from || exception.newDate > to) continue;
+    result.push({
+      date: exception.newDate,
+      startTime: exception.newStartTime,
+      originalDate: exception.originalDate,
+      moved: true,
+    });
+  }
+  return result.sort(
+    (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime),
+  );
 }
 
 const weekdayFormatter = new Intl.DateTimeFormat("fr-BE", { weekday: "long", timeZone: "UTC" });

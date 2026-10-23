@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatHours,
+  formatHoursShort,
+  isoWeek,
   lastSessionFor,
   layoutWeek,
   mondayOf,
@@ -57,8 +59,27 @@ describe("layoutWeek", () => {
     expect(wednesday.blocks[1].subtitle).toBe("2 inscrits");
     expect(wednesday.minutes).toBe(150);
     expect(week.totalMinutes).toBe(150);
-    // 20:30 dépasse 20:00 : la grille va jusqu'à 21:00.
-    expect([week.firstHour, week.lastHour]).toEqual([8, 21]);
+    // Toute la journée est visible par défaut : 06:00 - 22:00 (prompt Claude Design §6).
+    expect([week.firstHour, week.lastHour]).toEqual([6, 22]);
+  });
+});
+
+describe("plage horaire, heures courtes et numéro de semaine", () => {
+  it("élargit la grille pour ne couper aucune séance", () => {
+    const late = { ...piste, id: "late", startTime: "21:30", durationMinutes: 75 };
+    expect(layoutWeek([late], "2026-10-19").lastHour).toBe(23);
+  });
+
+  it("écrit les heures d'un jour en décimal", () => {
+    expect(formatHoursShort(150)).toBe("2,5 h");
+    expect(formatHoursShort(225)).toBe("3,75 h");
+    expect(formatHoursShort(0)).toBe("");
+  });
+
+  it("donne le numéro de semaine ISO", () => {
+    expect(isoWeek("2026-10-23")).toBe(43);
+    expect(isoWeek("2026-01-01")).toBe(1);
+    expect(isoWeek("2027-01-01")).toBe(53);
   });
 });
 
