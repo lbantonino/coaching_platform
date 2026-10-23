@@ -30,7 +30,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [x] `P0-06` Valider le socle unique Next.js/React/TypeScript/Supabase. ADR obligatoire avant d’ajouter backend, ORM, file Redis, paiement, dépendance UI redondante ou moteur PDF ; documenter pourquoi les outils déjà choisis ne suffisent pas.
 
 ### P1 — Auth et multi-tenancy
-- [x] `P1-01` Connexion email, session, reset, logout, email vérifié. (Fait ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription libre.)
+- [x] `P1-01` Connexion email, session, reset, logout, email vérifié. (Fait ; vérification d'e-mail active depuis l'inscription libre, D-30.)
 - [x] `P1-02` Organisation et memberships coach, rôle admin plateforme indépendant.
 - [x] `P1-03` RLS et policy tests 2 organisations, 2 sportifs.
 - [x] `P1-04` Guards serveur `requireCoach`, `requireAthlete`, `requirePlatformAdmin`, `requireOrgAccess`.
@@ -101,7 +101,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [ ] `P7-05` Stats provenant de réels saisis ; pas de métriques sportives inférées sans données.
 
 ### P8 — SaaS multi-coachs commercial (en architecture dès P1)
-- [ ] `P8-01` Onboarding organisation self-service, coachs additionnels et affectation.
+- [ ] `P8-01` Onboarding organisation self-service, coachs additionnels et affectation. (23/10/2026, D-30 : inscription libre coach et sportif, création de l'organisation du coach, e-mail confirmé, conditions acceptées ; restent les coachs additionnels et l'affectation.)
 - [ ] `P8-02` Portail admin audit/support minimal et sécurisation forte.
 - [ ] `P8-03` Définir une **offre commerciale validée** (limites de sportifs et sièges, essais, essai expiré, annulation, TVA/factures, CGV) sans inventer de tarifs avant l'étude de marché.
 - [ ] `P8-03a` Choisir le prestataire de paiement (Stripe candidat, non obligatoire), implémenter checkout hébergé et portail abonné pour l'**organisation**.

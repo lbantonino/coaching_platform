@@ -7,7 +7,7 @@
 |---|---|---|---|
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
-| P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 120/120, db:test 174/174, test:e2e 80/80 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
+| P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | À faire | Aucun | - |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
@@ -19,6 +19,35 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### D-30 : inscription libre (coach et sportif), connexions sociales préparées
+```
+Date : 2026-10-23
+Demande : page d'inscription (nom, prénom, e-mail, téléphone facultatif, mot de passe, confirmation)
+  et connexion Google, Facebook, Apple. Choix : coachs ET sportifs ; connexions préparées, boutons
+  cachés sans clés ; case d'acceptation + pages légales provisoires
+Fait :
+  - migration 20261023074320_inscription_libre.sql : table account_signups (type, identité,
+    téléphone, version et date d'acceptation des conditions), coach_profiles.phone, fonction
+    complete_signup (SECURITY DEFINER : e-mail confirmé obligatoire, une seule fois ; coach =
+    organisation + propriétaire + profil ; sportif = compte en attente de rattachement)
+  - config.toml : enable_signup = true, enable_confirmations = true, e-mail de confirmation en
+    français (supabase/templates/confirmation.html), sections Google et Facebook désactivées
+  - features/auth : signup-schemas (pur), signup-actions (inscription sans révéler les adresses déjà
+    inscrites, OAuth, finalisation), providers (AUTH_PROVIDERS), getHomePath (compte sans rôle →
+    /bienvenue), requireAthleteAccount (sportif en attente)
+  - pages /inscription, /bienvenue (pré-remplie, aussi pour Google / Facebook / Apple), /conditions,
+    /confidentialite (provisoires), lien depuis /login, espace sportif « Ton compte est prêt »,
+    /auth/confirm accepte /bienvenue et /espace, proxy (/bienvenue protégée)
+  - docs/AUTH_FOURNISSEURS.md (création des clés), README, .env.example (AUTH_PROVIDERS)
+Correctif en route : le test « Paramètres » modifiait le profil du coach A utilisé par Antonino
+  (prénom et entreprise écrasés) ; il tourne maintenant sur le coach B, profil d'Antonino rétabli
+Tests : pgTAP 13_inscription (12) ; Vitest signup (5) ; e2e signup.spec.ts (coach et sportif
+  jusqu'à leur espace avec le vrai e-mail Mailpit, erreurs, absence de boutons sociaux, pages
+  légales) ; check OK, Vitest 125, db:test 186, test:e2e 88 + 4 ignorés ; db:reset puis profil
+  d'Antonino restauré
+Limite : connexions sociales « intégration préparée, non testée en réel » (pas de clés)
+```
 
 ### Correctifs de l'audit du 23/10 (contraste du thème clair, code mort, roadmap)
 ```
