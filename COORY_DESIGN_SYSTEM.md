@@ -30,17 +30,17 @@ Use **semantic tokens** in components, never raw hex.
 
 ```css
 :root {                      /* DARK — default */
-  --page:#17171B;            /* outer page (light graphite, D-24 ; was #050505) */
-  --bg:#1C1C21;              /* app background (light graphite, D-24 ; was #0B0B0C) */
-  --surface:#26262C;         /* cards (D-24 ; was #141416) */
-  --surface-2:#303037;       /* hover, active nav (D-24 ; was #1C1C1F) */
-  --chip:#3A3A42;            /* chips, avatars, neutral pills (D-24 ; was #26262A) */
-  --bar:#41414A;             /* progress tracks, planned bars (D-24 ; was #2A2A2E) */
+  --page:#070B12;            /* outer page (navy, D-29 ; was #17171B graphite, #050505 originally) */
+  --bg:#0B1019;              /* app background (navy from the mockups, D-29 ; was #1C1C21) */
+  --surface:#121821;         /* cards, panels (D-29 ; was #26262C) */
+  --surface-2:#1A2331;       /* hover, table headers (D-29 ; was #303037) */
+  --chip:#243044;            /* chips, avatars, neutral pills (D-29 ; was #3A3A42) */
+  --bar:#2B3648;             /* progress tracks, planned bars (D-29 ; was #41414A) */
   --line:rgba(255,255,255,.14);   /* card borders, dividers (was .07, D-22) */
   --line-2:rgba(255,255,255,.36); /* control outlines, dashed drop zones (was .13, D-22) */
-  --text:#F4F2EF;
-  --muted:#B0B0B8;              /* was #8A8A90 (D-22 to D-24) */
-  --faint:#9C9CA6;              /* was #55555B (D-22 to D-24) */
+  --text:#F1F4F8;            /* cool white (D-29) */
+  --muted:#9BA6B5;              /* bluish grey of the mockups (D-29), ≥ 4.5:1 everywhere */
+  --faint:#97A2B2;              /* D-29, ≥ 4.5:1 incl. on chips */
 
   --accent:#FF3347;          /* fills: primary button, hero stat, active segment */
   --accent-hover:#FF5C6C;
@@ -107,6 +107,8 @@ Soft = same color at 12 % (dark) / 10 % (light) opacity. Text on card and on its
 > - **Agenda** : blocs de séance à teinte franche de la discipline (34 % sur `--surface`), texte en couleur de texte ; colonne du jour teintée de rouge ; jour courant en pastille rouge dans la vue Mois.
 > - **Photos** : avatar rond, photo recadrée (`object-cover`), initiales si aucune photo.
 > - **Cartes « Bientôt »** : filet en pointillés `--line-2`, badge neutre « Bientôt · phase ».
+
+> **Ajustement du 23/10/2026 (D-29, demande d'Antonino : « ajuster les couleurs par rapport à la maquette »)** : thème sombre en **bleu nuit**, couleurs mesurées au pixel sur les maquettes (`docs/design/maquettes/`) : fond #0B1019, panneaux #121821, survol #1A2331, gris bleutés. Teintes plus franches, réglées **par thème** avec trois jetons : `--tint-card` (cartes chiffrées, 14 % en sombre / 5 % en clair), `--tint-nav` (menu actif, 24 % / 16 %), `--tint-block` (blocs d'agenda, 28 % / 34 %). Blocs d'agenda : fond teinté + barre de couleur de 3 px à gauche. Thème clair inchangé. Couleurs par discipline inchangées (les maquettes ne sont pas cohérentes entre elles sur ce point). Contrastes revérifiés : textes ≥ 4,5:1 sur fond, panneau, survol, pastille, cartes teintées, menu actif ; texte des blocs ≥ 6:1.
 
 **Where red is allowed:** primary CTA (max 1 per view), one hero stat card per row, current week/segment, active mobile tab, active page-tab underline, completed set check, notification dot, nav counters, current bar in charts.
 **Never:** page backgrounds, large text blocks, raw `#FF3347` text on light theme (use `--accent-text`), dark text on red.

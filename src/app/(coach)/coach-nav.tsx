@@ -103,7 +103,7 @@ function NavList({ items }: { items: Item[] }) {
             aria-current={active ? "page" : undefined}
             className={`flex items-center gap-3 rounded-[11px] border px-3 py-2 text-body transition-colors ${
               active
-                ? "border-accent/35 bg-[color-mix(in_srgb,var(--accent)_16%,var(--bg))] text-text"
+                ? "border-accent/45 bg-[color-mix(in_srgb,var(--accent)_var(--tint-nav),var(--bg))] text-text"
                 : "border-transparent text-muted hover:bg-surface hover:text-text"
             }`}
           >

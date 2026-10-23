@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **23/10/2026** (D-28 : tableau de bord d'après la maquette, photos de profil, téléphone).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **23/10/2026** (D-29 : couleurs des maquettes, bleu nuit).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -279,6 +279,9 @@ Antonino a fourni la maquette du tableau de bord qu'il veut. Difficulté : la mo
 Les **photos de profil** sont une vraie fonctionnalité de stockage. Les images vont dans un espace **privé** de Supabase Storage ; elles n'ont aucune adresse publique, l'app les sert par sa propre route après avoir vérifié la session, et ce sont les règles de la base (RLS) qui décident qui peut les voir : un coach de l'organisation B ne peut pas télécharger la photo d'un sportif de A, même en connaissant l'adresse (un test le vérifie). On ne fait pas confiance au nom du fichier ni au type annoncé : on lit les premiers octets pour reconnaître un vrai JPEG, PNG ou WebP. Les photos de démonstration sont libres de droits et ne sont chargées qu'en local, par un script qui refuse de tourner ailleurs.
 
 Sur téléphone, l'agenda reprend le principe du calendrier de l'iPhone : trois jours en colonnes qu'on fait défiler, en commençant par aujourd'hui. Petit point technique instructif : pour que la colonne des heures reste collée à gauche pendant le défilement, les largeurs sont exprimées en **unités de conteneur** (`cqw`, la largeur de la zone qui défile) plutôt qu'en pourcentages. Enfin, les tests ont révélé un vrai bug : sur téléphone, la liste de la semaine passait par-dessus la barre d'onglets du bas et volait les clics ; le menu hamburger a remplacé cette barre.
+
+### Les couleurs de la maquette, mesurées plutôt que devinées (23/10)
+Pour coller aux maquettes, on n'a pas choisi les couleurs à l'œil : un petit script lit la couleur exacte des pixels sur les images (fond bleu nuit #0B1019, panneaux #121821, blocs d'agenda…), puis un second calcule le contraste de chaque texte sur chaque fond **avant** de toucher au code. Grâce aux jetons de couleur, le changement tient en quelques lignes et s'applique à toute l'app. Un piège évité : des teintes plus fortes rendaient le gris illisible en thème clair ; l'intensité des teintes est donc devenue elle-même un jeton, différent pour chaque thème.
 
 ---
 
