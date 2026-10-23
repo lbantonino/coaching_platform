@@ -6,6 +6,7 @@ import type { Discipline } from "@/domain/training/discipline";
 import { goalDiscipline, type GoalType } from "@/features/goals/schemas";
 import { createClient } from "@/lib/supabase/server";
 
+import { missingProfileInfo } from "./completeness";
 import type {
   AthleteLevel,
   AthleteListFilter,
@@ -28,6 +29,8 @@ export type AthleteListItem = {
   photoPath: string | null;
   // Discipline de l'objectif principal en cours : couleur de l'avatar dans la liste (D-24).
   mainDiscipline: Discipline | null;
+  // Fiche « à compléter » (D-35) : ce qui manque encore (vide si la fiche est complète).
+  missingInfo: string[];
 };
 
 const DEFAULT_FILTER: AthleteListFilter = { status: "active", q: "" };
@@ -50,7 +53,7 @@ export async function listAthletes(
   let query = supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, display_name, email, status, sex, photo_path, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status )",
+      "id, first_name, last_name, display_name, email, phone, status, sex, photo_path, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status )",
     )
     .eq("organization_id", organizationId)
     .order("display_name");
@@ -75,6 +78,11 @@ export async function listAthletes(
       sex: row.sex as Sex | null,
       photoPath: row.photo_path,
       mainDiscipline: mainGoalDiscipline(row.athlete_goals),
+      missingInfo: missingProfileInfo({
+        lastName: row.last_name,
+        email: row.email,
+        phone: row.phone,
+      }),
     }))
     .filter(
       (athlete) =>

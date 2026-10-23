@@ -1,8 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 // Séances encadrées du coach (P2-05b, D-27, D-35) : collective hebdomadaire avec inscrits,
-// individuelle, nouveau client, fenêtre « Nouvelle séance » commune, page Séances, modification,
-// suppression, isolation. Dates fixées en 2027 : le test ne dépend pas du jour où il tourne.
+// individuelle, nouveau sportif (fiche minimale), fenêtre « Nouvelle séance » commune, page Séances,
+// modification, suppression, isolation. Dates fixées en 2027 : le test ne dépend pas du jour où il tourne.
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
 const ORG_B = "0b000000-0000-4000-8000-0000000000b1";
 const SESSION_OF_B = "cb000000-0000-4000-8000-000000000001";
@@ -125,7 +125,7 @@ test("une séance individuelle demande son sportif (ou un nouveau client), et la
   await expect(
     dialog
       .getByRole("alert")
-      .filter({ hasText: "Choisis le sportif de la séance, ou coche « Nouveau sportif" }),
+      .filter({ hasText: "Choisis le sportif de la séance, ou coche « Nouveau sportif »." }),
   ).toBeVisible();
   await expect(dialog.getByLabel("Titre")).toHaveValue(title);
   await expect(dialog.getByLabel("Heure", { exact: true })).toHaveValue("07:30");
@@ -149,47 +149,51 @@ test("une séance individuelle demande son sportif (ou un nouveau client), et la
   await deleteOpenSession(page, title);
 });
 
-test("une séance avec un nouveau client, rattachée à sa fiche une fois créée", async ({
+test("un nouveau sportif tapé dans « Nouvelle séance » a aussitôt sa fiche, signalée à compléter", async ({
   page,
 }, testInfo) => {
   const title = `Découverte ${unique(testInfo)}`;
+  // Un seul mot : un prénom, sans nom de famille ni contact (unique, les tests tournent en parallèle).
+  const name = `John${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   await loginAsCoachA(page);
   await page.goto("/coach/seances");
   const dialog = await openNewSession(page);
 
   await dialog.getByLabel("Titre").fill(title);
-  await dialog.getByLabel(/Nouveau sportif, pas encore créé/).check();
-  await expect(dialog.getByLabel("Sportif", { exact: true })).toHaveCount(0);
-  await dialog.getByLabel(/Nom du nouveau client/).fill("Client Test");
+  await dialog.getByLabel(/^Nouveau sportif/).check();
+  await expect(dialog.getByRole("combobox", { name: "Sportif", exact: true })).toHaveCount(0);
+  await dialog.getByLabel("Nom du nouveau sportif").fill(name);
   await fillSchedule(dialog, "2027-01-20", "08:00", "45");
   await dialog.getByRole("button", { name: "Créer la séance" }).click();
-  await expect(page.getByText("Séance créée.")).toBeVisible();
-
-  await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=2027-01-20`);
-  const row = page.getByRole("link", { name: new RegExp(title) });
-  await expect(row).toContainText("Avec Client Test (nouveau client)");
-  await row.click();
-  await expect(page.getByRole("region", { name: "Sportif", exact: true })).toContainText(
-    "Client Test, nouveau client : pas encore de fiche.",
-  );
-
-  // La fiche existe maintenant (ici : Sophie) : « Modifier » rattache la séance, une seule fois.
-  await page.getByRole("link", { name: "Modifier", exact: true }).click();
-  await page.getByLabel(/Nouveau sportif, pas encore créé/).uncheck();
-  // Par son rôle : la page précédente, gardée cachée par Next, a aussi une carte « Sportif ».
-  await page
-    .getByRole("combobox", { name: "Sportif", exact: true })
-    .selectOption({ label: "Sophie Lambert" });
-  await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(
-    page
-      .getByRole("list", { name: "Sportifs de la séance" })
-      .getByRole("link", { name: "Sophie Lambert" }),
+    page.getByText(`Séance créée. Fiche de ${name} ajoutée à tes sportifs, à compléter.`),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Modifier", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Enregistrer" })).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Sportif", exact: true })).toHaveCount(0);
-  await page.goBack();
+
+  // Dans Sportifs : la fiche existe déjà, avec son repère « à compléter ».
+  await page.goto(`/coach/o/${ORG_A}/sportifs`);
+  const row = page
+    .getByRole("list", { name: "Liste des sportifs" })
+    .getByRole("listitem")
+    .filter({ hasText: name });
+  await expect(
+    row.getByTitle("Fiche à compléter : nom de famille, e-mail ou téléphone"),
+  ).toBeVisible();
+  await row
+    .getByRole("link", { name: new RegExp(name) })
+    .first()
+    .click();
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  await page.getByRole("link", { name: "Fiche à compléter" }).click();
+  await expect(page).toHaveURL(/onglet=profil/);
+
+  // La séance est bien la sienne.
+  await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=2027-01-20`);
+  const session = page.getByRole("link", { name: new RegExp(title) });
+  await expect(session).toContainText(`Avec ${name}`);
+  await session.click();
+  await expect(
+    page.getByRole("list", { name: "Sportifs de la séance" }).getByRole("link", { name }),
+  ).toBeVisible();
   await deleteOpenSession(page, title);
 });
 

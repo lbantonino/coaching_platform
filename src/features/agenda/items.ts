@@ -18,7 +18,6 @@ export type AgendaSessionSource = ScheduleLike & {
   startTime: string;
   durationMinutes: number;
   athletes: { id: string; name: string }[];
-  prospectName?: string | null;
   exceptions?: SessionException[];
 };
 
@@ -64,9 +63,7 @@ export type AgendaFilter = { discipline: Discipline | null; athleteId: string | 
 function sessionDetail(session: AgendaSessionSource): string {
   const who =
     session.kind === "individual"
-      ? session.athletes[0]
-        ? `Avec ${session.athletes[0].name}`
-        : `Avec ${session.prospectName ?? "un nouveau client"} (nouveau client)`
+      ? `Avec ${session.athletes[0]?.name ?? "un sportif"}`
       : `${session.athletes.length} inscrit${session.athletes.length > 1 ? "s" : ""}`;
   return [
     session.kind === "individual" ? who : null,

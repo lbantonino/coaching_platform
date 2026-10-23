@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, UserPen } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -10,6 +10,7 @@ import { buttonClass } from "@/components/ui/button";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { SexMark } from "@/components/ui/sex-mark";
 import { disciplineLabels, disciplineStyles, disciplineTones } from "@/domain/training/discipline";
+import { completionLabel } from "@/features/athletes/completeness";
 import { listAthletes, type AthleteListItem } from "@/features/athletes/queries";
 import {
   athleteListFilterSchema,
@@ -171,6 +172,18 @@ async function AthleteList({
                       <span className="flex min-w-0 items-center gap-2">
                         <span className="truncate font-medium">{athlete.displayName}</span>
                         <SexMark sex={athlete.sex} size="sm" />
+                        {/* Fiche créée d'un simple nom (D-35) : le repère reste jusqu'à ce qu'elle
+                            soit complétée. */}
+                        {athlete.missingInfo.length > 0 ? (
+                          <span
+                            title={completionLabel(athlete.missingInfo)}
+                            className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-warn-soft text-warn"
+                          >
+                            <UserPen aria-hidden size={13} strokeWidth={2} />
+                            {/* Texte masqué plutôt qu'aria-label : le détail est dans l'infobulle. */}
+                            <span className="sr-only">Fiche à compléter</span>
+                          </span>
+                        ) : null}
                       </span>
                       <span className="truncate text-small text-muted">
                         {athleteStatusLabels[athlete.status]}

@@ -32,6 +32,29 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### D-35 (retouche) : un nouveau sportif a tout de suite sa fiche, signalée « à compléter »
+```
+Date : 2026-10-23
+Demande : dans « Nouvelle séance », taper le nom du nouveau sportif (ex. John) crée déjà sa fiche,
+  la plus minimale possible, dans Sportifs ; une icône y signale qu'elle doit être complétée
+Fait :
+  - migration 20261023180000 : retour à la règle de D-27 (une séance individuelle a toujours son
+    sportif, qui ne change pas) ; prospect_name, son contrôle et son déclencheur retirés ; une
+    séance individuelle encore sans sportif reçoit sa fiche minimale (rien n'est perdu)
+  - createSession : avec « Nouveau sportif », fiche minimale d'abord (premier mot = prénom, le
+    reste = nom de famille), puis la séance rattachée ; si la séance échoue, le message le dit
+    (une fiche ne se supprime pas, on archive) ; toast « Fiche de John ajoutée à tes sportifs, à
+    compléter » ; le nom est obligatoire quand la case est cochée
+  - features/athletes/completeness : fiche à compléter = sans nom de famille, ou sans e-mail ni
+    téléphone ; calculé, jamais stocké (le repère disparaît seul) ; icône dans la liste des
+    sportifs (infobulle : ce qui manque) et pastille « Fiche à compléter » en tête de la fiche,
+    vers l'onglet Profil ; Manon (seed, prénom seul) l'a aussi
+  - tests e2e : champs Prénom / Nom de famille cherchés par leur rôle (l'icône et la page
+    précédente gardée cachée par Next créaient des doublons pour getByLabel)
+Tests : check OK (Vitest 149), db:test 248/248, test:e2e 103 + 5 ignorés ; db:reset puis profil
+  d'Antonino restauré
+```
+
 ### D-35, étape 4a partie 1 : tableau de bord, agenda interactif, Séances, Tâches, Messages, Facturation
 ```
 Date : 2026-10-23

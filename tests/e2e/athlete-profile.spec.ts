@@ -103,8 +103,8 @@ test("le coach renseigne l'identité et le profil sportif, retrouvés après rec
   await openAthleteTab(page, "Profil");
 
   // Prénom et nom sont enregistrés séparément ; le titre affiche le nom complet.
-  await expect(page.getByLabel("Prénom")).toHaveValue("Profil");
-  await expect(page.getByLabel("Nom de famille")).toHaveValue(suffix);
+  await expect(page.getByRole("textbox", { name: /^Prénom/ })).toHaveValue("Profil");
+  await expect(page.getByRole("textbox", { name: /^Nom de famille/ })).toHaveValue(suffix);
 
   await page.getByLabel("Sexe").selectOption({ label: "Femme" });
   await page.getByLabel("Canal de contact préféré").selectOption({ label: "WhatsApp" });

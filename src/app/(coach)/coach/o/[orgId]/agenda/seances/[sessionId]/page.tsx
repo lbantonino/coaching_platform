@@ -1,4 +1,4 @@
-import { CalendarDays, Pencil, UserPlus, Users } from "lucide-react";
+import { CalendarDays, Pencil, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -160,20 +160,7 @@ async function SessionDetail({
           title={session.kind === "group" ? `Inscrits · ${enrolled}` : "Sportif"}
           className="lg:col-span-6"
         >
-          {session.kind === "individual" && enrolled === 0 ? (
-            // Nouveau client (D-35) : pas encore de fiche sportif.
-            <CardEmpty icon={UserPlus}>
-              {session.prospectName ? `${session.prospectName}, nouveau client` : "Nouveau client"}{" "}
-              : pas encore de fiche.{" "}
-              <Link
-                href={`/coach/o/${organizationId}/sportifs/nouveau`}
-                className="font-medium text-text underline underline-offset-4"
-              >
-                Crée sa fiche
-              </Link>
-              , puis rattache-lui la séance avec « Modifier ».
-            </CardEmpty>
-          ) : enrolled === 0 ? (
+          {enrolled === 0 ? (
             <CardEmpty icon={Users}>
               Aucun inscrit pour l&apos;instant. Ajoute des sportifs avec « Modifier ».
             </CardEmpty>
@@ -209,7 +196,7 @@ async function SessionDetail({
                     </span>
                   }
                   title={session.title}
-                  sub={`${occurrence.startTime.slice(0, 5)} · ${session.kind === "group" ? `${enrolled} inscrit${enrolled > 1 ? "s" : ""}` : (session.athletes[0]?.name ?? session.prospectName ?? "Nouveau client")}`}
+                  sub={`${occurrence.startTime.slice(0, 5)} · ${session.kind === "group" ? `${enrolled} inscrit${enrolled > 1 ? "s" : ""}` : (session.athletes[0]?.name ?? "")}`}
                   trailing={
                     occurrence.moved ? (
                       <Badge tone="moved">

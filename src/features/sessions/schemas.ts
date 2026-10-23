@@ -24,9 +24,9 @@ export type SessionFormInput = {
   endsOn: string;
   athleteId: string;
   athleteIds: string[];
-  // Séance individuelle avec un nouveau client, pas encore créé (D-35), et son nom facultatif.
+  // Séance individuelle avec un nouveau sportif (D-35) : sa fiche minimale est créée avec ce nom.
   newClient: boolean;
-  prospectName: string;
+  newAthleteName: string;
   notes: string;
 };
 
@@ -37,7 +37,6 @@ export type SessionValues = {
   discipline: Discipline | null;
   location: string | null;
   athlete_id: string | null;
-  prospect_name: string | null;
   starts_on: string;
   start_time: string;
   duration_minutes: number;
@@ -46,8 +45,20 @@ export type SessionValues = {
   notes: string | null;
 };
 
+// Nouveau sportif à créer avant la séance (fiche minimale : prénom, et nom s'il est donné).
+export type NewAthleteName = { firstName: string; lastName: string | null };
+
 export type SessionParseResult =
-  { ok: true; values: SessionValues; athleteIds: string[] } | { ok: false; error: string };
+  | { ok: true; values: SessionValues; athleteIds: string[]; newAthlete: NewAthleteName | null }
+  | { ok: false; error: string };
+
+// « John » -> prénom John ; « John Martin Dupont » -> prénom John, nom « Martin Dupont » (comme la
+// fiche sportif : le prénom est le premier mot).
+export function splitAthleteName(fullName: string): NewAthleteName | null {
+  const [firstName, ...rest] = fullName.trim().split(/\s+/).filter(Boolean);
+  if (!firstName) return null;
+  return { firstName, lastName: rest.length > 0 ? rest.join(" ") : null };
+}
 
 const isoDay = (value: string) =>
   /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)) && value >= "2000-01-01";
@@ -97,18 +108,20 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
   if (notes.length > 500) return { ok: false, error: "Note trop longue (500 caractères maximum)." };
 
   let athleteId: string | null = null;
-  let prospectName: string | null = null;
+  let newAthlete: NewAthleteName | null = null;
   let athleteIds: string[] = [];
   if (kind === "individual" && input.newClient) {
-    // Nouveau client : pas de fiche sportif pour l'instant, son nom seulement s'il est donné.
-    const name = input.prospectName.trim();
-    if (name.length > 80) return { ok: false, error: "Nom trop long (80 caractères maximum)." };
-    prospectName = name === "" ? null : name;
+    // Nouveau sportif : sa fiche minimale sera créée avec ce nom, puis la séance lui sera rattachée.
+    newAthlete = splitAthleteName(input.newAthleteName);
+    if (!newAthlete) return { ok: false, error: "Écris le nom du nouveau sportif." };
+    if (newAthlete.firstName.length > 80 || (newAthlete.lastName?.length ?? 0) > 80) {
+      return { ok: false, error: "Nom trop long (80 caractères maximum)." };
+    }
   } else if (kind === "individual") {
     if (!z.uuid().safeParse(input.athleteId).success) {
       return {
         ok: false,
-        error: "Choisis le sportif de la séance, ou coche « Nouveau sportif, pas encore créé ».",
+        error: "Choisis le sportif de la séance, ou coche « Nouveau sportif ».",
       };
     }
     athleteId = input.athleteId;
@@ -122,13 +135,13 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
   return {
     ok: true,
     athleteIds,
+    newAthlete,
     values: {
       kind,
       title,
       discipline,
       location: location === "" ? null : location,
       athlete_id: athleteId,
-      prospect_name: prospectName,
       starts_on: startsOn,
       start_time: `${time[1]}:${time[2]}`,
       duration_minutes: duration,
