@@ -3,62 +3,86 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 
+import { entryPrimaryClass, FormAlert } from "@/components/layout/entry-ui";
+import { Field } from "@/components/ui/field";
+import { entryInputClass } from "@/components/ui/form-styles";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Spinner } from "@/components/ui/spinner";
 import { login, type LoginState } from "@/features/auth/actions";
 
-import { authInputClass, Field, PasswordInput, SubmitButton } from "../auth-fields";
+const initialState: LoginState = { error: null, fields: {}, email: "" };
 
-const initialState: LoginState = { error: null, email: "" };
-
-// Logique inchangée (action login, message d'erreur générique) ; présentation : COORY_AUTH_PAGES.md §3.
+// Connexion (prompt Claude Design §7.1). Logique inchangée (action login, message générique qui ne
+// révèle jamais si un compte existe) ; erreurs de saisie sous chaque champ, refus en bandeau.
 export function LoginForm() {
   const [state, formAction, pending] = useActionState(login, initialState);
   const [shown, setShown] = useState(false);
+  const fieldProps = (name: string) =>
+    state.fields[name]
+      ? { "aria-invalid": true, "aria-describedby": `${name}-error` }
+      : state.error
+        ? { "aria-describedby": "login-error" }
+        : {};
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <Field id="email" label="Adresse e-mail">
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          required
-          placeholder="toi@exemple.com"
-          defaultValue={state.email}
-          aria-invalid={state.error ? true : undefined}
-          className={authInputClass("login")}
-        />
-      </Field>
-
-      <Field
-        id="password"
-        label="Mot de passe"
-        error={state.error}
-        aside={
-          <Link href="/mot-de-passe-oublie" className="text-[13px] text-muted hover:text-text">
-            <span className="hidden lg:inline">Mot de passe oublié ?</span>
-            <span className="lg:hidden">Oublié ?</span>
-          </Link>
-        }
-      >
-        <PasswordInput
+    <form action={formAction} className="flex flex-col gap-[22px]" noValidate>
+      {state.error ? <FormAlert id="login-error">{state.error}</FormAlert> : null}
+      <div className="flex flex-col gap-[18px]">
+        <Field id="email" label="Adresse e-mail" error={state.fields.email}>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            inputMode="email"
+            placeholder="toi@exemple.com"
+            defaultValue={state.email}
+            disabled={pending}
+            {...fieldProps("email")}
+            className={entryInputClass}
+          />
+        </Field>
+        <Field
           id="password"
-          name="password"
-          autoComplete="current-password"
-          required
-          aria-invalid={state.error ? true : undefined}
-          aria-describedby={state.error ? "password-error" : undefined}
-          shown={shown}
-          onToggle={() => setShown((value) => !value)}
-          className={authInputClass("login")}
-        />
-      </Field>
-
-      {/* Le lien « Créer un compte » est sous le titre de la page, sur téléphone comme sur ordinateur. */}
-      <div className="mt-2 flex flex-col">
-        <SubmitButton disabled={pending}>{pending ? "Connexion…" : "Se connecter"}</SubmitButton>
+          label="Mot de passe"
+          error={state.fields.password}
+          aside={
+            <Link
+              href="/mot-de-passe-oublie"
+              className="border-b border-line-2 text-[14px] whitespace-nowrap text-muted transition-colors duration-150 hover:text-text"
+            >
+              Mot de passe oublié ?
+            </Link>
+          }
+        >
+          <PasswordInput
+            id="password"
+            name="password"
+            autoComplete="current-password"
+            placeholder="Ton mot de passe"
+            disabled={pending}
+            {...fieldProps("password")}
+            shown={shown}
+            onToggle={() => setShown((value) => !value)}
+            className={entryInputClass}
+          />
+        </Field>
       </div>
+      <button type="submit" disabled={pending} className={entryPrimaryClass}>
+        {pending ? (
+          <>
+            <Spinner />
+            Connexion…
+          </>
+        ) : (
+          <>
+            Se connecter
+            <span aria-hidden className="text-[18px]">
+              →
+            </span>
+          </>
+        )}
+      </button>
     </form>
   );
 }

@@ -5,20 +5,18 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
+import { fieldErrors } from "./field-errors";
 import { getHomePath } from "./guards";
 import { newPasswordSchema, passwordResetRequestSchema } from "./schemas";
 import { requireUser } from "./session";
 
 export type ResetRequestState = {
   status: "idle" | "sent" | "error";
+  // Erreur générale (bandeau) ; l'erreur de saisie de l'adresse va dans `fields.email`.
   message: string | null;
+  fields: Record<string, string>;
   email: string;
 };
-
-// Message identique que le compte existe ou non : ne jamais révéler quels e-mails sont inscrits.
-const RESET_SENT_MESSAGE =
-  "Si un compte correspond à cette adresse, un e-mail de réinitialisation vient d'être envoyé. " +
-  "Le lien est valable une heure.";
 
 export async function requestPasswordReset(
   _previous: ResetRequestState,
@@ -27,14 +25,14 @@ export async function requestPasswordReset(
   const email = String(formData.get("email") ?? "").trim();
   const parsed = passwordResetRequestSchema.safeParse({ email });
   if (!parsed.success) {
-    return { status: "error", message: parsed.error.issues[0]?.message ?? null, email };
+    return { status: "error", message: null, fields: fieldErrors(parsed.error), email };
   }
 
   // L'origine sert à construire le lien de retour ; Supabase n'accepte que les adresses
   // déclarées dans additional_redirect_urls, ce qui empêche un détournement du lien.
   const origin = (await headers()).get("origin");
   if (!origin) {
-    return { status: "error", message: "Requête invalide. Recharge la page.", email };
+    return { status: "error", message: "Requête invalide. Recharge la page.", fields: {}, email };
   }
 
   const supabase = await createClient();
@@ -46,14 +44,20 @@ export async function requestPasswordReset(
     return {
       status: "error",
       message: "Trop de demandes. Réessaie dans quelques minutes.",
+      fields: {},
       email,
     };
   }
-  // Toute autre erreur (compte inconnu, etc.) reçoit volontairement la même réponse qu'un succès.
-  return { status: "sent", message: RESET_SENT_MESSAGE, email };
+  // Toute autre erreur (compte inconnu, etc.) reçoit volontairement la même réponse qu'un succès :
+  // la page affiche « Si un compte existe pour … » sans jamais révéler qui est inscrit.
+  return { status: "sent", message: null, fields: {}, email };
 }
 
-export type NewPasswordState = { error: string | null };
+export type NewPasswordState = {
+  // Erreur générale (bandeau) ; erreurs de saisie sous les champs (password, confirmation).
+  error: string | null;
+  fields: Record<string, string>;
+};
 
 export async function updatePassword(
   _previous: NewPasswordState,
@@ -67,7 +71,7 @@ export async function updatePassword(
     confirmation: String(formData.get("confirmation") ?? ""),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+    return { error: null, fields: fieldErrors(parsed.error) };
   }
 
   const supabase = await createClient();
@@ -79,7 +83,7 @@ export async function updatePassword(
         : error.code === "weak_password"
           ? "Ce mot de passe est trop faible. Choisis-en un plus long ou plus varié."
           : "Le mot de passe n'a pas pu être modifié. Redemande un lien de réinitialisation.";
-    return { error: message };
+    return { error: message, fields: {} };
   }
 
   redirect(await getHomePath(user.id, supabase));

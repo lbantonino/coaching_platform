@@ -6,7 +6,8 @@ import { logoutCoach } from "./helpers";
 // Les e-mails locaux sont capturés par Mailpit (http://127.0.0.1:54324), lu ici via son API.
 const MAILPIT = "http://127.0.0.1:54324/api/v1";
 const RESET_ACCOUNT = "coach-reset@example.test"; // compte dédié (supabase/seed.sql)
-const SENT_MESSAGE = /Si un compte correspond à cette adresse/;
+// Réponse identique que le compte existe ou non (rien n'est révélé).
+const SENT_MESSAGE = /un lien vient d.être envoyé\. Il est valable 1 h\./;
 
 async function clearMailbox(request: APIRequestContext, email: string) {
   await request.delete(`${MAILPIT}/search`, { params: { query: `to:"${email}"` } });
@@ -32,8 +33,8 @@ test("un compte inconnu reçoit exactement la même réponse qu'un compte exista
 }) => {
   await page.goto("/mot-de-passe-oublie");
   await page.getByLabel("Adresse e-mail").fill("personne@example.test");
-  await page.getByRole("button", { name: "Recevoir un lien de réinitialisation" }).click();
-  await expect(page.getByRole("status")).toHaveText(SENT_MESSAGE);
+  await page.getByRole("button", { name: "Recevoir le lien" }).click();
+  await expect(page.getByRole("status")).toContainText(SENT_MESSAGE);
 });
 
 test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec", async ({
@@ -53,8 +54,8 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   // pendant la navigation, et le formulaire partirait vide.
   await expect(page.getByRole("heading", { name: "Mot de passe oublié" })).toBeVisible();
   await page.getByLabel("Adresse e-mail").fill(RESET_ACCOUNT);
-  await page.getByRole("button", { name: "Recevoir un lien de réinitialisation" }).click();
-  await expect(page.getByRole("status")).toHaveText(SENT_MESSAGE);
+  await page.getByRole("button", { name: "Recevoir le lien" }).click();
+  await expect(page.getByRole("status")).toContainText(SENT_MESSAGE);
 
   // 2. Ouverture du lien reçu par e-mail.
   const link = await waitForResetLink(request, RESET_ACCOUNT);
@@ -64,13 +65,13 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
 
   // 3. Mot de passe trop court refusé, puis nouveau mot de passe valide.
   await page.getByLabel("Nouveau mot de passe").fill("court");
-  await page.getByLabel("Confirme le mot de passe").fill("court");
-  await page.getByRole("button", { name: "Enregistrer le nouveau mot de passe" }).click();
+  await page.getByLabel("Confirmation", { exact: true }).fill("court");
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "au moins 10 caractères" })).toBeVisible();
 
   await page.getByLabel("Nouveau mot de passe").fill(newPassword);
-  await page.getByLabel("Confirme le mot de passe").fill(newPassword);
-  await page.getByRole("button", { name: "Enregistrer le nouveau mot de passe" }).click();
+  await page.getByLabel("Confirmation", { exact: true }).fill(newPassword);
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
   await expect(page).toHaveURL(/\/coach$/);
 
   // 4. Le lien est à usage unique.
@@ -80,7 +81,7 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   await page.goto(link);
   // Supabase ajoute un fragment #error=...otp_expired, conservé par le navigateur.
   await expect(page).toHaveURL(/\/lien-invalide(#.*)?$/);
-  await expect(page.getByRole("heading", { name: "Lien invalide ou expiré" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ce lien n'est plus valide" })).toBeVisible();
 
   // 5. Connexion avec le nouveau mot de passe.
   await page.goto("/login");

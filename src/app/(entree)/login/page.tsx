@@ -3,9 +3,9 @@ import Link from "next/link";
 
 import { DefaultEyebrow } from "@/components/layout/entry-eyebrow";
 import { BrandPitch } from "@/components/layout/entry-shell";
+import { entryLinkClass, EntryTitle } from "@/components/layout/entry-ui";
 import { CooryWatermark } from "@/components/ui/coory-logo";
 
-import { authLinkClass } from "../auth-fields";
 import { SocialButtons } from "../social-buttons";
 import { LoginForm } from "./login-form";
 
@@ -33,15 +33,18 @@ export default function LoginPage() {
       </section>
 
       <div className="flex flex-col gap-[22px] max-lg:my-auto">
-        <div className="flex flex-col gap-2.5">
-          <h1 className="font-display text-entry font-semibold lg:text-entry-lg">Bon retour.</h1>
-          <p className="text-[15px] text-muted">
-            Pas encore de compte ?{" "}
-            <Link href="/inscription" className={authLinkClass}>
-              Créer un compte
-            </Link>
-          </p>
-        </div>
+        <EntryTitle
+          sub={
+            <>
+              Pas encore de compte ?{" "}
+              <Link href="/inscription" className={entryLinkClass}>
+                Créer un compte
+              </Link>
+            </>
+          }
+        >
+          Bon retour.
+        </EntryTitle>
         <LoginForm />
         <SocialButtons />
       </div>

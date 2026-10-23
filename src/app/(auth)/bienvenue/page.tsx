@@ -2,25 +2,41 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
+import { EntryTitle } from "@/components/layout/entry-ui";
+import { SkeletonBar } from "@/components/ui/skeleton";
 import { getHomePath } from "@/features/auth/guards";
 import { requireUser } from "@/features/auth/session";
 import { TERMS_VERSION } from "@/features/auth/signup-schemas";
 import { createClient } from "@/lib/supabase/server";
 
 import { OnboardingForm } from "./onboarding-form";
+import { WelcomeReady } from "./welcome-ready";
 
 export const metadata: Metadata = {
   title: "Bienvenue",
 };
 
 // Dernière étape d'une inscription (D-30), après confirmation de l'e-mail ou après Google /
-// Facebook / Apple : le compte existe, il reste à choisir coach ou sportif et à accepter les conditions.
+// Facebook / Apple. Inscription par e-mail : tout est déjà connu, la page souhaite la bienvenue
+// (prompt Claude Design §7.1) et un clic ouvre l'espace. Sinon : formulaire pré-rempli.
 export default function WelcomePage() {
   return (
-    <div className="flex w-full flex-col gap-8">
-      <Suspense fallback={<p className="text-muted">Chargement…</p>}>
+    <div className="flex flex-col gap-[22px]">
+      <Suspense fallback={<WelcomeLoading />}>
         <Welcome />
       </Suspense>
+    </div>
+  );
+}
+
+function WelcomeLoading() {
+  return (
+    <div role="status" className="flex flex-col gap-4">
+      <SkeletonBar className="size-14 rounded-[7px]" />
+      <SkeletonBar className="h-7 w-[70%] rounded-[7px]" />
+      <SkeletonBar className="h-3.5 w-[90%] rounded-[7px]" />
+      <SkeletonBar className="h-3.5 w-[60%] rounded-[7px]" />
+      <span className="text-[14px] text-muted">Création de ton espace…</span>
     </div>
   );
 }
@@ -46,19 +62,24 @@ async function Welcome() {
     phone: text(meta.phone),
     organizationName: text(meta.organization_name),
   };
+  const termsAccepted = text(meta.terms_version) === TERMS_VERSION;
+  // Tout vient de l'inscription par e-mail (type, nom, conditions acceptées) : écran de bienvenue.
+  const ready =
+    (text(meta.kind) === "coach" || text(meta.kind) === "athlete") &&
+    initial.firstName !== "" &&
+    initial.lastName !== "" &&
+    termsAccepted;
+
+  if (ready) return <WelcomeReady values={initial} />;
 
   return (
     <>
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-h2 font-medium">Bienvenue sur Coory</h1>
-        <p className="text-small text-muted">
-          Ton adresse {user.email} est confirmée. Dernière étape : vérifie ces informations.
-        </p>
-      </div>
-      <OnboardingForm
-        initial={initial}
-        termsAlreadyAccepted={text(meta.terms_version) === TERMS_VERSION}
-      />
+      <EntryTitle
+        sub={`Ton adresse ${user.email} est confirmée. Dernière étape : vérifie ces informations.`}
+      >
+        Bienvenue sur Coory
+      </EntryTitle>
+      <OnboardingForm initial={initial} termsAlreadyAccepted={termsAccepted} />
     </>
   );
 }

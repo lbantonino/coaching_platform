@@ -64,21 +64,24 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
   // --- Sportif : autre navigateur, ouverture du lien ---
   const athlete = await newAthletePage(browser);
   await athlete.goto(link);
-  await expect(athlete.getByRole("heading", { name: `Bienvenue ${name}` })).toBeVisible();
-  await expect(athlete.getByLabel("Adresse e-mail (identifiant)")).toHaveValue(email);
+  await expect(
+    athlete.getByRole("heading", { name: "Rejoins l'espace de ton coach" }),
+  ).toBeVisible();
+  await expect(athlete.getByText(`Pour ${name}`)).toBeVisible();
+  await expect(athlete.getByLabel("Adresse e-mail")).toHaveValue(email);
 
   // Case « 18 ans ou plus » obligatoire.
-  await athlete.getByLabel("Choisis un mot de passe").fill(athletePassword);
-  await athlete.getByLabel("Confirme le mot de passe").fill(athletePassword);
-  await athlete.getByRole("button", { name: "Créer mon accès" }).click();
+  await athlete.getByLabel("Mot de passe", { exact: true }).fill(athletePassword);
+  await athlete.getByLabel("Confirmation du mot de passe").fill(athletePassword);
+  await athlete.getByRole("button", { name: "Rejoindre l'espace" }).click();
   await expect(
     athlete.getByRole("alert").filter({ hasText: "confirmer avoir 18 ans ou plus" }),
   ).toBeVisible();
 
-  await athlete.getByLabel("J'ai 18 ans ou plus").check();
-  await athlete.getByLabel("Choisis un mot de passe").fill(athletePassword);
-  await athlete.getByLabel("Confirme le mot de passe").fill(athletePassword);
-  await athlete.getByRole("button", { name: "Créer mon accès" }).click();
+  await athlete.getByLabel("J'ai 18 ans ou plus").check({ force: true });
+  await athlete.getByLabel("Mot de passe", { exact: true }).fill(athletePassword);
+  await athlete.getByLabel("Confirmation du mot de passe").fill(athletePassword);
+  await athlete.getByRole("button", { name: "Rejoindre l'espace" }).click();
 
   await expect(athlete).toHaveURL(/\/app$/);
   await expect(athlete.getByText("Ton coach (Organisation Démo A) t'a ajouté")).toBeVisible();

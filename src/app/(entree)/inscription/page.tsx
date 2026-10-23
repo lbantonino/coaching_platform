@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { authLinkClass } from "../auth-fields";
+import { entryLinkClass, EntryTitle } from "@/components/layout/entry-ui";
+
 import { SocialButtons } from "../social-buttons";
 import { SignupForm } from "./signup-form";
 
@@ -14,15 +15,18 @@ export const metadata: Metadata = {
 export default function SignupPage() {
   return (
     <div className="flex flex-col gap-[22px]">
-      <div className="flex flex-col gap-2.5">
-        <h1 className="font-display text-entry font-semibold lg:text-entry-lg">Créer un compte</h1>
-        <p className="text-[15px] text-muted">
-          Déjà un compte ?{" "}
-          <Link href="/login" className={authLinkClass}>
-            Se connecter
-          </Link>
-        </p>
-      </div>
+      <EntryTitle
+        sub={
+          <>
+            Déjà un compte ?{" "}
+            <Link href="/login" className={entryLinkClass}>
+              Se connecter
+            </Link>
+          </>
+        }
+      >
+        Créer un compte
+      </EntryTitle>
       <SignupForm />
       <SocialButtons />
     </div>
