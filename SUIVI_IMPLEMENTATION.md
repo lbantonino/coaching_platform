@@ -20,6 +20,22 @@
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
 
+### D-31 : pages Connexion et Inscription d'après COORY_AUTH_PAGES.md, plus de page d'accueil
+```
+Date : 2026-10-23
+Demande : recoder /login et /inscription selon COORY_AUTH_PAGES.md ; supprimer la page d'accueil
+  « Programmer, publier et suivre tes sportifs… Se connecter »
+Fait : / redirige vers /login ; groupe (entree) avec AuthShell (panneau de marque, accroche, boucle ∞
+  en filigrane via CooryWatermark, pied de page) et auth-fields (champs, AFFICHER / MASQUER partagé,
+  jauge de mot de passe, case des conditions, bouton principal) ; sur-titre ESPACE COACH / ESPACE
+  SPORTIF basculé en CSS (:has) ; erreurs affichées sous le champ concerné (l'action renvoie le nom du
+  champ, validation inchangée) ; bouton d'inscription inactif tant que la case n'est pas cochée
+Écarts assumés : choix coach / sportif en boutons radio (plus juste que aria-pressed) ; bouton de
+  bascule nommé « Afficher les caractères saisis »
+Tests : e2e mis à jour (libellés, radio, bouton inactif) ; check OK, test:e2e 88 + 4 ignorés ; db:reset
+  puis profil d'Antonino restauré ; captures 1440, 768, 390, sombre et clair
+```
+
 ### D-30 : inscription libre (coach et sportif), connexions sociales préparées
 ```
 Date : 2026-10-23

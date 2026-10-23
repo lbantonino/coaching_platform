@@ -23,6 +23,8 @@ export type SignupValues = {
 export type SignupState = {
   status: "idle" | "sent" | "error";
   message: string | null;
+  // Champ concerné par l'erreur (message affiché sous ce champ), null pour une erreur générale.
+  field: string | null;
   attempt: number;
   values: SignupValues | null;
 };
@@ -41,9 +43,10 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
     phone: field("phone"),
     organizationName: field("organizationName"),
   };
-  const fail = (message: string): SignupState => ({
+  const fail = (message: string, field: string | null = null): SignupState => ({
     status: "error",
     message,
+    field,
     attempt: previous.attempt + 1,
     values,
   });
@@ -54,7 +57,10 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
     confirmation: field("confirmation"),
     terms: formData.get("terms") ?? undefined,
   });
-  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return fail(issue?.message ?? "Formulaire invalide.", String(issue?.path[0] ?? "") || null);
+  }
 
   // Lien de retour construit sur l'origine de la requête ; Supabase n'accepte que les adresses
   // déclarées (additional_redirect_urls), ce qui empêche de détourner le lien.
@@ -89,7 +95,13 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
   // Confirmation désactivée (jamais en production) : session ouverte tout de suite.
   if (result?.session) redirect("/bienvenue");
 
-  return { status: "sent", message: SENT_MESSAGE, attempt: previous.attempt + 1, values };
+  return {
+    status: "sent",
+    message: SENT_MESSAGE,
+    field: null,
+    attempt: previous.attempt + 1,
+    values,
+  };
 }
 
 // Connexion ou inscription par un fournisseur (Google, Facebook, Apple), s'il est configuré.
