@@ -69,9 +69,8 @@ async function EditSession({ orgId, sessionId }: { orgId: string; sessionId: str
                 endsOn: session.endsOn ?? "",
                 athleteId: session.kind === "individual" ? (session.athletes[0]?.id ?? "") : "",
                 athleteIds: session.kind === "group" ? [...enrolledIds] : [],
-                // Séance d'un nouveau client : rattachable à sa fiche une fois créée (D-35).
-                newClient: session.kind === "individual" && session.athletes.length === 0,
-                prospectName: session.prospectName ?? "",
+                newClient: false,
+                newAthleteName: "",
                 notes: session.notes ?? "",
               }}
               locked

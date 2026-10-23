@@ -30,7 +30,7 @@ async function fillSignup(
   await page
     .getByRole("radio", { name: values.kind === "Je suis coach" ? /coach/i : /sportif/i })
     .check({ force: true });
-  await page.getByLabel("Prénom").fill(values.first);
+  await page.getByRole("textbox", { name: /^Prénom/ }).fill(values.first);
   await page.getByLabel("Nom", { exact: true }).fill(values.last);
   await page.getByLabel("Adresse e-mail").fill(values.email);
   await page.getByLabel(/^Téléphone/).fill("0470/12.34.56");
@@ -133,7 +133,7 @@ test("les erreurs de saisie sont expliquées et la saisie est conservée", async
     "true",
   );
   await expect(page.getByLabel("Adresse e-mail")).toHaveValue("erreurs@example.test");
-  await expect(page.getByLabel("Prénom")).toHaveValue("Max");
+  await expect(page.getByRole("textbox", { name: /^Prénom/ })).toHaveValue("Max");
 });
 
 test("la connexion propose l'inscription, sans bouton social tant qu'aucun n'est configuré", async ({

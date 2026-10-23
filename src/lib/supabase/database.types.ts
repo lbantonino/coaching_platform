@@ -674,7 +674,6 @@ export type Database = {
           location: string | null;
           notes: string | null;
           organization_id: string;
-          prospect_name: string | null;
           repeats_weekly: boolean;
           start_time: string;
           starts_on: string;
@@ -694,7 +693,6 @@ export type Database = {
           location?: string | null;
           notes?: string | null;
           organization_id: string;
-          prospect_name?: string | null;
           repeats_weekly?: boolean;
           start_time: string;
           starts_on: string;
@@ -713,7 +711,6 @@ export type Database = {
           location?: string | null;
           notes?: string | null;
           organization_id?: string;
-          prospect_name?: string | null;
           repeats_weekly?: boolean;
           start_time?: string;
           starts_on?: string;

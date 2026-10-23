@@ -35,7 +35,7 @@ type Props = {
   locked: boolean;
   submitLabel: string;
   // Fenêtre de l'agenda : la création reste sur la page et prévient la fenêtre (sinon : page de la séance).
-  onCreated?: (created: { id: string; title: string }) => void;
+  onCreated?: (created: { id: string; title: string; newAthleteName: string | null }) => void;
 };
 
 export function SessionForm({ action, athletes, initial, locked, submitLabel, onCreated }: Props) {
@@ -87,8 +87,6 @@ function SessionFields({
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
   const [newClient, setNewClient] = useState(v.newClient);
   const individualName = athletes.find((athlete) => athlete.id === v.athleteId)?.name;
-  // Séance déjà rattachée à un sportif : il ne change plus. Nouveau client : rattachable une fois.
-  const athleteLocked = locked && v.athleteId !== "";
 
   return (
     <form action={formAction} className="flex flex-col gap-6" noValidate>
@@ -96,8 +94,7 @@ function SessionFields({
       {locked ? (
         <p className="text-small text-muted">
           Séance {sessionKindLabels[kind].toLowerCase()}
-          {kind === "individual" && individualName ? ` avec ${individualName}` : ""}
-          {kind === "individual" && !athleteLocked ? " avec un nouveau client" : ""}. Pour changer
+          {kind === "individual" && individualName ? ` avec ${individualName}` : ""}. Pour changer
           de type ou de sportif, supprime la séance et crée-en une nouvelle.
         </p>
       ) : (
@@ -247,19 +244,20 @@ function SessionFields({
       </div>
 
       {kind === "individual" ? (
-        athleteLocked ? null : (
+        locked ? null : (
           <div className="flex flex-col gap-3 md:w-1/2">
             {newClient ? (
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="session-prospect" className={labelClass}>
-                  Nom du nouveau client <span className="font-normal text-muted">(facultatif)</span>
+                <label htmlFor="session-new-athlete" className={labelClass}>
+                  Nom du nouveau sportif
                 </label>
                 <input
-                  id="session-prospect"
-                  name="prospectName"
-                  defaultValue={v.prospectName}
-                  maxLength={80}
-                  placeholder="Ex. : Marc"
+                  id="session-new-athlete"
+                  name="newAthleteName"
+                  defaultValue={v.newAthleteName}
+                  maxLength={161}
+                  autoComplete="off"
+                  placeholder="Ex. : John Martin"
                   className={inputClass}
                 />
               </div>
@@ -283,7 +281,7 @@ function SessionFields({
                 </select>
               </div>
             )}
-            {/* Première rencontre (D-35) : une date tout de suite, la fiche du sportif plus tard. */}
+            {/* Première rencontre (D-35) : une fiche minimale est créée avec ce nom, à compléter. */}
             <label className="inline-flex w-fit cursor-pointer items-start gap-2.5 text-small">
               <input
                 type="checkbox"
@@ -293,9 +291,10 @@ function SessionFields({
                 className="mt-0.5 size-4 shrink-0 accent-[var(--text)]"
               />
               <span>
-                Nouveau sportif, pas encore créé
+                Nouveau sportif
                 <span className="block text-muted">
-                  Crée sa fiche plus tard, puis rattache-lui la séance depuis « Modifier ».
+                  Sa fiche est créée tout de suite dans Sportifs, avec son nom seulement : tu la
+                  compléteras ensuite.
                 </span>
               </span>
             </label>

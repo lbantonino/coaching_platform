@@ -25,7 +25,7 @@ const base: SessionFormInput = {
   athleteId: "",
   athleteIds: [ATHLETE, OTHER, ATHLETE],
   newClient: false,
-  prospectName: "",
+  newAthleteName: "",
   notes: "",
 };
 
@@ -34,13 +34,13 @@ describe("parseSessionForm", () => {
     expect(parseSessionForm(base)).toEqual({
       ok: true,
       athleteIds: [ATHLETE, OTHER],
+      newAthlete: null,
       values: {
         kind: "group",
         title: "Piste du mercredi",
         discipline: "running",
         location: "Stade",
         athlete_id: null,
-        prospect_name: null,
         starts_on: "2026-09-02",
         start_time: "19:00",
         duration_minutes: 90,
@@ -51,30 +51,37 @@ describe("parseSessionForm", () => {
     });
   });
 
-  it("accepte un nouveau client sans fiche sportif, nommé ou non (D-35)", () => {
+  it("prépare la fiche minimale d'un nouveau sportif à partir de son nom (D-35)", () => {
     expect(
       parseSessionForm({
         ...base,
         kind: "individual",
         newClient: true,
-        prospectName: "  Marc ",
+        newAthleteName: "  John   Martin Dupont ",
         athleteId: ATHLETE,
       }),
-    ).toMatchObject({ ok: true, values: { athlete_id: null, prospect_name: "Marc" } });
-    expect(
-      parseSessionForm({ ...base, kind: "individual", newClient: true, prospectName: " " }),
-    ).toMatchObject({ ok: true, values: { athlete_id: null, prospect_name: null } });
-    // Une séance collective n'a jamais de « nouveau client ».
-    expect(parseSessionForm({ ...base, newClient: true, prospectName: "Marc" })).toMatchObject({
+    ).toMatchObject({
       ok: true,
-      values: { prospect_name: null },
+      newAthlete: { firstName: "John", lastName: "Martin Dupont" },
+      values: { athlete_id: null },
+    });
+    expect(
+      parseSessionForm({ ...base, kind: "individual", newClient: true, newAthleteName: "John" }),
+    ).toMatchObject({ ok: true, newAthlete: { firstName: "John", lastName: null } });
+    expect(
+      parseSessionForm({ ...base, kind: "individual", newClient: true, newAthleteName: " " }),
+    ).toEqual({ ok: false, error: "Écris le nom du nouveau sportif." });
+    // Une séance collective n'a jamais de « nouveau sportif ».
+    expect(parseSessionForm({ ...base, newClient: true, newAthleteName: "John" })).toMatchObject({
+      ok: true,
+      newAthlete: null,
     });
   });
 
   it("exige le sportif d'une séance individuelle et ignore la liste d'inscrits", () => {
     expect(parseSessionForm({ ...base, kind: "individual" })).toEqual({
       ok: false,
-      error: "Choisis le sportif de la séance, ou coche « Nouveau sportif, pas encore créé ».",
+      error: "Choisis le sportif de la séance, ou coche « Nouveau sportif ».",
     });
     expect(parseSessionForm({ ...base, kind: "individual", athleteId: ATHLETE })).toMatchObject({
       ok: true,

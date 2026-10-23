@@ -17,7 +17,6 @@ export type WeekSession = ScheduleLike & {
   startTime: string;
   durationMinutes: number;
   athletes: { id: string; name: string }[];
-  prospectName?: string | null;
   exceptions?: SessionException[];
 };
 
@@ -86,7 +85,6 @@ export function layoutDays(sessions: WeekSession[], dates: string[]): WeekLayout
       const start = toMinutes(occurrence.startTime);
       const end = start + session.durationMinutes;
       const individual = session.kind === "individual";
-      const person = session.athletes[0]?.name ?? null;
       return {
         key: `${session.id}:${occurrence.originalDate}`,
         sessionId: session.id,
@@ -97,15 +95,10 @@ export function layoutDays(sessions: WeekSession[], dates: string[]): WeekLayout
         start,
         end,
         label: `${toTime(start)} - ${toTime(end)}`,
-        // Individuelle : le nom du sportif, ou du nouveau client pas encore créé (D-35).
-        title: individual ? (person ?? session.prospectName ?? session.title) : session.title,
-        subtitle: !individual
-          ? `${session.athletes.length} inscrit${session.athletes.length > 1 ? "s" : ""}`
-          : person
-            ? session.title
-            : session.prospectName
-              ? `Nouveau client · ${session.title}`
-              : "Nouveau client",
+        title: individual ? (session.athletes[0]?.name ?? session.title) : session.title,
+        subtitle: individual
+          ? session.title
+          : `${session.athletes.length} inscrit${session.athletes.length > 1 ? "s" : ""}`,
         discipline: session.discipline,
         individual,
         lane: 0,

@@ -59,11 +59,18 @@ export function NewSessionSheet({
     [loadAthletes],
   );
   const close = useCallback(() => setSlot(null), []);
-  const onCreated = useCallback(() => {
-    setSlot(null);
-    toast("Séance créée.");
-    router.refresh();
-  }, [router, toast]);
+  const onCreated = useCallback(
+    (created: { newAthleteName: string | null }) => {
+      setSlot(null);
+      toast(
+        created.newAthleteName
+          ? `Séance créée. Fiche de ${created.newAthleteName} ajoutée à tes sportifs, à compléter.`
+          : "Séance créée.",
+      );
+      router.refresh();
+    },
+    [router, toast],
+  );
 
   return (
     <OpenContext.Provider value={open}>
@@ -90,7 +97,7 @@ export function NewSessionSheet({
               athleteId: "",
               athleteIds: [],
               newClient: false,
-              prospectName: "",
+              newAthleteName: "",
               notes: "",
             }}
             locked={false}

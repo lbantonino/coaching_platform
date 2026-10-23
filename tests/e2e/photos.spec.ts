@@ -66,7 +66,7 @@ test("le coach renseigne son identité et son entreprise dans Paramètres", asyn
   await login(page, "coach-b@example.test");
   await page.goto("/coach/profil");
   await expect(page.getByRole("heading", { name: "Paramètres", level: 1 })).toBeVisible();
-  await page.getByLabel("Prénom").fill("Marco");
+  await page.getByRole("textbox", { name: /^Prénom/ }).fill("Marco");
   await page.getByLabel(/^Entreprise/).fill("Bianchi Performance");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Profil enregistré.");

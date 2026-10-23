@@ -17,8 +17,9 @@ export type SessionFormState = {
   error: string | null;
   attempt: number;
   values: SessionFormInput | null;
-  // Création depuis la fenêtre de l'agenda (champ « stay ») : la séance créée, sans changer de page.
-  created?: { id: string; title: string } | null;
+  // Création depuis la fenêtre « Nouvelle séance » (champ « stay ») : la séance créée, sans changer de
+  // page, et le nom du nouveau sportif dont la fiche minimale vient d'être créée.
+  created?: { id: string; title: string; newAthleteName: string | null } | null;
 };
 
 function readForm(formData: FormData, kind: string): SessionFormInput {
@@ -36,7 +37,7 @@ function readForm(formData: FormData, kind: string): SessionFormInput {
     athleteId: field("athleteId"),
     athleteIds: formData.getAll("athleteIds").map(String),
     newClient: formData.get("newClient") === "on",
-    prospectName: field("prospectName"),
+    newAthleteName: field("newAthleteName"),
     notes: field("notes"),
   };
 }
@@ -71,12 +72,47 @@ export async function createSession(
     return fail("Sportif introuvable dans ton organisation.");
 
   const supabase = await createClient();
+  // Nouveau sportif (D-35) : sa fiche minimale d'abord (le nom tapé), signalée « à compléter » dans
+  // Sportifs ; la séance lui est ensuite rattachée.
+  let newAthleteName: string | null = null;
+  if (parsed.newAthlete) {
+    const { data: athlete, error: athleteError } = await supabase
+      .from("athlete_profiles")
+      .insert({
+        organization_id: orgId,
+        first_name: parsed.newAthlete.firstName,
+        last_name: parsed.newAthlete.lastName,
+        created_by: user.id,
+      })
+      .select("id, display_name")
+      .single();
+    if (athleteError || !athlete) return fail("Le nouveau sportif n'a pas pu être créé. Réessaie.");
+    parsed.values.athlete_id = athlete.id;
+    newAthleteName = athlete.display_name;
+    revalidatePath(`/coach/o/${orgId}/sportifs`);
+  }
+
   const { data, error } = await supabase
     .from("coach_sessions")
     .insert({ ...parsed.values, organization_id: orgId, created_by: user.id })
     .select("id")
     .single();
-  if (error || !data) return fail("La séance n'a pas pu être enregistrée. Réessaie.");
+  if (error || !data) {
+    // Une fiche ne se supprime pas (on archive) : on le dit plutôt que de la cacher.
+    return newAthleteName
+      ? {
+          ...fail(
+            `La fiche de ${newAthleteName} est créée, mais la séance n'a pas pu être enregistrée. Réessaie en choisissant ${newAthleteName} dans la liste.`,
+          ),
+          values: {
+            ...input,
+            newClient: false,
+            newAthleteName: "",
+            athleteId: parsed.values.athlete_id ?? "",
+          },
+        }
+      : fail("La séance n'a pas pu être enregistrée. Réessaie.");
+  }
 
   if (parsed.athleteIds.length > 0) {
     const { error: enrolError } = await supabase.from("coach_session_athletes").insert(
@@ -102,7 +138,7 @@ export async function createSession(
       error: null,
       attempt: previous.attempt + 1,
       values: null,
-      created: { id: data.id, title: parsed.values.title },
+      created: { id: data.id, title: parsed.values.title, newAthleteName },
     };
   }
   redirect(`/coach/o/${orgId}/agenda/seances/${data.id}`);
@@ -120,20 +156,17 @@ export async function updateSession(
   if (!session)
     return { error: "Séance introuvable.", attempt: previous.attempt + 1, values: null };
 
-  // Le type ne change pas, ni le sportif une fois rattaché (refusé en base aussi). Une séance d'un
-  // nouveau client (sans sportif) peut, elle, être rattachée à sa fiche une fois créée.
+  // Le type et le sportif d'une séance individuelle ne changent pas (droit refusé en base aussi).
   const input = readForm(formData, session.kind);
-  const attached = session.athletes[0]?.id;
-  if (session.kind === "individual" && attached) {
-    input.athleteId = attached;
+  if (session.kind === "individual") {
+    input.athleteId = session.athletes[0]?.id ?? "";
     input.newClient = false;
   }
   const fail = (error: string) => ({ error, attempt: previous.attempt + 1, values: input });
 
   const parsed = parseSessionForm(input);
   if (!parsed.ok) return fail(parsed.error);
-  const linking = session.kind === "individual" && !attached ? parsed.values.athlete_id : null;
-  if (!(await allBelongToOrg(orgId, linking ? [linking] : parsed.athleteIds))) {
+  if (!(await allBelongToOrg(orgId, parsed.athleteIds))) {
     return fail("Sportif introuvable dans ton organisation.");
   }
 
@@ -150,10 +183,6 @@ export async function updateSession(
     repeats_weekly: v.repeats_weekly,
     ends_on: v.ends_on,
     notes: v.notes,
-    // Nouveau client : son nom, ou son rattachement à une fiche (une seule fois).
-    ...(session.kind === "individual" && !attached
-      ? { athlete_id: v.athlete_id, prospect_name: v.prospect_name }
-      : {}),
   };
   const { error } = await supabase
     .from("coach_sessions")

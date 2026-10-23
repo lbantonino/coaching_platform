@@ -2,10 +2,12 @@ import { expect, type Page } from "@playwright/test";
 
 // Remplit prénom et nom de famille à partir d'un nom complet, coupé au premier espace
 // (« Camille Test 123 » -> « Camille » + « Test 123 »). Le nom complet affiché reste identique.
+// Par le rôle « champ de texte » : seul le vrai champ répond, pas un autre élément de la page (ou de
+// la page précédente, gardée cachée par Next) dont le nom contiendrait aussi ces mots.
 export async function fillAthleteName(page: Page, fullName: string) {
   const [firstName, ...rest] = fullName.split(" ");
-  await page.getByLabel("Prénom").fill(firstName);
-  await page.getByLabel("Nom de famille").fill(rest.join(" "));
+  await page.getByRole("textbox", { name: /^Prénom/ }).fill(firstName);
+  await page.getByRole("textbox", { name: /^Nom de famille/ }).fill(rest.join(" "));
 }
 
 // Ouvre un onglet de la fiche sportif (Vue d'ensemble, Profil, Objectifs, Disponibilités, Repères).

@@ -20,8 +20,6 @@ export type CoachSession = {
   repeatsWeekly: boolean;
   endsOn: string | null;
   notes: string | null;
-  // Séance individuelle sans fiche sportif : le nom du nouveau client, s'il a été noté.
-  prospectName: string | null;
   // Séance individuelle : son sportif. Séance collective : ses inscrits.
   athletes: SessionAthlete[];
   // Dates déplacées (séance hebdomadaire seulement).
@@ -31,7 +29,7 @@ export type CoachSession = {
 // Le sportif direct (séance individuelle) et les inscrits (collective) passent par deux relations
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
 const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes,
-  repeats_weekly, ends_on, notes, prospect_name,
+  repeats_weekly, ends_on, notes,
   individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name ),
   enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name ) ),
   exceptions:coach_session_exceptions ( original_date, new_date, new_start_time )`;
@@ -49,7 +47,6 @@ type Row = {
   repeats_weekly: boolean;
   ends_on: string | null;
   notes: string | null;
-  prospect_name: string | null;
   individual: Profile;
   enrolled: { athlete: Profile }[];
   exceptions: { original_date: string; new_date: string; new_start_time: string }[];
@@ -80,7 +77,6 @@ function toSession(row: Row): CoachSession {
     repeatsWeekly: row.repeats_weekly,
     endsOn: row.ends_on,
     notes: row.notes,
-    prospectName: row.prospect_name,
     athletes,
     exceptions: row.exceptions.map((e) => ({
       originalDate: e.original_date,

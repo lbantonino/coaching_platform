@@ -134,8 +134,8 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
   // Les listes déroulantes et les cases cochées gardent aussi la saisie.
   await expect(page.getByLabel("Niveau")).toHaveValue("advanced");
   await expect(page.getByLabel("Domicile")).toBeChecked();
-  await expect(page.getByLabel("Prénom")).toHaveValue("Saisie");
-  await expect(page.getByLabel("Nom de famille")).toHaveValue(
+  await expect(page.getByRole("textbox", { name: /^Prénom/ })).toHaveValue("Saisie");
+  await expect(page.getByRole("textbox", { name: /^Nom de famille/ })).toHaveValue(
     `${name.slice("Saisie ".length)} renommé`,
   );
   await expect(page.getByLabel("Téléphone")).toHaveValue("appelle-moi");

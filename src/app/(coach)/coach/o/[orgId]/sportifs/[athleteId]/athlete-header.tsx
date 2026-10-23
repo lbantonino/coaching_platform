@@ -4,6 +4,7 @@ import {
   Flag,
   MessageCircle,
   Target,
+  UserPen,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +14,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { SexMark } from "@/components/ui/sex-mark";
+import { completionLabel, missingProfileInfo } from "@/features/athletes/completeness";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
@@ -37,6 +39,7 @@ export function AthleteHeader({
   listPath: string;
   invitePath: string;
 }) {
+  const missing = missingProfileInfo(athlete);
   return (
     <PageHeader
       back={{ href: listPath, label: "Sportifs" }}
@@ -45,6 +48,18 @@ export function AthleteHeader({
       subtitle={
         <span className="flex flex-wrap items-center gap-2">
           <Badge tone={statusTone[athlete.status]}>{athleteStatusLabels[athlete.status]}</Badge>
+          {/* Fiche créée d'un simple nom (D-35) : la pastille mène à l'onglet Profil. */}
+          {missing.length > 0 ? (
+            <Link
+              href={`${listPath}/${athlete.id}?onglet=profil`}
+              scroll={false}
+              title={completionLabel(missing)}
+              className="inline-flex items-center gap-1.5 rounded-pill bg-warn-soft px-2.5 py-1 text-[12px] leading-[1.3] font-medium whitespace-nowrap text-warn transition-[filter] duration-150 hover:brightness-95"
+            >
+              <UserPen aria-hidden size={13} strokeWidth={2} />
+              Fiche à compléter
+            </Link>
+          ) : null}
           {athlete.level ? (
             <Badge>Niveau {athleteLevelLabels[athlete.level].toLowerCase()}</Badge>
           ) : null}

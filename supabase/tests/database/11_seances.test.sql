@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(19);
+select plan(16);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -25,25 +25,12 @@ insert into public.coach_sessions (id, organization_id, kind, title, starts_on, 
 -- ---------------------------------------------------------------------
 -- Cohérence (contraintes en base, en plus de Zod)
 -- ---------------------------------------------------------------------
--- Nouveau client (D-35) : une séance individuelle peut attendre sa fiche sportif.
-select lives_ok(
-  $$ insert into public.coach_sessions (id, organization_id, kind, title, prospect_name, starts_on, start_time, duration_minutes)
-     values ('c3c3c3c3-0000-4000-8000-000000000003', 'aaaaaaaa-0000-4000-8000-000000000001', 'individual',
-             'Rendez-vous découverte', 'Marc', '2026-10-07', '18:00', 60) $$,
-  'Une séance individuelle peut viser un nouveau client, sans fiche sportif'
-);
+-- Un nouveau sportif a d'abord sa fiche minimale (D-35) : une séance individuelle a toujours le sien.
 select throws_ok(
-  $$ insert into public.coach_sessions (organization_id, kind, title, prospect_name, starts_on, start_time, duration_minutes)
-     values ('aaaaaaaa-0000-4000-8000-000000000001', 'group', 'Groupe', 'Marc', '2026-10-07', '18:00', 60) $$,
+  $$ insert into public.coach_sessions (organization_id, kind, title, starts_on, start_time, duration_minutes)
+     values ('aaaaaaaa-0000-4000-8000-000000000001', 'individual', 'Sans sportif', '2026-10-07', '18:00', 60) $$,
   '23514', null,
-  'Une séance collective n''a pas de « nouveau client »'
-);
-select throws_ok(
-  $$ insert into public.coach_sessions (organization_id, kind, title, athlete_id, prospect_name, starts_on, start_time, duration_minutes)
-     values ('aaaaaaaa-0000-4000-8000-000000000001', 'individual', 'Les deux',
-             'a1a1a1a1-0000-4000-8000-000000000001', 'Marc', '2026-10-07', '18:00', 60) $$,
-  '23514', null,
-  'Un sportif OU un nouveau client, pas les deux'
+  'Une séance individuelle exige son sportif'
 );
 select throws_ok(
   $$ insert into public.coach_sessions (organization_id, kind, title, athlete_id, starts_on, start_time, duration_minutes)
@@ -126,20 +113,18 @@ select throws_ok(
   'Coach A ne peut pas créer de séance dans l''organisation B'
 );
 select lives_ok(
-  $$ update public.coach_sessions set athlete_id = 'a1a1a1a1-0000-4000-8000-000000000001'
-     where id = 'c3c3c3c3-0000-4000-8000-000000000003' $$,
-  'Coach A rattache la séance du nouveau client à sa fiche, une fois créée'
-);
-select results_eq(
-  $$ select athlete_id, prospect_name from public.coach_sessions where id = 'c3c3c3c3-0000-4000-8000-000000000003' $$,
-  $$ values ('a1a1a1a1-0000-4000-8000-000000000001'::uuid, null::text) $$,
-  'Le nom provisoire s''efface au rattachement'
+  $$ insert into public.coach_sessions
+       (id, organization_id, kind, title, athlete_id, starts_on, start_time, duration_minutes, created_by)
+     values ('c3c3c3c3-0000-4000-8000-000000000003', 'aaaaaaaa-0000-4000-8000-000000000001', 'individual',
+             'Coaching force', 'a1a1a1a1-0000-4000-8000-000000000001', '2026-10-08', '18:00', 60,
+             '11111111-1111-4111-8111-111111111111') $$,
+  'Coach A crée une séance individuelle avec son sportif'
 );
 select throws_ok(
   $$ update public.coach_sessions set athlete_id = 'a2a2a2a2-0000-4000-8000-000000000002'
      where id = 'c3c3c3c3-0000-4000-8000-000000000003' $$,
-  '23514', null,
-  'Un sportif rattaché ne change plus'
+  '42501', null,
+  'Le sportif d''une séance individuelle ne se modifie pas'
 );
 select lives_ok(
   $$ delete from public.coach_sessions where id = 'c1c1c1c1-0000-4000-8000-000000000001' $$,
