@@ -1,8 +1,13 @@
 # Coory : brief de design complet (pour Claude Design)
 
 > Document à donner à Claude Design avec les fichiers joints listés en fin de page.
-> Objectif : dessiner **toutes les pages** de Coory, celles qui existent déjà (à redessiner) et celles
-> à venir, **en commençant par le téléphone**.
+> Objectif : dessiner **l'application entière, toutes les pages**, **en commençant par le téléphone**.
+>
+> **Important : aucune page grisée, aucun état « Bientôt ».** Chaque module (programmes, séances,
+> bibliothèque, facturation, comptabilité, documents, messages, tâches, espace sportif, admin…) est
+> à dessiner **complet et fonctionnel en apparence**, avec des données d'exemple réalistes, comme si
+> l'app était terminée. La distinction « déjà codé / pas encore codé » de ce brief sert seulement à
+> savoir quels contenus et champs sont déjà fixés par le code.
 
 ---
 
@@ -107,7 +112,7 @@ Lucide, contour fin, monochromes.
 - **Secondaire (en bas)** : Tâches · Documents · Messages · Paramètres.
 - **Carte du coach** tout en bas : photo, prénom nom, « Coach ».
 - Élément actif sur fond rouge teinté.
-- Les modules pas encore construits restent visibles avec un petit badge **« Bientôt »**.
+- Tous les modules sont actifs et cliquables dans les maquettes (pas de badge « Bientôt »).
 
 ### Menu (téléphone)
 Barre du haut : logo, titre de la page centré, bouton hamburger. Le hamburger ouvre le même menu
@@ -127,10 +132,8 @@ notifications, **bouton rouge d'action principale**.
 
 ## 5. Règles de contenu à respecter dans les maquettes
 
-1. **Jamais de faux chiffres** dans le produit : un module pas encore construit affiche un état
-   **« Bientôt · phase X »** qui explique ce qui arrive, pas des données inventées.
-   Dans les maquettes de design, les données d'exemple sont autorisées mais doivent être
-   **réalistes** (noms fictifs, valeurs plausibles).
+1. **Données d'exemple réalistes partout** : noms fictifs, valeurs plausibles (allures, charges,
+   montants en euros, dates). Toutes les pages sont remplies, aucune n'est grisée.
 2. **« Aucune donnée » plutôt que 0** quand une statistique n'a pas assez de mesures.
 3. Toute valeur a son **unité** (km, min, kg, /km, bpm, RPE).
 4. Chaque écran a ses états : **vide**, **chargement**, **erreur**, **succès**.
@@ -140,7 +143,7 @@ notifications, **bouton rouge d'action principale**.
 
 ---
 
-## 6. Pages EXISTANTES (à redessiner)
+## 6. Pages déjà codées (contenus fixés, à redessiner)
 
 Ces pages fonctionnent déjà. Le design doit garder **exactement ces contenus et champs**.
 
@@ -182,15 +185,16 @@ Le cahier détaillé de ces deux pages est joint : `COORY_AUTH_PAGES.md`.
 ### 6.2 Tableau de bord coach (`/coach`)
 Modèle : `maquettes/tableau-de-bord.png` (déjà construit à son image).
 - « Bonjour {prénom} », période, bouton rouge **« Créer »** qui ouvre un menu : Programme, Séance,
-  Sportif, Facture, Tâche (les éléments non disponibles marqués « Bientôt »).
+  Sportif, Facture, Tâche.
 - Cartes chiffrées : coachings de la semaine · sportifs actifs · programmes à livrer · factures en
   attente.
 - **Agenda** avec vues Semaine / Mois / Aujourd'hui :
   - ordinateur : grille 7 jours, heures en colonne gauche, séances en blocs colorés par discipline ;
   - **téléphone : 3 jours visibles, défilement horizontal, positionné sur aujourd'hui** ; « Mois »
     affiche une grille du mois ; « Aujourd'hui » une seule colonne.
-- Tâches prioritaires · Revenus du mois · Sportifs récents · Programmes en cours · Factures récentes
-  (modules non construits = cartes « Bientôt »).
+- Tâches prioritaires · Revenus du mois (montant, évolution vs mois précédent, mini-graphique) ·
+  Sportifs récents · Programmes en cours (barre « Semaine 6/12 ») · Factures récentes (n°, client,
+  montant, statut). Toutes ces cartes remplies avec des données d'exemple.
 
 ### 6.3 Sportifs : liste (`/coach/o/[org]/sportifs`)
 - Titre « Sportifs », bouton rouge « Nouveau sportif ».
@@ -263,25 +267,25 @@ Modèle : `maquettes/agenda.png` (refonte visuelle à faire).
 
 ### 6.9 Paramètres (`/coach/profil`)
 Modèle : `maquettes/parametres.png`.
-- Fait : **photo de profil** (import, recadrage carré, suppression), prénom, nom, entreprise,
-  téléphone.
-- À venir dans la même page : préférences et notifications, facturation et informations légales,
-  sécurité et accès, abonnement.
+Page complète, tous les blocs à dessiner :
+- **Profil et entreprise** : photo de profil (import, recadrage carré, suppression), prénom, nom,
+  entreprise, téléphone, nom de l'organisation.
+- **Préférences et notifications** : thème sombre / clair, langue, notifications (nouveau retour,
+  message, rappel de séance) par canal.
+- **Facturation et informations légales** : raison sociale, adresse, n° d'entreprise / TVA, IBAN,
+  mentions sur les factures, numérotation.
+- **Sécurité et accès** : e-mail, mot de passe, connexions Google / Facebook / Apple, appareils
+  connectés, déconnexion partout.
+- **Abonnement** : formule, prochaine échéance, historique.
 
-### 6.10 Pages « Bientôt » (`/coach/bientot/[module]`)
-Une page par module non construit : icône, nom du module, phase prévue, 3 ou 4 lignes sur ce qu'il
-fera, renvoi vers ce qui existe déjà. **À dessiner comme un vrai état soigné**, pas une page vide.
-
-### 6.11 Espace sportif actuel (`/app`, « Mon espace sportif »)
-Aujourd'hui minimal : écran d'attente « Ton coach prépare ton programme » + carte d'accord santé +
-message du coach. Il sera remplacé par l'espace sportif complet (section 7.2).
-
-### 6.12 Administration (`/admin`)
-Aujourd'hui une simple page « Administration de la plateforme ». Voir 7.3.
+### 6.10 Espace sportif et administration
+Seuls quelques morceaux existent (écran d'attente « Ton coach prépare ton programme », carte
+d'accord santé). Ils sont à dessiner **dans l'espace sportif complet** (section 7.2) ; de même
+l'administration est entièrement décrite en 7.3.
 
 ---
 
-## 7. Pages À VENIR (à designer dès maintenant)
+## 7. Pages pas encore codées (à dessiner tout aussi complètes)
 
 Les maquettes jointes donnent l'apparence voulue côté ordinateur. **Il manque leur version
 téléphone** : c'est la priorité.
@@ -342,13 +346,46 @@ publication (séances incomplètes), historique des versions, badge « Nouvelle 
 **Retours des sportifs** : liste des séances terminées avec RPE, difficulté, commentaire,
 **Prescrit vs Réalisé**.
 
-**Documents** (`maquettes/documents.png`, P5) · **Messages** (`maquettes/messages.png`, P7) ·
-**Tâches** (`maquettes/taches.png`) · **Facturation** (`maquettes/facturation.png`) ·
-**Comptabilité** (`maquettes/comptabilite.png`) : contenus détaillés dans `MAQUETTES.md` joint.
-Points clés : facturation sans paiement en ligne via Coory ; comptabilité = « vue de gestion, pas
-une comptabilité légale certifiée » ; messages en conversation 1:1 coach / sportif.
+**Documents** (`maquettes/documents.png`)
+- Cartes : documents, programmes PDF, factures, récents.
+- Liste filtrable (Tous / Programmes / Factures / Contrats / Autres) : document, catégorie, sportif
+  associé, dernière modification, actions (ouvrir, télécharger, supprimer).
+- Accès rapide ; bouton rouge « Importer un fichier » (nom, catégorie, sportif associé) ;
+  aperçu d'un PDF.
 
-**Assistant IA** (idée future, à esquisser seulement) : une fenêtre de discussion où le coach écrit
+**Messages** (`maquettes/messages.png`)
+- Liste des conversations (recherche, avatar, nom, dernier message, non lus) et conversation
+  sélectionnée (sportif, programme en cours, fil, pièce jointe, « Écrire un message… »).
+- Téléphone : la liste, puis la conversation en plein écran. Bouton « Nouveau message ».
+
+**Tâches** (`maquettes/taches.png`)
+- Cartes : ouvertes, urgentes, programmes, terminées.
+- Liste (Toutes / Aujourd'hui / À venir / Terminées) : case à cocher, tâche, associée à (Programme,
+  Facturation, Paiement, Suivi, Agenda), échéance, priorité (Haute / Normale), statut.
+- Création d'une tâche : titre, échéance, priorité, élément associé.
+
+**Facturation** (`maquettes/facturation.png`)
+- Cartes : encaissé ce mois, en attente, en retard, factures à préparer.
+- Liste (Toutes / Brouillons / À envoyer / En attente / Payées / En retard) : n° FAC-2026-014,
+  client, date, montant, statut.
+- **Créer une facture** : sportif, prestations (ligne, quantité, prix unitaire, TVA), échéance,
+  notes, total. **Détail / aperçu de facture** prêt à envoyer en PDF. Paiements et relances.
+- Pas de paiement en ligne via Coory : le coach marque la facture comme payée.
+
+**Comptabilité** (`maquettes/comptabilite.png`)
+- Cartes : chiffre d'affaires, dépenses, résultat estimé, factures impayées.
+- Histogramme du chiffre d'affaires sur 12 mois, anneau de répartition des dépenses (location
+  salle, matériel, services, autres), mouvements récents (date, libellé, Revenu / Dépense,
+  montant), ajout d'une dépense.
+- Mention discrète : « Vue de gestion, pas une comptabilité légale certifiée ».
+
+**Notifications** (cloche) : panneau avec nouveaux retours, messages, invitations acceptées,
+factures en retard, tâches du jour.
+
+**Recherche globale** (« Rechercher dans Coory… ») : résultats groupés par sportifs, programmes,
+séances, documents.
+
+**Assistant IA** : une fenêtre de discussion où le coach écrit
 « Crée Valentin Dupont, musculation, dispo mardi, mercredi, jeudi 19 h » et l'assistant **propose
 les actions**, que le coach **valide** avant exécution.
 
@@ -377,8 +414,11 @@ Contexte d'usage : à la salle, une main, parfois en sueur, lumière forte : gra
 fort contraste, rien qui dépend du survol.
 
 ### 7.3 Administration (ordinateur, priorité basse)
-Organisations et leur état · Utilisateurs et rôles · Abonnements et quotas · Journal d'audit ·
-Erreurs et intégrations · Conformité (export, suppression).
+- **Vue d'ensemble** : cartes (organisations, coachs, sportifs, inscriptions du mois).
+- **Organisations** : nom, propriétaire, nombre de sportifs, formule, état (Active / Suspendue).
+- **Utilisateurs et rôles** : nom, e-mail, rôle (Coach / Sportif / Admin), dernière connexion.
+- **Abonnements et quotas** · **Journal d'audit** (qui, quoi, quand) · **Erreurs et intégrations**
+  · **Conformité** (export des données, suppression de compte, avec confirmation renforcée).
 
 ---
 
