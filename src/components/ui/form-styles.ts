@@ -8,6 +8,9 @@ const fieldBase =
 
 export const inputClass = `${fieldBase} h-[50px] px-4`;
 
+// Pages d'entrée (connexion, inscription, mot de passe, invitation) : champs de 52 px (prototype §7.1).
+export const entryInputClass = `${fieldBase} h-[52px] px-4`;
+
 // Zone de texte : même habillage, hauteur libre (3 lignes par défaut).
 export const textareaClass = `${fieldBase} min-h-[96px] px-4 py-3 leading-normal`;
 

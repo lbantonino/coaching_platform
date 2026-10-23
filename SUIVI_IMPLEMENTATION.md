@@ -22,7 +22,7 @@
 |---|---|
 | 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
 | 2. Coquilles de navigation | **Fait** le 23/10 (coach, sportif, admin, entrée, pages légales) |
-| 3. Pages d'entrée | À faire |
+| 3. Pages d'entrée | **Fait** le 23/10 (connexion, inscription, vérification, bienvenue, mot de passe, invitation, erreurs, pages légales) |
 | 4. Espace coach | À faire |
 | 5. Espace sportif | À faire |
 | 6. Administration | À faire |
@@ -32,6 +32,35 @@
 - Date : 2026-10-22
 - Objectif : appliquer le nouveau design system Coory (version rouge) et le logo fournis par Antonino, avant P2-02.
 - Décisions produit du 22/10 (documentation seulement, **aucun code**) : D-17 Business du coach (étapes A suivi et B factures, **sans encaissement en ligne**, placement proposé après P6 à confirmer, backlog BIZ-01 à BIZ-06), D-18 musculation seule confirmée, OPEN-17 (règles de facturation, vérification par un comptable), comparatif Athleex corrigé dans `docs/16`.
+
+### D-34, étape 3 du prompt Claude Design : pages d'entrée
+```
+Date : 2026-10-23
+Demande : étape 3 (§7.1) ; inscription au prototype en gardant la confirmation du mot de passe
+Fait :
+  - components/layout/entry-ui (titre, pastille d'icône, bandeau d'erreur, carte d'information,
+    lien retour, boutons pleine largeur), account-kind-cards (cartes radio Coach / Sportif),
+    form-styles.entryInputClass (52 px), Checkbox multiline, Spinner à la couleur du texte
+  - messages du prototype dans les schémas (« Indique ton adresse e-mail. », « Cette adresse
+    e-mail ne semble pas valide. », « Choisis un mot de passe. », « Au moins 10 caractères… »,
+    « Tu dois accepter les conditions pour continuer. ») ; actions login, inscription, mot de
+    passe et invitation : une erreur par champ (field-errors.ts) + bandeau pour le reste
+  - connexion (carte de marque mobile de D-33 gardée), inscription, /verifier-email (cookie
+    httpOnly signup-cookie.ts, resendConfirmation), bienvenue (welcome-ready : coach / sportif ;
+    onboarding-form pour Google / Facebook / Apple), mot de passe oublié, nouveau mot de passe,
+    invitation (carte de l'organisation, adresse verrouillée), lien invalide, accès refusé
+    (compte connecté, retour à son espace, changer de compte), pages légales (LegalDocument :
+    retour, pastilles, sommaire, sections 01 à 0N)
+  - boutons Google / Facebook / Apple restylés (toujours cachés sans clés) ; auth-fields supprimé
+Écarts assumés : carte d'invitation au nom de l'organisation (le nom du coach n'est pas transmis
+  par la fonction d'invitation) ; case « 18 ans » de l'invitation sans mention des conditions
+  (leur acceptation n'est pas enregistrée pour les sportifs invités, à décider) ; après un
+  nouveau mot de passe, arrivée directe dans l'espace (session déjà ouverte) ; adresse de contact
+  des pages légales laissée « [à compléter] »
+Tests : check OK (Vitest 132, messages du prototype testés), test:e2e 90 + 4 ignorés (nouveau :
+  renvoi de l'e-mail) ; parcours réels coach et sportif vérifiés en production locale ;
+  db:reset puis profil d'Antonino restauré
+```
 
 ### D-33 : thème clair par défaut, carte de marque sur la connexion (téléphone)
 ```

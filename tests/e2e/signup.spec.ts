@@ -48,17 +48,19 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
 }, testInfo) => {
   const email = `inscription-coach-${unique(testInfo)}@example.test`;
   await fillSignup(page, { kind: "Je suis coach", first: "Léa", last: "Martin", email });
-  await page.getByLabel(/activité/).fill("Studio Léa");
-  await page.getByRole("button", { name: "Créer mon espace coach" }).click();
-  await expect(page.getByRole("status")).toContainText("Vérifie ta boîte mail");
+  await page.getByLabel(/entreprise/).fill("Studio Léa");
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  // Page « Vérifie ta boîte mail » : l'adresse vient d'un cookie, jamais de l'URL.
+  await expect(page).toHaveURL(/\/verifier-email$/);
+  await expect(page.getByRole("heading", { name: "Vérifie ta boîte mail" })).toBeVisible();
+  await expect(page.getByText(email)).toBeVisible();
 
-  // Le lien de l'e-mail confirme l'adresse puis ouvre la dernière étape, pré-remplie.
+  // Le lien de l'e-mail confirme l'adresse puis souhaite la bienvenue avec ce qui a été saisi.
   await page.goto(await confirmationLink(request, email));
   await expect(page).toHaveURL(/\/bienvenue$/);
-  await expect(page.getByLabel("Prénom")).toHaveValue("Léa");
-  await expect(page.getByLabel(/^Nom de ton activité/)).toHaveValue("Studio Léa");
-  await expect(page.getByRole("checkbox", { name: /J'ai 18 ans ou plus/ })).toBeChecked();
-  await page.getByRole("button", { name: "Créer mon espace coach" }).click();
+  await expect(page.getByRole("heading", { name: "Bienvenue, Léa." })).toBeVisible();
+  await expect(page.getByText("Studio Léa")).toBeVisible();
+  await page.getByRole("button", { name: "Accéder à mon tableau de bord" }).click();
 
   // Son espace est vide et n'a rien en commun avec les organisations de démonstration.
   await expect(page).toHaveURL(/\/coach$/);
@@ -73,15 +75,31 @@ test("un sportif s'inscrit seul et attend que son coach le rattache", async ({
 }, testInfo) => {
   const email = `inscription-sportif-${unique(testInfo)}@example.test`;
   await fillSignup(page, { kind: "Je suis sportif", first: "Sam", last: "Lefort", email });
-  await expect(page.getByLabel(/activité/)).toHaveCount(0);
+  await expect(page.getByLabel(/entreprise/)).toHaveCount(0);
   await page.getByRole("button", { name: "Créer mon compte" }).click();
-  await expect(page.getByRole("status")).toContainText("Vérifie ta boîte mail");
+  await expect(page.getByRole("heading", { name: "Vérifie ta boîte mail" })).toBeVisible();
 
   await page.goto(await confirmationLink(request, email));
-  await page.getByRole("button", { name: "Terminer" }).click();
+  await expect(page.getByRole("heading", { name: "Bienvenue, Sam." })).toBeVisible();
+  await page.getByRole("button", { name: "Compris" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByRole("heading", { name: "Ton compte est prêt" })).toBeVisible();
   await expect(page.getByText(email).first()).toBeVisible();
+});
+
+test("l'e-mail de confirmation peut être renvoyé depuis « Vérifie ta boîte mail »", async ({
+  page,
+}, testInfo) => {
+  const email = `inscription-renvoi-${unique(testInfo)}@example.test`;
+  await fillSignup(page, { kind: "Je suis sportif", first: "Noa", last: "Renvoi", email });
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await expect(page).toHaveURL(/\/verifier-email$/);
+  // Supabase limite l'envoi à un e-mail par seconde et par adresse (max_frequency).
+  await page.waitForTimeout(1500);
+  await page.getByRole("button", { name: "Renvoyer l'e-mail" }).click();
+  await expect(page.getByRole("button", { name: "E-mail renvoyé ✓" })).toBeDisabled();
+  await page.getByRole("link", { name: "Modifier l'adresse" }).click();
+  await expect(page).toHaveURL(/\/inscription$/);
 });
 
 test("les erreurs de saisie sont expliquées et la saisie est conservée", async ({ page }) => {
@@ -91,13 +109,20 @@ test("les erreurs de saisie sont expliquées et la saisie est conservée", async
     last: "Dupont",
     email: "erreurs@example.test",
   });
-  // Bouton inactif tant que les conditions ne sont pas acceptées (le serveur revérifie de toute façon).
+  // Conditions non acceptées : message sous la case et bandeau « Corrige les champs signalés ».
   await page.getByRole("checkbox", { name: /J'ai 18 ans ou plus/ }).uncheck({ force: true });
-  await expect(page.getByRole("button", { name: "Créer mon espace coach" })).toBeDisabled();
-  await page.getByRole("checkbox", { name: /J'ai 18 ans ou plus/ }).check({ force: true });
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Tu dois accepter les conditions pour continuer." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Corrige les champs signalés pour continuer." }),
+  ).toBeVisible();
 
+  await page.getByRole("checkbox", { name: /J'ai 18 ans ou plus/ }).check({ force: true });
+  await page.getByLabel("Mot de passe", { exact: true }).fill(PASSWORD);
   await page.getByLabel("Confirmation du mot de passe").fill("autre-mot-de-passe");
-  await page.getByRole("button", { name: "Créer mon espace coach" }).click();
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(
     page.getByRole("alert").filter({ hasText: "Les deux mots de passe ne correspondent pas." }),
   ).toBeVisible();

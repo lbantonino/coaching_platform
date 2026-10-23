@@ -66,6 +66,28 @@ describe("loginSchema", () => {
   });
 });
 
+describe("messages du prototype Claude Design (§7.1)", () => {
+  it("distingue une adresse vide d'une adresse mal formée", () => {
+    expect(loginSchema.safeParse({ email: "", password: "x" }).error?.issues[0]?.message).toBe(
+      "Indique ton adresse e-mail.",
+    );
+    expect(loginSchema.safeParse({ email: "coach", password: "x" }).error?.issues[0]?.message).toBe(
+      "Cette adresse e-mail ne semble pas valide.",
+    );
+    expect(
+      loginSchema.safeParse({ email: "coach@example.test", password: "" }).error?.issues[0]
+        ?.message,
+    ).toBe("Indique ton mot de passe.");
+  });
+
+  it("demande un mot de passe, puis au moins 10 caractères", () => {
+    const empty = newPasswordSchema.safeParse({ password: "", confirmation: "" });
+    expect(empty.error?.issues[0]?.message).toBe("Choisis un mot de passe.");
+    const short = newPasswordSchema.safeParse({ password: "court", confirmation: "court" });
+    expect(short.error?.issues[0]?.message).toBe("Au moins 10 caractères, s'il te plaît.");
+  });
+});
+
 describe("newPasswordSchema", () => {
   it(`exige au moins ${PASSWORD_MIN_LENGTH} caractères`, () => {
     const short = "a".repeat(PASSWORD_MIN_LENGTH - 1);

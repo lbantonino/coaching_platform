@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PASSWORD_MIN_LENGTH } from "./schemas";
+import { emailField, newPasswordField } from "./schemas";
 
 // Inscription libre (D-30) : règles PURES, testées par Vitest.
 
@@ -10,8 +10,8 @@ export const TERMS_VERSION = "2026-10-23-provisoire";
 export const ACCOUNT_KINDS = ["coach", "athlete"] as const;
 export type AccountKind = (typeof ACCOUNT_KINDS)[number];
 export const accountKindLabels: Record<AccountKind, string> = {
-  coach: "Je suis coach",
-  athlete: "Je suis sportif",
+  coach: "Coach",
+  athlete: "Sportif",
 };
 
 const name = (label: string) =>
@@ -42,11 +42,11 @@ const phone = z
 const organizationName = z
   .string()
   .trim()
-  .max(120, { error: "Nom de l'activité trop long (120 caractères maximum)." })
+  .max(120, { error: "Nom de l'entreprise trop long (120 caractères maximum)." })
   .transform((value) => (value === "" ? null : value));
 
 const terms = z.literal("on", {
-  error: "Accepte les conditions d'utilisation et la politique de confidentialité.",
+  error: "Tu dois accepter les conditions pour continuer.",
 });
 
 export const signupSchema = z
@@ -54,15 +54,10 @@ export const signupSchema = z
     kind: z.enum(ACCOUNT_KINDS, { error: "Indique si tu es coach ou sportif." }),
     firstName: name("prénom"),
     lastName: name("nom"),
-    email: z.email({ error: "Adresse e-mail invalide." }).max(254),
+    email: emailField,
     phone,
     organizationName,
-    password: z
-      .string()
-      .min(PASSWORD_MIN_LENGTH, {
-        error: `Le mot de passe doit contenir au moins ${PASSWORD_MIN_LENGTH} caractères.`,
-      })
-      .max(128, { error: "Le mot de passe est trop long (128 caractères maximum)." }),
+    password: newPasswordField,
     confirmation: z.string(),
     terms,
   })

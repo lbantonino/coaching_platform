@@ -4,11 +4,15 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
+import { fieldErrors } from "./field-errors";
 import { getHomePath } from "./guards";
 import { loginSchema } from "./schemas";
 
 export type LoginState = {
+  // Erreur générale (identifiants refusés, trop de tentatives), affichée en bandeau.
   error: string | null;
+  // Erreurs de saisie, affichées sous chaque champ (email, password).
+  fields: Record<string, string>;
   email: string;
 };
 
@@ -21,7 +25,7 @@ export async function login(_previous: LoginState, formData: FormData): Promise<
 
   const parsed = loginSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide.", email: raw.email };
+    return { error: null, fields: fieldErrors(parsed.error), email: raw.email };
   }
 
   const supabase = await createClient();
@@ -32,8 +36,8 @@ export async function login(_previous: LoginState, formData: FormData): Promise<
     const message =
       error?.status === 429
         ? "Trop de tentatives. Réessaie dans quelques minutes."
-        : "E-mail ou mot de passe incorrect.";
-    return { error: message, email: raw.email };
+        : "Adresse e-mail ou mot de passe incorrect. Vérifie tes informations ou réinitialise ton mot de passe.";
+    return { error: message, fields: {}, email: raw.email };
   }
 
   // Redirection directe vers l'espace correspondant aux rôles réels (coach -> /coach,

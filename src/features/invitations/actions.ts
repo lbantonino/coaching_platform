@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { fieldErrors } from "@/features/auth/field-errors";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { newPasswordSchema } from "@/features/auth/schemas";
 import { getCurrentUser } from "@/features/auth/session";
@@ -97,7 +98,11 @@ export async function revokeInvitation(organizationId: string, athleteId: string
 // Côté sportif
 // ---------------------------------------------------------------------------
 
-export type AcceptInvitationState = { error: string | null };
+export type AcceptInvitationState = {
+  // Erreur générale (bandeau) ; erreurs de saisie sous les champs (password, confirmation, adult).
+  error: string | null;
+  fields: Record<string, string>;
+};
 
 const acceptErrors: Record<string, string> = {
   invitation_invalide: "Ce lien n'est plus valable. Demande un nouveau lien à ton coach.",
@@ -119,6 +124,7 @@ async function linkInvitation(
   });
   if (error) {
     return {
+      fields: {},
       error: acceptErrors[error.message] ?? "L'invitation n'a pas pu être acceptée. Réessaie.",
     };
   }
@@ -132,14 +138,17 @@ export async function acceptInvitation(
   formData: FormData,
 ): Promise<AcceptInvitationState> {
   if (!invitationTokenSchema.safeParse(token).success) {
-    return { error: acceptErrors.invitation_invalide };
+    return { error: acceptErrors.invitation_invalide, fields: {} };
   }
   // Mineurs non pris en charge tant que le cadre légal n'est pas validé (OPEN-11).
-  if (formData.get("adult") !== "on") return { error: acceptErrors.age_non_confirme };
+  if (formData.get("adult") !== "on") {
+    return { error: null, fields: { adult: acceptErrors.age_non_confirme } };
+  }
 
   const invitation = await getPublicInvitation(token);
   if (!invitation || invitation.status !== "pending" || !invitation.email) {
     return {
+      fields: {},
       error:
         invitation?.status === "expired"
           ? acceptErrors.invitation_expiree
@@ -157,7 +166,7 @@ export async function acceptInvitation(
     password: String(formData.get("password") ?? ""),
     confirmation: String(formData.get("confirmation") ?? ""),
   });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+  if (!parsed.success) return { error: null, fields: fieldErrors(parsed.error) };
 
   // Procédure de confiance : l'inscription libre est fermée, seul le serveur crée ce compte,
   // et uniquement pour l'e-mail d'une invitation valide.
@@ -170,6 +179,7 @@ export async function acceptInvitation(
   if (createError) {
     const exists = createError.code === "email_exists" || createError.status === 422;
     return {
+      fields: {},
       error: exists
         ? "Un compte existe déjà avec cet e-mail : connecte-toi, puis rouvre ce lien pour accepter."
         : "Le compte n'a pas pu être créé. Réessaie.",
@@ -181,7 +191,10 @@ export async function acceptInvitation(
     password: parsed.data.password,
   });
   if (signInError)
-    return { error: "Compte créé, mais connexion impossible. Connecte-toi puis rouvre le lien." };
+    return {
+      error: "Compte créé, mais connexion impossible. Connecte-toi puis rouvre le lien.",
+      fields: {},
+    };
 
   return linkInvitation(supabase, token);
 }

@@ -39,7 +39,7 @@ describe("signupSchema", () => {
     ).toBe(false);
     const noTerms = signupSchema.safeParse({ ...base, terms: undefined });
     expect(noTerms.error?.issues[0]?.message).toBe(
-      "Accepte les conditions d'utilisation et la politique de confidentialité.",
+      "Tu dois accepter les conditions pour continuer.",
     );
   });
 

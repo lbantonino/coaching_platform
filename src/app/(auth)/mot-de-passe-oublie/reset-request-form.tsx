@@ -1,51 +1,67 @@
 "use client";
 
+import { CircleCheck } from "lucide-react";
 import { useActionState } from "react";
 
-import { errorTextClass, inputClass, primaryButtonClass } from "@/components/ui/form-styles";
+import { entryPrimaryClass, FormAlert, InfoCard } from "@/components/layout/entry-ui";
+import { Field } from "@/components/ui/field";
+import { entryInputClass } from "@/components/ui/form-styles";
+import { Spinner } from "@/components/ui/spinner";
 import { requestPasswordReset, type ResetRequestState } from "@/features/auth/password-actions";
 
-const initialState: ResetRequestState = { status: "idle", message: null, email: "" };
+const initialState: ResetRequestState = { status: "idle", message: null, fields: {}, email: "" };
 
+// Demande de lien. Réponse identique que le compte existe ou non (rien n'est révélé).
 export function ResetRequestForm() {
   const [state, formAction, pending] = useActionState(requestPasswordReset, initialState);
 
   if (state.status === "sent") {
     return (
-      <p role="status" className="rounded-card border border-line bg-surface p-4">
-        {state.message}
-      </p>
+      <div role="status">
+        <InfoCard tone="ok">
+          <div className="flex items-start gap-3">
+            <CircleCheck
+              aria-hidden
+              size={20}
+              strokeWidth={1.8}
+              className="mt-0.5 shrink-0 text-ok"
+            />
+            <p className="text-[15px] leading-[1.55]">
+              Si un compte existe pour <strong>{state.email}</strong>, un lien vient d&apos;être
+              envoyé. Il est valable 1 h.
+            </p>
+          </div>
+        </InfoCard>
+      </div>
     );
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-small font-medium">
-          Adresse e-mail
-        </label>
+    <form action={formAction} className="flex flex-col gap-[22px]" noValidate>
+      {state.message ? <FormAlert>{state.message}</FormAlert> : null}
+      <Field id="email" label="Adresse e-mail" error={state.fields.email}>
         <input
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           inputMode="email"
-          required
+          placeholder="toi@exemple.com"
           defaultValue={state.email}
-          aria-invalid={state.status === "error" ? true : undefined}
-          aria-describedby={state.status === "error" ? "reset-error" : undefined}
-          className={inputClass}
+          aria-invalid={state.fields.email ? true : undefined}
+          aria-describedby={state.fields.email ? "email-error" : undefined}
+          className={entryInputClass}
         />
-      </div>
-
-      {state.status === "error" ? (
-        <p id="reset-error" role="alert" className={errorTextClass}>
-          {state.message}
-        </p>
-      ) : null}
-
-      <button type="submit" disabled={pending} className={primaryButtonClass}>
-        {pending ? "Envoi…" : "Recevoir un lien de réinitialisation"}
+      </Field>
+      <button type="submit" disabled={pending} className={entryPrimaryClass}>
+        {pending ? (
+          <>
+            <Spinner />
+            Envoi…
+          </>
+        ) : (
+          "Recevoir le lien"
+        )}
       </button>
     </form>
   );

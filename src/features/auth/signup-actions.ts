@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
+import { fieldErrors } from "./field-errors";
 import { getHomePath } from "./guards";
 import { enabledProviders, type OAuthProvider } from "./providers";
 import { requireUser } from "./session";
+import { readSignupEmail, rememberSignupEmail } from "./signup-cookie";
 import { onboardingSchema, signupSchema, TERMS_VERSION } from "./signup-schemas";
 
 // Saisie renvoyée après une erreur (jamais les mots de passe) : React 19 vide le formulaire.
@@ -21,17 +23,14 @@ export type SignupValues = {
 };
 
 export type SignupState = {
-  status: "idle" | "sent" | "error";
+  status: "idle" | "error";
+  // Erreur générale, affichée en bandeau au-dessus du formulaire.
   message: string | null;
-  // Champ concerné par l'erreur (message affiché sous ce champ), null pour une erreur générale.
-  field: string | null;
+  // Erreurs de saisie, une par champ, affichées sous chaque champ.
+  fields: Record<string, string>;
   attempt: number;
   values: SignupValues | null;
 };
-
-// Même message que l'adresse soit nouvelle ou déjà inscrite : ne jamais révéler qui a un compte.
-const SENT_MESSAGE =
-  "Un e-mail de confirmation vient d'être envoyé. Ouvre le lien qu'il contient pour activer ton compte (valable une heure).";
 
 export async function signUp(previous: SignupState, formData: FormData): Promise<SignupState> {
   const field = (name: string) => String(formData.get(name) ?? "");
@@ -43,10 +42,10 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
     phone: field("phone"),
     organizationName: field("organizationName"),
   };
-  const fail = (message: string, field: string | null = null): SignupState => ({
+  const fail = (message: string | null, fields: Record<string, string> = {}): SignupState => ({
     status: "error",
     message,
-    field,
+    fields,
     attempt: previous.attempt + 1,
     values,
   });
@@ -58,8 +57,7 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
     terms: formData.get("terms") ?? undefined,
   });
   if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    return fail(issue?.message ?? "Formulaire invalide.", String(issue?.path[0] ?? "") || null);
+    return fail("Corrige les champs signalés pour continuer.", fieldErrors(parsed.error));
   }
 
   // Lien de retour construit sur l'origine de la requête ; Supabase n'accepte que les adresses
@@ -88,20 +86,43 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
 
   if (error?.status === 429) return fail("Trop de demandes. Réessaie dans quelques minutes.");
   if (error?.code === "weak_password")
-    return fail("Mot de passe trop faible : choisis-en un plus long.");
+    return fail(null, { password: "Mot de passe trop faible : choisis-en un plus long." });
   if (error && error.code !== "user_already_exists") {
     return fail("L'inscription n'a pas pu aboutir. Réessaie.");
   }
   // Confirmation désactivée (jamais en production) : session ouverte tout de suite.
   if (result?.session) redirect("/bienvenue");
 
-  return {
-    status: "sent",
-    message: SENT_MESSAGE,
-    field: null,
-    attempt: previous.attempt + 1,
-    values,
-  };
+  // Même suite que l'adresse soit nouvelle ou déjà inscrite : ne jamais révéler qui a un compte.
+  await rememberSignupEmail(data.email);
+  redirect("/verifier-email");
+}
+
+export type ResendState = { status: "idle" | "sent" | "error"; message: string | null };
+
+// « Renvoyer l'e-mail » de la page « Vérifie ta boîte mail ». Réponse identique que l'adresse
+// existe, soit déjà confirmée ou non ; seule la limite de fréquence de Supabase est signalée.
+export async function resendConfirmation(previous: ResendState): Promise<ResendState> {
+  // Un seul renvoi par visite de la page (le bouton passe à « E-mail renvoyé ✓ »).
+  if (previous.status === "sent") return previous;
+  const email = await readSignupEmail();
+  const origin = (await headers()).get("origin");
+  if (!email || !origin) {
+    return {
+      status: "error",
+      message: "Recommence ton inscription pour recevoir un nouvel e-mail.",
+    };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: `${origin}/auth/confirm?next=/bienvenue` },
+  });
+  if (error?.status === 429) {
+    return { status: "error", message: "Trop de demandes. Réessaie dans quelques minutes." };
+  }
+  return { status: "sent", message: null };
 }
 
 // Connexion ou inscription par un fournisseur (Google, Facebook, Apple), s'il est configuré.
@@ -128,8 +149,7 @@ export type OnboardingState = {
 const onboardingErrors: Record<string, string> = {
   email_non_confirme: "Confirme d'abord ton adresse e-mail avec le lien reçu.",
   deja_inscrit: "Ton compte est déjà prêt.",
-  conditions_non_acceptees:
-    "Accepte les conditions d'utilisation et la politique de confidentialité.",
+  conditions_non_acceptees: "Tu dois accepter les conditions pour continuer.",
 };
 
 // Dernière étape : crée l'espace du coach (son organisation) ou finalise le compte sportif.

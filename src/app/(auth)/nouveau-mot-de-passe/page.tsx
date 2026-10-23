@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { EntryTitle } from "@/components/layout/entry-ui";
+import { SkeletonLines } from "@/components/ui/skeleton";
 import { requireUser } from "@/features/auth/session";
 
 import { NewPasswordForm } from "./new-password-form";
@@ -10,11 +12,11 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+// Nouveau mot de passe (prompt Claude Design §7.1), ouvert par le lien de réinitialisation.
 export default function NewPasswordPage() {
   return (
-    <div className="flex w-full flex-col gap-8">
-      <h1 className="font-display text-h2 font-medium">Nouveau mot de passe</h1>
-      <Suspense fallback={<p className="text-muted">Vérification du lien…</p>}>
+    <div className="flex flex-col gap-[22px]">
+      <Suspense fallback={<SkeletonLines label="Vérification du lien…" />}>
         <RecoverySession />
       </Suspense>
     </div>
@@ -25,11 +27,9 @@ export default function NewPasswordPage() {
 async function RecoverySession() {
   const user = await requireUser();
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-small text-muted">
-        Compte : <span className="font-medium text-current">{user.email}</span>
-      </p>
+    <>
+      <EntryTitle sub={`Compte : ${user.email}`}>Nouveau mot de passe</EntryTitle>
       <NewPasswordForm />
-    </div>
+    </>
   );
 }

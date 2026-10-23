@@ -16,14 +16,24 @@ const boxSizes = {
 export function Checkbox({
   label,
   size = "md",
+  multiline = false,
   ...props
-}: NativeProps & { label: ReactNode; size?: keyof typeof boxSizes }) {
+}: NativeProps & {
+  label: ReactNode;
+  size?: keyof typeof boxSizes;
+  // Libellé sur plusieurs lignes (conditions d'utilisation) : case alignée sur la première ligne.
+  multiline?: boolean;
+}) {
   return (
-    <label className="group flex min-h-11 cursor-pointer items-center gap-3 text-[15px] text-text">
+    <label
+      className={`group flex min-h-11 cursor-pointer gap-3 text-text ${
+        multiline ? "items-start text-[14px] leading-normal" : "items-center text-[15px]"
+      }`}
+    >
       <input type="checkbox" {...props} className="peer sr-only" />
       <span
         aria-hidden
-        className={`${boxSizes[size]} inline-flex shrink-0 items-center justify-center border-[1.5px] border-line-2 text-on-accent transition-colors duration-150 peer-checked:border-accent peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent [&>svg]:hidden peer-checked:[&>svg]:block`}
+        className={`${boxSizes[size]} inline-flex shrink-0 items-center justify-center border-[1.5px] border-line-2 text-on-accent transition-colors duration-150 peer-checked:border-accent peer-checked:bg-accent peer-aria-invalid:border-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent [&>svg]:hidden peer-checked:[&>svg]:block`}
       >
         <Check size={size === "lg" ? 18 : 15} strokeWidth={3} />
       </span>
