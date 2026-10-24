@@ -32,6 +32,24 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### 4a : liste des sportifs d'après la maquette d'Antonino (D-40)
+```
+Date : 2026-10-24
+Demande : maquette en tableau (Sportif, Statut, Type de programme, Objectif, Actions) ; statut et
+  type de programme modifiables directement sur leur pastille ; filtres Statut et Type au-dessus ;
+  cases à cocher avec actions groupées ; « Prochaine séance » remplacée par « Objectif » ; lignes
+  neutres ; compte activé = icône message sans « Inviter », sinon seulement « Inviter »
+Fait : migration 20261024120000_type_de_programme (athlete_profiles.program_type, facultatif,
+  indépendant des objectifs, droit de modification au seul coach) ; seed (Lucas en Hybride, Manon
+  sans type) ; actions setAthletesStatus / setAthletesProgramType (un ou plusieurs sportifs, Zod,
+  organisation revérifiée) ; tableau triable (?tri=, ?ordre=) sur ordinateur, cartes sur téléphone ;
+  pastilles qui ouvrent le choix (choix en cours coché) ; barre « N sélectionnés · Statut · Type » ;
+  filtres en carte (Statut avec nombres, Type avec pictogrammes), « Tous » par défaut ;
+  menu « ••• » = statut
+Tests : db:test 264 (19_type_de_programme), check OK (Vitest 153), test:e2e 116 + 6 ignorés
+  (nouveau : pastilles + actions groupées ; filtre par type ; archivage adapté au filtre « Tous »)
+```
+
 ### 4a : liste des sportifs (prototype + retouches d'Antonino)
 ```
 Date : 2026-10-24

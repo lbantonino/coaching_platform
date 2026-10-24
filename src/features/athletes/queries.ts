@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import type { Discipline } from "@/domain/training/discipline";
-import { goalDiscipline, type GoalType } from "@/features/goals/schemas";
+import type { GoalType } from "@/features/goals/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,14 +28,14 @@ export type AthleteListItem = {
   sex: Sex | null;
   // Chemin de la photo de profil dans le stockage privé (D-28), servie par /photos.
   photoPath: string | null;
-  // Discipline de l'objectif principal en cours : couleur de l'avatar dans la liste (D-24).
-  mainDiscipline: Discipline | null;
+  // Type de programme choisi par le coach (D-40), indépendant des objectifs ; null = pas encore choisi.
+  programType: Discipline | null;
   // Fiche « à compléter » (D-35) : ce qui manque encore (vide si la fiche est complète).
   missingInfo: string[];
   level: AthleteLevel | null;
   createdAt: string;
-  // Objectif principal en cours (type, ou nom de la compétition) et prochaine compétition à venir.
-  mainGoal: { type: GoalType; competitionName: string | null } | null;
+  // Objectif principal en cours (type, nom de la compétition, date visée) et prochaine compétition.
+  mainGoal: { type: GoalType; competitionName: string | null; targetDate: string | null } | null;
   nextCompetition: { name: string; date: string } | null;
 };
 
@@ -48,12 +48,6 @@ type GoalRow = {
   target_date: string | null;
   competition_name: string | null;
 };
-
-function mainGoalDiscipline(goals: GoalRow[]) {
-  const main = goals.find((goal) => goal.priority === "main" && goal.status === "active");
-  // La contrainte CHECK en base garantit la liste des types d'objectif.
-  return main ? goalDiscipline(main.goal_type as GoalType) : null;
-}
 
 // Prochaine compétition en cours, à partir d'aujourd'hui (la plus proche).
 function nextCompetition(goals: GoalRow[], today: string) {
@@ -77,7 +71,7 @@ export async function listAthletes(
   let query = supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, last_name, display_name, email, phone, status, sex, photo_path, level, created_at, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status, target_date, competition_name )",
+      "id, first_name, last_name, display_name, email, phone, status, sex, photo_path, level, program_type, created_at, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status, target_date, competition_name )",
     )
     .eq("organization_id", organizationId)
     .order("display_name");
@@ -104,7 +98,8 @@ export async function listAthletes(
         ),
         sex: row.sex as Sex | null,
         photoPath: row.photo_path,
-        mainDiscipline: mainGoalDiscipline(row.athlete_goals),
+        // La contrainte CHECK en base garantit running | strength | hyrox | hybrid.
+        programType: row.program_type as Discipline | null,
         missingInfo: missingProfileInfo({
           lastName: row.last_name,
           email: row.email,
@@ -114,7 +109,11 @@ export async function listAthletes(
         level: row.level as AthleteLevel | null,
         createdAt: row.created_at,
         mainGoal: main
-          ? { type: main.goal_type as GoalType, competitionName: main.competition_name }
+          ? {
+              type: main.goal_type as GoalType,
+              competitionName: main.competition_name,
+              targetDate: main.target_date,
+            }
           : null,
         nextCompetition: nextCompetition(row.athlete_goals, today),
       };

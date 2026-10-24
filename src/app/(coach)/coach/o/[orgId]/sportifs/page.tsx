@@ -1,28 +1,17 @@
-import {
-  CirclePause,
-  Flag,
-  MailCheck,
-  MessageSquare,
-  Plus,
-  Search,
-  UserPen,
-  Users,
-} from "lucide-react";
+import { CirclePause, Flag, LayoutGrid, Plus, Search, UserPen, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge, StatusBadge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
-import { FilterChips } from "@/components/ui/filter-chips";
+import { chipActiveClass, chipClass, chipIdleClass } from "@/components/ui/chip";
+import { disciplineIcons } from "@/components/ui/discipline-icon";
 import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
-import { SexMark } from "@/components/ui/sex-mark";
 import {
+  DISCIPLINES,
   disciplineLabels,
   disciplineStyles,
-  disciplineTones,
   type Discipline,
 } from "@/domain/training/discipline";
 import { completionLabel } from "@/features/athletes/completeness";
@@ -30,41 +19,37 @@ import { listAthletes, type AthleteListItem } from "@/features/athletes/queries"
 import {
   athleteLevelLabels,
   athleteListFilterSchema,
-  athleteStatusLabels,
   type AthleteListFilter,
 } from "@/features/athletes/schemas";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { goalTypeLabels } from "@/features/goals/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
-import { AthleteRowMenu } from "./athlete-row-menu";
+import { AthleteTable, type AthleteTableRow, type SortColumn } from "./athlete-table";
 
 export const metadata: Metadata = {
   title: "Sportifs",
 };
 
-// Liste des sportifs (prompt Claude Design §7 `/coach/sportifs`, étape 4a), mobile first : chiffres
-// clés, filtres (statut et discipline, dans l'adresse), recherche, et une ligne par sportif : avatar
-// ♀ / ♂, nom, niveau, objectif, discipline, prochaine compétition, « ••• ».
-// Accès à son espace (demande d'Antonino du 24/10) : plus de libellés « Compte activé / Invitation en
-// attente / Sans compte ». Compte activé : icône message (écrire au sportif) et ligne d'un vert très
-// léger ; invitation envoyée : icône à côté du nom ; sans compte : seulement « Inviter ».
+// Liste des sportifs (prompt Claude Design §7 `/coach/sportifs`, étape 4a), d'après la maquette
+// d'Antonino du 24/10 (D-40) : chiffres clés, recherche, filtres Statut et Type de programme (dans
+// l'adresse), puis le tableau (cartes sur téléphone) où statut et type se changent d'un appui.
 const statusSlugs = {
+  tous: "all",
   actifs: "active",
   "en-pause": "paused",
   archives: "archived",
-  tous: "all",
 } as const;
 type StatusSlug = keyof typeof statusSlugs;
 const slugByStatus = Object.fromEntries(
   Object.entries(statusSlugs).map(([slug, status]) => [status, slug]),
 ) as Record<AthleteListFilter["status"], StatusSlug>;
-const chipLabels: Record<AthleteListFilter["status"], string> = {
-  active: "Actifs",
-  paused: "En pause",
-  archived: "Archivés",
-  all: "Tous",
-};
+const statusChips: { status: AthleteListFilter["status"]; label: string; dot: string | null }[] = [
+  { status: "all", label: "Tous", dot: null },
+  { status: "active", label: "Actifs", dot: "bg-ok" },
+  { status: "paused", label: "En pause", dot: "bg-warn" },
+  { status: "archived", label: "Archivés", dot: "bg-faint" },
+];
 const disciplineSlugs = {
   running: "running",
   musculation: "strength",
@@ -72,6 +57,10 @@ const disciplineSlugs = {
   hybride: "hybrid",
 } as const satisfies Record<string, Discipline>;
 type DisciplineSlug = keyof typeof disciplineSlugs;
+const slugByDiscipline = Object.fromEntries(
+  Object.entries(disciplineSlugs).map(([slug, discipline]) => [discipline, slug]),
+) as Record<Discipline, DisciplineSlug>;
+const sortColumns = ["sportif", "statut", "type", "objectif"] as const;
 
 export default function AthletesPage({
   params,
@@ -96,6 +85,26 @@ const shortDate = new Intl.DateTimeFormat("fr-BE", {
 });
 const formatShort = (day: string) => shortDate.format(new Date(`${day}T00:00:00Z`));
 
+// Tri du tableau : nom, statut (actif, en pause, archivé), type (ordre des disciplines, sans type
+// en dernier), objectif (date visée la plus proche d'abord, sans date en dernier).
+const statusOrder = { active: 0, paused: 1, archived: 2 } as const;
+function compare(column: SortColumn) {
+  return (a: AthleteListItem, b: AthleteListItem) => {
+    const byName = a.displayName.localeCompare(b.displayName, "fr");
+    if (column === "statut") return statusOrder[a.status] - statusOrder[b.status] || byName;
+    if (column === "type") {
+      const rank = (x: AthleteListItem) =>
+        x.programType ? DISCIPLINES.indexOf(x.programType) : DISCIPLINES.length;
+      return rank(a) - rank(b) || byName;
+    }
+    if (column === "objectif") {
+      const date = (x: AthleteListItem) => x.mainGoal?.targetDate ?? "9999-12-31";
+      return date(a).localeCompare(date(b)) || byName;
+    }
+    return byName;
+  };
+}
+
 async function AthleteList({
   orgId,
   query,
@@ -105,9 +114,9 @@ async function AthleteList({
 }) {
   // L'ID de l'URL est vérifié : un ID d'une autre organisation mène à « Accès refusé ».
   const { membership } = await requireOrgAccess(orgId);
-  const slug = typeof query.statut === "string" ? query.statut : "actifs";
+  const slug = typeof query.statut === "string" ? query.statut : "tous";
   const filter = athleteListFilterSchema.parse({
-    status: statusSlugs[slug as StatusSlug] ?? "active",
+    status: statusSlugs[slug as StatusSlug] ?? "all",
     q: typeof query.q === "string" ? query.q : "",
   });
   const disciplineSlug =
@@ -115,17 +124,22 @@ async function AthleteList({
       ? (query.discipline as DisciplineSlug)
       : null;
   const discipline = disciplineSlug ? disciplineSlugs[disciplineSlug] : null;
+  const sortColumn = (sortColumns as readonly string[]).includes(String(query.tri))
+    ? (query.tri as SortColumn)
+    : "sportif";
+  const desc = query.ordre === "desc";
 
   // Une seule lecture : les chiffres clés portent sur toute l'organisation, la liste sur le filtre.
   const everyone = await listAthletes(membership.organizationId, { status: "all", q: filter.q });
   const all = filter.q
     ? await listAthletes(membership.organizationId, { status: "all", q: "" })
     : everyone;
-  const athletes = everyone.filter(
-    (athlete) =>
-      (filter.status === "all" || athlete.status === filter.status) &&
-      (!discipline || athlete.mainDiscipline === discipline),
-  );
+  // Nombres des filtres de statut : sur la recherche et le type choisis, pour annoncer ce qu'on verra.
+  const ofType = everyone.filter((a) => !discipline || a.programType === discipline);
+  const athletes = ofType
+    .filter((a) => filter.status === "all" || a.status === filter.status)
+    .sort(compare(sortColumn));
+  if (desc) athletes.reverse();
 
   const today = todayIsoInBrussels();
   const active = all.filter((athlete) => athlete.status === "active");
@@ -141,14 +155,48 @@ async function AthleteList({
   const basePath = `/coach/o/${membership.organizationId}/sportifs`;
   const hrefFor = (changes: {
     status?: AthleteListFilter["status"];
-    discipline?: string | null;
+    discipline?: DisciplineSlug | null;
+    tri?: SortColumn;
+    desc?: boolean;
   }) => {
-    const search = new URLSearchParams({ statut: slugByStatus[changes.status ?? filter.status] });
+    const search = new URLSearchParams();
+    const status = changes.status ?? filter.status;
+    if (status !== "all") search.set("statut", slugByStatus[status]);
     const nextDiscipline = changes.discipline === undefined ? disciplineSlug : changes.discipline;
     if (nextDiscipline) search.set("discipline", nextDiscipline);
     if (filter.q) search.set("q", filter.q);
-    return `${basePath}?${search.toString()}`;
+    const tri = changes.tri ?? sortColumn;
+    if (tri !== "sportif") search.set("tri", tri);
+    if (changes.desc ?? desc) search.set("ordre", "desc");
+    const text = search.toString();
+    return text ? `${basePath}?${text}` : basePath;
   };
+  // Un appui sur la colonne déjà triée inverse l'ordre.
+  const sortHrefs = Object.fromEntries(
+    sortColumns.map((column) => [
+      column,
+      hrefFor({ tri: column, desc: column === sortColumn ? !desc : false }),
+    ]),
+  ) as Record<SortColumn, string>;
+
+  const rows: AthleteTableRow[] = athletes.map((athlete) => ({
+    id: athlete.id,
+    name: athlete.displayName,
+    sex: athlete.sex,
+    photoPath: athlete.photoPath,
+    status: athlete.status,
+    programType: athlete.programType,
+    hasAccount: athlete.hasAccount,
+    hasPendingInvite: athlete.hasPendingInvite,
+    missing: athlete.missingInfo.length > 0 ? completionLabel(athlete.missingInfo) : null,
+    sub: athlete.level ? athleteLevelLabels[athlete.level] : "",
+    objective: athlete.mainGoal
+      ? {
+          label: athlete.mainGoal.competitionName ?? goalTypeLabels[athlete.mainGoal.type],
+          date: athlete.mainGoal.targetDate,
+        }
+      : null,
+  }));
 
   return (
     <>
@@ -168,85 +216,102 @@ async function AthleteList({
             color="run"
             icon={Users}
             value={String(active.length)}
-            label={active.length > 1 ? "sportifs actifs" : "sportif actif"}
+            label={active.length > 1 ? "Sportifs actifs" : "Sportif actif"}
             detail={
               newThisMonth.length > 0
                 ? `+${newThisMonth.length} ce mois-ci`
                 : "Aucun nouveau ce mois-ci"
             }
           />
-          <KpiCard
-            color="warn"
-            icon={CirclePause}
-            value={String(paused.length)}
-            label="en pause"
-            detail={
-              paused.length > 0
-                ? paused
-                    .slice(0, 2)
-                    .map((athlete) => athlete.displayName.split(" ")[0])
-                    .join(", ")
-                : "Personne"
-            }
-          />
+          <KpiCard color="warn" icon={CirclePause} value={String(paused.length)} label="En pause" />
           <KpiCard
             color="accent"
             icon={Flag}
             value={String(competitions.length)}
-            label={competitions.length > 1 ? "compétitions à venir" : "compétition à venir"}
+            label={competitions.length > 1 ? "Compétitions à venir" : "Compétition à venir"}
             detail={competitions[0] ? `Prochaine : ${formatShort(competitions[0].date)}` : "Aucune"}
           />
           <KpiCard
             color="amber"
             icon={UserPen}
             value={String(incomplete.length)}
-            label={incomplete.length > 1 ? "fiches à compléter" : "fiche à compléter"}
+            label={incomplete.length > 1 ? "Fiches à compléter" : "Fiche à compléter"}
             detail="Nom ou contact manquant"
           />
         </KpiGrid>
 
-        <div className="flex flex-col gap-3">
-          {/* Recherche : formulaire GET classique, les filtres restent dans l'URL. */}
-          <form role="search" action={basePath} className="relative">
-            <Search
-              aria-hidden
-              size={15}
-              strokeWidth={1.7}
-              className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted"
-            />
-            <label htmlFor="athlete-search" className="sr-only">
-              Rechercher un sportif
-            </label>
-            <input
-              id="athlete-search"
-              name="q"
-              type="search"
-              defaultValue={filter.q}
-              placeholder="Rechercher un sportif…"
-              className="h-11 w-full rounded-control border border-line bg-surface pr-3 pl-10 text-[16px] text-text outline-none placeholder:text-faint focus:border-accent"
-            />
+        {/* Recherche : formulaire GET classique, les filtres restent dans l'URL. */}
+        <form role="search" action={basePath} className="relative">
+          <Search
+            aria-hidden
+            size={15}
+            strokeWidth={1.7}
+            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted"
+          />
+          <label htmlFor="athlete-search" className="sr-only">
+            Rechercher un sportif
+          </label>
+          <input
+            id="athlete-search"
+            name="q"
+            type="search"
+            defaultValue={filter.q}
+            placeholder="Rechercher un sportif…"
+            className="h-11 w-full rounded-control border border-line bg-surface pr-3 pl-10 text-[16px] text-text outline-none placeholder:text-faint focus:border-accent"
+          />
+          {filter.status !== "all" ? (
             <input type="hidden" name="statut" value={slugByStatus[filter.status]} />
-            {disciplineSlug ? (
-              <input type="hidden" name="discipline" value={disciplineSlug} />
-            ) : null}
-          </form>
-          <FilterChips
-            label="Filtrer par statut"
-            options={(["active", "paused", "archived", "all"] as const).map((status) => ({
-              href: hrefFor({ status }),
-              label: chipLabels[status],
-              active: filter.status === status,
-            }))}
-          />
-          <FilterChips
-            label="Filtrer par discipline"
-            options={(Object.keys(disciplineSlugs) as DisciplineSlug[]).map((key) => ({
-              // Un deuxième appui sur la discipline choisie la retire.
-              href: hrefFor({ discipline: key === disciplineSlug ? null : key }),
-              label: disciplineLabels[disciplineSlugs[key]],
-              active: key === disciplineSlug,
-            }))}
-          />
+          ) : null}
+          {disciplineSlug ? <input type="hidden" name="discipline" value={disciplineSlug} /> : null}
+        </form>
+
+        {/* Filtres (maquette) : deux groupes titrés dans une carte, Statut puis Type de programme. */}
+        <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 lg:flex-row lg:items-start lg:gap-0">
+          <FilterGroup title="Statut" label="Filtrer par statut">
+            {statusChips.map((chip) => {
+              const count =
+                chip.status === "all"
+                  ? ofType.length
+                  : ofType.filter((a) => a.status === chip.status).length;
+              return (
+                <FilterLink
+                  key={chip.status}
+                  href={hrefFor({ status: chip.status })}
+                  active={filter.status === chip.status}
+                >
+                  {chip.dot ? (
+                    <span aria-hidden className={`size-2 rounded-full ${chip.dot}`} />
+                  ) : null}
+                  {chip.label} ({count})
+                </FilterLink>
+              );
+            })}
+          </FilterGroup>
+          <span aria-hidden className="hidden w-px self-stretch bg-line lg:mx-6 lg:block" />
+          <FilterGroup title="Type de programme" label="Filtrer par type de programme">
+            <FilterLink href={hrefFor({ discipline: null })} active={!discipline}>
+              <LayoutGrid aria-hidden size={15} strokeWidth={1.8} />
+              Tous
+            </FilterLink>
+            {DISCIPLINES.map((item) => {
+              const Icon = disciplineIcons[item];
+              return (
+                <FilterLink
+                  key={item}
+                  href={hrefFor({ discipline: slugByDiscipline[item] })}
+                  active={discipline === item}
+                >
+                  <Icon
+                    aria-hidden
+                    size={15}
+                    strokeWidth={2}
+                    className={discipline === item ? "" : disciplineStyles[item].text}
+                  />
+                  {disciplineLabels[item]}
+                </FilterLink>
+              );
+            })}
+          </FilterGroup>
         </div>
 
         {athletes.length === 0 ? (
@@ -268,125 +333,55 @@ async function AthleteList({
             ) : null}
           </div>
         ) : (
-          <ul
-            className="flex flex-col overflow-hidden rounded-card border border-line bg-surface"
-            aria-label="Liste des sportifs"
-          >
-            {athletes.map((athlete) => (
-              <AthleteRow key={athlete.id} athlete={athlete} basePath={basePath} />
-            ))}
-          </ul>
+          <AthleteTable
+            organizationId={membership.organizationId}
+            basePath={basePath}
+            rows={rows}
+            sort={{ column: sortColumn, desc, hrefs: sortHrefs }}
+          />
         )}
       </PageBody>
     </>
   );
 }
 
-function AthleteRow({ athlete, basePath }: { athlete: AthleteListItem; basePath: string }) {
-  const href = `${basePath}/${athlete.id}`;
-  const canInvite = !athlete.hasAccount && athlete.status !== "archived";
-  const goal = athlete.mainGoal
-    ? (athlete.mainGoal.competitionName ?? goalTypeLabels[athlete.mainGoal.type])
-    : null;
-  const sub = [athlete.level ? athleteLevelLabels[athlete.level] : null, goal]
-    .filter(Boolean)
-    .join(" · ");
+function FilterGroup({
+  title,
+  label,
+  children,
+}: {
+  title: string;
+  label: string;
+  children: ReactNode;
+}) {
   return (
-    <li
-      className={`flex flex-col gap-3 border-b border-line p-4 last:border-b-0 lg:flex-row lg:items-center lg:gap-4 ${
-        // Compte activé dans son espace : un vert très léger (demande d'Antonino).
-        athlete.hasAccount ? "bg-[color-mix(in_srgb,var(--ok)_8%,var(--surface))]" : ""
-      }`}
+    <div className="flex min-w-0 flex-col gap-2.5">
+      <span className="text-[14px] font-medium text-muted">{title}</span>
+      {/* Retour à la ligne partout : tous les choix restent visibles, même sur téléphone. */}
+      <nav aria-label={label} className="flex flex-wrap gap-2">
+        {children}
+      </nav>
+    </div>
+  );
+}
+
+function FilterLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      aria-current={active ? "true" : undefined}
+      className={`${chipClass} ${active ? chipActiveClass : chipIdleClass}`}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2">
-        <Link
-          href={href}
-          className="flex min-w-0 items-center gap-3 rounded-[10px] hover:text-text"
-        >
-          {/* Avatar à la couleur de la discipline de l'objectif principal (D-24, D-25). */}
-          <Avatar
-            name={athlete.displayName}
-            colorClass={
-              athlete.mainDiscipline ? disciplineStyles[athlete.mainDiscipline].avatar : undefined
-            }
-            photoPath={athlete.photoPath}
-          />
-          <span className="flex min-w-0 flex-col">
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="truncate font-medium">{athlete.displayName}</span>
-              <SexMark sex={athlete.sex} size="sm" />
-              {athlete.hasPendingInvite && !athlete.hasAccount ? (
-                <span
-                  title="Invitation envoyée, en attente"
-                  className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-warn-soft text-warn"
-                >
-                  <MailCheck aria-hidden size={13} strokeWidth={2} />
-                  <span className="sr-only">Invitation envoyée</span>
-                </span>
-              ) : null}
-              {/* Fiche créée d'un simple nom (D-35) : le repère reste jusqu'à ce qu'elle soit complétée. */}
-              {athlete.missingInfo.length > 0 ? (
-                <span
-                  title={completionLabel(athlete.missingInfo)}
-                  className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-warn-soft text-warn"
-                >
-                  <UserPen aria-hidden size={13} strokeWidth={2} />
-                  {/* Texte masqué plutôt qu'aria-label : le détail est dans l'infobulle. */}
-                  <span className="sr-only">Fiche à compléter</span>
-                </span>
-              ) : null}
-            </span>
-            <span className="truncate text-[13px] text-muted">
-              {sub || athleteStatusLabels[athlete.status]}
-            </span>
-          </span>
-        </Link>
-        {athlete.hasAccount ? (
-          <Link
-            href={`/coach/messages?sportif=${athlete.id}`}
-            aria-label={`Écrire à ${athlete.displayName}`}
-            title="Compte activé : écrire un message"
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-ok-soft text-ok transition-colors duration-150 hover:bg-ok hover:text-surface"
-          >
-            <MessageSquare aria-hidden size={14} strokeWidth={2} />
-          </Link>
-        ) : null}
-      </div>
-      <div className="flex flex-wrap items-center gap-2 pl-[52px] lg:w-[340px] lg:flex-nowrap lg:justify-end lg:pl-0">
-        {athlete.mainDiscipline ? (
-          <Badge tone={disciplineTones[athlete.mainDiscipline]}>
-            {disciplineLabels[athlete.mainDiscipline]}
-          </Badge>
-        ) : null}
-        {athlete.status !== "active" ? (
-          <StatusBadge label={athleteStatusLabels[athlete.status]} />
-        ) : null}
-        {athlete.nextCompetition ? (
-          <span
-            title={athlete.nextCompetition.name}
-            className="inline-flex items-center gap-1 font-mono text-[12px] text-muted tabular"
-          >
-            <Flag aria-hidden size={12} strokeWidth={2} className="text-accent-text" />
-            {formatShort(athlete.nextCompetition.date)}
-          </span>
-        ) : null}
-        <span className="ml-auto flex items-center gap-2">
-          {canInvite ? (
-            <Link
-              href={`${href}/inviter`}
-              className={buttonClass({ variant: "outline", size: "sm" })}
-              aria-label={`Inviter ${athlete.displayName}`}
-            >
-              Inviter
-            </Link>
-          ) : null}
-          <AthleteRowMenu
-            name={athlete.displayName}
-            editHref={`${href}?onglet=profil`}
-            inviteHref={canInvite ? `${href}/inviter` : null}
-          />
-        </span>
-      </div>
-    </li>
+      {children}
+    </Link>
   );
 }

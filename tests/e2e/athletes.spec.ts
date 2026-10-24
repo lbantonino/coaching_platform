@@ -73,7 +73,7 @@ test("le coach A ne peut pas ouvrir les sportifs de l'organisation B en changean
   await expect(page).toHaveURL(/\/acces-refuse$/);
 });
 
-test("la liste montre l'accès de chaque sportif par une icône, et se filtre par discipline", async ({
+test("la liste montre l'accès de chaque sportif par une icône, et se filtre par type de programme", async ({
   page,
 }) => {
   await loginAsCoachA(page);
@@ -86,16 +86,71 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
   const thomas = list.getByRole("listitem").filter({ hasText: "Thomas Peeters" });
   await expect(thomas.getByRole("link", { name: "Écrire à Thomas Peeters" })).toBeVisible();
   await expect(thomas.getByRole("link", { name: "Inviter Thomas Peeters" })).toHaveCount(0);
-  // Inès a une invitation en attente : l'icône le signale, « Inviter » permet d'en renvoyer une.
+  // Inès a une invitation en attente : l'icône le signale, pas d'icône message, « Inviter » reste.
   const ines = list.getByRole("listitem").filter({ hasText: "Inès Benali" });
   await expect(ines.getByText("Invitation envoyée")).toBeAttached();
+  await expect(ines.getByRole("link", { name: "Écrire à Inès Benali" })).toHaveCount(0);
   await expect(ines.getByRole("link", { name: "Inviter Inès Benali" })).toBeVisible();
 
+  // Type de programme (D-40), indépendant de l'objectif : Lucas prépare un Hyrox en programme hybride.
   await page
-    .getByRole("navigation", { name: "Filtrer par discipline" })
-    .getByRole("link", { name: "Hyrox" })
+    .getByRole("navigation", { name: "Filtrer par type de programme" })
+    .getByRole("link", { name: "Hybride" })
     .click();
-  await expect(page).toHaveURL(/discipline=hyrox/);
-  await expect(list.getByText("Inès Benali")).toBeVisible();
-  await expect(list.getByText("Thomas Peeters")).toHaveCount(0);
+  await expect(page).toHaveURL(/discipline=hybride/);
+  await expect(list.getByText("Lucas Janssens")).toBeVisible();
+  await expect(list.getByText("Inès Benali")).toHaveCount(0);
+});
+
+test("le statut et le type de programme se changent d'un appui sur leur pastille, ou pour plusieurs sportifs", async ({
+  page,
+}, testInfo) => {
+  // Sportif créé pour ce test (nom unique par exécution et par profil) : les tests ne se gênent pas.
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const name = `Alex Statut ${suffix}`;
+  await loginAsCoachA(page);
+  await page.goto(`/coach/o/${ORG_A}/sportifs/nouveau`);
+  await fillAthleteName(page, name);
+  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
+  await expect(page).toHaveURL(new RegExp(`/coach/o/${ORG_A}/sportifs$`));
+
+  await page.goto(`/coach/o/${ORG_A}/sportifs?q=${encodeURIComponent(suffix)}`);
+  const row = page
+    .getByRole("list", { name: "Liste des sportifs" })
+    .getByRole("listitem")
+    .filter({ hasText: name });
+
+  // Statut : la pastille ouvre le choix, le statut en cours est coché.
+  await row.getByRole("button", { name: `Statut : Actif. Changer le statut de ${name}` }).click();
+  const statusMenu = page.getByRole("dialog", { name: `Statut de ${name}` });
+  await expect(statusMenu.getByRole("button", { name: "Actif" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await statusMenu.getByRole("button", { name: "En pause" }).click();
+  await expect(page.getByText(`Statut de ${name} : en pause.`)).toBeVisible();
+  await expect(row.getByRole("button", { name: /^Statut : En pause/ })).toBeVisible();
+
+  // Type de programme : pas encore choisi, puis Hybride.
+  await row.getByRole("button", { name: `Choisir le programme de ${name}` }).click();
+  await page
+    .getByRole("dialog", { name: `Programme de ${name}` })
+    .getByRole("button", { name: "Hybride" })
+    .click();
+  await expect(page.getByText(`Programme de ${name} : Hybride.`)).toBeVisible();
+  await expect(row.getByRole("button", { name: /^Programme : Hybride/ })).toBeVisible();
+
+  // Actions groupées : cocher le sportif fait apparaître la barre ; il passe en « Archivé ».
+  await row.getByRole("checkbox", { name: `Sélectionner ${name}` }).check({ force: true });
+  const bar = page.getByRole("region", { name: "Actions sur la sélection" });
+  await expect(bar).toContainText("1 sélectionné");
+  await bar.getByRole("button", { name: "Statut" }).click();
+  await page
+    .getByRole("dialog", { name: `Statut de ${name}` })
+    .getByRole("button", { name: "Archivé" })
+    .click();
+  await expect(row.getByRole("button", { name: /^Statut : Archivé/ })).toBeVisible();
+  await page.reload();
+  await expect(row.getByRole("button", { name: /^Statut : Archivé/ })).toBeVisible();
+  await expect(row.getByRole("button", { name: /^Programme : Hybride/ })).toBeVisible();
 });
