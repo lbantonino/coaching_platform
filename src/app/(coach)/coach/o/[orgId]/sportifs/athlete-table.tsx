@@ -8,9 +8,13 @@ import {
   CirclePause,
   CirclePlay,
   Ellipsis,
+  Layers,
   MailCheck,
   MessageSquare,
   Pencil,
+  RefreshCw,
+  Send,
+  Target,
   UserPen,
   X,
   type LucideIcon,
@@ -81,7 +85,8 @@ const shortDate = new Intl.DateTimeFormat("fr-BE", {
 });
 const formatShort = (day: string) => shortDate.format(new Date(`${day}T00:00:00Z`));
 
-type Menu = { kind: "status" | "type"; ids: string[]; title: string } | null;
+type MenuKind = "actions" | "status" | "type";
+type Menu = { kind: MenuKind; ids: string[]; title: string } | null;
 
 export function AthleteTable({
   organizationId,
@@ -125,9 +130,64 @@ export function AthleteTable({
     });
   };
 
+  const menuFor = (row: AthleteTableRow, kind: MenuKind): Menu => ({
+    kind,
+    ids: [row.id],
+    title:
+      kind === "status"
+        ? `Statut de ${row.name}`
+        : kind === "type"
+          ? `Programme de ${row.name}`
+          : row.name,
+  });
+
   const menuItems = () => {
     if (!menu) return [];
     const single = menu.ids.length === 1 ? byId.get(menu.ids[0]) : undefined;
+    // Menu « ••• » d'une ligne (demande d'Antonino du 24/10) : tout ce que la ligne permet, au même
+    // endroit. Statut et type ouvrent leur choix ; le reste mène à la fiche, à l'invitation ou au fil.
+    if (menu.kind === "actions" && single) {
+      const href = `${basePath}/${single.id}`;
+      return [
+        {
+          label: "Changer le statut",
+          icon: RefreshCw,
+          onSelect: () => setMenu(menuFor(single, "status")),
+        },
+        {
+          label: "Changer le type de programme",
+          icon: Layers,
+          onSelect: () => setMenu(menuFor(single, "type")),
+        },
+        {
+          label: "Modifier l'objectif",
+          icon: Target,
+          onSelect: () => router.push(`${href}?onglet=objectifs`),
+        },
+        {
+          label: "Modifier la fiche",
+          icon: Pencil,
+          onSelect: () => router.push(`${href}?onglet=profil`),
+        },
+        ...(single.hasAccount
+          ? [
+              {
+                label: "Écrire un message",
+                icon: MessageSquare,
+                onSelect: () => router.push(`/coach/messages?sportif=${single.id}`),
+              },
+            ]
+          : single.status !== "archived"
+            ? [
+                {
+                  label: "Inviter dans son espace",
+                  icon: Send,
+                  onSelect: () => router.push(`${href}/inviter`),
+                },
+              ]
+            : []),
+      ];
+    }
     if (menu.kind === "status") {
       return statusChoices.map((choice) => ({
         label: choice.label,
@@ -215,13 +275,7 @@ export function AthleteTable({
               href={`${basePath}/${row.id}`}
               checked={visible.includes(row.id)}
               onToggle={() => toggle(row.id)}
-              onMenu={(kind) =>
-                setMenu({
-                  kind,
-                  ids: [row.id],
-                  title: kind === "status" ? `Statut de ${row.name}` : `Programme de ${row.name}`,
-                })
-              }
+              onMenu={(kind) => setMenu(menuFor(row, kind))}
               pending={pending}
             />
           ))}
@@ -295,7 +349,7 @@ function Row({
   href: string;
   checked: boolean;
   onToggle: () => void;
-  onMenu: (kind: "status" | "type") => void;
+  onMenu: (kind: MenuKind) => void;
   pending: boolean;
 }) {
   const canInvite = !row.hasAccount && row.status !== "archived";
@@ -449,7 +503,7 @@ function Row({
             type="button"
             aria-label={`Actions pour ${row.name}`}
             disabled={pending}
-            onClick={() => onMenu("status")}
+            onClick={() => onMenu("actions")}
             className={iconButtonClass()}
           >
             <Ellipsis aria-hidden size={18} strokeWidth={1.8} />

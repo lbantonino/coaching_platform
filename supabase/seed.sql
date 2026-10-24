@@ -17,6 +17,8 @@
 --   coach-reset@example.test -> coach de « Organisation Démo A », réservé au test E2E « mot de passe oublié »
 --                               (son mot de passe change à chaque exécution du test)
 --   thomas.peeters@example.test -> sportif de « Organisation Démo A » (compte activé) : ouvre l'espace sportif
+--   ines.benali@example.test, nadia.elamrani@example.test -> sportives de « Organisation Démo A » (comptes
+--                               activés, comme Thomas : on leur écrit depuis la liste et les Messages)
 -- Les UUID sont fixes pour que les tests puissent s'y référer.
 
 -- ---------------------------------------------------------------------
@@ -42,7 +44,13 @@ values
    '{"provider":"email","providers":["email"]}', '{"display_name":"Coach Reset (test)"}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', 'e0000000-0000-4000-8000-00000000000e', 'authenticated', 'authenticated',
    'thomas.peeters@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"display_name":"Thomas Peeters"}', now(), now(), '', '', '', '');
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Thomas Peeters"}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', 'e0000000-0000-4000-8000-0000000000e3', 'authenticated', 'authenticated',
+   'ines.benali@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Inès Benali"}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', 'e0000000-0000-4000-8000-0000000000e5', 'authenticated', 'authenticated',
+   'nadia.elamrani@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Nadia El Amrani"}', now(), now(), '', '', '', '');
 
 insert into auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
 values
@@ -60,6 +68,12 @@ values
    'email', now(), now(), now()),
   (gen_random_uuid(), 'e0000000-0000-4000-8000-00000000000e', 'e0000000-0000-4000-8000-00000000000e',
    '{"sub":"e0000000-0000-4000-8000-00000000000e","email":"thomas.peeters@example.test","email_verified":true}',
+   'email', now(), now(), now()),
+  (gen_random_uuid(), 'e0000000-0000-4000-8000-0000000000e3', 'e0000000-0000-4000-8000-0000000000e3',
+   '{"sub":"e0000000-0000-4000-8000-0000000000e3","email":"ines.benali@example.test","email_verified":true}',
+   'email', now(), now(), now()),
+  (gen_random_uuid(), 'e0000000-0000-4000-8000-0000000000e5', 'e0000000-0000-4000-8000-0000000000e5',
+   '{"sub":"e0000000-0000-4000-8000-0000000000e5","email":"nadia.elamrani@example.test","email_verified":true}',
    'email', now(), now(), now());
 
 -- Administrateur de la plateforme (aucun accès implicite aux organisations, docs/02 §6).
@@ -137,11 +151,17 @@ values
    '{gym}', null,
    'active', 'b0000000-0000-4000-8000-00000000000b', '2026-09-18 10:00+02');
 
--- Thomas a accepté son invitation (compte activé) ; Inès a une invitation en attente.
+-- Thomas, Inès et Nadia ont accepté leur invitation (comptes activés : ce sont elles et lui qui écrivent
+-- dans les Messages) ; Lucas a une invitation en attente.
 -- Les jetons de démo ne sont connus de personne : seules leurs empreintes sont stockées, comme en vrai.
-update public.athlete_profiles
-  set athlete_user_id = 'e0000000-0000-4000-8000-00000000000e'
-  where id = 'da000000-0000-4000-8000-000000000002';
+update public.athlete_profiles as p
+  set athlete_user_id = v.user_id
+  from (values
+    ('da000000-0000-4000-8000-000000000002'::uuid, 'e0000000-0000-4000-8000-00000000000e'::uuid),
+    ('da000000-0000-4000-8000-000000000003'::uuid, 'e0000000-0000-4000-8000-0000000000e3'::uuid),
+    ('da000000-0000-4000-8000-000000000005'::uuid, 'e0000000-0000-4000-8000-0000000000e5'::uuid)
+  ) as v (id, user_id)
+  where p.id = v.id;
 
 -- Type de programme (D-40), indépendant des objectifs : Lucas prépare un Hyrox mais suit un programme
 -- hybride. Manon reste sans type (fiche créée d'un simple nom) pour montrer le cas « à choisir ».
@@ -186,7 +206,15 @@ values
    'a0000000-0000-4000-8000-00000000000a', '2026-09-02 18:30+02',
    '2026-09-03 07:50+02', 'e0000000-0000-4000-8000-00000000000e', '2026-09-03 07:50+02'),
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003',
-   encode(extensions.digest('seed-invitation-ines', 'sha256'), 'hex'), 'pending', now() + interval '6 days',
+   encode(extensions.digest('seed-invitation-ines', 'sha256'), 'hex'), 'accepted', '2026-09-22 09:15+02',
+   'a0000000-0000-4000-8000-00000000000a', '2026-09-15 09:15+02',
+   '2026-09-16 08:40+02', 'e0000000-0000-4000-8000-0000000000e3', '2026-09-16 08:40+02'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005',
+   encode(extensions.digest('seed-invitation-nadia', 'sha256'), 'hex'), 'accepted', '2026-09-17 12:00+02',
+   'a0000000-0000-4000-8000-00000000000a', '2026-09-10 12:00+02',
+   '2026-09-11 19:20+02', 'e0000000-0000-4000-8000-0000000000e5', '2026-09-11 19:20+02'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000004',
+   encode(extensions.digest('seed-invitation-lucas', 'sha256'), 'hex'), 'pending', now() + interval '6 days',
    'a0000000-0000-4000-8000-00000000000a', now() - interval '1 day',
    null, null, null);
 
@@ -445,10 +473,12 @@ values
    now() - interval '25 minutes', 'e0000000-0000-4000-8000-00000000000e'),
   ('3a000000-0000-4000-8000-0000000000a2', '0a000000-0000-4000-8000-0000000000a1',
    'da000000-0000-4000-8000-000000000003', 'athlete',
-   'Circuit de samedi bouclé, je suis prête pour la suite !', null, now() - interval '3 hours', null),
+   'Circuit de samedi bouclé, je suis prête pour la suite !', null, now() - interval '3 hours',
+   'e0000000-0000-4000-8000-0000000000e3'),
   ('3a000000-0000-4000-8000-0000000000a3', '0a000000-0000-4000-8000-0000000000a1',
    'da000000-0000-4000-8000-000000000005', 'athlete',
-   'Je confirme pour mardi 18 h 30, j''apporte ma ceinture.', null, now() - interval '26 hours', null),
+   'Je confirme pour mardi 18 h 30, j''apporte ma ceinture.', null, now() - interval '26 hours',
+   'e0000000-0000-4000-8000-0000000000e5'),
   ('3a000000-0000-4000-8000-0000000000a4', '0a000000-0000-4000-8000-0000000000a1',
    'da000000-0000-4000-8000-000000000005', 'coach',
    'Mardi, on fait le point sur le squat avant le championnat.', now() - interval '27 hours',

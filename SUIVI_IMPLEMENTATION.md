@@ -32,6 +32,19 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Liste des sportifs : menu « ••• » complet et jeu de démo cohérent
+```
+Date : 2026-10-24
+Demande : (1) Inès et Nadia, qui écrivent dans les Messages, doivent avoir un compte activé dans la
+  démo (icône message, pas « Inviter »), comme Thomas ; (2) le menu « ••• » regroupe toutes les
+  actions de la ligne
+Fait : seed : comptes de démo ines.benali@ et nadia.elamrani@example.test (mot de passe de démo),
+  invitations acceptées, messages signés par leur compte ; l'invitation en attente passe à Lucas ;
+  « ••• » : Changer le statut, Changer le type de programme (ouvrent leur choix), Modifier
+  l'objectif, Modifier la fiche, puis Écrire un message (compte activé) ou Inviter dans son espace
+Tests : check OK (Vitest 153), db:test 264, test:e2e 116 + 6 ignorés (menu « ••• » vérifié)
+```
+
 ### 4a : liste des sportifs d'après la maquette d'Antonino (D-40)
 ```
 Date : 2026-10-24

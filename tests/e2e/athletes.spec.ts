@@ -86,11 +86,48 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
   const thomas = list.getByRole("listitem").filter({ hasText: "Thomas Peeters" });
   await expect(thomas.getByRole("link", { name: "Écrire à Thomas Peeters" })).toBeVisible();
   await expect(thomas.getByRole("link", { name: "Inviter Thomas Peeters" })).toHaveCount(0);
-  // Inès a une invitation en attente : l'icône le signale, pas d'icône message, « Inviter » reste.
-  const ines = list.getByRole("listitem").filter({ hasText: "Inès Benali" });
-  await expect(ines.getByText("Invitation envoyée")).toBeAttached();
-  await expect(ines.getByRole("link", { name: "Écrire à Inès Benali" })).toHaveCount(0);
-  await expect(ines.getByRole("link", { name: "Inviter Inès Benali" })).toBeVisible();
+  // Inès et Nadia aussi (jeu de démo cohérent avec les Messages, demande d'Antonino du 24/10).
+  for (const name of ["Inès Benali", "Nadia El Amrani"]) {
+    const row = list.getByRole("listitem").filter({ hasText: name });
+    await expect(row.getByRole("link", { name: `Écrire à ${name}` })).toBeVisible();
+    await expect(row.getByRole("link", { name: `Inviter ${name}` })).toHaveCount(0);
+  }
+  // Lucas a une invitation en attente : l'icône le signale, pas d'icône message, « Inviter » reste.
+  const lucas = list.getByRole("listitem").filter({ hasText: "Lucas Janssens" });
+  await expect(lucas.getByText("Invitation envoyée")).toBeAttached();
+  await expect(lucas.getByRole("link", { name: "Écrire à Lucas Janssens" })).toHaveCount(0);
+  await expect(lucas.getByRole("link", { name: "Inviter Lucas Janssens" })).toBeVisible();
+
+  // Menu « ••• » : toutes les actions de la ligne ; « Écrire » ou « Inviter » selon le compte.
+  await thomas.getByRole("button", { name: "Actions pour Thomas Peeters" }).click();
+  const actions = page.getByRole("dialog", { name: "Thomas Peeters" });
+  for (const label of [
+    "Changer le statut",
+    "Changer le type de programme",
+    "Modifier l'objectif",
+    "Modifier la fiche",
+    "Écrire un message",
+  ]) {
+    await expect(actions.getByRole("button", { name: label })).toBeVisible();
+  }
+  await expect(actions.getByRole("button", { name: "Inviter dans son espace" })).toHaveCount(0);
+  await actions.getByRole("button", { name: "Changer le statut" }).click();
+  const status = page.getByRole("dialog", { name: "Statut de Thomas Peeters" });
+  await expect(status.getByRole("button", { name: "Actif" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await status.getByRole("button", { name: "Fermer" }).click();
+  await lucas.getByRole("button", { name: "Actions pour Lucas Janssens" }).click();
+  await expect(
+    page
+      .getByRole("dialog", { name: "Lucas Janssens" })
+      .getByRole("button", { name: "Inviter dans son espace" }),
+  ).toBeVisible();
+  await page
+    .getByRole("dialog", { name: "Lucas Janssens" })
+    .getByRole("button", { name: "Fermer" })
+    .click();
 
   // Type de programme (D-40), indépendant de l'objectif : Lucas prépare un Hyrox en programme hybride.
   await page
