@@ -16,10 +16,19 @@ import { useShell } from "./shell-context";
 
 function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
   const pathname = usePathname();
-  const { space, unreadMessages = 0 } = useShell();
-  // Pastille rouge des messages non lus (D-36), sur l'entrée « Messages » du coach.
+  const { space, unreadMessages = 0, notificationCount = 0 } = useShell();
+  // Pastilles rouges du coach : messages non lus sur « Messages » (D-36), et le même total que la
+  // cloche sur « Notifications » (D-37).
   const countFor = (href: string) =>
-    space === "coach" && href === "/coach/messages" ? unreadMessages : 0;
+    space !== "coach"
+      ? 0
+      : href === "/coach/messages"
+        ? unreadMessages
+        : href === "/coach/notifications"
+          ? notificationCount
+          : 0;
+  const countLabel = (href: string, count: number) =>
+    href === "/coach/notifications" ? `, ${count} à voir` : `, ${count} non lus`;
   return (
     <ul className="flex flex-col gap-0.5">
       {entries.map(({ href, label, icon: Icon, match }) => {
@@ -35,7 +44,7 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
               <span className="flex-1 truncate">
                 {label}
                 {countFor(href) > 0 ? (
-                  <span className="sr-only">, {countFor(href)} non lus</span>
+                  <span className="sr-only">{countLabel(href, countFor(href))}</span>
                 ) : null}
               </span>
               <CountBadge count={countFor(href)} />

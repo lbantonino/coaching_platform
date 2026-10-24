@@ -18,6 +18,15 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
   await loginAsCoachA(page);
   const bell = page.getByRole("link", { name: /^Notifications, \d+ à voir$/ });
   await expect(bell).toBeVisible();
+  // Le menu de gauche (ordinateur) affiche le même nombre que la cloche.
+  if ((page.viewportSize()?.width ?? 1280) >= 1024) {
+    const count = (await bell.getAttribute("aria-label"))?.match(/\d+/)?.[0];
+    await expect(
+      page
+        .getByRole("navigation", { name: "Navigation principale" })
+        .getByRole("link", { name: new RegExp(`^Notifications\\s*, ${count} à voir$`) }),
+    ).toBeVisible();
+  }
   await bell.click();
   await expect(page).toHaveURL(/\/coach\/notifications$/);
   await expect(page.getByRole("heading", { name: "Notifications", level: 1 })).toBeVisible();
