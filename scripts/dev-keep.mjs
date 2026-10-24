@@ -23,6 +23,8 @@ const psql = (sql) =>
     {
       input: sql,
       encoding: "utf8",
+      // Les sessions laissées par les tests peuvent peser plusieurs centaines de Ko.
+      maxBuffer: 64 * 1024 * 1024,
     },
   ).trim();
 
@@ -69,7 +71,29 @@ async function save() {
       ),
     ),
   };
-  // La photo saisie par Antonino (pas celle de démonstration) est copiée aussi.
+  // Jamais de recul : un reset raté peut laisser la base vide ou au profil de démonstration. On garde
+  // alors le profil déjà sauvegardé, et on ajoute les sessions à celles déjà gardées.
+  const previous = existsSync(`${DIR}/kept.json`)
+    ? JSON.parse(readFileSync(`${DIR}/kept.json`, "utf8"))
+    : null;
+  // Profil du seed (supabase/seed.sql) : celui qu'un reset remet en place.
+  const isDemo = (profile) =>
+    !profile || (profile.first_name === "Marco" && profile.last_name === "Bianchi");
+  if (previous && isDemo(kept.profile) && !isDemo(previous.profile))
+    kept.profile = previous.profile;
+  if (previous) {
+    const known = new Set(kept.sessions.map((session) => session.id));
+    const cutoff = Date.now() - 14 * 86_400_000;
+    const recent = (session) =>
+      new Date(session.refreshed_at ?? session.updated_at ?? session.created_at).getTime() > cutoff;
+    const extra = previous.sessions.filter((session) => !known.has(session.id) && recent(session));
+    const extraIds = new Set(extra.map((session) => session.id));
+    kept.sessions.push(...extra);
+    kept.refreshTokens.push(
+      ...previous.refreshTokens.filter((token) => extraIds.has(token.session_id)),
+    );
+  }
+  // La photo saisie par Antonino (pas celle de démonstration), si elle est bien dans le stockage.
   const photo = kept.profile?.photo_path;
   if (photo && !photo.includes("/demo-")) {
     const { data } = await localApi().storage.from("profile-photos").download(photo);
