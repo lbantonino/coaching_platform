@@ -86,7 +86,8 @@ const shortDate = new Intl.DateTimeFormat("fr-BE", {
 const formatShort = (day: string) => shortDate.format(new Date(`${day}T00:00:00Z`));
 
 type MenuKind = "actions" | "status" | "type";
-type Menu = { kind: MenuKind; ids: string[]; title: string } | null;
+// `fromActions` : ouvert depuis le menu « ••• » de la ligne, avec une flèche pour y revenir.
+type Menu = { kind: MenuKind; ids: string[]; title: string; fromActions?: boolean } | null;
 
 export function AthleteTable({
   organizationId,
@@ -130,8 +131,9 @@ export function AthleteTable({
     });
   };
 
-  const menuFor = (row: AthleteTableRow, kind: MenuKind): Menu => ({
+  const menuFor = (row: AthleteTableRow, kind: MenuKind, fromActions = false): Menu => ({
     kind,
+    fromActions,
     ids: [row.id],
     title:
       kind === "status"
@@ -152,12 +154,12 @@ export function AthleteTable({
         {
           label: "Changer le statut",
           icon: RefreshCw,
-          onSelect: () => setMenu(menuFor(single, "status")),
+          onSelect: () => setMenu(menuFor(single, "status", true)),
         },
         {
           label: "Changer le type de programme",
           icon: Layers,
-          onSelect: () => setMenu(menuFor(single, "type")),
+          onSelect: () => setMenu(menuFor(single, "type", true)),
         },
         {
           label: "Modifier l'objectif",
@@ -328,6 +330,14 @@ export function AthleteTable({
       <ActionMenu
         open={menu !== null}
         onClose={() => setMenu(null)}
+        onBack={
+          menu?.fromActions
+            ? () => {
+                const row = byId.get(menu.ids[0]);
+                setMenu(row ? menuFor(row, "actions") : null);
+              }
+            : undefined
+        }
         title={menu?.title ?? ""}
         items={menuItems()}
       />

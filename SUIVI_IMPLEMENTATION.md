@@ -42,6 +42,7 @@ Fait : seed : comptes de démo ines.benali@ et nadia.elamrani@example.test (mot 
   invitations acceptées, messages signés par leur compte ; l'invitation en attente passe à Lucas ;
   « ••• » : Changer le statut, Changer le type de programme (ouvrent leur choix), Modifier
   l'objectif, Modifier la fiche, puis Écrire un message (compte activé) ou Inviter dans son espace
+  ; flèche « Retour » dans Statut et Type quand ils sont ouverts depuis « ••• » (ActionMenu onBack)
 Tests : check OK (Vitest 153), db:test 264, test:e2e 116 + 6 ignorés (menu « ••• » vérifié)
 ```
 
