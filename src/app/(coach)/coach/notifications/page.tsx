@@ -136,7 +136,9 @@ async function NotificationList() {
             <ListRow
               key={profile.id}
               href={`/coach/o/${organizationId}/sportifs/${profile.id}?onglet=profil`}
-              leading={<Avatar name={profile.name} />}
+              leading={
+                <Avatar name={profile.name} photoPath={profile.photoPath} sex={profile.sex} />
+              }
               title={profile.name}
               sub={`Manque : ${profile.missing.join(", ")}`}
             />

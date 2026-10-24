@@ -65,7 +65,7 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   // Son espace est vide et n'a rien en commun avec les organisations de démonstration.
   await expect(page).toHaveURL(/\/coach$/);
   await expect(page.getByRole("heading", { name: /^Bonjour Léa/, level: 1 })).toBeVisible();
-  await expect(page.getByRole("link", { name: /^0\s*tâche à faire$/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^0\s*tâche à faire/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /encaissés cette semaine/ })).toContainText("0,00");
   await expect(page.getByText("Aucune séance prévue dans les 30 prochains jours.")).toBeVisible();
   await expect(page.getByText("Organisation Démo A")).toHaveCount(0);

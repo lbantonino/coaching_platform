@@ -32,6 +32,19 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Retouche mobile du tableau de bord (mobile first)
+```
+Date : 2026-10-24
+Demande : sur téléphone, 4 petites cartes deux par deux (Tâches et « encaissés » ne prennent plus
+  toute la largeur), pour atteindre l'agenda plus vite ; la carte Tâches comme le petit widget
+  Rappels de l'iPhone (« Tâches » + nombre, 2 ou 3 intitulés en petit avec leur rond) ; sous
+  l'agenda : Séances à venir, puis Programmes en cours, puis Activité financière
+Fait : KpiListCard (téléphone : libellé court en couleur + nombre, liste sans précisions ;
+  ordinateur inchangé) ; CheckList : intitulé 13 px seul sur téléphone ; option « wide » retirée ;
+  ordre des cartes du bas changé aussi sur ordinateur ; photos dans « Fiches à compléter »
+Tests : check OK (Vitest 153), test:e2e 109 + 5 ignorés ; db:reset puis profil restauré
+```
+
 ### D-37 : vraie page Notifications, en sections
 ```
 Date : 2026-10-24

@@ -15,7 +15,6 @@ export function KpiCard({
   color,
   icon: Icon,
   href,
-  wide = false,
 }: {
   value: string;
   label: string;
@@ -23,8 +22,6 @@ export function KpiCard({
   color: KpiColor;
   icon?: LucideIcon;
   href?: string;
-  // Pleine largeur sur téléphone (seule sur sa ligne), une colonne sur ordinateur.
-  wide?: boolean;
 }) {
   // Les chiffres longs (« 3 240 € ») passent un cran en dessous pour tenir dans la carte.
   const size =
@@ -54,9 +51,8 @@ export function KpiCard({
       {detail ? <span className="text-[12px] leading-snug text-muted">{detail}</span> : null}
     </>
   );
-  const className = `flex min-w-0 flex-col gap-1.5 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text ${
-    wide ? "col-span-2 lg:col-span-1" : ""
-  }`;
+  const className =
+    "flex min-w-0 flex-col gap-1.5 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text";
   const style = { "--kpi": `var(--${color})` } as CSSProperties;
   return href ? (
     <Link
@@ -73,13 +69,15 @@ export function KpiCard({
   );
 }
 
-// Carte chiffrée avec sa liste (Tâches, Messages du tableau de bord), façon widget de l'iPhone.
-// Téléphone : pleine largeur, pastille en haut à gauche, chiffre et libellé en bas, liste à droite.
-// Ordinateur : une colonne de la grille, chiffre et pastille en haut, liste en dessous. Seul le bloc
-// chiffré est un lien vers le module : la liste a ses propres boutons (CheckList).
+// Carte chiffrée avec sa liste (Tâches du tableau de bord), façon widget Rappels de l'iPhone.
+// Téléphone (mobile first, demande d'Antonino du 24/10) : petite carte, deux par ligne ; en haut le
+// libellé en couleur et le nombre total, en dessous les premières lignes de la liste (intitulé seul,
+// avec leur rond). Ordinateur : chiffre et pastille, libellé, puis la liste détaillée.
+// Seul le bloc chiffré est un lien : la liste a ses propres boutons (CheckList).
 export function KpiListCard({
   value,
   label,
+  shortLabel,
   color,
   icon: Icon,
   href,
@@ -87,6 +85,8 @@ export function KpiListCard({
 }: {
   value: string;
   label: string;
+  // Titre du petit widget sur téléphone (« Tâches »).
+  shortLabel: string;
   color: KpiColor;
   icon: LucideIcon;
   href: string;
@@ -95,14 +95,21 @@ export function KpiListCard({
   return (
     <div
       style={{ "--kpi": `var(--${color})` } as CSSProperties}
-      className="col-span-2 flex min-w-0 gap-3 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text lg:col-span-1 lg:flex-col lg:gap-1"
+      className="flex min-w-0 flex-col gap-1 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text max-lg:gap-0.5 max-lg:px-3.5 max-lg:py-3"
     >
       <Link
         href={href}
-        className="flex w-[92px] shrink-0 flex-col gap-1.5 transition-[scale] duration-150 active:scale-[.98] lg:w-auto"
+        aria-label={`${value} ${label}`}
+        className="flex min-w-0 flex-col gap-1.5 transition-[scale] duration-150 active:scale-[.98]"
       >
-        <span className="flex flex-1 flex-col-reverse items-start justify-between gap-3 lg:flex-row lg:gap-2">
-          <span className="font-display text-[24px] leading-[1.05] font-semibold tracking-[-0.03em] tabular md:text-[30px]">
+        <span className="flex items-center justify-between gap-2 lg:hidden">
+          <span className="text-[15px] font-semibold text-[var(--kpi)]">{shortLabel}</span>
+          <span className="font-display text-[24px] leading-none font-semibold tabular">
+            {value}
+          </span>
+        </span>
+        <span className="hidden items-start justify-between gap-2 lg:flex">
+          <span className="font-display text-[30px] leading-[1.05] font-semibold tracking-[-0.03em] tabular">
             {value}
           </span>
           <span
@@ -112,7 +119,7 @@ export function KpiListCard({
             <Icon size={16} strokeWidth={1.8} />
           </span>
         </span>
-        <span className="text-[14px] leading-snug font-medium">{label}</span>
+        <span className="hidden text-[14px] leading-snug font-medium lg:block">{label}</span>
       </Link>
       {children}
     </div>

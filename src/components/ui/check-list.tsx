@@ -109,7 +109,7 @@ export function CheckList({
             <span className="flex min-w-0 items-baseline gap-2">
               <span
                 className={`min-w-0 flex-1 truncate leading-snug ${
-                  page ? "text-[15px] font-semibold" : "text-[14px] font-medium"
+                  page ? "text-[15px] font-semibold" : "text-[13px] font-medium lg:text-[14px]"
                 } ${item.checked ? "text-muted line-through" : ""}`}
               >
                 {item.urgent && !page ? (
@@ -126,7 +126,7 @@ export function CheckList({
                 {item.title}
               </span>
               {item.meta && !page ? (
-                <span className="shrink-0 font-mono text-[11px] text-muted tabular">
+                <span className="shrink-0 font-mono text-[11px] text-muted tabular max-lg:hidden">
                   {item.meta}
                 </span>
               ) : null}
@@ -140,8 +140,9 @@ export function CheckList({
                   {item.sub}
                 </Link>
               ) : (
+                // Carte sur téléphone : l'intitulé seul, comme le widget Rappels de l'iPhone.
                 <span
-                  className={`truncate leading-snug text-muted ${page ? "text-[13px]" : "text-[12px]"}`}
+                  className={`truncate leading-snug text-muted ${page ? "text-[13px]" : "text-[12px] max-lg:hidden"}`}
                 >
                   {item.sub}
                 </span>
