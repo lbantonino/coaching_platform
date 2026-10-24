@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, TriangleAlert, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Check, TriangleAlert, X, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
 import { buttonClass } from "./button";
@@ -118,14 +118,18 @@ export type ActionMenuItem = {
 };
 
 // Menu « ••• » : lignes de 52 px, icône 19 + libellé 16/500 ; action destructrice en rouge texte.
+// `onBack` : sous-menu ouvert depuis un autre menu (ex. « Changer le statut » depuis « ••• ») ;
+// une flèche avant le titre ramène au menu de départ.
 export function ActionMenu({
   open,
   onClose,
+  onBack,
   title,
   items,
 }: {
   open: boolean;
   onClose: () => void;
+  onBack?: () => void;
   title: string;
   items: ActionMenuItem[];
 }) {
@@ -133,9 +137,21 @@ export function ActionMenu({
   return (
     <Overlay open={open} onClose={onClose} labelledBy={titleId}>
       <div className="flex items-center justify-between gap-3">
-        <h2 id={titleId} className="font-display text-block font-semibold">
-          {title}
-        </h2>
+        <div className="flex min-w-0 items-center gap-3">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              aria-label="Retour"
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-control border border-line bg-surface text-text transition-colors duration-150 hover:bg-surface-2"
+            >
+              <ArrowLeft aria-hidden size={18} strokeWidth={1.8} />
+            </button>
+          ) : null}
+          <h2 id={titleId} className="min-w-0 font-display text-block font-semibold">
+            {title}
+          </h2>
+        </div>
         <CloseButton onClose={onClose} />
       </div>
       <ul className="flex flex-col">

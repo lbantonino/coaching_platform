@@ -117,7 +117,17 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
     "aria-current",
     "true",
   );
-  await status.getByRole("button", { name: "Fermer" }).click();
+  // Flèche de retour : on revient au menu « ••• » (demande d'Antonino), sans rien changer.
+  await status.getByRole("button", { name: "Retour" }).click();
+  await actions.getByRole("button", { name: "Changer le type de programme" }).click();
+  const program = page.getByRole("dialog", { name: "Programme de Thomas Peeters" });
+  await expect(program.getByRole("button", { name: "Running" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await program.getByRole("button", { name: "Retour" }).click();
+  await expect(actions.getByRole("button", { name: "Modifier la fiche" })).toBeVisible();
+  await actions.getByRole("button", { name: "Fermer" }).click();
   await lucas.getByRole("button", { name: "Actions pour Lucas Janssens" }).click();
   await expect(
     page
