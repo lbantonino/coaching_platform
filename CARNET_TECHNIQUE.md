@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **23/10/2026** (D-35 : tableau de bord vivant et agenda interactif).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **24/10/2026** (4a : liste des sportifs).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -313,6 +313,8 @@ Antonino a repéré une incohérence : la cloche affichait « 3 », mais la page
 Derniers réglages du cadre (D-38) : le menu de gauche gagne « Assistant IA » et « Notifications », et la carte de la personne devient un **menu du compte** (Mon profil, Paramètres, Changer de compte, Thème, Se déconnecter), dessiné d'après une maquette d'Antonino. Le thème accepte maintenant « Système » : le petit script lancé avant l'affichage suit le réglage de l'appareil, même s'il change pendant la visite. Piège rencontré : un menu qui doit déborder d'une barre latérale qui défile est coupé par celle-ci ; il est donc positionné par rapport à l'écran (position fixe), calculée sur la carte au moment de l'ouverture.
 
 Côté outils de développement, deux causes faisaient sans cesse déconnecter Antonino : « Se déconnecter » fermait toutes les sessions du compte (les tests, connectés avec le même compte, le déconnectaient aussi), et chaque remise à zéro de la base effaçait les sessions. La déconnexion ne ferme plus que l'appareil, comme partout, et `npm run db:reset` garde les sessions récentes et le profil du développeur. Ce script a lui-même eu un défaut instructif : enchaîné par `&&`, il ne restaurait rien quand le reset échouait, et la sauvegarde suivante écrasait la bonne copie. Il restaure maintenant toujours, et une sauvegarde ne recule jamais.
+
+Étape 4a, deuxième partie : la **liste des sportifs**. Antonino a remplacé les libellés d'accès (« Compte activé », « Invitation en attente », « Sans compte ») par des signes plus discrets : une petite icône message, qui ouvre directement la conversation, et un fond vert très doux pour un compte activé ; une petite icône pour une invitation envoyée ; rien du tout sans compte, seulement le bouton « Inviter ». Les chiffres du haut (actifs, en pause, compétitions à venir, fiches à compléter) sont calculés sur la même lecture que la liste, et les filtres sont dans l'adresse (`?statut=`, `?discipline=`) : un filtre se partage et survit au rechargement. Leçon de test : une icône dont le nom accessible contient « Nom de famille » entrait en collision avec le champ du même nom dans les tests ; le texte caché aux yeux (sr-only) plus une infobulle évitent ce piège.
 
 Deux leçons. Une zone de message toujours présente avec `role="status"` se confond avec les messages de statut des formulaires : les tests qui cherchaient « le » statut en trouvaient deux. Et le serveur de développement peut garder une ancienne version d'un module : une constante nouvellement exportée arrivait `undefined` ; la déplacer dans un nouveau fichier a suffi.
 

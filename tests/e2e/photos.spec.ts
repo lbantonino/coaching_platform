@@ -21,7 +21,7 @@ test("le coach ajoute puis retire la photo d'un sportif ; un autre coach ne peut
   const name = `Photo ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   await login(page, "coach-a@example.test");
   await goToCoachSection(page, "Sportifs");
-  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await fillAthleteName(page, name);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await page

@@ -17,7 +17,7 @@ async function login(page: Page, email: string) {
 // Crée un sportif et revient sur la liste ; renvoie le chemin de la liste.
 async function createAthlete(page: Page, name: string, email: string) {
   await goToCoachSection(page, "Sportifs");
-  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
   await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);
