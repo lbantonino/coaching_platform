@@ -70,8 +70,9 @@ async function Profile() {
       </section>
       {/* D-38 : le thème quitte la barre du menu pour les Paramètres (Clair, Sombre, Système). */}
       <section
+        id="theme"
         aria-labelledby="coach-theme-title"
-        className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+        className="flex scroll-mt-6 flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
       >
         <div className="flex flex-col gap-1">
           <h2 id="coach-theme-title" className="text-title font-medium">

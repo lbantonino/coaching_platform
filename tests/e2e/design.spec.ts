@@ -46,7 +46,7 @@ async function loginAsCoachA(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-test("sur téléphone, le menu hamburger remplace la barre du bas et contient la roue dentée", async ({
+test("sur téléphone, le menu hamburger remplace la barre du bas et contient le menu du compte", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "telephone", "Menu propre au téléphone");
@@ -57,9 +57,9 @@ test("sur téléphone, le menu hamburger remplace la barre du bas et contient la
   await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   const menu = page.getByRole("dialog", { name: "Menu" });
   await expect(menu.getByRole("link", { name: "Agenda", exact: true })).toBeVisible();
-  await menu.getByRole("button", { name: "Paramètres et compte" }).click();
+  await menu.getByRole("button", { name: /^Menu du compte/ }).click();
   await expect(
-    menu.getByRole("group", { name: "Paramètres et compte" }).getByRole("button", {
+    menu.getByRole("group", { name: "Menu du compte" }).getByRole("button", {
       name: "Se déconnecter",
     }),
   ).toBeVisible();
@@ -67,7 +67,7 @@ test("sur téléphone, le menu hamburger remplace la barre du bas et contient la
   await expect(menu).toBeHidden();
 });
 
-test("le menu de gauche : Assistant IA puis Messages, Notifications ; la roue dentée mène aux Paramètres", async ({
+test("le menu de gauche : Assistant IA puis Messages, Notifications ; le menu du compte mène aux Paramètres", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "ordinateur", "Barre latérale de l'ordinateur");
@@ -82,11 +82,22 @@ test("le menu de gauche : Assistant IA puis Messages, Notifications ; la roue de
   expect(names).toContain("Notifications");
   expect(names).not.toContain("Paramètres");
 
-  await page.getByRole("button", { name: "Paramètres et compte" }).click();
-  const settings = page.getByRole("group", { name: "Paramètres et compte" });
-  await expect(settings.getByRole("radio", { name: "Système" })).toBeVisible();
+  const account = page.getByRole("button", { name: /^Menu du compte/ });
+  await expect(account).toContainText("Coach");
+  await account.click();
+  const settings = page.getByRole("group", { name: "Menu du compte" });
+  for (const name of ["Mon profil", "Paramètres"]) {
+    await expect(settings.getByRole("link", { name })).toBeVisible();
+  }
+  await expect(settings.getByRole("button", { name: "Changer de compte" })).toBeVisible();
+  // Le thème se change aussi directement dans ce menu.
+  await settings.getByText("Sombre", { exact: true }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await settings.getByText("Clair", { exact: true }).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-theme", "dark");
   await settings.getByRole("link", { name: "Paramètres" }).click();
   await expect(page.getByRole("heading", { name: "Paramètres", level: 1 })).toBeVisible();
+  await expect(page).toHaveURL(/\/coach\/profil#theme$/);
 });
 
 test("dans les Paramètres, le thème se choisit : clair, sombre ou celui de l'appareil", async ({

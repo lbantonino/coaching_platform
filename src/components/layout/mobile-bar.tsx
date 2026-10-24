@@ -10,8 +10,8 @@ import { CooryLogo } from "@/components/ui/coory-logo";
 
 import { NotificationBell } from "./header-tools";
 import { athleteTabs, homeHref, pageTitle } from "./navigation";
-import { SettingsMenu } from "./settings-menu";
-import { SideNav, UserCard } from "./side-nav";
+import { AccountMenu } from "./account-menu";
+import { SideNav } from "./side-nav";
 import { useShell } from "./shell-context";
 
 // Téléphone (prompt Claude Design §5.2 et §5.3). Barre du haut collante : logo · titre de la page
@@ -82,11 +82,8 @@ function MobileMenu() {
           </div>
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-3.5 pt-4 pb-8">
             <SideNav large />
-            <div className="mt-auto flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <UserCard />
-              </div>
-              <SettingsMenu />
+            <div className="mt-auto">
+              <AccountMenu />
             </div>
           </div>
         </div>

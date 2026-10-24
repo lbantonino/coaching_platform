@@ -38,7 +38,7 @@ async function AthleteShell({ children }: { children: React.ReactNode }) {
         user: name
           ? {
               name,
-              role: link ? `${title} · ${link.organizationName}` : title,
+              role: title,
               photoPath: link?.photoPath ?? null,
               sex,
               settingsHref: "/app/profil",

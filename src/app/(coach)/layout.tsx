@@ -40,7 +40,7 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
         user: profile
           ? {
               name: profile.displayName,
-              role: first ? `Coach · ${first.organizationName}` : "Coach",
+              role: "Coach",
               photoPath: profile.photoPath,
               sex: null,
               settingsHref: "/coach/profil",
