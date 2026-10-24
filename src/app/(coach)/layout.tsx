@@ -6,7 +6,8 @@ import { AppShell } from "@/components/layout/app-shell";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { createPayment } from "@/features/billing/payment-actions";
 import { getCoachProfile } from "@/features/coach/profile";
-import { countUnreadMessages } from "@/features/messages/queries";
+import { countNotifications } from "@/features/notifications/queries";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createSession, listSessionAthletes } from "@/features/sessions/actions";
 
 // Coquille de l'espace coach (prompt Claude Design §5.2). Elle lit la session (organisation, carte
@@ -25,16 +26,17 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
   const memberships = user ? await getCoachMemberships(user.id) : [];
   // Une organisation suffit au lancement ; le choix entre plusieurs organisations viendra plus tard.
   const first = memberships[0];
-  const [profile, unreadMessages] = await Promise.all([
+  const [profile, counts] = await Promise.all([
     user ? getCoachProfile(user) : null,
-    first ? countUnreadMessages(first.organizationId) : 0,
+    first ? countNotifications(first.organizationId, todayIsoInBrussels()) : null,
   ]);
   return (
     <AppShell
       value={{
         space: "coach",
         orgBase: first ? `/coach/o/${first.organizationId}` : null,
-        unreadMessages,
+        unreadMessages: counts?.messages ?? 0,
+        notificationCount: counts?.total ?? 0,
         user: profile
           ? {
               name: profile.displayName,

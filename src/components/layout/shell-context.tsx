@@ -20,8 +20,10 @@ export type ShellValue = {
   space: Space;
   orgBase: string | null;
   user: ShellUser | null;
-  // Messages reçus non lus (coach, D-36) : pastille rouge sur « Messages » et sur la cloche.
+  // Messages reçus non lus (coach, D-36) : pastille rouge sur « Messages ».
   unreadMessages?: number;
+  // Tout ce qui attend dans Notifications (coach, D-37) : pastille rouge de la cloche.
+  notificationCount?: number;
 };
 
 const ShellContext = createContext<ShellValue>({ space: "coach", orgBase: null, user: null });
