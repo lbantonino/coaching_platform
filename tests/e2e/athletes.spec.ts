@@ -27,7 +27,7 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   await goToCoachSection(page, "Sportifs");
   await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
 
   // Prénom manquant : erreur claire, rien n'est enregistré.
@@ -43,10 +43,13 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   await expect(page).toHaveURL(new RegExp(`/coach/o/${ORG_A}/sportifs$`));
   const list = page.getByRole("list", { name: "Liste des sportifs" });
   await expect(list.getByText(name)).toBeVisible();
-  await expect(list.getByText(email)).toBeVisible();
+  // L'e-mail n'est plus affiché sur la ligne (prototype) : la recherche le retrouve.
+  await page.getByLabel("Rechercher un sportif").fill(email);
+  await page.getByLabel("Rechercher un sportif").press("Enter");
+  await expect(list.getByText(name)).toBeVisible();
 
   // Même e-mail une seconde fois : refusé avec un message compréhensible.
-  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await fillAthleteName(page, `${name} bis`);
   await page.getByLabel(/Adresse e-mail/).fill(email.toUpperCase());
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
@@ -68,4 +71,31 @@ test("le coach A ne peut pas ouvrir les sportifs de l'organisation B en changean
 
   await page.goto("/coach/o/pas-un-identifiant/sportifs");
   await expect(page).toHaveURL(/\/acces-refuse$/);
+});
+
+test("la liste montre l'accès de chaque sportif par une icône, et se filtre par discipline", async ({
+  page,
+}) => {
+  await loginAsCoachA(page);
+  await page.goto(`/coach/o/${ORG_A}/sportifs`);
+  const list = page.getByRole("list", { name: "Liste des sportifs" });
+  // Plus de libellés « Compte activé / Invitation en attente / Sans compte » (demande d'Antonino).
+  await expect(list.getByText(/Compte activé|Invitation en attente|Sans compte/)).toHaveCount(0);
+
+  // Thomas a activé son compte : on peut lui écrire, plus besoin de l'inviter.
+  const thomas = list.getByRole("listitem").filter({ hasText: "Thomas Peeters" });
+  await expect(thomas.getByRole("link", { name: "Écrire à Thomas Peeters" })).toBeVisible();
+  await expect(thomas.getByRole("link", { name: "Inviter Thomas Peeters" })).toHaveCount(0);
+  // Inès a une invitation en attente : l'icône le signale, « Inviter » permet d'en renvoyer une.
+  const ines = list.getByRole("listitem").filter({ hasText: "Inès Benali" });
+  await expect(ines.getByText("Invitation envoyée")).toBeAttached();
+  await expect(ines.getByRole("link", { name: "Inviter Inès Benali" })).toBeVisible();
+
+  await page
+    .getByRole("navigation", { name: "Filtrer par discipline" })
+    .getByRole("link", { name: "Hyrox" })
+    .click();
+  await expect(page).toHaveURL(/discipline=hyrox/);
+  await expect(list.getByText("Inès Benali")).toBeVisible();
+  await expect(list.getByText("Thomas Peeters")).toHaveCount(0);
 });

@@ -23,7 +23,7 @@
 | 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
 | 2. Coquilles de navigation | **Fait** le 23/10 (coach, sportif, admin, entrée, pages légales) |
 | 3. Pages d'entrée | **Fait** le 23/10 (connexion, inscription, vérification, bienvenue, mot de passe, invitation, erreurs, pages légales) |
-| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; reste en 4a : liste des sportifs, nouveau sportif, fiche sportif, paramètres ; puis 4b à 4g |
+| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; liste des sportifs faite le 24/10 ; reste en 4a : nouveau sportif, fiche sportif, paramètres ; puis 4b à 4g |
 | 5. Espace sportif | À faire |
 | 6. Administration | À faire |
 | 7. Recette finale | À faire |
@@ -31,6 +31,21 @@
 ## Dernière session
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+
+### 4a : liste des sportifs (prototype + retouches d'Antonino)
+```
+Date : 2026-10-24
+Demande : liste des sportifs du prototype ; à la place des libellés d'accès : compte activé =
+  petite icône message à côté du sexe (ouvre sa conversation) et ligne vert très doux ;
+  invitation envoyée = petite icône ; sans compte = rien, juste « Inviter », ligne grise
+Fait : en-tête « N sportifs · N actifs » + bouton « Nouveau sportif » ; 4 KPI (actifs avec
+  +N ce mois-ci, en pause, compétitions à venir, fiches à compléter) ; recherche ; filtres
+  statut et discipline (?statut=, ?discipline=) ; ligne : avatar couleur de discipline, nom,
+  sexe, icônes d'accès et de fiche à compléter, niveau · objectif, badge discipline, statut si
+  pas actif, prochaine compétition, « Inviter », menu « ••• » (Modifier, Inviter)
+Tests : check OK (Vitest 153), test:e2e 112 + 6 ignorés, + test « accès par icône et filtre
+  discipline » (2/2) ; liens « Ajouter un sportif » des tests renommés « Nouveau sportif »
+```
 
 ### Menu du compte (maquette d'Antonino)
 ```

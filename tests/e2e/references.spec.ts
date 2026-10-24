@@ -10,7 +10,7 @@ async function openNewAthleteProfile(page: Page, name: string) {
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
   await goToCoachSection(page, "Sportifs");
-  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await fillAthleteName(page, name);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await page

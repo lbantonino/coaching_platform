@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import type { Discipline } from "@/domain/training/discipline";
 import { goalDiscipline, type GoalType } from "@/features/goals/schemas";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 import { missingProfileInfo } from "./completeness";
@@ -31,14 +32,37 @@ export type AthleteListItem = {
   mainDiscipline: Discipline | null;
   // Fiche « à compléter » (D-35) : ce qui manque encore (vide si la fiche est complète).
   missingInfo: string[];
+  level: AthleteLevel | null;
+  createdAt: string;
+  // Objectif principal en cours (type, ou nom de la compétition) et prochaine compétition à venir.
+  mainGoal: { type: GoalType; competitionName: string | null } | null;
+  nextCompetition: { name: string; date: string } | null;
 };
 
 const DEFAULT_FILTER: AthleteListFilter = { status: "active", q: "" };
 
-function mainGoalDiscipline(goals: { goal_type: string; priority: string; status: string }[]) {
+type GoalRow = {
+  goal_type: string;
+  priority: string;
+  status: string;
+  target_date: string | null;
+  competition_name: string | null;
+};
+
+function mainGoalDiscipline(goals: GoalRow[]) {
   const main = goals.find((goal) => goal.priority === "main" && goal.status === "active");
   // La contrainte CHECK en base garantit la liste des types d'objectif.
   return main ? goalDiscipline(main.goal_type as GoalType) : null;
+}
+
+// Prochaine compétition en cours, à partir d'aujourd'hui (la plus proche).
+function nextCompetition(goals: GoalRow[], today: string) {
+  const next = goals
+    .filter(
+      (g) => g.status === "active" && g.competition_name && g.target_date && g.target_date >= today,
+    )
+    .sort((a, b) => (a.target_date ?? "").localeCompare(b.target_date ?? ""))[0];
+  return next ? { name: next.competition_name ?? "", date: next.target_date ?? "" } : null;
 }
 
 // Sportifs d'une organisation. À appeler APRÈS requireOrgAccess(organizationId) ;
@@ -53,7 +77,7 @@ export async function listAthletes(
   let query = supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, last_name, display_name, email, phone, status, sex, photo_path, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status )",
+      "id, first_name, last_name, display_name, email, phone, status, sex, photo_path, level, created_at, athlete_user_id, athlete_invites ( status, expires_at ), athlete_goals ( goal_type, priority, status, target_date, competition_name )",
     )
     .eq("organization_id", organizationId)
     .order("display_name");
@@ -63,27 +87,38 @@ export async function listAthletes(
   if (error) throw new Error("Lecture des sportifs impossible.");
 
   const now = new Date();
+  const today = todayIsoInBrussels();
   return (data ?? [])
-    .map((row) => ({
-      id: row.id,
-      // display_name est calculé par la base (prénom + nom) : jamais vide, le repli ne sert qu'au typage.
-      displayName: row.display_name ?? row.first_name,
-      email: row.email,
-      // La contrainte CHECK en base garantit active | paused | archived.
-      status: row.status as AthleteStatus,
-      hasAccount: row.athlete_user_id !== null,
-      hasPendingInvite: row.athlete_invites.some(
-        (invite) => invite.status === "pending" && new Date(invite.expires_at) > now,
-      ),
-      sex: row.sex as Sex | null,
-      photoPath: row.photo_path,
-      mainDiscipline: mainGoalDiscipline(row.athlete_goals),
-      missingInfo: missingProfileInfo({
-        lastName: row.last_name,
+    .map((row) => {
+      const main = row.athlete_goals.find((g) => g.priority === "main" && g.status === "active");
+      return {
+        id: row.id,
+        // display_name est calculé par la base (prénom + nom) : jamais vide, le repli ne sert qu'au typage.
+        displayName: row.display_name ?? row.first_name,
         email: row.email,
-        phone: row.phone,
-      }),
-    }))
+        // La contrainte CHECK en base garantit active | paused | archived.
+        status: row.status as AthleteStatus,
+        hasAccount: row.athlete_user_id !== null,
+        hasPendingInvite: row.athlete_invites.some(
+          (invite) => invite.status === "pending" && new Date(invite.expires_at) > now,
+        ),
+        sex: row.sex as Sex | null,
+        photoPath: row.photo_path,
+        mainDiscipline: mainGoalDiscipline(row.athlete_goals),
+        missingInfo: missingProfileInfo({
+          lastName: row.last_name,
+          email: row.email,
+          phone: row.phone,
+        }),
+        // Les contraintes CHECK en base garantissent ces listes fermées.
+        level: row.level as AthleteLevel | null,
+        createdAt: row.created_at,
+        mainGoal: main
+          ? { type: main.goal_type as GoalType, competitionName: main.competition_name }
+          : null,
+        nextCompetition: nextCompetition(row.athlete_goals, today),
+      };
+    })
     .filter(
       (athlete) =>
         !filter.q ||

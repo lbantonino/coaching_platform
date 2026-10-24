@@ -29,10 +29,12 @@ test("le coach A se connecte, voit uniquement son organisation, puis se déconne
 
   await expect(page).toHaveURL(/\/coach$/);
   await expect(page.getByRole("heading", { name: /^Bonjour/, level: 1 })).toBeVisible();
-  // Le nom de l'organisation B n'apparaît nulle part ; celui de A est en tête de la liste des sportifs.
+  // Rien de l'organisation B n'apparaît : ni son nom, ni ses sportifs (Sarah Vermeulen).
   await expect(page.getByText("Organisation Démo B")).toHaveCount(0);
   await goToCoachSection(page, "Sportifs");
-  await expect(page.getByText("Organisation Démo A", { exact: true })).toBeVisible();
+  const list = page.getByRole("list", { name: "Liste des sportifs" });
+  await expect(list.getByText("Thomas Peeters")).toBeVisible();
+  await expect(list.getByText("Sarah Vermeulen")).toHaveCount(0);
   await expect(page.getByText("Organisation Démo B")).toHaveCount(0);
 
   await logoutCoach(page);

@@ -16,7 +16,7 @@ async function loginAsCoachA(page: Page) {
 // Crée un sportif unique dans l'organisation A et ouvre sa page d'invitation.
 async function createAthleteAndOpenInvite(page: Page, name: string, email: string) {
   await goToCoachSection(page, "Sportifs");
-  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
   await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);
@@ -103,10 +103,13 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
   await athlete.getByRole("button", { name: "Se connecter" }).click();
   await expect(athlete).toHaveURL(/\/app$/);
 
-  // --- Coach : la fiche indique maintenant un compte activé ---
+  // --- Coach : dans la liste, le compte activé se voit à l'icône « écrire » (plus de libellé) ---
   await page.goto(page.url().replace(/\/[^/]+\/inviter$/, ""));
   const row = page.getByRole("listitem").filter({ hasText: name });
-  await expect(row.getByText("compte activé")).toBeVisible();
+  await expect(row.getByRole("link", { name: `Écrire à ${name}` })).toHaveAttribute(
+    "href",
+    /\/coach\/messages\?sportif=/,
+  );
   await expect(row.getByRole("link", { name: `Inviter ${name}` })).toHaveCount(0);
 
   // Sur la fiche, l'e-mail (identifiant de connexion) est verrouillé.

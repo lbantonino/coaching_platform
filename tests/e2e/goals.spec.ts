@@ -20,7 +20,7 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
 
   await login(page);
   await goToCoachSection(page, "Sportifs");
-  await page.getByRole("link", { name: "Ajouter un sportif" }).click();
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await fillAthleteName(page, name);
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await page
