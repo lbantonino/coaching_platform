@@ -34,21 +34,19 @@ export function HeaderTools() {
   );
 }
 
-// Cloche des notifications, avec la pastille rouge des messages non lus (D-36).
+// Cloche des notifications, avec la pastille rouge de tout ce qui attend (D-37).
 export function NotificationBell() {
-  const { space, unreadMessages = 0 } = useShell();
+  const { space, notificationCount = 0 } = useShell();
   return (
     <Link
       href={notificationsHref[space]}
       aria-label={
-        unreadMessages > 0
-          ? `Notifications, ${unreadMessages} message${unreadMessages > 1 ? "s" : ""} non lu${unreadMessages > 1 ? "s" : ""}`
-          : "Notifications"
+        notificationCount > 0 ? `Notifications, ${notificationCount} à voir` : "Notifications"
       }
       className={iconButtonClass()}
     >
       <Bell aria-hidden size={18} strokeWidth={1.8} />
-      <CountBadge count={unreadMessages} className="absolute -top-1.5 -right-1.5" />
+      <CountBadge count={notificationCount} className="absolute -top-1.5 -right-1.5" />
     </Link>
   );
 }

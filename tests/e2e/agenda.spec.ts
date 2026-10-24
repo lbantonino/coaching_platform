@@ -166,16 +166,14 @@ test("les messages non lus : pastille sur la cloche ; ouvrir le fil les marque l
   const reply = `Réponse ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   await loginAsCoachA(page);
 
-  // La cloche annonce les messages non lus (pastille rouge, D-36).
+  // La cloche annonce ce qui attend, messages non lus compris (pastille rouge, D-36, D-37).
   await page.goto("/coach/messages");
   const conversation = page
     .getByRole("list")
     .getByRole("link", { name: new RegExp(sender) })
     .first();
   if (/non lu/.test(await conversation.innerText())) {
-    await expect(
-      page.getByRole("link", { name: /^Notifications, \d+ messages? non lus?$/ }),
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /^Notifications, \d+ à voir$/ })).toBeVisible();
   }
   await conversation.click();
   await expect(page).toHaveURL(/\/coach\/messages\?sportif=/);

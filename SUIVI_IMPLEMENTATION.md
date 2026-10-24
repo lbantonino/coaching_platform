@@ -32,6 +32,21 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### D-37 : vraie page Notifications, en sections
+```
+Date : 2026-10-24
+Constat : la pastille de la cloche (messages non lus) menait à une page Notifications vide
+Demande : une vraie page, rangée par sections, avant de reprendre 4a
+Fait : features/notifications (countNotifications pour les pastilles, getNotifications pour la
+  page) ; /coach/notifications : Messages non lus, Tâches du jour ou en retard, Factures en retard,
+  Fiches à compléter (même règle que completeness), chaque ligne vers l'endroit où on s'en occupe,
+  « Rien à signaler » par section vide ; la cloche compte le total (« Notifications, 6 à voir »), la
+  pastille de « Messages » seulement les messages ; rien n'est stocké, une ligne disparaît d'elle-même
+Reste : retours de séance des sportifs (P6), invitations acceptées
+Tests : check OK (Vitest 153), test:e2e 109 + 5 ignorés (nouveau : cloche → sections → fiche de
+  Manon) ; db:reset puis profil d'Antonino restauré
+```
+
 ### D-36 : paiements reçus, CA de la semaine, Comptabilité ; messages non lus en pastille
 ```
 Date : 2026-10-24

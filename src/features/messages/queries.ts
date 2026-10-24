@@ -111,16 +111,3 @@ export async function getThread(
     }))
     .reverse();
 }
-
-// Nombre de messages reçus des sportifs et pas encore lus (pastille du menu et de la cloche).
-export async function countUnreadMessages(organizationId: string): Promise<number> {
-  const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("athlete_messages")
-    .select("id", { count: "exact", head: true })
-    .eq("organization_id", organizationId)
-    .eq("sender", "athlete")
-    .is("read_at", null);
-  if (error) return 0;
-  return count ?? 0;
-}

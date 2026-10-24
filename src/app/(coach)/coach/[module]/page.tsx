@@ -10,7 +10,14 @@ import { requireCoach } from "@/features/auth/guards";
 // Modules de l'espace coach pas encore construits (D-32) : /coach/programmes, /coach/facturation…
 // Les pages construites (profil, sportifs, agenda) ont leur propre dossier et passent avant.
 // Modules qui ont maintenant leur propre page (D-35) : leur dossier passe avant celui-ci.
-const BUILT = new Set(["taches", "messages", "facturation", "seances", "comptabilite"]);
+const BUILT = new Set([
+  "taches",
+  "messages",
+  "facturation",
+  "seances",
+  "comptabilite",
+  "notifications",
+]);
 
 export function generateStaticParams() {
   return Object.keys(COACH_MODULES)
