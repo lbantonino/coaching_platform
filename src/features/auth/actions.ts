@@ -46,8 +46,10 @@ export async function login(_previous: LoginState, formData: FormData): Promise<
   redirect(await getHomePath(data.user.id, supabase));
 }
 
+// Déconnexion de CET appareil seulement (scope « local ») : les autres appareils du compte restent
+// connectés, comme partout ailleurs. Une « déconnexion de tous les appareils » sera un choix à part.
 export async function logout() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/login");
 }

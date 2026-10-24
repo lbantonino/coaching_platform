@@ -32,6 +32,20 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Développement : rester connecté avec coach-a@example.test
+```
+Date : 2026-10-24
+Demande : ne plus devoir se reconnecter sans cesse pendant le développement
+Causes : (1) « Se déconnecter » fermait TOUTES les sessions du compte (signOut global) : les tests qui
+  se déconnectent en coach A déconnectaient aussi Antonino ; (2) `db:reset` efface les sessions
+Fait : déconnexion limitée à l'appareil (scope local, comportement habituel ; une « déconnexion de
+  tous les appareils » sera un choix à part) ; scripts/dev-keep.mjs, lancé par `npm run db:reset`
+  avant et après le reset : garde les sessions du coach A actives depuis moins de 14 jours et son
+  profil (nom, entreprise, photo), dans supabase/.temp (jamais commité), base locale uniquement
+Vérifié : connexion, suite e2e complète (avec ses déconnexions), db:reset : la page reste connectée
+  (« Bonjour Gianluca »). Tests : check OK (Vitest 153), test:e2e 112 + 6 ignorés
+```
+
 ### D-38 : menu de gauche, roue dentée et thème dans les Paramètres
 ```
 Date : 2026-10-24

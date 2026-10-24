@@ -43,7 +43,7 @@ Prérequis : **Docker Desktop lancé**. Le CLI Supabase est une dépendance du p
 |---|---|
 | `npm run db:start` | Démarre Supabase en local (Postgres, Auth, Storage, Studio). Le premier lancement télécharge les images Docker (plusieurs Go) |
 | `npm run db:status` | Affiche les URL et les clés locales (à recopier dans `.env.local`) |
-| `npm run db:reset` | Recrée la base locale de zéro : toutes les migrations, `supabase/seed.sql`, puis les photos de démonstration (`scripts/seed-photos.mjs`) |
+| `npm run db:reset` | Recrée la base locale de zéro : toutes les migrations, `supabase/seed.sql`, puis les photos de démonstration (`scripts/seed-photos.mjs`). Les sessions récentes et le profil du coach A sont gardés (`scripts/dev-keep.mjs`) : on reste connecté dans son navigateur |
 | `npm run db:new <nom>` | Crée un fichier de migration horodaté dans `supabase/migrations/` |
 | `npm run db:test` | Lance les tests SQL/RLS (pgTAP) de `supabase/tests/` sur la base locale |
 | `npm run db:types` | Régénère `src/lib/supabase/database.types.ts` depuis le schéma local (après chaque migration) |
