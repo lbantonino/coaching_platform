@@ -7,11 +7,10 @@ import { useEffect, useRef, useState } from "react";
 
 import { iconButtonClass } from "@/components/ui/button";
 import { CooryLogo } from "@/components/ui/coory-logo";
-import { LogoutButton } from "@/components/ui/logout-button";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 import { NotificationBell } from "./header-tools";
 import { athleteTabs, homeHref, pageTitle } from "./navigation";
+import { SettingsMenu } from "./settings-menu";
 import { SideNav, UserCard } from "./side-nav";
 import { useShell } from "./shell-context";
 
@@ -82,11 +81,12 @@ function MobileMenu() {
             </button>
           </div>
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-3.5 pt-4 pb-8">
-            <UserCard />
             <SideNav large />
-            <div className="mt-auto flex gap-2">
-              <LogoutButton className="flex-1 [&>button]:w-full" />
-              <ThemeToggle />
+            <div className="mt-auto flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <UserCard />
+              </div>
+              <SettingsMenu />
             </div>
           </div>
         </div>
