@@ -213,6 +213,7 @@ async function Dashboard({
               icon={ListChecks}
               value={String(tasks.openCount)}
               label={tasks.openCount > 1 ? "tâches à faire" : "tâche à faire"}
+              shortLabel="Tâches"
             >
               <CheckList
                 items={tasks.items.map((task) => ({
@@ -237,7 +238,6 @@ async function Dashboard({
               value={formatEuros(weekIncome.inclCents)}
               label="encaissés cette semaine"
               detail={`${formatEuros(weekIncome.exclCents)} HTVA · ${plural(weekIncome.count, "paiement")}`}
-              wide
             />
           </KpiGrid>
         </div>
@@ -338,18 +338,6 @@ async function Dashboard({
         </section>
 
         <Card
-          id="programs-title"
-          title="Programmes en cours"
-          action={{ href: "/coach/programmes", label: "Programmes" }}
-          className="lg:col-span-4"
-        >
-          <CardEmpty icon={FileText}>
-            Aucun programme pour l&apos;instant. Chaque programme apparaîtra ici avec son sportif et
-            sa progression (semaine 6 sur 12…).
-          </CardEmpty>
-        </Card>
-
-        <Card
           id="upcoming-title"
           title="Séances à venir"
           action={{ href: "/coach/seances", label: "Voir tout" }}
@@ -366,7 +354,7 @@ async function Dashboard({
                   key={block.key}
                   href={`${orgBase}/agenda/seances/${block.sessionId}`}
                   leading={
-                    <span className="flex w-[74px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
+                    <span className="flex w-[84px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
                       <span className="text-muted">{dayShortLabel(block.date, today)}</span>
                       <span className="text-[14px] font-medium">{block.label.slice(0, 5)}</span>
                     </span>
@@ -384,6 +372,18 @@ async function Dashboard({
               ))}
             </div>
           )}
+        </Card>
+
+        <Card
+          id="programs-title"
+          title="Programmes en cours"
+          action={{ href: "/coach/programmes", label: "Programmes" }}
+          className="lg:col-span-4"
+        >
+          <CardEmpty icon={FileText}>
+            Aucun programme pour l&apos;instant. Chaque programme apparaîtra ici avec son sportif et
+            sa progression (semaine 6 sur 12…).
+          </CardEmpty>
         </Card>
 
         <Card

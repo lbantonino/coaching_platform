@@ -38,7 +38,7 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
 
   await page
     .getByRole("region", { name: "Fiches à compléter" })
-    .getByRole("link", { name: /^Manon/ })
+    .getByRole("link", { name: /Manon/ })
     .click();
   await expect(page).toHaveURL(/onglet=profil/);
   await expect(page.getByRole("heading", { name: "Manon", level: 1 })).toBeVisible();

@@ -107,7 +107,7 @@ test("le menu « Créer » mène aux vraies créations, et à la page vide du mo
   await expect(page.getByRole("main").getByText(/Bientôt/)).toHaveCount(0);
 });
 
-// Cartes Tâches et Messages (D-35). Chaque projet (ordinateur, téléphone) touche SES lignes du seed :
+// Carte Tâches et messages (D-35, D-36). Chaque projet (ordinateur, téléphone) touche SES lignes du seed :
 // les deux tournent en parallèle sur la même base. L'état de départ est lu, pas supposé (la base
 // locale sert aussi au serveur de dev), et chaque tâche est remise à faire à la fin.
 const ATHLETE_OF_B = "db000000-0000-4000-8000-000000000001";
@@ -115,10 +115,12 @@ const ATHLETE_OF_B = "db000000-0000-4000-8000-000000000001";
 test("une tâche cochée quitte la carte du tableau de bord et passe dans « Terminées »", async ({
   page,
 }, testInfo) => {
-  const title =
-    testInfo.project.name === "telephone"
-      ? "Relancer Sophie pour la facture d'octobre"
-      : "Finaliser le programme Hyrox de Lucas";
+  // Carte du tableau de bord : liste détaillée sur ordinateur, petit widget (intitulé + rond) sur
+  // téléphone ; on coche dans la carte sur les deux.
+  const phone = testInfo.project.name === "telephone";
+  const title = phone
+    ? "Relancer Sophie pour la facture d'octobre"
+    : "Finaliser le programme Hyrox de Lucas";
   const checkbox = page.getByRole("checkbox", { name: `Tâche faite : ${title}` });
   await loginAsCoachA(page);
 
@@ -131,19 +133,17 @@ test("une tâche cochée quitte la carte du tableau de bord et passe dans « Ter
   }
 
   await page.goto("/coach");
-  await expect(page.getByRole("link", { name: /tâches? à faire/ })).toHaveAttribute(
-    "href",
-    "/coach/taches",
-  );
+  const card = page.getByRole("link", { name: /tâches? à faire/ });
+  await expect(card).toHaveAttribute("href", "/coach/taches");
   await expect(checkbox).toHaveAttribute("aria-checked", "false");
   await checkbox.click();
   await expect(page.getByText("Tâche terminée.")).toBeVisible();
   await expect(checkbox).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole("link", { name: /tâches? à faire/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(checkbox).toHaveCount(0);
 
-  // Elle est dans « Terminées », cochée ; la rouvrir la remet sur le tableau de bord.
+  // Elle est dans « Terminées », cochée ; la rouvrir la remet à faire.
   await page.goto("/coach/taches");
   await page
     .getByRole("navigation", { name: "Onglets des tâches" })

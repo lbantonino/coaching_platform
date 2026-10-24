@@ -61,7 +61,13 @@ export async function countNotifications(
   return { ...counts, total: counts.messages + counts.tasks + counts.invoices + counts.profiles };
 }
 
-export type IncompleteProfile = { id: string; name: string; missing: string[] };
+export type IncompleteProfile = {
+  id: string;
+  name: string;
+  photoPath: string | null;
+  sex: "female" | "male" | "unspecified" | null;
+  missing: string[];
+};
 
 export type Notifications = {
   messages: Conversation[];
@@ -90,6 +96,8 @@ export async function getNotifications(
       .map((athlete) => ({
         id: athlete.id,
         name: athlete.displayName,
+        photoPath: athlete.photoPath,
+        sex: athlete.sex,
         missing: athlete.missingInfo,
       })),
   };
