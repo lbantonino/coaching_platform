@@ -45,7 +45,7 @@ const options: { value: ThemePreference; label: string; icon: LucideIcon }[] = [
   { value: "system", label: "Système", icon: Monitor },
 ];
 
-// `compact` : dans le petit menu de la roue dentée (texte plus petit, sans icônes).
+// `compact` : dans le menu du compte (plus petit, choix actif en rouge doux).
 export function ThemeChoice({
   name = "theme",
   compact = false,
@@ -76,11 +76,13 @@ export function ThemeChoice({
               className="peer sr-only"
             />
             <span
-              className={`flex items-center justify-center gap-1.5 rounded-[9px] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text peer-checked:bg-accent peer-checked:text-on-accent ${
-                compact ? "h-8 px-1.5 text-[13px]" : "h-9 px-3 text-[14px]"
+              className={`flex items-center justify-center gap-1.5 rounded-[9px] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text ${
+                compact
+                  ? "h-9 px-1.5 text-[13px] peer-checked:bg-accent-soft peer-checked:text-text"
+                  : "h-9 px-3 text-[14px] peer-checked:bg-accent peer-checked:text-on-accent"
               }`}
             >
-              {compact ? null : <Icon aria-hidden size={15} strokeWidth={1.8} />}
+              <Icon aria-hidden size={compact ? 14 : 15} strokeWidth={1.8} />
               {label}
             </span>
           </label>

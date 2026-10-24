@@ -1,10 +1,8 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Avatar } from "@/components/ui/avatar";
 import { CountBadge } from "@/components/ui/count-badge";
 import { navItemClass } from "@/components/ui/nav-item";
 
@@ -87,37 +85,5 @@ export function SideNav({ large = false }: { large?: boolean }) {
         </div>
       ) : null}
     </nav>
-  );
-}
-
-// Carte de la personne connectée : photo, nom, chevron vers ses paramètres.
-export function UserCard() {
-  const { user } = useShell();
-  if (!user) return null;
-  // Même hauteur que la roue dentée à côté (44 px, demande d'Antonino du 24/10) : photo et nom seuls ;
-  // le rôle et l'organisation sont dans Paramètres > Compte (et en infobulle).
-  const body = (
-    <>
-      <Avatar name={user.name} photoPath={user.photoPath} sex={user.sex} size="sm" />
-      <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{user.name}</span>
-      {user.settingsHref ? (
-        <ChevronRight aria-hidden size={16} strokeWidth={1.8} className="shrink-0 text-muted" />
-      ) : null}
-    </>
-  );
-  const box =
-    "flex h-11 items-center gap-2.5 rounded-control border border-line bg-surface pr-2.5 pl-1 text-text";
-  return user.settingsHref ? (
-    <Link
-      href={user.settingsHref}
-      title={user.role}
-      className={`${box} transition-colors duration-150 hover:bg-surface-2`}
-    >
-      {body}
-    </Link>
-  ) : (
-    <div title={user.role} className={box}>
-      {body}
-    </div>
   );
 }

@@ -32,6 +32,19 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Menu du compte (maquette d'Antonino)
+```
+Date : 2026-10-24
+Demande : remplacer la carte + roue dentée par la carte de la maquette (photo avec pastille verte,
+  nom, « Coach », flèche) qui ouvre au survol / au clic : Mon profil, Paramètres, Changer de compte,
+  Thème (Clair / Sombre / Système), Se déconnecter
+Fait : AccountMenu (barre latérale et menu hamburger ; position fixe pour déborder de la barre sur
+  ordinateur, 280 px) ; rôle affiché « Coach » / « Sportif(ve) » (organisation dans Paramètres >
+  Compte) ; Paramètres → section Thème de la page ; « Changer de compte » = déconnexion puis
+  connexion (pas encore de comptes multiples) ; SettingsMenu et UserCard supprimés
+Tests : check OK (Vitest 153), test:e2e 112 + 6 ignorés (menu du compte, thème depuis le menu)
+```
+
 ### Retouches du menu de gauche
 ```
 Date : 2026-10-24

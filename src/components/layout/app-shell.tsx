@@ -5,9 +5,9 @@ import { CooryLogo } from "@/components/ui/coory-logo";
 
 import { AthleteTabBar, MobileTopBar } from "./mobile-bar";
 import { homeHref } from "./navigation";
-import { SettingsMenu } from "./settings-menu";
+import { AccountMenu } from "./account-menu";
 import { ShellProvider, type ShellValue } from "./shell-context";
-import { SideNav, UserCard } from "./side-nav";
+import { SideNav } from "./side-nav";
 
 // Coquille des espaces coach, sportif et admin (prompt Claude Design §5.2 et §5.3).
 // Ordinateur (≥ 1024 px) : barre latérale collante de 252 px (logo, menu, carte de la personne et
@@ -26,12 +26,9 @@ export function AppShell({ value, children }: { value: ShellValue; children: Rea
             <CooryLogo size={26} />
           </Link>
           <SideNav />
-          {/* La carte de la personne, et la roue dentée (Paramètres, Thème, Compte, Se déconnecter). */}
-          <div className="mt-auto flex items-center gap-2">
-            <div className="min-w-0 flex-1">
-              <UserCard />
-            </div>
-            <SettingsMenu />
+          {/* Menu du compte : Mon profil, Paramètres, Changer de compte, Se déconnecter. */}
+          <div className="mt-auto">
+            <AccountMenu />
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
