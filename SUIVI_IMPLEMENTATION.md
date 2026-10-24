@@ -32,6 +32,16 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Retouches du menu de gauche
+```
+Date : 2026-10-24
+Demande : carte de la personne et roue dentée à la même taille (ordinateur et téléphone) ; « Messages »
+  juste sous « Assistant IA »
+Fait : carte de 44 px (photo et nom, rôle et organisation en infobulle et dans Paramètres > Compte) ;
+  ordre : Assistant IA, Messages, Tâches, Documents, Notifications (menu de gauche et hamburger)
+Tests : check OK (Vitest 153), test:e2e 112 + 6 ignorés
+```
+
 ### Développement : rester connecté avec coach-a@example.test
 ```
 Date : 2026-10-24

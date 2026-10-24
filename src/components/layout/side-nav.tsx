@@ -81,32 +81,34 @@ export function SideNav({ large = false }: { large?: boolean }) {
   );
 }
 
-// Carte de la personne connectée : avatar 40, nom, rôle, chevron vers ses paramètres.
+// Carte de la personne connectée : photo, nom, chevron vers ses paramètres.
 export function UserCard() {
   const { user } = useShell();
   if (!user) return null;
+  // Même hauteur que la roue dentée à côté (44 px, demande d'Antonino du 24/10) : photo et nom seuls ;
+  // le rôle et l'organisation sont dans Paramètres > Compte (et en infobulle).
   const body = (
     <>
-      <Avatar name={user.name} photoPath={user.photoPath} sex={user.sex} />
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-[14px] font-semibold">{user.name}</span>
-        <span className="truncate text-[12px] text-muted">{user.role}</span>
-      </span>
+      <Avatar name={user.name} photoPath={user.photoPath} sex={user.sex} size="sm" />
+      <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{user.name}</span>
       {user.settingsHref ? (
         <ChevronRight aria-hidden size={16} strokeWidth={1.8} className="shrink-0 text-muted" />
       ) : null}
     </>
   );
   const box =
-    "flex items-center gap-3 rounded-wide border border-line bg-surface px-3 py-2.5 text-text";
+    "flex h-11 items-center gap-2.5 rounded-control border border-line bg-surface pr-2.5 pl-1 text-text";
   return user.settingsHref ? (
     <Link
       href={user.settingsHref}
+      title={user.role}
       className={`${box} transition-colors duration-150 hover:bg-surface-2`}
     >
       {body}
     </Link>
   ) : (
-    <div className={box}>{body}</div>
+    <div title={user.role} className={box}>
+      {body}
+    </div>
   );
 }

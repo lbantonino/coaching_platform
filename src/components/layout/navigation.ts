@@ -78,14 +78,15 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
     moduleEntry("comptabilite", Calculator),
     moduleEntry("bibliotheque", BookOpen),
   );
-  // D-38 : Assistant IA au-dessus de Tâches, Notifications au-dessus de Messages ; Paramètres passe
-  // dans la roue dentée en bas du menu (avec Thème, Compte, Se déconnecter).
+  // D-38 : Assistant IA, puis Messages juste en dessous (demande d'Antonino du 24/10), Tâches,
+  // Documents, Notifications ; Paramètres passe dans la roue dentée en bas du menu (avec Thème,
+  // Compte, Se déconnecter).
   const secondary: NavEntry[] = [
     moduleEntry("assistant", Sparkles),
+    moduleEntry("messages", MessageSquare),
     moduleEntry("taches", ListChecks),
     moduleEntry("documents", Folder),
     moduleEntry("notifications", Bell),
-    moduleEntry("messages", MessageSquare),
   ];
   return { main, secondary };
 }

@@ -67,7 +67,7 @@ test("sur téléphone, le menu hamburger remplace la barre du bas et contient la
   await expect(menu).toBeHidden();
 });
 
-test("le menu de gauche : Assistant IA et Notifications ; la roue dentée mène aux Paramètres", async ({
+test("le menu de gauche : Assistant IA puis Messages, Notifications ; la roue dentée mène aux Paramètres", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "ordinateur", "Barre latérale de l'ordinateur");
@@ -77,9 +77,9 @@ test("le menu de gauche : Assistant IA et Notifications ; la roue dentée mène 
   await expect(nav.getByRole("link", { name: "Tâches", exact: true })).toBeVisible();
   const labels = await nav.getByRole("link").allInnerTexts();
   const names = labels.map((label) => label.trim().split("\n")[0]);
-  // Assistant IA juste au-dessus de Tâches, Notifications juste au-dessus de Messages.
-  expect(names.indexOf("Assistant IA")).toBe(names.indexOf("Tâches") - 1);
-  expect(names.indexOf("Notifications")).toBe(names.indexOf("Messages") - 1);
+  // Messages juste en dessous de l'Assistant IA ; Notifications dans la même section.
+  expect(names.indexOf("Messages")).toBe(names.indexOf("Assistant IA") + 1);
+  expect(names).toContain("Notifications");
   expect(names).not.toContain("Paramètres");
 
   await page.getByRole("button", { name: "Paramètres et compte" }).click();
