@@ -461,6 +461,7 @@ export type Database = {
           phone: string | null;
           photo_path: string | null;
           preferred_contact: string | null;
+          program_type: string | null;
           schedule_constraints: string | null;
           sessions_per_week: number | null;
           sex: string | null;
@@ -489,6 +490,7 @@ export type Database = {
           phone?: string | null;
           photo_path?: string | null;
           preferred_contact?: string | null;
+          program_type?: string | null;
           schedule_constraints?: string | null;
           sessions_per_week?: number | null;
           sex?: string | null;
@@ -516,6 +518,7 @@ export type Database = {
           phone?: string | null;
           photo_path?: string | null;
           preferred_contact?: string | null;
+          program_type?: string | null;
           schedule_constraints?: string | null;
           sessions_per_week?: number | null;
           sex?: string | null;

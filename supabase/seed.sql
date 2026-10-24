@@ -143,6 +143,23 @@ update public.athlete_profiles
   set athlete_user_id = 'e0000000-0000-4000-8000-00000000000e'
   where id = 'da000000-0000-4000-8000-000000000002';
 
+-- Type de programme (D-40), indépendant des objectifs : Lucas prépare un Hyrox mais suit un programme
+-- hybride. Manon reste sans type (fiche créée d'un simple nom) pour montrer le cas « à choisir ».
+update public.athlete_profiles as p
+  set program_type = v.program_type
+  from (values
+    ('da000000-0000-4000-8000-000000000001'::uuid, 'strength'),
+    ('da000000-0000-4000-8000-000000000002'::uuid, 'running'),
+    ('da000000-0000-4000-8000-000000000003'::uuid, 'hyrox'),
+    ('da000000-0000-4000-8000-000000000004'::uuid, 'hybrid'),
+    ('da000000-0000-4000-8000-000000000005'::uuid, 'strength'),
+    ('da000000-0000-4000-8000-000000000006'::uuid, 'strength'),
+    ('da000000-0000-4000-8000-000000000008'::uuid, 'running'),
+    ('db000000-0000-4000-8000-000000000001'::uuid, 'running'),
+    ('db000000-0000-4000-8000-000000000002'::uuid, 'strength')
+  ) as v (id, program_type)
+  where p.id = v.id;
+
 -- Sexe déclaré (D-25). Manon reste non renseignée pour montrer le cas « facultatif ».
 update public.athlete_profiles as p
   set sex = v.sex

@@ -2,12 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
+import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
 import { getAthlete } from "./queries";
-import { athleteUpdateSchema, availabilitySchema, newAthleteSchema } from "./schemas";
+import {
+  ATHLETE_STATUSES,
+  athleteUpdateSchema,
+  availabilitySchema,
+  newAthleteSchema,
+  type AthleteStatus,
+} from "./schemas";
 
 export type NewAthleteState = {
   error: string | null;
@@ -171,6 +179,59 @@ export async function updateAthlete(
 
   revalidatePath(`/coach/o/${membership.organizationId}/sportifs`, "layout");
   return { error: null, saved: true, attempt: previous.attempt + 1, values: null };
+}
+
+// Statut et type de programme depuis la liste des sportifs (demande d'Antonino du 24/10, D-40) :
+// pour une ligne (pastille ou menu « ••• ») ou pour plusieurs sportifs cochés à la fois.
+// Archiver n'efface rien et se défait de la même façon. Les identifiants viennent du navigateur :
+// la mise à jour est limitée à l'organisation du coach (et la RLS le garantit aussi).
+const athleteIdsSchema = z.array(z.uuid()).min(1).max(200);
+const statusSchema = z.enum(ATHLETE_STATUSES);
+const programTypeSchema = z.enum(DISCIPLINES);
+
+export type BulkResult = { ok: boolean; error: string | null };
+
+async function updateAthletes(
+  organizationId: string,
+  athleteIds: unknown,
+  changes: { status: AthleteStatus } | { program_type: Discipline },
+): Promise<BulkResult> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const ids = athleteIdsSchema.safeParse(athleteIds);
+  if (!ids.success) return { ok: false, error: "Aucun sportif sélectionné." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("athlete_profiles")
+    .update(changes)
+    .in("id", ids.data)
+    .eq("organization_id", membership.organizationId)
+    .select("id");
+  if (error) return { ok: false, error: "La modification n'a pas pu être enregistrée. Réessaie." };
+  if ((data ?? []).length !== ids.data.length) return { ok: false, error: "Sportif introuvable." };
+
+  revalidatePath(`/coach/o/${membership.organizationId}/sportifs`, "layout");
+  return { ok: true, error: null };
+}
+
+export async function setAthletesStatus(
+  organizationId: string,
+  athleteIds: string[],
+  status: string,
+): Promise<BulkResult> {
+  const parsed = statusSchema.safeParse(status);
+  if (!parsed.success) return { ok: false, error: "Statut invalide." };
+  return updateAthletes(organizationId, athleteIds, { status: parsed.data });
+}
+
+export async function setAthletesProgramType(
+  organizationId: string,
+  athleteIds: string[],
+  programType: string,
+): Promise<BulkResult> {
+  const parsed = programTypeSchema.safeParse(programType);
+  if (!parsed.success) return { ok: false, error: "Type de programme invalide." };
+  return updateAthletes(organizationId, athleteIds, { program_type: parsed.data });
 }
 
 // Saisie brute des disponibilités, renvoyée en cas d'erreur.

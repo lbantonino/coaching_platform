@@ -1,6 +1,6 @@
 "use client";
 
-import { TriangleAlert, X, type LucideIcon } from "lucide-react";
+import { Check, TriangleAlert, X, type LucideIcon } from "lucide-react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 
 import { buttonClass } from "./button";
@@ -113,6 +113,8 @@ export type ActionMenuItem = {
   icon: LucideIcon;
   onSelect: () => void;
   destructive?: boolean;
+  // Choix en cours (ex. statut du sportif) : coche à droite, annoncé aux lecteurs d'écran.
+  selected?: boolean;
 };
 
 // Menu « ••• » : lignes de 52 px, icône 19 + libellé 16/500 ; action destructrice en rouge texte.
@@ -141,6 +143,7 @@ export function ActionMenu({
           <li key={item.label}>
             <button
               type="button"
+              aria-current={item.selected ? "true" : undefined}
               onClick={() => {
                 onClose();
                 item.onSelect();
@@ -151,6 +154,14 @@ export function ActionMenu({
             >
               <item.icon aria-hidden size={19} strokeWidth={1.8} />
               {item.label}
+              {item.selected ? (
+                <Check
+                  aria-hidden
+                  size={18}
+                  strokeWidth={2.2}
+                  className="ml-auto text-accent-text"
+                />
+              ) : null}
             </button>
           </li>
         ))}
