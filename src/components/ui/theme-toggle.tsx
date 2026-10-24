@@ -7,6 +7,8 @@ import { THEME_STORAGE_KEY, type Theme } from "@/lib/theme";
 
 import { iconButtonClass } from "./button";
 
+// Bouton clair / sombre des pages d'accès (connexion, inscription…). Dans l'app, le thème se choisit
+// dans les Paramètres (ThemeChoice, avec « Système »).
 // Le thème actif est l'attribut data-theme de <html> (posé avant l'affichage par themeInitScript).
 // useSyncExternalStore lit cette valeur hors de React ; côté serveur, on suppose « clair » (D-33).
 // Plusieurs boutons peuvent coexister (barre latérale + en-tête mobile) : ils restent synchronisés.

@@ -32,6 +32,22 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### D-38 : menu de gauche, roue dentée et thème dans les Paramètres
+```
+Date : 2026-10-24
+Demande : menu de gauche avec « Assistant IA » au-dessus de Tâches et « Notifications » au-dessus de
+  Messages (cloche et étoile gardées en haut) ; plus de bouton thème ni de « Se déconnecter » en bas :
+  une roue dentée à la place du thème, avec un petit menu au survol (Paramètres, Thème, Compte, Se
+  déconnecter) ; le thème se choisit dans les Paramètres : Clair, Sombre ou Système
+Fait : lib/theme (préférence « system », suivie en direct par le script du <head>) ; ThemeChoice ;
+  SettingsMenu (survol à la souris, toucher sur téléphone, Échap / clic ailleurs) dans la barre
+  latérale et le menu hamburger, à côté de la carte de la personne ; « Paramètres » retiré de la
+  liste ; Paramètres : sections Thème et Compte (e-mail, organisation, changer le mot de passe, se
+  déconnecter) ; le bouton clair / sombre reste sur les pages d'accès (connexion…)
+Tests : check OK (Vitest 153), test:e2e 112 + 6 ignorés (nouveaux : ordre du menu et roue dentée,
+  thème Clair / Sombre / Système) ; aides de déconnexion passées par la roue dentée
+```
+
 ### Retouche mobile du tableau de bord (mobile first)
 ```
 Date : 2026-10-24

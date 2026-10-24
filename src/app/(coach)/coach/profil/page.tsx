@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, pageMainClass } from "@/components/layout/page-header";
+import { buttonClass } from "@/components/ui/button";
+import { LogoutButton } from "@/components/ui/logout-button";
 import { SkeletonLines } from "@/components/ui/skeleton";
+import { ThemeChoice } from "@/components/ui/theme-choice";
 import { requireCoach } from "@/features/auth/guards";
 import { getCoachProfile } from "@/features/coach/profile";
 import { removeCoachPhoto, uploadCoachPhoto } from "@/features/photos/actions";
@@ -19,7 +23,7 @@ export default function CoachProfilePage() {
     <main className={pageMainClass}>
       <PageHeader
         title="Paramètres"
-        subtitle="Ton profil de coach : photo, identité et entreprise."
+        subtitle="Ton profil de coach, le thème de l'app et ton compte."
       />
       <PageBody>
         <div className="flex w-full max-w-2xl flex-col gap-6">
@@ -63,9 +67,49 @@ async function Profile() {
           lastName={profile.lastName ?? ""}
           companyName={profile.companyName ?? ""}
         />
-        <p className="text-caption text-muted">
-          Connecté avec {user.email} · {memberships[0]?.organizationName}
-        </p>
+      </section>
+      {/* D-38 : le thème quitte la barre du menu pour les Paramètres (Clair, Sombre, Système). */}
+      <section
+        aria-labelledby="coach-theme-title"
+        className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+      >
+        <div className="flex flex-col gap-1">
+          <h2 id="coach-theme-title" className="text-title font-medium">
+            Thème
+          </h2>
+          <p className="text-caption text-muted">
+            « Système » suit le réglage de ton téléphone ou de ton ordinateur. Retenu sur cet
+            appareil.
+          </p>
+        </div>
+        <div className="max-w-md">
+          <ThemeChoice />
+        </div>
+      </section>
+      <section
+        id="compte"
+        aria-labelledby="coach-account-title"
+        className="flex scroll-mt-6 flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+      >
+        <h2 id="coach-account-title" className="text-title font-medium">
+          Compte
+        </h2>
+        <dl className="flex flex-col gap-2 text-[15px]">
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
+            <dt className="text-muted sm:w-40">Adresse e-mail</dt>
+            <dd className="break-all">{user.email}</dd>
+          </div>
+          <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-3">
+            <dt className="text-muted sm:w-40">Organisation</dt>
+            <dd>{memberships[0]?.organizationName}</dd>
+          </div>
+        </dl>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/mot-de-passe-oublie" className={buttonClass({ variant: "outline" })}>
+            Changer mon mot de passe
+          </Link>
+          <LogoutButton />
+        </div>
       </section>
     </>
   );

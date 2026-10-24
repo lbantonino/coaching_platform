@@ -18,6 +18,7 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Sparkles,
   Target,
   TrendingUp,
   User,
@@ -77,11 +78,14 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
     moduleEntry("comptabilite", Calculator),
     moduleEntry("bibliotheque", BookOpen),
   );
+  // D-38 : Assistant IA au-dessus de Tâches, Notifications au-dessus de Messages ; Paramètres passe
+  // dans la roue dentée en bas du menu (avec Thème, Compte, Se déconnecter).
   const secondary: NavEntry[] = [
+    moduleEntry("assistant", Sparkles),
     moduleEntry("taches", ListChecks),
     moduleEntry("documents", Folder),
+    moduleEntry("notifications", Bell),
     moduleEntry("messages", MessageSquare),
-    { label: "Paramètres", href: "/coach/profil", icon: Settings, match: exact("/coach/profil") },
   ];
   return { main, secondary };
 }

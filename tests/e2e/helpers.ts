@@ -42,19 +42,30 @@ export async function goToCoachSection(page: Page, name: string) {
     .click();
 }
 
-export async function logoutCoach(page: Page) {
-  await openCoachMenuIfNeeded(page);
-  await page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }).click();
+// « Se déconnecter » est dans le menu de la roue dentée, en bas du menu de gauche (D-38).
+async function logoutFromSettingsMenu(page: Page) {
+  await page
+    .getByRole("button", { name: "Paramètres et compte" })
+    .filter({ visible: true })
+    .click();
+  await page
+    .getByRole("group", { name: "Paramètres et compte" })
+    .getByRole("button", { name: "Se déconnecter" })
+    .click();
 }
 
-// Déconnexion du sportif : barre latérale sur ordinateur ; sur téléphone, onglet « Profil » de la
-// barre du bas (comme dans le prototype).
+export async function logoutCoach(page: Page) {
+  await openCoachMenuIfNeeded(page);
+  await logoutFromSettingsMenu(page);
+}
+
+// Déconnexion du sportif : roue dentée de la barre latérale sur ordinateur ; sur téléphone, onglet
+// « Profil » de la barre du bas (comme dans le prototype).
 export async function logoutAthlete(page: Page) {
-  if (isPhone(page)) {
-    await page
-      .getByRole("navigation", { name: "Navigation du sportif" })
-      .getByRole("link", { name: "Profil" })
-      .click();
-  }
+  if (!isPhone(page)) return logoutFromSettingsMenu(page);
+  await page
+    .getByRole("navigation", { name: "Navigation du sportif" })
+    .getByRole("link", { name: "Profil" })
+    .click();
   await page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }).click();
 }
