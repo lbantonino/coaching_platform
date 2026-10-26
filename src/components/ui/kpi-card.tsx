@@ -40,11 +40,17 @@ export function KpiCard({
       : value.length > 7
         ? "text-[18px] md:text-[30px]"
         : "text-[24px] md:text-[30px]";
+  // Un montant long (« 157,30 € ») ne tient pas à côté du titre : il passe sur la ligne suivante.
+  const long = value.length > 7;
   const widget = shortLabel ? (
     <span className="flex min-w-0 flex-col gap-1.5 lg:hidden">
-      <span className="flex items-center justify-between gap-2">
+      <span
+        className={`flex gap-2 ${long ? "flex-col items-start gap-1" : "items-center justify-between"}`}
+      >
         <span className="truncate text-[15px] font-semibold text-[var(--kpi)]">{shortLabel}</span>
-        <span className="font-display text-[22px] leading-none font-semibold tabular">{value}</span>
+        <span className="font-display text-[22px] leading-none font-semibold tracking-[-0.02em] tabular">
+          {value}
+        </span>
       </span>
       {(mobileLines ?? []).map((line) => (
         <span key={line} className="truncate text-[13px] leading-snug text-muted">

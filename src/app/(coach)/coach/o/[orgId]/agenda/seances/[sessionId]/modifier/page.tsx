@@ -72,6 +72,13 @@ async function EditSession({ orgId, sessionId }: { orgId: string; sessionId: str
                 newClient: false,
                 newAthleteName: "",
                 notes: session.notes ?? "",
+                // 6500 -> « 65 » ; 6550 -> « 65,50 ».
+                price:
+                  session.priceCents === null
+                    ? ""
+                    : (session.priceCents / 100).toFixed(2).replace(".", ",").replace(/,00$/, ""),
+                vatIncluded: session.priceVatIncluded,
+                paymentMethod: session.paymentMethod ?? "transfer",
               }}
               locked
               submitLabel="Enregistrer"

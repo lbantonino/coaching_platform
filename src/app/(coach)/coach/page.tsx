@@ -25,7 +25,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
 import { formatEuros, monthActivity } from "@/domain/billing/invoices";
-import { paymentTotals } from "@/domain/billing/payments";
+import { coveredByPackage, paymentTotals } from "@/domain/billing/payments";
 import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
@@ -39,10 +39,11 @@ import {
   type WeekBlock,
 } from "@/features/agenda/week";
 import { requireCoach } from "@/features/auth/guards";
-import { listPayments } from "@/features/billing/payment-queries";
+import { listPackageCovers, listPayments } from "@/features/billing/payment-queries";
 import { listMonthInvoices } from "@/features/billing/queries";
 import { getCoachProfile } from "@/features/coach/profile";
 import { moveSession } from "@/features/sessions/actions";
+import { plannedIncome } from "@/features/sessions/prices";
 import { listSessions } from "@/features/sessions/queries";
 import { setTaskDone } from "@/features/tasks/actions";
 import { getDashboardTasks } from "@/features/tasks/queries";
@@ -148,16 +149,26 @@ async function Dashboard({
   // Paiements depuis le lundi ou le 1er du mois (le plus ancien des deux) : semaine et mois.
   const monthStart = `${today.slice(0, 7)}-01`;
   const weekStart = mondayOf(today);
-  const [profile, sessions, tasks, invoices, payments, programs] = await Promise.all([
+  const [profile, sessions, tasks, invoices, payments, programs, covers] = await Promise.all([
     getCoachProfile(user),
     listSessions(current.organizationId),
     getDashboardTasks(current.organizationId),
     listMonthInvoices(current.organizationId, today),
     listPayments(current.organizationId, weekStart < monthStart ? weekStart : monthStart),
     listActivePrograms(current.organizationId),
+    listPackageCovers(current.organizationId),
   ]);
   const weekIncome = paymentTotals(payments, weekStart, addDays(weekStart, 6));
   const monthIncome = paymentTotals(payments, monthStart, today);
+  // Ce que les séances de la semaine pourraient rapporter (D-52) : leurs prix, payées ou non, sauf
+  // les dates comprises dans un forfait déjà réglé.
+  const planned = plannedIncome(
+    sessions,
+    weekStart,
+    addDays(weekStart, 6),
+    (session, date) =>
+      session.kind === "individual" && coveredByPackage(covers, session.athletes[0]?.id, date),
+  );
 
   const now = nowTimeInBrussels();
   const nowMinutes = toMinutes(now);
@@ -271,9 +282,21 @@ async function Dashboard({
               icon={Euro}
               value={formatEuros(weekIncome.inclCents)}
               shortLabel="Encaissé"
-              mobileLines={["cette semaine", plural(weekIncome.count, "paiement")]}
+              mobileLines={[
+                "cette semaine",
+                plural(weekIncome.count, "paiement"),
+                ...(planned.count > 0 ? [`${formatEuros(planned.inclCents)} prévus`] : []),
+              ]}
               label="encaissés cette semaine"
-              detail={`${formatEuros(weekIncome.exclCents)} HTVA · ${plural(weekIncome.count, "paiement")}`}
+              detail={[
+                `${formatEuros(weekIncome.exclCents)} HTVA`,
+                plural(weekIncome.count, "paiement"),
+                planned.count > 0
+                  ? `${formatEuros(planned.inclCents)} prévus (${plural(planned.count, "séance")})`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             />
           </KpiGrid>
         </div>

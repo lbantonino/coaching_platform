@@ -17,6 +17,10 @@ export type PaymentFormValues = {
   vatRate: string;
   method: string;
   label: string;
+  // Forfait (D-52) : le paiement couvre une période (ex. 3 mois) ; sinon il paie une séance.
+  package: boolean;
+  coversFrom: string;
+  coversTo: string;
 };
 export type PaymentFormState = {
   error: string | null;
@@ -38,6 +42,14 @@ const schema = z.object({
   method: z.enum(PAYMENT_METHODS, { error: "Choisis le mode de paiement." }),
   label: z.string().trim().max(120, { error: "Libellé trop long (120 caractères maximum)." }),
 });
+const periodSchema = z
+  .object({
+    coversFrom: z.iso.date({ error: "Indique le début de la période couverte." }),
+    coversTo: z.iso.date({ error: "Indique la fin de la période couverte." }),
+  })
+  .refine((period) => period.coversTo >= period.coversFrom, {
+    error: "La fin de la période ne peut pas précéder son début.",
+  });
 
 // Paiement reçu d'un sportif de SON organisation (D-36). Aucun argent ne passe par Coory : le coach
 // note ce qu'il a reçu, TVA comprise.
@@ -56,6 +68,9 @@ export async function createPayment(
     vatRate: field("vatRate"),
     method: field("method"),
     label: field("label"),
+    package: formData.get("package") === "on",
+    coversFrom: field("coversFrom"),
+    coversTo: field("coversTo"),
   };
   const fail = (error: string): PaymentFormState => ({
     error,
@@ -68,6 +83,10 @@ export async function createPayment(
   if (amountCents === null) return fail("Indique le montant reçu, par exemple 3000 ou 85,50.");
   const parsed = schema.safeParse(values);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Saisie invalide.");
+  const period = values.package ? periodSchema.safeParse(values) : null;
+  if (period && !period.success) {
+    return fail(period.error.issues[0]?.message ?? "Période invalide.");
+  }
   const athlete = await getAthlete(orgId, parsed.data.athleteId);
   if (!athlete) return fail("Sportif introuvable dans ton organisation.");
 
@@ -80,6 +99,8 @@ export async function createPayment(
     vat_rate: parsed.data.vatRate,
     method: parsed.data.method,
     label: parsed.data.label === "" ? null : parsed.data.label,
+    covers_from: period?.success ? period.data.coversFrom : null,
+    covers_to: period?.success ? period.data.coversTo : null,
     created_by: user.id,
   });
   if (error) return fail("Le paiement n'a pas pu être enregistré. Réessaie.");

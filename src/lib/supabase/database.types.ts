@@ -347,7 +347,9 @@ export type Database = {
       athlete_payments: {
         Row: {
           amount_cents: number;
-          athlete_id: string;
+          athlete_id: string | null;
+          covers_from: string | null;
+          covers_to: string | null;
           created_at: string;
           created_by: string | null;
           id: string;
@@ -355,13 +357,17 @@ export type Database = {
           method: string;
           organization_id: string;
           received_on: string;
+          session_date: string | null;
+          session_id: string | null;
           updated_at: string;
           vat_rate: number;
         };
         ComputedFields: never;
         Insert: {
           amount_cents: number;
-          athlete_id: string;
+          athlete_id?: string | null;
+          covers_from?: string | null;
+          covers_to?: string | null;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -369,12 +375,16 @@ export type Database = {
           method: string;
           organization_id: string;
           received_on: string;
+          session_date?: string | null;
+          session_id?: string | null;
           updated_at?: string;
           vat_rate?: number;
         };
         Update: {
           amount_cents?: number;
-          athlete_id?: string;
+          athlete_id?: string | null;
+          covers_from?: string | null;
+          covers_to?: string | null;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -382,6 +392,8 @@ export type Database = {
           method?: string;
           organization_id?: string;
           received_on?: string;
+          session_date?: string | null;
+          session_id?: string | null;
           updated_at?: string;
           vat_rate?: number;
         };
@@ -391,6 +403,13 @@ export type Database = {
             columns: ["athlete_id", "organization_id"];
             isOneToOne: false;
             referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "athlete_payments_session_fkey";
+            columns: ["session_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "coach_sessions";
             referencedColumns: ["id", "organization_id"];
           },
         ];
@@ -731,6 +750,9 @@ export type Database = {
           location: string | null;
           notes: string | null;
           organization_id: string;
+          payment_method: string | null;
+          price_cents: number | null;
+          price_vat_included: boolean;
           repeats_weekly: boolean;
           start_time: string;
           starts_on: string;
@@ -750,6 +772,9 @@ export type Database = {
           location?: string | null;
           notes?: string | null;
           organization_id: string;
+          payment_method?: string | null;
+          price_cents?: number | null;
+          price_vat_included?: boolean;
           repeats_weekly?: boolean;
           start_time: string;
           starts_on: string;
@@ -768,6 +793,9 @@ export type Database = {
           location?: string | null;
           notes?: string | null;
           organization_id?: string;
+          payment_method?: string | null;
+          price_cents?: number | null;
+          price_vat_included?: boolean;
           repeats_weekly?: boolean;
           start_time?: string;
           starts_on?: string;

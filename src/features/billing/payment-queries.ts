@@ -9,6 +9,9 @@ export type AthletePayment = PaymentLike & {
   athleteName: string;
   method: PaymentMethod;
   label: string | null;
+  // Forfait (D-52) : période couverte ; sinon null.
+  coversFrom: string | null;
+  coversTo: string | null;
 };
 
 type Row = {
@@ -18,6 +21,8 @@ type Row = {
   vat_rate: number;
   method: string;
   label: string | null;
+  covers_from: string | null;
+  covers_to: string | null;
   athlete: { id: string; first_name: string; display_name: string | null } | null;
 };
 
@@ -31,7 +36,7 @@ export async function listPayments(
   let query = supabase
     .from("athlete_payments")
     .select(
-      "id, received_on, amount_cents, vat_rate, method, label, athlete:athlete_profiles ( id, first_name, display_name )",
+      "id, received_on, amount_cents, vat_rate, method, label, covers_from, covers_to, athlete:athlete_profiles ( id, first_name, display_name )",
     )
     .eq("organization_id", organizationId)
     .order("received_on", { ascending: false })
@@ -48,8 +53,31 @@ export async function listPayments(
     // La contrainte CHECK en base garantit cette liste fermée.
     method: row.method as PaymentMethod,
     label: row.label,
-    // La clé étrangère garantit le sportif ; le repli ne sert qu'au typage.
+    coversFrom: row.covers_from,
+    coversTo: row.covers_to,
+    // Séance collective payée en une fois (D-52) : pas de sportif, son libellé (titre et date) la nomme.
     athleteId: row.athlete?.id ?? "",
-    athleteName: row.athlete ? (row.athlete.display_name ?? row.athlete.first_name) : "Sportif",
+    athleteName: row.athlete
+      ? (row.athlete.display_name ?? row.athlete.first_name)
+      : (row.label ?? "Séance collective"),
   }));
+}
+
+// Forfaits en cours (D-52) : par sportif, les périodes couvertes par un forfait, pour marquer ses
+// dates de séance « comprises dans le forfait ».
+export type PackageCover = { athleteId: string; coversFrom: string; coversTo: string };
+
+export async function listPackageCovers(organizationId: string): Promise<PackageCover[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("athlete_payments")
+    .select("athlete_id, covers_from, covers_to")
+    .eq("organization_id", organizationId)
+    .not("covers_from", "is", null);
+  if (error) throw new Error("Lecture des forfaits impossible.");
+  return (data ?? []).flatMap((row) =>
+    row.athlete_id && row.covers_from && row.covers_to
+      ? [{ athleteId: row.athlete_id, coversFrom: row.covers_from, coversTo: row.covers_to }]
+      : [],
+  );
 }

@@ -29,6 +29,11 @@ export function splitVat(
   return { exclCents, vatCents: amountCents - exclCents };
 }
 
+// 65,00 € HTVA à 21 % -> 78,65 € TVAC (arrondi au centime).
+export function addVat(exclCents: number, vatRate: number): number {
+  return Math.round((exclCents * (100 + vatRate)) / 100);
+}
+
 export type PaymentTotals = {
   count: number;
   inclCents: number;
@@ -48,6 +53,22 @@ export function paymentTotals(payments: PaymentLike[], from: string, to: string)
     totals.vatCents += vatCents;
   }
   return totals;
+}
+
+// Forfait (D-52) : un paiement qui couvre une période pour un sportif (ex. 3 mois payés d'avance).
+// Une date de séance de ce sportif dans la période est « comprise dans le forfait » : elle ne se paie
+// pas une deuxième fois, et ne compte pas dans ce que les séances « pourraient rapporter ».
+export type PackageCoverLike = { athleteId: string; coversFrom: string; coversTo: string };
+
+export function coveredByPackage(
+  covers: PackageCoverLike[],
+  athleteId: string | null | undefined,
+  date: string,
+): boolean {
+  if (!athleteId) return false;
+  return covers.some(
+    (cover) => cover.athleteId === athleteId && date >= cover.coversFrom && date <= cover.coversTo,
+  );
 }
 
 // Montant saisi (« 3000 », « 3 000,50 », « 3000.5 ») -> centimes, ou null s'il n'est pas valide.

@@ -13,10 +13,14 @@ import {
   labelClass,
 } from "@/components/ui/form-styles";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
+import { formatEuros } from "@/domain/billing/invoices";
+import { addVat, parseEuros, splitVat } from "@/domain/billing/payments";
 import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
 import {
   SESSION_KINDS,
+  SESSION_VAT_RATE,
+  defaultVatIncluded,
   sessionKindLabels,
   type SessionFormInput,
   type SessionKind,
@@ -86,6 +90,10 @@ function SessionFields({
   const [kind, setKind] = useState<SessionKind>(v.kind === "individual" ? "individual" : "group");
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
   const [newClient, setNewClient] = useState(v.newClient);
+  const [price, setPrice] = useState(v.price);
+  const [vatIncluded, setVatIncluded] = useState(v.vatIncluded);
+  const [paymentMethod, setPaymentMethod] = useState(v.paymentMethod || "transfer");
+  const priceCents = parseEuros(price);
   const individualName = athletes.find((athlete) => athlete.id === v.athleteId)?.name;
 
   return (
@@ -331,6 +339,80 @@ function SessionFields({
           )}
         </fieldset>
       )}
+
+      {/* Prix (D-52, demande d'Antonino) : quand le coach marque une date « payée », ce montant compte
+          dans « Encaissé cette semaine ». Collective : un seul prix pour toute la séance. Règle de
+          Gianluca : virement = facturé, prix hors TVA (la TVA s'ajoute) ; espèces = prix direct, TVA
+          comprise. La case suit le mode choisi, le coach peut la changer. */}
+      <fieldset className="flex flex-col gap-3">
+        <legend className={`${labelClass} mb-2`}>
+          Prix <span className="font-normal text-muted">(facultatif)</span>
+        </legend>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="session-price" className={labelClass}>
+              {kind === "group" ? "Prix pour toute la séance (€)" : "Prix de la séance (€)"}
+            </label>
+            <input
+              id="session-price"
+              name="price"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="Ex. : 65"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+              aria-describedby="session-price-hint"
+              className={`${inputClass} font-mono`}
+            />
+          </div>
+          <fieldset className="flex flex-col gap-1.5">
+            <legend className={`${labelClass} mb-1.5`}>Paiement</legend>
+            <div className={segmentedGroupClass}>
+              {(
+                [
+                  ["transfer", "Virement"],
+                  ["cash", "Espèces"],
+                ] as const
+              ).map(([method, label]) => (
+                <label
+                  key={method}
+                  className="flex-1 cursor-pointer rounded-sm has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent"
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={method}
+                    checked={paymentMethod === method}
+                    onChange={() => {
+                      setPaymentMethod(method);
+                      setVatIncluded(defaultVatIncluded(method));
+                    }}
+                    className="peer sr-only"
+                  />
+                  <span className={segmentedItemClass}>{label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+        <label className="inline-flex w-fit cursor-pointer items-center gap-2.5 text-small">
+          <input
+            type="checkbox"
+            name="vatIncluded"
+            checked={vatIncluded}
+            onChange={(event) => setVatIncluded(event.target.checked)}
+            className="size-4 accent-[var(--text)]"
+          />
+          TVA comprise dans le prix
+        </label>
+        <p id="session-price-hint" className={hintClass}>
+          {priceCents === null
+            ? "Sans prix, la séance ne compte pas dans l'encaissé."
+            : vatIncluded
+              ? `${formatEuros(priceCents)} reçus, TVA comprise : ${formatEuros(splitVat(priceCents, SESSION_VAT_RATE).exclCents)} HTVA et ${formatEuros(splitVat(priceCents, SESSION_VAT_RATE).vatCents)} de TVA.`
+              : `${formatEuros(priceCents)} HTVA : le sportif paie ${formatEuros(addVat(priceCents, SESSION_VAT_RATE))}, TVA de ${SESSION_VAT_RATE} % comprise.`}
+        </p>
+      </fieldset>
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="session-notes" className={labelClass}>

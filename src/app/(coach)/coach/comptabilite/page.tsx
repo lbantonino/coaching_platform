@@ -149,7 +149,16 @@ async function Accounting({ filter }: { filter: Filter }) {
                       }
                       title={payment.athleteName}
                       // Le mode d'abord : sur téléphone, la fin de la ligne est coupée.
-                      sub={`${paymentMethodLabels[payment.method]} · ${formatEuros(exclCents)} HTVA (TVA ${payment.vatRate} %) · ${payment.label ?? "Paiement"}`}
+                      sub={[
+                        paymentMethodLabels[payment.method],
+                        payment.coversFrom && payment.coversTo
+                          ? `Forfait du ${shortDate.format(new Date(`${payment.coversFrom}T00:00:00Z`))} au ${shortDate.format(new Date(`${payment.coversTo}T00:00:00Z`))}`
+                          : null,
+                        `${formatEuros(exclCents)} HTVA (TVA ${payment.vatRate} %)`,
+                        payment.label ?? "Paiement",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                       trailing={
                         <>
                           <span className="text-[15px] font-semibold tabular">
