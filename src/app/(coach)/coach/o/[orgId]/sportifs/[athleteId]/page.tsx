@@ -19,6 +19,7 @@ import { todayIsoInBrussels } from "@/lib/format";
 
 import { PhotoForm } from "../../../../photo-form";
 
+import { AthleteAgendaSection, AthleteProgramSection } from "./athlete-agenda";
 import { AthleteEditForm } from "./athlete-edit-form";
 import { ActivityTimeline } from "./activity-timeline";
 import { AthleteHeader, KeyFigures } from "./athlete-header";
@@ -35,10 +36,14 @@ export const metadata: Metadata = {
 
 // Onglets de la fiche (P2-04). L'onglet est dans l'adresse (?onglet=…) ; une valeur inconnue
 // retombe sur la vue d'ensemble.
+// Ordre validé par Antonino (26/10) : le suivi au quotidien d'abord (Programme, Agenda), la saisie
+// plus rare ensuite.
 const TABS = [
   { key: "vue", label: "Vue d'ensemble" },
-  { key: "profil", label: "Profil" },
+  { key: "programme", label: "Programme" },
+  { key: "agenda", label: "Agenda" },
   { key: "objectifs", label: "Objectifs" },
+  { key: "profil", label: "Profil" },
   { key: "disponibilites", label: "Disponibilités" },
   { key: "reperes", label: "Repères" },
   { key: "notes", label: "Notes" },
@@ -47,13 +52,12 @@ const TABS = [
 type TabKey = (typeof TABS)[number]["key"];
 const tabSchema = z.enum(TABS.map((tab) => tab.key) as [TabKey, ...TabKey[]]).catch("vue");
 
-function upcomingFor(
-  sessions: Awaited<ReturnType<typeof listSessions>>,
-  goals: Awaited<ReturnType<typeof listGoals>>["current"],
-  athlete: { id: string; name: string },
-  today: string,
-): AgendaItem[] {
-  const competitions = goals.flatMap((goal) =>
+type Sessions = Awaited<ReturnType<typeof listSessions>>;
+type Goals = Awaited<ReturnType<typeof listGoals>>["current"];
+
+// Compétitions à venir du sportif (objectifs en cours avec un nom et une date), pour l'agenda.
+function competitionEvents(goals: Goals, athlete: { id: string; name: string }) {
+  return goals.flatMap((goal) =>
     goal.competitionName && goal.targetDate
       ? [
           {
@@ -71,6 +75,16 @@ function upcomingFor(
         ]
       : [],
   );
+}
+
+// Carte « Prochaines séances » : 4 séances encadrées au plus sur 30 jours, et la prochaine
+// compétition, toujours visible même quand les séances hebdomadaires remplissent la liste.
+function upcomingFor(
+  sessions: Sessions,
+  goals: Goals,
+  athlete: { id: string; name: string },
+  today: string,
+): AgendaItem[] {
   const filter = { discipline: null, athleteId: athlete.id };
   const nextSessions = buildAgendaItems(sessions, [], today, addDays(today, 30), filter).slice(
     0,
@@ -78,12 +92,25 @@ function upcomingFor(
   );
   const nextCompetition = buildAgendaItems(
     [],
-    competitions,
+    competitionEvents(goals, athlete),
     today,
     addDays(today, 730),
     filter,
   ).slice(0, 1);
   return [...nextSessions, ...nextCompetition].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// Onglet « Agenda » : tout sur les 8 prochaines semaines (56 jours).
+function agendaFor(
+  sessions: Sessions,
+  goals: Goals,
+  athlete: { id: string; name: string },
+  today: string,
+): AgendaItem[] {
+  return buildAgendaItems(sessions, competitionEvents(goals, athlete), today, addDays(today, 55), {
+    discipline: null,
+    athleteId: athlete.id,
+  });
 }
 
 export default function AthletePage({
@@ -160,6 +187,25 @@ async function AthleteSection({
             today={today}
             basePath={basePath}
           />
+        ) : tab === "agenda" ? (
+          <div className="flex w-full max-w-3xl flex-col gap-6">
+            <AthleteAgendaSection
+              name={athlete.firstName}
+              items={agendaFor(
+                await listSessions(organizationId),
+                goals,
+                { id: athlete.id, name: athlete.displayName },
+                today,
+              )}
+              today={today}
+              agendaPath={`/coach/o/${organizationId}/agenda`}
+              goalsHref={`${basePath}?onglet=objectifs`}
+            />
+          </div>
+        ) : tab === "programme" ? (
+          <div className="flex w-full max-w-3xl flex-col gap-6">
+            <AthleteProgramSection name={athlete.firstName} />
+          </div>
         ) : (
           // Les onglets de saisie gardent une largeur de lecture confortable.
           <div className="flex w-full max-w-3xl flex-col gap-6">
