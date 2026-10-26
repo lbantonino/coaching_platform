@@ -64,8 +64,8 @@ export function WeekTimeGrid({
   // de carte, filtres, en-tête des jours, légende). Calculée sur 100svh, la hauteur d'écran AVEC les barres du
   // navigateur : elle ne bouge pas quand Safari replie sa barre d'adresse pendant le défilement (avec
   // 100dvh, les cases rétrécissaient et grandissaient au défilement, demande d'Antonino du 26/10).
-  // Ordinateur : 40 px par heure, et la grille défile dans sa
-  // carte, à la hauteur de l'écran (mesurée au navigateur), ouverte près de l'heure actuelle.
+  // Ordinateur : 48 px par heure, comme la page Agenda (demande d'Antonino du 26/10 : l'agenda est la
+  // section principale du tableau de bord, il ne doit plus être tassé dans sa carte).
   fit?: boolean;
   creatable?: boolean;
   onMove?: (input: MoveSessionInput) => Promise<{ ok: boolean; error?: string }>;
@@ -104,7 +104,7 @@ export function WeekTimeGrid({
           // Téléphone : la grille va d'un bord à l'autre de l'écran (-mx-4 = marge de la page).
           className={`@container snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 ${
             fit
-              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:356px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
+              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:356px] lg:[--hour:48px]"
               : "[--hour:44px] lg:[--hour:48px]"
           }`}
           fitPage={fit}

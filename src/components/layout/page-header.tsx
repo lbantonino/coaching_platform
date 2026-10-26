@@ -61,7 +61,8 @@ export function PageBody({ grid = false, children }: { grid?: boolean; children:
   return (
     <div
       className={`px-4 pt-3 pb-[120px] lg:px-8 lg:pt-4 lg:pb-14 ${
-        grid ? "grid grid-cols-1 gap-4 lg:grid-cols-12" : "flex flex-col gap-4"
+        // Téléphone (26/10) : plus d'air entre les sections d'une page en grille (tableau de bord…).
+        grid ? "grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-4" : "flex flex-col gap-4"
       }`}
     >
       {children}
