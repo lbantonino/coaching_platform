@@ -32,6 +32,18 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Agenda sur téléphone : bouton « Vue » et semaine entière (D-47)
+```
+Date : 2026-10-26
+Demande : sur téléphone, comme Google Agenda, pouvoir voir les 7 jours de la semaine dans l'écran
+  (colonnes étroites), avec un bouton « Vue » qui incite à changer de vue (tableau de bord et Agenda)
+Fait : ViewMenu (téléphone) : Aujourd'hui, 3 jours, Semaine, Mois, choix en cours coché ; adresse
+  ?jours=7 pour la semaine entière ; WeekTimeGrid fullWeek : 7 colonnes flex, gouttière réduite,
+  séance = heure de début + titre en petit ; ordinateur inchangé (onglets)
+Tests : check OK (Vitest 158), test:e2e 120 + 6 ignorés (aide chooseAgendaView ; semaine entière
+  sur téléphone)
+```
+
 ### Démo : une semaine réaliste de 30 h pour Gianluca ; programmes en cours au tableau de bord
 ```
 Date : 2026-10-26

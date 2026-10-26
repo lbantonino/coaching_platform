@@ -14,6 +14,7 @@ import { Suspense, type ReactNode } from "react";
 import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
 import { NewSessionButton } from "@/components/blocks/new-session-sheet";
+import { ViewMenu } from "@/components/blocks/view-menu";
 import { KindBadge, WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -130,6 +131,8 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
       : "semaine";
   const kindParam = single(query.type);
   const kind: Kind = kinds.some((k) => k.key === kindParam) ? (kindParam as Kind) : "toutes";
+  // Téléphone, vue Semaine : les 7 jours dans l'écran (?jours=7) plutôt que 3 jours qui défilent.
+  const fullWeek = single(query.jours) === "7";
   const date =
     view === "aujourdhui"
       ? today
@@ -144,10 +147,11 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
       (kind === "collectives" ? session.kind === "group" : session.kind === "individual"),
   );
 
-  const href = (changes: { vue?: View; date?: string; type?: Kind }) => {
+  const href = (changes: { vue?: View; date?: string; type?: Kind; fullWeek?: boolean }) => {
     const search = new URLSearchParams();
     const nextView = changes.vue ?? view;
     if (nextView !== "semaine") search.set("vue", nextView);
+    if (nextView === "semaine" && (changes.fullWeek ?? fullWeek)) search.set("jours", "7");
     const nextDate = changes.date ?? date;
     if (nextView !== "aujourdhui" && nextDate !== today) search.set("date", nextDate);
     const nextKind = changes.type ?? kind;
@@ -189,6 +193,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         today={today}
         now={now}
         sessionHref={sessionHref}
+        fullWeek={fullWeek}
         creatable
         onMove={moveSession.bind(null, organizationId)}
       />
@@ -257,14 +262,47 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         actions={<NewSessionButton date={view === "jour" ? date : undefined} />}
       />
       <PageBody>
-        <PageTabs
-          label="Vue de l'agenda"
-          items={views.map((item) => ({
-            href: href({ vue: item.key, date: item.key === "aujourdhui" ? today : date }),
-            label: item.label,
-            active: item.key === view,
-          }))}
-        />
+        {/* Téléphone : un bouton « Vue » (Aujourd'hui, 3 jours, Semaine, Mois) ; ordinateur : onglets. */}
+        <div className="lg:hidden">
+          <ViewMenu
+            options={[
+              {
+                key: "jour",
+                label: "Aujourd'hui",
+                href: href({ vue: "aujourdhui", date: today }),
+                selected: view === "aujourdhui" || view === "jour",
+              },
+              {
+                key: "3jours",
+                label: "3 jours",
+                href: href({ vue: "semaine", fullWeek: false }),
+                selected: view === "semaine" && !fullWeek,
+              },
+              {
+                key: "semaine",
+                label: "Semaine",
+                href: href({ vue: "semaine", fullWeek: true }),
+                selected: view === "semaine" && fullWeek,
+              },
+              {
+                key: "mois",
+                label: "Mois",
+                href: href({ vue: "mois" }),
+                selected: view === "mois",
+              },
+            ]}
+          />
+        </div>
+        <div className="hidden lg:block">
+          <PageTabs
+            label="Vue de l'agenda"
+            items={views.map((item) => ({
+              href: href({ vue: item.key, date: item.key === "aujourdhui" ? today : date }),
+              label: item.label,
+              active: item.key === view,
+            }))}
+          />
+        </div>
         <KpiGrid label="Chiffres de la semaine">
           <KpiCard
             color="run"

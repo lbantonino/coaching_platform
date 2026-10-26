@@ -15,6 +15,7 @@ import { Suspense, type CSSProperties } from "react";
 
 import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
+import { ViewMenu } from "@/components/blocks/view-menu";
 import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +74,7 @@ export default function CoachHomePage({ searchParams }: PageProps<"/coach">) {
             kind={
               query.type === "individuelles" || query.type === "collectives" ? query.type : "toutes"
             }
+            fullWeek={query.jours === "7"}
           />
         ))}
       </Suspense>
@@ -121,10 +123,13 @@ async function Dashboard({
   view,
   date: dateParam,
   kind,
+  fullWeek,
 }: {
   view: AgendaView;
   date: string | undefined;
   kind: SessionKindFilter;
+  // Téléphone : semaine entière (7 colonnes étroites) plutôt que 3 jours (?jours=7).
+  fullWeek: boolean;
 }) {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
   const { user, memberships } = await requireCoach();
@@ -176,12 +181,18 @@ async function Dashboard({
   const shown = monthLayout ?? layout;
   const shownCount = shown.days.reduce((sum, day) => sum + day.blocks.length, 0);
 
-  const viewHref = (target: AgendaView, at: string = date, nextKind: SessionKindFilter = kind) => {
+  const viewHref = (
+    target: AgendaView,
+    at: string = date,
+    nextKind: SessionKindFilter = kind,
+    nextFullWeek: boolean = fullWeek,
+  ) => {
     const search = new URLSearchParams();
     if (target !== "semaine" || at !== today) {
       search.set("vue", target);
       search.set("date", at);
     }
+    if (target === "semaine" && nextFullWeek) search.set("jours", "7");
     if (nextKind !== "toutes") search.set("type", nextKind);
     const text = search.toString();
     return text ? `/coach?${text}` : "/coach";
@@ -332,14 +343,52 @@ async function Dashboard({
                   <ChevronRight aria-hidden size={18} strokeWidth={1.8} />
                 </Link>
               </nav>
-              <SegmentedNav
-                label="Vue de l'agenda"
-                items={[
-                  { href: viewHref("jour", today), label: "Aujourd'hui", active: view === "jour" },
-                  { href: viewHref("semaine"), label: "Semaine", active: view === "semaine" },
-                  { href: viewHref("mois"), label: "Mois", active: view === "mois" },
-                ]}
-              />
+              {/* Téléphone : un bouton « Vue » (Aujourd'hui, 3 jours, Semaine, Mois) ; ordinateur :
+                  les trois vues côte à côte. */}
+              <span className="lg:hidden">
+                <ViewMenu
+                  options={[
+                    {
+                      key: "jour",
+                      label: "Aujourd'hui",
+                      href: viewHref("jour", today),
+                      selected: view === "jour",
+                    },
+                    {
+                      key: "3jours",
+                      label: "3 jours",
+                      href: viewHref("semaine", date, kind, false),
+                      selected: view === "semaine" && !fullWeek,
+                    },
+                    {
+                      key: "semaine",
+                      label: "Semaine",
+                      href: viewHref("semaine", date, kind, true),
+                      selected: view === "semaine" && fullWeek,
+                    },
+                    {
+                      key: "mois",
+                      label: "Mois",
+                      href: viewHref("mois"),
+                      selected: view === "mois",
+                    },
+                  ]}
+                />
+              </span>
+              <span className="hidden lg:block">
+                <SegmentedNav
+                  label="Vue de l'agenda"
+                  items={[
+                    {
+                      href: viewHref("jour", today),
+                      label: "Aujourd'hui",
+                      active: view === "jour",
+                    },
+                    { href: viewHref("semaine"), label: "Semaine", active: view === "semaine" },
+                    { href: viewHref("mois"), label: "Mois", active: view === "mois" },
+                  ]}
+                />
+              </span>
               <Link
                 href={`${orgBase}/agenda`}
                 className="shrink-0 border-b border-line-2 pb-px text-[13px] text-muted transition-colors duration-150 hover:text-text lg:ml-2"
@@ -369,6 +418,7 @@ async function Dashboard({
               today={today}
               now={now}
               single={view === "jour"}
+              fullWeek={fullWeek}
               fit
               creatable
               onMove={moveSession.bind(null, current.organizationId)}

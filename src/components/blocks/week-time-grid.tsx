@@ -44,6 +44,7 @@ export function WeekTimeGrid({
   now,
   sessionHref,
   single = false,
+  fullWeek = false,
   fit = false,
   creatable = false,
   onMove,
@@ -54,6 +55,10 @@ export function WeekTimeGrid({
   now: string;
   sessionHref: (sessionId: string) => string;
   single?: boolean;
+  // Téléphone, vue « Semaine » (demande d'Antonino du 26/10, comme Google Agenda) : les 7 jours tiennent
+  // dans l'écran, en colonnes étroites ; chaque séance se réduit à son heure et son titre. Sans cette
+  // option, le téléphone montre 3 jours et l'on fait glisser. L'ordinateur montre toujours 7 jours.
+  fullWeek?: boolean;
   // Tableau de bord (demandes d'Antonino). Téléphone : la hauteur d'une heure s'adapte pour que la
   // carte entière tienne dans la hauteur visible (26–44 px ; --grid-chrome = barre du haut, en-tête
   // de carte, filtres, en-tête des jours, légende). Calculée sur 100svh, la hauteur d'écran AVEC les barres du
@@ -84,9 +89,10 @@ export function WeekTimeGrid({
   const dates = layout.days.map((day) => day.date);
   const yesterday = addDays(today, -1);
   const start = dates.includes(yesterday) ? yesterday : dates.includes(today) ? today : dates[0];
-  const column = single
-    ? "min-w-0 flex-1"
-    : "w-[104px] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:flex-1";
+  const column =
+    single || fullWeek
+      ? "min-w-0 flex-1"
+      : "w-[104px] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:flex-1";
 
   return (
     <GridInteractions move={onMove}>
@@ -100,9 +106,13 @@ export function WeekTimeGrid({
           fitPage={fit}
           scrollHour={scrollHour}
         >
-          <div className={`flex ${single ? "w-full" : "w-max min-w-full lg:w-full"}`}>
+          <div className={`flex ${single || fullWeek ? "w-full" : "w-max min-w-full lg:w-full"}`}>
             {/* Heures, collées à gauche pendant le défilement. */}
-            <div data-gutter aria-hidden className="sticky left-0 z-20 w-12 shrink-0 bg-surface">
+            <div
+              data-gutter
+              aria-hidden
+              className={`sticky left-0 z-20 shrink-0 bg-surface ${fullWeek ? "w-9 lg:w-12" : "w-12"}`}
+            >
               <div
                 className={`sticky top-0 z-[15] h-14 border-b border-line bg-surface ${fit ? "lg:h-11" : ""}`}
               />
@@ -110,7 +120,9 @@ export function WeekTimeGrid({
                 {hours.map((hour, index) => (
                   <span
                     key={hour}
-                    className="absolute inset-x-0 text-center font-mono text-[11px] text-muted tabular"
+                    className={`absolute inset-x-0 text-center font-mono text-muted tabular ${
+                      fullWeek ? "text-[9px] lg:text-[11px]" : "text-[11px]"
+                    }`}
                     style={{
                       top: at(hour - layout.firstHour),
                       transform:
@@ -147,7 +159,11 @@ export function WeekTimeGrid({
                     <span
                       className={`text-[12px] whitespace-nowrap ${isToday ? "" : "text-muted"}`}
                     >
-                      {name} {formatHoursShort(day.minutes)}
+                      {name}
+                      <span className={fullWeek ? "max-lg:hidden" : ""}>
+                        {" "}
+                        {formatHoursShort(day.minutes)}
+                      </span>
                     </span>
                     <span className="font-display text-[18px] leading-tight font-semibold tabular">
                       {number}
@@ -213,44 +229,66 @@ export function WeekTimeGrid({
                               : "outline-1 -outline-offset-1 outline-[var(--c)] outline-dashed"
                           } ${
                             compactPhone ? "max-lg:justify-center max-lg:py-0.5" : "max-lg:py-1"
-                          } ${compactDesktop ? "lg:justify-center lg:py-0" : "lg:py-1"}`}
+                          } ${compactDesktop ? "lg:justify-center lg:py-0" : "lg:py-1"} ${
+                            fullWeek ? "max-lg:justify-start max-lg:px-0.5 max-lg:py-0.5" : ""
+                          }`}
                         >
-                          {compactPhone || compactDesktop ? (
+                          {fullWeek ? (
+                            // Semaine entière sur téléphone : l'heure de début et le titre, en petit.
+                            <span className="flex min-w-0 flex-col lg:hidden">
+                              <span className="font-mono text-[9px] leading-tight text-[var(--c)] tabular">
+                                {block.label.slice(0, 5)}
+                              </span>
+                              <span className="line-clamp-3 overflow-hidden text-[10px] leading-tight font-semibold">
+                                {block.title}
+                              </span>
+                            </span>
+                          ) : null}
+                          <span className={fullWeek ? "contents max-lg:hidden" : "contents"}>
+                            {compactPhone || compactDesktop ? (
+                              <span
+                                className={`truncate text-[12px] leading-tight ${compactPhone ? "" : "max-lg:hidden"} ${compactDesktop ? "" : "lg:hidden"}`}
+                              >
+                                {block.individual ? null : (
+                                  <Users
+                                    aria-hidden
+                                    size={10}
+                                    strokeWidth={2.4}
+                                    className="mr-0.5 inline align-[-1px] text-[var(--c)]"
+                                  />
+                                )}
+                                <span className="font-mono text-[11px] text-[var(--c)] tabular">
+                                  {block.label.slice(0, 5)}
+                                </span>{" "}
+                                <span className="font-semibold">{block.title}</span>
+                              </span>
+                            ) : null}
                             <span
-                              className={`truncate text-[12px] leading-tight ${compactPhone ? "" : "max-lg:hidden"} ${compactDesktop ? "" : "lg:hidden"}`}
+                              className={`flex items-center gap-1 truncate font-mono text-[11px] leading-tight text-[var(--c)] tabular ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
                             >
                               {block.individual ? null : (
                                 <Users
                                   aria-hidden
-                                  size={10}
+                                  size={11}
                                   strokeWidth={2.4}
-                                  className="mr-0.5 inline align-[-1px] text-[var(--c)]"
+                                  className="shrink-0"
                                 />
                               )}
-                              <span className="font-mono text-[11px] text-[var(--c)] tabular">
-                                {block.label.slice(0, 5)}
-                              </span>{" "}
-                              <span className="font-semibold">{block.title}</span>
+                              {block.label.replace(" - ", " – ")}
                             </span>
-                          ) : null}
-                          <span
-                            className={`flex items-center gap-1 truncate font-mono text-[11px] leading-tight text-[var(--c)] tabular ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
-                          >
-                            {block.individual ? null : (
-                              <Users aria-hidden size={11} strokeWidth={2.4} className="shrink-0" />
-                            )}
-                            {block.label.replace(" - ", " – ")}
-                          </span>
-                          <span
-                            className={`truncate text-[12px] leading-tight font-semibold ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
-                          >
-                            {block.title}
-                          </span>
-                          {roomy ? (
-                            <span className="truncate text-[11px] leading-tight text-muted">
-                              {block.individual ? block.subtitle : `Collective · ${block.subtitle}`}
+                            <span
+                              className={`truncate text-[12px] leading-tight font-semibold ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
+                            >
+                              {block.title}
                             </span>
-                          ) : null}
+                            {roomy ? (
+                              <span className="truncate text-[11px] leading-tight text-muted">
+                                {block.individual
+                                  ? block.subtitle
+                                  : `Collective · ${block.subtitle}`}
+                              </span>
+                            ) : null}
+                          </span>
                         </DraggableBlock>
                       );
                     })}
@@ -277,7 +315,9 @@ export function WeekTimeGrid({
               `1 jour · ${span} heures visibles`
             ) : (
               <>
-                <span className="lg:hidden">Glisse pour changer de jour</span>
+                <span className="lg:hidden">
+                  {fullWeek ? "7 jours" : "Glisse pour changer de jour"}
+                </span>
                 <span className="hidden lg:inline">7 jours · {span} heures visibles</span>
               </>
             )}
