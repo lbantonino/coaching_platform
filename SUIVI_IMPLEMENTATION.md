@@ -78,6 +78,11 @@ Fait : page Agenda, vue du jour = WeekTimeGrid single (56 px / heure, nom du spo
   par jour, barre verticale et titre (aujourd'hui rouge, demain ambre, ensuite gris)
 Tests : check OK (Vitest 158), test:e2e 120 + 6 ignorés (vue du jour : le bloc porte le nom du
   sportif, plus « Avec … »)
+Retouche du soir (26/10) : sur téléphone, la grille du tableau de bord ne s'adapte plus à la
+  hauteur de l'écran (« beaucoup trop petite en hauteur ») : mêmes réglages que la page Agenda,
+  44 px par heure, 56 px en vue du jour, heure et nom sur deux lignes, détail quand le bloc est
+  assez haut ; `fit` ne garde que ses effets ordinateur (48 px, en-tête bas, blocs de 45 min sur une
+  ligne, défilement dans la carte). test:e2e 122 + 6 ignorés
 Reste : lier la carte Encaissé à la future comptabilité des forfaits (attente du retour de Gianluca)
 ```
 
