@@ -412,6 +412,11 @@ update public.athlete_goals as g
                         else greatest(g.target_date::timestamptz + interval '1 day', p.created_at + interval '1 day') end
   from public.athlete_profiles as p
   where p.id = g.athlete_id;
+-- Temps visés (26/10/2026) : Thomas vise son semi en 1:44:30, Inès Hyrox Bruxelles en 1:15:00.
+update public.athlete_goals set target_time_seconds = 6270
+  where athlete_id = 'da000000-0000-4000-8000-000000000002' and competition_name = 'Semi-marathon de printemps';
+update public.athlete_goals set target_time_seconds = 4500
+  where athlete_id = 'da000000-0000-4000-8000-000000000003' and competition_name = 'Hyrox Bruxelles';
 alter table public.athlete_goals enable trigger set_updated_at;
 
 -- Séances encadrées du coach (P2-05b, D-27), inventées : deux collectives chaque semaine avec leurs

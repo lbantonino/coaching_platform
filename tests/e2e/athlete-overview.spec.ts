@@ -62,3 +62,44 @@ test("la recherche du haut trouve un sportif, quel que soit son statut", async (
     "Kevin Mertens",
   );
 });
+
+test("la fiche propose « Créer un programme », le menu « ••• » et les prochaines séances", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+  await page.goto(`/coach/o/${ORG_A}/sportifs/${INES}`);
+  await expect(page.getByRole("heading", { name: "Inès Benali", level: 1 })).toBeVisible();
+  const main = page.getByRole("main");
+
+  // En-tête (26/10) : plus d'étiquette d'accès ; « Créer un programme » mène aux programmes.
+  await expect(main.getByText(/^(Compte activé|Sans compte)$/)).toHaveCount(0);
+  await expect(main.getByRole("link", { name: "Créer un programme" })).toHaveAttribute(
+    "href",
+    "/coach/programmes",
+  );
+
+  // Prochaines séances : ses compétitions à venir y figurent (Hyrox Gent en décembre).
+  await expect(main.getByRole("region", { name: "Prochaines séances" })).toContainText(
+    "Hyrox Gent",
+  );
+  // Temps visé de son objectif principal.
+  await expect(main.getByRole("region", { name: "Objectif actuel" })).toContainText(
+    "Temps visé 1:15:00",
+  );
+
+  // « ••• » : les actions de la liste ; Inès a un compte, donc « Écrire un message ».
+  await main.getByRole("button", { name: "Actions pour Inès Benali" }).click();
+  const menu = page.getByRole("dialog", { name: "Inès Benali" });
+  await expect(menu.getByRole("button", { name: "Écrire un message" })).toBeVisible();
+  await menu.getByRole("button", { name: "Changer le type de programme" }).click();
+  const type = page.getByRole("dialog", { name: "Programme de Inès Benali" });
+  await expect(type.getByRole("button", { name: "Hyrox" })).toHaveAttribute("aria-current", "true");
+  await type.getByRole("button", { name: "Retour" }).click();
+  await menu.getByRole("button", { name: "Modifier l'objectif" }).click();
+  await expect(page).toHaveURL(/onglet=objectifs/);
+  await expect(page.getByText("Temps visé 1:15:00")).toBeVisible();
+});

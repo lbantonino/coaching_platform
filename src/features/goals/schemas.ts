@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Discipline } from "@/domain/training/discipline";
+import { parseDuration } from "@/domain/training/vma";
 
 // Objectifs et compétitions (P2-02 partie 2). Listes alignées sur les contraintes CHECK de
 // supabase/migrations/*_objectifs_sportifs.sql : ajouter une valeur = migration + libellé ici.
@@ -76,6 +77,8 @@ export type GoalFormInput = {
   goalType: string;
   priority: string;
   targetDate: string;
+  // Temps visé saisi « 1:15:00 » ou « 45:00 » (facultatif).
+  targetTime: string;
   isCompetition: boolean;
   competitionName: string;
   competitionLocation: string;
@@ -87,6 +90,7 @@ export type GoalValues = {
   goal_type: GoalType;
   priority: GoalPriority;
   target_date: string | null;
+  target_time_seconds: number | null;
   competition_name: string | null;
   competition_location: string | null;
   hyrox_category: HyroxCategory | null;
@@ -128,6 +132,14 @@ export function parseGoalForm(
     if (targetDate < today) return { ok: false, error: "La date de l'objectif est déjà passée." };
   }
 
+  // Temps visé : « 1:15:00 » ou « 45:00 » ; entre 1 minute et 24 heures (comme la base).
+  let targetTimeSeconds: number | null = null;
+  if (input.targetTime.trim() !== "") {
+    targetTimeSeconds = parseDuration(input.targetTime);
+    if (targetTimeSeconds === null || targetTimeSeconds < 60 || targetTimeSeconds > 86_400)
+      return { ok: false, error: "Temps visé invalide : écris-le comme 1:15:00 ou 45:00." };
+  }
+
   let competitionName: string | null = null;
   let competitionLocation: string | null = null;
   let hyroxCategory: HyroxCategory | null = null;
@@ -150,6 +162,7 @@ export function parseGoalForm(
       goal_type: goalType,
       priority,
       target_date: targetDate,
+      target_time_seconds: targetTimeSeconds,
       competition_name: competitionName,
       competition_location: competitionLocation,
       hyrox_category: hyroxCategory,

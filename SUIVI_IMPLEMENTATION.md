@@ -32,6 +32,24 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Fiche sportif, point 1 de l'audit du 26/10 (D-42)
+```
+Date : 2026-10-26
+Demande (audit du tableau de bord et des sportifs) : bouton « Créer un programme » sur la fiche,
+  voir ce que le sportif a à faire, en-tête cohérent avec la liste, temps visé des objectifs
+Fait : en-tête : rouge « Créer un programme » (→ /coach/programmes tant que le module n'existe pas ;
+  plus tard l'assistant pré-rempli avec ce sportif), « Inviter dans son espace » sur ordinateur,
+  menu « ••• » (AthleteFicheMenu : statut, type, objectif, fiche, écrire / inviter, flèche Retour),
+  étiquettes « Compte activé / Sans compte » retirées ; vue d'ensemble : carte « Prochaines séances »
+  en premier (4 séances encadrées sur 30 jours via buildAgendaItems filtré sur le sportif + sa
+  prochaine compétition toujours visible ; « Aujourd'hui » surligné) ; grille limitée à la largeur
+  de l'écran (grid-cols-1 : la carte débordait sur téléphone) ; objectifs : migration
+  20261026100000 (target_time_seconds, 1 min à 24 h), champ « Temps visé » (1:15:00 ou 45:00) à
+  l'ajout et à la modification, affiché sur les cartes ; seed : Thomas 1:44:30, Inès 1:15:00
+Tests : check OK (Vitest 155 : temps visé), db:test 265, test:e2e 118 + 6 ignorés (nouveau test de
+  la fiche : bouton, menu, prochaines séances, temps visé)
+```
+
 ### Téléphone : filtres compacts, vue d'ensemble lisible, objectifs modifiables (D-41)
 ```
 Date : 2026-10-26

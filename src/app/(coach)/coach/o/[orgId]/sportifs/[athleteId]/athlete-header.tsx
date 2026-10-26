@@ -3,6 +3,7 @@ import {
   Clock,
   Flag,
   MessageCircle,
+  Plus,
   Target,
   UserPen,
   type LucideIcon,
@@ -26,16 +27,23 @@ import { disciplineStyles } from "@/domain/training/discipline";
 import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { daysBetween, formatDate, formatDay } from "@/lib/format";
 
+import { AthleteFicheMenu } from "./athlete-fiche-menu";
+
 const statusTone = { active: "ok", paused: "warn", archived: "neutral" } as const;
 
-// En-tête de la fiche (prompt Claude Design §5.2, en-tête de page) : retour vers la liste, nom et
-// repère ♀ / ♂, statuts, action « Inviter dans son espace ».
+// En-tête de la fiche (prompt Claude Design §7.2) : retour vers la liste, nom et repère ♀ / ♂,
+// statut, niveau ; rouge « Créer un programme » (cœur de Coory : on crée un programme depuis le
+// sportif ; tant que le module n'existe pas, le bouton ouvre la page Programmes), « Inviter dans son
+// espace » sur ordinateur, et « ••• » avec les mêmes actions que la liste (demande du 26/10).
+// L'accès à son espace n'est plus écrit en toutes lettres (comme dans la liste, D-39).
 export function AthleteHeader({
   athlete,
+  organizationId,
   listPath,
   invitePath,
 }: {
   athlete: AthleteDetail;
+  organizationId: string;
   listPath: string;
   invitePath: string;
 }) {
@@ -63,18 +71,36 @@ export function AthleteHeader({
           {athlete.level ? (
             <Badge>Niveau {athleteLevelLabels[athlete.level].toLowerCase()}</Badge>
           ) : null}
-          <Badge tone={athlete.hasAccount ? "ok" : "neutral"}>
-            {athlete.hasAccount ? "Compte activé" : "Sans compte"}
-          </Badge>
           <span className="text-[13px] text-muted">Ajouté le {formatDay(athlete.createdAt)}</span>
         </span>
       }
       actions={
-        athlete.hasAccount || athlete.status === "archived" ? null : (
-          <Link href={invitePath} className={buttonClass({ variant: "outline" })}>
-            Inviter dans son espace
+        // Un seul conteneur : sur téléphone, le bouton rouge prend la place et « ••• » garde sa taille.
+        <div className="flex items-center gap-2">
+          {athlete.hasAccount || athlete.status === "archived" ? null : (
+            <Link
+              href={invitePath}
+              className={buttonClass({ variant: "outline", className: "max-lg:hidden" })}
+            >
+              Inviter dans son espace
+            </Link>
+          )}
+          <Link href="/coach/programmes" className={buttonClass({ className: "max-lg:flex-1" })}>
+            <Plus aria-hidden size={16} strokeWidth={2} />
+            Créer un programme
           </Link>
-        )
+          <AthleteFicheMenu
+            organizationId={organizationId}
+            athlete={{
+              id: athlete.id,
+              name: athlete.displayName,
+              status: athlete.status,
+              programType: athlete.programType,
+              hasAccount: athlete.hasAccount,
+            }}
+            basePath={`${listPath}/${athlete.id}`}
+          />
+        </div>
       }
     />
   );

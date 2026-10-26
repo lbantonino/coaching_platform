@@ -61,7 +61,7 @@ export type AthleteTableRow = {
 
 export type SortColumn = "sportif" | "statut" | "type" | "objectif";
 
-const statusChoices: { status: AthleteStatus; label: string; icon: LucideIcon }[] = [
+export const statusChoices: { status: AthleteStatus; label: string; icon: LucideIcon }[] = [
   { status: "active", label: "Actif", icon: CirclePlay },
   { status: "paused", label: "En pause", icon: CirclePause },
   { status: "archived", label: "Archivé", icon: Archive },
