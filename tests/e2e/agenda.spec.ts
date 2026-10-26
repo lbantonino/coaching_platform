@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { goToCoachSection } from "./helpers";
+import { chooseAgendaView, goToCoachSection, isPhone } from "./helpers";
 
 // Agenda du coach (P2-05, refonte 4a) et tableau de bord, sur les données du seed (supabase/seed.sql).
 // Les mois sont fixés dans l'adresse pour que le test ne dépende pas de la date du jour.
@@ -24,8 +24,21 @@ test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, filtres, et aucune co
   await goToCoachSection(page, "Agenda");
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: /^Semaine du/ })).toBeVisible();
-  const views = page.getByRole("navigation", { name: "Vue de l'agenda" });
-  await expect(views.getByRole("link")).toHaveText(["Aujourd'hui", "Semaine", "Mois"]);
+  // Vues : onglets sur ordinateur ; bouton « Vue » sur téléphone, avec aussi « 3 jours ».
+  if (isPhone(page)) {
+    await page.getByRole("button", { name: /^Vue : / }).click();
+    const menu = page.getByRole("dialog", { name: "Vue de l'agenda" });
+    await expect(menu.getByRole("button")).toContainText([
+      "Aujourd'hui",
+      "3 jours",
+      "Semaine",
+      "Mois",
+    ]);
+    await menu.getByRole("button", { name: "Fermer" }).click();
+  } else {
+    const views = page.getByRole("navigation", { name: "Vue de l'agenda" });
+    await expect(views.getByRole("link")).toHaveText(["Aujourd'hui", "Semaine", "Mois"]);
+  }
   const filters = page.getByRole("navigation", { name: "Filtrer l'agenda" });
   await expect(filters.getByRole("link")).toHaveText(["Toutes", "Individuelles", "Collectives"]);
 
@@ -81,19 +94,27 @@ test("l'agenda du tableau de bord passe du jour à la semaine et au mois sans qu
   page,
 }) => {
   await loginAsCoachA(page);
-  const views = page.getByRole("navigation", { name: "Vue de l'agenda" });
-  await views.getByRole("link", { name: "Mois" }).click();
+  await chooseAgendaView(page, "Mois");
   await expect(page).toHaveURL(/\/coach\?vue=mois/);
   // Un jour du mois ouvre sa journée, toujours sur le tableau de bord.
   await page.getByRole("link", { name: /^15 :/ }).click();
   await expect(page).toHaveURL(/\/coach\?vue=jour&date=\d{4}-\d{2}-15/);
-  await expect(views.getByRole("link", { name: "Aujourd'hui" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-  await views.getByRole("link", { name: "Semaine" }).click();
+  if (isPhone(page)) {
+    await expect(page.getByRole("button", { name: /^Vue : Aujourd'hui/ })).toBeVisible();
+    // Semaine entière sur téléphone : les 7 jours dans l'écran (?jours=7).
+    await chooseAgendaView(page, "Semaine");
+    await expect(page).toHaveURL(/jours=7/);
+    await expect(page.getByText("7 jours", { exact: true })).toBeVisible();
+  } else {
+    await expect(
+      page
+        .getByRole("navigation", { name: "Vue de l'agenda" })
+        .getByRole("link", { name: "Aujourd'hui" }),
+    ).toHaveAttribute("aria-current", "page");
+    await chooseAgendaView(page, "Semaine");
+  }
   await expect(page.getByRole("heading", { name: /^Semaine du/, level: 2 })).toBeVisible();
-  await views.getByRole("link", { name: "Mois" }).click();
+  await chooseAgendaView(page, "Mois");
   await expect(page.getByRole("link", { name: /^15 :/ })).toBeVisible();
 });
 

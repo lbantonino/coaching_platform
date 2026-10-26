@@ -92,3 +92,25 @@ export async function chooseAthleteFilter(
     .getByRole("link", { name: new RegExp(`^${label}`) })
     .click();
 }
+
+// Vue de l'agenda (tableau de bord, page Agenda) : onglets sur ordinateur ; sur téléphone, bouton
+// « Vue » qui ouvre le choix Aujourd'hui, 3 jours, Semaine, Mois (demande d'Antonino du 26/10).
+export async function chooseAgendaView(
+  page: Page,
+  label: "Aujourd'hui" | "3 jours" | "Semaine" | "Mois",
+) {
+  if (isPhone(page)) {
+    await page.getByRole("button", { name: /^Vue : / }).click();
+    await page
+      .getByRole("dialog", { name: "Vue de l'agenda" })
+      .getByRole("button", { name: label, exact: true })
+      .click();
+    return;
+  }
+  await page
+    .getByRole("navigation", { name: "Vue de l'agenda" })
+    .getByRole("link", { name: label, exact: true })
+    .click();
+}
+
+export { isPhone };
