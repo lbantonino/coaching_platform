@@ -121,7 +121,15 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await openAthleteTab(page, "Agenda");
   await expect(page.getByRole("heading", { name: "Programme hebdomadaire" })).toBeVisible();
   const firstWeek = page.getByRole("region", { name: "Semaine du 26 oct. au 1 nov." });
-  await expect(firstWeek).toContainText("5 séances à répartir librement sur la semaine");
+  // Ses 5 séances par semaine COMPRENNENT ses 2 rendez-vous avec le coach (pas 5 + 2) : coaching du
+  // mardi 7 h et circuit collectif du samedi 10 h, affichés sur la carte de la séance.
+  await expect(firstWeek).toContainText("5 séances : 2 avec le coach, 3 à placer librement");
+  await expect(firstWeek.getByRole("listitem").filter({ hasText: "Renfo Hyrox" })).toContainText(
+    /Avec le coach · .* 07:00/,
+  );
+  await expect(firstWeek.getByRole("listitem").filter({ hasText: "Circuit Hyrox" })).toContainText(
+    /Avec le coach · Sam 31 10:00/,
+  );
   await expect(firstWeek.getByRole("listitem").filter({ hasText: /^Séance/ })).toHaveCount(5);
   await expect(page.getByRole("region", { name: /^Semaine du / })).toHaveCount(12);
 

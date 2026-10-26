@@ -12,8 +12,9 @@ import { dayShortLabel } from "@/lib/format";
 
 // Onglet « Agenda » quand le sportif a un programme (D-46, maquettes d'Antonino du 26/10) : le
 // programme semaine par semaine, comme le tableur du coach. Une ligne par semaine, ses séances
-// numérotées SANS jour : le sportif les fait dans l'ordre et aux jours qu'il choisit. Sous chaque
-// semaine, ses séances avec le coach (ex. BeHybrid 19 h) et ses compétitions, qui ont, elles, un jour.
+// numérotées SANS jour : le sportif les fait dans l'ordre et aux jours qu'il choisit. Une séance faite
+// AVEC le coach (withCoach) l'indique sur sa carte avec son rendez-vous (« Avec le coach · Mar 07:00 ») :
+// elle compte dans les séances de la semaine. Sous la semaine : ses compétitions.
 // Ordinateur : les séances d'une semaine côte à côte ; téléphone : l'une sous l'autre.
 
 const dayMonth = new Intl.DateTimeFormat("fr-BE", {
@@ -28,7 +29,17 @@ export function weekRange(week: { monday: string; sunday: string }): string {
   return `Semaine du ${dayMonth.format(utc(week.monday))} au ${dayMonth.format(utc(week.sunday))}`;
 }
 
-function SessionCard({ session, href }: { session: ProgramSessionCard; href: string }) {
+// `coachSlot` : séance faite avec le coach (withCoach) ; son jour et son heure cette semaine
+// (« Mar 07:00 »), ou null si le rendez-vous n'a pas lieu cette semaine-là.
+function SessionCard({
+  session,
+  href,
+  coachSlot,
+}: {
+  session: ProgramSessionCard;
+  href: string;
+  coachSlot: string | null | undefined;
+}) {
   const { content } = session;
   const Icon = content.discipline ? disciplineIcons[content.discipline] : ListChecks;
   const styles = content.discipline ? disciplineStyles[content.discipline] : null;
@@ -69,6 +80,12 @@ function SessionCard({ session, href }: { session: ProgramSessionCard; href: str
         <span className={`text-[16px] leading-snug font-semibold ${styles?.text ?? ""}`}>
           {content.title}
         </span>
+        {coachSlot !== undefined ? (
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-surface px-2 py-0.5 text-[12px] font-medium">
+            <Users aria-hidden size={12} strokeWidth={2} />
+            {coachSlot ? `Avec le coach · ${coachSlot}` : "Avec le coach"}
+          </span>
+        ) : null}
         <span className="flex flex-col text-[13px] leading-snug text-muted">
           {sessionSummary(content).map((line) => (
             <span key={line} className="truncate">
@@ -97,7 +114,8 @@ function SessionCard({ session, href }: { session: ProgramSessionCard; href: str
   );
 }
 
-// Séances avec le coach et compétitions de la semaine : elles, ont un jour.
+// Sous la semaine : ses compétitions, et une séance avec le coach qui ne correspond à aucune séance
+// du programme (rendez-vous en plus). Chaque ligne dit ce qu'elle est, avec son jour.
 function WeekCoachItems({
   items,
   today,
@@ -111,7 +129,7 @@ function WeekCoachItems({
 }) {
   if (items.length === 0) return null;
   return (
-    <ul aria-label="Avec le coach et compétitions" className="flex flex-wrap gap-2">
+    <ul aria-label="Compétitions et rendez-vous de la semaine" className="flex flex-wrap gap-2">
       {items.map((item) => (
         <li key={item.key}>
           <Link
@@ -123,6 +141,9 @@ function WeekCoachItems({
             ) : (
               <Users aria-hidden size={13} strokeWidth={2} className="text-muted" />
             )}
+            <span className="text-muted">
+              {item.type === "event" ? "Compétition" : "Avec le coach, en plus"}
+            </span>
             <span className="font-mono text-[12px] text-muted tabular">
               {dayShortLabel(item.date, today)}
               {item.type === "session" ? ` ${item.time}` : ""}
@@ -150,6 +171,25 @@ function WeekCard({
 }) {
   const current = today >= week.monday && today <= week.sunday;
   const count = week.sessions.length;
+  // Séances du programme faites avec le coach : leur rendez-vous de la semaine (jour et heure).
+  const coachSlots = new Map<string, string | null>();
+  const linked = new Set<string>();
+  for (const session of week.sessions) {
+    const coachSessionId = session.content.withCoach?.sessionId;
+    if (!coachSessionId) continue;
+    const meeting = coachItems.find(
+      (item) => item.type === "session" && item.sessionId === coachSessionId,
+    );
+    if (meeting) linked.add(meeting.key);
+    coachSlots.set(
+      session.id,
+      meeting && meeting.type === "session"
+        ? `${dayShortLabel(meeting.date, today)} ${meeting.time}`
+        : null,
+    );
+  }
+  const withCoach = coachSlots.size;
+  const others = coachItems.filter((item) => !linked.has(item.key));
   return (
     <section
       aria-label={weekRange(week)}
@@ -163,7 +203,9 @@ function WeekCard({
           <p className="text-[13px] text-muted">
             {count === 0
               ? "Semaine de repos"
-              : `${plural(count, "séance")} à répartir librement sur la semaine`}
+              : withCoach === 0
+                ? `${plural(count, "séance")} à répartir librement sur la semaine`
+                : `${plural(count, "séance")} : ${withCoach} avec le coach, ${count - withCoach} à placer librement`}
           </p>
         </div>
         <span className="flex flex-wrap items-center gap-1.5">
@@ -186,13 +228,17 @@ function WeekCard({
         >
           {week.sessions.map((session) => (
             <li key={session.id} className="flex min-w-0">
-              <SessionCard session={session} href={`${basePath}/programme/${session.id}`} />
+              <SessionCard
+                session={session}
+                href={`${basePath}/programme/${session.id}`}
+                coachSlot={coachSlots.has(session.id) ? coachSlots.get(session.id) : undefined}
+              />
             </li>
           ))}
         </ol>
       ) : null}
       <WeekCoachItems
-        items={coachItems}
+        items={others}
         today={today}
         agendaPath={agendaPath}
         goalsHref={`${basePath}?onglet=objectifs`}

@@ -32,6 +32,29 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Audit de cohérence du jeu de démo (D-48)
+```
+Date : 2026-10-26
+Demande : toutes les données doivent être cohérentes entre elles (ex. Inès : 5 séances voulues
+  mais 5 séances de programme + 8 rendez-vous avec le coach, dont un le mercredi, jour sans
+  entraînement ; étiquettes incompréhensibles sous la semaine)
+Audit : AUCUN sportif cohérent (Inès 8 séances avec le coach pour 5 voulues, Lucas 9 pour 4,
+  Sophie 6 pour 2, Nadia 6 pour 4, Thomas 7 pour 4 + test VMA un jour indisponible)
+Règle : N séances voulues par semaine = N au total, sur SES jours ; une séance avec le coach
+  (individuelle ou collective) compte dans les N, elle ne s'y ajoute pas
+Fait : semaine type régénérée par un script qui VÉRIFIE (aucun chevauchement pour le coach, jours
+  respectés, jamais plus de rendez-vous que de séances voulues) : 22 individuelles + 6 collectives,
+  30 h 15 par semaine ; 10 sportifs de démo INVENTÉS ajoutés (clientèle d'un coach à 30 h), avec
+  jours, séances voulues, type de programme et objectif ; Manon : 2 séances (lun, mer) ; test VMA de
+  Thomas au dimanche ; Sophie « à partir de 17 h » ; séances de Lucas renommées « Coaching
+  hybride » ; programme d'Inès relié à ses rendez-vous (withCoach : séance 1 = coaching du mardi
+  7 h, séance 4 = circuit du samedi) ; carte « Avec le coach · Mar 07:00 », en-tête « 5 séances : 2
+  avec le coach, 3 à placer librement », sous la semaine seulement les compétitions, nommées
+Vérifié : requête d'audit (16 sportifs actifs : rendez-vous ≤ séances voulues, jours respectés),
+  factures, paiements, tâches et messages liés à des sportifs actifs, messages seulement de comptes
+  activés. Tests : db:test 273, check OK (Vitest 158), test:e2e 120 + 6 ignorés
+```
+
 ### Agenda sur téléphone : bouton « Vue » et semaine entière (D-47)
 ```
 Date : 2026-10-26
