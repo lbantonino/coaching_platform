@@ -72,7 +72,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   await page.getByLabel("Rechercher un sportif").fill(suffix);
   await page.getByLabel("Rechercher un sportif").press("Enter");
   // Filtre « Tous » par défaut (maquette du 24/10) : il reste visible, marqué « Archivé ».
-  await expect(list.getByRole("button", { name: /^Statut : Archivé/ })).toBeVisible();
+  await expect(list.getByRole("listitem").filter({ hasText: renamed })).toContainText("Archivé");
   await chooseAthleteFilter(page, "Statut", "Actifs");
   await expect(page.getByText(/Aucun sportif ne correspond/)).toBeVisible();
 

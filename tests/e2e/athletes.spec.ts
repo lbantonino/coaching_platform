@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { chooseAthleteFilter, fillAthleteName, goToCoachSection } from "./helpers";
+import { chooseAthleteFilter, fillAthleteName, goToCoachSection, isPhone } from "./helpers";
 
 const DEMO_PASSWORD = "demo-coach-local";
 // Identifiants fixes du seed (supabase/seed.sql).
@@ -164,8 +164,26 @@ test("le statut et le type de programme se changent d'un appui sur leur pastille
     .getByRole("listitem")
     .filter({ hasText: name });
 
-  // Statut : la pastille ouvre le choix, le statut en cours est coché.
-  await row.getByRole("button", { name: `Statut : Actif. Changer le statut de ${name}` }).click();
+  // Ordinateur : la pastille ouvre le choix. Téléphone : les pastilles ne sont que des repères
+  // (un appui sur la carte ouvre la fiche) ; on passe par « ••• » (demande d'Antonino du 26/10).
+  const phone = isPhone(page);
+  const openChoice = async (kind: "statut" | "type", pill: string) => {
+    if (!phone) return row.getByRole("button", { name: pill }).click();
+    await row.getByRole("button", { name: `Actions pour ${name}` }).click();
+    await page
+      .getByRole("dialog", { name })
+      .getByRole("button", {
+        name: kind === "statut" ? "Changer le statut" : "Changer le type de programme",
+      })
+      .click();
+  };
+  const shows = (label: string, pill: RegExp) =>
+    phone
+      ? row.getByText(label, { exact: true }).filter({ visible: true })
+      : row.getByRole("button", { name: pill });
+
+  // Statut : le choix s'ouvre, le statut en cours est coché.
+  await openChoice("statut", `Statut : Actif. Changer le statut de ${name}`);
   const statusMenu = page.getByRole("dialog", { name: `Statut de ${name}` });
   await expect(statusMenu.getByRole("button", { name: "Actif" })).toHaveAttribute(
     "aria-current",
@@ -173,16 +191,16 @@ test("le statut et le type de programme se changent d'un appui sur leur pastille
   );
   await statusMenu.getByRole("button", { name: "En pause" }).click();
   await expect(page.getByText(`Statut de ${name} : en pause.`)).toBeVisible();
-  await expect(row.getByRole("button", { name: /^Statut : En pause/ })).toBeVisible();
+  await expect(shows("En pause", /^Statut : En pause/)).toBeVisible();
 
   // Type de programme : pas encore choisi, puis Hybride.
-  await row.getByRole("button", { name: `Choisir le programme de ${name}` }).click();
+  await openChoice("type", `Choisir le programme de ${name}`);
   await page
     .getByRole("dialog", { name: `Programme de ${name}` })
     .getByRole("button", { name: "Hybride" })
     .click();
   await expect(page.getByText(`Programme de ${name} : Hybride.`)).toBeVisible();
-  await expect(row.getByRole("button", { name: /^Programme : Hybride/ })).toBeVisible();
+  await expect(shows("Hybride", /^Programme : Hybride/)).toBeVisible();
 
   // Actions groupées : cocher le sportif fait apparaître la barre ; il passe en « Archivé ».
   await row.getByRole("checkbox", { name: `Sélectionner ${name}` }).check({ force: true });
@@ -193,8 +211,19 @@ test("le statut et le type de programme se changent d'un appui sur leur pastille
     .getByRole("dialog", { name: `Statut de ${name}` })
     .getByRole("button", { name: "Archivé" })
     .click();
-  await expect(row.getByRole("button", { name: /^Statut : Archivé/ })).toBeVisible();
+  await expect(shows("Archivé", /^Statut : Archivé/)).toBeVisible();
   await page.reload();
-  await expect(row.getByRole("button", { name: /^Statut : Archivé/ })).toBeVisible();
-  await expect(row.getByRole("button", { name: /^Programme : Hybride/ })).toBeVisible();
+  await expect(shows("Archivé", /^Statut : Archivé/)).toBeVisible();
+  await expect(shows("Hybride", /^Programme : Hybride/)).toBeVisible();
+
+  // Téléphone : un appui sur la carte (ici sur sa pastille de statut) ouvre la fiche.
+  if (phone) {
+    // Toucher à l'endroit de la pastille : c'est la carte (lien de la fiche) qui reçoit l'appui.
+    const pill = await row
+      .getByText("Archivé", { exact: true })
+      .filter({ visible: true })
+      .boundingBox();
+    await page.mouse.click(pill!.x + pill!.width / 2, pill!.y + pill!.height / 2);
+    await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  }
 });
