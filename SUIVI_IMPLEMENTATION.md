@@ -32,6 +32,21 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Agenda du sportif en trois vues (D-44)
+```
+Date : 2026-10-26
+Demande : l'onglet Agenda de la fiche comme un vrai agenda, en trois vues (Aujourd'hui, Semaine,
+  Mois), seulement pour ce sportif ; l'agenda du coach (tableau de bord, page Agenda) ne change pas ;
+  PAS d'heures pour les séances de programme (faites quand le sportif veut dans la journée) :
+  seules les séances encadrées (ex. BeHybrid 19 h à Mérode) et les compétitions ont une heure / date
+Fait : AthleteAgendaSection réécrit : ?vue=jour|semaine|mois&date= (Semaine par défaut), flèches
+  précédent / suivant ; Semaine = une colonne par jour avec des cartes teintées de la discipline
+  (heure si séance encadrée, « Journée » pour une compétition, type), sans grille horaire, 3 jours
+  visibles sur téléphone (défilement aimanté, scroll-padding) et 7 sur ordinateur ; Mois = grille
+  avec pastilles de couleur et drapeau, toucher un jour ouvre ce jour ; Aujourd'hui = liste du jour
+Tests : check OK (Vitest 155), test:e2e 118 + 6 ignorés (semaine fixée, mois → jour de Hyrox Gent)
+```
+
 ### Fiche sportif : « + Créer », onglets Programme et Agenda (D-43)
 ```
 Date : 2026-10-26

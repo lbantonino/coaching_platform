@@ -116,6 +116,19 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(page.getByText("Aucun programme pour Inès")).toBeVisible();
   await openAthleteTab(page, "Agenda");
   const agenda = page.getByRole("region", { name: "Agenda de Inès" });
-  await expect(agenda).toContainText("Hyrox Gent");
-  await expect(agenda).toContainText("Cette semaine");
+  const views = agenda.getByRole("navigation", { name: "Vue de l'agenda du sportif" });
+  // Semaine par défaut : une colonne par jour, sans grille horaire (dates fixées dans l'adresse).
+  await expect(views.getByRole("link", { name: "Semaine" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await page.goto(`/coach/o/${ORG_A}/sportifs/${INES}?onglet=agenda&vue=semaine&date=2027-01-06`);
+  await expect(agenda.getByRole("list", { name: "Jours de la semaine" })).toContainText(
+    "Piste du mercredi",
+  );
+  // Mois : un jour se touche et ouvre sa journée ; Hyrox Gent le 12 décembre.
+  await page.goto(`/coach/o/${ORG_A}/sportifs/${INES}?onglet=agenda&vue=mois&date=2026-12-01`);
+  await agenda.getByRole("link", { name: /^Samedi 12 décembre/ }).click();
+  await expect(page).toHaveURL(/vue=jour&date=2026-12-12/);
+  await expect(agenda.getByRole("list", { name: "Séances du jour" })).toContainText("Hyrox Gent");
 });
