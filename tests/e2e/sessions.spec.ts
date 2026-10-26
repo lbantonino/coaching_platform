@@ -186,10 +186,10 @@ test("un nouveau sportif tapé dans « Nouvelle séance » a aussitôt sa fiche,
   await page.getByRole("link", { name: "Fiche à compléter" }).click();
   await expect(page).toHaveURL(/onglet=profil/);
 
-  // La séance est bien la sienne.
+  // La séance est bien la sienne (vue du jour en grille : le bloc porte le nom du sportif).
   await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=2027-01-20`);
   const session = page.getByRole("link", { name: new RegExp(title) });
-  await expect(session).toContainText(`Avec ${name}`);
+  await expect(session).toContainText(name);
   await session.click();
   await expect(
     page.getByRole("list", { name: "Sportifs de la séance" }).getByRole("link", { name }),

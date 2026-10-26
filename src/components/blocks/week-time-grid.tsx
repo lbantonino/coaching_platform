@@ -1,4 +1,4 @@
-import { User, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import type { CSSProperties } from "react";
 
 import type { Discipline } from "@/domain/training/discipline";
@@ -105,7 +105,9 @@ export function WeekTimeGrid({
           className={`@container snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 ${
             fit
               ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:356px] lg:[--hour:48px]"
-              : "[--hour:44px] lg:[--hour:48px]"
+              : single
+                ? "[--hour:56px]"
+                : "[--hour:44px] lg:[--hour:48px]"
           }`}
           fitPage={fit}
           scrollHour={scrollHour}
@@ -197,7 +199,9 @@ export function WeekTimeGrid({
                       const top = (block.start - layout.firstHour * 60) / 60;
                       const length = (block.end - block.start) / 60;
                       // Détail affiché seulement si le bloc mesure au moins 56 px (téléphone compris).
-                      const roomy = length * (fit ? 26 : 44) - 3 >= 56;
+                      // Vue d'un seul jour de la page Agenda (heures de 56 px) : le détail tient
+                      // toujours. Tableau de bord (fit) : la règle de hauteur habituelle.
+                      const roomy = (single && !fit) || length * (fit ? 26 : 44) - 3 >= 56;
                       // Grille resserrée : un bloc court tient sur une ligne (téléphone : jusqu'à 1 h ;
                       // ordinateur, 40 px par heure : jusqu'à 45 min).
                       const compactPhone = fit && length <= 1;
@@ -332,21 +336,6 @@ export function WeekTimeGrid({
         </div>
       </div>
     </GridInteractions>
-  );
-}
-
-// Type d'une séance encadrée : pastille « Individuelle » / « Collective » (listes du jour).
-export function KindBadge({ individual }: { individual: boolean }) {
-  const Icon = individual ? User : Users;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-pill border px-2 py-0.5 text-[12px] font-medium whitespace-nowrap text-muted ${
-        individual ? "border-line-2" : "border-dashed border-line-2"
-      }`}
-    >
-      <Icon aria-hidden size={12} strokeWidth={2} />
-      {individual ? "Individuelle" : "Collective"}
-    </span>
   );
 }
 

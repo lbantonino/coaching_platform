@@ -1,22 +1,18 @@
-import { CalendarCheck, CalendarDays, Clock, Flag, Users } from "lucide-react";
+import { CalendarCheck, CalendarDays, Clock, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 
-import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
 import { AgendaToolbar, periodLabel } from "@/components/blocks/agenda-toolbar";
 import { NewSessionButton } from "@/components/blocks/new-session-sheet";
-import { KindBadge, WeekTimeGrid } from "@/components/blocks/week-time-grid";
+import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { Badge, StatusBadge } from "@/components/ui/badge";
-import { CardEmpty } from "@/components/ui/card";
 import { FilterChips } from "@/components/ui/filter-chips";
-import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
+import { StatTiles } from "@/components/ui/stat-tiles";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
-import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
+import { addDays } from "@/features/agenda/items";
 import {
   formatHours,
-  isoWeek,
   layoutDays,
   layoutWeek,
   mondayOf,
@@ -69,6 +65,12 @@ export default function AgendaPage({ params, searchParams }: PageProps<"/coach/o
 }
 
 const utc = (day: string) => new Date(`${day}T00:00:00Z`);
+// Barre de l'agenda sur téléphone, vue d'un jour : « Lun 26 ».
+const shortDayLabel = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const longDay = new Intl.DateTimeFormat("fr-BE", {
   weekday: "long",
@@ -81,24 +83,13 @@ const dayAndMonth = new Intl.DateTimeFormat("fr-BE", {
   month: "long",
   timeZone: "UTC",
 });
-const shortWeekday = new Intl.DateTimeFormat("fr-BE", { weekday: "short", timeZone: "UTC" });
 const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
-const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 
 function weekTitle(monday: string): string {
   const sunday = addDays(monday, 6);
   const sameMonth = monday.slice(0, 7) === sunday.slice(0, 7);
   const from = sameMonth ? String(utc(monday).getUTCDate()) : dayAndMonth.format(utc(monday));
   return `Semaine du ${from} au ${dayAndMonth.format(utc(sunday))}`;
-}
-
-// « Jeu. et dim. », « Lun., mar. et ven. »
-function dayNames(dates: string[]): string {
-  const names = dates.map((date) => shortWeekday.format(utc(date)));
-  if (names.length === 0) return "";
-  const text =
-    names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} et ${names.at(-1)}`;
-  return capitalize(text);
 }
 
 async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
@@ -157,7 +148,6 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   // Chiffres de la semaine affichée, toutes séances confondues.
   const week = layoutWeek(sessions, monday);
   const weekCount = week.days.reduce((sum, day) => sum + day.blocks.length, 0);
-  const busyDays = week.days.filter((day) => day.blocks.length > 0);
   const freeDays = week.days.filter((day) => day.blocks.length === 0).map((day) => day.date);
   const groupBlocks = week.days.flatMap((day) => day.blocks.filter((block) => !block.individual));
 
@@ -198,35 +188,25 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
       />
     );
   } else {
-    // Jour ou Aujourd'hui : la liste de la journée, par heure.
-    const items = buildAgendaItems(shownSessions, [], date, date, {
-      discipline: null,
-      athleteId: null,
-    });
-    const sessionCount = items.filter((item) => item.type === "session").length;
+    // Jour ou Aujourd'hui : la même grille horaire que la vue « Aujourd'hui » du tableau de bord
+    // (demande d'Antonino du 26/10), plutôt qu'une liste.
+    const dayLayout = layoutDays(shownSessions, [date]);
+    const count = dayLayout.days[0].blocks.length;
     title =
       view === "aujourdhui"
-        ? `Aujourd'hui · ${plural(sessionCount, "séance")}`
+        ? `Aujourd'hui · ${plural(count, "séance")}`
         : capitalize(longDay.format(utc(date)));
-    content =
-      items.length === 0 ? (
-        <CardEmpty icon={CalendarDays}>Rien de prévu ce jour-là.</CardEmpty>
-      ) : (
-        <div className="flex flex-col">
-          {items.map((item) => (
-            <DayRow
-              key={item.key}
-              item={item}
-              href={item.type === "session" ? sessionHref(item.sessionId) : ""}
-              status={
-                view === "aujourdhui" && item.type === "session"
-                  ? sessionStatus(item, sessions, now)
-                  : null
-              }
-            />
-          ))}
-        </div>
-      );
+    content = (
+      <WeekTimeGrid
+        layout={dayLayout}
+        today={today}
+        now={now}
+        single
+        sessionHref={sessionHref}
+        creatable
+        onMove={moveSession.bind(null, organizationId)}
+      />
+    );
   }
 
   return (
@@ -259,7 +239,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
                 ? periodLabel(`${month}-01`, `${month}-01`, true)
                 : view === "semaine"
                   ? periodLabel(monday, addDays(monday, 6), true)
-                  : undefined
+                  : capitalize(shortDayLabel.format(utc(date)).replace(".", ""))
             }
             prevHref={href({ vue: view === "aujourdhui" ? "jour" : view, date: step(-1) })}
             nextHref={href({ vue: view === "aujourdhui" ? "jour" : view, date: step(1) })}
@@ -306,93 +286,38 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
           {content}
         </section>
 
-        {/* Chiffres de la semaine : de petites pastilles, plus de grandes cartes (26/10). */}
-        <ul aria-label="Chiffres de la semaine" className="flex flex-wrap gap-2">
-          {[
+        {/* Chiffres de la semaine (26/10) : quatre petites tuiles colorées sur une ligne, grand chiffre
+            en couleur et mot court dessous ; plus de grandes cartes au-dessus du calendrier. */}
+        <StatTiles
+          label="Chiffres de la semaine"
+          tiles={[
             {
+              color: "run",
               icon: Clock,
               value: week.totalMinutes > 0 ? formatHours(week.totalMinutes) : "0 h",
-              text: `de coaching · semaine ${isoWeek(monday)}`,
+              text: "de coaching",
             },
             {
+              color: "accent",
               icon: CalendarDays,
               value: String(weekCount),
-              text: `${weekCount > 1 ? "séances" : "séance"}${
-                busyDays.length > 0 ? ` sur ${plural(busyDays.length, "jour")}` : ""
-              }`,
+              text: weekCount > 1 ? "séances" : "séance",
             },
             {
+              color: "ok",
               icon: CalendarCheck,
               value: String(freeDays.length),
-              text: `${freeDays.length > 1 ? "jours libres" : "jour libre"}${
-                freeDays.length > 0 && freeDays.length < 7 ? ` (${dayNames(freeDays)})` : ""
-              }`,
+              text: freeDays.length > 1 ? "jours libres" : "jour libre",
             },
             {
+              color: "strength",
               icon: Users,
               value: String(groupBlocks.length),
-              text: groupBlocks.length > 1 ? "séances collectives" : "séance collective",
+              text: groupBlocks.length > 1 ? "collectives" : "collective",
             },
-          ].map((stat) => (
-            <li
-              key={stat.text}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-pill border border-line bg-surface px-3 text-[13px] text-muted"
-            >
-              <stat.icon aria-hidden size={14} strokeWidth={1.8} />
-              <span className="font-semibold text-text tabular">{stat.value}</span>
-              {stat.text}
-            </li>
-          ))}
-        </ul>
+          ]}
+        />
       </PageBody>
     </>
-  );
-}
-
-// Statut d'une séance d'aujourd'hui selon l'heure : Terminée, En cours ou À venir.
-function sessionStatus(
-  item: Extract<AgendaItem, { type: "session" }>,
-  sessions: CoachSession[],
-  now: string,
-): string {
-  const session = sessions.find((s) => s.id === item.sessionId);
-  const start = toMinutes(item.time);
-  const end = start + (session?.durationMinutes ?? 0);
-  const current = toMinutes(now);
-  return current >= end ? "Terminée" : current >= start ? "En cours" : "À venir";
-}
-
-function DayRow({ item, href, status }: { item: AgendaItem; href: string; status: string | null }) {
-  return (
-    <ListRow
-      href={href}
-      leading={
-        <span className="w-12 shrink-0 font-mono text-[14px] font-medium tabular">
-          {item.type === "session" ? (
-            item.time.slice(0, 5)
-          ) : (
-            <Flag
-              aria-label="Compétition"
-              size={16}
-              strokeWidth={1.8}
-              className="text-accent-text"
-            />
-          )}
-        </span>
-      }
-      title={item.type === "session" ? item.title : `${item.title} · ${item.athleteName}`}
-      sub={item.detail || (item.type === "event" ? "Compétition" : undefined)}
-      trailing={
-        <>
-          {item.type === "session" ? <KindBadge individual={item.individual} /> : null}
-          {item.discipline ? (
-            <Badge tone={disciplineTones[item.discipline]}>
-              {disciplineLabels[item.discipline]}
-            </Badge>
-          ) : null}
-          {status ? <StatusBadge label={status} /> : null}
-        </>
-      }
-    />
   );
 }

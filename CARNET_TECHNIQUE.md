@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **26/10/2026** (programmes, tranche 1 : l'affichage).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **26/10/2026** (programmes, tranche 1 : l'affichage ; tableau de bord recentré).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -325,6 +325,8 @@ Le même jour, un **audit** du tableau de bord et des sportifs face au prompt Cl
 Puis le **cœur** : les programmes. Antonino a montré le tableur de Gianluca et ses maquettes : une ligne par semaine, des séances numérotées, **sans jour** (le sportif les place quand il veut). Le cahier des charges avait déjà prévu la bonne structure : un programme, des **versions publiées figées** (le sportif suit toujours une version précise, que le coach ne peut pas modifier en douce), et une ligne par séance publiée, repérée par sa semaine et son numéro ; c'est cette ligne que les retours du sportif viseront. Le contenu d'une séance est un **objet structuré** (étapes, bloc « Répéter 4 fois », conseils), vérifié à chaque lecture : une donnée mal formée est écartée plutôt qu'affichée de travers. On a commencé par l'**affichage**, avec un programme de démo inventé de 12 semaines, pour valider la forme avant de construire l'éditeur, qui est la partie la plus délicate. Les tables sont en lecture seule depuis le navigateur tant que la publication contrôlée n'existe pas.
 
 Deux leçons. Une zone de message toujours présente avec `role="status"` se confond avec les messages de statut des formulaires : les tests qui cherchaient « le » statut en trouvaient deux. Et le serveur de développement peut garder une ancienne version d'un module : une constante nouvellement exportée arrivait `undefined` ; la déplacer dans un nouveau fichier a suffi.
+
+En fin de journée, le **tableau de bord** a été recentré sur ce que Gianluca doit voir en premier : ses tâches et l'argent encaissé dans la semaine. Les chiffres de l'agenda (coachings du jour, heures de la semaine) descendent sous le calendrier, en petites tuiles colorées. Ces tuiles existaient déjà sur la page Agenda, écrites directement dans la page : elles deviennent un composant partagé (`StatTiles`), pour que les deux pages gardent le même style sans copier le code. La vue « Aujourd'hui » de la page Agenda reprend la grille horaire du tableau de bord au lieu d'une liste. Leçon d'accessibilité : quand le libellé complet d'une carte est masqué sur téléphone au profit d'un titre court, le lien perd son nom pour les lecteurs d'écran ; un `aria-label` complet le lui rend, et les tests qui cherchaient la carte par son nom l'ont signalé aussitôt.
 
 ---
 

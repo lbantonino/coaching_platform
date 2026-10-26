@@ -16,6 +16,8 @@ export function KpiCard({
   icon: Icon,
   href,
   compact = false,
+  shortLabel,
+  mobileLines,
 }: {
   value: string;
   label: string;
@@ -26,6 +28,10 @@ export function KpiCard({
   // Tableau de bord (demande d'Antonino du 26/10) : carte basse et sobre, pour laisser la place à
   // l'agenda : chiffre et pastille sur une ligne, libellé dessous, précision sur ordinateur seulement.
   compact?: boolean;
+  // Téléphone, tableau de bord (26/10) : même modèle que le widget Tâches, pour 4 tuiles égales :
+  // titre court en couleur et chiffre sur une ligne, puis une ou deux lignes de détail.
+  shortLabel?: string;
+  mobileLines?: string[];
 }) {
   // Les chiffres longs (« 3 240 € ») passent un cran en dessous pour tenir dans la carte.
   const size =
@@ -34,9 +40,23 @@ export function KpiCard({
       : value.length > 7
         ? "text-[18px] md:text-[30px]"
         : "text-[24px] md:text-[30px]";
+  const widget = shortLabel ? (
+    <span className="flex min-w-0 flex-col gap-1.5 lg:hidden">
+      <span className="flex items-center justify-between gap-2">
+        <span className="truncate text-[15px] font-semibold text-[var(--kpi)]">{shortLabel}</span>
+        <span className="font-display text-[22px] leading-none font-semibold tabular">{value}</span>
+      </span>
+      {(mobileLines ?? []).map((line) => (
+        <span key={line} className="truncate text-[13px] leading-snug text-muted">
+          {line}
+        </span>
+      ))}
+    </span>
+  ) : null;
   const body = compact ? (
     <>
-      <div className="flex items-center justify-between gap-2">
+      {widget}
+      <div className={`flex items-center justify-between gap-2 ${widget ? "max-lg:hidden" : ""}`}>
         <span className="font-display text-[20px] leading-none font-semibold tracking-[-0.02em] tabular lg:text-[24px]">
           {value}
         </span>
@@ -49,7 +69,11 @@ export function KpiCard({
           </span>
         ) : null}
       </div>
-      <span className="truncate text-[13px] leading-snug font-medium">{label}</span>
+      <span
+        className={`truncate text-[13px] leading-snug font-medium ${widget ? "max-lg:hidden" : ""}`}
+      >
+        {label}
+      </span>
       {detail ? (
         <span className="truncate text-[12px] leading-snug text-muted max-lg:hidden">{detail}</span>
       ) : null}
@@ -83,6 +107,8 @@ export function KpiCard({
     <Link
       href={href}
       style={style}
+      // Téléphone : le libellé complet est masqué au profit du titre court ; le lien garde son nom entier.
+      aria-label={shortLabel ? `${value} ${label}` : undefined}
       className={`${className} transition-[scale] duration-150 active:scale-[.98]`}
     >
       {body}
@@ -157,10 +183,13 @@ export function KpiListCard({
 export function KpiGrid({
   label,
   columns = 4,
+  equal = false,
   children,
 }: {
   label: string;
   columns?: 2 | 4 | 5;
+  // Téléphone : toutes les tuiles à la même hauteur (tableau de bord, 26/10).
+  equal?: boolean;
   children: ReactNode;
 }) {
   const cols = {
@@ -169,7 +198,10 @@ export function KpiGrid({
     5: "grid-cols-2 lg:grid-cols-5",
   };
   return (
-    <section aria-label={label} className={`grid gap-3 ${cols[columns]}`}>
+    <section
+      aria-label={label}
+      className={`grid gap-3 ${cols[columns]} ${equal ? "max-lg:auto-rows-fr" : ""}`}
+    >
       {children}
     </section>
   );
