@@ -37,17 +37,18 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
         open={open}
         onClose={() => setOpen(false)}
         title="Créer"
+        // Ordre choisi par Antonino (26/10).
         items={[
-          { label: "Programme", icon: FilePlus, onSelect: go("/coach/programmes") },
           {
             label: "Séance",
             icon: CalendarPlus,
             onSelect: () => openNewSession?.(),
           },
-          { label: "Sportif", icon: UserPlus, onSelect: go(`${orgBase}/sportifs/nouveau`) },
-          { label: "Paiement reçu", icon: Euro, onSelect: () => openNewPayment?.() },
-          { label: "Facture", icon: ReceiptText, onSelect: go("/coach/facturation") },
+          { label: "Programme", icon: FilePlus, onSelect: go("/coach/programmes") },
           { label: "Tâche", icon: ClipboardList, onSelect: go("/coach/taches") },
+          { label: "Sportif", icon: UserPlus, onSelect: go(`${orgBase}/sportifs/nouveau`) },
+          { label: "Facture", icon: ReceiptText, onSelect: go("/coach/facturation") },
+          { label: "Paiement reçu", icon: Euro, onSelect: () => openNewPayment?.() },
         ]}
       />
     </>
