@@ -103,6 +103,75 @@ export async function addGoal(
   return { error: null, saved: previous.saved + 1, attempt: previous.attempt + 1, values: null };
 }
 
+// Modification d'un objectif en cours (demande d'Antonino du 26/10) : mêmes champs et mêmes règles
+// que l'ajout. Une date déjà passée reste acceptée si elle n'a pas changé (objectif en retard dont on
+// corrige seulement le nom, par exemple). Un objectif atteint ou abandonné ne se modifie plus.
+export type EditGoalState = {
+  error: string | null;
+  saved: number;
+  attempt: number;
+  values: GoalFormInput | null;
+};
+
+export async function updateGoal(
+  organizationId: string,
+  athleteId: string,
+  goalId: string,
+  previous: EditGoalState,
+  formData: FormData,
+): Promise<EditGoalState> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const fail = (error: string, values: GoalFormInput | null) => ({
+    error,
+    saved: previous.saved,
+    attempt: previous.attempt + 1,
+    values,
+  });
+  if (!goalIdSchema.safeParse(goalId).success) return fail("Objectif introuvable.", null);
+
+  const supabase = await createClient();
+  const { data: current } = await supabase
+    .from("athlete_goals")
+    .select("id, target_date, priority")
+    .eq("id", goalId)
+    .eq("athlete_id", athleteId)
+    .eq("organization_id", membership.organizationId)
+    .eq("status", "active")
+    .maybeSingle();
+  if (!current) return fail("Objectif introuvable.", null);
+
+  const field = (name: string) => String(formData.get(name) ?? "");
+  const input: GoalFormInput = {
+    goalType: field("goalType"),
+    priority: field("priority"),
+    targetDate: field("targetDate"),
+    isCompetition: formData.get("isCompetition") === "on",
+    competitionName: field("competitionName"),
+    competitionLocation: field("competitionLocation"),
+    hyroxCategory: field("hyroxCategory"),
+    description: field("description"),
+  };
+  const today = todayIsoInBrussels();
+  const keptPastDate =
+    current.target_date !== null && current.target_date < today ? current.target_date : today;
+  const parsed = parseGoalForm(input, keptPastDate);
+  if (!parsed.ok) return fail(parsed.error, input);
+
+  if (parsed.values.priority === "main" && current.priority !== "main") {
+    const { error } = await demoteCurrentMain(supabase, membership.organizationId, athleteId);
+    if (error) return fail("L'objectif n'a pas pu être modifié. Réessaie.", input);
+  }
+  const { error } = await supabase
+    .from("athlete_goals")
+    .update(parsed.values)
+    .eq("id", current.id)
+    .eq("organization_id", membership.organizationId);
+  if (error) return fail("L'objectif n'a pas pu être modifié. Réessaie.", input);
+
+  revalidatePath(`/coach/o/${membership.organizationId}/sportifs/${athleteId}`);
+  return { error: null, saved: previous.saved + 1, attempt: previous.attempt + 1, values: null };
+}
+
 const goalIdSchema = z.uuid();
 const closingStatusSchema = z.enum(["achieved", "dropped"]);
 
@@ -149,7 +218,7 @@ export async function makeGoalMain(organizationId: string, athleteId: string, go
   revalidatePath(`/coach/o/${membership.organizationId}/sportifs/${athleteId}`);
 }
 
-// Suppression d'un objectif saisi par erreur (pour corriger : supprimer puis recréer).
+// Suppression d'un objectif saisi par erreur (pour corriger un détail : « Modifier »).
 export async function deleteGoal(organizationId: string, athleteId: string, goalId: string) {
   const { membership } = await requireOrgAccess(organizationId);
   if (!goalIdSchema.safeParse(goalId).success) return;

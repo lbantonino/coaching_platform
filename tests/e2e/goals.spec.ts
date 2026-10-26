@@ -71,4 +71,21 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   // L'objectif restant redevient principal.
   await page.getByRole("button", { name: `Rendre principal : ${competition}` }).click();
   await expect(hyrox).toContainText("Principal");
+
+  // Modifier (demande d'Antonino du 26/10) : corriger le nom et la date sans supprimer l'objectif.
+  const renamed = `${competition} Gand`;
+  const inNinetyDays = new Date(Date.now() + 90 * 86_400_000).toISOString().slice(0, 10);
+  await page.getByRole("button", { name: `Modifier : ${competition}` }).click();
+  const edit = page.getByRole("dialog", { name: "Modifier l'objectif" });
+  await expect(edit.getByLabel("Nom de la compétition")).toHaveValue(competition);
+  await edit.getByLabel("Nom de la compétition").fill(renamed);
+  await edit.getByLabel(/Date cible/).fill(inNinetyDays);
+  await edit.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(page.getByText("Objectif modifié.")).toBeVisible();
+  await expect(edit).toBeHidden();
+  const edited = current.getByRole("listitem").filter({ hasText: renamed });
+  await expect(edited).toContainText("Principal");
+  await expect(edited).toContainText("Catégorie Pro");
+  await page.reload();
+  await expect(current.getByRole("listitem").filter({ hasText: renamed })).toBeVisible();
 });

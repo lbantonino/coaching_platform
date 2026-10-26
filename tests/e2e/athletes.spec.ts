@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { fillAthleteName, goToCoachSection } from "./helpers";
+import { chooseAthleteFilter, fillAthleteName, goToCoachSection } from "./helpers";
 
 const DEMO_PASSWORD = "demo-coach-local";
 // Identifiants fixes du seed (supabase/seed.sql).
@@ -140,10 +140,7 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
     .click();
 
   // Type de programme (D-40), indépendant de l'objectif : Lucas prépare un Hyrox en programme hybride.
-  await page
-    .getByRole("navigation", { name: "Filtrer par type de programme" })
-    .getByRole("link", { name: "Hybride" })
-    .click();
+  await chooseAthleteFilter(page, "Type de programme", "Hybride");
   await expect(page).toHaveURL(/discipline=hybride/);
   await expect(list.getByText("Lucas Janssens")).toBeVisible();
   await expect(list.getByText("Inès Benali")).toHaveCount(0);

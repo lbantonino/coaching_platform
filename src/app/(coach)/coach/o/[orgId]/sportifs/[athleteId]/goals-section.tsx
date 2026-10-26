@@ -16,6 +16,7 @@ import {
 import { formatDate } from "@/lib/format";
 
 import { AddGoalForm } from "./add-goal-form";
+import { EditGoalButton } from "./edit-goal-button";
 import { GoalDisciplineBadge } from "./goal-discipline-badge";
 
 // Titre d'un objectif : le nom de la compétition s'il y en a une, sinon le type d'objectif.
@@ -63,11 +64,13 @@ function GoalCard({
   athleteId,
   goal,
   today,
+  hasMain,
 }: {
   organizationId: string;
   athleteId: string;
   goal: GoalEntry;
   today: string;
+  hasMain: boolean;
 }) {
   const title = goalTitle(goal);
   const countdown = goal.targetDate ? goalCountdown(today, goal.targetDate) : null;
@@ -98,6 +101,14 @@ function GoalCard({
       </div>
       {goal.description ? <p className="text-small text-muted">{goal.description}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
+        <EditGoalButton
+          organizationId={organizationId}
+          athleteId={athleteId}
+          goal={goal}
+          title={title}
+          today={today}
+          otherMain={hasMain && goal.priority !== "main"}
+        />
         <form action={setGoalStatus.bind(null, organizationId, athleteId, goal.id, "achieved")}>
           <button
             type="submit"
@@ -181,6 +192,7 @@ export async function GoalsSection({
                 athleteId={athleteId}
                 goal={goal}
                 today={today}
+                hasMain={hasMain}
               />
             </li>
           ))}

@@ -26,6 +26,7 @@ import { goalTypeLabels } from "@/features/goals/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
 import { AthleteTable, type AthleteTableRow, type SortColumn } from "./athlete-table";
+import { CompactFilter } from "./compact-filter";
 
 export const metadata: Metadata = {
   title: "Sportifs",
@@ -140,6 +141,8 @@ async function AthleteList({
     .filter((a) => filter.status === "all" || a.status === filter.status)
     .sort(compare(sortColumn));
   if (desc) athletes.reverse();
+  const statusCount = (status: AthleteListFilter["status"]) =>
+    status === "all" ? ofType.length : ofType.filter((a) => a.status === status).length;
 
   const today = todayIsoInBrussels();
   const active = all.filter((athlete) => athlete.status === "active");
@@ -265,14 +268,43 @@ async function AthleteList({
           {disciplineSlug ? <input type="hidden" name="discipline" value={disciplineSlug} /> : null}
         </form>
 
+        {/* Téléphone et tablette : deux boutons compacts (choix en cours + flèche) ; ordinateur : la
+            carte de la maquette avec toutes les pastilles. */}
+        <div className="grid grid-cols-2 gap-3 lg:hidden">
+          <CompactFilter
+            title="Statut"
+            options={statusChips.map((chip) => ({
+              key: chip.status,
+              label: `${chip.label} (${statusCount(chip.status)})`,
+              href: hrefFor({ status: chip.status }),
+              selected: filter.status === chip.status,
+            }))}
+          />
+          <CompactFilter
+            title="Type de programme"
+            shortTitle="Programme"
+            options={[
+              {
+                key: "all",
+                label: "Tous",
+                href: hrefFor({ discipline: null }),
+                selected: !discipline,
+              },
+              ...DISCIPLINES.map((item) => ({
+                key: item,
+                label: disciplineLabels[item],
+                href: hrefFor({ discipline: slugByDiscipline[item] }),
+                selected: discipline === item,
+              })),
+            ]}
+          />
+        </div>
+
         {/* Filtres (maquette) : deux groupes titrés dans une carte, Statut puis Type de programme. */}
-        <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-4 lg:flex-row lg:items-start lg:gap-0">
+        <div className="hidden rounded-card border border-line bg-surface p-4 lg:flex lg:flex-row lg:items-start">
           <FilterGroup title="Statut" label="Filtrer par statut">
             {statusChips.map((chip) => {
-              const count =
-                chip.status === "all"
-                  ? ofType.length
-                  : ofType.filter((a) => a.status === chip.status).length;
+              const count = statusCount(chip.status);
               return (
                 <FilterLink
                   key={chip.status}
