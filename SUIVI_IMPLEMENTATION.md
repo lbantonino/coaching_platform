@@ -32,6 +32,18 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Démo : une semaine réaliste de 30 h pour Gianluca ; programmes en cours au tableau de bord
+```
+Date : 2026-10-26
+Demande : voir au tableau de bord et dans l'Agenda ce que Gianluca a vraiment par semaine (≈ 30 h)
+Fait : seed : 21 séances individuelles hebdomadaires d'une heure (7 h, 8 h 15, 12 h 15, soir) et
+  4 collectives (small group Hyrox lundi et jeudi, mobilité vendredi, run club samedi), en plus de
+  la piste, du circuit et du coaching force : 29 séances, 30 h affichées ; elles s'arrêtent le
+  20/12/2026 (les tests utilisent des semaines de 2027) ; carte « Programmes en cours » branchée sur
+  les programmes publiés (listActivePrograms, semaine n / N et barre de progression)
+Tests : test:e2e 120 + 6 ignorés (carte Programmes en cours : Inès, « Sem. n/12 »)
+```
+
 ### Programmes, tranche 1 : l'affichage du programme d'un sportif (D-46)
 ```
 Date : 2026-10-26

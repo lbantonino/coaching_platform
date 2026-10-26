@@ -22,7 +22,9 @@ import { iconButtonClass } from "@/components/ui/button";
 import { Card, CardEmpty } from "@/components/ui/card";
 import { CheckList } from "@/components/ui/check-list";
 import { KpiCard, KpiGrid, KpiListCard } from "@/components/ui/kpi-card";
+import { Avatar } from "@/components/ui/avatar";
 import { FilterChips } from "@/components/ui/filter-chips";
+import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
 import { SegmentedNav } from "@/components/ui/segmented";
 import { formatEuros, monthActivity } from "@/domain/billing/invoices";
 import { paymentTotals } from "@/domain/billing/payments";
@@ -132,12 +134,13 @@ async function Dashboard({
   // Paiements depuis le lundi ou le 1er du mois (le plus ancien des deux) : semaine et mois.
   const monthStart = `${today.slice(0, 7)}-01`;
   const weekStart = mondayOf(today);
-  const [profile, sessions, tasks, invoices, payments] = await Promise.all([
+  const [profile, sessions, tasks, invoices, payments, programs] = await Promise.all([
     getCoachProfile(user),
     listSessions(current.organizationId),
     getDashboardTasks(current.organizationId),
     listMonthInvoices(current.organizationId, today),
     listPayments(current.organizationId, weekStart < monthStart ? weekStart : monthStart),
+    listActivePrograms(current.organizationId),
   ]);
   const weekIncome = paymentTotals(payments, weekStart, addDays(weekStart, 6));
   const monthIncome = paymentTotals(payments, monthStart, today);
@@ -417,10 +420,43 @@ async function Dashboard({
           action={{ href: "/coach/programmes", label: "Programmes" }}
           className="lg:col-span-4"
         >
-          <CardEmpty icon={FileText}>
-            Aucun programme pour l&apos;instant. Chaque programme apparaîtra ici avec son sportif et
-            sa progression (semaine 6 sur 12…).
-          </CardEmpty>
+          {programs.length === 0 ? (
+            <CardEmpty icon={FileText}>
+              Aucun programme pour l&apos;instant. Chaque programme apparaîtra ici avec son sportif
+              et sa progression (semaine 6 sur 12…).
+            </CardEmpty>
+          ) : (
+            <div className="flex flex-col">
+              {programs.slice(0, 4).map((program) => {
+                const week = currentWeekIndex(program.startDate, program.weeksCount, today);
+                return (
+                  <ListRow
+                    key={program.id}
+                    href={`${orgBase}/sportifs/${program.athleteId}?onglet=agenda`}
+                    leading={<Avatar name={program.athleteName} photoPath={program.photoPath} />}
+                    title={program.athleteName}
+                    sub={program.title}
+                    trailing={
+                      <span className="flex w-[84px] flex-col items-end gap-1">
+                        <span className="font-mono text-[12px] text-muted tabular">
+                          Sem. {week}/{program.weeksCount}
+                        </span>
+                        <span
+                          aria-hidden
+                          className="h-1.5 w-full overflow-hidden rounded-pill bg-bar"
+                        >
+                          <span
+                            className="block h-full rounded-pill bg-accent"
+                            style={{ width: `${(week / program.weeksCount) * 100}%` }}
+                          />
+                        </span>
+                      </span>
+                    }
+                  />
+                );
+              })}
+            </div>
+          )}
         </Card>
 
         <Card

@@ -128,3 +128,45 @@ export async function getProgramSession(
   }
   return null;
 }
+
+export type ActiveProgram = {
+  id: string;
+  title: string;
+  athleteId: string;
+  athleteName: string;
+  photoPath: string | null;
+  startDate: string;
+  weeksCount: number;
+};
+
+// Programmes publiés de l'organisation (DÉJÀ vérifiée), pour la carte « Programmes en cours » du
+// tableau de bord ; sportifs archivés exclus.
+export async function listActivePrograms(organizationId: string): Promise<ActiveProgram[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("programs")
+    .select(
+      "id, title, start_date, weeks_count, athlete_id, athlete_profiles!inner ( first_name, display_name, photo_path, status )",
+    )
+    .eq("organization_id", organizationId)
+    .eq("status", "published")
+    .neq("athlete_profiles.status", "archived")
+    .order("start_date", { ascending: false });
+  if (error) throw new Error("Lecture des programmes impossible.");
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: row.title,
+    athleteId: row.athlete_id,
+    // display_name est calculé par la base : jamais vide, le repli ne sert qu'au typage.
+    athleteName: row.athlete_profiles.display_name ?? row.athlete_profiles.first_name,
+    photoPath: row.athlete_profiles.photo_path,
+    startDate: row.start_date,
+    weeksCount: row.weeks_count,
+  }));
+}
+
+// Semaine en cours d'un programme (1 à n), bornée : avant le début, 1 ; après la fin, n.
+export function currentWeekIndex(startDate: string, weeksCount: number, today: string): number {
+  const days = Math.floor((Date.parse(today) - Date.parse(startDate)) / 86_400_000);
+  return Math.min(Math.max(Math.floor(days / 7) + 1, 1), weeksCount);
+}
