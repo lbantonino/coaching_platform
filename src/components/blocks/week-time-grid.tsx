@@ -59,13 +59,12 @@ export function WeekTimeGrid({
   // dans l'écran, en colonnes étroites ; chaque séance se réduit à son heure et son titre. Sans cette
   // option, le téléphone montre 3 jours et l'on fait glisser. L'ordinateur montre toujours 7 jours.
   fullWeek?: boolean;
-  // Tableau de bord (demandes d'Antonino). Téléphone : la hauteur d'une heure s'adapte pour que la
-  // carte entière tienne dans la hauteur visible (26–44 px ; --grid-chrome = barre du haut, en-tête
-  // de carte, filtres, en-tête des jours, légende). Calculée sur 100svh, la hauteur d'écran AVEC les barres du
-  // navigateur : elle ne bouge pas quand Safari replie sa barre d'adresse pendant le défilement (avec
-  // 100dvh, les cases rétrécissaient et grandissaient au défilement, demande d'Antonino du 26/10).
-  // Ordinateur : 48 px par heure, comme la page Agenda (demande d'Antonino du 26/10 : l'agenda est la
-  // section principale du tableau de bord, il ne doit plus être tassé dans sa carte).
+  // Tableau de bord, ordinateur seulement (demandes d'Antonino) : 48 px par heure comme la page
+  // Agenda, en-tête des jours plus bas, blocs de 45 min au plus sur une ligne, et la grille défile
+  // dans sa carte à la hauteur de l'écran (ScrollToDay). Sur téléphone, plus aucune différence avec la
+  // page Agenda (demande d'Antonino du 26/10 au soir : la grille du tableau de bord, adaptée à la
+  // hauteur de l'écran, était « beaucoup trop petite en hauteur ») : 44 px par heure, 56 px en vue
+  // d'un seul jour, et le détail des blocs.
   fit?: boolean;
   creatable?: boolean;
   onMove?: (input: MoveSessionInput) => Promise<{ ok: boolean; error?: string }>;
@@ -102,13 +101,11 @@ export function WeekTimeGrid({
       <div className="flex flex-col gap-2.5">
         <ScrollToDay
           // Téléphone : la grille va d'un bord à l'autre de l'écran (-mx-4 = marge de la page).
+          // Hauteur d'une heure : téléphone 56 px pour un seul jour, sinon 44 px ; ordinateur 48 px,
+          // sauf la vue d'un seul jour de la page Agenda (56 px).
           className={`@container snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 ${
-            fit
-              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:356px] lg:[--hour:48px]"
-              : single
-                ? "[--hour:56px]"
-                : "[--hour:44px] lg:[--hour:48px]"
-          }`}
+            single ? "[--hour:56px]" : "[--hour:44px]"
+          } ${fit || !single ? "lg:[--hour:48px]" : ""}`}
           fitPage={fit}
           scrollHour={scrollHour}
         >
@@ -198,13 +195,20 @@ export function WeekTimeGrid({
                     {day.blocks.map((block) => {
                       const top = (block.start - layout.firstHour * 60) / 60;
                       const length = (block.end - block.start) / 60;
-                      // Détail affiché seulement si le bloc mesure au moins 56 px (téléphone compris).
-                      // Vue d'un seul jour de la page Agenda (heures de 56 px) : le détail tient
-                      // toujours. Tableau de bord (fit) : la règle de hauteur habituelle.
-                      const roomy = (single && !fit) || length * (fit ? 26 : 44) - 3 >= 56;
-                      // Grille resserrée : un bloc court tient sur une ligne (téléphone : jusqu'à 1 h ;
-                      // ordinateur, 40 px par heure : jusqu'à 45 min).
-                      const compactPhone = fit && length <= 1;
+                      // Détail (sportif, inscrits) affiché seulement si le bloc mesure au moins 56 px,
+                      // selon la hauteur d'une heure de chaque écran : téléphone 56 px (un seul jour)
+                      // ou 44 px ; ordinateur, vue d'un seul jour de la page Agenda (56 px) : toujours,
+                      // tableau de bord (fit) : la règle de hauteur habituelle.
+                      const roomyPhone = single || length * 44 - 3 >= 56;
+                      const roomyDesktop = (single && !fit) || length * (fit ? 26 : 44) - 3 >= 56;
+                      const roomy = roomyPhone || roomyDesktop;
+                      const roomyClass =
+                        roomyPhone && roomyDesktop
+                          ? ""
+                          : roomyPhone
+                            ? "lg:hidden"
+                            : "max-lg:hidden";
+                      // Tableau de bord sur ordinateur : un bloc de 45 min au plus tient sur une ligne.
                       const compactDesktop = fit && length <= 0.75;
                       const style = {
                         "--c": disciplineColor[block.discipline ?? "none"],
@@ -235,9 +239,7 @@ export function WeekTimeGrid({
                             block.individual
                               ? ""
                               : "outline-1 -outline-offset-1 outline-[var(--c)] outline-dashed"
-                          } ${
-                            compactPhone ? "max-lg:justify-center max-lg:py-0.5" : "max-lg:py-1"
-                          } ${compactDesktop ? "lg:justify-center lg:py-0" : "lg:py-1"} ${
+                          } max-lg:py-1 ${compactDesktop ? "lg:justify-center lg:py-0" : "lg:py-1"} ${
                             fullWeek ? "max-lg:justify-start max-lg:px-0.5 max-lg:py-0.5" : ""
                           }`}
                         >
@@ -253,10 +255,8 @@ export function WeekTimeGrid({
                             </span>
                           ) : null}
                           <span className={fullWeek ? "contents max-lg:hidden" : "contents"}>
-                            {compactPhone || compactDesktop ? (
-                              <span
-                                className={`truncate text-[12px] leading-tight ${compactPhone ? "" : "max-lg:hidden"} ${compactDesktop ? "" : "lg:hidden"}`}
-                              >
+                            {compactDesktop ? (
+                              <span className="truncate text-[12px] leading-tight max-lg:hidden">
                                 {block.individual ? null : (
                                   <Users
                                     aria-hidden
@@ -272,7 +272,7 @@ export function WeekTimeGrid({
                               </span>
                             ) : null}
                             <span
-                              className={`flex items-center gap-1 truncate font-mono text-[11px] leading-tight text-[var(--c)] tabular ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
+                              className={`flex items-center gap-1 truncate font-mono text-[11px] leading-tight text-[var(--c)] tabular ${compactDesktop ? "lg:hidden" : ""}`}
                             >
                               {block.individual ? null : (
                                 <Users
@@ -285,12 +285,14 @@ export function WeekTimeGrid({
                               {block.label.replace(" - ", " – ")}
                             </span>
                             <span
-                              className={`truncate text-[12px] leading-tight font-semibold ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
+                              className={`truncate text-[12px] leading-tight font-semibold ${compactDesktop ? "lg:hidden" : ""}`}
                             >
                               {block.title}
                             </span>
                             {roomy ? (
-                              <span className="truncate text-[11px] leading-tight text-muted">
+                              <span
+                                className={`truncate text-[11px] leading-tight text-muted ${roomyClass}`}
+                              >
                                 {block.individual
                                   ? block.subtitle
                                   : `Collective · ${block.subtitle}`}
