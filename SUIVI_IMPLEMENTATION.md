@@ -42,6 +42,9 @@ Fait : ViewMenu (téléphone) : Aujourd'hui, 3 jours, Semaine, Mois, choix en co
   séance = heure de début + titre en petit ; ordinateur inchangé (onglets)
 Tests : check OK (Vitest 158), test:e2e 120 + 6 ignorés (aide chooseAgendaView ; semaine entière
   sur téléphone)
+Puis : vue « 3 jours » sur téléphone, la 3e colonne était coupée (largeur fixe de 104 px) : chaque
+  colonne mesure maintenant (largeur de l'agenda − 3rem) ÷ 3 (unités cqw, agenda déclaré @container) ;
+  mesuré à 375, 390 et 430 px : 3 colonnes entières, aucune coupée, tableau de bord et Agenda
 ```
 
 ### Démo : une semaine réaliste de 30 h pour Gianluca ; programmes en cours au tableau de bord
