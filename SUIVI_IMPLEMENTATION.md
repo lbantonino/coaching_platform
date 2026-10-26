@@ -32,6 +32,30 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Agendas façon Google Agenda, page de séance en couleurs, sportifs sur téléphone (D-50)
+```
+Date : 2026-10-26
+Demande : (1) page Agenda : le calendrier d'abord, les 4 cartes en petit ; plus de titre « Semaine du
+  … » (Agenda et tableau de bord), à la Google Agenda ; (2) onglet Agenda d'un sportif sur
+  ordinateur : cartes minimalistes (pictogramme, titre, type, heure du coach) ; (3) page d'une
+  séance en couleurs comme Garmin Connect ; (4) tableau de bord : de l'air sur téléphone, agenda
+  sous les widgets avec un fond de couleur sans carte ; 4 cartes plus basses ; agenda plus grand sur
+  ordinateur ; (5) liste des sportifs sur téléphone : pastilles non cliquables, toute la carte ouvre
+  la fiche
+Fait : AgendaToolbar (flèches, période « Octobre 2026 » / « Oct. – nov. » sur téléphone, vue ;
+  titre « Semaine du … » gardé pour les lecteurs d'écran) sur les deux pages ; page Agenda :
+  calendrier en premier, chiffres de la semaine en pastilles dessous ; tableau de bord : KpiCard
+  compact (chiffre et pastille sur une ligne), KpiListCard plus basse, agenda 48 px / heure sans
+  défilement interne, bande de couleur d'un bord à l'autre sur téléphone, sections espacées
+  (PageBody grille : gap-6 sur téléphone) ; SessionCard minimaliste partout (ordinateur : empilée
+  dans sa colonne) ; page de séance : chiffres teintés (durée ambre, type couleur de la discipline,
+  objectif vert), étapes colorées (échauffement ambre, bloc principal discipline, retour au calme
+  vert d'eau, récupérations grises) ; liste des sportifs (téléphone) : pastilles = repères, lien
+  étendu sur la carte, case / message / Inviter / « ••• » au-dessus
+Tests : check OK (Vitest 158), test:e2e 120 + 6 ignorés (pastilles via « ••• » et appui sur la
+  carte au téléphone ; « Agenda → » seulement sur ordinateur ; cartes comptées par la liste)
+```
+
 ### Téléphone : agendas pleine largeur, cartes de programme compactes ; un programme par sportif (D-49)
 ```
 Date : 2026-10-26

@@ -130,7 +130,9 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(firstWeek.getByRole("listitem").filter({ hasText: "Circuit Hyrox" })).toContainText(
     /Avec le coach · Sam 31 10:00/,
   );
-  await expect(firstWeek.getByRole("listitem").filter({ hasText: /^Séance/ })).toHaveCount(5);
+  await expect(
+    firstWeek.getByRole("list", { name: /^Séances, semaine du 26 oct/ }).getByRole("listitem"),
+  ).toHaveCount(5);
   await expect(page.getByRole("region", { name: /^Semaine du / })).toHaveCount(12);
 
   // Une séance s'ouvre : étapes, bloc répété, conseils, statut « À faire ».
