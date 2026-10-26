@@ -32,6 +32,28 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Programmes, tranche 1 : l'affichage du programme d'un sportif (D-46)
+```
+Date : 2026-10-26
+Demande (maquettes d'Antonino : tableur de Gianluca, « Programme hebdomadaire », page de séance) :
+  une ligne par semaine, N séances numérotées SANS jour (le sportif les place quand il veut), cartes
+  par discipline, détail d'une séance (étapes, « Répéter n fois », conseils) ; 5 séances / semaine
+  comme Inès l'a demandé, 12 semaines pour la démo
+Fait : migration 20261026120000_programmes (programs, program_publications figées,
+  publication_sessions : week_index + slot_index, planned_date vide ; lecture seule pour les coachs,
+  aucune écriture depuis le navigateur avant l'éditeur) ; domaine program-session.ts (contenu
+  structuré validé par Zod, résumé des cartes) ; features/programs/queries.ts (publication ACTIVE) ;
+  onglet Agenda = ProgramWeeksSection (semaine en cours encadrée, phase, séances avec le coach et
+  compétitions de la semaine) ou, sans programme, l'agenda en trois vues ; onglet Programme = résumé
+  (période, durée, séances, version publiée) ; page /sportifs/[id]/programme/[séance] ; seed : programme
+  INVENTÉ de 12 semaines × 5 séances pour Inès, publié en version 1
+Non fait (tranches suivantes) : éditeur et publication (tranche 2, après étude Garmin / RoxFit /
+  muscu et maquettes) ; « Je l'ai faite », ressenti, commentaire côté sportif (tranche 3) ; bloc
+  « Suivi automatique avec l'IA » (OPEN-16)
+Tests : db:test 273 (20_programmes), check OK (Vitest 158 : contenu de séance), test:e2e 120 + 6
+  ignorés (programme d'Inès : 12 semaines, 5 séances, détail ; agenda en trois vues pour Thomas)
+```
+
 ### Agenda du coach : sans compétitions, filtres et individuelles / collectives (D-45)
 ```
 Date : 2026-10-26

@@ -944,6 +944,158 @@ export type Database = {
         };
         Relationships: [];
       };
+      program_publications: {
+        Row: {
+          id: string;
+          number: number;
+          organization_id: string;
+          program_id: string;
+          published_at: string;
+          published_by: string | null;
+          schema_version: number;
+          snapshot_json: NonNullable<Json>;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: string;
+          number: number;
+          organization_id: string;
+          program_id: string;
+          published_at?: string;
+          published_by?: string | null;
+          schema_version?: number;
+          snapshot_json: NonNullable<Json>;
+        };
+        Update: {
+          id?: string;
+          number?: number;
+          organization_id?: string;
+          program_id?: string;
+          published_at?: string;
+          published_by?: string | null;
+          schema_version?: number;
+          snapshot_json?: NonNullable<Json>;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "program_publications_program_id_organization_id_fkey";
+            columns: ["program_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "programs";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
+      programs: {
+        Row: {
+          active_publication_id: string | null;
+          athlete_id: string;
+          created_at: string;
+          created_by: string | null;
+          goal: string | null;
+          id: string;
+          organization_id: string;
+          start_date: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          weeks_count: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          active_publication_id?: string | null;
+          athlete_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          goal?: string | null;
+          id?: string;
+          organization_id: string;
+          start_date: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          weeks_count: number;
+        };
+        Update: {
+          active_publication_id?: string | null;
+          athlete_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          goal?: string | null;
+          id?: string;
+          organization_id?: string;
+          start_date?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          weeks_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "programs_active_publication_fkey";
+            columns: ["active_publication_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "program_publications";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "programs_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "programs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      publication_sessions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          planned_date: string | null;
+          publication_id: string;
+          session_json: NonNullable<Json>;
+          slot_index: number;
+          source_session_key: string;
+          week_index: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: string;
+          organization_id: string;
+          planned_date?: string | null;
+          publication_id: string;
+          session_json: NonNullable<Json>;
+          slot_index: number;
+          source_session_key: string;
+          week_index: number;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          planned_date?: string | null;
+          publication_id?: string;
+          session_json?: NonNullable<Json>;
+          slot_index?: number;
+          source_session_key?: string;
+          week_index?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "publication_sessions_publication_id_organization_id_fkey";
+            columns: ["publication_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "program_publications";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;

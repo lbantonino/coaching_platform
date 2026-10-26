@@ -6,6 +6,7 @@ import { openAthleteTab } from "./helpers";
 // Lecture seule sur une sportive de démo du seed (Inès Benali) : rien n'est modifié.
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
 const INES = "da000000-0000-4000-8000-000000000003";
+const THOMAS = "da000000-0000-4000-8000-000000000002";
 
 test("la vue d'ensemble résume la fiche et « Modifier » ouvre le bon onglet", async ({ page }) => {
   await page.goto("/login");
@@ -111,24 +112,37 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(page).toHaveURL(/onglet=objectifs/);
   await expect(page.getByText("Temps visé 1:15:00")).toBeVisible();
 
-  // Onglets Programme (état vide et création) et Agenda (8 semaines, compétitions comprises).
+  // Onglet Programme : le programme publié d'Inès (12 semaines, version 1).
   await openAthleteTab(page, "Programme");
-  await expect(page.getByText("Aucun programme pour Inès")).toBeVisible();
+  const summary = page.getByRole("region", { name: "Prépa Hyrox Bruxelles · bloc 1" });
+  await expect(summary).toContainText("12 semaines");
+  await expect(summary).toContainText("Publiée n° 1");
+  // Agenda d'Inès = son programme (D-46) : une ligne par semaine, 5 séances numérotées sans jour.
   await openAthleteTab(page, "Agenda");
-  const agenda = page.getByRole("region", { name: "Agenda de Inès" });
-  const views = agenda.getByRole("navigation", { name: "Vue de l'agenda du sportif" });
-  // Semaine par défaut : une colonne par jour, sans grille horaire (dates fixées dans l'adresse).
-  await expect(views.getByRole("link", { name: "Semaine" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
-  await page.goto(`/coach/o/${ORG_A}/sportifs/${INES}?onglet=agenda&vue=semaine&date=2027-01-06`);
-  await expect(agenda.getByRole("list", { name: "Jours de la semaine" })).toContainText(
-    "Piste du mercredi",
-  );
-  // Mois : un jour se touche et ouvre sa journée ; Hyrox Gent le 12 décembre.
-  await page.goto(`/coach/o/${ORG_A}/sportifs/${INES}?onglet=agenda&vue=mois&date=2026-12-01`);
-  await agenda.getByRole("link", { name: /^Samedi 12 décembre/ }).click();
-  await expect(page).toHaveURL(/vue=jour&date=2026-12-12/);
-  await expect(agenda.getByRole("list", { name: "Séances du jour" })).toContainText("Hyrox Gent");
+  await expect(page.getByRole("heading", { name: "Programme hebdomadaire" })).toBeVisible();
+  const firstWeek = page.getByRole("region", { name: "Semaine du 26 oct. au 1 nov." });
+  await expect(firstWeek).toContainText("5 séances à répartir librement sur la semaine");
+  await expect(firstWeek.getByRole("listitem").filter({ hasText: /^Séance/ })).toHaveCount(5);
+  await expect(page.getByRole("region", { name: /^Semaine du / })).toHaveCount(12);
+
+  // Une séance s'ouvre : étapes, bloc répété, conseils, statut « À faire ».
+  await firstWeek.getByRole("link", { name: /Endurance rapide/ }).click();
+  await expect(page.getByRole("heading", { name: "Endurance rapide", level: 1 })).toBeVisible();
+  const steps = page.getByRole("list", { name: "Étapes de la séance" });
+  await expect(steps).toContainText("Échauffement");
+  await expect(steps).toContainText("Répéter 5 fois");
+  await expect(page.getByRole("heading", { name: "Conseils du coach" })).toBeVisible();
+  await expect(page.getByRole("main").getByText("À faire").first()).toBeVisible();
+  await page.getByRole("main").getByRole("link", { name: "Inès Benali" }).click();
+  await expect(page).toHaveURL(/onglet=agenda/);
+
+  // Sans programme (Thomas), l'onglet Agenda montre ce qui a un jour, en trois vues.
+  await page.goto(`/coach/o/${ORG_A}/sportifs/${THOMAS}?onglet=agenda&vue=mois&date=2026-12-01`);
+  const agenda = page.getByRole("region", { name: "Agenda de Thomas" });
+  await expect(
+    agenda.getByRole("navigation", { name: "Vue de l'agenda du sportif" }).getByRole("link"),
+  ).toHaveText(["Aujourd'hui", "Semaine", "Mois"]);
+  await agenda.getByRole("link", { name: /^Dimanche 20 décembre/ }).click();
+  await expect(page).toHaveURL(/vue=jour&date=2026-12-20/);
+  await expect(agenda.getByRole("list", { name: "Séances du jour" })).toContainText("Corrida");
 });
