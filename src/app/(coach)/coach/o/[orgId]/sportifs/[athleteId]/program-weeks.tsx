@@ -1,13 +1,11 @@
-import { ChevronRight, Clock, Flag, ListChecks, Users } from "lucide-react";
+import { ChevronRight, Flag, ListChecks, Users } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { disciplineIcons } from "@/components/ui/discipline-icon";
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
-import { sessionSummary } from "@/domain/training/program-session";
 import type { AgendaItem } from "@/features/agenda/items";
 import type { AthleteProgram, ProgramSessionCard, ProgramWeek } from "@/features/programs/queries";
-import { formatDuration } from "@/features/sessions/schemas";
 import { dayShortLabel } from "@/lib/format";
 
 // Onglet « Agenda » quand le sportif a un programme (D-46, maquettes d'Antonino du 26/10) : le
@@ -31,9 +29,9 @@ export function weekRange(week: { monday: string; sunday: string }): string {
 
 // `coachSlot` : séance faite avec le coach (withCoach) ; son jour et son heure cette semaine
 // (« Mar 07:00 »), ou null si le rendez-vous n'a pas lieu cette semaine-là.
-// Téléphone (demande d'Antonino du 26/10) : une ligne compacte (numéro, titre, rendez-vous ou durée)
-// pour voir toutes les séances de la semaine sans défiler ; le détail est sur la page de la séance.
-// Ordinateur : la carte complète (résumé des étapes, durée, type).
+// Carte minimaliste, sur téléphone comme sur ordinateur (demandes d'Antonino du 26/10) : pictogramme
+// de la discipline, numéro et titre, puis le type (Force, Intervalles…) et l'heure du rendez-vous
+// avec le coach s'il y en a un. Tout le reste (étapes, conseils) est sur la page de la séance.
 function SessionCard({
   session,
   href,
@@ -51,66 +49,38 @@ function SessionCard({
   return (
     <Link
       href={href}
-      className={`group flex w-full min-w-0 items-center gap-2.5 rounded-[12px] border px-2.5 py-2 transition-[filter] duration-150 hover:brightness-[.97] lg:flex-col lg:items-stretch lg:gap-2 lg:rounded-[14px] lg:p-3.5 ${
+      title={content.discipline ? disciplineLabels[content.discipline] : undefined}
+      // Téléphone : une ligne. Ordinateur : la carte s'empile dans sa colonne (pictogramme, titre sur
+      // deux lignes au plus, puis le type et le rendez-vous), pour ne pas couper les titres.
+      className={`group flex w-full min-w-0 items-center gap-2.5 rounded-[12px] border px-2.5 py-2 transition-[filter] duration-150 hover:brightness-[.97] lg:flex-col lg:items-start lg:gap-2 lg:p-3 ${
         styles ? styles.header : "border-line bg-bg"
       }`}
     >
-      {/* Téléphone : pastille de la discipline. */}
       <span
         aria-hidden
-        className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full lg:hidden ${
+        className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full ${
           styles ? styles.icon : "border border-line-2 bg-chip text-muted"
         }`}
       >
         <Icon size={15} strokeWidth={2} />
       </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5 lg:gap-1">
-        <span className="flex items-center justify-between gap-2 max-lg:hidden">
-          <span className="flex items-center gap-1.5 text-[13px] text-muted">
-            <Icon aria-hidden size={14} strokeWidth={2} className={styles?.text ?? ""} />
-            Séance {session.slotIndex}
-          </span>
-          {content.discipline ? (
-            <span
-              className={`rounded-pill px-2 py-0.5 text-[12px] font-medium ${styles?.icon ?? ""}`}
-            >
-              {disciplineLabels[content.discipline]}
-            </span>
-          ) : null}
-        </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
-          className={`truncate text-[14px] leading-snug font-semibold lg:text-[16px] ${styles?.text ?? ""}`}
+          className={`truncate text-[14px] leading-snug font-semibold lg:line-clamp-2 lg:whitespace-normal ${styles?.text ?? ""}`}
         >
-          <span className="font-mono text-[12px] text-muted lg:hidden">{session.slotIndex} · </span>
+          <span className="font-mono text-[12px] text-muted">{session.slotIndex} · </span>
           {content.title}
         </span>
-        {/* Téléphone : une seule ligne sous le titre (rendez-vous, sinon durée et type). */}
         <span className="truncate text-[12px] text-muted lg:hidden">
-          {coachLabel ?? `${formatDuration(content.durationMinutes)} · ${content.sessionType}`}
+          {coachLabel ? `${content.sessionType} · ${coachLabel}` : content.sessionType}
         </span>
+        <span className="hidden text-[12px] text-muted lg:block">{content.sessionType}</span>
         {coachLabel ? (
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-surface px-2 py-0.5 text-[12px] font-medium max-lg:hidden">
+          <span className="hidden items-center gap-1 text-[12px] font-medium lg:inline-flex">
             <Users aria-hidden size={12} strokeWidth={2} />
             {coachLabel}
           </span>
         ) : null}
-        <span className="flex flex-col text-[13px] leading-snug text-muted max-lg:hidden">
-          {sessionSummary(content).map((line) => (
-            <span key={line} className="truncate">
-              {line}
-            </span>
-          ))}
-        </span>
-        <span className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[12px] text-muted max-lg:hidden">
-          <span className="inline-flex items-center gap-1">
-            <Clock aria-hidden size={13} strokeWidth={1.8} />
-            {formatDuration(content.durationMinutes)}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <ListChecks aria-hidden size={13} strokeWidth={1.8} />
-            {content.sessionType}
-          </span>
-        </span>
       </span>
       {coachLabel ? (
         <Users aria-hidden size={14} strokeWidth={2} className="shrink-0 text-muted lg:hidden" />
