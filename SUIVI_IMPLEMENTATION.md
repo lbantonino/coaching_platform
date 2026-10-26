@@ -32,6 +32,25 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Téléphone : agendas pleine largeur, cartes de programme compactes ; un programme par sportif (D-49)
+```
+Date : 2026-10-26
+Demande : (1) cartes du « Programme hebdomadaire » plus étroites sur téléphone pour voir toute la
+  semaine sans défiler, et un programme pour CHAQUE sportif selon ses séances par semaine ;
+  (2) sur téléphone, plus de carte autour du calendrier (tableau de bord, Agenda), grille sur toute
+  la largeur ; (3) page Agenda : bouton « Vue » sous les 4 cartes, comme au tableau de bord
+Fait : (1) SessionCard : sur téléphone une ligne (pastille, « n · titre », rendez-vous ou durée et
+  type) ; ordinateur inchangé ; semaine d'Inès sur téléphone : 419 px ; programmes générés pour les
+  15 autres sportifs actifs (N séances / semaine, 12 semaines, rendez-vous avec le coach reliés par
+  withCoach, le reste à faire seul selon la discipline) ; Julien (en pause) sans programme ;
+  rendez-vous de la démo prolongés jusqu'au 17/01/2027 (fin des programmes) ; tâche de Lucas :
+  « Préparer le bloc 2 du programme de Lucas » ; (2) section de l'agenda sans carte sur téléphone,
+  grille -mx-4 bord à bord (semaine, 3 jours, mois) ; (3) ViewMenu déplacé sous les KPI
+Vérifié : séances voulues = séances de la semaine 1 du programme pour les 16 sportifs actifs ;
+  largeur de page 390 px (pas de débordement). Tests : check OK, db:test 273, test:e2e 120 + 6
+  ignorés (agenda en trois vues désormais testé sur Julien, sans programme)
+```
+
 ### Audit de cohérence du jeu de démo (D-48)
 ```
 Date : 2026-10-26

@@ -262,37 +262,6 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         actions={<NewSessionButton date={view === "jour" ? date : undefined} />}
       />
       <PageBody>
-        {/* Téléphone : un bouton « Vue » (Aujourd'hui, 3 jours, Semaine, Mois) ; ordinateur : onglets. */}
-        <div className="lg:hidden">
-          <ViewMenu
-            options={[
-              {
-                key: "jour",
-                label: "Aujourd'hui",
-                href: href({ vue: "aujourdhui", date: today }),
-                selected: view === "aujourdhui" || view === "jour",
-              },
-              {
-                key: "3jours",
-                label: "3 jours",
-                href: href({ vue: "semaine", fullWeek: false }),
-                selected: view === "semaine" && !fullWeek,
-              },
-              {
-                key: "semaine",
-                label: "Semaine",
-                href: href({ vue: "semaine", fullWeek: true }),
-                selected: view === "semaine" && fullWeek,
-              },
-              {
-                key: "mois",
-                label: "Mois",
-                href: href({ vue: "mois" }),
-                selected: view === "mois",
-              },
-            ]}
-          />
-        </div>
         <div className="hidden lg:block">
           <PageTabs
             label="Vue de l'agenda"
@@ -337,10 +306,43 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
             detail={groupDetail ? capitalize(groupDetail) : "Aucune cette semaine"}
           />
         </KpiGrid>
+        {/* Téléphone : bouton « Vue » sous les chiffres, comme au tableau de bord (Aujourd'hui, 3 jours,
+            Semaine, Mois) ; ordinateur : onglets en haut. */}
+        <div className="lg:hidden">
+          <ViewMenu
+            options={[
+              {
+                key: "jour",
+                label: "Aujourd'hui",
+                href: href({ vue: "aujourdhui", date: today }),
+                selected: view === "aujourdhui" || view === "jour",
+              },
+              {
+                key: "3jours",
+                label: "3 jours",
+                href: href({ vue: "semaine", fullWeek: false }),
+                selected: view === "semaine" && !fullWeek,
+              },
+              {
+                key: "semaine",
+                label: "Semaine",
+                href: href({ vue: "semaine", fullWeek: true }),
+                selected: view === "semaine" && fullWeek,
+              },
+              {
+                key: "mois",
+                label: "Mois",
+                href: href({ vue: "mois" }),
+                selected: view === "mois",
+              },
+            ]}
+          />
+        </div>
 
         <section
           aria-labelledby="agenda-title"
-          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px]"
+          // Téléphone : pas de carte autour de l'agenda, la grille prend toute la largeur de l'écran.
+          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:p-0"
         >
           <header className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">

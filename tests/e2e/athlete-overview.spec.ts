@@ -6,7 +6,7 @@ import { openAthleteTab } from "./helpers";
 // Lecture seule sur une sportive de démo du seed (Inès Benali) : rien n'est modifié.
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
 const INES = "da000000-0000-4000-8000-000000000003";
-const THOMAS = "da000000-0000-4000-8000-000000000002";
+const JULIEN = "da000000-0000-4000-8000-000000000006";
 
 test("la vue d'ensemble résume la fiche et « Modifier » ouvre le bon onglet", async ({ page }) => {
   await page.goto("/login");
@@ -144,13 +144,13 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await page.getByRole("main").getByRole("link", { name: "Inès Benali" }).click();
   await expect(page).toHaveURL(/onglet=agenda/);
 
-  // Sans programme (Thomas), l'onglet Agenda montre ce qui a un jour, en trois vues.
-  await page.goto(`/coach/o/${ORG_A}/sportifs/${THOMAS}?onglet=agenda&vue=mois&date=2026-12-01`);
-  const agenda = page.getByRole("region", { name: "Agenda de Thomas" });
+  // Sans programme (Julien, en pause), l'onglet Agenda montre ce qui a un jour, en trois vues.
+  await page.goto(`/coach/o/${ORG_A}/sportifs/${JULIEN}?onglet=agenda&vue=mois&date=2026-12-01`);
+  const agenda = page.getByRole("region", { name: "Agenda de Julien" });
   await expect(
     agenda.getByRole("navigation", { name: "Vue de l'agenda du sportif" }).getByRole("link"),
   ).toHaveText(["Aujourd'hui", "Semaine", "Mois"]);
   await agenda.getByRole("link", { name: /^Dimanche 20 décembre/ }).click();
   await expect(page).toHaveURL(/vue=jour&date=2026-12-20/);
-  await expect(agenda.getByRole("list", { name: "Séances du jour" })).toContainText("Corrida");
+  await expect(agenda.getByText("Rien de prévu pour Julien ce jour-là.")).toBeVisible();
 });

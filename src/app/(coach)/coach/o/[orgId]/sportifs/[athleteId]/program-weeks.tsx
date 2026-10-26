@@ -31,6 +31,9 @@ export function weekRange(week: { monday: string; sunday: string }): string {
 
 // `coachSlot` : séance faite avec le coach (withCoach) ; son jour et son heure cette semaine
 // (« Mar 07:00 »), ou null si le rendez-vous n'a pas lieu cette semaine-là.
+// Téléphone (demande d'Antonino du 26/10) : une ligne compacte (numéro, titre, rendez-vous ou durée)
+// pour voir toutes les séances de la semaine sans défiler ; le détail est sur la page de la séance.
+// Ordinateur : la carte complète (résumé des étapes, durée, type).
 function SessionCard({
   session,
   href,
@@ -43,30 +46,28 @@ function SessionCard({
   const { content } = session;
   const Icon = content.discipline ? disciplineIcons[content.discipline] : ListChecks;
   const styles = content.discipline ? disciplineStyles[content.discipline] : null;
+  const coachLabel =
+    coachSlot === undefined ? null : coachSlot ? `Avec le coach · ${coachSlot}` : "Avec le coach";
   return (
     <Link
       href={href}
-      className={`group flex w-full min-w-0 items-center gap-3 rounded-[14px] border p-3.5 transition-[filter] duration-150 hover:brightness-[.97] lg:flex-col lg:items-stretch lg:gap-2 ${
+      className={`group flex w-full min-w-0 items-center gap-2.5 rounded-[12px] border px-2.5 py-2 transition-[filter] duration-150 hover:brightness-[.97] lg:flex-col lg:items-stretch lg:gap-2 lg:rounded-[14px] lg:p-3.5 ${
         styles ? styles.header : "border-line bg-bg"
       }`}
     >
+      {/* Téléphone : pastille de la discipline. */}
       <span
         aria-hidden
-        className={`inline-flex size-10 shrink-0 items-center justify-center rounded-full lg:hidden ${
+        className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full lg:hidden ${
           styles ? styles.icon : "border border-line-2 bg-chip text-muted"
         }`}
       >
-        <Icon size={18} strokeWidth={2} />
+        <Icon size={15} strokeWidth={2} />
       </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="flex items-center justify-between gap-2">
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5 lg:gap-1">
+        <span className="flex items-center justify-between gap-2 max-lg:hidden">
           <span className="flex items-center gap-1.5 text-[13px] text-muted">
-            <Icon
-              aria-hidden
-              size={14}
-              strokeWidth={2}
-              className={`max-lg:hidden ${styles?.text ?? ""}`}
-            />
+            <Icon aria-hidden size={14} strokeWidth={2} className={styles?.text ?? ""} />
             Séance {session.slotIndex}
           </span>
           {content.discipline ? (
@@ -77,23 +78,30 @@ function SessionCard({
             </span>
           ) : null}
         </span>
-        <span className={`text-[16px] leading-snug font-semibold ${styles?.text ?? ""}`}>
+        <span
+          className={`truncate text-[14px] leading-snug font-semibold lg:text-[16px] ${styles?.text ?? ""}`}
+        >
+          <span className="font-mono text-[12px] text-muted lg:hidden">{session.slotIndex} · </span>
           {content.title}
         </span>
-        {coachSlot !== undefined ? (
-          <span className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-surface px-2 py-0.5 text-[12px] font-medium">
+        {/* Téléphone : une seule ligne sous le titre (rendez-vous, sinon durée et type). */}
+        <span className="truncate text-[12px] text-muted lg:hidden">
+          {coachLabel ?? `${formatDuration(content.durationMinutes)} · ${content.sessionType}`}
+        </span>
+        {coachLabel ? (
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-surface px-2 py-0.5 text-[12px] font-medium max-lg:hidden">
             <Users aria-hidden size={12} strokeWidth={2} />
-            {coachSlot ? `Avec le coach · ${coachSlot}` : "Avec le coach"}
+            {coachLabel}
           </span>
         ) : null}
-        <span className="flex flex-col text-[13px] leading-snug text-muted">
+        <span className="flex flex-col text-[13px] leading-snug text-muted max-lg:hidden">
           {sessionSummary(content).map((line) => (
             <span key={line} className="truncate">
               {line}
             </span>
           ))}
         </span>
-        <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-muted lg:mt-auto lg:pt-1">
+        <span className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-[12px] text-muted max-lg:hidden">
           <span className="inline-flex items-center gap-1">
             <Clock aria-hidden size={13} strokeWidth={1.8} />
             {formatDuration(content.durationMinutes)}
@@ -104,9 +112,12 @@ function SessionCard({
           </span>
         </span>
       </span>
+      {coachLabel ? (
+        <Users aria-hidden size={14} strokeWidth={2} className="shrink-0 text-muted lg:hidden" />
+      ) : null}
       <ChevronRight
         aria-hidden
-        size={18}
+        size={16}
         strokeWidth={1.8}
         className="shrink-0 text-muted lg:hidden"
       />
@@ -193,14 +204,14 @@ function WeekCard({
   return (
     <section
       aria-label={weekRange(week)}
-      className={`flex flex-col gap-3 rounded-card border bg-surface p-4 ${
+      className={`flex flex-col gap-2.5 rounded-card border bg-surface p-3 lg:gap-3 lg:p-4 ${
         current ? "border-accent" : "border-line"
       }`}
     >
       <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <h3 className="text-[16px] font-semibold">{weekRange(week)}</h3>
-          <p className="text-[13px] text-muted">
+          <h3 className="text-[15px] font-semibold lg:text-[16px]">{weekRange(week)}</h3>
+          <p className="text-[12px] text-muted lg:text-[13px]">
             {count === 0
               ? "Semaine de repos"
               : withCoach === 0
@@ -224,7 +235,7 @@ function WeekCard({
         <ol
           aria-label={`Séances, ${weekRange(week).toLowerCase()}`}
           style={{ "--n": count } as CSSProperties}
-          className="grid grid-cols-1 gap-2.5 lg:grid-cols-[repeat(var(--n),minmax(0,1fr))]"
+          className="grid grid-cols-1 gap-1.5 lg:grid-cols-[repeat(var(--n),minmax(0,1fr))] lg:gap-2.5"
         >
           {week.sessions.map((session) => (
             <li key={session.id} className="flex min-w-0">

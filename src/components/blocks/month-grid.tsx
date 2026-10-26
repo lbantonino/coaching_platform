@@ -38,7 +38,8 @@ export function MonthGrid({
   dayHref: (date: string) => string;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    // Téléphone : la grille du mois prend toute la largeur de l'écran.
+    <div className="flex flex-col gap-1.5 max-lg:-mx-3">
       <div className="grid grid-cols-7 text-center font-mono text-[11px] text-muted uppercase">
         {weekDayNames.map((name) => (
           <span key={name} className="py-1">
