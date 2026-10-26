@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardEmpty } from "@/components/ui/card";
 import { CheckList } from "@/components/ui/check-list";
 import { KpiCard, KpiGrid, KpiListCard } from "@/components/ui/kpi-card";
+import { StatTiles } from "@/components/ui/stat-tiles";
 import { Avatar } from "@/components/ui/avatar";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
@@ -45,7 +46,13 @@ import { moveSession } from "@/features/sessions/actions";
 import { listSessions } from "@/features/sessions/queries";
 import { setTaskDone } from "@/features/tasks/actions";
 import { getDashboardTasks } from "@/features/tasks/queries";
-import { dayShortLabel, dueLabel, nowTimeInBrussels, todayIsoInBrussels } from "@/lib/format";
+import {
+  dayShortLabel,
+  daysBetween,
+  dueLabel,
+  nowTimeInBrussels,
+  todayIsoInBrussels,
+} from "@/lib/format";
 
 import { CreateMenu } from "./create-menu";
 
@@ -92,6 +99,12 @@ const dayAndMonth = new Intl.DateTimeFormat("fr-BE", {
   timeZone: "UTC",
 });
 const utc = (day: string) => new Date(`${day}T00:00:00Z`);
+// Barre de l'agenda sur téléphone, vue d'un jour : « Lun 26 ».
+const shortDayLabel = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 // « Semaine du 19 au 25 octobre », ou « du 28 septembre au 4 octobre » à cheval sur deux mois.
@@ -223,29 +236,10 @@ async function Dashboard({
       />
       <PageBody grid>
         <div className="lg:col-span-12">
-          <KpiGrid label="Chiffres clés">
-            <KpiCard
-              compact
-              href={`${orgBase}/agenda`}
-              color="accent"
-              icon={CalendarDays}
-              value={String(todayBlocks.length)}
-              label={todayBlocks.length > 1 ? "coachings aujourd'hui" : "coaching aujourd'hui"}
-              detail={
-                todayBlocks.length === 0
-                  ? "Rien de prévu aujourd'hui"
-                  : `${plural(doneToday, "terminé")} · ${todayBlocks.length - doneToday} à venir`
-              }
-            />
-            <KpiCard
-              compact
-              href={`${orgBase}/agenda`}
-              color="run"
-              icon={Clock}
-              value={thisWeek.totalMinutes > 0 ? formatHours(thisWeek.totalMinutes) : "0 h"}
-              label="de coaching cette semaine"
-              detail={`${plural(weekSessions, "séance")} ${weekSessions > 1 ? "planifiées" : "planifiée"}`}
-            />
+          {/* Demande d'Antonino du 26/10 : en haut, seulement ce que le coach doit voir d'abord, ses
+              tâches et ce qu'il a encaissé cette semaine. Les chiffres de l'agenda passent sous le
+              calendrier. */}
+          <KpiGrid label="Chiffres clés" columns={2} equal>
             <KpiListCard
               href="/coach/taches"
               color="strength"
@@ -276,6 +270,8 @@ async function Dashboard({
               color="ok"
               icon={Euro}
               value={formatEuros(weekIncome.inclCents)}
+              shortLabel="Encaissé"
+              mobileLines={["cette semaine", plural(weekIncome.count, "paiement")]}
               label="encaissés cette semaine"
               detail={`${formatEuros(weekIncome.exclCents)} HTVA · ${plural(weekIncome.count, "paiement")}`}
             />
@@ -306,7 +302,7 @@ async function Dashboard({
                 ? periodLabel(`${month}-01`, `${month}-01`, true)
                 : view === "semaine"
                   ? periodLabel(monday, addDays(monday, 6), true)
-                  : undefined
+                  : capitalize(shortDayLabel.format(utc(date)).replace(".", ""))
             }
             prevHref={viewHref(view, step(-1))}
             nextHref={viewHref(view, step(1))}
@@ -373,6 +369,30 @@ async function Dashboard({
               sessionHref={(id) => `${orgBase}/agenda/seances/${id}`}
             />
           )}
+          {/* Sous le calendrier (26/10), comme sur la page Agenda : aujourd'hui et la semaine en
+              cours, quelle que soit la période affichée. */}
+          <StatTiles
+            label="Chiffres de l'agenda"
+            tiles={[
+              {
+                color: "accent",
+                icon: CalendarDays,
+                value: String(todayBlocks.length),
+                text: todayBlocks.length > 1 ? "coachings aujourd'hui" : "coaching aujourd'hui",
+                detail:
+                  todayBlocks.length === 0
+                    ? "rien de prévu"
+                    : `${plural(doneToday, "terminé")}, ${todayBlocks.length - doneToday} à venir`,
+              },
+              {
+                color: "run",
+                icon: Clock,
+                value: thisWeek.totalMinutes > 0 ? formatHours(thisWeek.totalMinutes) : "0 h",
+                text: "de coaching cette semaine",
+                detail: plural(weekSessions, "séance"),
+              },
+            ]}
+          />
         </section>
 
         <Card
@@ -386,28 +406,52 @@ async function Dashboard({
               Aucune séance prévue dans les 30 prochains jours.
             </CardEmpty>
           ) : (
-            <div className="flex flex-col">
-              {upcoming.map((block) => (
-                <ListRow
-                  key={block.key}
-                  href={`${orgBase}/agenda/seances/${block.sessionId}`}
-                  leading={
-                    <span className="flex w-[84px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
-                      <span className="text-muted">{dayShortLabel(block.date, today)}</span>
-                      <span className="text-[14px] font-medium">{block.label.slice(0, 5)}</span>
-                    </span>
-                  }
-                  title={block.title}
-                  sub={block.individual ? block.subtitle : `Collective · ${block.subtitle}`}
-                  trailing={
-                    block.discipline ? (
-                      <Badge tone={disciplineTones[block.discipline]} dot={false}>
-                        {disciplineLabels[block.discipline]}
-                      </Badge>
-                    ) : null
-                  }
-                />
-              ))}
+            // Groupées par jour (demande d'Antonino du 26/10) : « Aujourd'hui » marqué d'une barre
+            // rouge, « Demain » d'une barre ambre, les jours suivants en gris ; chaque séance garde
+            // la barre de son jour, pour voir d'un coup d'œil où s'arrête la journée.
+            <div className="flex flex-col gap-3 pt-1">
+              {[...new Set(upcoming.map((block) => block.date))].map((day) => {
+                const gap = daysBetween(today, day);
+                const bar = gap === 0 ? "bg-accent" : gap === 1 ? "bg-amber" : "bg-line-2";
+                const text =
+                  gap === 0 ? "text-accent-text" : gap === 1 ? "text-amber" : "text-muted";
+                return (
+                  <section key={day} aria-label={dayShortLabel(day, today)} className="flex gap-3">
+                    <span aria-hidden className={`w-1 shrink-0 rounded-pill ${bar}`} />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <h3
+                        className={`text-[12px] font-semibold tracking-[0.04em] uppercase ${text}`}
+                      >
+                        {dayShortLabel(day, today)}
+                      </h3>
+                      {upcoming
+                        .filter((block) => block.date === day)
+                        .map((block) => (
+                          <ListRow
+                            key={block.key}
+                            href={`${orgBase}/agenda/seances/${block.sessionId}`}
+                            leading={
+                              <span className="w-12 shrink-0 font-mono text-[14px] font-medium tabular">
+                                {block.label.slice(0, 5)}
+                              </span>
+                            }
+                            title={block.title}
+                            sub={
+                              block.individual ? block.subtitle : `Collective · ${block.subtitle}`
+                            }
+                            trailing={
+                              block.discipline ? (
+                                <Badge tone={disciplineTones[block.discipline]} dot={false}>
+                                  {disciplineLabels[block.discipline]}
+                                </Badge>
+                              ) : null
+                            }
+                          />
+                        ))}
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           )}
         </Card>

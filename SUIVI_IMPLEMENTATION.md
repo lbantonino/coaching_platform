@@ -32,6 +32,26 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Tableau de bord recentré sur les tâches et l'encaissé ; vue du jour en grille (D-51)
+```
+Date : 2026-10-26
+Demande : (1) vue « Aujourd'hui » de la page Agenda comme celle du tableau de bord ; (2) tableau de
+  bord : ne garder en haut que les tâches et l'encaissé de la semaine (le plus important pour
+  Gianluca), coachings du jour et total d'heures en petites lignes sous le calendrier, comme la page
+  Agenda, téléphone et ordinateur ; (3) chiffres de la page Agenda plus petits et colorés ;
+  (4) « Séances à venir » : distinguer aujourd'hui et demain
+Fait : page Agenda, vue du jour = WeekTimeGrid single (56 px / heure, nom du sportif et détail
+  visibles), libellé court « Lun 26 » sur téléphone ; StatTiles (src/components/ui/stat-tiles.tsx),
+  tuiles colorées partagées par la page Agenda (4 tuiles) et le tableau de bord (2 tuiles sous le
+  calendrier : coachings aujourd'hui + terminés / à venir, heures de la semaine + séances) ;
+  KpiGrid du tableau de bord à 2 cartes (Tâches, Encaissé) ; KpiCard garde son nom complet
+  (aria-label) quand le libellé court remplace le long sur téléphone ; « Séances à venir » groupées
+  par jour, barre verticale et titre (aujourd'hui rouge, demain ambre, ensuite gris)
+Tests : check OK (Vitest 158), test:e2e 120 + 6 ignorés (vue du jour : le bloc porte le nom du
+  sportif, plus « Avec … »)
+Reste : lier la carte Encaissé à la future comptabilité des forfaits (attente du retour de Gianluca)
+```
+
 ### Agendas façon Google Agenda, page de séance en couleurs, sportifs sur téléphone (D-50)
 ```
 Date : 2026-10-26
