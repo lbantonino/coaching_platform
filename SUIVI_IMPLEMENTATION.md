@@ -32,6 +32,26 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Agenda du coach : sans compétitions, filtres et individuelles / collectives (D-45)
+```
+Date : 2026-10-26
+Demande : plus de compétitions dans le planning du coach (tableau de bord, page Agenda) : elles
+  deviennent des rappels (notifications) ; page Agenda : vues Aujourd'hui, Semaine, Mois ; filtres
+  Toutes, Individuelles, Collectives (dans cet ordre) sur la page Agenda ET le calendrier du
+  tableau de bord ; distinguer une séance individuelle d'une collective sur les deux calendriers
+Fait : notifications : section « Compétitions dans les 7 jours » (objectifs en cours avec un nom
+  de compétition, J-n, lien vers les objectifs du sportif), comptée dans la cloche ; AgendaEvent
+  gagne isCompetition ; page Agenda : listAgendaEvents retiré, filtre Compétitions retiré, onglets
+  Aujourd'hui / Semaine / Mois (la vue Jour reste accessible depuis un jour du mois) ; tableau de
+  bord : FilterChips ?type=individuelles|collectives (l'agenda seulement, pas les chiffres clés),
+  --grid-chrome téléphone 340 → 392 px ; calendriers : collective = contour pointillé + icône
+  « groupe » (semaine, jour), point creux / icône (mois), pastille Individuelle / Collective dans les
+  listes du jour, légende sous la grille
+Tests : check OK (Vitest 155), test:e2e 120 + 6 ignorés (agenda sans compétition, vues et filtres,
+  filtre du tableau de bord, rappel J-3 dans les notifications ; glisser-déposer visé à 11:00, loin
+  du bord haut de la zone visible)
+```
+
 ### Agenda du sportif en trois vues (D-44)
 ```
 Date : 2026-10-26

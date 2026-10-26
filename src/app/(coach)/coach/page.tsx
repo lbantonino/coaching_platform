@@ -22,6 +22,7 @@ import { iconButtonClass } from "@/components/ui/button";
 import { Card, CardEmpty } from "@/components/ui/card";
 import { CheckList } from "@/components/ui/check-list";
 import { KpiCard, KpiGrid, KpiListCard } from "@/components/ui/kpi-card";
+import { FilterChips } from "@/components/ui/filter-chips";
 import { SegmentedNav } from "@/components/ui/segmented";
 import { formatEuros, monthActivity } from "@/domain/billing/invoices";
 import { paymentTotals } from "@/domain/billing/payments";
@@ -67,6 +68,9 @@ export default function CoachHomePage({ searchParams }: PageProps<"/coach">) {
           <Dashboard
             view={query.vue === "jour" || query.vue === "mois" ? query.vue : "semaine"}
             date={typeof query.date === "string" ? query.date : undefined}
+            kind={
+              query.type === "individuelles" || query.type === "collectives" ? query.type : "toutes"
+            }
           />
         ))}
       </Suspense>
@@ -102,12 +106,23 @@ const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "
 
 const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 
+// Filtre de l'agenda (demande d'Antonino du 26/10), dans cet ordre : Toutes, Individuelles,
+// Collectives. Il ne touche que l'agenda : les chiffres clés comptent toujours toutes les séances.
+type SessionKindFilter = "toutes" | "individuelles" | "collectives";
+const kindFilters: { key: SessionKindFilter; label: string }[] = [
+  { key: "toutes", label: "Toutes" },
+  { key: "individuelles", label: "Individuelles" },
+  { key: "collectives", label: "Collectives" },
+];
+
 async function Dashboard({
   view,
   date: dateParam,
+  kind,
 }: {
   view: AgendaView;
   date: string | undefined;
+  kind: SessionKindFilter;
 }) {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
   const { user, memberships } = await requireCoach();
@@ -140,20 +155,34 @@ async function Dashboard({
   const date = parseDay(dateParam, today);
   const monday = mondayOf(date);
   const month = date.slice(0, 7);
-  const layout = view === "jour" ? layoutDays(sessions, [date]) : layoutWeek(sessions, monday);
+  const agendaSessions = sessions.filter(
+    (session) =>
+      kind === "toutes" ||
+      (kind === "collectives" ? session.kind === "group" : session.kind === "individual"),
+  );
+  const layout =
+    view === "jour" ? layoutDays(agendaSessions, [date]) : layoutWeek(agendaSessions, monday);
   const monthDates = monthGrid(month)
     .flat()
     .filter((day) => day.inMonth)
     .map((day) => day.iso);
-  const monthLayout = view === "mois" ? layoutDays(sessions, monthDates) : null;
+  const monthLayout = view === "mois" ? layoutDays(agendaSessions, monthDates) : null;
   const monthBlocks = new Map<string, WeekBlock[]>(
     monthLayout ? monthLayout.days.map((day) => [day.date, day.blocks]) : [],
   );
   const shown = monthLayout ?? layout;
   const shownCount = shown.days.reduce((sum, day) => sum + day.blocks.length, 0);
 
-  const viewHref = (target: AgendaView, at: string = date) =>
-    target === "semaine" && at === today ? "/coach" : `/coach?vue=${target}&date=${at}`;
+  const viewHref = (target: AgendaView, at: string = date, nextKind: SessionKindFilter = kind) => {
+    const search = new URLSearchParams();
+    if (target !== "semaine" || at !== today) {
+      search.set("vue", target);
+      search.set("date", at);
+    }
+    if (nextKind !== "toutes") search.set("type", nextKind);
+    const text = search.toString();
+    return text ? `/coach?${text}` : "/coach";
+  };
   const step = (direction: 1 | -1) =>
     view === "jour"
       ? addDays(date, direction)
@@ -316,6 +345,14 @@ async function Dashboard({
               </Link>
             </div>
           </header>
+          <FilterChips
+            label="Filtrer l'agenda"
+            options={kindFilters.map((filter) => ({
+              href: viewHref(view, date, filter.key),
+              label: filter.label,
+              active: kind === filter.key,
+            }))}
+          />
           {view === "mois" ? (
             <MonthGrid
               month={month}

@@ -185,10 +185,11 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
   await page.goto("/coach?date=2027-02-10");
   await expect(inDay("2027-02-10")).toBeVisible();
 
-  // Toute la série, depuis le mercredi 10 : chaque vendredi à 09:00. La date déjà déplacée reste
+  // Toute la série, depuis le mercredi 10 : chaque vendredi à 11:00 (loin du bord haut de la zone
+  // visible, où le défilement automatique décalerait la cible). La date déjà déplacée reste
   // au jeudi 4.
-  await mouseDrag(page, inDay("2027-02-10"), "2027-02-12", 9);
-  await menu.getByRole("button", { name: "Toute la série · chaque vendredi à 09:00" }).click();
+  await mouseDrag(page, inDay("2027-02-10"), "2027-02-12", 11);
+  await menu.getByRole("button", { name: "Toute la série · chaque vendredi à 11:00" }).click();
   await expect(page.getByText("Séance déplacée.")).toBeVisible();
   await expect(inDay("2027-02-12")).toBeVisible();
   await expect(inDay("2027-02-10")).toHaveCount(0);
@@ -198,7 +199,7 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
 
   await inDay("2027-02-04").click();
   await expect(page.getByRole("region", { name: "Détails", exact: true })).toContainText(
-    "Chaque vendredi à 09:00",
+    "Chaque vendredi à 11:00",
   );
   await deleteSession(page, title);
 });

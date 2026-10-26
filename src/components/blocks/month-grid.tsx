@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import Link from "next/link";
 
 import type { Discipline } from "@/domain/training/discipline";
@@ -6,7 +7,8 @@ import type { WeekBlock } from "@/features/agenda/week";
 
 // Vue Mois de l'agenda (prompt Claude Design §6) : grille 7 colonnes, cases carrées, un point de
 // couleur par séance (couleur de la discipline), aujourd'hui en rouge plein. Ordinateur : l'heure et
-// le nom des deux premières séances. Un jour ouvre sa journée.
+// le nom des deux premières séances. Un jour ouvre sa journée. Séance collective (26/10) : point creux
+// (cerclé) sur téléphone, icône « groupe » sur ordinateur ; individuelle : point plein.
 const dotClasses: Record<Discipline | "none", string> = {
   running: "bg-run",
   strength: "bg-strength",
@@ -72,13 +74,25 @@ export function MonthGrid({
                     {blocks.slice(0, 4).map((block) => (
                       <span
                         key={block.key}
-                        className={`size-1.5 rounded-full ${dotClasses[block.discipline ?? "none"]}`}
+                        className={`size-1.5 rounded-full ${
+                          block.individual
+                            ? dotClasses[block.discipline ?? "none"]
+                            : `border border-current ${textClasses[block.discipline ?? "none"]}`
+                        }`}
                       />
                     ))}
                   </span>
                   <span className="hidden min-w-0 flex-col gap-0.5 lg:flex">
                     {blocks.slice(0, 2).map((block) => (
                       <span key={block.key} className="truncate text-[11px] leading-tight">
+                        {block.individual ? null : (
+                          <Users
+                            aria-hidden
+                            size={10}
+                            strokeWidth={2.4}
+                            className={`mr-0.5 inline align-[-1px] ${textClasses[block.discipline ?? "none"]}`}
+                          />
+                        )}
                         <span className={`font-mono ${textClasses[block.discipline ?? "none"]}`}>
                           {block.label.slice(0, 5)}
                         </span>{" "}

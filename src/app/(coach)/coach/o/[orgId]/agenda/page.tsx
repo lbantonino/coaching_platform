@@ -14,7 +14,7 @@ import { Suspense, type ReactNode } from "react";
 import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
 import { NewSessionButton } from "@/components/blocks/new-session-sheet";
-import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
+import { KindBadge, WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { iconButtonClass } from "@/components/ui/button";
@@ -25,7 +25,6 @@ import { PageTabs } from "@/components/ui/page-tabs";
 import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
-import { listAgendaEvents, type AgendaEvent } from "@/features/agenda/queries";
 import {
   formatHours,
   isoWeek,
@@ -44,23 +43,24 @@ export const metadata: Metadata = {
   title: "Agenda",
 };
 
-// Agenda du coach (prompt Claude Design §6 et §7.2) : séances encadrées, collectives et
-// individuelles, et calque des compétitions de ses sportifs (objectifs datés, D-27).
-// Adresse : ?vue=semaine|jour|mois|aujourdhui, ?date=AAAA-MM-JJ, ?type=collectives|individuelles|competitions.
+// Agenda du coach (prompt Claude Design §6 et §7.2) : SES séances encadrées, collectives et
+// individuelles. Demande d'Antonino du 26/10 : les compétitions des sportifs ne sont plus dans son
+// planning (rappels dans les Notifications) ; vues Aujourd'hui, Semaine, Mois ; filtres Toutes,
+// Individuelles, Collectives. La vue Jour reste accessible en touchant un jour du mois.
+// Adresse : ?vue=semaine|jour|mois|aujourdhui, ?date=AAAA-MM-JJ, ?type=individuelles|collectives.
 type View = "semaine" | "jour" | "mois" | "aujourdhui";
-type Kind = "toutes" | "collectives" | "individuelles" | "competitions";
+type Kind = "toutes" | "individuelles" | "collectives";
 
 const views: { key: View; label: string }[] = [
-  { key: "semaine", label: "Semaine" },
-  { key: "jour", label: "Jour" },
-  { key: "mois", label: "Mois" },
   { key: "aujourdhui", label: "Aujourd'hui" },
+  { key: "semaine", label: "Semaine" },
+  { key: "mois", label: "Mois" },
 ];
+const viewKeys: View[] = ["semaine", "jour", "mois", "aujourdhui"];
 const kinds: { key: Kind; label: string }[] = [
   { key: "toutes", label: "Toutes" },
-  { key: "collectives", label: "Collectives" },
   { key: "individuelles", label: "Individuelles" },
-  { key: "competitions", label: "Compétitions" },
+  { key: "collectives", label: "Collectives" },
 ];
 
 type Query = Record<string, string | string[] | undefined>;
@@ -93,11 +93,6 @@ const dayAndMonth = new Intl.DateTimeFormat("fr-BE", {
   timeZone: "UTC",
 });
 const shortWeekday = new Intl.DateTimeFormat("fr-BE", { weekday: "short", timeZone: "UTC" });
-const shortDate = new Intl.DateTimeFormat("fr-BE", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
 const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
 const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
 
@@ -130,7 +125,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   const viewParam = single(query.vue);
   const view: View = /^\d{4}-\d{2}$/.test(legacyMonth ?? "")
     ? "mois"
-    : views.some((v) => v.key === viewParam)
+    : viewKeys.includes(viewParam as View)
       ? (viewParam as View)
       : "semaine";
   const kindParam = single(query.type);
@@ -142,19 +137,12 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   const monday = mondayOf(date);
   const month = date.slice(0, 7);
 
-  const [sessions, events] = await Promise.all([
-    listSessions(organizationId),
-    listAgendaEvents(organizationId),
-  ]);
-  const shownSessions: CoachSession[] =
-    kind === "competitions"
-      ? []
-      : sessions.filter(
-          (session) =>
-            kind === "toutes" ||
-            (kind === "collectives" ? session.kind === "group" : session.kind === "individual"),
-        );
-  const shownEvents: AgendaEvent[] = kind === "toutes" || kind === "competitions" ? events : [];
+  const sessions = await listSessions(organizationId);
+  const shownSessions: CoachSession[] = sessions.filter(
+    (session) =>
+      kind === "toutes" ||
+      (kind === "collectives" ? session.kind === "group" : session.kind === "individual"),
+  );
 
   const href = (changes: { vue?: View; date?: string; type?: Kind }) => {
     const search = new URLSearchParams();
@@ -186,8 +174,6 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     .join(" · ");
 
   const sessionHref = (id: string) => `${base}/seances/${id}`;
-  const eventHref = (event: { athleteId: string }) =>
-    `/coach/o/${organizationId}/sportifs/${event.athleteId}?onglet=objectifs`;
 
   let title: string;
   let subtitle: string;
@@ -195,32 +181,17 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   if (view === "semaine") {
     const layout = layoutWeek(shownSessions, monday);
     const count = layout.days.reduce((sum, day) => sum + day.blocks.length, 0);
-    const weekEvents = shownEvents.filter(
-      (event) => event.date >= monday && event.date <= addDays(monday, 6),
-    );
     title = weekTitle(monday);
-    subtitle =
-      kind === "competitions"
-        ? plural(weekEvents.length, "compétition")
-        : `${plural(count, "séance")} · ${formatHours(layout.totalMinutes)} planifiées`;
+    subtitle = `${plural(count, "séance")} · ${formatHours(layout.totalMinutes)} planifiées`;
     content = (
-      <>
-        {weekEvents.length > 0 ? (
-          <EventList events={weekEvents} href={eventHref} label="Compétitions de la semaine" />
-        ) : kind === "competitions" ? (
-          <CardEmpty icon={Flag}>Aucune compétition cette semaine.</CardEmpty>
-        ) : null}
-        {kind === "competitions" ? null : (
-          <WeekTimeGrid
-            layout={layout}
-            today={today}
-            now={now}
-            sessionHref={sessionHref}
-            creatable
-            onMove={moveSession.bind(null, organizationId)}
-          />
-        )}
-      </>
+      <WeekTimeGrid
+        layout={layout}
+        today={today}
+        now={now}
+        sessionHref={sessionHref}
+        creatable
+        onMove={moveSession.bind(null, organizationId)}
+      />
     );
   } else if (view === "mois") {
     const dates = monthGrid(month)
@@ -231,26 +202,20 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     const monthBlocks = new Map<string, WeekBlock[]>(
       monthLayout.days.map((day) => [day.date, day.blocks]),
     );
-    const monthEvents = shownEvents.filter((event) => event.date.startsWith(month));
     const count = monthLayout.days.reduce((sum, day) => sum + day.blocks.length, 0);
     title = capitalize(monthLabel(month));
-    subtitle = `${plural(count, "séance")} · ${plural(monthEvents.length, "compétition")}`;
+    subtitle = plural(count, "séance");
     content = (
-      <>
-        <MonthGrid
-          month={month}
-          monthBlocks={monthBlocks}
-          today={today}
-          dayHref={(day) => href({ vue: "jour", date: day })}
-        />
-        {monthEvents.length > 0 ? (
-          <EventList events={monthEvents} href={eventHref} label="Compétitions du mois" />
-        ) : null}
-      </>
+      <MonthGrid
+        month={month}
+        monthBlocks={monthBlocks}
+        today={today}
+        dayHref={(day) => href({ vue: "jour", date: day })}
+      />
     );
   } else {
-    // Jour ou Aujourd'hui : la liste de la journée, par heure ; les compétitions d'abord.
-    const items = buildAgendaItems(shownSessions, shownEvents, date, date, {
+    // Jour ou Aujourd'hui : la liste de la journée, par heure.
+    const items = buildAgendaItems(shownSessions, [], date, date, {
       discipline: null,
       athleteId: null,
     });
@@ -272,7 +237,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
             <DayRow
               key={item.key}
               item={item}
-              href={item.type === "session" ? sessionHref(item.sessionId) : eventHref(item)}
+              href={item.type === "session" ? sessionHref(item.sessionId) : ""}
               status={
                 view === "aujourdhui" && item.type === "session"
                   ? sessionStatus(item, sessions, now)
@@ -417,6 +382,7 @@ function DayRow({ item, href, status }: { item: AgendaItem; href: string; status
       sub={item.detail || (item.type === "event" ? "Compétition" : undefined)}
       trailing={
         <>
+          {item.type === "session" ? <KindBadge individual={item.individual} /> : null}
           {item.discipline ? (
             <Badge tone={disciplineTones[item.discipline]}>
               {disciplineLabels[item.discipline]}
@@ -426,46 +392,5 @@ function DayRow({ item, href, status }: { item: AgendaItem; href: string; status
         </>
       }
     />
-  );
-}
-
-function EventList({
-  events,
-  href,
-  label,
-}: {
-  events: AgendaEvent[];
-  href: (event: AgendaEvent) => string;
-  label: string;
-}) {
-  return (
-    <div className="flex flex-col">
-      <p className="pb-1 font-mono text-[11px] font-medium tracking-[0.08em] text-muted uppercase">
-        {label}
-      </p>
-      {events.map((event) => (
-        <ListRow
-          key={event.id}
-          href={href(event)}
-          leading={
-            <span className="w-14 shrink-0 font-mono text-[13px] font-medium tabular">
-              {shortDate.format(utc(event.date))}
-            </span>
-          }
-          title={`${event.title} · ${event.athleteName}`}
-          sub={event.detail || "Compétition"}
-          trailing={
-            <>
-              {event.discipline ? (
-                <Badge tone={disciplineTones[event.discipline]}>
-                  {disciplineLabels[event.discipline]}
-                </Badge>
-              ) : null}
-              {event.achieved ? <StatusBadge label="Atteint" /> : null}
-            </>
-          }
-        />
-      ))}
-    </div>
   );
 }
