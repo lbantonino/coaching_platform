@@ -57,10 +57,12 @@ test("le tableau de bord montre la semaine du coach avec ses vraies séances", a
   await expect(
     week.getByRole("link", { name: /Piste du mercredi/ }).filter({ visible: true }),
   ).toHaveCount(1);
-  // Les modules pas encore construits disent ce qu'ils contiennent : rien, jamais de faux chiffres.
-  await expect(
-    page.getByRole("region", { name: "Programmes en cours" }).getByText(/Aucun programme/),
-  ).toBeVisible();
+  // Programmes en cours (D-46) : le programme publié d'Inès, avec sa semaine en cours.
+  const programs = page.getByRole("region", { name: "Programmes en cours" });
+  await expect(programs.getByRole("link", { name: /Inès Benali/ })).toContainText(
+    "Prépa Hyrox Bruxelles",
+  );
+  await expect(programs).toContainText(/Sem\. \d+\/12/);
   await expect(page.getByRole("region", { name: "Séances à venir" })).toBeVisible();
   // Filtre de l'agenda (26/10) : Toutes, Individuelles, Collectives ; la piste est collective.
   const filters = page.getByRole("navigation", { name: "Filtrer l'agenda" });
