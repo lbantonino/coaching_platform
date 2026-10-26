@@ -97,6 +97,7 @@ export type Database = {
           priority: string;
           status: string;
           target_date: string | null;
+          target_time_seconds: number | null;
           updated_at: string;
         };
         ComputedFields: never;
@@ -114,6 +115,7 @@ export type Database = {
           priority?: string;
           status?: string;
           target_date?: string | null;
+          target_time_seconds?: number | null;
           updated_at?: string;
         };
         Update: {
@@ -130,6 +132,7 @@ export type Database = {
           priority?: string;
           status?: string;
           target_date?: string | null;
+          target_time_seconds?: number | null;
           updated_at?: string;
         };
         Relationships: [

@@ -13,6 +13,7 @@ import {
   goalTypeLabels,
   hyroxCategoryLabels,
 } from "@/features/goals/schemas";
+import { formatRaceTime } from "@/features/records/schemas";
 import { formatDate } from "@/lib/format";
 
 import { AddGoalForm } from "./add-goal-form";
@@ -31,6 +32,7 @@ function goalDetails(goal: GoalEntry): string {
     goal.hyroxCategory ? `Catégorie ${hyroxCategoryLabels[goal.hyroxCategory]}` : null,
     goal.competitionLocation,
     goal.targetDate ? formatDate(goal.targetDate) : "Sans date",
+    goal.targetTimeSeconds ? `Temps visé ${formatRaceTime(goal.targetTimeSeconds)}` : null,
   ]
     .filter(Boolean)
     .join(" · ");

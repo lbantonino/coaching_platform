@@ -128,6 +128,21 @@ export function GoalFields({
             className={`${inputClass} font-mono`}
           />
         </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor={`${idPrefix}-time`} className={labelClass}>
+            Temps visé <span className="font-normal text-muted">(facultatif)</span>
+          </label>
+          <input
+            id={`${idPrefix}-time`}
+            name="targetTime"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="Ex. : 1:15:00"
+            defaultValue={v?.targetTime}
+            className={`${inputClass} font-mono`}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">

@@ -9,6 +9,8 @@ export type GoalEntry = {
   type: GoalType;
   description: string | null;
   targetDate: string | null;
+  // Temps visé en secondes (facultatif), ex. 4500 pour 1:15:00.
+  targetTimeSeconds: number | null;
   priority: GoalPriority;
   status: GoalStatus;
   competitionName: string | null;
@@ -29,7 +31,7 @@ export async function listGoals(organizationId: string, athleteId: string): Prom
   const { data, error } = await supabase
     .from("athlete_goals")
     .select(
-      "id, goal_type, description, target_date, priority, status, competition_name, competition_location, hyrox_category, updated_at",
+      "id, goal_type, description, target_date, target_time_seconds, priority, status, competition_name, competition_location, hyrox_category, updated_at",
     )
     .eq("organization_id", organizationId)
     .eq("athlete_id", athleteId)
@@ -45,6 +47,7 @@ export async function listGoals(organizationId: string, athleteId: string): Prom
       type: row.goal_type as GoalType,
       description: row.description,
       targetDate: row.target_date,
+      targetTimeSeconds: row.target_time_seconds,
       priority: row.priority as GoalPriority,
       status: row.status as GoalStatus,
       competitionName: row.competition_name,

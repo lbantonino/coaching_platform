@@ -9,6 +9,7 @@ const base: GoalFormInput = {
   goalType: "run_half",
   priority: "main",
   targetDate: "",
+  targetTime: "",
   isCompetition: false,
   competitionName: "",
   competitionLocation: "",
@@ -28,6 +29,7 @@ describe("parseGoalForm (objectifs et compétitions)", () => {
         goal_type: "fitness",
         priority: "main",
         target_date: null,
+        target_time_seconds: null,
         competition_name: null,
         competition_location: null,
         hyrox_category: null,
@@ -140,6 +142,25 @@ describe("compte à rebours", () => {
     expect(goalCountdown(TODAY, "2026-12-06")).toEqual({ label: "J-45", overdue: false });
     expect(goalCountdown(TODAY, TODAY)).toEqual({ label: "Aujourd'hui", overdue: false });
     expect(goalCountdown(TODAY, "2026-10-01")).toEqual({ label: "Date passée", overdue: true });
+  });
+});
+
+describe("parseGoalForm : temps visé", () => {
+  it("lit 1:15:00 et 45:00 en secondes", () => {
+    const hours = parseGoalForm({ ...base, targetTime: "1:15:00" }, TODAY);
+    expect(hours.ok && hours.values.target_time_seconds).toBe(4500);
+    const minutes = parseGoalForm({ ...base, targetTime: " 45:00 " }, TODAY);
+    expect(minutes.ok && minutes.values.target_time_seconds).toBe(2700);
+  });
+
+  it("refuse un temps mal écrit ou hors limites, avec un exemple", () => {
+    const error = {
+      ok: false,
+      error: "Temps visé invalide : écris-le comme 1:15:00 ou 45:00.",
+    };
+    expect(parseGoalForm({ ...base, targetTime: "1h15" }, TODAY)).toEqual(error);
+    expect(parseGoalForm({ ...base, targetTime: "0:30" }, TODAY)).toEqual(error);
+    expect(parseGoalForm({ ...base, targetTime: "25:00:00" }, TODAY)).toEqual(error);
   });
 });
 

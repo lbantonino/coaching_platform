@@ -149,6 +149,8 @@ export type AthleteDetail = {
   healthConstraints: string | null;
   healthConsentAt: string | null;
   status: AthleteStatus;
+  // Type de programme choisi par le coach (D-40) ; null = pas encore choisi.
+  programType: Discipline | null;
   hasAccount: boolean;
   createdAt: string;
 };
@@ -165,7 +167,7 @@ export async function getAthlete(
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, last_name, sex, photo_path, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, athlete_user_id, created_at",
+      "id, first_name, last_name, sex, photo_path, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, program_type, athlete_user_id, created_at",
     )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
@@ -196,6 +198,7 @@ export async function getAthlete(
     healthConstraints: data.health_constraints,
     healthConsentAt: data.health_consent_at,
     status: data.status as AthleteStatus,
+    programType: data.program_type as Discipline | null,
     hasAccount: data.athlete_user_id !== null,
     createdAt: data.created_at,
   };

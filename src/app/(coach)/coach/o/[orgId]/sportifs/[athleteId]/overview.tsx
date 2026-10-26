@@ -4,6 +4,7 @@ import {
   Clock,
   Dumbbell,
   FileText,
+  Flag,
   Gauge,
   HeartPulse,
   Mail,
@@ -23,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { SexMark } from "@/components/ui/sex-mark";
 import type { ActivityEvent } from "@/features/activity/build";
+import type { AgendaItem } from "@/features/agenda/items";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
@@ -41,8 +43,9 @@ import {
   goalTypeLabels,
   hyroxCategoryLabels,
 } from "@/features/goals/schemas";
+import { formatRaceTime } from "@/features/records/schemas";
 import type { ReferenceEntry } from "@/features/references/queries";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { dayShortLabel, formatDate, formatDateTime } from "@/lib/format";
 
 import { ActivityTimeline } from "./activity-timeline";
 import { GoalDisciplineBadge } from "./goal-discipline-badge";
@@ -113,6 +116,85 @@ function Row({
       </dt>
       <dd className="min-w-0 text-[15px] leading-snug break-words sm:text-small">{children}</dd>
     </div>
+  );
+}
+
+// Prochaines séances (demande d'Antonino du 26/10) : ce que le sportif a avec le coach dans les
+// 30 jours (séances individuelles et collectives où il est inscrit) et ses compétitions à venir.
+// « Aujourd'hui » ressort. Les séances de ses programmes s'y ajouteront avec l'espace sportif (P6).
+function UpcomingCard({
+  items,
+  today,
+  agendaPath,
+  goalsHref,
+}: {
+  items: AgendaItem[];
+  today: string;
+  agendaPath: string;
+  goalsHref: string;
+}) {
+  return (
+    <OverviewCard
+      id="overview-upcoming"
+      title="Prochaines séances"
+      icon={CalendarDays}
+      editHref={agendaPath}
+      actionLabel="Agenda"
+    >
+      {items.length === 0 ? (
+        <p className="text-small text-muted">
+          Rien de prévu avec ce sportif dans les 30 prochains jours.
+        </p>
+      ) : (
+        <ul aria-label="Prochaines séances du sportif" className="flex flex-col">
+          {items.map((item) => {
+            const isToday = item.date === today;
+            return (
+              <li key={item.key} className="border-t border-line first:border-t-0">
+                <Link
+                  href={
+                    item.type === "session" ? `${agendaPath}/seances/${item.sessionId}` : goalsHref
+                  }
+                  scroll={item.type === "session"}
+                  className={`-mx-2 flex min-h-[52px] items-center gap-3 rounded-[10px] px-2 py-2.5 transition-colors duration-150 hover:bg-surface-2 ${
+                    isToday ? "bg-accent-soft" : ""
+                  }`}
+                >
+                  <span className="flex w-[92px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
+                    <span className={isToday ? "font-medium text-accent-text" : "text-muted"}>
+                      {dayShortLabel(item.date, today)}
+                    </span>
+                    <span className="text-[14px] font-medium">
+                      {item.type === "session" ? item.time : "Journée"}
+                    </span>
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="flex min-w-0 items-center gap-1.5 font-medium">
+                      {item.type === "event" ? (
+                        <Flag
+                          aria-hidden
+                          size={14}
+                          strokeWidth={2}
+                          className="shrink-0 text-accent-text"
+                        />
+                      ) : null}
+                      <span className="truncate">{item.title}</span>
+                    </span>
+                    <span className="truncate text-[13px] text-muted">
+                      {item.type === "event"
+                        ? `Compétition · ${item.detail}`
+                        : item.individual
+                          ? item.detail
+                          : `Collective · ${item.detail}`}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </OverviewCard>
   );
 }
 
@@ -206,6 +288,9 @@ function GoalCard({
                     ? `Catégorie ${hyroxCategoryLabels[goal.hyroxCategory]}`
                     : null,
                   goal.competitionLocation,
+                  goal.targetTimeSeconds
+                    ? `Temps visé ${formatRaceTime(goal.targetTimeSeconds)}`
+                    : null,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
@@ -368,6 +453,8 @@ export function AthleteOverview({
   references,
   notes,
   activity,
+  upcoming,
+  agendaPath,
   today,
   basePath,
 }: {
@@ -376,12 +463,21 @@ export function AthleteOverview({
   references: ReferenceEntry[];
   notes: AthleteNotes;
   activity: ActivityEvent[];
+  upcoming: AgendaItem[];
+  agendaPath: string;
   today: string;
   basePath: string;
 }) {
   // Ordre de la maquette : à gauche Profil, Disponibilités, Notes ; à droite Objectif, Repères, Historique.
   return (
-    <div className="grid gap-[14px] lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-[14px] lg:grid-cols-2">
+      {/* En premier : ce que le sportif a à faire aujourd'hui et dans les prochains jours. */}
+      <UpcomingCard
+        items={upcoming}
+        today={today}
+        agendaPath={agendaPath}
+        goalsHref={`${basePath}?onglet=objectifs`}
+      />
       <ProfileCard athlete={athlete} editHref={`${basePath}?onglet=profil`} />
       <GoalCard goals={goals} today={today} editHref={`${basePath}?onglet=objectifs`} />
       <AvailabilityCard athlete={athlete} editHref={`${basePath}?onglet=disponibilites`} />

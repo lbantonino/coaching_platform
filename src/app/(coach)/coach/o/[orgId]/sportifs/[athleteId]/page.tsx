@@ -6,11 +6,14 @@ import { z } from "zod";
 import { PageBody, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { listAthleteActivity } from "@/features/activity/queries";
+import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { listGoals } from "@/features/goals/queries";
+import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { getAthleteNotes } from "@/features/notes/queries";
 import { listReferences } from "@/features/references/queries";
+import { listSessions } from "@/features/sessions/queries";
 import { removeAthletePhoto, uploadAthletePhoto } from "@/features/photos/actions";
 import { todayIsoInBrussels } from "@/lib/format";
 
@@ -43,6 +46,45 @@ const TABS = [
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 const tabSchema = z.enum(TABS.map((tab) => tab.key) as [TabKey, ...TabKey[]]).catch("vue");
+
+function upcomingFor(
+  sessions: Awaited<ReturnType<typeof listSessions>>,
+  goals: Awaited<ReturnType<typeof listGoals>>["current"],
+  athlete: { id: string; name: string },
+  today: string,
+): AgendaItem[] {
+  const competitions = goals.flatMap((goal) =>
+    goal.competitionName && goal.targetDate
+      ? [
+          {
+            id: goal.id,
+            date: goal.targetDate,
+            athleteId: athlete.id,
+            athleteName: athlete.name,
+            title: goal.competitionName,
+            detail: [goalTypeLabels[goal.type], goal.competitionLocation]
+              .filter(Boolean)
+              .join(" · "),
+            discipline: goalDiscipline(goal.type),
+            achieved: false,
+          },
+        ]
+      : [],
+  );
+  const filter = { discipline: null, athleteId: athlete.id };
+  const nextSessions = buildAgendaItems(sessions, [], today, addDays(today, 30), filter).slice(
+    0,
+    4,
+  );
+  const nextCompetition = buildAgendaItems(
+    [],
+    competitions,
+    today,
+    addDays(today, 730),
+    filter,
+  ).slice(0, 1);
+  return [...nextSessions, ...nextCompetition].sort((a, b) => a.date.localeCompare(b.date));
+}
 
 export default function AthletePage({
   params,
@@ -81,7 +123,12 @@ async function AthleteSection({
 
   return (
     <>
-      <AthleteHeader athlete={athlete} listPath={listPath} invitePath={`${basePath}/inviter`} />
+      <AthleteHeader
+        athlete={athlete}
+        organizationId={organizationId}
+        listPath={listPath}
+        invitePath={`${basePath}/inviter`}
+      />
       <PageBody>
         <KeyFigures athlete={athlete} goals={goals} today={today} basePath={basePath} />
 
@@ -101,6 +148,15 @@ async function AthleteSection({
             references={(await listReferences(organizationId, athlete.id)).current}
             notes={await getAthleteNotes(organizationId, athlete.id)}
             activity={await listAthleteActivity(organizationId, athlete)}
+            // Prochaines séances encadrées avec ce sportif (4 au plus, sur 30 jours) et sa prochaine
+            // compétition, toujours visible même quand les séances hebdomadaires remplissent la liste.
+            upcoming={upcomingFor(
+              await listSessions(organizationId),
+              goals,
+              { id: athlete.id, name: athlete.displayName },
+              today,
+            )}
+            agendaPath={`/coach/o/${organizationId}/agenda`}
             today={today}
             basePath={basePath}
           />

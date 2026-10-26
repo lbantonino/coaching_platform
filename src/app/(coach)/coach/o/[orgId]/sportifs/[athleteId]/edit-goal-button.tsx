@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { updateGoal, type EditGoalState } from "@/features/goals/actions";
 import type { GoalEntry } from "@/features/goals/queries";
 import type { GoalFormInput } from "@/features/goals/schemas";
+import { formatRaceTime } from "@/features/records/schemas";
 
 import { GoalFields } from "./add-goal-form";
 
@@ -21,6 +22,7 @@ function toForm(goal: GoalEntry): GoalFormInput {
     goalType: goal.type,
     priority: goal.priority,
     targetDate: goal.targetDate ?? "",
+    targetTime: goal.targetTimeSeconds ? formatRaceTime(goal.targetTimeSeconds) : "",
     isCompetition: goal.competitionName !== null,
     competitionName: goal.competitionName ?? "",
     competitionLocation: goal.competitionLocation ?? "",
