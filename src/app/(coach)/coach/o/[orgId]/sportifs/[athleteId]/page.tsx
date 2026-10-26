@@ -7,6 +7,7 @@ import { PageBody, PageLoading, pageMainClass } from "@/components/layout/page-h
 import { PageTabs } from "@/components/ui/page-tabs";
 import { listAthleteActivity } from "@/features/activity/queries";
 import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
+import { parseDay } from "@/features/agenda/week";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { listGoals } from "@/features/goals/queries";
@@ -19,7 +20,13 @@ import { todayIsoInBrussels } from "@/lib/format";
 
 import { PhotoForm } from "../../../../photo-form";
 
-import { AthleteAgendaSection, AthleteProgramSection } from "./athlete-agenda";
+import {
+  AGENDA_VIEWS,
+  agendaRange,
+  AthleteAgendaSection,
+  AthleteProgramSection,
+  type AgendaView,
+} from "./athlete-agenda";
 import { AthleteEditForm } from "./athlete-edit-form";
 import { ActivityTimeline } from "./activity-timeline";
 import { AthleteHeader, KeyFigures } from "./athlete-header";
@@ -51,6 +58,8 @@ const TABS = [
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 const tabSchema = z.enum(TABS.map((tab) => tab.key) as [TabKey, ...TabKey[]]).catch("vue");
+// Vue de l'onglet Agenda (?vue=jour|semaine|mois, la semaine par défaut) et jour affiché (?date=).
+const agendaViewSchema = z.enum(AGENDA_VIEWS).catch("semaine");
 
 type Sessions = Awaited<ReturnType<typeof listSessions>>;
 type Goals = Awaited<ReturnType<typeof listGoals>>["current"];
@@ -100,14 +109,14 @@ function upcomingFor(
   return [...nextSessions, ...nextCompetition].sort((a, b) => a.date.localeCompare(b.date));
 }
 
-// Onglet « Agenda » : tout sur les 8 prochaines semaines (56 jours).
+// Onglet « Agenda » : tout ce qui concerne le sportif sur la période de la vue choisie.
 function agendaFor(
   sessions: Sessions,
   goals: Goals,
   athlete: { id: string; name: string },
-  today: string,
+  range: { from: string; to: string },
 ): AgendaItem[] {
-  return buildAgendaItems(sessions, competitionEvents(goals, athlete), today, addDays(today, 55), {
+  return buildAgendaItems(sessions, competitionEvents(goals, athlete), range.from, range.to, {
     discipline: null,
     athleteId: athlete.id,
   });
@@ -121,7 +130,13 @@ export default function AthletePage({
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading />}>
         {Promise.all([params, searchParams]).then(([{ orgId, athleteId }, query]) => (
-          <AthleteSection orgId={orgId} athleteId={athleteId} tab={tabSchema.parse(query.onglet)} />
+          <AthleteSection
+            orgId={orgId}
+            athleteId={athleteId}
+            tab={tabSchema.parse(query.onglet)}
+            agendaView={agendaViewSchema.parse(query.vue)}
+            agendaDate={typeof query.date === "string" ? query.date : undefined}
+          />
         ))}
       </Suspense>
     </main>
@@ -132,10 +147,14 @@ async function AthleteSection({
   orgId,
   athleteId,
   tab,
+  agendaView,
+  agendaDate,
 }: {
   orgId: string;
   athleteId: string;
   tab: TabKey;
+  agendaView: AgendaView;
+  agendaDate: string | undefined;
 }) {
   const { membership } = await requireOrgAccess(orgId);
   const athlete = await getAthlete(membership.organizationId, athleteId);
@@ -147,6 +166,7 @@ async function AthleteSection({
   const basePath = `${listPath}/${athlete.id}`;
   const today = todayIsoInBrussels();
   const { current: goals } = await listGoals(organizationId, athlete.id);
+  const agendaDay = parseDay(agendaDate, today);
 
   return (
     <>
@@ -191,13 +211,16 @@ async function AthleteSection({
           <div className="flex w-full max-w-3xl flex-col gap-6">
             <AthleteAgendaSection
               name={athlete.firstName}
+              view={agendaView}
+              date={agendaDay}
+              today={today}
               items={agendaFor(
                 await listSessions(organizationId),
                 goals,
                 { id: athlete.id, name: athlete.displayName },
-                today,
+                agendaRange(agendaView, agendaDay),
               )}
-              today={today}
+              basePath={basePath}
               agendaPath={`/coach/o/${organizationId}/agenda`}
               goalsHref={`${basePath}?onglet=objectifs`}
             />
