@@ -366,24 +366,28 @@ function Row({
   const TypeIcon = row.programType ? disciplineIcons[row.programType] : null;
   return (
     <li
-      className={`grid grid-cols-[44px_minmax(0,1fr)] gap-x-0 gap-y-2.5 border-b border-line px-4 py-3 last:border-b-0 ${grid} ${
+      className={`relative grid grid-cols-[44px_minmax(0,1fr)] gap-x-0 gap-y-2.5 border-b border-line px-4 py-3 last:border-b-0 ${grid} ${
         checked ? "bg-surface-2" : ""
       }`}
     >
       {/* Nom accessible sur la case (aria-label) plutôt qu'en texte masqué : le texte
           « Sélectionner … » se confondrait avec le nom du sportif dans les recherches de la page. */}
-      <Checkbox
-        checked={checked}
-        onChange={onToggle}
-        aria-label={`Sélectionner ${row.name}`}
-        label={null}
-      />
+      <span className="relative z-10">
+        <Checkbox
+          checked={checked}
+          onChange={onToggle}
+          aria-label={`Sélectionner ${row.name}`}
+          label={null}
+        />
+      </span>
 
-      {/* Sportif : la ligne entière (photo, nom, niveau) ouvre la fiche. */}
+      {/* Sportif : photo, nom, niveau ouvrent la fiche. Téléphone (demande d'Antonino du 26/10) :
+          TOUTE la carte ouvre la fiche (lien étendu par ::after) ; seuls la case, l'icône message,
+          « Inviter » et « ••• » restent des boutons, posés au-dessus (z-10). */}
       <div className="flex min-w-0 items-center gap-2">
         <Link
           href={href}
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-[10px] hover:text-text"
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-[10px] hover:text-text max-lg:after:absolute max-lg:after:inset-0 max-lg:after:content-['']"
         >
           <Avatar
             name={row.name}
@@ -420,9 +424,33 @@ function Row({
         </Link>
       </div>
 
-      {/* Statut et type : pastilles qui ouvrent leur choix (téléphone : sous le nom). */}
+      {/* Statut et type. Ordinateur : pastilles qui ouvrent leur choix. Téléphone : simples repères,
+          non cliquables (pour ne pas ouvrir un choix en voulant ouvrir la fiche) ; on les change par
+          « ••• ». */}
       <div className="col-start-2 flex flex-wrap items-center gap-2 lg:contents">
-        <span className="lg:block">
+        <span
+          className={`inline-flex h-8 items-center gap-1.5 rounded-pill border px-2.5 text-[13px] font-medium lg:hidden ${statusPill[row.status]}`}
+        >
+          {row.status === "active" ? (
+            <span aria-hidden className="size-2 rounded-full bg-ok" />
+          ) : row.status === "paused" ? (
+            <CirclePause aria-hidden size={14} strokeWidth={2} />
+          ) : (
+            <Archive aria-hidden size={13} strokeWidth={2} />
+          )}
+          {statusLabel[row.status]}
+        </span>
+        <span
+          className={`inline-flex h-8 items-center gap-1.5 rounded-pill px-2.5 text-[13px] font-medium lg:hidden ${
+            row.programType
+              ? disciplineStyles[row.programType].icon
+              : "border border-dashed border-line-2 text-muted"
+          }`}
+        >
+          {TypeIcon ? <TypeIcon aria-hidden size={14} strokeWidth={2} /> : null}
+          {row.programType ? disciplineLabels[row.programType] : "Sans type"}
+        </span>
+        <span className="hidden lg:block">
           <button
             type="button"
             disabled={pending}
@@ -440,7 +468,7 @@ function Row({
             {statusLabel[row.status]}
           </button>
         </span>
-        <span className="lg:block">
+        <span className="hidden lg:block">
           <button
             type="button"
             disabled={pending}
@@ -483,7 +511,7 @@ function Row({
           )}
         </span>
 
-        <span className="flex shrink-0 items-center justify-end gap-2">
+        <span className="relative z-10 flex shrink-0 items-center justify-end gap-2">
           {row.hasAccount ? (
             <Link
               href={`/coach/messages?sportif=${row.id}`}
