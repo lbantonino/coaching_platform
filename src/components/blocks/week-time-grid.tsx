@@ -55,7 +55,10 @@ export function WeekTimeGrid({
   single?: boolean;
   // Tableau de bord (demandes d'Antonino). Téléphone : la hauteur d'une heure s'adapte pour que la
   // carte entière tienne dans la hauteur visible (26–44 px ; --grid-chrome = barre du haut, en-tête
-  // de carte, en-tête des jours, légende). Ordinateur : 40 px par heure, et la grille défile dans sa
+  // de carte, en-tête des jours, légende). Calculée sur 100svh, la hauteur d'écran AVEC les barres du
+  // navigateur : elle ne bouge pas quand Safari replie sa barre d'adresse pendant le défilement (avec
+  // 100dvh, les cases rétrécissaient et grandissaient au défilement, demande d'Antonino du 26/10).
+  // Ordinateur : 40 px par heure, et la grille défile dans sa
   // carte, à la hauteur de l'écran (mesurée au navigateur), ouverte près de l'heure actuelle.
   fit?: boolean;
   creatable?: boolean;
@@ -90,7 +93,7 @@ export function WeekTimeGrid({
         <ScrollToDay
           className={`snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg ${
             fit
-              ? "[--hour:clamp(26px,calc((100dvh-var(--grid-chrome))/16),44px)] [--grid-chrome:340px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
+              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:340px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
               : "[--hour:44px] lg:[--hour:48px]"
           }`}
           fitPage={fit}
