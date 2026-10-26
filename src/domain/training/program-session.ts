@@ -34,6 +34,10 @@ export const programSessionSchema = z.object({
   objective: text(200).optional(),
   coachTips: text(1000).optional(),
   steps: z.array(stepSchema).min(1).max(30),
+  // Séance faite AVEC le coach (demande d'Antonino du 26/10) : elle correspond à une séance encadrée
+  // de son agenda (ex. coaching du mardi 7 h, circuit collectif du samedi) et compte dans les séances
+  // de la semaine du sportif, au lieu de s'y ajouter.
+  withCoach: z.object({ sessionId: z.uuid() }).optional(),
 });
 
 export type ProgramSessionContent = z.infer<typeof programSessionSchema>;
