@@ -92,13 +92,16 @@ export function WeekTimeGrid({
   const column =
     single || fullWeek
       ? "min-w-0 flex-1"
-      : "w-[104px] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:flex-1";
+      : // Téléphone, 3 jours (demande d'Antonino du 26/10) : chaque colonne mesure exactement le tiers
+        // de la largeur de l'agenda moins la colonne des heures (3rem), pour voir 3 jours ENTIERS.
+        // cqw = 1 % de la largeur du conteneur (l'agenda, déclaré @container ci-dessous).
+        "w-[calc((100cqw-3rem)/3)] shrink-0 snap-start lg:w-auto lg:min-w-0 lg:flex-1";
 
   return (
     <GridInteractions move={onMove}>
       <div className="flex flex-col gap-2.5">
         <ScrollToDay
-          className={`snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg ${
+          className={`@container snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg ${
             fit
               ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:392px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
               : "[--hour:44px] lg:[--hour:48px]"
