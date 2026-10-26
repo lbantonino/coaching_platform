@@ -91,8 +91,11 @@ function OverviewCard({
   );
 }
 
-const missing = <span className="text-muted">Non renseigné</span>;
+const missing = <span className="text-faint">Non renseigné</span>;
 
+// Une information de la fiche. Téléphone (demande d'Antonino du 26/10, comme le prototype) : une
+// ligne par information, séparée par un filet, libellé gris au-dessus, valeur lisible en dessous.
+// Ordinateur : libellé à gauche (avec son icône), valeur à droite.
 function Row({
   icon: Icon,
   label,
@@ -103,12 +106,12 @@ function Row({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
-      <dt className="flex shrink-0 items-center gap-2 text-muted sm:w-48">
-        <Icon aria-hidden size={15} strokeWidth={1.7} />
+    <div className="flex flex-col gap-1 border-t border-line py-3 first:border-t-0 first:pt-0 last:pb-0 sm:flex-row sm:gap-4 sm:border-t-0 sm:py-0">
+      <dt className="flex shrink-0 items-center gap-2 text-[13px] text-muted sm:w-48 sm:text-small">
+        <Icon aria-hidden size={15} strokeWidth={1.7} className="max-sm:hidden" />
         {label}
       </dt>
-      <dd className="min-w-0 break-words">{children}</dd>
+      <dd className="min-w-0 text-[15px] leading-snug break-words sm:text-small">{children}</dd>
     </div>
   );
 }
@@ -116,7 +119,7 @@ function Row({
 function ProfileCard({ athlete, editHref }: { athlete: AthleteDetail; editHref: string }) {
   return (
     <OverviewCard id="overview-profile" title="Profil du sportif" icon={User} editHref={editHref}>
-      <dl className="flex flex-col gap-3 text-small">
+      <dl className="flex flex-col text-small sm:gap-3">
         <Row icon={User} label="Nom complet">
           {athlete.displayName}
         </Row>
@@ -137,7 +140,7 @@ function ProfileCard({ athlete, editHref }: { athlete: AthleteDetail; editHref: 
           {athlete.phone ? <span className="font-mono">{athlete.phone}</span> : missing}
         </Row>
       </dl>
-      <dl className="flex flex-col gap-3 border-t border-line pt-4 text-small">
+      <dl className="flex flex-col border-t border-line pt-4 text-small sm:gap-3">
         <Row icon={Gauge} label="Niveau">
           {athlete.level ? <Badge tone="ok">{athleteLevelLabels[athlete.level]}</Badge> : missing}
         </Row>
@@ -264,7 +267,7 @@ function AvailabilityCard({ athlete, editHref }: { athlete: AthleteDetail; editH
           })}
         </ul>
       </div>
-      <dl className="flex flex-col gap-3 text-small">
+      <dl className="flex flex-col text-small sm:gap-3">
         <Row icon={CalendarDays} label="Contraintes d'organisation">
           {athlete.scheduleConstraints ?? missing}
         </Row>

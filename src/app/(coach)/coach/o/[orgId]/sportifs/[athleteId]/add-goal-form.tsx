@@ -38,34 +38,43 @@ export function AddGoalForm({ organizationId, athleteId, today, hasMain }: Props
           réaffiche toute la saisie (listes et cases comprises) après une erreur. */}
       <GoalFields
         key={state.attempt}
+        idPrefix="goal"
         formAction={formAction}
         pending={pending}
-        today={today}
+        minDate={today}
         hasMain={hasMain}
         error={state.error}
         values={state.values}
-        justSaved={state.saved > 0 && state.error === null}
+        submitLabel="Ajouter l'objectif"
+        savedMessage={state.saved > 0 && state.error === null ? "Objectif ajouté." : null}
       />
     </div>
   );
 }
 
-function GoalFields({
+// Champs d'un objectif, partagés par l'ajout et la modification (« Modifier l'objectif »).
+// `idPrefix` : les deux formulaires peuvent être sur la page en même temps, leurs id doivent différer.
+// `hasMain` : un autre objectif est déjà principal (l'avertissement s'affiche alors).
+export function GoalFields({
+  idPrefix,
   formAction,
   pending,
-  today,
+  minDate,
   hasMain,
   error,
   values,
-  justSaved,
+  submitLabel,
+  savedMessage = null,
 }: {
+  idPrefix: string;
   formAction: (formData: FormData) => void;
   pending: boolean;
-  today: string;
+  minDate: string;
   hasMain: boolean;
   error: string | null;
   values: GoalFormInput | null;
-  justSaved: boolean;
+  submitLabel: string;
+  savedMessage?: string | null;
 }) {
   // Après une erreur, on réaffiche la saisie (React 19 vide le formulaire après chaque envoi).
   const v = values;
@@ -79,11 +88,11 @@ function GoalFields({
     <form action={formAction} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="goal-type" className={labelClass}>
+          <label htmlFor={`${idPrefix}-type`} className={labelClass}>
             Type d&apos;objectif
           </label>
           <select
-            id="goal-type"
+            id={`${idPrefix}-type`}
             name="goalType"
             defaultValue={v?.goalType ?? ""}
             onChange={(event) => setGoalType(event.target.value)}
@@ -104,17 +113,17 @@ function GoalFields({
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="goal-date" className={labelClass}>
+          <label htmlFor={`${idPrefix}-date`} className={labelClass}>
             Date cible{" "}
             <span className="font-normal text-muted">
               ({isCompetition ? "date de la compétition" : "facultatif"})
             </span>
           </label>
           <input
-            id="goal-date"
+            id={`${idPrefix}-date`}
             name="targetDate"
             type="date"
-            min={today}
+            min={minDate}
             defaultValue={v?.targetDate}
             className={`${inputClass} font-mono`}
           />
@@ -152,11 +161,11 @@ function GoalFields({
       {isCompetition ? (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="goal-competition" className={labelClass}>
+            <label htmlFor={`${idPrefix}-competition`} className={labelClass}>
               Nom de la compétition
             </label>
             <input
-              id="goal-competition"
+              id={`${idPrefix}-competition`}
               name="competitionName"
               type="text"
               maxLength={120}
@@ -167,11 +176,11 @@ function GoalFields({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="goal-location" className={labelClass}>
+            <label htmlFor={`${idPrefix}-location`} className={labelClass}>
               Lieu <span className="font-normal text-muted">(facultatif)</span>
             </label>
             <input
-              id="goal-location"
+              id={`${idPrefix}-location`}
               name="competitionLocation"
               type="text"
               maxLength={120}
@@ -182,11 +191,11 @@ function GoalFields({
           </div>
           {goalType === "hyrox" ? (
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="goal-hyrox-category" className={labelClass}>
+              <label htmlFor={`${idPrefix}-hyrox-category`} className={labelClass}>
                 Catégorie Hyrox
               </label>
               <select
-                id="goal-hyrox-category"
+                id={`${idPrefix}-hyrox-category`}
                 name="hyroxCategory"
                 defaultValue={v?.hyroxCategory ?? ""}
                 className={inputClass}
@@ -204,11 +213,11 @@ function GoalFields({
       ) : null}
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="goal-description" className={labelClass}>
+        <label htmlFor={`${idPrefix}-description`} className={labelClass}>
           Description <span className="font-normal text-muted">(facultatif)</span>
         </label>
         <textarea
-          id="goal-description"
+          id={`${idPrefix}-description`}
           name="description"
           rows={2}
           maxLength={500}
@@ -224,15 +233,15 @@ function GoalFields({
           disabled={pending}
           className={buttonClass({ variant: "inverse", size: "md" })}
         >
-          {pending ? "Enregistrement…" : "Ajouter l'objectif"}
+          {pending ? "Enregistrement…" : submitLabel}
         </button>
         {error ? (
           <p role="alert" className={errorTextClass}>
             {error}
           </p>
-        ) : justSaved ? (
+        ) : savedMessage ? (
           <p role="status" className="text-small text-ok">
-            Objectif ajouté.
+            {savedMessage}
           </p>
         ) : null}
       </div>

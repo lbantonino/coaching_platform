@@ -32,6 +32,25 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Téléphone : filtres compacts, vue d'ensemble lisible, objectifs modifiables (D-41)
+```
+Date : 2026-10-26
+Demande : (1) liste des sportifs sur téléphone : plus de rangées de pastilles qui passent à la
+  ligne, seulement le choix en cours avec un symbole pour le changer ; (2) vue d'ensemble de la
+  fiche sur téléphone trop serrée ; (3) pouvoir MODIFIER un objectif au lieu de le supprimer
+Fait : (1) CompactFilter (téléphone et tablette) : « Statut · Tous (8) ⌄ » et « Programme · Tous ⌄ »
+  ouvrent la liste des choix (icône, nombre, choix en cours coché) ; ordinateur inchangé ;
+  (2) Row de la vue d'ensemble : une information par ligne, filets, libellé gris au-dessus, valeur
+  en 15 px (prototype « kv ») ; ordinateur inchangé ; (3) migration 20261026090000 (droit de
+  modifier les champs de saisie d'un objectif, jamais son rattachement), action updateGoal (mêmes
+  règles que l'ajout ; une date déjà passée reste acceptée si elle ne change pas ; objectif en
+  cours seulement), bouton « Modifier » sur chaque objectif en cours → fenêtre pré-remplie
+  (GoalFields partagé avec l'ajout) ; corrigé aussi : next.config allowedDevOrigins 192.168.*.*
+  (œil du mot de passe et tout le JavaScript bloqués sur le vrai téléphone en développement)
+Tests : db:test 265 (07_objectifs mis à jour), check OK (Vitest 153), test:e2e 116 + 6 ignorés
+  (nouveau : modifier un objectif ; filtres via l'aide chooseAthleteFilter, téléphone et ordinateur)
+```
+
 ### Liste des sportifs : menu « ••• » complet et jeu de démo cohérent
 ```
 Date : 2026-10-24

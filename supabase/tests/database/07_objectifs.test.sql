@@ -1,10 +1,10 @@
 -- Tests des objectifs et compétitions (P2-02 partie 2) : cohérence, objectif principal unique,
--- droits limités (priorité et statut) et isolation entre organisations.
+-- droits limités (champs de saisie, priorité et statut ; jamais le rattachement) et isolation.
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(16);
+select plan(17);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -93,11 +93,18 @@ select lives_ok(
      where athlete_id = 'a1a1a1a1-0000-4000-8000-000000000001' and goal_type = 'strength' $$,
   'L''objectif principal étant clos, un autre objectif peut devenir principal'
 );
+-- Objectifs modifiables (26/10/2026) : les champs de saisie se corrigent, le rattachement non.
+select lives_ok(
+  $$ update public.athlete_goals set description = 'Réécrit', target_date = '2027-03-27',
+       competition_name = 'Hyrox Gand'
+     where id = '9a000000-0000-4000-8000-000000000001' $$,
+  'Coach A corrige la date, le nom et la description d''un objectif'
+);
 select throws_ok(
-  $$ update public.athlete_goals set description = 'Réécrit'
+  $$ update public.athlete_goals set athlete_id = 'b1b1b1b1-0000-4000-8000-000000000001'
      where id = '9a000000-0000-4000-8000-000000000001' $$,
   '42501', null,
-  'Seuls la priorité et le statut se modifient (pour corriger : supprimer puis recréer)'
+  'Le sportif d''un objectif ne change pas'
 );
 select is_empty(
   $$ select 1 from public.athlete_goals where organization_id = 'bbbbbbbb-0000-4000-8000-000000000002' $$,

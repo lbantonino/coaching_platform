@@ -69,3 +69,26 @@ export async function logoutAthlete(page: Page) {
     .click();
   await page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }).click();
 }
+
+// Filtres de la liste des sportifs : pastilles sur ordinateur ; sur téléphone, bouton compact
+// (« Statut : Tous (8) ») qui ouvre la liste des choix (demande d'Antonino du 26/10).
+export async function chooseAthleteFilter(
+  page: Page,
+  group: "Statut" | "Type de programme",
+  label: string,
+) {
+  if (isPhone(page)) {
+    const button = group === "Statut" ? "Statut" : "Programme";
+    await page.getByRole("button", { name: new RegExp(`^${button} : .*Changer$`) }).click();
+    await page
+      .getByRole("dialog", { name: group })
+      .getByRole("button", { name: new RegExp(`^${label}`) })
+      .click();
+    return;
+  }
+  const nav = group === "Statut" ? "Filtrer par statut" : "Filtrer par type de programme";
+  await page
+    .getByRole("navigation", { name: nav })
+    .getByRole("link", { name: new RegExp(`^${label}`) })
+    .click();
+}

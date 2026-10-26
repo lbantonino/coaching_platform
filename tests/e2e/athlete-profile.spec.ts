@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { fillAthleteName, goToCoachSection, openAthleteTab } from "./helpers";
+import { chooseAthleteFilter, fillAthleteName, goToCoachSection, openAthleteTab } from "./helpers";
 
 // Fiche sportif (P2-01b) : modifier, archiver, restaurer, rechercher, et isolation par organisation.
 const DEMO_PASSWORD = "demo-coach-local";
@@ -73,10 +73,10 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   await page.getByLabel("Rechercher un sportif").press("Enter");
   // Filtre « Tous » par défaut (maquette du 24/10) : il reste visible, marqué « Archivé ».
   await expect(list.getByRole("button", { name: /^Statut : Archivé/ })).toBeVisible();
-  await page.getByRole("link", { name: "Actifs" }).click();
+  await chooseAthleteFilter(page, "Statut", "Actifs");
   await expect(page.getByText(/Aucun sportif ne correspond/)).toBeVisible();
 
-  await page.getByRole("link", { name: "Archivés" }).click();
+  await chooseAthleteFilter(page, "Statut", "Archivés");
   await expect(list.getByText(renamed)).toBeVisible();
 
   // Restauration.
