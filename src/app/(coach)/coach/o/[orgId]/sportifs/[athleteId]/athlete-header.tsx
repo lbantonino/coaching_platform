@@ -3,7 +3,6 @@ import {
   Clock,
   Flag,
   MessageCircle,
-  Plus,
   Target,
   UserPen,
   type LucideIcon,
@@ -28,13 +27,14 @@ import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { daysBetween, formatDate, formatDay } from "@/lib/format";
 
 import { AthleteFicheMenu } from "./athlete-fiche-menu";
+import { FicheCreateMenu } from "./fiche-create-menu";
 
 const statusTone = { active: "ok", paused: "warn", archived: "neutral" } as const;
 
 // En-tête de la fiche (prompt Claude Design §7.2) : retour vers la liste, nom et repère ♀ / ♂,
-// statut, niveau ; rouge « Créer un programme » (cœur de Coory : on crée un programme depuis le
-// sportif ; tant que le module n'existe pas, le bouton ouvre la page Programmes), « Inviter dans son
-// espace » sur ordinateur, et « ••• » avec les mêmes actions que la liste (demande du 26/10).
+// statut, niveau ; rouge « + Créer » (Programme, cœur de Coory, ou Séance avec ce sportif),
+// « Inviter dans son espace » sur ordinateur, et « ••• » avec les mêmes actions que la liste
+// (demandes du 26/10).
 // L'accès à son espace n'est plus écrit en toutes lettres (comme dans la liste, D-39).
 export function AthleteHeader({
   athlete,
@@ -85,10 +85,13 @@ export function AthleteHeader({
               Inviter dans son espace
             </Link>
           )}
-          <Link href="/coach/programmes" className={buttonClass({ className: "max-lg:flex-1" })}>
-            <Plus aria-hidden size={16} strokeWidth={2} />
-            Créer un programme
-          </Link>
+          <FicheCreateMenu
+            athlete={{
+              id: athlete.id,
+              name: athlete.displayName,
+              programType: athlete.programType,
+            }}
+          />
           <AthleteFicheMenu
             organizationId={organizationId}
             athlete={{

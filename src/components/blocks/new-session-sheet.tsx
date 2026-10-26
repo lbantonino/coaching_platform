@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { buttonClass } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
+import type { Discipline } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
 
 import { SessionForm } from "./session-form";
@@ -18,7 +19,15 @@ import { SessionForm } from "./session-form";
 // Feuille du bas sur téléphone, fenêtre centrée sur ordinateur. Après « Créer la séance », on reste
 // sur la page : la fenêtre se ferme, un toast confirme et la page se met à jour. Il n'y a plus de page
 // « Nouvelle séance » à part. Les sportifs proposés sont lus à chaque ouverture (fiches récentes).
-type Slot = { date: string; time: string; label?: string };
+// Depuis la fiche d'un sportif (« + Créer → Séance », 26/10) : séance individuelle avec ce sportif
+// déjà choisi, et la discipline de son type de programme.
+type Slot = {
+  date: string;
+  time: string;
+  label?: string;
+  athleteId?: string;
+  discipline?: Discipline | null;
+};
 type Athlete = { id: string; name: string };
 
 const OpenContext = createContext<((slot?: Partial<Slot>) => void) | null>(null);
@@ -53,6 +62,8 @@ export function NewSessionSheet({
         date: wanted?.date ?? todayInBrussels(),
         time: wanted?.time ?? DEFAULT_TIME,
         label: wanted?.label,
+        athleteId: wanted?.athleteId,
+        discipline: wanted?.discipline,
       });
       loadAthletes().then(setAthletes, () => setAthletes([]));
     },
@@ -87,14 +98,14 @@ export function NewSessionSheet({
             initial={{
               kind: "individual",
               title: "",
-              discipline: "",
+              discipline: slot.discipline ?? "",
               location: "",
               startsOn: slot.date,
               startTime: slot.time,
               durationMinutes: "60",
               repeatsWeekly: false,
               endsOn: "",
-              athleteId: "",
+              athleteId: slot.athleteId ?? "",
               athleteIds: [],
               newClient: false,
               newAthleteName: "",

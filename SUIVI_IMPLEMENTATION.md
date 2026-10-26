@@ -32,6 +32,23 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Fiche sportif : « + Créer », onglets Programme et Agenda (D-43)
+```
+Date : 2026-10-26
+Demande : un bouton rouge « + Créer » sur la fiche (Programme, Séance) au lieu de « Créer un
+  programme » ; deux onglets Programme et Agenda ; ordre des onglets validé : Vue d'ensemble,
+  Programme, Agenda, Objectifs, Profil, Disponibilités, Repères, Notes, Historique
+Fait : FicheCreateMenu (Programme → /coach/programmes ; Séance → fenêtre « Nouvelle séance »
+  pré-remplie : individuelle, ce sportif, discipline de son type de programme, date du jour ;
+  NewSessionSheet accepte athleteId et discipline) ; onglet Agenda (AthleteAgendaSection : 8
+  semaines rangées par semaine, séances encadrées + compétitions, « Avec le coach » / « Collective »
+  / « Compétition ») ; onglet Programme (état vide honnête + « Créer un programme ») ; ligne
+  AgendaItemRow partagée avec la carte « Prochaines séances », dont le bouton « Agenda » ouvre
+  désormais l'onglet Agenda de la fiche
+Tests : check OK (Vitest 155), test:e2e 118 + 6 ignorés (test de la fiche : menu Créer, séance
+  pré-remplie, onglets Programme et Agenda)
+```
+
 ### Fiche sportif, point 1 de l'audit du 26/10 (D-42)
 ```
 Date : 2026-10-26

@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { openAthleteTab } from "./helpers";
+
 // Fiche à onglets (P2-04, étape 1) : vue d'ensemble en lecture, chiffres clés et recherche du haut.
 // Lecture seule sur une sportive de démo du seed (Inès Benali) : rien n'est modifié.
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
@@ -75,12 +77,18 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(page.getByRole("heading", { name: "Inès Benali", level: 1 })).toBeVisible();
   const main = page.getByRole("main");
 
-  // En-tête (26/10) : plus d'étiquette d'accès ; « Créer un programme » mène aux programmes.
+  // En-tête (26/10) : plus d'étiquette d'accès ; « + Créer » propose Programme et Séance, la
+  // séance déjà remplie pour Inès (individuelle, Hyrox, son type de programme).
   await expect(main.getByText(/^(Compte activé|Sans compte)$/)).toHaveCount(0);
-  await expect(main.getByRole("link", { name: "Créer un programme" })).toHaveAttribute(
-    "href",
-    "/coach/programmes",
-  );
+  await main.getByRole("button", { name: "Créer", exact: true }).click();
+  const create = page.getByRole("dialog", { name: "Créer pour Inès Benali" });
+  await expect(create.getByRole("button", { name: "Programme" })).toBeVisible();
+  await create.getByRole("button", { name: "Séance" }).click();
+  const session = page.getByRole("dialog", { name: "Nouvelle séance" });
+  await expect(session.getByLabel("Sportif", { exact: true })).toHaveValue(INES);
+  await expect(session.getByLabel("Discipline")).toHaveValue("hyrox");
+  await session.getByRole("button", { name: "Fermer" }).click();
+  await expect(session).toBeHidden();
 
   // Prochaines séances : ses compétitions à venir y figurent (Hyrox Gent en décembre).
   await expect(main.getByRole("region", { name: "Prochaines séances" })).toContainText(
@@ -102,4 +110,12 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await menu.getByRole("button", { name: "Modifier l'objectif" }).click();
   await expect(page).toHaveURL(/onglet=objectifs/);
   await expect(page.getByText("Temps visé 1:15:00")).toBeVisible();
+
+  // Onglets Programme (état vide et création) et Agenda (8 semaines, compétitions comprises).
+  await openAthleteTab(page, "Programme");
+  await expect(page.getByText("Aucun programme pour Inès")).toBeVisible();
+  await openAthleteTab(page, "Agenda");
+  const agenda = page.getByRole("region", { name: "Agenda de Inès" });
+  await expect(agenda).toContainText("Hyrox Gent");
+  await expect(agenda).toContainText("Cette semaine");
 });

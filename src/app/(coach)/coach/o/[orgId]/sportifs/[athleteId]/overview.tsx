@@ -4,7 +4,6 @@ import {
   Clock,
   Dumbbell,
   FileText,
-  Flag,
   Gauge,
   HeartPulse,
   Mail,
@@ -45,9 +44,10 @@ import {
 } from "@/features/goals/schemas";
 import { formatRaceTime } from "@/features/records/schemas";
 import type { ReferenceEntry } from "@/features/references/queries";
-import { dayShortLabel, formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime } from "@/lib/format";
 
 import { ActivityTimeline } from "./activity-timeline";
+import { AgendaItemRow } from "./athlete-agenda";
 import { GoalDisciplineBadge } from "./goal-discipline-badge";
 import { ReferenceTile } from "./reference-tile";
 
@@ -126,11 +126,14 @@ function UpcomingCard({
   items,
   today,
   agendaPath,
+  agendaTabHref,
   goalsHref,
 }: {
   items: AgendaItem[];
   today: string;
   agendaPath: string;
+  // Le bouton « Agenda » de la carte ouvre l'onglet Agenda de la fiche.
+  agendaTabHref: string;
   goalsHref: string;
 }) {
   return (
@@ -138,7 +141,7 @@ function UpcomingCard({
       id="overview-upcoming"
       title="Prochaines séances"
       icon={CalendarDays}
-      editHref={agendaPath}
+      editHref={agendaTabHref}
       actionLabel="Agenda"
     >
       {items.length === 0 ? (
@@ -147,51 +150,16 @@ function UpcomingCard({
         </p>
       ) : (
         <ul aria-label="Prochaines séances du sportif" className="flex flex-col">
-          {items.map((item) => {
-            const isToday = item.date === today;
-            return (
-              <li key={item.key} className="border-t border-line first:border-t-0">
-                <Link
-                  href={
-                    item.type === "session" ? `${agendaPath}/seances/${item.sessionId}` : goalsHref
-                  }
-                  scroll={item.type === "session"}
-                  className={`-mx-2 flex min-h-[52px] items-center gap-3 rounded-[10px] px-2 py-2.5 transition-colors duration-150 hover:bg-surface-2 ${
-                    isToday ? "bg-accent-soft" : ""
-                  }`}
-                >
-                  <span className="flex w-[92px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
-                    <span className={isToday ? "font-medium text-accent-text" : "text-muted"}>
-                      {dayShortLabel(item.date, today)}
-                    </span>
-                    <span className="text-[14px] font-medium">
-                      {item.type === "session" ? item.time : "Journée"}
-                    </span>
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="flex min-w-0 items-center gap-1.5 font-medium">
-                      {item.type === "event" ? (
-                        <Flag
-                          aria-hidden
-                          size={14}
-                          strokeWidth={2}
-                          className="shrink-0 text-accent-text"
-                        />
-                      ) : null}
-                      <span className="truncate">{item.title}</span>
-                    </span>
-                    <span className="truncate text-[13px] text-muted">
-                      {item.type === "event"
-                        ? `Compétition · ${item.detail}`
-                        : item.individual
-                          ? item.detail
-                          : `Collective · ${item.detail}`}
-                    </span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+          {items.map((item) => (
+            <li key={item.key} className="border-t border-line first:border-t-0">
+              <AgendaItemRow
+                item={item}
+                today={today}
+                agendaPath={agendaPath}
+                goalsHref={goalsHref}
+              />
+            </li>
+          ))}
         </ul>
       )}
     </OverviewCard>
@@ -476,6 +444,7 @@ export function AthleteOverview({
         items={upcoming}
         today={today}
         agendaPath={agendaPath}
+        agendaTabHref={`${basePath}?onglet=agenda`}
         goalsHref={`${basePath}?onglet=objectifs`}
       />
       <ProfileCard athlete={athlete} editHref={`${basePath}?onglet=profil`} />
