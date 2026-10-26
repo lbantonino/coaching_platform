@@ -3,7 +3,7 @@ import "server-only";
 import type { Discipline } from "@/domain/training/discipline";
 import { createClient } from "@/lib/supabase/server";
 
-import type { SessionException, SessionKind } from "./schemas";
+import type { SessionException, SessionKind, SessionPaymentMethod } from "./schemas";
 
 export type SessionAthlete = { id: string; name: string };
 
@@ -24,12 +24,16 @@ export type CoachSession = {
   athletes: SessionAthlete[];
   // Dates déplacées (séance hebdomadaire seulement).
   exceptions: SessionException[];
+  // Prix (D-52), en centimes : TVA comprise si priceVatIncluded, sinon sans TVA. Null : pas de prix.
+  priceCents: number | null;
+  priceVatIncluded: boolean;
+  paymentMethod: SessionPaymentMethod | null;
 };
 
 // Le sportif direct (séance individuelle) et les inscrits (collective) passent par deux relations
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
 const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes,
-  repeats_weekly, ends_on, notes,
+  repeats_weekly, ends_on, notes, price_cents, price_vat_included, payment_method,
   individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name ),
   enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name ) ),
   exceptions:coach_session_exceptions ( original_date, new_date, new_start_time )`;
@@ -47,6 +51,9 @@ type Row = {
   repeats_weekly: boolean;
   ends_on: string | null;
   notes: string | null;
+  price_cents: number | null;
+  price_vat_included: boolean;
+  payment_method: string | null;
   individual: Profile;
   enrolled: { athlete: Profile }[];
   exceptions: { original_date: string; new_date: string; new_start_time: string }[];
@@ -83,6 +90,9 @@ function toSession(row: Row): CoachSession {
       newDate: e.new_date,
       newStartTime: e.new_start_time.slice(0, 5),
     })),
+    priceCents: row.price_cents,
+    priceVatIncluded: row.price_vat_included,
+    paymentMethod: row.payment_method as SessionPaymentMethod | null,
   };
 }
 
@@ -111,4 +121,39 @@ export async function getSession(
     .maybeSingle();
   if (error) throw new Error("Lecture de la séance impossible.");
   return data ? toSession(data as unknown as Row) : null;
+}
+
+// Paiements des dates d'une séance (D-52), repérés par la date de la série (`sessionDate`).
+export type SessionPayment = {
+  id: string;
+  sessionDate: string;
+  receivedOn: string;
+  amountCents: number;
+  method: string;
+};
+
+export async function listSessionPayments(
+  organizationId: string,
+  sessionId: string,
+): Promise<SessionPayment[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("athlete_payments")
+    .select("id, session_date, received_on, amount_cents, method")
+    .eq("organization_id", organizationId)
+    .eq("session_id", sessionId);
+  if (error) throw new Error("Lecture des paiements de la séance impossible.");
+  return (data ?? []).flatMap((row) =>
+    row.session_date
+      ? [
+          {
+            id: row.id,
+            sessionDate: row.session_date,
+            receivedOn: row.received_on,
+            amountCents: row.amount_cents,
+            method: row.method,
+          },
+        ]
+      : [],
+  );
 }

@@ -150,7 +150,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-14` Définition d'un groupe (club, salle) et droits associés (avant `DIF-05`).
 - `OPEN-15` Conditions actuelles des API Strava et Garmin (avant `DIF-09` étape 2).
 - `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08` et `DIF-11`, l'agent IA qui agit dans l'app).
-- `OPEN-17` Règles de facturation du coach (D-17 étape B) : mentions obligatoires, TVA ou régime de franchise, numérotation, conservation, Peppol pour les clients entreprises. **En cours de vérification par un comptable** (Antonino, 22/10/2026).
+- `OPEN-17` Règles de facturation du coach (D-17 étape B) : mentions obligatoires, TVA ou régime de franchise, numérotation, conservation, Peppol pour les clients entreprises. **En cours de vérification par un comptable** (Antonino, 22/10/2026). Ajout du 26/10 (D-52) : une séance payée en espèces est notée « prix direct », TVA de 21 % comprise (65 € reçus = 53,72 € HTVA) ; par virement, le prix est hors TVA et la TVA s'ajoute. À confirmer avec le comptable.
 - `OPEN-18` Séances encadrées (D-27) : annuler ou déplacer **une seule date** d'une séance récurrente (exception), visibilité des séances et inscriptions côté sportif (P6), pointage des présences, conflit avec les disponibilités du sportif (avertissement docs/03 §3). À trancher avec Gianluca.
 
 **Différenciateurs `DIF-01` à `DIF-10`** (décision du 20/10/2026) : voir `docs/16_POSITIONNEMENT.md` §4–5 pour leur phase d'insertion. Ils ne modifient pas l'ordre P2 → P6.

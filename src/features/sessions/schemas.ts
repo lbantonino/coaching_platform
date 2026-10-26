@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { addVat, parseEuros } from "@/domain/billing/payments";
 import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { formatDate } from "@/lib/format";
 
@@ -28,6 +29,10 @@ export type SessionFormInput = {
   newClient: boolean;
   newAthleteName: string;
   notes: string;
+  // Prix (D-52) : facultatif, « 65 » ou « 65,50 » ; TVA comprise (21 %) ou sans TVA ; mode attendu.
+  price: string;
+  vatIncluded: boolean;
+  paymentMethod: string;
 };
 
 // Valeurs prêtes à enregistrer (noms de colonnes) ; les inscrits d'une séance collective sont à part.
@@ -43,7 +48,28 @@ export type SessionValues = {
   repeats_weekly: boolean;
   ends_on: string | null;
   notes: string | null;
+  price_cents: number | null;
+  price_vat_included: boolean;
+  payment_method: SessionPaymentMethod | null;
 };
+
+// Paiement d'une séance (D-52) : espèces ou virement, comme l'a demandé Antonino.
+export const SESSION_PAYMENT_METHODS = ["transfer", "cash"] as const;
+export type SessionPaymentMethod = (typeof SESSION_PAYMENT_METHODS)[number];
+
+// TVA d'une séance : 21 %. Règle de Gianluca (26/10) : par virement, la séance est facturée et le
+// prix est hors TVA (65 € HTVA -> 78,65 € payés) ; en espèces, le prix est « direct », TVA comprise.
+export const SESSION_VAT_RATE = 21;
+export const defaultVatIncluded = (method: SessionPaymentMethod) => method === "cash";
+
+// Montant reçu pour une date, TVA comprise : le prix tel quel s'il est TVA comprise, sinon le prix
+// HTVA plus 21 %.
+export function sessionAmountCents(price: {
+  priceCents: number;
+  priceVatIncluded: boolean;
+}): number {
+  return price.priceVatIncluded ? price.priceCents : addVat(price.priceCents, SESSION_VAT_RATE);
+}
 
 // Nouveau sportif à créer avant la séance (fiche minimale : prénom, et nom s'il est donné).
 export type NewAthleteName = { firstName: string; lastName: string | null };
@@ -107,6 +133,18 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
   const notes = input.notes.trim();
   if (notes.length > 500) return { ok: false, error: "Note trop longue (500 caractères maximum)." };
 
+  let priceCents: number | null = null;
+  let paymentMethod: SessionPaymentMethod | null = null;
+  if (input.price.trim() !== "") {
+    priceCents = parseEuros(input.price);
+    if (priceCents === null) {
+      return { ok: false, error: "Prix invalide : écris par exemple 65 ou 65,50." };
+    }
+    paymentMethod =
+      SESSION_PAYMENT_METHODS.find((method) => method === input.paymentMethod) ?? null;
+    if (!paymentMethod) return { ok: false, error: "Choisis espèces ou virement." };
+  }
+
   let athleteId: string | null = null;
   let newAthlete: NewAthleteName | null = null;
   let athleteIds: string[] = [];
@@ -148,6 +186,9 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
       repeats_weekly: input.repeatsWeekly,
       ends_on: endsOn,
       notes: notes === "" ? null : notes,
+      price_cents: priceCents,
+      price_vat_included: input.vatIncluded,
+      payment_method: paymentMethod,
     },
   };
 }

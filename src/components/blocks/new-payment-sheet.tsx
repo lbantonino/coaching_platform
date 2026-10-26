@@ -116,6 +116,9 @@ function PaymentForm({
           vatRate: "21",
           method: "transfer",
           label: "",
+          package: false,
+          coversFrom: "",
+          coversTo: "",
         }
       }
       athletes={athletes}
@@ -138,6 +141,7 @@ function PaymentFields({
 }) {
   const [amount, setAmount] = useState(v.amount);
   const [vatRate, setVatRate] = useState(v.vatRate);
+  const [isPackage, setIsPackage] = useState(v.package);
   const cents = parseEuros(amount);
   const split = cents === null ? null : splitVat(cents, Number(vatRate));
 
@@ -229,6 +233,56 @@ function PaymentFields({
             className={inputClass}
           />
         </div>
+      </div>
+
+      {/* Forfait (D-52, retour de Gianluca) : certains paient 3 mois d'avance, d'autres séance par
+          séance. Le paiement compte en entier la semaine où il est reçu ; les séances du sportif dans
+          la période sont « comprises dans le forfait ». */}
+      <div className="flex flex-col gap-3">
+        <label className="inline-flex w-fit cursor-pointer items-start gap-2.5 text-small">
+          <input
+            type="checkbox"
+            name="package"
+            checked={isPackage}
+            onChange={(event) => setIsPackage(event.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-[var(--text)]"
+          />
+          <span>
+            Forfait sur une période
+            <span className="block text-muted">
+              Ex. : 3 mois payés d&apos;avance. Les séances du sportif sur cette période seront
+              notées « comprises dans le forfait ».
+            </span>
+          </span>
+        </label>
+        {isPackage ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="payment-covers-from" className={labelClass}>
+                Du
+              </label>
+              <input
+                id="payment-covers-from"
+                name="coversFrom"
+                type="date"
+                defaultValue={v.coversFrom}
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="payment-covers-to" className={labelClass}>
+                Au
+              </label>
+              <input
+                id="payment-covers-to"
+                name="coversTo"
+                type="date"
+                defaultValue={v.coversTo}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <fieldset className="flex flex-col gap-1.5">

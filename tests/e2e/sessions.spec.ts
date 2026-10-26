@@ -1,5 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+import { isPhone } from "./helpers";
+
 // Séances encadrées du coach (P2-05b, D-27, D-35) : collective hebdomadaire avec inscrits,
 // individuelle, nouveau sportif (fiche minimale), fenêtre « Nouvelle séance » commune, page Séances,
 // modification, suppression, isolation. Dates fixées en 2027 : le test ne dépend pas du jour où il tourne.
@@ -64,6 +66,12 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   const enrolled = dialog.getByRole("group", { name: /Sportifs inscrits/ });
   await enrolled.getByText("Thomas Peeters", { exact: true }).click();
   await enrolled.getByText("Inès Benali", { exact: true }).click();
+  // Prix (D-52) : 80 € TVA comprise pour toute la séance, en espèces.
+  await dialog.getByLabel(/^Prix pour toute la séance/).fill("80");
+  await dialog
+    .getByRole("group", { name: "Paiement" })
+    .getByText("Espèces", { exact: true })
+    .click();
   await dialog.getByRole("button", { name: "Créer la séance" }).click();
 
   // On reste sur l'agenda : la fenêtre se ferme et la séance apparaît le mercredi 6.
@@ -83,6 +91,9 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   await expect(
     page.getByRole("list", { name: "Sportifs de la séance" }).getByRole("link"),
   ).toHaveCount(2);
+  const price = page.getByRole("region", { name: "Prix et paiements" });
+  await expect(price).toContainText(/80,00\s€ TVAC · 66,12\s€ HTVA/);
+  await expect(price).toContainText("Espèces");
 
   // Dans l'agenda de janvier 2027 : quatre mercredis, pas un de plus (chaque case du mois nomme
   // ses séances).
@@ -94,6 +105,7 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=2027-01-13`);
   await page.getByRole("link", { name: new RegExp(title) }).click();
   await page.getByRole("link", { name: "Modifier", exact: true }).click();
+  await expect(page.getByLabel(/^Prix pour toute la séance/)).toHaveValue("80");
   await page.getByLabel("Heure", { exact: true }).fill("19:30");
   await page
     .getByRole("group", { name: /Sportifs inscrits/ })
@@ -195,6 +207,58 @@ test("un nouveau sportif tapé dans « Nouvelle séance » a aussitôt sa fiche,
     page.getByRole("list", { name: "Sportifs de la séance" }).getByRole("link", { name }),
   ).toBeVisible();
   await deleteOpenSession(page, title);
+});
+
+// Une date de séance se marque « payée » (D-52) : un vrai paiement reçu, visible dans la
+// Comptabilité, puis annulé. Chaque projet (ordinateur, téléphone) prend un lundi différent de la
+// séance de démo « Coaching force » du lundi 7 h : ils tournent en parallèle.
+const DAY_MS = 86_400_000;
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+const longDay = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+function pastMonday(weeksBack: number): string {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(
+    new Date(),
+  );
+  const day = Math.round(Date.parse(`${today}T00:00:00Z`) / DAY_MS);
+  const monday = day - ((new Date(day * DAY_MS).getUTCDay() + 6) % 7);
+  return new Date((monday - 7 * weeksBack) * DAY_MS).toISOString().slice(0, 10);
+}
+
+test("une date de séance se marque payée, compte dans la comptabilité, puis s'annule", async ({
+  page,
+}) => {
+  const date = pastMonday(isPhone(page) ? 2 : 1);
+  const dayText = longDay.format(new Date(`${date}T00:00:00Z`));
+  const when = `${capitalize(dayText)} · 07:00`;
+  await loginAsCoachA(page);
+  await page.goto(`/coach/o/${ORG_A}/agenda/seances/ca000000-0000-4000-8000-000000000201`);
+  const price = page.getByRole("region", { name: "Prix et paiements" });
+  // Facturée par virement : 65 € hors TVA, 78,65 € payés.
+  await expect(price).toContainText(/65,00\s€ HTVA · 78,65\s€ TVAC/);
+  const row = price.getByRole("listitem").filter({ hasText: when });
+  await expect(row).toContainText("Pas encore payée");
+  await row.getByRole("button", { name: `Marquer payée : ${when}` }).click();
+  await expect(row).toContainText(/Payée le .* · 78,65\s€/);
+
+  // Comptabilité : le paiement de cette date, en virement (le mode de la séance).
+  await page.goto("/coach/comptabilite");
+  const payment = page
+    .getByRole("list", { name: "Liste des paiements" })
+    .getByRole("listitem")
+    .filter({ hasText: `Coaching force · ${dayText}` });
+  await expect(payment).toContainText("Nadia El Amrani");
+  await expect(payment).toContainText("Virement");
+  await expect(payment).toContainText(/78,65\s€/);
+
+  // Marquée par erreur : « Annuler » retire le paiement.
+  await page.goto(`/coach/o/${ORG_A}/agenda/seances/ca000000-0000-4000-8000-000000000201`);
+  await row.getByRole("button", { name: `Annuler le paiement : ${when}` }).click();
+  await expect(row).toContainText("Pas encore payée");
 });
 
 test("la page Séances liste les séances à venir, avec ses filtres", async ({ page }) => {

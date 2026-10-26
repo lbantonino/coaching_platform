@@ -32,6 +32,35 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Prix des séances, dates payées, forfaits (D-52)
+```
+Date : 2026-10-26
+Demande : (1) à la création d'une séance, où qu'elle soit créée : son prix, une case TVA, espèces ou
+  virement, en lien avec « Encaissé cette semaine » ; démo : toutes les séances de musculation à
+  65 €, TVA 21 % ; (2) retour de Gianluca : certains sportifs paient 3 mois d'avance, d'autres
+  séance par séance, à rendre cohérent avec l'encaissé de la semaine ; (3) règle de Gianluca :
+  facturé (virement) = 65 € hors TVA, espèces = 65 € direct
+Décisions (Antonino) : payée = encaissée (jamais l'inverse) ; collective = un prix pour toute la
+  séance ; démo : musculation seulement
+Fait : migration 20261026160000_prix_des_seances (coach_sessions.price_cents, price_vat_included,
+  payment_method espèces/virement ; athlete_payments.session_id + session_date, unique par date,
+  sportif facultatif pour une collective, covers_from / covers_to pour un forfait, lien gardé à null
+  si la séance est supprimée) ; bloc « Prix » du formulaire de séance (fenêtre et page Modifier) :
+  prix, Virement / Espèces, case « TVA comprise dans le prix » qui suit le mode (virement : hors TVA,
+  le sportif paie prix + 21 % ; espèces : prix direct), calcul en direct ; page de la séance : carte
+  « Prix et paiements » (4 semaines de dates, « Marquer payée » = paiement reçu daté du jour,
+  « Annuler », « Forfait » pour une date couverte) ; fenêtre « Nouveau paiement » : case « Forfait
+  sur une période » avec Du / Au ; Comptabilité : « Forfait du … au … » sur la ligne ; tableau de
+  bord : « X € prévus (N séances) » sur la carte Encaissé, hors dates comprises dans un forfait ;
+  règles pures : sessionAmountCents, defaultVatIncluded, plannedIncome, coveredByPackage, addVat ;
+  démo : 13 séances de musculation à 65 € (individuelles facturées par virement = 78,65 € ;
+  collective « Mobilité & gainage » en espèces), deux dates du lundi déjà payées (157,30 €
+  encaissés), forfaits d'Inès (3 mois), Thomas (1 mois) et Chloé (3 mois, reçu la veille)
+Tests : check OK (Vitest 165), pgTAP 286 (21_prix_des_seances : 13), test:e2e 122 + 6 ignorés
+  (séance collective avec prix, date marquée payée puis annulée, paiement de forfait)
+Reste : lien paiement ↔ facture ; traitement TVA des espèces à confirmer avec le comptable (OPEN-17)
+```
+
 ### Tableau de bord recentré sur les tâches et l'encaissé ; vue du jour en grille (D-51)
 ```
 Date : 2026-10-26

@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  defaultVatIncluded,
   describePeriod,
   describeSchedule,
   formatDuration,
+  sessionAmountCents,
   occurrencesBetween,
   parseSessionForm,
   type SessionFormInput,
   sessionOccurrences,
 } from "@/features/sessions/schemas";
+import { coveredByPackage } from "@/domain/billing/payments";
+import { plannedIncome } from "@/features/sessions/prices";
 
 const ATHLETE = "da000000-0000-4000-8000-000000000002";
 const OTHER = "da000000-0000-4000-8000-000000000003";
@@ -27,6 +31,9 @@ const base: SessionFormInput = {
   newClient: false,
   newAthleteName: "",
   notes: "",
+  price: "",
+  vatIncluded: true,
+  paymentMethod: "transfer",
 };
 
 describe("parseSessionForm", () => {
@@ -47,6 +54,9 @@ describe("parseSessionForm", () => {
         repeats_weekly: true,
         ends_on: null,
         notes: null,
+        price_cents: null,
+        price_vat_included: true,
+        payment_method: null,
       },
     });
   });
@@ -210,5 +220,99 @@ describe("dates déplacées d'une séance hebdomadaire (glisser-déposer, D-35)"
     expect(sessionOccurrences(orphan, "2026-10-19", "2026-10-25")).toEqual([
       { date: "2026-10-21", startTime: "19:00", originalDate: "2026-10-21", moved: false },
     ]);
+  });
+});
+
+describe("prix d'une séance (D-52)", () => {
+  it("lit le prix TVA comprise et le mode de paiement", () => {
+    const parsed = parseSessionForm({ ...base, price: " 65,50 ", paymentMethod: "cash" });
+    expect(parsed.ok && parsed.values).toMatchObject({
+      price_cents: 6550,
+      price_vat_included: true,
+      payment_method: "cash",
+    });
+  });
+
+  it("calcule le montant reçu : prix direct, ou prix HTVA plus 21 %", () => {
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: true })).toBe(6500);
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false })).toBe(7865);
+    expect(defaultVatIncluded("cash")).toBe(true);
+    expect(defaultVatIncluded("transfer")).toBe(false);
+  });
+
+  it("garde un prix hors TVA quand la case est décochée (facturé par virement)", () => {
+    const parsed = parseSessionForm({ ...base, price: "65", vatIncluded: false });
+    expect(parsed.ok && parsed.values).toMatchObject({
+      price_cents: 6500,
+      price_vat_included: false,
+      payment_method: "transfer",
+    });
+  });
+
+  it("refuse un prix illisible ou un mode inconnu", () => {
+    expect(parseSessionForm({ ...base, price: "abc" })).toEqual({
+      ok: false,
+      error: "Prix invalide : écris par exemple 65 ou 65,50.",
+    });
+    expect(parseSessionForm({ ...base, price: "65", paymentMethod: "bitcoin" })).toEqual({
+      ok: false,
+      error: "Choisis espèces ou virement.",
+    });
+  });
+
+  it("additionne les dates de la période qui ont un prix, déplacements compris", () => {
+    const weekly = {
+      startsOn: "2026-09-07",
+      startTime: "07:00",
+      repeatsWeekly: true,
+      endsOn: null,
+      priceCents: 6500,
+      priceVatIncluded: false,
+      // La date du lundi 2 novembre a lieu le dimanche 1er : elle reste dans la semaine du 26/10.
+      exceptions: [{ originalDate: "2026-11-02", newDate: "2026-11-01", newStartTime: "09:00" }],
+    };
+    const once = {
+      ...weekly,
+      startsOn: "2026-10-28",
+      repeatsWeekly: false,
+      priceVatIncluded: true,
+      exceptions: [],
+    };
+    const free = { ...weekly, priceCents: null, exceptions: [] };
+    // Deux dates facturées (78,65 €) et une en espèces (65 €).
+    expect(plannedIncome([weekly, once, free], "2026-10-26", "2026-11-01")).toEqual({
+      count: 3,
+      inclCents: 22230,
+    });
+  });
+});
+
+describe("forfaits (D-52)", () => {
+  const covers = [{ athleteId: ATHLETE, coversFrom: "2026-10-25", coversTo: "2027-01-22" }];
+
+  it("dit si une date d'un sportif est comprise dans son forfait", () => {
+    expect(coveredByPackage(covers, ATHLETE, "2026-10-26")).toBe(true);
+    expect(coveredByPackage(covers, ATHLETE, "2027-01-22")).toBe(true);
+    expect(coveredByPackage(covers, ATHLETE, "2026-10-24")).toBe(false);
+    expect(coveredByPackage(covers, OTHER, "2026-10-26")).toBe(false);
+    expect(coveredByPackage(covers, null, "2026-10-26")).toBe(false);
+  });
+
+  it("ne compte pas, dans le prévu, les dates comprises dans un forfait", () => {
+    const session = {
+      startsOn: "2026-09-07",
+      startTime: "07:00",
+      repeatsWeekly: true,
+      endsOn: null,
+      priceCents: 6500,
+      priceVatIncluded: true,
+      athleteId: ATHLETE,
+    };
+    const other = { ...session, athleteId: OTHER };
+    expect(
+      plannedIncome([session, other], "2026-10-26", "2026-11-01", (s, date) =>
+        coveredByPackage(covers, s.athleteId, date),
+      ),
+    ).toEqual({ count: 1, inclCents: 6500 });
   });
 });

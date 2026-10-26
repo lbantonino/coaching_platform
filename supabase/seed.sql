@@ -602,6 +602,42 @@ values
   ('0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', current_date - 1,
    9000, 21, 'cash', 'Forfait 10 km', 'b0000000-0000-4000-8000-00000000000b');
 
+-- Forfaits (D-52, retour de Gianluca) : Inès et Thomas ont payé une période d'avance ; Chloé a réglé
+-- 3 mois de remise en forme hier : ses coachings force de la période sont « compris dans le forfait ».
+update public.athlete_payments set covers_from = current_date - 1, covers_to = current_date + 89
+  where label = 'Forfait Hyrox 3 mois' and athlete_id = 'da000000-0000-4000-8000-000000000003';
+update public.athlete_payments set covers_from = current_date - 5, covers_to = current_date + 25
+  where label = 'Suivi running mensuel' and athlete_id = 'da000000-0000-4000-8000-000000000002';
+insert into public.athlete_payments (
+  organization_id, athlete_id, received_on, amount_cents, vat_rate, method, label, covers_from,
+  covers_to, created_by
+)
+values
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000013', current_date - 1,
+   150000, 21, 'transfer', 'Forfait remise en forme · 3 mois', current_date - 1, current_date + 89,
+   'a0000000-0000-4000-8000-00000000000a');
+
+-- Prix des séances (D-52, demande d'Antonino du 26/10) : démo avec la musculation seulement, 65 €.
+-- Règle de Gianluca : individuelles facturées par virement, 65 € hors TVA (78,65 € payés) ; la
+-- collective « Mobilité & gainage » en espèces, 65 € direct (TVA comprise) pour toute la séance.
+-- Les autres disciplines restent sans prix pour l'instant.
+update public.coach_sessions
+  set price_cents = 6500, price_vat_included = (kind = 'group'),
+      payment_method = case when kind = 'group' then 'cash' else 'transfer' end
+  where organization_id = '0a000000-0000-4000-8000-0000000000a1' and discipline = 'strength';
+
+-- Les deux coachings force du lundi matin de la semaine du reset, déjà payés (virement, 65 € HTVA
+-- soit 78,65 € TVAC) : ils comptent dans « Encaissé cette semaine ».
+insert into public.athlete_payments (
+  organization_id, athlete_id, received_on, amount_cents, vat_rate, method, label, session_id,
+  session_date, created_by
+)
+select s.organization_id, s.athlete_id, date_trunc('week', current_date)::date, 7865, 21, 'transfer',
+       s.title || ' · ' || to_char(date_trunc('week', current_date), 'DD/MM'), s.id,
+       date_trunc('week', current_date)::date, 'a0000000-0000-4000-8000-00000000000a'
+from public.coach_sessions s
+where s.id in ('ca000000-0000-4000-8000-000000000201', 'ca000000-0000-4000-8000-000000000202');
+
 -- Profils des coachs de démonstration (D-28) : prénoms inventés ; leurs photos (libres de droits) sont
 -- chargées par scripts/seed-photos.mjs, lancé par `npm run db:reset`.
 insert into public.coach_profiles (user_id, first_name, last_name, company_name) values

@@ -110,6 +110,9 @@ export function NewSessionSheet({
               newClient: false,
               newAthleteName: "",
               notes: "",
+              price: "",
+              vatIncluded: false,
+              paymentMethod: "transfer",
             }}
             locked={false}
             submitLabel="Créer la séance"

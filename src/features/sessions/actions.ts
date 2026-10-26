@@ -6,10 +6,18 @@ import { z } from "zod";
 
 import { listAthletes } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { dayLabel } from "@/features/agenda/calendar";
 import { createClient } from "@/lib/supabase/server";
+import { todayIsoInBrussels } from "@/lib/format";
 
 import { getSession } from "./queries";
-import { occursOn, parseSessionForm, type SessionFormInput } from "./schemas";
+import {
+  occursOn,
+  parseSessionForm,
+  SESSION_VAT_RATE,
+  sessionAmountCents,
+  type SessionFormInput,
+} from "./schemas";
 
 // `attempt` change à CHAQUE réponse : le formulaire est reconstruit avec la saisie renvoyée
 // (React 19 remet sinon les menus déroulants et les cases à leur valeur de départ).
@@ -39,6 +47,9 @@ function readForm(formData: FormData, kind: string): SessionFormInput {
     newClient: formData.get("newClient") === "on",
     newAthleteName: field("newAthleteName"),
     notes: field("notes"),
+    price: field("price"),
+    vatIncluded: formData.get("vatIncluded") === "on",
+    paymentMethod: field("paymentMethod"),
   };
 }
 
@@ -183,6 +194,9 @@ export async function updateSession(
     repeats_weekly: v.repeats_weekly,
     ends_on: v.ends_on,
     notes: v.notes,
+    price_cents: v.price_cents,
+    price_vat_included: v.price_vat_included,
+    payment_method: v.payment_method,
   };
   const { error } = await supabase
     .from("coach_sessions")
@@ -337,4 +351,68 @@ export async function listSessionAthletes(
   return athletes
     .filter((athlete) => athlete.status !== "archived")
     .map((athlete) => ({ id: athlete.id, name: athlete.displayName }));
+}
+
+// « Payée » (D-52) : le coach note qu'une date de la séance a été payée. C'est un VRAI paiement reçu
+// (athlete_payments), daté d'aujourd'hui : il compte dans « Encaissé cette semaine » et dans la
+// Comptabilité. Montant, TVA et mode viennent de la séance, jamais du navigateur. Une seule fois par
+// date (index unique en base) : un double clic ne crée pas deux paiements.
+const sessionDateSchema = z.iso.date().refine((day) => day >= "2000-01-01");
+
+function revalidatePayments(orgId: string, sessionId: string) {
+  revalidatePath("/coach");
+  revalidatePath("/coach/comptabilite");
+  revalidatePath(`/coach/o/${orgId}/agenda/seances/${sessionId}`);
+}
+
+export async function markSessionPaid(
+  organizationId: string,
+  sessionId: string,
+  sessionDate: string,
+): Promise<void> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
+  const session =
+    z.uuid().safeParse(sessionId).success && sessionDateSchema.safeParse(sessionDate).success
+      ? await getSession(orgId, sessionId)
+      : null;
+  if (!session || session.priceCents === null || !session.paymentMethod) return;
+  if (!occursOn(session, sessionDate)) return;
+
+  const supabase = await createClient();
+  // Doublon (déjà payée) : l'index unique refuse la ligne, rien d'autre à faire.
+  await supabase.from("athlete_payments").insert({
+    organization_id: orgId,
+    athlete_id: session.kind === "individual" ? (session.athletes[0]?.id ?? null) : null,
+    received_on: todayIsoInBrussels(),
+    amount_cents: sessionAmountCents({ ...session, priceCents: session.priceCents }),
+    vat_rate: SESSION_VAT_RATE,
+    method: session.paymentMethod,
+    label: `${session.title} · ${dayLabel(sessionDate)}`.slice(0, 120),
+    session_id: session.id,
+    session_date: sessionDate,
+    created_by: user.id,
+  });
+  revalidatePayments(orgId, session.id);
+}
+
+// Payée par erreur : le paiement de cette date est supprimé.
+export async function unmarkSessionPaid(
+  organizationId: string,
+  sessionId: string,
+  sessionDate: string,
+): Promise<void> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
+  if (!z.uuid().safeParse(sessionId).success || !sessionDateSchema.safeParse(sessionDate).success) {
+    return;
+  }
+  const supabase = await createClient();
+  await supabase
+    .from("athlete_payments")
+    .delete()
+    .eq("organization_id", orgId)
+    .eq("session_id", sessionId)
+    .eq("session_date", sessionDate);
+  revalidatePayments(orgId, sessionId);
 }

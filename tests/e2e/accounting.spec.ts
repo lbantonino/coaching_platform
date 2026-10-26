@@ -33,6 +33,10 @@ test("le coach note un paiement reçu en espèces et le retrouve dans sa comptab
   await dialog.getByLabel("Montant reçu (TVAC)").fill("3000");
   await expect(dialog.getByText(/2\s479,34\s€ HTVA · 520,66\s€ de TVA/)).toBeVisible();
   await dialog.getByText("Espèces", { exact: true }).click();
+  // Forfait (D-52) : 3 mois payés d'avance, la période couverte est notée.
+  await dialog.getByLabel(/^Forfait sur une période/).check();
+  await dialog.getByLabel("Du", { exact: true }).fill("2026-11-01");
+  await dialog.getByLabel("Au", { exact: true }).fill("2027-01-31");
   await dialog.getByLabel(/^Libellé/).fill(label);
   await dialog.getByRole("button", { name: "Enregistrer le paiement" }).click();
   await expect(page.getByText("Paiement enregistré.")).toBeVisible();
@@ -42,6 +46,7 @@ test("le coach note un paiement reçu en espèces et le retrouve dans sa comptab
   const payments = page.getByRole("list", { name: "Liste des paiements" });
   const row = payments.getByRole("listitem").filter({ hasText: label });
   await expect(row).toContainText("Espèces");
+  await expect(row).toContainText("Forfait du 1 nov. au 31 janv.");
   await expect(row).toContainText(/3\s000,00\s€/);
 
   // Filtre : ce paiement en espèces n'est pas sur le compte bancaire.
