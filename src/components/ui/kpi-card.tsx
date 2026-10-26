@@ -15,6 +15,7 @@ export function KpiCard({
   color,
   icon: Icon,
   href,
+  compact = false,
 }: {
   value: string;
   label: string;
@@ -22,6 +23,9 @@ export function KpiCard({
   color: KpiColor;
   icon?: LucideIcon;
   href?: string;
+  // Tableau de bord (demande d'Antonino du 26/10) : carte basse et sobre, pour laisser la place à
+  // l'agenda : chiffre et pastille sur une ligne, libellé dessous, précision sur ordinateur seulement.
+  compact?: boolean;
 }) {
   // Les chiffres longs (« 3 240 € ») passent un cran en dessous pour tenir dans la carte.
   const size =
@@ -30,7 +34,27 @@ export function KpiCard({
       : value.length > 7
         ? "text-[18px] md:text-[30px]"
         : "text-[24px] md:text-[30px]";
-  const body = (
+  const body = compact ? (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-display text-[20px] leading-none font-semibold tracking-[-0.02em] tabular lg:text-[24px]">
+          {value}
+        </span>
+        {Icon ? (
+          <span
+            aria-hidden
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--kpi)_16%,transparent)] text-[var(--kpi)]"
+          >
+            <Icon size={14} strokeWidth={1.8} />
+          </span>
+        ) : null}
+      </div>
+      <span className="truncate text-[13px] leading-snug font-medium">{label}</span>
+      {detail ? (
+        <span className="truncate text-[12px] leading-snug text-muted max-lg:hidden">{detail}</span>
+      ) : null}
+    </>
+  ) : (
     <>
       <div className="flex items-start justify-between gap-2">
         <span
@@ -51,8 +75,9 @@ export function KpiCard({
       {detail ? <span className="text-[12px] leading-snug text-muted">{detail}</span> : null}
     </>
   );
-  const className =
-    "flex min-w-0 flex-col gap-1.5 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text";
+  const className = `flex min-w-0 flex-col rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] text-text ${
+    compact ? "gap-1 px-3.5 py-3" : "gap-1.5 p-4"
+  }`;
   const style = { "--kpi": `var(--${color})` } as CSSProperties;
   return href ? (
     <Link
@@ -95,7 +120,7 @@ export function KpiListCard({
   return (
     <div
       style={{ "--kpi": `var(--${color})` } as CSSProperties}
-      className="flex min-w-0 flex-col gap-1 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] p-4 text-text max-lg:gap-0.5 max-lg:px-3.5 max-lg:py-3"
+      className="flex min-w-0 flex-col gap-0.5 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] px-3.5 py-3 text-text"
     >
       <Link
         href={href}
@@ -108,18 +133,21 @@ export function KpiListCard({
             {value}
           </span>
         </span>
-        <span className="hidden items-start justify-between gap-2 lg:flex">
-          <span className="font-display text-[30px] leading-[1.05] font-semibold tracking-[-0.03em] tabular">
-            {value}
+        {/* Ordinateur : chiffre, libellé et pastille sur une ligne (carte basse, 26/10). */}
+        <span className="hidden items-center justify-between gap-2 lg:flex">
+          <span className="flex min-w-0 items-baseline gap-2">
+            <span className="font-display text-[24px] leading-none font-semibold tracking-[-0.02em] tabular">
+              {value}
+            </span>
+            <span className="truncate text-[13px] font-medium">{label}</span>
           </span>
           <span
             aria-hidden
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--kpi)_16%,transparent)] text-[var(--kpi)]"
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--kpi)_16%,transparent)] text-[var(--kpi)]"
           >
-            <Icon size={16} strokeWidth={1.8} />
+            <Icon size={14} strokeWidth={1.8} />
           </span>
         </span>
-        <span className="hidden text-[14px] leading-snug font-medium lg:block">{label}</span>
       </Link>
       {children}
     </div>

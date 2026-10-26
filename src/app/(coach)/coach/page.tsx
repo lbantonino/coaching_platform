@@ -1,8 +1,6 @@
 import {
   CalendarDays,
   Check,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   FileText,
   ListChecks,
@@ -15,18 +13,16 @@ import { Suspense, type CSSProperties } from "react";
 
 import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
-import { ViewMenu } from "@/components/blocks/view-menu";
+import { AgendaToolbar, periodLabel } from "@/components/blocks/agenda-toolbar";
 import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
-import { iconButtonClass } from "@/components/ui/button";
 import { Card, CardEmpty } from "@/components/ui/card";
 import { CheckList } from "@/components/ui/check-list";
 import { KpiCard, KpiGrid, KpiListCard } from "@/components/ui/kpi-card";
 import { Avatar } from "@/components/ui/avatar";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
-import { SegmentedNav } from "@/components/ui/segmented";
 import { formatEuros, monthActivity } from "@/domain/billing/invoices";
 import { paymentTotals } from "@/domain/billing/payments";
 import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
@@ -178,8 +174,6 @@ async function Dashboard({
   const monthBlocks = new Map<string, WeekBlock[]>(
     monthLayout ? monthLayout.days.map((day) => [day.date, day.blocks]) : [],
   );
-  const shown = monthLayout ?? layout;
-  const shownCount = shown.days.reduce((sum, day) => sum + day.blocks.length, 0);
 
   const viewHref = (
     target: AgendaView,
@@ -231,6 +225,7 @@ async function Dashboard({
         <div className="lg:col-span-12">
           <KpiGrid label="Chiffres clés">
             <KpiCard
+              compact
               href={`${orgBase}/agenda`}
               color="accent"
               icon={CalendarDays}
@@ -243,6 +238,7 @@ async function Dashboard({
               }
             />
             <KpiCard
+              compact
               href={`${orgBase}/agenda`}
               color="run"
               icon={Clock}
@@ -275,6 +271,7 @@ async function Dashboard({
             </KpiListCard>
             {/* CA de la semaine (D-36) : l'argent réellement reçu, à la date du paiement. */}
             <KpiCard
+              compact
               href="/coach/comptabilite"
               color="ok"
               icon={Euro}
@@ -289,116 +286,65 @@ async function Dashboard({
           aria-labelledby="agenda-title"
           // Téléphone (demande d'Antonino du 26/10) : pas de carte autour de l'agenda, la grille prend
           // toute la largeur de l'écran ; ordinateur : la carte.
-          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:p-0 lg:col-span-12"
+          // Téléphone (26/10) : pas de carte, mais une bande de couleur d'un bord à l'autre qui sépare
+          // l'agenda des autres sections ; la grille prend toute la largeur. Ordinateur : la carte.
+          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 max-lg:px-4 max-lg:py-4 lg:col-span-12"
         >
-          {/* Téléphone : flèches sur la ligne du titre, vues et lien « Agenda » en dessous, pour que la
-              carte entière tienne dans la hauteur de l'écran. Ordinateur : tout à droite du titre. */}
-          <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-col gap-1">
-                <h2 id="agenda-title" className="font-display text-block font-semibold">
-                  {agendaTitle}
-                </h2>
-                <p className="text-[13px] text-muted">
-                  {plural(shownCount, "séance")}
-                  {view === "mois" ? "" : ` · ${formatHours(shown.totalMinutes)} planifiées`}
-                </p>
-              </div>
-              <nav
-                aria-label="Changer de période"
-                className="flex shrink-0 lg:hidden items-center gap-1.5"
-              >
-                <Link
-                  href={viewHref(view, step(-1))}
-                  scroll={false}
-                  aria-label="Période précédente"
-                  className={iconButtonClass()}
-                >
-                  <ChevronLeft aria-hidden size={18} strokeWidth={1.8} />
-                </Link>
-                <Link
-                  href={viewHref(view, step(1))}
-                  scroll={false}
-                  aria-label="Période suivante"
-                  className={iconButtonClass()}
-                >
-                  <ChevronRight aria-hidden size={18} strokeWidth={1.8} />
-                </Link>
-              </nav>
-            </div>
-            <div className="flex items-center justify-between gap-2 lg:justify-end">
-              <nav aria-label="Changer de période" className="hidden lg:flex items-center gap-1.5">
-                <Link
-                  href={viewHref(view, step(-1))}
-                  scroll={false}
-                  aria-label="Période précédente"
-                  className={iconButtonClass()}
-                >
-                  <ChevronLeft aria-hidden size={18} strokeWidth={1.8} />
-                </Link>
-                <Link
-                  href={viewHref(view, step(1))}
-                  scroll={false}
-                  aria-label="Période suivante"
-                  className={iconButtonClass()}
-                >
-                  <ChevronRight aria-hidden size={18} strokeWidth={1.8} />
-                </Link>
-              </nav>
-              {/* Téléphone : un bouton « Vue » (Aujourd'hui, 3 jours, Semaine, Mois) ; ordinateur :
-                  les trois vues côte à côte. */}
-              <span className="lg:hidden">
-                <ViewMenu
-                  options={[
-                    {
-                      key: "jour",
-                      label: "Aujourd'hui",
-                      href: viewHref("jour", today),
-                      selected: view === "jour",
-                    },
-                    {
-                      key: "3jours",
-                      label: "3 jours",
-                      href: viewHref("semaine", date, kind, false),
-                      selected: view === "semaine" && !fullWeek,
-                    },
-                    {
-                      key: "semaine",
-                      label: "Semaine",
-                      href: viewHref("semaine", date, kind, true),
-                      selected: view === "semaine" && fullWeek,
-                    },
-                    {
-                      key: "mois",
-                      label: "Mois",
-                      href: viewHref("mois"),
-                      selected: view === "mois",
-                    },
-                  ]}
-                />
-              </span>
-              <span className="hidden lg:block">
-                <SegmentedNav
-                  label="Vue de l'agenda"
-                  items={[
-                    {
-                      href: viewHref("jour", today),
-                      label: "Aujourd'hui",
-                      active: view === "jour",
-                    },
-                    { href: viewHref("semaine"), label: "Semaine", active: view === "semaine" },
-                    { href: viewHref("mois"), label: "Mois", active: view === "mois" },
-                  ]}
-                />
-              </span>
+          {/* Barre façon Google Agenda (26/10) : flèches, mois, vue ; plus de grand titre. */}
+          <AgendaToolbar
+            titleId="agenda-title"
+            srTitle={agendaTitle}
+            label={
+              view === "jour"
+                ? capitalize(longDay.format(utc(date)))
+                : view === "mois"
+                  ? capitalize(monthLabel(month))
+                  : periodLabel(monday, addDays(monday, 6))
+            }
+            shortLabel={
+              view === "mois"
+                ? periodLabel(`${month}-01`, `${month}-01`, true)
+                : view === "semaine"
+                  ? periodLabel(monday, addDays(monday, 6), true)
+                  : undefined
+            }
+            prevHref={viewHref(view, step(-1))}
+            nextHref={viewHref(view, step(1))}
+            viewOptions={[
+              {
+                key: "jour",
+                label: "Aujourd'hui",
+                href: viewHref("jour", today),
+                selected: view === "jour",
+              },
+              {
+                key: "3jours",
+                label: "3 jours",
+                href: viewHref("semaine", date, kind, false),
+                selected: view === "semaine" && !fullWeek,
+              },
+              {
+                key: "semaine",
+                label: "Semaine",
+                href: viewHref("semaine", date, kind, true),
+                selected: view === "semaine" && fullWeek,
+              },
+              { key: "mois", label: "Mois", href: viewHref("mois"), selected: view === "mois" },
+            ]}
+            desktopViews={[
+              { href: viewHref("jour", today), label: "Aujourd'hui", active: view === "jour" },
+              { href: viewHref("semaine"), label: "Semaine", active: view === "semaine" },
+              { href: viewHref("mois"), label: "Mois", active: view === "mois" },
+            ]}
+            extra={
               <Link
                 href={`${orgBase}/agenda`}
-                className="shrink-0 border-b border-line-2 pb-px text-[13px] text-muted transition-colors duration-150 hover:text-text lg:ml-2"
+                className="ml-2 shrink-0 border-b border-line-2 pb-px text-[13px] text-muted transition-colors duration-150 hover:text-text max-lg:hidden"
               >
                 Agenda →
               </Link>
-            </div>
-          </header>
+            }
+          />
           <FilterChips
             label="Filtrer l'agenda"
             options={kindFilters.map((filter) => ({

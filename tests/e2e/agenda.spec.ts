@@ -86,7 +86,9 @@ test("le tableau de bord montre la semaine du coach avec ses vraies séances", a
     week.getByRole("link", { name: /Piste du mercredi/ }).filter({ visible: true }),
   ).toHaveCount(0);
   await filters.getByRole("link", { name: "Toutes" }).click();
-  await week.getByRole("link", { name: "Agenda →" }).click();
+  // « Agenda → » sur ordinateur ; sur téléphone, la barre reste courte : l'Agenda est dans le menu.
+  if (isPhone(page)) await goToCoachSection(page, "Agenda");
+  else await week.getByRole("link", { name: "Agenda →" }).click();
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
 });
 

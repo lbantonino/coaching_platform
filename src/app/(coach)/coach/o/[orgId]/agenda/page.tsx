@@ -1,28 +1,16 @@
-import {
-  CalendarCheck,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Flag,
-  Users,
-} from "lucide-react";
+import { CalendarCheck, CalendarDays, Clock, Flag, Users } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
 import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
+import { AgendaToolbar, periodLabel } from "@/components/blocks/agenda-toolbar";
 import { NewSessionButton } from "@/components/blocks/new-session-sheet";
-import { ViewMenu } from "@/components/blocks/view-menu";
 import { KindBadge, WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
-import { iconButtonClass } from "@/components/ui/button";
 import { CardEmpty } from "@/components/ui/card";
 import { FilterChips } from "@/components/ui/filter-chips";
-import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
-import { PageTabs } from "@/components/ui/page-tabs";
 import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
@@ -172,21 +160,14 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   const busyDays = week.days.filter((day) => day.blocks.length > 0);
   const freeDays = week.days.filter((day) => day.blocks.length === 0).map((day) => day.date);
   const groupBlocks = week.days.flatMap((day) => day.blocks.filter((block) => !block.individual));
-  const groupDetail = groupBlocks
-    .slice(0, 2)
-    .map((block) => `${shortWeekday.format(utc(block.date))} ${block.label.slice(0, 5)}`)
-    .join(" · ");
 
   const sessionHref = (id: string) => `${base}/seances/${id}`;
 
   let title: string;
-  let subtitle: string;
   let content: ReactNode;
   if (view === "semaine") {
     const layout = layoutWeek(shownSessions, monday);
-    const count = layout.days.reduce((sum, day) => sum + day.blocks.length, 0);
     title = weekTitle(monday);
-    subtitle = `${plural(count, "séance")} · ${formatHours(layout.totalMinutes)} planifiées`;
     content = (
       <WeekTimeGrid
         layout={layout}
@@ -207,9 +188,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     const monthBlocks = new Map<string, WeekBlock[]>(
       monthLayout.days.map((day) => [day.date, day.blocks]),
     );
-    const count = monthLayout.days.reduce((sum, day) => sum + day.blocks.length, 0);
     title = capitalize(monthLabel(month));
-    subtitle = plural(count, "séance");
     content = (
       <MonthGrid
         month={month}
@@ -229,10 +208,6 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
       view === "aujourdhui"
         ? `Aujourd'hui · ${plural(sessionCount, "séance")}`
         : capitalize(longDay.format(utc(date)));
-    subtitle =
-      view === "aujourdhui"
-        ? capitalize(longDay.format(utc(date)))
-        : plural(sessionCount, "séance");
     content =
       items.length === 0 ? (
         <CardEmpty icon={CalendarDays}>Rien de prévu ce jour-là.</CardEmpty>
@@ -262,55 +237,33 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         actions={<NewSessionButton date={view === "jour" ? date : undefined} />}
       />
       <PageBody>
-        <div className="hidden lg:block">
-          <PageTabs
-            label="Vue de l'agenda"
-            items={views.map((item) => ({
-              href: href({ vue: item.key, date: item.key === "aujourdhui" ? today : date }),
-              label: item.label,
-              active: item.key === view,
-            }))}
-          />
-        </div>
-        <KpiGrid label="Chiffres de la semaine">
-          <KpiCard
-            color="run"
-            icon={Clock}
-            value={week.totalMinutes > 0 ? formatHours(week.totalMinutes) : "0 h"}
-            label="de coaching planifiées"
-            detail={`Semaine ${isoWeek(monday)}`}
-          />
-          <KpiCard
-            color="accent"
-            icon={CalendarDays}
-            value={String(weekCount)}
-            label={weekCount > 1 ? "séances programmées" : "séance programmée"}
-            detail={
-              busyDays.length > 0
-                ? `Sur ${plural(busyDays.length, "jour")}`
-                : "Aucune cette semaine"
+        {/* Le calendrier d'abord, à la façon de Google Agenda (demande d'Antonino du 26/10) : barre
+            (flèches, mois, vue), filtres, puis la grille ; les chiffres de la semaine, en petit, dessous. */}
+        <section
+          aria-labelledby="agenda-title"
+          // Téléphone : pas de carte autour de l'agenda, la grille prend toute la largeur de l'écran.
+          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:p-0"
+        >
+          <AgendaToolbar
+            titleId="agenda-title"
+            srTitle={title}
+            label={
+              view === "mois"
+                ? capitalize(monthLabel(month))
+                : view === "semaine"
+                  ? periodLabel(monday, addDays(monday, 6))
+                  : capitalize(longDay.format(utc(date)))
             }
-          />
-          <KpiCard
-            color="ok"
-            icon={CalendarCheck}
-            value={String(freeDays.length)}
-            label={freeDays.length > 1 ? "jours libres" : "jour libre"}
-            detail={freeDays.length === 7 ? "Toute la semaine" : dayNames(freeDays)}
-          />
-          <KpiCard
-            color="strength"
-            icon={Users}
-            value={String(groupBlocks.length)}
-            label={groupBlocks.length > 1 ? "séances collectives" : "séance collective"}
-            detail={groupDetail ? capitalize(groupDetail) : "Aucune cette semaine"}
-          />
-        </KpiGrid>
-        {/* Téléphone : bouton « Vue » sous les chiffres, comme au tableau de bord (Aujourd'hui, 3 jours,
-            Semaine, Mois) ; ordinateur : onglets en haut. */}
-        <div className="lg:hidden">
-          <ViewMenu
-            options={[
+            shortLabel={
+              view === "mois"
+                ? periodLabel(`${month}-01`, `${month}-01`, true)
+                : view === "semaine"
+                  ? periodLabel(monday, addDays(monday, 6), true)
+                  : undefined
+            }
+            prevHref={href({ vue: view === "aujourdhui" ? "jour" : view, date: step(-1) })}
+            nextHref={href({ vue: view === "aujourdhui" ? "jour" : view, date: step(1) })}
+            viewOptions={[
               {
                 key: "jour",
                 label: "Aujourd'hui",
@@ -336,42 +289,12 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
                 selected: view === "mois",
               },
             ]}
+            desktopViews={views.map((item) => ({
+              href: href({ vue: item.key, date: item.key === "aujourdhui" ? today : date }),
+              label: item.label,
+              active: item.key === view,
+            }))}
           />
-        </div>
-
-        <section
-          aria-labelledby="agenda-title"
-          // Téléphone : pas de carte autour de l'agenda, la grille prend toute la largeur de l'écran.
-          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:p-0"
-        >
-          <header className="flex items-start justify-between gap-3">
-            <div className="flex min-w-0 flex-col gap-1">
-              <h2 id="agenda-title" className="font-display text-block font-semibold">
-                {title}
-              </h2>
-              <p className="text-[13px] text-muted">{subtitle}</p>
-            </div>
-            {view === "aujourdhui" ? null : (
-              <nav aria-label="Changer de période" className="flex shrink-0 items-center gap-1.5">
-                <Link
-                  href={href({ date: step(-1) })}
-                  scroll={false}
-                  aria-label="Période précédente"
-                  className={iconButtonClass()}
-                >
-                  <ChevronLeft aria-hidden size={18} strokeWidth={1.8} />
-                </Link>
-                <Link
-                  href={href({ date: step(1) })}
-                  scroll={false}
-                  aria-label="Période suivante"
-                  className={iconButtonClass()}
-                >
-                  <ChevronRight aria-hidden size={18} strokeWidth={1.8} />
-                </Link>
-              </nav>
-            )}
-          </header>
           <FilterChips
             label="Filtrer l'agenda"
             options={kinds.map((item) => ({
@@ -382,6 +305,45 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
           />
           {content}
         </section>
+
+        {/* Chiffres de la semaine : de petites pastilles, plus de grandes cartes (26/10). */}
+        <ul aria-label="Chiffres de la semaine" className="flex flex-wrap gap-2">
+          {[
+            {
+              icon: Clock,
+              value: week.totalMinutes > 0 ? formatHours(week.totalMinutes) : "0 h",
+              text: `de coaching · semaine ${isoWeek(monday)}`,
+            },
+            {
+              icon: CalendarDays,
+              value: String(weekCount),
+              text: `${weekCount > 1 ? "séances" : "séance"}${
+                busyDays.length > 0 ? ` sur ${plural(busyDays.length, "jour")}` : ""
+              }`,
+            },
+            {
+              icon: CalendarCheck,
+              value: String(freeDays.length),
+              text: `${freeDays.length > 1 ? "jours libres" : "jour libre"}${
+                freeDays.length > 0 && freeDays.length < 7 ? ` (${dayNames(freeDays)})` : ""
+              }`,
+            },
+            {
+              icon: Users,
+              value: String(groupBlocks.length),
+              text: groupBlocks.length > 1 ? "séances collectives" : "séance collective",
+            },
+          ].map((stat) => (
+            <li
+              key={stat.text}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-pill border border-line bg-surface px-3 text-[13px] text-muted"
+            >
+              <stat.icon aria-hidden size={14} strokeWidth={1.8} />
+              <span className="font-semibold text-text tabular">{stat.value}</span>
+              {stat.text}
+            </li>
+          ))}
+        </ul>
       </PageBody>
     </>
   );
