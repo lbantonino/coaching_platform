@@ -1,4 +1,11 @@
-import { FileWarning, ListChecks, MessageSquare, UserPen, type LucideIcon } from "lucide-react";
+import {
+  FileWarning,
+  Flag,
+  ListChecks,
+  MessageSquare,
+  UserPen,
+  type LucideIcon,
+} from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 
@@ -10,15 +17,23 @@ import { Card, CardEmpty } from "@/components/ui/card";
 import { CountBadge } from "@/components/ui/count-badge";
 import { formatEuros } from "@/domain/billing/invoices";
 import { requireCoach } from "@/features/auth/guards";
-import { getNotifications } from "@/features/notifications/queries";
-import { dayShortLabel, dueLabel, messageTime, todayIsoInBrussels } from "@/lib/format";
+import { COMPETITION_NOTICE_DAYS, getNotifications } from "@/features/notifications/queries";
+import {
+  dayShortLabel,
+  daysBetween,
+  dueLabel,
+  messageTime,
+  todayIsoInBrussels,
+} from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Notifications",
 };
 
 // Page Notifications (demande d'Antonino, 24/10, D-37) : ce qui demande l'attention du coach, en
-// sections : messages non lus, tâches du jour ou en retard, factures en retard, fiches à compléter.
+// sections : compétitions des sportifs dans les 7 jours (rappels, 26/10 : elles ne sont plus dans
+// l'agenda du coach), messages non lus, tâches du jour ou en retard, factures en retard, fiches à
+// compléter.
 // Tout est calculé à partir des vraies données ; chaque ligne mène là où on s'en occupe, et une ligne
 // disparaît d'elle-même une fois la chose faite (message lu, tâche cochée, facture payée, fiche
 // complétée). Les retours de séance des sportifs s'ajouteront en P6.
@@ -37,9 +52,12 @@ async function NotificationList() {
   const { memberships } = await requireCoach();
   const organizationId = memberships[0].organizationId;
   const today = todayIsoInBrussels();
-  const { messages, tasks, invoices, profiles } = await getNotifications(organizationId, today);
+  const { competitions, messages, tasks, invoices, profiles } = await getNotifications(
+    organizationId,
+    today,
+  );
   const unread = messages.reduce((sum, conversation) => sum + conversation.unread, 0);
-  const total = unread + tasks.length + invoices.length + profiles.length;
+  const total = competitions.length + unread + tasks.length + invoices.length + profiles.length;
 
   return (
     <>
@@ -48,6 +66,35 @@ async function NotificationList() {
         subtitle={total > 0 ? `${total} à voir` : "Tout est à jour."}
       />
       <PageBody grid>
+        <Section
+          id="notif-competitions"
+          title={`Compétitions dans les ${COMPETITION_NOTICE_DAYS} jours`}
+          count={competitions.length}
+          icon={Flag}
+        >
+          {competitions.map((competition) => {
+            const gap = daysBetween(today, competition.date);
+            return (
+              <ListRow
+                key={competition.id}
+                href={`/coach/o/${organizationId}/sportifs/${competition.athleteId}?onglet=objectifs`}
+                leading={
+                  <span className="flex w-[84px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
+                    <span className="text-accent-text">
+                      {dayShortLabel(competition.date, today)}
+                    </span>
+                    <span className="text-[13px] font-medium">
+                      {gap === 0 ? "Jour J" : `J-${gap}`}
+                    </span>
+                  </span>
+                }
+                title={`${competition.title} · ${competition.athleteName}`}
+                sub={competition.detail || "Compétition"}
+              />
+            );
+          })}
+        </Section>
+
         <Section id="notif-messages" title="Messages non lus" count={unread} icon={MessageSquare}>
           {messages.map((conversation) => (
             <ListRow

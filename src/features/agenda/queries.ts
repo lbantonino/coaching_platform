@@ -24,6 +24,8 @@ export type AgendaEvent = {
   discipline: Discipline | null;
   isMain: boolean;
   achieved: boolean;
+  // Une vraie compétition (avec un nom), pas un simple objectif daté.
+  isCompetition: boolean;
 };
 
 // Échéances de l'organisation (déjà vérifiée par requireOrgAccess) : objectifs en cours ou atteints,
@@ -67,6 +69,7 @@ export async function listAgendaEvents(organizationId: string): Promise<AgendaEv
         detail,
         discipline: goalDiscipline(type),
         isMain: row.priority === "main",
+        isCompetition: row.competition_name !== null,
         achieved: (row.status as GoalStatus) === "achieved",
       },
     ];

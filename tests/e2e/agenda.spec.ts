@@ -15,7 +15,7 @@ async function loginAsCoachA(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-test("le coach voit les compétitions de ses sportifs, filtre et ouvre la fiche", async ({
+test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, filtres, et aucune compétition", async ({
   page,
 }) => {
   await loginAsCoachA(page);
@@ -24,28 +24,28 @@ test("le coach voit les compétitions de ses sportifs, filtre et ouvre la fiche"
   await goToCoachSection(page, "Agenda");
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: /^Semaine du/ })).toBeVisible();
-
-  // Mars 2027 (ancienne adresse ?mois= conservée) : le Hyrox d'Inès ; jamais Sarah (organisation B).
-  await page.goto(`/coach/o/${ORG_A}/agenda?mois=2027-03`);
-  const march = page.getByRole("region", { name: "Mars 2027" });
-  await expect(march.getByRole("link", { name: /Hyrox Bruxelles/ })).toBeVisible();
-  await expect(march.getByText(/Sarah/)).toHaveCount(0);
-
-  // Filtre « Collectives » : les compétitions disparaissent.
+  const views = page.getByRole("navigation", { name: "Vue de l'agenda" });
+  await expect(views.getByRole("link")).toHaveText(["Aujourd'hui", "Semaine", "Mois"]);
   const filters = page.getByRole("navigation", { name: "Filtrer l'agenda" });
+  await expect(filters.getByRole("link")).toHaveText(["Toutes", "Individuelles", "Collectives"]);
+
+  // Mars 2027 : le Hyrox d'Inès (20 mars) n'est plus dans le planning du coach (26/10).
+  await page.goto(`/coach/o/${ORG_A}/agenda?vue=mois&date=2027-03-01`);
+  const march = page.getByRole("region", { name: "Mars 2027" });
+  await expect(march).toBeVisible();
+  await expect(march.getByText(/Hyrox Bruxelles/)).toHaveCount(0);
+
+  // Semaine fixée (janvier 2027) : la piste du mercredi est collective, l'individuelle disparaît
+  // avec le filtre « Collectives ».
+  await page.goto(`/coach/o/${ORG_A}/agenda?date=2027-01-06`);
+  const week = page.getByRole("region", { name: /^Semaine du/ });
+  await expect(week.getByRole("link", { name: /Piste du mercredi/ }).first()).toBeVisible();
+  await filters.getByRole("link", { name: "Individuelles" }).click();
+  await expect(page).toHaveURL(/type=individuelles/);
+  await expect(week.getByRole("link", { name: /Piste du mercredi/ })).toHaveCount(0);
   await filters.getByRole("link", { name: "Collectives" }).click();
   await expect(page).toHaveURL(/type=collectives/);
-  await expect(march.getByRole("link", { name: /Hyrox Bruxelles/ })).toHaveCount(0);
-
-  // Mois suivant, filtre « Compétitions » : le semi de Thomas en avril, qui ouvre sa fiche.
-  await page.getByRole("link", { name: "Période suivante" }).click();
-  await expect(page).toHaveURL(/date=2027-04-01/);
-  await filters.getByRole("link", { name: "Compétitions" }).click();
-  await expect(page).toHaveURL(/type=competitions/);
-  const april = page.getByRole("region", { name: "Avril 2027" });
-  await april.getByRole("link", { name: /Semi-marathon de printemps/ }).click();
-  await expect(page).toHaveURL(/onglet=objectifs/);
-  await expect(page.getByRole("heading", { name: "Thomas Peeters", level: 1 })).toBeVisible();
+  await expect(week.getByRole("link", { name: /Piste du mercredi/ }).first()).toBeVisible();
 });
 
 test("le tableau de bord montre la semaine du coach avec ses vraies séances", async ({ page }) => {
@@ -62,6 +62,15 @@ test("le tableau de bord montre la semaine du coach avec ses vraies séances", a
     page.getByRole("region", { name: "Programmes en cours" }).getByText(/Aucun programme/),
   ).toBeVisible();
   await expect(page.getByRole("region", { name: "Séances à venir" })).toBeVisible();
+  // Filtre de l'agenda (26/10) : Toutes, Individuelles, Collectives ; la piste est collective.
+  const filters = page.getByRole("navigation", { name: "Filtrer l'agenda" });
+  await expect(filters.getByRole("link")).toHaveText(["Toutes", "Individuelles", "Collectives"]);
+  await filters.getByRole("link", { name: "Individuelles" }).click();
+  await expect(page).toHaveURL(/type=individuelles/);
+  await expect(
+    week.getByRole("link", { name: /Piste du mercredi/ }).filter({ visible: true }),
+  ).toHaveCount(0);
+  await filters.getByRole("link", { name: "Toutes" }).click();
   await week.getByRole("link", { name: "Agenda →" }).click();
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
 });

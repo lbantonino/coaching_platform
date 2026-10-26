@@ -1,3 +1,4 @@
+import { User, Users } from "lucide-react";
 import type { CSSProperties } from "react";
 
 import type { Discipline } from "@/domain/training/discipline";
@@ -55,7 +56,7 @@ export function WeekTimeGrid({
   single?: boolean;
   // Tableau de bord (demandes d'Antonino). Téléphone : la hauteur d'une heure s'adapte pour que la
   // carte entière tienne dans la hauteur visible (26–44 px ; --grid-chrome = barre du haut, en-tête
-  // de carte, en-tête des jours, légende). Calculée sur 100svh, la hauteur d'écran AVEC les barres du
+  // de carte, filtres, en-tête des jours, légende). Calculée sur 100svh, la hauteur d'écran AVEC les barres du
   // navigateur : elle ne bouge pas quand Safari replie sa barre d'adresse pendant le défilement (avec
   // 100dvh, les cases rétrécissaient et grandissaient au défilement, demande d'Antonino du 26/10).
   // Ordinateur : 40 px par heure, et la grille défile dans sa
@@ -93,7 +94,7 @@ export function WeekTimeGrid({
         <ScrollToDay
           className={`snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg ${
             fit
-              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:340px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
+              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:392px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
               : "[--hour:44px] lg:[--hour:48px]"
           }`}
           fitPage={fit}
@@ -204,7 +205,13 @@ export function WeekTimeGrid({
                           href={sessionHref(block.sessionId)}
                           title={`${block.label} · ${block.title} · ${block.subtitle}`}
                           style={style}
+                          // Collective (demande d'Antonino du 26/10) : contour en pointillés et icône
+                          // « groupe », pour la distinguer d'un coup d'œil d'une séance individuelle.
                           className={`absolute flex flex-col overflow-hidden rounded-[8px] border-l-[3px] border-l-[var(--c)] bg-[color-mix(in_srgb,var(--c)_12%,var(--surface))] px-1.5 transition-[filter,opacity] duration-150 hover:brightness-110 ${
+                            block.individual
+                              ? ""
+                              : "outline-1 -outline-offset-1 outline-[var(--c)] outline-dashed"
+                          } ${
                             compactPhone ? "max-lg:justify-center max-lg:py-0.5" : "max-lg:py-1"
                           } ${compactDesktop ? "lg:justify-center lg:py-0" : "lg:py-1"}`}
                         >
@@ -212,6 +219,14 @@ export function WeekTimeGrid({
                             <span
                               className={`truncate text-[12px] leading-tight ${compactPhone ? "" : "max-lg:hidden"} ${compactDesktop ? "" : "lg:hidden"}`}
                             >
+                              {block.individual ? null : (
+                                <Users
+                                  aria-hidden
+                                  size={10}
+                                  strokeWidth={2.4}
+                                  className="mr-0.5 inline align-[-1px] text-[var(--c)]"
+                                />
+                              )}
                               <span className="font-mono text-[11px] text-[var(--c)] tabular">
                                 {block.label.slice(0, 5)}
                               </span>{" "}
@@ -219,8 +234,11 @@ export function WeekTimeGrid({
                             </span>
                           ) : null}
                           <span
-                            className={`truncate font-mono text-[11px] leading-tight text-[var(--c)] tabular ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
+                            className={`flex items-center gap-1 truncate font-mono text-[11px] leading-tight text-[var(--c)] tabular ${compactPhone ? "max-lg:hidden" : ""} ${compactDesktop ? "lg:hidden" : ""}`}
                           >
+                            {block.individual ? null : (
+                              <Users aria-hidden size={11} strokeWidth={2.4} className="shrink-0" />
+                            )}
                             {block.label.replace(" - ", " – ")}
                           </span>
                           <span
@@ -252,7 +270,8 @@ export function WeekTimeGrid({
             })}
           </div>
         </ScrollToDay>
-        <div className="flex items-start justify-between gap-3 text-[12px] text-muted">
+        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5 text-[12px] text-muted">
+          <KindLegend />
           <span>
             {single ? (
               `1 jour · ${span} heures visibles`
@@ -269,5 +288,43 @@ export function WeekTimeGrid({
         </div>
       </div>
     </GridInteractions>
+  );
+}
+
+// Type d'une séance encadrée : pastille « Individuelle » / « Collective » (listes du jour).
+export function KindBadge({ individual }: { individual: boolean }) {
+  const Icon = individual ? User : Users;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-pill border px-2 py-0.5 text-[12px] font-medium whitespace-nowrap text-muted ${
+        individual ? "border-line-2" : "border-dashed border-line-2"
+      }`}
+    >
+      <Icon aria-hidden size={12} strokeWidth={2} />
+      {individual ? "Individuelle" : "Collective"}
+    </span>
+  );
+}
+
+// Légende sous l'agenda : comment reconnaître une séance individuelle et une collective.
+export function KindLegend() {
+  return (
+    <span aria-label="Légende" className="flex items-center gap-3">
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          aria-hidden
+          className="h-3 w-4 rounded-[3px] border-l-[3px] border-l-muted bg-surface-2"
+        />
+        Individuelle
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span
+          aria-hidden
+          className="h-3 w-4 rounded-[3px] border-l-[3px] border-l-muted bg-surface-2 outline-1 -outline-offset-1 outline-muted outline-dashed"
+        />
+        <Users aria-hidden size={12} strokeWidth={2.2} />
+        Collective
+      </span>
+    </span>
   );
 }

@@ -1,7 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { fillAthleteName, openAthleteTab } from "./helpers";
+
 // Notifications du coach (D-37) : la cloche compte ce qui attend, la page le range en sections
-// (messages non lus, tâches du jour ou en retard, factures en retard, fiches à compléter), et chaque
+// (compétitions des sportifs dans les 7 jours, messages non lus, tâches du jour ou en retard,
+// factures en retard, fiches à compléter), et chaque
 // ligne mène là où on s'en occupe. Lignes stables du seed : la facture en retard de Sophie et la
 // fiche de Manon (prénom seul) ; les messages et les tâches bougent avec les autres tests.
 async function loginAsCoachA(page: Page) {
@@ -32,6 +35,7 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
   await expect(page.getByRole("heading", { name: "Notifications", level: 1 })).toBeVisible();
 
   for (const name of [
+    "Compétitions dans les 7 jours",
     "Messages non lus",
     "Tâches du jour ou en retard",
     "Factures en retard",
@@ -51,4 +55,37 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
     .click();
   await expect(page).toHaveURL(/onglet=profil/);
   await expect(page.getByRole("heading", { name: "Manon", level: 1 })).toBeVisible();
+});
+
+test("une compétition d'un sportif dans les 7 jours devient un rappel dans les notifications", async ({
+  page,
+}, testInfo) => {
+  // Sportif et compétition créés pour ce test (nom unique par exécution et par profil).
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const name = `Rappel ${suffix}`;
+  const competition = `Course ${suffix}`;
+  const inThreeDays = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+  await loginAsCoachA(page);
+  await page.goto("/coach/o/0a000000-0000-4000-8000-0000000000a1/sportifs/nouveau");
+  await fillAthleteName(page, name);
+  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
+  await page
+    .getByRole("list", { name: "Liste des sportifs" })
+    .getByRole("link", { name: new RegExp(`^${name}`) })
+    .click();
+  await openAthleteTab(page, "Objectifs");
+  await page.getByLabel("Type d'objectif").selectOption({ label: "Course 10 km" });
+  await page.getByLabel(/Date cible/).fill(inThreeDays);
+  await page.getByLabel("C'est une compétition").check();
+  await page.getByLabel("Nom de la compétition").fill(competition);
+  await page.getByRole("button", { name: "Ajouter l'objectif" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Objectif ajouté." })).toBeVisible();
+
+  // Rappel dans les notifications (J-3), qui mène à ses objectifs ; jamais dans l'agenda du coach.
+  await page.goto("/coach/notifications");
+  const reminders = page.getByRole("region", { name: "Compétitions dans les 7 jours" });
+  const row = reminders.getByRole("link", { name: new RegExp(`${competition} · ${name}`) });
+  await expect(row).toContainText("J-3");
+  await row.click();
+  await expect(page).toHaveURL(/onglet=objectifs/);
 });
