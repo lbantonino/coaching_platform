@@ -152,7 +152,7 @@ test("une tâche cochée quitte la carte du tableau de bord et passe dans « Ter
   const phone = testInfo.project.name === "telephone";
   const title = phone
     ? "Relancer Sophie pour la facture d'octobre"
-    : "Finaliser le programme Hyrox de Lucas";
+    : "Préparer le bloc 2 du programme de Lucas";
   const checkbox = page.getByRole("checkbox", { name: `Tâche faite : ${title}` });
   await loginAsCoachA(page);
 

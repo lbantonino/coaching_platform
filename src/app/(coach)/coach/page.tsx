@@ -287,7 +287,9 @@ async function Dashboard({
 
         <section
           aria-labelledby="agenda-title"
-          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] lg:col-span-12"
+          // Téléphone (demande d'Antonino du 26/10) : pas de carte autour de l'agenda, la grille prend
+          // toute la largeur de l'écran ; ordinateur : la carte.
+          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:rounded-none max-lg:border-0 max-lg:bg-transparent max-lg:p-0 lg:col-span-12"
         >
           {/* Téléphone : flèches sur la ligne du titre, vues et lien « Agenda » en dessous, pour que la
               carte entière tienne dans la hauteur de l'écran. Ordinateur : tout à droite du titre. */}

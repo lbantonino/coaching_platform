@@ -101,9 +101,10 @@ export function WeekTimeGrid({
     <GridInteractions move={onMove}>
       <div className="flex flex-col gap-2.5">
         <ScrollToDay
-          className={`@container snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg ${
+          // Téléphone : la grille va d'un bord à l'autre de l'écran (-mx-4 = marge de la page).
+          className={`@container snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 ${
             fit
-              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:392px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
+              ? "[--hour:clamp(26px,calc((100svh-var(--grid-chrome))/16),44px)] [--grid-chrome:356px] lg:max-h-[max(380px,calc(100dvh-var(--grid-chrome-lg,560px)))] lg:overflow-y-auto lg:[--hour:40px]"
               : "[--hour:44px] lg:[--hour:48px]"
           }`}
           fitPage={fit}
