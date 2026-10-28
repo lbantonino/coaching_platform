@@ -31,7 +31,7 @@ async function NewAthleteSection({ orgId }: { orgId: string }) {
       <PageHeader
         title="Nouveau sportif"
         back={{ href: listPath, label: "Sportifs" }}
-        subtitle="Sa fiche complète en une fois. Tout se modifie ensuite depuis sa fiche."
+        subtitle="Seul le prénom est obligatoire. Tout se modifie ensuite depuis sa fiche."
       />
       <PageBody>
         <NewAthleteForm organizationId={membership.organizationId} />

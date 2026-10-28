@@ -62,17 +62,21 @@ export function CheckList({
     );
   }
 
-  const toggle = (item: CheckItem) => {
+  // Après un changement réussi, le message propose « Annuler » : remet la tâche comme avant.
+  const toggle = (item: CheckItem, undoable = true) => {
     const checked = !item.checked;
     startTransition(async () => {
       setShown({ id: item.id, checked });
       const { ok } = await action(item.id, checked);
+      if (!ok) {
+        toast("Le changement n'a pas pu être enregistré. Réessaie.");
+        return;
+      }
       toast(
-        ok
-          ? checked
-            ? toasts.checked
-            : toasts.unchecked
-          : "Le changement n'a pas pu être enregistré. Réessaie.",
+        checked ? toasts.checked : toasts.unchecked,
+        undoable
+          ? { action: { label: "Annuler", onClick: () => toggle({ ...item, checked }, false) } }
+          : undefined,
       );
     });
   };

@@ -151,7 +151,10 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
       toast(
         result.ok ? "Séance déplacée." : (result.error ?? "La séance n'a pas pu être déplacée."),
       );
-      router.refresh();
+      // Le rechargement reste dans la transition (audit apple-design du 28/10) : l'aperçu garde la
+      // séance à sa nouvelle place jusqu'à ce que la grille rechargée l'y montre. Sans ça, elle
+      // revenait une fraction de seconde à son ancienne place avant d'apparaître à la nouvelle.
+      startTransition(() => router.refresh());
     });
   };
 
@@ -380,9 +383,11 @@ export function DropPreview({ date, firstHour }: { date: string; firstHour: numb
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute inset-x-[3px] z-20 flex flex-col overflow-hidden rounded-[8px] border-2 border-dashed border-accent bg-[color-mix(in_srgb,var(--accent)_10%,var(--surface))] px-1.5 ${
-        active.duration <= 60 ? "justify-center" : "py-0.5"
-      }`}
+      // Pendant le glissé : contour en pointillés. Lâchée (enregistrement) : contour plein, la séance
+      // est « posée » à sa nouvelle place en attendant la grille rechargée.
+      className={`pointer-events-none absolute inset-x-[3px] z-20 flex flex-col overflow-hidden rounded-[8px] border-2 border-accent bg-[color-mix(in_srgb,var(--accent)_10%,var(--surface))] px-1.5 ${
+        active.saving ? "border-solid" : "border-dashed"
+      } ${active.duration <= 60 ? "justify-center" : "py-0.5"}`}
       style={{
         top: `calc(var(--hour) * ${(start - firstHour * 60) / 60})`,
         height: `calc(var(--hour) * ${active.duration / 60} - 3px)`,

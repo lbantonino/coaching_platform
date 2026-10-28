@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 
+import { PressFeedback } from "@/components/ui/press-feedback";
 import { ToastProvider } from "@/components/ui/toast";
 import { BRAND } from "@/config/brand";
 import { themeInitScript } from "@/lib/theme";
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="flex min-h-full flex-col bg-bg text-text">
+        <PressFeedback />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

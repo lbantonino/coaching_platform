@@ -33,6 +33,8 @@ import {
 } from "@/features/sessions/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
+import { PaymentRows } from "./payment-rows";
+
 export const metadata: Metadata = {
   title: "Séance",
 };
@@ -249,80 +251,39 @@ async function SessionDetail({
                   },
                 ]}
               />
-              <ul aria-label="Paiements des dates" className="flex flex-col">
-                {payable.map((occurrence) => {
+              <PaymentRows
+                priced={priced}
+                amountLabel={
+                  session.priceCents === null
+                    ? ""
+                    : formatEuros(
+                        session.priceVatIncluded
+                          ? session.priceCents
+                          : addVat(session.priceCents, SESSION_VAT_RATE),
+                      )
+                }
+                mark={markSessionPaid.bind(null, organizationId, session.id)}
+                unmark={unmarkSessionPaid.bind(null, organizationId, session.id)}
+                rows={payable.map((occurrence) => {
                   const paid = paidByDate.get(occurrence.originalDate);
-                  const covered = coveredByPackage(covers, athleteId, occurrence.originalDate);
                   const time = occurrence.startTime.slice(0, 5);
-                  const when = `${capitalize(dayLabel(occurrence.date))} · ${time}`;
-                  return (
-                    <li key={occurrence.originalDate}>
-                      <ListRow
-                        title={
-                          <>
-                            <span className="lg:hidden">
-                              {capitalize(compactDay.format(utc(occurrence.date)).replace(".", ""))}{" "}
-                              · {time}
-                            </span>
-                            <span className="max-lg:hidden">{when}</span>
-                          </>
-                        }
-                        sub={
-                          paid
-                            ? `Payée le ${shortDate.format(utc(paid.receivedOn))} · ${formatEuros(paid.amountCents)}`
-                            : covered
-                              ? "Comprise dans le forfait du sportif"
-                              : occurrence.date > today
-                                ? "À venir"
-                                : "Pas encore payée"
-                        }
-                        trailing={
-                          paid ? (
-                            <span className="flex items-center gap-1">
-                              <Badge tone="ok">Payée</Badge>
-                              <form
-                                action={unmarkSessionPaid.bind(
-                                  null,
-                                  organizationId,
-                                  session.id,
-                                  occurrence.originalDate,
-                                )}
-                              >
-                                <button
-                                  type="submit"
-                                  aria-label={`Annuler le paiement : ${when}`}
-                                  className={buttonClass({ variant: "ghost" })}
-                                >
-                                  Annuler
-                                </button>
-                              </form>
-                            </span>
-                          ) : covered ? (
-                            <Badge tone="ok">Forfait</Badge>
-                          ) : priced ? (
-                            <form
-                              action={markSessionPaid.bind(
-                                null,
-                                organizationId,
-                                session.id,
-                                occurrence.originalDate,
-                              )}
-                            >
-                              <button
-                                type="submit"
-                                aria-label={`Marquer payée : ${when}`}
-                                className={buttonClass({ variant: "outline" })}
-                              >
-                                Marquer payée
-                              </button>
-                            </form>
-                          ) : null
-                        }
-                      />
-                    </li>
-                  );
+                  return {
+                    date: occurrence.originalDate,
+                    compact: `${capitalize(compactDay.format(utc(occurrence.date)).replace(".", ""))} · ${time}`,
+                    long: `${capitalize(dayLabel(occurrence.date))} · ${time}`,
+                    state: paid
+                      ? "paid"
+                      : coveredByPackage(covers, athleteId, occurrence.originalDate)
+                        ? "covered"
+                        : occurrence.date > today
+                          ? "future"
+                          : "unpaid",
+                    paidLabel: paid
+                      ? `Payée le ${shortDate.format(utc(paid.receivedOn))} · ${formatEuros(paid.amountCents)}`
+                      : null,
+                  };
                 })}
-              </ul>
+              />
               <p className="text-[12px] text-muted">
                 « Marquer payée » note le paiement reçu aujourd&apos;hui : il compte dans « Encaissé
                 cette semaine » et dans la Comptabilité. Un forfait se note avec « Créer → Paiement

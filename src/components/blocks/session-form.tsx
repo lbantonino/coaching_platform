@@ -12,6 +12,7 @@ import {
   textareaClass,
   labelClass,
 } from "@/components/ui/form-styles";
+import { FieldCheck } from "@/components/ui/field-check";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { formatEuros } from "@/domain/billing/invoices";
 import { addVat, parseEuros, splitVat } from "@/domain/billing/payments";
@@ -364,6 +365,7 @@ function SessionFields({
               aria-describedby="session-price-hint"
               className={`${inputClass} font-mono`}
             />
+            <FieldCheck htmlFor="session-price" rule="euros" />
           </div>
           <fieldset className="flex flex-col gap-1.5">
             <legend className={`${labelClass} mb-1.5`}>Paiement</legend>
