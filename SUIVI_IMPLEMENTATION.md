@@ -32,6 +32,20 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Outils, tranche 3 : notifications lues et masquées (D-61)
+```
+Date : 2026-10-28
+Fait : migration 20261028170000 (coach_notification_states : état par coach et par organisation,
+  lue / masquée, clé de forme vérifiée, RLS « ses propres lignes ») ; clés stables
+  (domain/notifications/keys : une tâche reportée, un nouveau message ou une nouvelle échéance
+  redonne une notification non lue) ; la cloche et le menu ne comptent que ce qui n'est ni lu ni
+  masqué (un message = un sportif qui a écrit) ; page Notifications : point rouge « Non lue »,
+  ouvrir une ligne la marque lue, « ••• » Marquer comme lue / non lue, Masquer (« Annuler » dans le
+  message), rouge « Tout marquer comme lu ». Les notifications restent calculées (rien n'est copié).
+Tests : Vitest (notification-keys), pgTAP 25_etat_des_notifications (10), e2e
+  notification-states.spec (en série, coach B, stable sur deux passages)
+```
+
 ### Outils, tranche 2 : documents (D-60)
 ```
 Date : 2026-10-28

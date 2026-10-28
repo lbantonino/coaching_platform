@@ -679,6 +679,42 @@ export type Database = {
           },
         ];
       };
+      coach_notification_states: {
+        Row: {
+          dismissed_at: string | null;
+          key: string;
+          organization_id: string;
+          read_at: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          dismissed_at?: string | null;
+          key: string;
+          organization_id: string;
+          read_at?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Update: {
+          dismissed_at?: string | null;
+          key?: string;
+          organization_id?: string;
+          read_at?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_notification_states_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       coach_profiles: {
         Row: {
           agenda_first_hour: number;

@@ -351,6 +351,9 @@ Les tâches se cochaient, mais on ne pouvait ni en créer, ni en corriger, ni en
 ### Les outils, tranche 2 : des documents privés (28/10)
 Pour les documents, la question n'était pas l'écran mais la confiance : un contrat ou une facture ne doit jamais être lisible par un autre coach. On a repris le modèle des photos : un espace de stockage **privé**, rangé par dossier d'organisation, avec des règles RLS sur les fichiers eux-mêmes, et une route de l'app qui sert le fichier avec la session de la personne. Une autre organisation reçoit un 404, comme si le document n'existait pas. Deux précautions de plus : le format est lu dans les premiers octets du fichier (un texte renommé en .pdf est refusé), et le chemin de stockage est tiré au hasard, jamais le nom envoyé par le navigateur. Leçon d'écran : l'envoi se fait « à la main » plutôt que par l'action automatique du formulaire, car React vide le formulaire après l'envoi ; en cas d'erreur, le fichier choisi et les champs restent en place.
 
+### Les outils, tranche 3 : lire et masquer des notifications calculées (28/10)
+Les notifications de Coory ne sont pas stockées : elles sont calculées à partir des vraies données (une tâche en retard, une facture impayée). Comment alors en « lire » une ? On garde seulement l'état choisi par le coach, rangé sous une **clé** qui décrit la situation : « cette tâche, avec cette échéance ». Si la tâche est reportée, la clé change, et la notification revient non lue, ce qui est le comportement attendu. Chaque coach a ses propres états (lire n'efface rien pour un collègue). Leçon de test : un test qui compte la cloche du coach A échouait au hasard, parce qu'un autre test créait en même temps des compétitions pour ce même coach. Le test tourne maintenant avec le coach B, en série, et remet tout en place à la fin.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris

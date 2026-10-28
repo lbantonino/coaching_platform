@@ -10,7 +10,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
-import { ListRow } from "@/components/blocks/list-row";
+import { MarkAllRead, NotificationRow } from "./notification-row";
+
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
@@ -20,6 +21,11 @@ import { formatEuros } from "@/domain/billing/invoices";
 import { requireCoach } from "@/features/auth/guards";
 import { getCoachProfile } from "@/features/coach/profile";
 import { NOTIFICATION_KINDS, notificationKindLabels } from "@/features/coach/settings";
+import {
+  dismissNotification,
+  restoreNotification,
+  setNotificationsRead,
+} from "@/features/notifications/actions";
 import { COMPETITION_NOTICE_DAYS, getNotifications } from "@/features/notifications/queries";
 import {
   dayShortLabel,
@@ -40,6 +46,8 @@ export const metadata: Metadata = {
 // Tout est calculé à partir des vraies données ; chaque ligne mène là où on s'en occupe, et une ligne
 // disparaît d'elle-même une fois la chose faite (message lu, tâche cochée, facture payée, fiche
 // complétée). Les retours de séance des sportifs s'ajouteront en P6.
+// 4e (D-61) : chaque ligne se marque lue (en l'ouvrant, ou par « ••• ») ou se masque ; « Tout marquer
+// comme lu » en rouge. La cloche ne compte que ce qui n'est ni lu ni masqué.
 export default function NotificationsPage() {
   return (
     <main className={pageMainClass}>
@@ -67,14 +75,26 @@ async function NotificationList() {
   const invoices = notify.invoices ? all.invoices : [];
   const profiles = notify.profiles ? all.profiles : [];
   const hidden = NOTIFICATION_KINDS.filter((kind) => !notify[kind]);
-  const unread = messages.reduce((sum, conversation) => sum + conversation.unread, 0);
-  const total = competitions.length + unread + tasks.length + invoices.length + profiles.length;
+  const unreadOf = (items: { read: boolean }[]) => items.filter((item) => !item.read).length;
+  const unreadKeys = [...competitions, ...messages, ...tasks, ...invoices, ...profiles]
+    .filter((item) => !item.read)
+    .map((item) => item.key);
+  const total = unreadKeys.length;
+  const actions = {
+    setRead: setNotificationsRead.bind(null, organizationId),
+    dismiss: dismissNotification.bind(null, organizationId),
+    restore: restoreNotification.bind(null, organizationId),
+  };
+  // Une ligne par clé ET par état : quand la page se recalcule (ex. « Tout marquer comme lu »), la
+  // ligne repart de l'état enregistré.
+  const rowKey = (item: { key: string; read: boolean }) => `${item.key}:${item.read}`;
 
   return (
     <>
       <PageHeader
         title="Notifications"
         subtitle={total > 0 ? `${total} à voir` : "Tout est à jour."}
+        actions={<MarkAllRead keys={unreadKeys} setRead={actions.setRead} />}
       />
       <PageBody grid>
         {hidden.length > 0 ? (
@@ -93,14 +113,17 @@ async function NotificationList() {
           <Section
             id="notif-competitions"
             title={`Compétitions dans les ${COMPETITION_NOTICE_DAYS} jours`}
-            count={competitions.length}
+            count={unreadOf(competitions)}
             icon={Flag}
           >
             {competitions.map((competition) => {
               const gap = daysBetween(today, competition.date);
               return (
-                <ListRow
-                  key={competition.id}
+                <NotificationRow
+                  key={rowKey(competition)}
+                  notificationKey={competition.key}
+                  read={competition.read}
+                  actions={actions}
                   href={`/coach/o/${organizationId}/sportifs/${competition.athleteId}?onglet=objectifs`}
                   leading={
                     <span className="flex w-[84px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
@@ -121,10 +144,18 @@ async function NotificationList() {
         ) : null}
 
         {notify.messages ? (
-          <Section id="notif-messages" title="Messages non lus" count={unread} icon={MessageSquare}>
+          <Section
+            id="notif-messages"
+            title="Messages non lus"
+            count={unreadOf(messages)}
+            icon={MessageSquare}
+          >
             {messages.map((conversation) => (
-              <ListRow
-                key={conversation.athlete.id}
+              <NotificationRow
+                key={rowKey(conversation)}
+                notificationKey={conversation.key}
+                read={conversation.read}
+                actions={actions}
                 href={`/coach/messages?sportif=${conversation.athlete.id}`}
                 leading={
                   <Avatar
@@ -154,12 +185,15 @@ async function NotificationList() {
           <Section
             id="notif-tasks"
             title="Tâches du jour ou en retard"
-            count={tasks.length}
+            count={unreadOf(tasks)}
             icon={ListChecks}
           >
             {tasks.map((task) => (
-              <ListRow
-                key={task.id}
+              <NotificationRow
+                key={rowKey(task)}
+                notificationKey={task.key}
+                read={task.read}
+                actions={actions}
                 href="/coach/taches?onglet=aujourdhui"
                 title={task.title}
                 sub={task.athleteName ?? undefined}
@@ -182,12 +216,15 @@ async function NotificationList() {
           <Section
             id="notif-invoices"
             title="Factures en retard"
-            count={invoices.length}
+            count={unreadOf(invoices)}
             icon={FileWarning}
           >
             {invoices.map((invoice) => (
-              <ListRow
-                key={invoice.id}
+              <NotificationRow
+                key={rowKey(invoice)}
+                notificationKey={invoice.key}
+                read={invoice.read}
+                actions={actions}
                 href="/coach/facturation"
                 title={invoice.athleteName}
                 sub={`${invoice.label} · échéance ${dayShortLabel(invoice.dueOn, today).toLowerCase()}`}
@@ -208,12 +245,15 @@ async function NotificationList() {
           <Section
             id="notif-profiles"
             title="Fiches à compléter"
-            count={profiles.length}
+            count={unreadOf(profiles)}
             icon={UserPen}
           >
             {profiles.map((profile) => (
-              <ListRow
-                key={profile.id}
+              <NotificationRow
+                key={rowKey(profile)}
+                notificationKey={profile.key}
+                read={profile.read}
+                actions={actions}
                 href={`/coach/o/${organizationId}/sportifs/${profile.id}?onglet=profil`}
                 leading={
                   <Avatar name={profile.name} photoPath={profile.photoPath} sex={profile.sex} />
