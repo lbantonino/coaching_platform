@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { TaskCategory } from "@/domain/tasks/task-form";
 import { createClient } from "@/lib/supabase/server";
 
 export type TaskPriority = "high" | "normal";
@@ -9,6 +10,8 @@ export type CoachTask = {
   title: string;
   priority: TaskPriority;
   dueOn: string | null;
+  category: TaskCategory | null;
+  notes: string | null;
   athleteId: string | null;
   athleteName: string | null;
   done: boolean;
@@ -20,12 +23,14 @@ type Row = {
   title: string;
   priority: string;
   due_on: string | null;
+  category: string | null;
+  notes: string | null;
   done_at: string | null;
   athlete: { id: string; first_name: string; display_name: string | null } | null;
 };
 
 const SELECT =
-  "id, title, priority, due_on, done_at, athlete:athlete_profiles ( id, first_name, display_name )";
+  "id, title, priority, due_on, category, notes, done_at, athlete:athlete_profiles ( id, first_name, display_name )";
 
 const toTask = (row: Row): CoachTask => ({
   id: row.id,
@@ -33,6 +38,9 @@ const toTask = (row: Row): CoachTask => ({
   // La contrainte CHECK en base garantit cette liste fermée.
   priority: row.priority as TaskPriority,
   dueOn: row.due_on,
+  // Listes fermées garanties par les contraintes CHECK en base.
+  category: row.category as TaskCategory | null,
+  notes: row.notes,
   athleteId: row.athlete?.id ?? null,
   athleteName: row.athlete ? (row.athlete.display_name ?? row.athlete.first_name) : null,
   done: row.done_at !== null,

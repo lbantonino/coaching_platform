@@ -18,7 +18,7 @@ import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardEmpty } from "@/components/ui/card";
-import { CheckList } from "@/components/ui/check-list";
+import { TaskList } from "@/components/blocks/task-list";
 import { KpiCard, KpiGrid, KpiListCard } from "@/components/ui/kpi-card";
 import { StatTiles } from "@/components/ui/stat-tiles";
 import { Avatar } from "@/components/ui/avatar";
@@ -47,6 +47,7 @@ import { moveSession } from "@/features/sessions/actions";
 import { plannedIncome } from "@/features/sessions/prices";
 import { listSessions } from "@/features/sessions/queries";
 import { setTaskDone } from "@/features/tasks/actions";
+import { editableTask } from "@/features/tasks/editable";
 import { getDashboardTasks } from "@/features/tasks/queries";
 import {
   dayShortLabel,
@@ -264,14 +265,15 @@ async function Dashboard({
               label={tasks.openCount > 1 ? "tâches à faire" : "tâche à faire"}
               shortLabel="Tâches"
             >
-              <CheckList
-                items={tasks.items.map((task) => ({
+              <TaskList
+                tasks={tasks.items.map((task) => ({
                   id: task.id,
                   title: task.title,
                   sub: [dueLabel(task.dueOn, today), task.athleteName].filter(Boolean).join(" · "),
                   urgent: task.priority === "high",
                   checked: task.done,
                   label: `Tâche faite : ${task.title}`,
+                  edit: editableTask(task),
                 }))}
                 action={setTaskDone.bind(null, current.organizationId)}
                 empty="Aucune tâche à faire"

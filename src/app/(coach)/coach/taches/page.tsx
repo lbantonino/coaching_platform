@@ -2,15 +2,18 @@ import { CalendarClock, CircleCheck, ListChecks, TriangleAlert } from "lucide-re
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
+import { TaskList } from "@/components/blocks/task-list";
+import { NewTaskButton } from "@/components/blocks/task-sheet";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
-import { CheckList } from "@/components/ui/check-list";
 import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
 import { PageTabs } from "@/components/ui/page-tabs";
 import { inTab, type TaskTab } from "@/domain/tasks/buckets";
+import { taskCategoryLabels } from "@/domain/tasks/task-form";
 import { mondayOf } from "@/features/agenda/week";
 import { requireCoach } from "@/features/auth/guards";
 import { setTaskDone } from "@/features/tasks/actions";
+import { editableTask } from "@/features/tasks/editable";
 import { listTasks } from "@/features/tasks/queries";
 import { brusselsDayOf, dueLabel, todayIsoInBrussels } from "@/lib/format";
 
@@ -21,7 +24,8 @@ export const metadata: Metadata = {
 // Page Tâches (prompt Claude Design §7 `/coach/taches`, D-35) avec les VRAIES tâches : chiffres,
 // onglets Toutes / Aujourd'hui / À venir / Terminées, rond pour cocher. Dans un onglet filtré, la tâche
 // cochée (ou rouverte) change d'onglet et quitte la liste ; dans « Toutes », elle reste, barrée.
-// Pas encore de création ni de « associée à » : ils viendront avec 4e.
+// 4e (D-59) : « + Nouvelle tâche », « associée à », et un appui sur le titre ouvre la tâche pour la
+// modifier ou la supprimer.
 const tabs: { key: TaskTab; label: string; empty: string }[] = [
   { key: "toutes", label: "Toutes", empty: "Aucune tâche pour l'instant." },
   { key: "aujourdhui", label: "Aujourd'hui", empty: "Rien à faire aujourd'hui." },
@@ -59,7 +63,11 @@ async function Tasks({ tab }: { tab: TaskTab }) {
 
   return (
     <>
-      <PageHeader title="Tâches" subtitle="Toutes les actions liées à ton activité." />
+      <PageHeader
+        title="Tâches"
+        subtitle="Toutes les actions liées à ton activité."
+        actions={<NewTaskButton />}
+      />
       <PageBody>
         <KpiGrid label="Chiffres des tâches">
           <KpiCard
@@ -104,12 +112,12 @@ async function Tasks({ tab }: { tab: TaskTab }) {
           title={tab === "toutes" ? "Toutes les tâches" : current.label}
           subtitle={`${shown.length} tâche${shown.length > 1 ? "s" : ""}`}
         >
-          <CheckList
+          <TaskList
             // Une liste par onglet : l'état « affiché tout de suite » repart de zéro à chaque onglet.
             key={tab}
             variant="page"
             removeOnToggle={tab !== "toutes"}
-            items={shown.map((task) => ({
+            tasks={shown.map((task) => ({
               id: task.id,
               title: task.title,
               sub: task.athleteName ?? undefined,
@@ -118,8 +126,10 @@ async function Tasks({ tab }: { tab: TaskTab }) {
                 : undefined,
               meta: dueLabel(task.dueOn, today) ?? undefined,
               urgent: task.priority === "high",
+              tag: task.category ? taskCategoryLabels[task.category] : undefined,
               checked: task.done,
               label: `Tâche faite : ${task.title}`,
+              edit: editableTask(task),
             }))}
             action={setTaskDone.bind(null, organizationId)}
             empty={current.empty}
