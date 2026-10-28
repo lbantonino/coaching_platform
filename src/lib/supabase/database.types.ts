@@ -621,6 +621,64 @@ export type Database = {
           },
         ];
       };
+      coach_documents: {
+        Row: {
+          athlete_id: string | null;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          mime_type: string;
+          name: string;
+          organization_id: string;
+          size_bytes: number;
+          storage_path: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          athlete_id?: string | null;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          mime_type: string;
+          name: string;
+          organization_id: string;
+          size_bytes: number;
+          storage_path: string;
+          updated_at?: string;
+        };
+        Update: {
+          athlete_id?: string | null;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          mime_type?: string;
+          name?: string;
+          organization_id?: string;
+          size_bytes?: number;
+          storage_path?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_documents_athlete_id_organization_id_fkey";
+            columns: ["athlete_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "coach_documents_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       coach_profiles: {
         Row: {
           agenda_first_hour: number;

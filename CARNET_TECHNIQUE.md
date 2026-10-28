@@ -348,6 +348,9 @@ Antonino n'aimait pas la page des Paramètres : on quittait ce qu'on faisait pou
 ### Les outils, tranche 1 : des tâches qu'on gère vraiment (28/10)
 Les tâches se cochaient, mais on ne pouvait ni en créer, ni en corriger, ni en supprimer. Le choix : une seule fenêtre « tâche », montée une fois pour toutes les pages coach, comme « Nouvelle séance ». Elle s'ouvre vide pour créer, ou remplie quand on touche le titre d'une tâche, et la suppression passe par une confirmation. Les règles du formulaire sont écrites une fois (Zod) et la base les répète (contraintes, droits par colonne) : le navigateur ne peut pas glisser une catégorie inventée ni changer l'organisation d'une tâche. Leçon d'écran : sur téléphone, mettre les pastilles à droite du titre le coupait au bout de quelques mots ; on les a passées dessous, et le titre tient sur deux lignes.
 
+### Les outils, tranche 2 : des documents privés (28/10)
+Pour les documents, la question n'était pas l'écran mais la confiance : un contrat ou une facture ne doit jamais être lisible par un autre coach. On a repris le modèle des photos : un espace de stockage **privé**, rangé par dossier d'organisation, avec des règles RLS sur les fichiers eux-mêmes, et une route de l'app qui sert le fichier avec la session de la personne. Une autre organisation reçoit un 404, comme si le document n'existait pas. Deux précautions de plus : le format est lu dans les premiers octets du fichier (un texte renommé en .pdf est refusé), et le chemin de stockage est tiré au hasard, jamais le nom envoyé par le navigateur. Leçon d'écran : l'envoi se fait « à la main » plutôt que par l'action automatique du formulaire, car React vide le formulaire après l'envoi ; en cas d'erreur, le fichier choisi et les champs restent en place.
+
 ---
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris

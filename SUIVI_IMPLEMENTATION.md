@@ -32,6 +32,28 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Outils, tranche 2 : documents (D-60)
+```
+Date : 2026-10-28
+Demande (Antonino) : les outils de 4e, les voir, les créer, les modifier, les supprimer
+Fait : migration 20261028160000 (espace de stockage PRIVÉ coach-documents, 10 Mo, rangé par
+  organisation, RLS ; table coach_documents : nom, catégorie Programme / Facture / Contrat / Bilan /
+  Autre, sportif facultatif, chemin forcé dans le dossier de l'organisation, PDF / images / Word /
+  Excel, droits par colonne) ; règles domain/documents (format lu dans les premiers octets, nom
+  proposé, chemin sûr) ; actions uploadDocument, updateDocument, deleteDocument (le fichier part
+  avec la fiche, pas d'orphelin si l'enregistrement échoue) ; route /documents/<id> (session de la
+  personne, 404 si interdit, aperçu PDF / image, téléchargement avec ?telecharger) ; page
+  /coach/documents : chiffres, recherche et filtres en direct, liste, aperçu en grande fenêtre (PDF
+  en cadre sur ordinateur, « Ouvrir le PDF » sur téléphone), « ••• » (Aperçu, Télécharger,
+  Modifier, Supprimer), import (nom et catégorie proposés d'après le fichier, saisie gardée en cas
+  d'erreur) ; limite des actions serveur portée à 11 Mo. Démo : 4 PDF inventés pour le coach A,
+  1 pour le coach B (chargés au reset avec les photos).
+Tests : Vitest 208 (documents), pgTAP 322 (24_documents : stockage et table), e2e documents.spec
+  (faux PDF refusé sans perte, import, recherche, filtres, aperçu, coach A refusé en 404,
+  renommage, suppression, fichier plus servi)
+Reste : partager un document avec le sportif (avec les publications, P5) ; documents sur la fiche
+```
+
 ### Outils, tranche 1 : tâches complètes (D-59)
 ```
 Date : 2026-10-28
