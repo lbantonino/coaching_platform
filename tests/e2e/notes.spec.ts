@@ -25,8 +25,8 @@ test("le coach écrit une note privée et un message, visibles dans la vue d'ens
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 
   await openAthleteTab(page, "Notes");
-  await page.getByLabel("Note privée").fill("Très investie, progresse bien.");
-  await page.getByRole("button", { name: "Enregistrer : note privée" }).click();
+  await page.getByRole("textbox", { name: "Notes libres" }).fill("Très investie, progresse bien.");
+  await page.getByRole("button", { name: "Enregistrer : notes libres" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Note enregistrée." })).toBeVisible();
   await page.getByLabel("Message au sportif").fill("Semaine facile, reste en endurance.");
   await page.getByRole("button", { name: "Enregistrer : message au sportif" }).click();
@@ -45,14 +45,14 @@ test("le coach écrit une note privée et un message, visibles dans la vue d'ens
   await page.getByRole("link", { name: "Voir tout : Historique récent" }).click();
   const history = page.getByRole("list", { name: "Historique de la fiche" });
   await expect(history.getByRole("listitem").last()).toContainText("Fiche créée");
-  await expect(history).toContainText("Note privée mise à jour");
+  await expect(history).toContainText("Notes libres mises à jour");
 
   // Vider une note puis l'enregistrer la supprime.
   await openAthleteTab(page, "Notes");
-  await page.getByLabel("Note privée").fill("");
-  await page.getByRole("button", { name: "Enregistrer : note privée" }).click();
+  await page.getByRole("textbox", { name: "Notes libres" }).fill("");
+  await page.getByRole("button", { name: "Enregistrer : notes libres" }).click();
   await openAthleteTab(page, "Vue d'ensemble");
-  await expect(notes).toContainText("Aucune note privée.");
+  await expect(notes).toContainText("Aucune note libre.");
 });
 
 test("le sportif lit le message de son coach dans son espace", async ({ page }) => {

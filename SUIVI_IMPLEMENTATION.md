@@ -32,6 +32,23 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Case « Notes » : blessures et points d'attention, notes libres (D-56)
+```
+Date : 2026-10-28
+Demande : dans la fiche (et la page Nouveau sportif), une case Notes pour les blessures, et des notes
+  supplémentaires où Gianluca écrit ce qu'il veut
+Décision (Antonino, RGPD) : deux cases. « Blessures et points d'attention » = donnée de santé,
+  seulement avec l'accord du sportif ; « Notes libres » = tout le reste, privé entre coachs
+Fait : migration 20261028090000 (health_constraints 300 -> 1000 caractères) ; « Contraintes
+  physiques » renommé « Blessures et points d'attention » partout côté coach ; onglet Notes de la
+  fiche : bloc Blessures (accord, preuve, champ enregistré à part par updateHealthNotes, retrait,
+  historique ; déplacé depuis Disponibilités), Notes libres (ancienne « Note privée »), Message au
+  sportif ; onglet Disponibilités : plus de donnée de santé (updateAvailability n'y touche plus) ;
+  page Nouveau sportif : section Notes (accord intégré au bloc Blessures + Notes libres, créées
+  comme note privée du coach), colonne de droite = rappel « Données de santé » + bouton
+Tests : Vitest 181, pgTAP 286, test:e2e 129 + 7 ignorés
+```
+
 ### Audit apple-design : les 10 retouches (D-55)
 ```
 Date : 2026-10-28

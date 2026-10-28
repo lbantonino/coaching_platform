@@ -1,18 +1,21 @@
+import type { AthleteDetail } from "@/features/athletes/queries";
 import { getAthleteNotes } from "@/features/notes/queries";
 import { formatDateTime } from "@/lib/format";
 
+import { HealthNotesBlock } from "./health-notes-block";
 import { NoteForm } from "./note-form";
 
-// Onglet « Notes » (P2-03 fin) : la note privée du coach et le message visible par le sportif.
+// Onglet « Notes » (P2-03 fin, D-56) : les blessures et points d'attention (avec l'accord du
+// sportif), les notes libres (privées, entre coachs) et le message visible par le sportif.
 export async function NotesSection({
   organizationId,
-  athleteId,
-  hasAccount,
+  athlete,
 }: {
   organizationId: string;
-  athleteId: string;
-  hasAccount: boolean;
+  athlete: AthleteDetail;
 }) {
+  const athleteId = athlete.id;
+  const hasAccount = athlete.hasAccount;
   const notes = await getAthleteNotes(organizationId, athleteId);
 
   return (
@@ -22,22 +25,25 @@ export async function NotesSection({
     >
       <div className="flex flex-col gap-1">
         <h2 id="notes-title" className="text-title font-medium">
-          Notes du coach
+          Notes
         </h2>
         <p className="text-small text-muted">
-          Deux notes séparées : l&apos;une reste entre coachs, l&apos;autre s&apos;affiche dans
-          l&apos;espace du sportif. Vider une note puis l&apos;enregistrer la supprime.
+          Les blessures, avec l&apos;accord du sportif ; tes notes libres, entre coachs ; et un
+          message qu&apos;il lit dans son espace. Vider une note puis l&apos;enregistrer la
+          supprime.
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <HealthNotesBlock organizationId={organizationId} athlete={athlete} />
+
+      <div className="flex flex-col gap-2 border-t border-line pt-6">
         <NoteForm
           organizationId={organizationId}
           athleteId={athleteId}
           visibility="coach"
-          label="Note privée"
-          hint="Visible seulement par les coachs de ton organisation. Pas de blessures ni de données de santé ici : utilise « Contraintes physiques », avec l'accord du sportif."
-          placeholder="Ex. : très investie, progresse bien sur les séances longues ; vise la catégorie Pro"
+          label="Notes libres"
+          hint="Caractère, préférences, logistique… Visible seulement par les coachs de ton organisation. Pas de blessures ici : elles vont dans « Blessures et points d'attention », avec l'accord du sportif."
+          placeholder="Ex. : très investie, préfère les séances du matin ; vise la catégorie Pro"
           body={notes.coach?.body ?? ""}
         />
         {notes.coach ? (

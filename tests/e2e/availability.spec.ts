@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { fillAthleteName, openAthleteTab } from "./helpers";
 
-// Disponibilités et contraintes physiques avec accord du sportif (P2-02 partie 3, D-20).
+// Disponibilités (P2-02 partie 3), puis les blessures et points d'attention avec l'accord du sportif
+// (D-20), dans l'onglet Notes depuis le 28/10 (D-56).
 const ORG_A = "0a000000-0000-4000-8000-0000000000a1";
 // Thomas Peeters : sportif de démo du seed, avec un compte activé (supabase/seed.sql).
 const THOMAS_PROFILE = "da000000-0000-4000-8000-000000000002";
@@ -14,7 +15,7 @@ async function login(page: Page, email: string) {
   await page.getByRole("button", { name: "Se connecter" }).click();
 }
 
-test("le coach renseigne les disponibilités et gère l'accord pour les contraintes physiques", async ({
+test("le coach renseigne les disponibilités, puis gère l'accord et les blessures dans Notes", async ({
   page,
 }, testInfo) => {
   const name = `Dispos ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -26,11 +27,13 @@ test("le coach renseigne les disponibilités et gère l'accord pour les contrain
   // Le sportif enregistré, on arrive sur sa fiche (D-54).
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await openAthleteTab(page, "Disponibilités");
-  const section = page.getByRole("region", { name: "Disponibilités & contraintes" });
+  const section = page.getByRole("region", { name: "Disponibilités", exact: true });
   const saved = section.getByRole("status").filter({ hasText: "Disponibilités enregistrées." });
 
-  // Disponibilités ; sans accord, aucun champ pour les contraintes physiques.
-  await expect(section.getByLabel("Contraintes physiques", { exact: true })).toHaveCount(0);
+  // Disponibilités : plus aucun champ de santé ici.
+  await expect(
+    section.getByRole("textbox", { name: "Blessures et points d'attention" }),
+  ).toHaveCount(0);
   await section.getByLabel("Séances par semaine").fill("3");
   await section.getByLabel(/Durée maximale/).fill("60");
   await section.getByText("Lundi", { exact: true }).click();
@@ -44,32 +47,36 @@ test("le coach renseigne les disponibilités et gère l'accord pour les contrain
   await expect(section.getByLabel("Mercredi")).toBeChecked();
   await expect(section.getByLabel("Mardi")).not.toBeChecked();
 
+  // Onglet Notes : blessures et points d'attention. Sans accord, aucun champ.
+  await openAthleteTab(page, "Notes");
+  const health = page.getByRole("group", { name: "Blessures et points d'attention" });
+  const field = health.getByRole("textbox", { name: "Blessures et points d'attention" });
+  await expect(field).toHaveCount(0);
+
   // L'accord exige la case cochée, puis le coach précise comment il l'a obtenu.
-  await section.getByLabel("Comment ?").selectOption({ label: "Oral (en séance, au téléphone)" });
-  await section.getByRole("button", { name: "Enregistrer l'accord" }).click();
-  await expect(section.getByRole("alert").filter({ hasText: "Coche la case" })).toBeVisible();
-  await section.getByLabel(/m'a donné son accord explicite/).check();
-  await section.getByLabel("Comment ?").selectOption({ label: "Oral (en séance, au téléphone)" });
-  await section.getByRole("button", { name: "Enregistrer l'accord" }).click();
-  await expect(section.getByText(/Accord en cours depuis le/)).toBeVisible();
+  await health.getByLabel("Comment ?").selectOption({ label: "Oral (en séance, au téléphone)" });
+  await health.getByRole("button", { name: "Enregistrer l'accord" }).click();
+  await expect(health.getByRole("alert").filter({ hasText: "Coche la case" })).toBeVisible();
+  await health.getByLabel(/m'a donné son accord explicite/).check();
+  await health.getByLabel("Comment ?").selectOption({ label: "Oral (en séance, au téléphone)" });
+  await health.getByRole("button", { name: "Enregistrer l'accord" }).click();
+  await expect(health.getByText(/Accord en cours depuis le/)).toBeVisible();
 
-  // Avec l'accord, le champ apparaît et s'enregistre.
-  await section
-    .getByLabel("Contraintes physiques", { exact: true })
-    .fill("Genou droit sensible en descente");
-  await section.getByRole("button", { name: "Enregistrer les disponibilités" }).click();
-  await expect(saved).toBeVisible();
+  // Avec l'accord, le champ apparaît et s'enregistre à part.
+  await field.fill("Genou droit sensible en descente");
+  await health.getByRole("button", { name: "Enregistrer les blessures" }).click();
+  await expect(
+    health.getByRole("status").filter({ hasText: "Blessures et points d'attention enregistrés." }),
+  ).toBeVisible();
   await page.reload();
-  await expect(section.getByLabel("Contraintes physiques", { exact: true })).toHaveValue(
-    "Genou droit sensible en descente",
-  );
+  await expect(field).toHaveValue("Genou droit sensible en descente");
 
-  // Retrait (après confirmation) : la contrainte est effacée, le journal garde les deux événements.
-  await section.getByRole("button", { name: "Retirer l'accord" }).click();
+  // Retrait (après confirmation) : la note est effacée, le journal garde les deux événements.
+  await health.getByRole("button", { name: "Retirer l'accord" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Retirer l'accord" }).click();
-  await expect(section.getByLabel("Contraintes physiques", { exact: true })).toHaveCount(0);
-  await section.getByText("Historique de l'accord (2)").click();
-  await expect(section.getByRole("list", { name: "Historique de l'accord" })).toContainText(
+  await expect(field).toHaveCount(0);
+  await health.getByText("Historique de l'accord (2)").click();
+  await expect(health.getByRole("list", { name: "Historique de l'accord" })).toContainText(
     "Accord retiré, noté par le coach",
   );
 });
@@ -98,19 +105,17 @@ test("le sportif donne son accord depuis son espace, voit ce que le coach note, 
   const coach = await coachContext.newPage();
   await login(coach, "coach-a@example.test");
   await expect(coach).toHaveURL(/\/coach$/);
-  await coach.goto(`/coach/o/${ORG_A}/sportifs/${THOMAS_PROFILE}?onglet=disponibilites`);
-  const section = coach.getByRole("region", { name: "Disponibilités & contraintes" });
+  await coach.goto(`/coach/o/${ORG_A}/sportifs/${THOMAS_PROFILE}?onglet=notes`);
+  const health = coach.getByRole("group", { name: "Blessures et points d'attention" });
   await expect(
-    section
-      .getByRole("status")
-      .filter({ hasText: "Accord donné par le sportif depuis son espace" }),
+    health.getByRole("status").filter({ hasText: "Accord donné par le sportif depuis son espace" }),
   ).toBeVisible();
-  await section
-    .getByLabel("Contraintes physiques", { exact: true })
+  await health
+    .getByRole("textbox", { name: "Blessures et points d'attention" })
     .fill("Tendon d'Achille à surveiller");
-  await section.getByRole("button", { name: "Enregistrer les disponibilités" }).click();
+  await health.getByRole("button", { name: "Enregistrer les blessures" }).click();
   await expect(
-    section.getByRole("status").filter({ hasText: "Disponibilités enregistrées." }),
+    health.getByRole("status").filter({ hasText: "Blessures et points d'attention enregistrés." }),
   ).toBeVisible();
   await coachContext.close();
 

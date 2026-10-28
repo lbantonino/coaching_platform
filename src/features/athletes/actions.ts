@@ -29,8 +29,9 @@ export type NewAthleteState = {
 
 // Page « Nouveau sportif » (D-54) : toute la fiche en une fois. Server Action liée à une
 // organisation (.bind dans la page), appelable directement : l'accès est donc revérifié ici.
-// Ordre : la fiche, puis son objectif principal, puis l'accord santé (fonction SQL journalisée) et
-// les contraintes physiques, que la base n'accepte qu'avec un accord en cours. Si une étape après la
+// Ordre : la fiche, puis ses notes libres (note privée du coach), son objectif principal, puis
+// l'accord santé (fonction SQL journalisée) et les blessures et points d'attention, que la base
+// n'accepte qu'avec un accord en cours. Si une étape après la
 // fiche échoue, la fiche existe déjà : on y va quand même, en le signalant (?creation=incomplete).
 export async function createAthlete(
   organizationId: string,
@@ -64,6 +65,7 @@ export async function createAthlete(
     competitionName: field("competitionName"),
     healthConsent: formData.get("healthConsent") === "on",
     consentProof: field("consentProof"),
+    coachNote: field("coachNote"),
   };
   const fail = (error: string): NewAthleteState => ({
     error,
@@ -73,7 +75,7 @@ export async function createAthlete(
 
   const parsed = parseNewAthleteForm(values, todayIsoInBrussels());
   if (!parsed.ok) return fail(parsed.error);
-  const { profile, goal, consent } = parsed.values;
+  const { profile, goal, consent, coachNote } = parsed.values;
 
   const supabase = await createClient();
   const { data: athlete, error } = await supabase
@@ -90,6 +92,17 @@ export async function createAthlete(
   }
 
   let incomplete = false;
+  if (coachNote) {
+    const { error: noteError } = await supabase.from("athlete_notes").insert({
+      organization_id: orgId,
+      athlete_id: athlete.id,
+      visibility: "coach",
+      body: coachNote,
+      created_by: user.id,
+      updated_by: user.id,
+    });
+    incomplete ||= Boolean(noteError);
+  }
   if (goal) {
     const { error: goalError } = await supabase.from("athlete_goals").insert({
       ...goal,
@@ -303,7 +316,8 @@ export type UpdateAvailabilityState = {
   values: AvailabilityFormValues | null;
 };
 
-// Disponibilités, contraintes d'organisation et, SEULEMENT si un accord est en cours, contraintes physiques.
+// Disponibilités et contraintes d'organisation. Les blessures et points d'attention (donnée de santé)
+// ont leur propre bloc et leur propre action, dans l'onglet Notes (D-56) : ce formulaire n'y touche pas.
 export async function updateAvailability(
   organizationId: string,
   athleteId: string,
@@ -332,18 +346,6 @@ export async function updateAvailability(
     };
   }
 
-  // Sans accord en cours (jamais donné, ou retiré entre-temps par le sportif), on ne touche pas aux
-  // contraintes physiques. La base le refuserait de toute façon.
-  const hasConsent = current.healthConsentAt !== null;
-  if (!hasConsent && parsed.data.healthConstraints !== null) {
-    return {
-      error: "L'accord du sportif est nécessaire pour noter des contraintes physiques.",
-      saved: false,
-      attempt,
-      values,
-    };
-  }
-
   const supabase = await createClient();
   const { error } = await supabase
     .from("athlete_profiles")
@@ -352,7 +354,6 @@ export async function updateAvailability(
       max_session_minutes: parsed.data.maxSessionMinutes,
       available_days: parsed.data.availableDays,
       schedule_constraints: parsed.data.scheduleConstraints,
-      ...(hasConsent ? { health_constraints: parsed.data.healthConstraints } : {}),
     })
     .eq("id", current.id)
     .eq("organization_id", membership.organizationId);
@@ -368,4 +369,46 @@ export async function updateAvailability(
 
   revalidatePath(`/coach/o/${membership.organizationId}/sportifs/${current.id}`);
   return { error: null, saved: true, attempt, values: null };
+}
+
+// Blessures et points d'attention (D-56) : donnée de santé, enregistrée SEULEMENT pendant un accord
+// en cours du sportif (la base le refuse aussi). Vider le champ efface ce qui était noté.
+export type HealthNotesState = {
+  error: string | null;
+  saved: boolean;
+  attempt: number;
+  value: string | null;
+};
+
+export async function updateHealthNotes(
+  organizationId: string,
+  athleteId: string,
+  previous: HealthNotesState,
+  formData: FormData,
+): Promise<HealthNotesState> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const current = await getAthlete(membership.organizationId, athleteId);
+  const attempt = previous.attempt + 1;
+  const raw = String(formData.get("healthConstraints") ?? "");
+  const fail = (error: string): HealthNotesState => ({ error, saved: false, attempt, value: raw });
+  if (!current) return fail("Sportif introuvable.");
+  if (current.healthConsentAt === null) {
+    return fail(
+      "L'accord du sportif est nécessaire pour noter des blessures ou points d'attention.",
+    );
+  }
+  const parsed = availabilitySchema.shape.healthConstraints.safeParse(raw);
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Saisie invalide.");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("athlete_profiles")
+    .update({ health_constraints: parsed.data })
+    .eq("id", current.id)
+    .eq("organization_id", membership.organizationId);
+  if (error)
+    return fail("Les blessures et points d'attention n'ont pas pu être enregistrés. Réessaie.");
+
+  revalidatePath(`/coach/o/${membership.organizationId}/sportifs/${current.id}`);
+  return { error: null, saved: true, attempt, value: null };
 }
