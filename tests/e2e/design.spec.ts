@@ -87,7 +87,7 @@ test("le menu de gauche : Assistant IA puis Messages, Notifications ; le menu du
   await account.click();
   const settings = page.getByRole("group", { name: "Menu du compte" });
   for (const name of ["Mon profil", "Paramètres"]) {
-    await expect(settings.getByRole("link", { name })).toBeVisible();
+    await expect(settings.getByRole("button", { name, exact: true })).toBeVisible();
   }
   await expect(settings.getByRole("button", { name: "Changer de compte" })).toBeVisible();
   // Le thème se change aussi directement dans ce menu.
@@ -95,9 +95,10 @@ test("le menu de gauche : Assistant IA puis Messages, Notifications ; le menu du
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await settings.getByText("Clair", { exact: true }).click();
   await expect(page.locator("html")).not.toHaveAttribute("data-theme", "dark");
-  await settings.getByRole("link", { name: "Paramètres" }).click();
-  await expect(page.getByRole("heading", { name: "Paramètres", level: 1 })).toBeVisible();
-  await expect(page).toHaveURL(/\/coach\/profil$/);
+  // D-58 : les Paramètres s'ouvrent en grande fenêtre par-dessus la page, qu'on ne quitte pas.
+  await settings.getByRole("button", { name: "Paramètres", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Paramètres" })).toBeVisible();
+  await expect(page).toHaveURL(/\/coach$/);
 });
 
 test("dans les Paramètres, le thème se choisit : clair, sombre ou celui de l'appareil", async ({

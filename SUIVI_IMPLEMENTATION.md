@@ -23,7 +23,7 @@
 | 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
 | 2. Coquilles de navigation | **Fait** le 23/10 (coach, sportif, admin, entrée, pages légales) |
 | 3. Pages d'entrée | **Fait** le 23/10 (connexion, inscription, vérification, bienvenue, mot de passe, invitation, erreurs, pages légales) |
-| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; liste des sportifs faite le 24/10 ; nouveau sportif complet le 28/10 (D-54) ; reste en 4a : paramètres ; puis 4b à 4g |
+| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; liste des sportifs faite le 24/10 ; nouveau sportif complet le 28/10 (D-54) ; paramètres complets le 28/10 (D-57), ouverts en fenêtre depuis le menu du compte (D-58) : 4a terminée ; en cours : outils (Tâches, Documents, Notifications, Recherche) ; puis 4b à 4g |
 | 5. Espace sportif | À faire |
 | 6. Administration | À faire |
 | 7. Recette finale | À faire |
@@ -31,6 +31,28 @@
 ## Dernière session
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+
+### Paramètres en fenêtre, par-dessus la page (D-58)
+```
+Date : 2026-10-28
+Demande (Antonino) : « je n'aime pas la page des paramètres » ; depuis le nom en bas à gauche,
+  « Paramètres » doit ouvrir une boîte par-dessus la page, comme Claude.ai ; et « pourquoi Séance et
+  Agenda dans Préférences ? »
+Fait : une grande fenêtre (PanelDialog, variante wide de Overlay) ouverte par le menu du compte, sur
+  toutes les pages coach, sans changer d'adresse : sommaire puis section avec retour sur téléphone
+  (feuille qui monte du bas, glissable), menu des sections à gauche sur ordinateur ; titre et croix
+  collés en haut pendant le défilement ; défilement remis en haut à chaque section ; « Mon profil »
+  ouvre la section Profil ; sur téléphone le menu hamburger se referme derrière. Données lues à
+  l'ouverture (loadSettings, action serveur revérifiée) et relues après chaque changement.
+  Contenu partagé avec la page /coach/profil (SettingsPanel, sections.ts), qui reste pour un lien
+  ou un rechargement. Carte renommée « Valeurs par défaut » avec une phrase d'explication
+  (« Quand tu crées une séance », « Heures de l'agenda »). Photo : un seul bouton « Ajouter /
+  Changer la photo », envoi dès le choix du fichier (plus de « Choose File » anglais).
+Écarté : routes interceptées de Next (@modal) : le routage strict de Next 16 refuse les attrape-tout
+  nécessaires (404 sur /login, routes de même spécificité)
+Tests : Vitest 197, pgTAP 298, test:e2e 136 + 10 ignorés (nouveau test : fenêtre ouverte depuis le
+  menu du compte, téléphone et ordinateur)
+```
 
 ### Paramètres complets (D-57)
 ```

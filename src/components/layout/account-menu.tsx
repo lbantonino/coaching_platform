@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, LogOut, Settings, UserRound, Users } from "l
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { useOpenSettings } from "@/components/blocks/settings-context";
 import { Avatar } from "@/components/ui/avatar";
 import { ThemeChoice } from "@/components/ui/theme-choice";
 import { logout } from "@/features/auth/actions";
@@ -32,6 +33,8 @@ function Photo({ name, photoPath, sex }: { name: string; photoPath: string | nul
 
 export function AccountMenu() {
   const { user, space } = useShell();
+  // Coach (D-58) : les Paramètres s'ouvrent en grande fenêtre par-dessus la page en cours.
+  const openSettings = useOpenSettings();
   const [open, setOpen] = useState(false);
   // Position fixe, calculée sur la carte : la barre latérale défile et couperait un menu qui déborde.
   const [place, setPlace] = useState<{ left: number; bottom: number; width: number } | null>(null);
@@ -87,7 +90,14 @@ export function AccountMenu() {
     "flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[15px] font-medium whitespace-nowrap transition-colors duration-150 hover:bg-surface-2";
   const item = `${itemBase} text-text`;
   const close = () => setOpen(false);
-  // Coach (D-57) : « Mon profil » ouvre l'onglet Profil des Paramètres, « Paramètres » leur sommaire.
+  // Téléphone : le menu hamburger est lui-même une fenêtre ; on le referme d'abord, pour retrouver
+  // la page (et non le menu) en fermant les Paramètres.
+  const showSettings = (section: "profil" | null) => {
+    close();
+    trigger.current?.closest("dialog")?.close();
+    openSettings?.(section);
+  };
+  // Coach : la fenêtre des Paramètres (ci-dessus) ; à défaut, la page (onglet Profil, sommaire).
   // Sportif : sa page profil, et sa section Thème.
   const settings = user.settingsHref
     ? user.settingsHref.startsWith("/coach")
@@ -115,7 +125,18 @@ export function AccountMenu() {
             </span>
           </div>
           <div className="flex flex-col border-t border-line pt-1.5">
-            {settings ? (
+            {openSettings ? (
+              <>
+                <button type="button" onClick={() => showSettings("profil")} className={item}>
+                  <UserRound aria-hidden size={18} strokeWidth={1.7} />
+                  Mon profil
+                </button>
+                <button type="button" onClick={() => showSettings(null)} className={item}>
+                  <Settings aria-hidden size={18} strokeWidth={1.7} />
+                  Paramètres
+                </button>
+              </>
+            ) : settings ? (
               <>
                 <Link href={settings.profile} onClick={close} className={item}>
                   <UserRound aria-hidden size={18} strokeWidth={1.7} />
