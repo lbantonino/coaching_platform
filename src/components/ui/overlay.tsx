@@ -41,12 +41,15 @@ function Overlay({
   onClose,
   labelledBy,
   describedBy,
+  wide = false,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   labelledBy: string;
   describedBy?: string;
+  // Grande fenêtre (Paramètres, D-58) : presque tout l'écran du téléphone, 960 px sur ordinateur.
+  wide?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -327,7 +330,11 @@ function Overlay({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerEnd}
       onPointerCancel={onPointerEnd}
-      className="m-0 mt-auto max-h-[88%] w-full max-w-none overflow-y-auto rounded-t-sheet border border-line-2 bg-bg p-0 text-text backdrop:bg-[rgba(3,6,12,0.6)] md:m-auto md:max-h-[86vh] md:max-w-[560px] md:rounded-card"
+      className={`m-0 mt-auto w-full max-w-none overflow-y-auto rounded-t-sheet border border-line-2 bg-bg p-0 text-text backdrop:bg-[rgba(3,6,12,0.6)] md:m-auto md:rounded-card ${
+        wide
+          ? "h-[94%] max-h-[94%] md:h-[min(86vh,800px)] md:max-h-[86vh] md:max-w-[min(960px,calc(100vw-48px))]"
+          : "max-h-[88%] md:max-h-[86vh] md:max-w-[560px]"
+      }`}
     >
       {rendered ? (
         <div className="flex flex-col gap-4 px-[18px] pt-[18px] pb-[22px]">
@@ -389,6 +396,37 @@ export function Sheet({
       </div>
       {children}
       {footer ? <div className="flex gap-2.5 [&>*]:flex-1">{footer}</div> : null}
+    </Overlay>
+  );
+}
+
+// Grande fenêtre de travail (Paramètres, D-58, comme les réglages de Claude.ai) : titre, fermer, et
+// un contenu libre qui défile (menu des sections compris).
+export function PanelDialog({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+}) {
+  const titleId = useId();
+  return (
+    <Overlay open={open} onClose={onClose} labelledBy={titleId} wide>
+      {/* Titre et croix restent en haut pendant qu'on défile (comme les réglages de Claude.ai). */}
+      <div
+        data-sheet-grab
+        className="sticky top-0 z-10 -mx-[18px] flex touch-none items-center justify-between gap-3 bg-bg px-[18px] py-2 md:-mt-[18px] md:pt-[18px] md:pb-3"
+      >
+        <h2 id={titleId} className="font-display text-[22px] font-semibold tracking-[-0.02em]">
+          {title}
+        </h2>
+        <CloseButton onClose={onClose} />
+      </div>
+      {children}
     </Overlay>
   );
 }

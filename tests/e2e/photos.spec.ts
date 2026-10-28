@@ -35,12 +35,11 @@ test("le coach ajoute puis retire la photo d'un sportif ; un autre coach ne peut
     mimeType: "image/jpeg",
     buffer: Buffer.from("ceci n'est pas une image"),
   });
-  await photo.getByRole("button", { name: "Ajouter la photo" }).click();
+  // D-58 : un seul bouton ; la photo part dès qu'elle est choisie.
   await expect(photo.getByRole("alert")).toContainText("Format non accepté");
 
   // Une vraie photo : enregistrée, puis servie par l'app à ce coach.
   await photo.getByLabel("Photo de profil").setInputFiles(PHOTO);
-  await photo.getByRole("button", { name: "Ajouter la photo" }).click();
   await expect(photo.getByRole("status")).toContainText("Photo enregistrée.");
   const src = await photo.locator("img").first().getAttribute("src");
   expect(src).toMatch(/^\/photos\/org\//);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useOptimistic, useState, useTransition } from "react";
+import { useActionState, useEffect, useOptimistic, useState, useTransition } from "react";
 
 import { Toggle } from "@/components/ui/checkbox";
 import { buttonClass } from "@/components/ui/button";
@@ -59,8 +59,12 @@ function Submit({ pending, label }: { pending: boolean; label: string }) {
 }
 
 // --- Profil -------------------------------------------------------------------------------------
-export function ProfileForm({ values }: { values: ProfileInput }) {
+export function ProfileForm({ values, onSaved }: { values: ProfileInput; onSaved?: () => void }) {
   const [state, formAction, pending] = useActionState(updateProfile, initial<ProfileInput>());
+  // Fenêtre : relire les données (nom affiché) après un enregistrement.
+  useEffect(() => {
+    if (state.saved) onSaved?.();
+  }, [state, onSaved]);
   const v = state.values ?? values;
   return (
     <form key={state.attempt} action={formAction} className="flex flex-col gap-4" noValidate>
@@ -194,10 +198,10 @@ export function PreferencesForm({ values }: { values: PreferencesInput }) {
     <form key={state.attempt} action={formAction} className="flex flex-col gap-6" noValidate>
       <div role="group" aria-labelledby="pref-session-title" className="flex flex-col gap-4">
         <h3 id="pref-session-title" className="text-block font-medium">
-          Nouvelle séance
+          Quand tu crées une séance
         </h3>
         <p className="-mt-2.5 text-small text-muted">
-          Proposé d&apos;office dans la fenêtre « Nouvelle séance » ; tu peux toujours le changer.
+          Ex. : 60 min, à la salle, 65 € par virement, déjà remplis dans « Nouvelle séance ».
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -284,7 +288,7 @@ export function PreferencesForm({ values }: { values: PreferencesInput }) {
         className="flex flex-col gap-4 border-t border-line pt-6"
       >
         <h3 id="pref-agenda-title" className="text-block font-medium">
-          Agenda
+          Heures de l&apos;agenda
         </h3>
         <p className="-mt-2.5 text-small text-muted">
           Heures affichées dans la grille ; une séance plus tôt ou plus tard élargit

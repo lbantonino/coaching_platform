@@ -50,12 +50,15 @@ export function LegalEntityButton({
   entityId = null,
   values = empty,
   label,
+  onSaved,
 }: {
   organizationId: string;
   entityId?: string | null;
   values?: LegalEntityInput;
   // Nom de la structure : bouton « Modifier » ; sinon bouton « Ajouter une structure ».
   label?: string;
+  // Fenêtre des Paramètres : relire les structures après un enregistrement.
+  onSaved?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -87,7 +90,10 @@ export function LegalEntityButton({
             organizationId={organizationId}
             entityId={entityId}
             values={values}
-            onSaved={() => setOpen(false)}
+            onSaved={() => {
+              setOpen(false);
+              onSaved?.();
+            }}
           />
         ) : null}
       </Sheet>

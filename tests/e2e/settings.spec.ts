@@ -13,6 +13,52 @@ async function loginAsCoachB(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
+test("le menu du compte ouvre les Paramètres en fenêtre, par-dessus la page en cours", async ({
+  page,
+}) => {
+  await loginAsCoachB(page);
+  const here = page.url();
+  // Téléphone : le menu du compte est au bas du menu hamburger, qui se referme derrière.
+  if (isPhone(page)) await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+  await page
+    .getByRole("button", { name: /^Menu du compte/ })
+    .filter({ visible: true })
+    .click();
+  await page.getByRole("button", { name: "Paramètres", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Paramètres" });
+  const sections = dialog.getByRole("navigation", { name: "Sections des paramètres" });
+  await expect(sections).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Menu" })).toBeHidden();
+
+  // On change de section sans changer d'adresse.
+  await sections.getByRole("button", { name: /^Sécurité/ }).click();
+  await expect(dialog.getByRole("heading", { name: "Sécurité" })).toBeVisible();
+  await expect(dialog.getByRole("region", { name: "Adresse e-mail" })).toContainText(
+    "coach-b@example.test",
+  );
+  if (isPhone(page)) {
+    // Téléphone : un retour vers le sommaire.
+    await dialog.getByRole("button", { name: "Paramètres", exact: true }).click();
+    await expect(sections.getByRole("button", { name: /^Données/ })).toBeVisible();
+  }
+  expect(page.url()).toBe(here);
+
+  // Échap referme la fenêtre : on est toujours sur la même page.
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  expect(page.url()).toBe(here);
+
+  // « Mon profil » ouvre directement la section Profil.
+  if (isPhone(page)) await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+  await page
+    .getByRole("button", { name: /^Menu du compte/ })
+    .filter({ visible: true })
+    .click();
+  await page.getByRole("button", { name: "Mon profil", exact: true }).click();
+  await expect(dialog.getByRole("region", { name: "Identité" })).toBeVisible();
+  await expect(dialog.getByRole("textbox", { name: "Prénom" })).not.toHaveValue("");
+});
+
 test("téléphone : un sommaire façon Réglages, puis chaque section avec un retour", async ({
   page,
 }) => {
@@ -37,7 +83,7 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   test.skip(isPhone(page), "Écrit les préférences du coach B : un seul projet.");
   await loginAsCoachB(page);
   await page.goto("/coach/profil?onglet=preferences");
-  const defaults = page.getByRole("region", { name: "Séances et agenda" });
+  const defaults = page.getByRole("region", { name: "Valeurs par défaut" });
   await defaults.getByLabel("Durée (min)").fill("45");
   await defaults.getByLabel(/^Lieu/).fill("Box de test");
   await defaults.getByLabel(/^Prix/).fill("70");

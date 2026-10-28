@@ -7,6 +7,7 @@ import { z } from "zod";
 import { requireCoach, requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
+import { getSettingsData, type SettingsData } from "./settings-data";
 import {
   NOTIFICATION_KINDS,
   emailChangeSchema,
@@ -35,6 +36,12 @@ export type SettingsState<T> = {
 };
 
 const field = (formData: FormData, name: string) => String(formData.get(name) ?? "");
+
+// Fenêtre des Paramètres (D-58) : ses données, lues à l'ouverture (et après un changement).
+export async function loadSettings(): Promise<SettingsData> {
+  const { user, memberships } = await requireCoach();
+  return getSettingsData(user, memberships[0]);
+}
 
 // --- Profil -------------------------------------------------------------------------------------
 export async function updateProfile(
