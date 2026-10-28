@@ -52,7 +52,7 @@ function SessionCard({
       title={content.discipline ? disciplineLabels[content.discipline] : undefined}
       // Téléphone : une ligne. Ordinateur : la carte s'empile dans sa colonne (pictogramme, titre sur
       // deux lignes au plus, puis le type et le rendez-vous), pour ne pas couper les titres.
-      className={`group flex w-full min-w-0 items-center gap-2.5 rounded-[12px] border px-2.5 py-2 transition-[filter] duration-150 hover:brightness-[.97] lg:flex-col lg:items-start lg:gap-2 lg:p-3 ${
+      className={`group flex w-full min-w-0 items-center gap-2.5 rounded-[12px] border px-2.5 py-2 transition-[filter] duration-150 hover:brightness-[.97] active:brightness-[.92] active:duration-0 lg:flex-col lg:items-start lg:gap-2 lg:p-3 ${
         styles ? styles.header : "border-line bg-bg"
       }`}
     >

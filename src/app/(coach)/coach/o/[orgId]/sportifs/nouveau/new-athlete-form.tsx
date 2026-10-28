@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FieldCheck } from "@/components/ui/field-check";
 import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import { DISCIPLINES, disciplineLabels } from "@/domain/training/discipline";
@@ -179,6 +180,7 @@ function NewAthleteFields({
                   defaultValue={v.goalDate}
                   className={`${inputClass} font-mono`}
                 />
+                <FieldCheck htmlFor="goalDate" rule="future-date" />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -263,24 +265,39 @@ function NewAthleteFields({
           )}
         </Card>
 
-        <div className="flex flex-col gap-3">
-          {error ? (
-            <p role="alert" className={errorTextClass}>
-              {error}
-            </p>
-          ) : null}
-          <button
-            type="submit"
-            disabled={pending}
-            className={buttonClass({ variant: "primary", size: "lg", className: "w-full" })}
-          >
-            {pending ? "Enregistrement…" : "Enregistrer le sportif"}
-          </button>
-          <p className={hintClass}>
-            Seul le prénom est obligatoire : le reste se complète plus tard.
-          </p>
+        {/* Ordinateur : le bouton sous la carte, collé en haut avec elle. */}
+        <div className="flex flex-col gap-3 max-lg:hidden">
+          <SubmitArea pending={pending} error={error} />
         </div>
       </div>
+
+      {/* Téléphone (audit apple-design du 28/10) : le bouton reste visible tout le long du formulaire,
+          dans une barre translucide collée en bas ; le contenu défile dessous. */}
+      <div className="material sticky bottom-0 z-20 -mx-4 flex flex-col gap-2 border-t px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
+        <SubmitArea pending={pending} error={error} />
+      </div>
     </form>
+  );
+}
+
+function SubmitArea({ pending, error }: { pending: boolean; error: string | null }) {
+  return (
+    <>
+      {error ? (
+        <p role="alert" className={errorTextClass}>
+          {error}
+        </p>
+      ) : null}
+      <button
+        type="submit"
+        disabled={pending}
+        className={buttonClass({ variant: "primary", size: "lg", className: "w-full" })}
+      >
+        {pending ? "Enregistrement…" : "Enregistrer le sportif"}
+      </button>
+      <p className={`${hintClass} max-lg:hidden`}>
+        Seul le prénom est obligatoire : le reste se complète plus tard.
+      </p>
+    </>
   );
 }

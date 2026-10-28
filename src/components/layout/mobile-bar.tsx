@@ -20,7 +20,8 @@ export function MobileTopBar() {
   const { space } = useShell();
   const pathname = usePathname();
   return (
-    <header className="sticky top-0 z-30 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b border-line bg-bg px-3.5 py-2 lg:hidden">
+    // Matière translucide (audit apple-design du 28/10) : le contenu défile sous la barre, flouté.
+    <header className="material sticky top-0 z-30 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b px-3.5 py-2 lg:hidden">
       <Link href={homeHref[space]} aria-label="Accueil" className="flex w-fit rounded-sm">
         <CooryLogo size={19} />
       </Link>

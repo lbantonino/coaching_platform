@@ -374,7 +374,8 @@ function Row({
     <li
       // Téléphone (demande d'Antonino du 28/10) : une carte basse sur une seule rangée : case, photo,
       // nom puis statut · type et objectif en petit, « ••• » à droite. Ordinateur : la ligne du tableau.
-      className={`relative grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-x-0 border-b border-line px-4 py-2 last:border-b-0 lg:py-3 ${grid} ${
+      // Appui sur la carte (téléphone) : le fond s'assombrit tout de suite, avant l'ouverture de la fiche.
+      className={`relative grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-x-0 border-b border-line px-4 py-2 last:border-b-0 max-lg:active:bg-surface-2 lg:py-3 ${grid} ${
         checked ? "bg-surface-2" : ""
       }`}
     >

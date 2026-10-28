@@ -161,6 +161,28 @@ body {
   }
 }
 
+/* Matière translucide (audit apple-design du 28/10) : barres collées en haut ou en bas du téléphone,
+   le contenu défile dessous, flouté. Transparence réduite : fond plein ; contraste élevé : filet net. */
+.material {
+  background-color: color-mix(in srgb, var(--bg) 80%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-color: color-mix(in srgb, var(--line) 55%, transparent);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .material {
+    background-color: var(--bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-contrast: more) {
+  .material {
+    background-color: var(--bg);
+    border-color: var(--line-2);
+  }
+}
+
 /* Chiffres alignés dans les données (charges, séries, durées). */
 .tabular {
   font-variant-numeric: tabular-nums;

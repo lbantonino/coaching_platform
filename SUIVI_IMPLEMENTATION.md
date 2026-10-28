@@ -32,6 +32,30 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Audit apple-design : les 10 retouches (D-55)
+```
+Date : 2026-10-28
+Demande : audit du design avec le skill apple-design, puis appliquer les points 1 à 10
+Fait : (1) fenêtres (Sheet, ActionMenu, ConfirmDialog) : entrée par le bas au ressort sans rebond
+  (courbe linear() calculée, src/lib/motion.ts), glisser vers le bas pour fermer (poignée et
+  en-têtes [data-sheet-grab], suivi 1:1, résistance vers le haut, vitesse du doigt reprise, élan
+  projeté), sortie par une copie visuelle inerte : la vraie fenêtre se ferme tout de suite et la page
+  répond aussitôt ; ordinateur : fondu + léger zoom ; mouvement réduit : fondu ; (2) segment choisi
+  en noir/blanc inversé (vues, statut, paiement, thème) : le rouge reste à l'action ; (3) Nouveau
+  sportif : barre « Enregistrer » collée en bas sur téléphone ; (4) retour à l'appui : écouteur
+  tactile pour :active sur iPhone (PressFeedback), fond qui s'assombrit sur les lignes et cartes ;
+  (5) pastilles à cocher et filtres à 44 px ; (6) « Marquer payée » / « Annuler » affichés tout de
+  suite (useOptimistic, PaymentRows), et le serveur refuse maintenant une date comprise dans un
+  forfait (vérification promise le 26/10 mais absente) ; (7) barre du haut du téléphone translucide
+  (.material, transparence réduite et contraste élevé respectés) ; (8) contrôle d'un champ quand on
+  le quitte (FieldCheck : e-mail, téléphone, date passée, montant), message différé si on appuie au
+  même moment (sinon le bouton bougeait sous le doigt) ; (9) « Annuler » dans le toast après avoir
+  coché une tâche ; (10) agenda : l'aperçu reste en place jusqu'à la grille rechargée (plus de
+  retour éclair à l'ancienne place)
+Tests : check OK (Vitest 180), test:e2e 126 + ux-audit.spec (feuille glissée, contrôle au départ
+  d'un champ) + « Annuler » dans agenda.spec
+```
+
 ### Page « Nouveau sportif » complète, avec la carte « Accord santé » (D-54)
 ```
 Date : 2026-10-28

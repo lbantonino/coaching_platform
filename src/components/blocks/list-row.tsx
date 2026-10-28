@@ -30,7 +30,8 @@ export function ListRow({
   return href ? (
     <Link
       href={href}
-      className={`${className} -mx-2 rounded-[12px] px-2 transition-colors duration-150 hover:bg-surface-2`}
+      // Appui : le fond s'assombrit tout de suite (sans transition), avant l'ouverture de la page.
+      className={`${className} -mx-2 rounded-[12px] px-2 transition-colors duration-150 hover:bg-surface-2 active:bg-surface-2 active:duration-0`}
     >
       {body}
     </Link>

@@ -173,6 +173,14 @@ test("une tâche cochée quitte la carte du tableau de bord et passe dans « Ter
   await checkbox.click();
   await expect(page.getByText("Tâche terminée.")).toBeVisible();
   await expect(checkbox).toHaveCount(0);
+  // « Annuler » dans le message (audit apple-design du 28/10) : la tâche revient, à faire ; on la
+  // recoche pour continuer.
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await expect(page.getByText("Tâche rouverte.")).toBeVisible();
+  await expect(checkbox).toHaveAttribute("aria-checked", "false");
+  await checkbox.click();
+  await expect(page.getByText("Tâche terminée.")).toBeVisible();
+  await expect(checkbox).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await expect(checkbox).toHaveCount(0);

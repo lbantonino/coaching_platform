@@ -10,6 +10,7 @@ import {
   textareaClass,
   labelClass,
 } from "@/components/ui/form-styles";
+import { FieldCheck } from "@/components/ui/field-check";
 import { Segmented } from "@/components/ui/segmented";
 import { addGoal, type AddGoalState } from "@/features/goals/actions";
 import {
@@ -127,6 +128,8 @@ export function GoalFields({
             defaultValue={v?.targetDate}
             className={`${inputClass} font-mono`}
           />
+          {/* Ajout seulement : une modification garde une date passée qui n'a pas changé. */}
+          {idPrefix === "goal" ? <FieldCheck htmlFor="goal-date" rule="future-date" /> : null}
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor={`${idPrefix}-time`} className={labelClass}>

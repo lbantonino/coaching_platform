@@ -14,6 +14,7 @@ import {
 
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import { FieldCheck } from "@/components/ui/field-check";
 import { Sheet } from "@/components/ui/overlay";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { Spinner } from "@/components/ui/spinner";
@@ -181,6 +182,7 @@ function PaymentFields({
             onChange={(event) => setAmount(event.target.value)}
             className={inputClass}
           />
+          <FieldCheck htmlFor="payment-amount" rule="euros" />
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="payment-vat" className={labelClass}>

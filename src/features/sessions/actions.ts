@@ -6,7 +6,9 @@ import { z } from "zod";
 
 import { listAthletes } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { coveredByPackage } from "@/domain/billing/payments";
 import { dayLabel } from "@/features/agenda/calendar";
+import { listPackageCovers } from "@/features/billing/payment-queries";
 import { createClient } from "@/lib/supabase/server";
 import { todayIsoInBrussels } from "@/lib/format";
 
@@ -369,21 +371,24 @@ export async function markSessionPaid(
   organizationId: string,
   sessionId: string,
   sessionDate: string,
-): Promise<void> {
+): Promise<{ ok: boolean }> {
   const { user, membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
   const session =
     z.uuid().safeParse(sessionId).success && sessionDateSchema.safeParse(sessionDate).success
       ? await getSession(orgId, sessionId)
       : null;
-  if (!session || session.priceCents === null || !session.paymentMethod) return;
-  if (!occursOn(session, sessionDate)) return;
+  if (!session || session.priceCents === null || !session.paymentMethod) return { ok: false };
+  if (!occursOn(session, sessionDate)) return { ok: false };
+  // Date comprise dans un forfait déjà payé par le sportif : jamais payée une deuxième fois.
+  const athleteId = session.kind === "individual" ? (session.athletes[0]?.id ?? null) : null;
+  if (coveredByPackage(await listPackageCovers(orgId), athleteId, sessionDate))
+    return { ok: false };
 
   const supabase = await createClient();
-  // Doublon (déjà payée) : l'index unique refuse la ligne, rien d'autre à faire.
-  await supabase.from("athlete_payments").insert({
+  const { error } = await supabase.from("athlete_payments").insert({
     organization_id: orgId,
-    athlete_id: session.kind === "individual" ? (session.athletes[0]?.id ?? null) : null,
+    athlete_id: athleteId,
     received_on: todayIsoInBrussels(),
     amount_cents: sessionAmountCents({ ...session, priceCents: session.priceCents }),
     vat_rate: SESSION_VAT_RATE,
@@ -394,6 +399,8 @@ export async function markSessionPaid(
     created_by: user.id,
   });
   revalidatePayments(orgId, session.id);
+  // Doublon (déjà payée, double appui) : l'index unique refuse la ligne ; la date est bien payée.
+  return { ok: !error || error.code === "23505" };
 }
 
 // Payée par erreur : le paiement de cette date est supprimé.
@@ -401,18 +408,19 @@ export async function unmarkSessionPaid(
   organizationId: string,
   sessionId: string,
   sessionDate: string,
-): Promise<void> {
+): Promise<{ ok: boolean }> {
   const { membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
   if (!z.uuid().safeParse(sessionId).success || !sessionDateSchema.safeParse(sessionDate).success) {
-    return;
+    return { ok: false };
   }
   const supabase = await createClient();
-  await supabase
+  const { error } = await supabase
     .from("athlete_payments")
     .delete()
     .eq("organization_id", orgId)
     .eq("session_id", sessionId)
     .eq("session_date", sessionDate);
   revalidatePayments(orgId, sessionId);
+  return { ok: !error };
 }

@@ -8,6 +8,7 @@ import {
   textareaClass,
   labelClass,
 } from "@/components/ui/form-styles";
+import { FieldCheck } from "@/components/ui/field-check";
 import type { AthleteFormValues, AvailabilityFormValues } from "@/features/athletes/actions";
 import {
   ATHLETE_LEVELS,
@@ -127,6 +128,7 @@ export function ContactFields({
           aria-describedby={hasAccount ? "email-hint" : optional ? "email-invite-hint" : undefined}
           className={inputClass}
         />
+        {hasAccount ? null : <FieldCheck htmlFor="email" rule="email" />}
         {hasAccount ? (
           <p id="email-hint" className={hintClass}>
             Identifiant de connexion du sportif : non modifiable ici.
@@ -151,6 +153,7 @@ export function ContactFields({
           defaultValue={values.phone}
           className={inputClass}
         />
+        <FieldCheck htmlFor="phone" rule="phone" />
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="preferredContact" className={labelClass}>

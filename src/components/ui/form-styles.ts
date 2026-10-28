@@ -32,4 +32,4 @@ export const errorTextClass = "text-[13px] font-medium text-accent-text";
 // reste dans la page (classe sr-only) pour le clavier et les lecteurs d'écran. Cochée = couleurs
 // inversées et « ✓ » devant. Mettre une icône Check avec la classe « hidden group-has-checked:block ».
 export const checkboxChipClass =
-  "group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-pill border border-line-2 px-3.5 text-[14px] font-medium whitespace-nowrap text-text transition-colors duration-150 not-has-checked:hover:bg-surface has-checked:border-inv has-checked:bg-inv has-checked:text-on-inv has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent";
+  "group inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-pill border border-line-2 px-3.5 text-[14px] font-medium whitespace-nowrap text-text transition-colors duration-150 not-has-checked:hover:bg-surface has-checked:border-inv has-checked:bg-inv has-checked:text-on-inv has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent";
