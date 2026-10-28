@@ -149,7 +149,7 @@ export function buildActivity(sources: ActivitySources): ActivityEvent[] {
       kind: "consent",
       at: consent.recordedAt,
       title: consentEventLabel(consent.action, consent.source, consent.proof),
-      detail: "Contraintes physiques (données de santé)",
+      detail: "Blessures et points d'attention (données de santé)",
     });
   }
 
@@ -187,7 +187,7 @@ export function buildActivity(sources: ActivitySources): ActivityEvent[] {
       kind: "note",
       at: note.updatedAt,
       title:
-        note.visibility === "coach" ? "Note privée mise à jour" : "Message au sportif mis à jour",
+        note.visibility === "coach" ? "Notes libres mises à jour" : "Message au sportif mis à jour",
       detail: null,
     });
   }

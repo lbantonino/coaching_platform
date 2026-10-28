@@ -134,9 +134,12 @@ export const availabilitySchema = z.object({
       .string()
       .max(500, { error: "Les contraintes d'organisation sont limitées à 500 caractères." }),
   ),
-  // Donnée de santé : courte et sans diagnostic. Acceptée seulement si un accord est en cours (serveur + base).
+  // Blessures et points d'attention (D-56, ancien « contraintes physiques ») : donnée de santé, sans
+  // diagnostic. Acceptée seulement si un accord est en cours (serveur + base).
   healthConstraints: optionalText(
-    z.string().max(300, { error: "Les contraintes physiques sont limitées à 300 caractères." }),
+    z.string().max(1000, {
+      error: "Les blessures et points d'attention sont limités à 1000 caractères.",
+    }),
   ),
 });
 

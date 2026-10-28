@@ -17,6 +17,7 @@ import { goalTypeGroups, goalTypeLabels } from "@/features/goals/schemas";
 
 import {
   AvailabilityFields,
+  CoachNoteField,
   ContactFields,
   HealthConstraintsField,
   IdentityFields,
@@ -25,9 +26,10 @@ import {
 } from "../athlete-fields";
 
 // Page « Nouveau sportif » (D-54, prompt Claude Design §7.2) : la fiche complète en une fois.
-// Téléphone (mobile first) : les sections s'empilent, la carte « Accord santé » et le bouton rouge
-// viennent à la fin. Ordinateur : le formulaire sur 8 colonnes, la carte sur 4, collée en haut avec
-// le bouton pendant le défilement. Seul le prénom est obligatoire.
+// Téléphone (mobile first) : les sections s'empilent ; le bouton rouge reste collé en bas. Ordinateur :
+// le formulaire sur 8 colonnes, la colonne de droite (rappel des données de santé + bouton) collée en
+// haut pendant le défilement. Seul le prénom est obligatoire. Section Notes (D-56) : blessures avec
+// l'accord du sportif, et notes libres.
 const emptyValues: NewAthleteFormInput = {
   firstName: "",
   lastName: "",
@@ -51,6 +53,7 @@ const emptyValues: NewAthleteFormInput = {
   competitionName: "",
   healthConsent: false,
   consentProof: "",
+  coachNote: "",
 };
 
 const initialState: NewAthleteState = { error: null, attempt: 0, values: null };
@@ -209,12 +212,77 @@ function NewAthleteFields({
             <AvailabilityFields values={v} />
           </Part>
         </section>
+
+        {/* Notes (D-56, demande d'Antonino) : les blessures, avec l'accord du sportif (donnée de
+            santé, journalisée), puis des notes libres, privées au coach. */}
+        <section aria-labelledby="new-athlete-notes" className={sectionClass}>
+          <div className="flex flex-col gap-7">
+            <fieldset className="flex flex-col gap-4">
+              <legend
+                id="new-athlete-notes"
+                className="mb-4 font-mono text-data tracking-wide text-muted uppercase"
+              >
+                Notes
+              </legend>
+              <div
+                role="group"
+                aria-labelledby="health-block-title"
+                className="flex flex-col gap-3 rounded-[14px] border border-line p-4"
+              >
+                <h3 id="health-block-title" className="text-small font-medium">
+                  Blessures et points d&apos;attention
+                </h3>
+                <label className="flex cursor-pointer items-start gap-2.5 text-small">
+                  <input
+                    type="checkbox"
+                    name="healthConsent"
+                    checked={consent}
+                    onChange={(event) => setConsent(event.target.checked)}
+                    className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
+                  />
+                  Le sportif m&apos;a donné son accord explicite pour que je note ses blessures et
+                  points d&apos;attention.
+                </label>
+                {consent ? (
+                  <>
+                    <div className="flex flex-col gap-1.5 md:w-1/2">
+                      <label htmlFor="consentProof" className={labelClass}>
+                        Comment ?
+                      </label>
+                      <select
+                        id="consentProof"
+                        name="consentProof"
+                        defaultValue={v.consentProof}
+                        className={inputClass}
+                      >
+                        <option value="" disabled>
+                          Choisir…
+                        </option>
+                        {COACH_PROOFS.map((proof) => (
+                          <option key={proof} value={proof}>
+                            {coachProofLabels[proof]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <HealthConstraintsField value={v.healthConstraints} />
+                  </>
+                ) : (
+                  <p className={hintClass}>
+                    Donnée de santé : coche l&apos;accord pour les noter. Sans accord, tu pourras le
+                    faire plus tard depuis sa fiche.
+                  </p>
+                )}
+              </div>
+              <CoachNoteField value={v.coachNote} />
+            </fieldset>
+          </div>
+        </section>
       </div>
 
       <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:col-span-4">
-        {/* Accord santé (D-20) : les contraintes physiques sont une donnée de santé. Elles ne
-            s'écrivent qu'avec l'accord explicite du sportif, noté avec sa preuve et journalisé. */}
-        <Card id="health-consent-title" title="Accord santé">
+        {/* Données de santé (D-20, D-56) : rappel, le choix se fait dans la section Notes. */}
+        <Card id="health-info-title" title="Données de santé">
           <p className="flex items-start gap-2 text-small text-muted">
             <ShieldCheck
               aria-hidden
@@ -222,47 +290,9 @@ function NewAthleteFields({
               strokeWidth={1.8}
               className="mt-0.5 shrink-0 text-ok"
             />
-            Les contraintes physiques sont une donnée de santé : on ne les note qu&apos;avec
-            l&apos;accord explicite du sportif. Il peut le retirer à tout moment.
+            Les blessures ne se notent qu&apos;avec l&apos;accord explicite du sportif (section
+            Notes). Il peut le retirer à tout moment : ce qui a été noté est alors effacé.
           </p>
-          <label className="flex cursor-pointer items-start gap-2.5 text-small">
-            <input
-              type="checkbox"
-              name="healthConsent"
-              checked={consent}
-              onChange={(event) => setConsent(event.target.checked)}
-              className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
-            />
-            Le sportif m&apos;a donné son accord explicite pour que je note ses contraintes
-            physiques.
-          </label>
-          {consent ? (
-            <>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="consentProof" className={labelClass}>
-                  Comment ?
-                </label>
-                <select
-                  id="consentProof"
-                  name="consentProof"
-                  defaultValue={v.consentProof}
-                  className={inputClass}
-                >
-                  <option value="" disabled>
-                    Choisir…
-                  </option>
-                  {COACH_PROOFS.map((proof) => (
-                    <option key={proof} value={proof}>
-                      {coachProofLabels[proof]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <HealthConstraintsField value={v.healthConstraints} />
-            </>
-          ) : (
-            <p className={hintClass}>Sans accord, tu pourras le noter plus tard depuis sa fiche.</p>
-          )}
         </Card>
 
         {/* Ordinateur : le bouton sous la carte, collé en haut avec elle. */}

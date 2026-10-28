@@ -353,11 +353,7 @@ async function AthleteSection({
               </>
             ) : null}
             {tab === "notes" ? (
-              <NotesSection
-                organizationId={organizationId}
-                athleteId={athlete.id}
-                hasAccount={athlete.hasAccount}
-              />
+              <NotesSection organizationId={organizationId} athlete={athlete} />
             ) : null}
             {tab === "historique" ? (
               <section

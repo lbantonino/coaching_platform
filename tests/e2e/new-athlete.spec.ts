@@ -49,12 +49,19 @@ test("le coach crée une fiche complète d'un coup, accord santé compris, et la
   await page.getByText("Lundi", { exact: true }).click();
   await page.getByText("Jeudi", { exact: true }).click();
 
-  // Accord santé : le champ des contraintes physiques n'existe qu'avec l'accord coché.
-  const consent = page.getByRole("region", { name: "Accord santé" });
-  await expect(page.getByLabel("Contraintes physiques", { exact: true })).toHaveCount(0);
+  // Notes : les blessures n'existent qu'avec l'accord coché ; les notes libres, toujours.
+  const consent = page.getByRole("group", { name: "Blessures et points d'attention" });
+  await expect(page.getByRole("textbox", { name: "Blessures et points d'attention" })).toHaveCount(
+    0,
+  );
   await consent.getByLabel(/m'a donné son accord explicite/).check();
   await consent.getByLabel("Comment ?").selectOption({ label: "Formulaire signé" });
-  await consent.getByLabel("Contraintes physiques", { exact: true }).fill("Épaule gauche fragile");
+  await consent
+    .getByRole("textbox", { name: "Blessures et points d'attention" })
+    .fill("Épaule gauche fragile");
+  await page
+    .getByRole("textbox", { name: /^Notes libres/ })
+    .fill("Très motivée, préfère le matin.");
   await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
 
   // Arrivée sur la fiche, puis chaque onglet montre ce qui a été saisi.
@@ -65,13 +72,19 @@ test("le coach crée une fiche complète d'un coup, accord santé compris, et la
   await expect(page.getByRole("list", { name: "Objectifs en cours" })).toContainText(competition);
 
   await openAthleteTab(page, "Disponibilités");
-  const section = page.getByRole("region", { name: "Disponibilités & contraintes" });
+  const section = page.getByRole("region", { name: "Disponibilités", exact: true });
   await expect(section.getByLabel("Séances par semaine")).toHaveValue("4");
   await expect(section.getByLabel("Jeudi")).toBeChecked();
   await expect(section.getByLabel("Mardi")).not.toBeChecked();
-  await expect(section.getByText(/Accord en cours depuis le/)).toBeVisible();
-  await expect(section.getByLabel("Contraintes physiques", { exact: true })).toHaveValue(
-    "Épaule gauche fragile",
+
+  await openAthleteTab(page, "Notes");
+  const health = page.getByRole("group", { name: "Blessures et points d'attention" });
+  await expect(health.getByText(/Accord en cours depuis le/)).toBeVisible();
+  await expect(
+    health.getByRole("textbox", { name: "Blessures et points d'attention" }),
+  ).toHaveValue("Épaule gauche fragile");
+  await expect(page.getByRole("textbox", { name: "Notes libres" })).toHaveValue(
+    "Très motivée, préfère le matin.",
   );
 
   await openAthleteTab(page, "Profil");
@@ -79,22 +92,25 @@ test("le coach crée une fiche complète d'un coup, accord santé compris, et la
   await expect(page.getByLabel("Canal de contact préféré")).toHaveValue("whatsapp");
 });
 
-test("sans accord coché, aucune contrainte physique ne peut être enregistrée", async ({
-  page,
-}, testInfo) => {
+test("sans accord coché, aucune blessure ne peut être enregistrée", async ({ page }, testInfo) => {
   const name = `Noa Sans ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   await login(page);
   await page.goto(`/coach/o/${ORG_A}/sportifs/nouveau`);
   await fillAthleteName(page, name);
   // L'accord coché puis décoché : le champ disparaît avec sa saisie.
-  const consent = page.getByRole("region", { name: "Accord santé" });
+  const consent = page.getByRole("group", { name: "Blessures et points d'attention" });
   await consent.getByLabel(/m'a donné son accord explicite/).check();
-  await consent.getByLabel("Contraintes physiques", { exact: true }).fill("Genou");
+  await consent.getByRole("textbox", { name: "Blessures et points d'attention" }).fill("Genou");
   await consent.getByLabel(/m'a donné son accord explicite/).uncheck();
-  await expect(page.getByLabel("Contraintes physiques", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Blessures et points d'attention" })).toHaveCount(
+    0,
+  );
   await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
-  await openAthleteTab(page, "Disponibilités");
-  const section = page.getByRole("region", { name: "Disponibilités & contraintes" });
-  await expect(section.getByLabel("Contraintes physiques", { exact: true })).toHaveCount(0);
+  await openAthleteTab(page, "Notes");
+  const health = page.getByRole("group", { name: "Blessures et points d'attention" });
+  await expect(
+    health.getByRole("textbox", { name: "Blessures et points d'attention" }),
+  ).toHaveCount(0);
+  await expect(health.getByRole("button", { name: "Enregistrer l'accord" })).toBeVisible();
 });

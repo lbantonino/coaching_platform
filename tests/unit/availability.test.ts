@@ -47,10 +47,13 @@ describe("availabilitySchema (disponibilités)", () => {
     );
   });
 
-  it("limite les contraintes physiques à 300 caractères (texte court, sans dossier médical)", () => {
+  it("limite les blessures et points d'attention à 1000 caractères (sans dossier médical)", () => {
     expect(
-      availabilitySchema.safeParse({ ...base, healthConstraints: "x".repeat(301) }).success,
+      availabilitySchema.safeParse({ ...base, healthConstraints: "x".repeat(1001) }).success,
     ).toBe(false);
+    expect(
+      availabilitySchema.safeParse({ ...base, healthConstraints: "x".repeat(1000) }).success,
+    ).toBe(true);
     expect(
       availabilitySchema.parse({ ...base, healthConstraints: "  Genou droit sensible  " })
         .healthConstraints,

@@ -262,8 +262,8 @@ export function SportProfileFields({
   );
 }
 
-// Séances par semaine, durée maximale, jours, contraintes d'organisation. Les contraintes physiques
-// ont leur propre champ (HealthConstraintsField) : il n'existe qu'avec un accord du sportif.
+// Séances par semaine, durée maximale, jours, contraintes d'organisation. Les blessures et points
+// d'attention ont leur propre champ (HealthConstraintsField) : il n'existe qu'avec un accord.
 export function AvailabilityFields({
   values,
 }: {
@@ -350,25 +350,52 @@ export function AvailabilityFields({
   );
 }
 
-// Donnée de santé : courte, sans diagnostic, et seulement avec l'accord du sportif.
+// Blessures et points d'attention (D-56, ancien « contraintes physiques ») : donnée de santé, sans
+// diagnostic, et seulement avec l'accord du sportif.
 export function HealthConstraintsField({ value }: { value: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor="healthConstraints" className={labelClass}>
-        Contraintes physiques
+        Blessures et points d&apos;attention
       </label>
       <textarea
         id="healthConstraints"
         name="healthConstraints"
-        rows={2}
-        maxLength={300}
+        rows={4}
+        maxLength={1000}
         aria-describedby="health-hint"
-        placeholder="Ex. : genou droit sensible en descente ; éviter les sauts"
+        placeholder="Ex. : entorse de la cheville droite en septembre, éviter les sauts ; dos sensible en soulevé de terre"
         defaultValue={value}
         className={textareaClass}
       />
       <p id="health-hint" className={hintClass}>
-        Seulement ce qui change l&apos;entraînement : pas de diagnostic, pas de traitement.
+        Ce qui change l&apos;entraînement : blessures, douleurs, zones à ménager. Pas de diagnostic
+        ni de traitement.
+      </p>
+    </div>
+  );
+}
+
+// Notes libres (D-56) : la note privée du coach, tout ce qui n'est pas de la santé.
+export function CoachNoteField({ value, id = "coachNote" }: { value: string; id?: string }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className={labelClass}>
+        Notes libres <span className="font-normal text-muted">(facultatif)</span>
+      </label>
+      <textarea
+        id={id}
+        name="coachNote"
+        rows={4}
+        maxLength={2000}
+        aria-describedby={`${id}-hint`}
+        placeholder="Ex. : très motivée, préfère les séances du matin ; vient en vélo ; aime les défis chronométrés"
+        defaultValue={value}
+        className={textareaClass}
+      />
+      <p id={`${id}-hint`} className={hintClass}>
+        Caractère, préférences, logistique… Visible seulement par les coachs. Pas de blessures ici :
+        elles vont dans « Blessures et points d&apos;attention », avec l&apos;accord du sportif.
       </p>
     </div>
   );

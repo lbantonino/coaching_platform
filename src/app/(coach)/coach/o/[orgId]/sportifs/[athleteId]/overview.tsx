@@ -324,7 +324,7 @@ function AvailabilityCard({ athlete, editHref }: { athlete: AthleteDetail; editH
         <Row icon={CalendarDays} label="Contraintes d'organisation">
           {athlete.scheduleConstraints ?? missing}
         </Row>
-        <Row icon={HeartPulse} label="Contraintes physiques">
+        <Row icon={HeartPulse} label="Blessures et points d'attention">
           {athlete.healthConsentAt === null ? (
             <span className="text-muted">Pas d&apos;accord du sportif : rien n&apos;est noté.</span>
           ) : (
@@ -381,11 +381,11 @@ function NotesCard({ notes, editHref }: { notes: AthleteNotes; editHref: string 
         <div className="flex flex-col gap-1.5 rounded-[14px] border border-line bg-bg p-4">
           <p className="text-small whitespace-pre-line">{notes.coach.body}</p>
           <p className="text-caption text-faint">
-            Note privée · mise à jour le {formatDateTime(notes.coach.updatedAt)}
+            Notes libres · mises à jour le {formatDateTime(notes.coach.updatedAt)}
           </p>
         </div>
       ) : (
-        <p className="text-small text-muted">Aucune note privée.</p>
+        <p className="text-small text-muted">Aucune note libre.</p>
       )}
       {notes.athlete ? (
         <div className="flex flex-col gap-1.5 rounded-[14px] border border-line bg-bg p-4">

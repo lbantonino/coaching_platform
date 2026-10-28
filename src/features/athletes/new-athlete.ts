@@ -3,6 +3,7 @@ import { z } from "zod";
 import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { coachProofSchema, type CoachProof } from "@/features/consents/schemas";
 import { parseGoalForm, type GoalValues } from "@/features/goals/schemas";
+import { noteBodySchema } from "@/features/notes/schemas";
 
 import type { AthleteFormValues, AvailabilityFormValues } from "./actions";
 import { athleteUpdateSchema, availabilitySchema } from "./schemas";
@@ -21,6 +22,8 @@ export type NewAthleteFormInput = AthleteFormValues &
     // Accord santé, noté par le coach, et comment il l'a obtenu.
     healthConsent: boolean;
     consentProof: string;
+    // Notes libres (D-56) : la note privée du coach (caractère, préférences, logistique).
+    coachNote: string;
   };
 
 export type NewAthleteValues = {
@@ -43,8 +46,9 @@ export type NewAthleteValues = {
     schedule_constraints: string | null;
   };
   goal: GoalValues | null;
-  // Accord santé : sa preuve, et les contraintes physiques notées avec lui.
+  // Accord santé : sa preuve, et les blessures et points d'attention notés avec lui.
   consent: { proof: CoachProof; healthConstraints: string | null } | null;
+  coachNote: string | null;
 };
 
 const programTypeSchema = z.preprocess(
@@ -108,9 +112,13 @@ export function parseNewAthleteForm(
   } else if (healthConstraints !== null) {
     return {
       ok: false,
-      error: "L'accord du sportif est nécessaire pour noter des contraintes physiques.",
+      error: "L'accord du sportif est nécessaire pour noter des blessures ou points d'attention.",
     };
   }
+
+  const note = noteBodySchema.safeParse(input.coachNote);
+  if (!note.success)
+    return { ok: false, error: note.error.issues[0]?.message ?? "Saisie invalide." };
 
   const p = profile.data;
   const a = availability.data;
@@ -137,6 +145,7 @@ export function parseNewAthleteForm(
       },
       goal,
       consent,
+      coachNote: note.data === "" ? null : note.data,
     },
   };
 }

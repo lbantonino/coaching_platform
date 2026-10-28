@@ -27,6 +27,7 @@ const base: NewAthleteFormInput = {
   competitionName: "",
   healthConsent: false,
   consentProof: "",
+  coachNote: "",
 };
 
 describe("parseNewAthleteForm", () => {
@@ -111,10 +112,18 @@ describe("parseNewAthleteForm", () => {
     ).toEqual({ ok: false, error: "La date de l'objectif est déjà passée." });
   });
 
-  it("n'accepte des contraintes physiques qu'avec l'accord du sportif et sa preuve", () => {
+  it("garde les notes libres, sans les espaces autour, et ignore une note vide", () => {
+    const parsed = parseNewAthleteForm({ ...base, coachNote: "  Préfère le matin  " }, TODAY);
+    expect(parsed.ok && parsed.values.coachNote).toBe("Préfère le matin");
+    const empty = parseNewAthleteForm({ ...base, coachNote: "   " }, TODAY);
+    expect(empty.ok && empty.values.coachNote).toBeNull();
+    expect(parseNewAthleteForm({ ...base, coachNote: "x".repeat(2001) }, TODAY).ok).toBe(false);
+  });
+
+  it("n'accepte des blessures qu'avec l'accord du sportif et sa preuve", () => {
     expect(parseNewAthleteForm({ ...base, healthConstraints: "Genou sensible" }, TODAY)).toEqual({
       ok: false,
-      error: "L'accord du sportif est nécessaire pour noter des contraintes physiques.",
+      error: "L'accord du sportif est nécessaire pour noter des blessures ou points d'attention.",
     });
     expect(parseNewAthleteForm({ ...base, healthConsent: true }, TODAY)).toEqual({
       ok: false,

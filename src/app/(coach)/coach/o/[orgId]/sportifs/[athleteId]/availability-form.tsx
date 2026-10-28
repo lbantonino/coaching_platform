@@ -10,7 +10,7 @@ import {
   type UpdateAvailabilityState,
 } from "@/features/athletes/actions";
 
-import { AvailabilityFields, HealthConstraintsField } from "../athlete-fields";
+import { AvailabilityFields } from "../athlete-fields";
 
 const initialState: UpdateAvailabilityState = {
   error: null,
@@ -22,12 +22,11 @@ const initialState: UpdateAvailabilityState = {
 type Props = {
   organizationId: string;
   athleteId: string;
-  // Le champ « contraintes physiques » n'existe que pendant qu'un accord du sportif est en cours.
-  hasConsent: boolean;
   values: AvailabilityFormValues;
 };
 
-export function AvailabilityForm({ organizationId, athleteId, hasConsent, values }: Props) {
+// Les blessures et points d'attention ne sont plus ici : onglet Notes (D-56).
+export function AvailabilityForm({ organizationId, athleteId, values }: Props) {
   const [state, formAction, pending] = useActionState(
     updateAvailability.bind(null, organizationId, athleteId),
     initialState,
@@ -39,8 +38,6 @@ export function AvailabilityForm({ organizationId, athleteId, hasConsent, values
     // Reconstruit après chaque réponse : la saisie renvoyée (ou enregistrée) s'affiche partout.
     <form key={state.attempt} action={formAction} className="flex flex-col gap-5" noValidate>
       <AvailabilityFields values={shown} />
-
-      {hasConsent ? <HealthConstraintsField value={shown.healthConstraints} /> : null}
 
       <div className="flex flex-wrap items-center gap-4">
         <button

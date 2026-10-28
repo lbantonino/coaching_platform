@@ -30,7 +30,8 @@ export function HealthConsentForm({
           name="confirmed"
           className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
         />
-        Le sportif m&apos;a donné son accord explicite pour que je note ses contraintes physiques.
+        Le sportif m&apos;a donné son accord explicite pour que je note ses blessures et points
+        d&apos;attention.
       </label>
       <div className="flex flex-col gap-1.5 md:w-1/2">
         <label htmlFor="consent-proof" className={labelClass}>
