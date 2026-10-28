@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -40,6 +40,7 @@ export function MobileTopBar() {
 // PRINCIPAL et PLUS, puis « Se déconnecter » et le thème. Élément <dialog> natif : focus gardé
 // dedans, Échap le ferme. Toucher une ligne ferme le menu et ouvre la page.
 function MobileMenu() {
+  const { space } = useShell();
   const dialog = useRef<HTMLDialogElement>(null);
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -82,6 +83,28 @@ function MobileMenu() {
             </button>
           </div>
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-3.5 pt-4 pb-8">
+            {/* Coach (D-62) : la recherche globale, en tête du menu sur téléphone. */}
+            {space === "coach" ? (
+              <form
+                role="search"
+                action="/coach/recherche"
+                className="flex h-12 items-center gap-2.5 rounded-control border border-line-2 bg-surface px-3 focus-within:border-accent"
+              >
+                <Search aria-hidden size={18} strokeWidth={1.8} className="shrink-0 text-muted" />
+                <label htmlFor="menu-search" className="sr-only">
+                  Rechercher dans Coory
+                </label>
+                <input
+                  id="menu-search"
+                  name="q"
+                  type="search"
+                  enterKeyHint="search"
+                  autoComplete="off"
+                  placeholder="Rechercher dans Coory…"
+                  className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-text outline-none placeholder:text-muted"
+                />
+              </form>
+            ) : null}
             <SideNav large />
             <div className="mt-auto">
               <AccountMenu />

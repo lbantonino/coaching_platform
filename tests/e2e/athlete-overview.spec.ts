@@ -57,13 +57,12 @@ test("la recherche du haut trouve un sportif, quel que soit son statut", async (
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
 
-  // Kevin Mertens est archivé : la recherche du haut couvre tous les statuts.
-  await page.getByLabel("Rechercher dans Coory (sportifs)").fill("mertens");
-  await page.getByLabel("Rechercher dans Coory (sportifs)").press("Enter");
-  await expect(page).toHaveURL(/statut=tous/);
-  await expect(page.getByRole("list", { name: "Liste des sportifs" })).toContainText(
-    "Kevin Mertens",
-  );
+  // Kevin Mertens est archivé : la recherche du haut (page Recherche globale, D-62) couvre tous
+  // les statuts.
+  await page.getByRole("searchbox", { name: "Rechercher dans Coory" }).fill("mertens");
+  await page.getByRole("searchbox", { name: "Rechercher dans Coory" }).press("Enter");
+  await expect(page).toHaveURL(/\/coach\/recherche\?q=mertens$/);
+  await expect(page.getByRole("region", { name: /Sportifs/ })).toContainText("Kevin Mertens");
 });
 
 test("la fiche propose « Créer un programme », le menu « ••• » et les prochaines séances", async ({

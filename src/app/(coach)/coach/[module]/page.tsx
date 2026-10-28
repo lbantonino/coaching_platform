@@ -18,6 +18,7 @@ const BUILT = new Set([
   "comptabilite",
   "notifications",
   "documents",
+  "recherche",
 ]);
 
 export function generateStaticParams() {

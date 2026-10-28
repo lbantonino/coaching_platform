@@ -13,14 +13,14 @@ import { useShell } from "./shell-context";
 
 // Outils à droite de l'en-tête de page sur ordinateur (prompt Claude Design §5.2) : recherche
 // « Rechercher dans Coory… ⌘K » de 260 px, Assistant IA (coach), cloche des notifications.
-// Coach : la recherche trouve les sportifs (vraie liste filtrée) en attendant la recherche globale.
+// Coach : la recherche ouvre la page Recherche globale (D-62) avec la saisie.
 // Sportif et admin : la recherche ouvre la page Recherche de l'espace. ⌘K / Ctrl K y mène aussi.
 export function HeaderTools() {
   const { space, orgBase } = useShell();
   return (
     <div className="hidden items-center gap-2 lg:flex">
       {space === "coach" && orgBase ? (
-        <CoachSearch athletesHref={`${orgBase}/sportifs`} />
+        <CoachSearch />
       ) : (
         <SearchLink href={space === "athlete" ? "/app/recherche" : "/admin/recherche"} />
       )}
@@ -82,15 +82,21 @@ function useCommandK(onTrigger: () => void) {
   }, []);
 }
 
-// Formulaire GET vers la liste des sportifs, tous statuts confondus : le résultat est une vraie page,
-// partageable, qui marche aussi sans JavaScript.
-function CoachSearch({ athletesHref }: { athletesHref: string }) {
+// Formulaire GET vers la page Recherche (D-62) : le résultat est une vraie page, partageable, qui
+// marche aussi sans JavaScript. Sur la page Recherche elle-même, ⌘K revient à son grand champ.
+function CoachSearch() {
   const input = useRef<HTMLInputElement>(null);
-  useCommandK(() => input.current?.focus());
+  useCommandK(() => {
+    if (window.location.pathname !== "/coach/recherche") input.current?.focus();
+  });
   return (
-    <form role="search" action={athletesHref} className={`${searchBox} focus-within:border-accent`}>
+    <form
+      role="search"
+      action="/coach/recherche"
+      className={`${searchBox} focus-within:border-accent`}
+    >
       <label htmlFor="coach-search" className="sr-only">
-        Rechercher dans Coory (sportifs)
+        Rechercher dans Coory
       </label>
       <Search aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
       <input
@@ -102,7 +108,6 @@ function CoachSearch({ athletesHref }: { athletesHref: string }) {
         placeholder="Rechercher dans Coory…"
         className="h-full min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-muted"
       />
-      <input type="hidden" name="statut" value="tous" />
       <Kbd />
     </form>
   );
