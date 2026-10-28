@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **28/10/2026** (case Notes, Paramètres complets puis ouverts en fenêtre).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **28/10/2026** (case Notes, Paramètres en fenêtre, et les outils : tâches, documents, notifications, recherche).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -353,6 +353,9 @@ Pour les documents, la question n'était pas l'écran mais la confiance : un con
 
 ### Les outils, tranche 3 : lire et masquer des notifications calculées (28/10)
 Les notifications de Coory ne sont pas stockées : elles sont calculées à partir des vraies données (une tâche en retard, une facture impayée). Comment alors en « lire » une ? On garde seulement l'état choisi par le coach, rangé sous une **clé** qui décrit la situation : « cette tâche, avec cette échéance ». Si la tâche est reportée, la clé change, et la notification revient non lue, ce qui est le comportement attendu. Chaque coach a ses propres états (lire n'efface rien pour un collègue). Leçon de test : un test qui compte la cloche du coach A échouait au hasard, parce qu'un autre test créait en même temps des compétitions pour ce même coach. Le test tourne maintenant avec le coach B, en série, et remet tout en place à la fin.
+
+### Les outils, tranche 4 : une recherche qui ne fait pas confiance à la saisie (28/10)
+La recherche globale interroge cinq tables à la fois et range les résultats par groupe pendant qu'on tape. Le point délicat : ce que le coach tape finit dans une requête SQL de type « contient ». Les caractères spéciaux de cette requête (`%`, `_`) sont donc échappés, et ceux qui servent à combiner des filtres (virgules, parenthèses) deviennent des espaces : taper « %% » ne renvoie pas toute la base, et un test le vérifie. Comme partout, l'action revérifie l'organisation et la RLS fait le reste : le document d'un autre coach ne sort jamais. Côté écran, seule la dernière réponse compte : si une recherche lente arrive après une plus récente, elle est ignorée. Leçon : un état React ne se met pas à jour dans un effet ; la recherche part du gestionnaire de saisie, ce qui est aussi plus simple à lire.
 
 ---
 
