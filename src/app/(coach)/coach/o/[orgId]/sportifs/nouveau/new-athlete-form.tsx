@@ -1,15 +1,60 @@
 "use client";
 
-import { useActionState } from "react";
+import { ShieldCheck } from "lucide-react";
+import { useActionState, useState } from "react";
 
-import { errorTextClass, inputClass, primaryButtonClass } from "@/components/ui/form-styles";
+import { buttonClass } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import { Segmented } from "@/components/ui/segmented";
+import { DISCIPLINES, disciplineLabels } from "@/domain/training/discipline";
 import { createAthlete, type NewAthleteState } from "@/features/athletes/actions";
-import { SEXES, sexLabels } from "@/features/athletes/schemas";
+import type { NewAthleteFormInput } from "@/features/athletes/new-athlete";
+import type { AthleteStatus } from "@/features/athletes/schemas";
+import { COACH_PROOFS, coachProofLabels } from "@/features/consents/schemas";
+import { goalTypeGroups, goalTypeLabels } from "@/features/goals/schemas";
 
-const initialState: NewAthleteState = {
-  error: null,
-  values: { firstName: "", lastName: "", sex: "", email: "", phone: "" },
+import {
+  AvailabilityFields,
+  ContactFields,
+  HealthConstraintsField,
+  IdentityFields,
+  Part,
+  SportProfileFields,
+} from "../athlete-fields";
+
+// Page « Nouveau sportif » (D-54, prompt Claude Design §7.2) : la fiche complète en une fois.
+// Téléphone (mobile first) : les sections s'empilent, la carte « Accord santé » et le bouton rouge
+// viennent à la fin. Ordinateur : le formulaire sur 8 colonnes, la carte sur 4, collée en haut avec
+// le bouton pendant le défilement. Seul le prénom est obligatoire.
+const emptyValues: NewAthleteFormInput = {
+  firstName: "",
+  lastName: "",
+  sex: "",
+  email: "",
+  phone: "",
+  status: "active",
+  preferredContact: "",
+  level: "",
+  experience: "",
+  trainingPlaces: [],
+  equipment: "",
+  programType: "",
+  sessionsPerWeek: "",
+  maxSessionMinutes: "",
+  availableDays: [],
+  scheduleConstraints: "",
+  healthConstraints: "",
+  goalType: "",
+  goalDate: "",
+  competitionName: "",
+  healthConsent: false,
+  consentProof: "",
 };
+
+const initialState: NewAthleteState = { error: null, attempt: 0, values: null };
+
+const sectionClass = "rounded-card border border-line bg-surface p-[18px] md:p-[22px]";
 
 export function NewAthleteForm({ organizationId }: { organizationId: string }) {
   // L'organisation est liée à l'action ; l'action la revérifie de toute façon côté serveur.
@@ -17,100 +62,225 @@ export function NewAthleteForm({ organizationId }: { organizationId: string }) {
     createAthlete.bind(null, organizationId),
     initialState,
   );
-  const errorProps = state.error ? { "aria-describedby": "athlete-error" } : {};
+  return (
+    // Reconstruit après chaque réponse : la saisie renvoyée s'affiche partout, menus et cases compris.
+    <NewAthleteFields
+      key={state.attempt}
+      formAction={formAction}
+      pending={pending}
+      error={state.error}
+      values={state.values ?? emptyValues}
+    />
+  );
+}
+
+function NewAthleteFields({
+  formAction,
+  pending,
+  error,
+  values: v,
+}: {
+  formAction: (formData: FormData) => void;
+  pending: boolean;
+  error: string | null;
+  values: NewAthleteFormInput;
+}) {
+  const [consent, setConsent] = useState(v.healthConsent);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="firstName" className="text-small font-medium">
-            Prénom
+    <form
+      action={formAction}
+      noValidate
+      className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-4"
+    >
+      <div className="flex min-w-0 flex-col gap-6 lg:col-span-8 lg:gap-4">
+        <section className={sectionClass}>
+          <div className="flex flex-col gap-7">
+            <Part title="Identité">
+              <IdentityFields values={v} optionalLastName />
+            </Part>
+            <Part title="Contact">
+              <ContactFields values={v} optional />
+            </Part>
+          </div>
+        </section>
+
+        <section className={sectionClass}>
+          <Part title="Profil sportif">
+            <SportProfileFields
+              values={v}
+              besideLevel={
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="programType" className={labelClass}>
+                    Type de programme
+                  </label>
+                  <select
+                    id="programType"
+                    name="programType"
+                    defaultValue={v.programType}
+                    className={inputClass}
+                  >
+                    <option value="">Non précisé</option>
+                    {DISCIPLINES.map((discipline) => (
+                      <option key={discipline} value={discipline}>
+                        {disciplineLabels[discipline]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              }
+            />
+            <Segmented
+              name="status"
+              legend="Statut"
+              defaultValue={(v.status || "active") as AthleteStatus}
+              options={[
+                { value: "active", label: "Actif" },
+                { value: "paused", label: "En pause" },
+                { value: "archived", label: "Archivé" },
+              ]}
+            />
+          </Part>
+        </section>
+
+        <section className={sectionClass}>
+          <Part title="Objectif principal">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="goalType" className={labelClass}>
+                  Type d&apos;objectif <span className="font-normal text-muted">(facultatif)</span>
+                </label>
+                <select
+                  id="goalType"
+                  name="goalType"
+                  defaultValue={v.goalType}
+                  className={inputClass}
+                >
+                  <option value="">Pas encore défini</option>
+                  {goalTypeGroups.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.types.map((type) => (
+                        <option key={type} value={type}>
+                          {goalTypeLabels[type]}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="goalDate" className={labelClass}>
+                  Date visée <span className="font-normal text-muted">(facultatif)</span>
+                </label>
+                <input
+                  id="goalDate"
+                  name="goalDate"
+                  type="date"
+                  defaultValue={v.goalDate}
+                  className={`${inputClass} font-mono`}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="competitionName" className={labelClass}>
+                Prochaine compétition <span className="font-normal text-muted">(facultatif)</span>
+              </label>
+              <input
+                id="competitionName"
+                name="competitionName"
+                autoComplete="off"
+                maxLength={120}
+                placeholder="Ex. : Hyrox Bruxelles"
+                defaultValue={v.competitionName}
+                aria-describedby="competition-hint"
+                className={inputClass}
+              />
+              <p id="competition-hint" className={hintClass}>
+                Avec un nom, l&apos;objectif devient une compétition : indique alors sa date.
+              </p>
+            </div>
+          </Part>
+        </section>
+
+        <section className={sectionClass}>
+          <Part title="Disponibilités">
+            <AvailabilityFields values={v} />
+          </Part>
+        </section>
+      </div>
+
+      <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:col-span-4">
+        {/* Accord santé (D-20) : les contraintes physiques sont une donnée de santé. Elles ne
+            s'écrivent qu'avec l'accord explicite du sportif, noté avec sa preuve et journalisé. */}
+        <Card id="health-consent-title" title="Accord santé">
+          <p className="flex items-start gap-2 text-small text-muted">
+            <ShieldCheck
+              aria-hidden
+              size={16}
+              strokeWidth={1.8}
+              className="mt-0.5 shrink-0 text-ok"
+            />
+            Les contraintes physiques sont une donnée de santé : on ne les note qu&apos;avec
+            l&apos;accord explicite du sportif. Il peut le retirer à tout moment.
+          </p>
+          <label className="flex cursor-pointer items-start gap-2.5 text-small">
+            <input
+              type="checkbox"
+              name="healthConsent"
+              checked={consent}
+              onChange={(event) => setConsent(event.target.checked)}
+              className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
+            />
+            Le sportif m&apos;a donné son accord explicite pour que je note ses contraintes
+            physiques.
           </label>
-          <input
-            id="firstName"
-            name="firstName"
-            type="text"
-            autoComplete="off"
-            required
-            maxLength={80}
-            defaultValue={state.values.firstName}
-            {...errorProps}
-            className={inputClass}
-          />
+          {consent ? (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="consentProof" className={labelClass}>
+                  Comment ?
+                </label>
+                <select
+                  id="consentProof"
+                  name="consentProof"
+                  defaultValue={v.consentProof}
+                  className={inputClass}
+                >
+                  <option value="" disabled>
+                    Choisir…
+                  </option>
+                  {COACH_PROOFS.map((proof) => (
+                    <option key={proof} value={proof}>
+                      {coachProofLabels[proof]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <HealthConstraintsField value={v.healthConstraints} />
+            </>
+          ) : (
+            <p className={hintClass}>Sans accord, tu pourras le noter plus tard depuis sa fiche.</p>
+          )}
+        </Card>
+
+        <div className="flex flex-col gap-3">
+          {error ? (
+            <p role="alert" className={errorTextClass}>
+              {error}
+            </p>
+          ) : null}
+          <button
+            type="submit"
+            disabled={pending}
+            className={buttonClass({ variant: "primary", size: "lg", className: "w-full" })}
+          >
+            {pending ? "Enregistrement…" : "Enregistrer le sportif"}
+          </button>
+          <p className={hintClass}>
+            Seul le prénom est obligatoire : le reste se complète plus tard.
+          </p>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="lastName" className="text-small font-medium">
-            Nom de famille <span className="font-normal text-muted">(facultatif)</span>
-          </label>
-          <input
-            id="lastName"
-            name="lastName"
-            type="text"
-            autoComplete="off"
-            maxLength={80}
-            defaultValue={state.values.lastName}
-            {...errorProps}
-            className={inputClass}
-          />
-        </div>
       </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="sex" className="text-small font-medium">
-          Sexe <span className="font-normal text-muted">(facultatif)</span>
-        </label>
-        <select id="sex" name="sex" defaultValue={state.values.sex} className={inputClass}>
-          <option value="">Non renseigné</option>
-          {SEXES.map((sex) => (
-            <option key={sex} value={sex}>
-              {sexLabels[sex]}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-small font-medium">
-          Adresse e-mail <span className="font-normal text-muted">(facultatif)</span>
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="off"
-          inputMode="email"
-          defaultValue={state.values.email}
-          {...errorProps}
-          className={inputClass}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="phone" className="text-small font-medium">
-          Téléphone <span className="font-normal text-muted">(facultatif)</span>
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          autoComplete="off"
-          inputMode="tel"
-          placeholder="+32 …"
-          defaultValue={state.values.phone}
-          {...errorProps}
-          className={inputClass}
-        />
-      </div>
-
-      {state.error ? (
-        <p id="athlete-error" role="alert" className={errorTextClass}>
-          {state.error}
-        </p>
-      ) : null}
-
-      <button type="submit" disabled={pending} className={primaryButtonClass}>
-        {pending ? "Enregistrement…" : "Ajouter le sportif"}
-      </button>
     </form>
   );
 }

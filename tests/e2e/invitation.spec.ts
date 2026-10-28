@@ -26,16 +26,10 @@ async function createAthleteAndOpenInvite(page: Page, name: string, email: strin
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
   await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
-  await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
-
-  // Téléphone (carte compacte, 28/10) : « Inviter » est dans le menu « ••• » de la carte.
-  if (isPhone(page)) {
-    await page.getByRole("button", { name: `Actions pour ${name}` }).click();
-    await page.getByRole("button", { name: "Inviter dans son espace" }).click();
-  } else {
-    await page.getByRole("link", { name: `Inviter ${name}` }).click();
-  }
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  // Le sportif enregistré, on arrive sur sa fiche (D-54) ; son invitation est à /inviter.
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  await page.goto(`${page.url()}/inviter`);
   await expect(page.getByRole("heading", { name: `Inviter ${name}` })).toBeVisible();
 }
 

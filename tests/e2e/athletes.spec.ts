@@ -31,16 +31,18 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
 
   // Prénom manquant : erreur claire, rien n'est enregistré.
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
   await expect(
     page.getByRole("alert").filter({ hasText: "Le prénom est obligatoire." }),
   ).toBeVisible();
 
   await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
 
-  await expect(page).toHaveURL(new RegExp(`/coach/o/${ORG_A}/sportifs$`));
+  // On arrive sur sa fiche (D-54), puis on le retrouve dans la liste.
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  await page.goto(`/coach/o/${ORG_A}/sportifs`);
   const list = page.getByRole("list", { name: "Liste des sportifs" });
   await expect(list.getByText(name)).toBeVisible();
   // L'e-mail n'est plus affiché sur la ligne (prototype) : la recherche le retrouve.
@@ -52,7 +54,7 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await fillAthleteName(page, `${name} bis`);
   await page.getByLabel(/Adresse e-mail/).fill(email.toUpperCase());
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
   await expect(
     page.getByRole("alert").filter({ hasText: "utilise déjà cette adresse e-mail" }),
   ).toBeVisible();
@@ -159,8 +161,8 @@ test("le statut et le type de programme se changent d'un appui sur leur pastille
   await loginAsCoachA(page);
   await page.goto(`/coach/o/${ORG_A}/sportifs/nouveau`);
   await fillAthleteName(page, name);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
-  await expect(page).toHaveURL(new RegExp(`/coach/o/${ORG_A}/sportifs$`));
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 
   await page.goto(`/coach/o/${ORG_A}/sportifs?q=${encodeURIComponent(suffix)}`);
   const row = page

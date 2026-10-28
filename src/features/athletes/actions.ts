@@ -8,62 +8,115 @@ import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
+import { todayIsoInBrussels } from "@/lib/format";
+
+import { parseNewAthleteForm, type NewAthleteFormInput } from "./new-athlete";
 import { getAthlete } from "./queries";
 import {
   ATHLETE_STATUSES,
   athleteUpdateSchema,
   availabilitySchema,
-  newAthleteSchema,
   type AthleteStatus,
 } from "./schemas";
 
+// `values` : saisie renvoyée en cas d'erreur (React 19 vide le formulaire après chaque envoi) ;
+// `attempt` reconstruit le formulaire avec elle (listes et cases comprises).
 export type NewAthleteState = {
   error: string | null;
-  values: { firstName: string; lastName: string; sex: string; email: string; phone: string };
+  attempt: number;
+  values: NewAthleteFormInput | null;
 };
 
-// Server Action liée à une organisation (organizationId est fixé côté serveur par .bind dans la page).
-// Elle reste appelable directement : l'accès à l'organisation est donc revérifié ici.
+// Page « Nouveau sportif » (D-54) : toute la fiche en une fois. Server Action liée à une
+// organisation (.bind dans la page), appelable directement : l'accès est donc revérifié ici.
+// Ordre : la fiche, puis son objectif principal, puis l'accord santé (fonction SQL journalisée) et
+// les contraintes physiques, que la base n'accepte qu'avec un accord en cours. Si une étape après la
+// fiche échoue, la fiche existe déjà : on y va quand même, en le signalant (?creation=incomplete).
 export async function createAthlete(
   organizationId: string,
-  _previous: NewAthleteState,
+  previous: NewAthleteState,
   formData: FormData,
 ): Promise<NewAthleteState> {
   const { user, membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
 
-  const values = {
-    firstName: String(formData.get("firstName") ?? ""),
-    lastName: String(formData.get("lastName") ?? ""),
-    sex: String(formData.get("sex") ?? ""),
-    email: String(formData.get("email") ?? ""),
-    phone: String(formData.get("phone") ?? ""),
+  const field = (name: string) => String(formData.get(name) ?? "");
+  const values: NewAthleteFormInput = {
+    firstName: field("firstName"),
+    lastName: field("lastName"),
+    sex: field("sex"),
+    email: field("email"),
+    phone: field("phone"),
+    status: field("status") || "active",
+    preferredContact: field("preferredContact"),
+    level: field("level"),
+    experience: field("experience"),
+    trainingPlaces: formData.getAll("trainingPlaces").map(String),
+    equipment: field("equipment"),
+    programType: field("programType"),
+    sessionsPerWeek: field("sessionsPerWeek"),
+    maxSessionMinutes: field("maxSessionMinutes"),
+    availableDays: formData.getAll("availableDays").map(String),
+    scheduleConstraints: field("scheduleConstraints"),
+    healthConstraints: field("healthConstraints"),
+    goalType: field("goalType"),
+    goalDate: field("goalDate"),
+    competitionName: field("competitionName"),
+    healthConsent: formData.get("healthConsent") === "on",
+    consentProof: field("consentProof"),
   };
-
-  const parsed = newAthleteSchema.safeParse(values);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide.", values };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("athlete_profiles").insert({
-    organization_id: membership.organizationId,
-    first_name: parsed.data.firstName,
-    last_name: parsed.data.lastName,
-    sex: parsed.data.sex,
-    email: parsed.data.email,
-    phone: parsed.data.phone,
-    created_by: user.id,
+  const fail = (error: string): NewAthleteState => ({
+    error,
+    attempt: previous.attempt + 1,
+    values,
   });
 
-  if (error) {
-    const message =
-      error.code === "23505"
+  const parsed = parseNewAthleteForm(values, todayIsoInBrussels());
+  if (!parsed.ok) return fail(parsed.error);
+  const { profile, goal, consent } = parsed.values;
+
+  const supabase = await createClient();
+  const { data: athlete, error } = await supabase
+    .from("athlete_profiles")
+    .insert({ ...profile, organization_id: orgId, created_by: user.id })
+    .select("id")
+    .single();
+  if (error || !athlete) {
+    return fail(
+      error?.code === "23505"
         ? "Un sportif de ton organisation utilise déjà cette adresse e-mail."
-        : "Le sportif n'a pas pu être enregistré. Réessaie.";
-    return { error: message, values };
+        : "Le sportif n'a pas pu être enregistré. Réessaie.",
+    );
   }
 
-  redirect(`/coach/o/${membership.organizationId}/sportifs`);
+  let incomplete = false;
+  if (goal) {
+    const { error: goalError } = await supabase.from("athlete_goals").insert({
+      ...goal,
+      organization_id: orgId,
+      athlete_id: athlete.id,
+      created_by: user.id,
+    });
+    incomplete ||= Boolean(goalError);
+  }
+  if (consent) {
+    const { error: consentError } = await supabase.rpc("grant_health_consent", {
+      p_athlete_id: athlete.id,
+      p_coach_proof: consent.proof,
+    });
+    incomplete ||= Boolean(consentError);
+    if (!consentError && consent.healthConstraints !== null) {
+      const { error: healthError } = await supabase
+        .from("athlete_profiles")
+        .update({ health_constraints: consent.healthConstraints })
+        .eq("id", athlete.id)
+        .eq("organization_id", orgId);
+      incomplete ||= Boolean(healthError);
+    }
+  }
+
+  revalidatePath(`/coach/o/${orgId}/sportifs`, "layout");
+  redirect(`/coach/o/${orgId}/sportifs/${athlete.id}${incomplete ? "?creation=incomplete" : ""}`);
 }
 
 // Saisie telle que reçue du formulaire (chaînes brutes), renvoyée en cas d'erreur.

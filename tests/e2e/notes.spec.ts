@@ -20,11 +20,9 @@ test("le coach écrit une note privée et un message, visibles dans la vue d'ens
   await expect(page).toHaveURL(/\/coach$/);
   await page.goto(`/coach/o/${ORG_A}/sportifs/nouveau`);
   await fillAthleteName(page, name);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
-  await page
-    .getByRole("list", { name: "Liste des sportifs" })
-    .getByRole("link", { name: new RegExp(`^${name}`) })
-    .click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  // Le sportif enregistré, on arrive sur sa fiche (D-54).
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 
   await openAthleteTab(page, "Notes");
   await page.getByLabel("Note privée").fill("Très investie, progresse bien.");

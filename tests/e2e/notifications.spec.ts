@@ -68,13 +68,11 @@ test("une compétition d'un sportif dans les 7 jours devient un rappel dans les 
   await loginAsCoachA(page);
   await page.goto("/coach/o/0a000000-0000-4000-8000-0000000000a1/sportifs/nouveau");
   await fillAthleteName(page, name);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
-  await page
-    .getByRole("list", { name: "Liste des sportifs" })
-    .getByRole("link", { name: new RegExp(`^${name}`) })
-    .click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  // Le sportif enregistré, on arrive sur sa fiche (D-54).
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await openAthleteTab(page, "Objectifs");
-  await page.getByLabel("Type d'objectif").selectOption({ label: "Course 10 km" });
+  await page.getByLabel("Type d'objectif", { exact: true }).selectOption({ label: "Course 10 km" });
   await page.getByLabel(/Date cible/).fill(inThreeDays);
   await page.getByLabel("C'est une compétition").check();
   await page.getByLabel("Nom de la compétition").fill(competition);
