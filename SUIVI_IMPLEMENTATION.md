@@ -23,7 +23,7 @@
 | 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
 | 2. Coquilles de navigation | **Fait** le 23/10 (coach, sportif, admin, entrée, pages légales) |
 | 3. Pages d'entrée | **Fait** le 23/10 (connexion, inscription, vérification, bienvenue, mot de passe, invitation, erreurs, pages légales) |
-| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; liste des sportifs faite le 24/10 ; reste en 4a : nouveau sportif, fiche sportif, paramètres ; puis 4b à 4g |
+| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; liste des sportifs faite le 24/10 ; nouveau sportif complet le 28/10 (D-54) ; reste en 4a : paramètres ; puis 4b à 4g |
 | 5. Espace sportif | À faire |
 | 6. Administration | À faire |
 | 7. Recette finale | À faire |
@@ -31,6 +31,30 @@
 ## Dernière session
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+
+### Page « Nouveau sportif » complète, avec la carte « Accord santé » (D-54)
+```
+Date : 2026-10-28
+Demande : la suite prévue de 4a, la page « Nouveau sportif » du prompt Claude Design (§7.2) :
+  formulaire complet + carte « Accord santé »
+Fait : page /coach/o/[orgId]/sportifs/nouveau en quatre sections (Identité et contact, Profil
+  sportif avec type de programme et statut, Objectif principal, Disponibilités) et la carte
+  « Accord santé » (accord explicite + preuve, puis le champ « Contraintes physiques ») ; téléphone :
+  tout empilé, carte et bouton rouge à la fin ; ordinateur : 8 + 4 colonnes, carte et bouton collés
+  en haut. Champs partagés avec les onglets Profil et Disponibilités de la fiche
+  (sportifs/athlete-fields.tsx : IdentityFields, ContactFields, SportProfileFields,
+  AvailabilityFields, HealthConstraintsField). Règle pure parseNewAthleteForm
+  (features/athletes/new-athlete.ts) qui réutilise les schémas de la fiche, des disponibilités, des
+  objectifs (parseGoalForm, priorité principale) et de l'accord. createAthlete : la fiche, puis
+  l'objectif, puis l'accord par grant_health_consent (journalisé) et les contraintes physiques ;
+  arrivée sur la FICHE (avant : la liste) ; une étape secondaire en échec est signalée sur la fiche
+  (?creation=incomplete). Pas de migration
+Tests : check OK (Vitest 172 : 7 nouveaux), test:e2e 126 (new-athlete.spec : fiche complète
+  retrouvée onglet par onglet, accord décoché = aucune contrainte physique ; specs qui créent un
+  sportif adaptées : bouton « Enregistrer le sportif », arrivée sur la fiche, sélecteurs limités aux
+  éléments visibles car la page quittée reste cachée dans le DOM)
+Reste : « Disciplines (multi) » du prompt = ici un seul type de programme (colonne existante)
+```
 
 ### Liste des sportifs : carte compacte sur téléphone (D-53)
 ```

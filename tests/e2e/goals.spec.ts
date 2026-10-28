@@ -22,17 +22,15 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   await goToCoachSection(page, "Sportifs");
   await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await fillAthleteName(page, name);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
-  await page
-    .getByRole("list", { name: "Liste des sportifs" })
-    .getByRole("link", { name: new RegExp(`^${name}`) })
-    .click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  // Le sportif enregistré, on arrive sur sa fiche (D-54).
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await openAthleteTab(page, "Objectifs");
   await expect(page.getByRole("heading", { name: "Objectifs & compétitions" })).toBeVisible();
   const current = page.getByRole("list", { name: "Objectifs en cours" });
 
   // Une compétition sans date est refusée, avec un message clair.
-  await page.getByLabel("Type d'objectif").selectOption({ label: "Hyrox" });
+  await page.getByLabel("Type d'objectif", { exact: true }).selectOption({ label: "Hyrox" });
   await page.getByLabel("C'est une compétition").check();
   await page.getByLabel("Nom de la compétition").fill(competition);
   await page.getByLabel("Catégorie Hyrox").selectOption({ label: "Pro" });
@@ -52,7 +50,9 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   await expect(hyrox).toContainText(/J-\d+/);
 
   // Un nouvel objectif principal fait passer l'ancien en secondaire.
-  await page.getByLabel("Type d'objectif").selectOption({ label: "Semi-marathon" });
+  await page
+    .getByLabel("Type d'objectif", { exact: true })
+    .selectOption({ label: "Semi-marathon" });
   await page
     .getByRole("group", { name: "Priorité" })
     .getByText("Principal", { exact: true })

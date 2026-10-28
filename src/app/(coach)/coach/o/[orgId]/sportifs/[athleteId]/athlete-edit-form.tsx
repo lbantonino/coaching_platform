@@ -1,34 +1,18 @@
 "use client";
 
-import { Check } from "lucide-react";
-import { useActionState, type ReactNode } from "react";
+import { useActionState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import {
-  checkboxChipClass,
-  errorTextClass,
-  hintClass,
-  inputClass,
-  textareaClass,
-  labelClass,
-} from "@/components/ui/form-styles";
+import { errorTextClass, hintClass } from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import {
   updateAthlete,
   type AthleteFormValues,
   type UpdateAthleteState,
 } from "@/features/athletes/actions";
-import {
-  ATHLETE_LEVELS,
-  athleteLevelLabels,
-  SEXES,
-  sexLabels,
-  CONTACT_CHANNELS,
-  contactChannelLabels,
-  TRAINING_PLACES,
-  trainingPlaceLabels,
-  type AthleteStatus,
-} from "@/features/athletes/schemas";
+import type { AthleteStatus } from "@/features/athletes/schemas";
+
+import { ContactFields, IdentityFields, Part, SportProfileFields } from "../athlete-fields";
 
 type Props = {
   organizationId: string;
@@ -39,18 +23,6 @@ type Props = {
 };
 
 const initialState: UpdateAthleteState = { error: null, saved: false, attempt: 0, values: null };
-
-// Intertitre d'une partie du formulaire (micro-libellé du design system).
-function Part({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <fieldset className="flex flex-col gap-4">
-      <legend className="mb-4 font-mono text-data tracking-wide text-muted uppercase">
-        {title}
-      </legend>
-      {children}
-    </fieldset>
-  );
-}
 
 export function AthleteEditForm({ organizationId, athleteId, hasAccount, values }: Props) {
   // Organisation et fiche liées à l'action ; l'action les revérifie côté serveur.
@@ -65,181 +37,15 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
     // Reconstruit après chaque réponse : la saisie renvoyée (ou enregistrée) s'affiche partout.
     <form key={state.attempt} action={formAction} className="flex flex-col gap-7" noValidate>
       <Part title="Identité">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="firstName" className={labelClass}>
-              Prénom
-            </label>
-            <input
-              id="firstName"
-              name="firstName"
-              type="text"
-              autoComplete="off"
-              required
-              maxLength={80}
-              defaultValue={shown.firstName}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="lastName" className={labelClass}>
-              Nom de famille
-            </label>
-            <input
-              id="lastName"
-              name="lastName"
-              type="text"
-              autoComplete="off"
-              maxLength={80}
-              defaultValue={shown.lastName}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="sex" className={labelClass}>
-              Sexe <span className="font-normal text-muted">(facultatif)</span>
-            </label>
-            <select id="sex" name="sex" defaultValue={shown.sex} className={inputClass}>
-              <option value="">Non renseigné</option>
-              {SEXES.map((sex) => (
-                <option key={sex} value={sex}>
-                  {sexLabels[sex]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <IdentityFields values={shown} />
       </Part>
 
       <Part title="Contact">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="email" className={labelClass}>
-              Adresse e-mail
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="off"
-              inputMode="email"
-              defaultValue={shown.email}
-              readOnly={hasAccount}
-              aria-describedby={hasAccount ? "email-hint" : undefined}
-              className={inputClass}
-            />
-            {hasAccount ? (
-              <p id="email-hint" className={hintClass}>
-                Identifiant de connexion du sportif : non modifiable ici.
-              </p>
-            ) : null}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="phone" className={labelClass}>
-              Téléphone
-            </label>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              autoComplete="off"
-              inputMode="tel"
-              placeholder="+32 …"
-              defaultValue={shown.phone}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="preferredContact" className={labelClass}>
-              Canal de contact préféré
-            </label>
-            <select
-              id="preferredContact"
-              name="preferredContact"
-              defaultValue={shown.preferredContact}
-              className={inputClass}
-            >
-              <option value="">Non précisé</option>
-              {CONTACT_CHANNELS.map((channel) => (
-                <option key={channel} value={channel}>
-                  {contactChannelLabels[channel]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <ContactFields values={shown} hasAccount={hasAccount} />
       </Part>
 
       <Part title="Profil sportif">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="level" className={labelClass}>
-              Niveau
-            </label>
-            <select id="level" name="level" defaultValue={shown.level} className={inputClass}>
-              <option value="">Non précisé</option>
-              {ATHLETE_LEVELS.map((level) => (
-                <option key={level} value={level}>
-                  {athleteLevelLabels[level]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="experience" className={labelClass}>
-            Expérience
-          </label>
-          <textarea
-            id="experience"
-            name="experience"
-            rows={2}
-            maxLength={500}
-            placeholder="Ex. : course depuis 3 ans, un Hyrox en Open, musculation régulière"
-            defaultValue={shown.experience}
-            className={textareaClass}
-          />
-        </div>
-
-        <fieldset className="flex flex-col gap-2">
-          <legend className={`${labelClass} mb-2`}>Lieux d&apos;entraînement</legend>
-          <div className="flex flex-wrap gap-2">
-            {TRAINING_PLACES.map((place) => (
-              <label key={place} className={checkboxChipClass}>
-                <input
-                  type="checkbox"
-                  name="trainingPlaces"
-                  value={place}
-                  defaultChecked={shown.trainingPlaces.includes(place)}
-                  className="sr-only"
-                />
-                <Check
-                  aria-hidden
-                  size={14}
-                  strokeWidth={2}
-                  className="hidden group-has-checked:block"
-                />
-                {trainingPlaceLabels[place]}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="equipment" className={labelClass}>
-            Matériel disponible
-          </label>
-          <textarea
-            id="equipment"
-            name="equipment"
-            rows={2}
-            maxLength={500}
-            placeholder="Ex. : haltères jusqu'à 20 kg, kettlebell 16 kg, rameur"
-            defaultValue={shown.equipment}
-            className={textareaClass}
-          />
-        </div>
+        <SportProfileFields values={shown} />
       </Part>
 
       <div className="flex flex-col gap-1.5">

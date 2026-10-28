@@ -1,23 +1,16 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { useActionState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import {
-  checkboxChipClass,
-  errorTextClass,
-  hintClass,
-  inputClass,
-  textareaClass,
-  labelClass,
-} from "@/components/ui/form-styles";
+import { errorTextClass } from "@/components/ui/form-styles";
 import {
   updateAvailability,
   type AvailabilityFormValues,
   type UpdateAvailabilityState,
 } from "@/features/athletes/actions";
-import { WEEK_DAYS, weekDayLabels } from "@/features/athletes/schemas";
+
+import { AvailabilityFields, HealthConstraintsField } from "../athlete-fields";
 
 const initialState: UpdateAvailabilityState = {
   error: null,
@@ -45,99 +38,9 @@ export function AvailabilityForm({ organizationId, athleteId, hasConsent, values
   return (
     // Reconstruit après chaque réponse : la saisie renvoyée (ou enregistrée) s'affiche partout.
     <form key={state.attempt} action={formAction} className="flex flex-col gap-5" noValidate>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="sessionsPerWeek" className={labelClass}>
-            Séances par semaine
-          </label>
-          <input
-            id="sessionsPerWeek"
-            name="sessionsPerWeek"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={14}
-            defaultValue={shown.sessionsPerWeek}
-            className={`${inputClass} font-mono`}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="maxSessionMinutes" className={labelClass}>
-            Durée maximale d&apos;une séance (min)
-          </label>
-          <input
-            id="maxSessionMinutes"
-            name="maxSessionMinutes"
-            type="number"
-            inputMode="numeric"
-            min={10}
-            max={300}
-            step={5}
-            defaultValue={shown.maxSessionMinutes}
-            className={`${inputClass} font-mono`}
-          />
-        </div>
-      </div>
+      <AvailabilityFields values={shown} />
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className={`${labelClass} mb-2`}>Jours disponibles</legend>
-        <div className="flex flex-wrap gap-2">
-          {WEEK_DAYS.map((day) => (
-            <label key={day} className={checkboxChipClass}>
-              <input
-                type="checkbox"
-                name="availableDays"
-                value={day}
-                defaultChecked={shown.availableDays.includes(day)}
-                className="sr-only"
-              />
-              <Check
-                aria-hidden
-                size={14}
-                strokeWidth={2}
-                className="hidden group-has-checked:block"
-              />
-              {weekDayLabels[day]}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="scheduleConstraints" className={labelClass}>
-          Contraintes d&apos;organisation
-        </label>
-        <textarea
-          id="scheduleConstraints"
-          name="scheduleConstraints"
-          rows={2}
-          maxLength={500}
-          placeholder="Ex. : déplacements le jeudi ; séances avant 8 h en semaine"
-          defaultValue={shown.scheduleConstraints}
-          className={textareaClass}
-        />
-      </div>
-
-      {hasConsent ? (
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="healthConstraints" className={labelClass}>
-            Contraintes physiques
-          </label>
-          <textarea
-            id="healthConstraints"
-            name="healthConstraints"
-            rows={2}
-            maxLength={300}
-            aria-describedby="health-hint"
-            placeholder="Ex. : genou droit sensible en descente ; éviter les sauts"
-            defaultValue={shown.healthConstraints}
-            className={textareaClass}
-          />
-          <p id="health-hint" className={hintClass}>
-            Seulement ce qui change l&apos;entraînement : pas de diagnostic, pas de traitement.
-          </p>
-        </div>
-      ) : null}
+      {hasConsent ? <HealthConstraintsField value={shown.healthConstraints} /> : null}
 
       <div className="flex flex-wrap items-center gap-4">
         <button

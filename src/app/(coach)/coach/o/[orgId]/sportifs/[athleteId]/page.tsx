@@ -147,6 +147,7 @@ export default function AthletePage({
             tab={tabSchema.parse(query.onglet)}
             agendaView={agendaViewSchema.parse(query.vue)}
             agendaDate={typeof query.date === "string" ? query.date : undefined}
+            creationIncomplete={query.creation === "incomplete"}
           />
         ))}
       </Suspense>
@@ -160,12 +161,16 @@ async function AthleteSection({
   tab,
   agendaView,
   agendaDate,
+  creationIncomplete,
 }: {
   orgId: string;
   athleteId: string;
   tab: TabKey;
   agendaView: AgendaView;
   agendaDate: string | undefined;
+  // Page « Nouveau sportif » (D-54) : la fiche est créée, mais son objectif ou son accord santé
+  // n'a pas pu être enregistré.
+  creationIncomplete: boolean;
 }) {
   const { membership } = await requireOrgAccess(orgId);
   const athlete = await getAthlete(membership.organizationId, athleteId);
@@ -192,6 +197,15 @@ async function AthleteSection({
         invitePath={`${basePath}/inviter`}
       />
       <PageBody>
+        {creationIncomplete ? (
+          <p
+            role="alert"
+            className="rounded-wide border border-warn/50 bg-warn-soft p-4 text-[14px]"
+          >
+            La fiche est créée, mais son objectif ou son accord santé n&apos;a pas pu être
+            enregistré. Ajoute-les depuis les onglets Objectifs et Profil.
+          </p>
+        ) : null}
         <KeyFigures athlete={athlete} goals={goals} today={today} basePath={basePath} />
 
         <PageTabs

@@ -14,14 +14,16 @@ async function login(page: Page, email: string) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-// Crée un sportif et revient sur la liste ; renvoie le chemin de la liste.
+// Crée un sportif (on arrive sur sa fiche, D-54) et revient sur la liste.
 async function createAthlete(page: Page, name: string, email: string) {
   await goToCoachSection(page, "Sportifs");
   await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
   await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  await goToCoachSection(page, "Sportifs");
   await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
 }
 
@@ -113,8 +115,11 @@ test("le coach renseigne l'identité et le profil sportif, retrouvés après rec
   await page.getByLabel("Canal de contact préféré").selectOption({ label: "WhatsApp" });
   await page.getByLabel("Niveau").selectOption({ label: "Intermédiaire" });
   await page.getByLabel("Expérience").fill("Course depuis 3 ans, un Hyrox en Open");
-  await page.getByText("Salle de sport", { exact: true }).click();
-  await page.getByText("Extérieur (route, trail)", { exact: true }).click();
+  await page.getByText("Salle de sport", { exact: true }).filter({ visible: true }).click();
+  await page
+    .getByText("Extérieur (route, trail)", { exact: true })
+    .filter({ visible: true })
+    .click();
   await page.getByLabel("Matériel disponible").fill("Haltères jusqu'à 20 kg");
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
@@ -129,9 +134,9 @@ test("le coach renseigne l'identité et le profil sportif, retrouvés après rec
   await expect(page.getByLabel("Canal de contact préféré")).toHaveValue("whatsapp");
   await expect(page.getByLabel("Niveau")).toHaveValue("intermediate");
   await expect(page.getByLabel("Expérience")).toHaveValue("Course depuis 3 ans, un Hyrox en Open");
-  await expect(page.getByLabel("Salle de sport")).toBeChecked();
-  await expect(page.getByLabel("Extérieur (route, trail)")).toBeChecked();
-  await expect(page.getByLabel("Domicile")).not.toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Salle de sport" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Extérieur (route, trail)" })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Domicile" })).not.toBeChecked();
   await expect(page.getByLabel("Matériel disponible")).toHaveValue("Haltères jusqu'à 20 kg");
 });
 

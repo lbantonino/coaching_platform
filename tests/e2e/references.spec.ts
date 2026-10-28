@@ -12,11 +12,9 @@ async function openNewAthleteProfile(page: Page, name: string) {
   await goToCoachSection(page, "Sportifs");
   await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await fillAthleteName(page, name);
-  await page.getByRole("button", { name: "Ajouter le sportif" }).click();
-  await page
-    .getByRole("list", { name: "Liste des sportifs" })
-    .getByRole("link", { name: new RegExp(`^${name}`) })
-    .click();
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  // Le sportif enregistré, on arrive sur sa fiche (D-54).
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await openAthleteTab(page, "Repères");
   await expect(page.getByRole("heading", { name: "Allures & repères" })).toBeVisible();
 }
@@ -125,7 +123,7 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
   await fillAthleteName(page, `${name} renommé`);
   await page.getByLabel("Téléphone").fill("appelle-moi");
   await page.getByLabel("Niveau").selectOption({ label: "Confirmé" });
-  await page.getByText("Domicile", { exact: true }).click();
+  await page.getByText("Domicile", { exact: true }).filter({ visible: true }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
 
   await expect(
@@ -133,7 +131,7 @@ test("une erreur de saisie sur la fiche conserve les autres champs saisis", asyn
   ).toBeVisible();
   // Les listes déroulantes et les cases cochées gardent aussi la saisie.
   await expect(page.getByLabel("Niveau")).toHaveValue("advanced");
-  await expect(page.getByLabel("Domicile")).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Domicile" })).toBeChecked();
   await expect(page.getByRole("textbox", { name: /^Prénom/ })).toHaveValue("Saisie");
   await expect(page.getByRole("textbox", { name: /^Nom de famille/ })).toHaveValue(
     `${name.slice("Saisie ".length)} renommé`,
