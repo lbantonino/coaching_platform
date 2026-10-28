@@ -82,21 +82,25 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
   // Plus de libellés « Compte activé / Invitation en attente / Sans compte » (demande d'Antonino).
   await expect(list.getByText(/Compte activé|Invitation en attente|Sans compte/)).toHaveCount(0);
 
-  // Thomas a activé son compte : on peut lui écrire, plus besoin de l'inviter.
+  // Thomas a activé son compte : on peut lui écrire, plus besoin de l'inviter. Téléphone (carte
+  // compacte, 28/10) : l'icône « Écrire » et « Inviter » sont seulement dans le menu « ••• ».
+  const phone = isPhone(page);
+  const reachable = (link: ReturnType<Page["getByRole"]>) =>
+    phone ? expect(link).toHaveCount(0) : expect(link).toBeVisible();
   const thomas = list.getByRole("listitem").filter({ hasText: "Thomas Peeters" });
-  await expect(thomas.getByRole("link", { name: "Écrire à Thomas Peeters" })).toBeVisible();
+  await reachable(thomas.getByRole("link", { name: "Écrire à Thomas Peeters" }));
   await expect(thomas.getByRole("link", { name: "Inviter Thomas Peeters" })).toHaveCount(0);
   // Inès et Nadia aussi (jeu de démo cohérent avec les Messages, demande d'Antonino du 24/10).
   for (const name of ["Inès Benali", "Nadia El Amrani"]) {
     const row = list.getByRole("listitem").filter({ hasText: name });
-    await expect(row.getByRole("link", { name: `Écrire à ${name}` })).toBeVisible();
+    await reachable(row.getByRole("link", { name: `Écrire à ${name}` }));
     await expect(row.getByRole("link", { name: `Inviter ${name}` })).toHaveCount(0);
   }
   // Lucas a une invitation en attente : l'icône le signale, pas d'icône message, « Inviter » reste.
   const lucas = list.getByRole("listitem").filter({ hasText: "Lucas Janssens" });
   await expect(lucas.getByText("Invitation envoyée")).toBeAttached();
   await expect(lucas.getByRole("link", { name: "Écrire à Lucas Janssens" })).toHaveCount(0);
-  await expect(lucas.getByRole("link", { name: "Inviter Lucas Janssens" })).toBeVisible();
+  await reachable(lucas.getByRole("link", { name: "Inviter Lucas Janssens" }));
 
   // Menu « ••• » : toutes les actions de la ligne ; « Écrire » ou « Inviter » selon le compte.
   await thomas.getByRole("button", { name: "Actions pour Thomas Peeters" }).click();
