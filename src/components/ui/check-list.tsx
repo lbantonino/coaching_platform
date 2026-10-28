@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
 
-import { StatusBadge } from "./badge";
+import { Badge, StatusBadge } from "./badge";
 import { useToast } from "./toast";
 
 // Liste à ronds cochables, façon widget Rappels de l'iPhone (demande d'Antonino, 23/10) : un rond par
@@ -21,6 +21,8 @@ export type CheckItem = {
   meta?: string;
   // Tâche urgente : « ! » rouge devant le titre (carte) ou pastille « Haute » (page).
   urgent?: boolean;
+  // « Associée à » (page seulement), ex. « Facturation ».
+  tag?: string;
   checked: boolean;
   // Nom du rond pour les lecteurs d'écran (« Tâche faite : … »).
   label: string;
@@ -33,6 +35,7 @@ export function CheckList({
   toasts,
   removeOnToggle = false,
   variant = "card",
+  onOpen,
 }: {
   items: CheckItem[];
   action: (id: string, checked: boolean) => Promise<{ ok: boolean }>;
@@ -40,6 +43,8 @@ export function CheckList({
   toasts: { checked: string; unchecked: string };
   removeOnToggle?: boolean;
   variant?: "card" | "page";
+  // Appui sur le titre : ouvre la tâche (modifier, supprimer), D-59.
+  onOpen?: (id: string) => void;
 }) {
   const toast = useToast();
   const [, startTransition] = useTransition();
@@ -111,9 +116,13 @@ export function CheckList({
           </button>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="flex min-w-0 items-baseline gap-2">
-              <span
-                className={`min-w-0 flex-1 truncate leading-snug ${
-                  page ? "text-[15px] font-semibold" : "text-[13px] font-medium lg:text-[14px]"
+              <Title
+                onOpen={onOpen ? () => onOpen(item.id) : undefined}
+                // Page sur téléphone : le titre tient sur deux lignes plutôt que d'être coupé.
+                className={`min-w-0 flex-1 leading-snug ${
+                  page
+                    ? "line-clamp-2 text-[15px] font-semibold lg:truncate"
+                    : "truncate text-[13px] font-medium lg:text-[14px]"
                 } ${item.checked ? "text-muted line-through" : ""}`}
               >
                 {item.urgent && !page ? (
@@ -128,7 +137,7 @@ export function CheckList({
                   </>
                 ) : null}
                 {item.title}
-              </span>
+              </Title>
               {item.meta && !page ? (
                 <span className="shrink-0 font-mono text-[11px] text-muted tabular max-lg:hidden">
                   {item.meta}
@@ -152,10 +161,23 @@ export function CheckList({
                 </span>
               )
             ) : null}
+            {/* Page sur téléphone : « associée à », priorité haute et échéance sous le titre. */}
+            {page && (item.tag || item.urgent || item.meta) ? (
+              <span className="mt-1 flex flex-wrap items-center gap-1.5 lg:hidden">
+                {item.urgent ? <StatusBadge label="Haute" /> : null}
+                {item.tag ? <Badge>{item.tag}</Badge> : null}
+                {item.meta ? (
+                  <span className="font-mono text-[12px] text-muted tabular">{item.meta}</span>
+                ) : null}
+              </span>
+            ) : null}
           </div>
           {page ? (
-            <span className="flex shrink-0 flex-col items-end gap-1 lg:flex-row lg:items-center lg:gap-3">
-              <StatusBadge label={item.urgent ? "Haute" : "Normale"} />
+            <span className="flex shrink-0 items-center gap-3 max-lg:hidden">
+              <span className="flex items-center gap-1.5">
+                {item.tag ? <Badge>{item.tag}</Badge> : null}
+                <StatusBadge label={item.urgent ? "Haute" : "Normale"} />
+              </span>
               {item.meta ? (
                 <span className="font-mono text-[12px] text-muted tabular">{item.meta}</span>
               ) : null}
@@ -164,5 +186,29 @@ export function CheckList({
         </li>
       ))}
     </ul>
+  );
+}
+
+// Titre d'une ligne : un bouton quand la ligne s'ouvre (le texte du titre est son nom), sinon du texte.
+function Title({
+  onOpen,
+  className,
+  children,
+}: {
+  onOpen?: () => void;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return onOpen ? (
+    // Le texte garde ses classes dans un <span> (coupure sur deux lignes fiable, même sur Safari).
+    <button
+      type="button"
+      onClick={onOpen}
+      className="-my-1 flex min-w-0 flex-1 rounded-[6px] py-1 text-left underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      <span className={className}>{children}</span>
+    </button>
+  ) : (
+    <span className={className}>{children}</span>
   );
 }

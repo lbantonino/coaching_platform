@@ -528,17 +528,17 @@ values
 
 -- Tâches du coach (4a, D-35), inventées : une urgente pour aujourd'hui, une normale dans trois jours.
 -- Dates relatives au jour du reset, pour que la carte du tableau de bord reste parlante.
-insert into public.coach_tasks (id, organization_id, title, priority, due_on, athlete_id, created_by)
+insert into public.coach_tasks (id, organization_id, title, priority, due_on, athlete_id, category, notes, created_by)
 values
   ('7a000000-0000-4000-8000-0000000000a1', '0a000000-0000-4000-8000-0000000000a1',
    'Préparer le bloc 2 du programme de Lucas', 'high', current_date, 'da000000-0000-4000-8000-000000000004',
-   'a0000000-0000-4000-8000-00000000000a'),
+   'programme', 'Reprendre les charges de la semaine 4.', 'a0000000-0000-4000-8000-00000000000a'),
   ('7a000000-0000-4000-8000-0000000000a2', '0a000000-0000-4000-8000-0000000000a1',
    'Relancer Sophie pour la facture d''octobre', 'normal', current_date + 3,
-   'da000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-00000000000a'),
+   'da000000-0000-4000-8000-000000000001', 'facturation', null, 'a0000000-0000-4000-8000-00000000000a'),
   -- Organisation B : invisible pour le coach A (isolation).
   ('7b000000-0000-4000-8000-0000000000b1', '0b000000-0000-4000-8000-0000000000b1',
-   'Préparer le renfo du lundi', 'normal', current_date + 1, null, 'b0000000-0000-4000-8000-00000000000b');
+   'Préparer le renfo du lundi', 'normal', current_date + 1, null, null, null, 'b0000000-0000-4000-8000-00000000000b');
 
 -- Messages des sportifs (4a, D-35), inventés : trois non lus pour le coach A, et une ancienne réponse du
 -- coach. Inès et Nadia n'ont pas encore de compte : en vrai, seul un sportif connecté écrira (P7) ; ici,

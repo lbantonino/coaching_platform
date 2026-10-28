@@ -32,6 +32,23 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Outils, tranche 1 : tâches complètes (D-59)
+```
+Date : 2026-10-28
+Demande (Antonino) : les outils de 4e, « qu'on puisse les voir, les créer, les modifier et les
+  supprimer »
+Fait : migration 20261028150000 (coach_tasks : category « associée à » Programme / Facturation /
+  Paiement / Suivi / Agenda, notes 1000 caractères ; droits par colonne) ; règles partagées
+  domain/tasks/task-form (Zod) ; actions createTask, updateTask, deleteTask (accès revérifié,
+  sportif de la même organisation) ; fenêtre « Nouvelle tâche / Modifier la tâche » montée sur
+  toutes les pages coach (TaskSheetProvider) : bouton rouge de la page Tâches, « Créer → Tâche »
+  (on reste sur la page), appui sur le titre d'une tâche (page Tâches et carte du tableau de bord) ;
+  suppression avec confirmation ; « associée à » en pastille ; téléphone : titre sur deux lignes,
+  pastilles et échéance dessous. Démo : catégories et une note sur les tâches du coach A.
+Tests : Vitest 202 (task-form), pgTAP 307 (23_taches_completes), e2e tasks.spec (créer, refus sans
+  titre sans perte de saisie, modifier, supprimer après confirmation ; Créer → Tâche)
+```
+
 ### Paramètres en fenêtre, par-dessus la page (D-58)
 ```
 Date : 2026-10-28

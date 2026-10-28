@@ -855,12 +855,14 @@ export type Database = {
       coach_tasks: {
         Row: {
           athlete_id: string | null;
+          category: string | null;
           created_at: string;
           created_by: string | null;
           done_at: string | null;
           done_by: string | null;
           due_on: string | null;
           id: string;
+          notes: string | null;
           organization_id: string;
           priority: string;
           title: string;
@@ -869,12 +871,14 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           athlete_id?: string | null;
+          category?: string | null;
           created_at?: string;
           created_by?: string | null;
           done_at?: string | null;
           done_by?: string | null;
           due_on?: string | null;
           id?: string;
+          notes?: string | null;
           organization_id: string;
           priority?: string;
           title: string;
@@ -882,12 +886,14 @@ export type Database = {
         };
         Update: {
           athlete_id?: string | null;
+          category?: string | null;
           created_at?: string;
           created_by?: string | null;
           done_at?: string | null;
           done_by?: string | null;
           due_on?: string | null;
           id?: string;
+          notes?: string | null;
           organization_id?: string;
           priority?: string;
           title?: string;

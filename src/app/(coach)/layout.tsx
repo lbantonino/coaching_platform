@@ -2,6 +2,7 @@ import { Suspense } from "react";
 
 import { NewPaymentSheet } from "@/components/blocks/new-payment-sheet";
 import { NewSessionSheet } from "@/components/blocks/new-session-sheet";
+import { TaskSheetProvider } from "@/components/blocks/task-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { createPayment } from "@/features/billing/payment-actions";
@@ -11,6 +12,7 @@ import { enabledTotal } from "@/features/notifications/filter";
 import { countNotifications } from "@/features/notifications/queries";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createSession, listSessionAthletes } from "@/features/sessions/actions";
+import { createTask, deleteTask, updateTask } from "@/features/tasks/actions";
 
 import { SettingsDialogProvider } from "./coach/profil/settings-dialog";
 
@@ -57,7 +59,7 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
             : null,
         }}
       >
-        {/* Les fenêtres « Nouvelle séance » (D-35) et « Nouveau paiement » (D-36), les mêmes sur toutes
+        {/* Les fenêtres « Nouvelle séance » (D-35), « Nouveau paiement » (D-36) et « Tâche » (D-59), les mêmes sur toutes
           les pages coach. Les actions revérifient elles-mêmes l'accès à l'organisation. */}
         {first ? (
           <NewSessionSheet
@@ -74,7 +76,15 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
               action={createPayment.bind(null, first.organizationId)}
               loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
             >
-              {children}
+              {/* Fenêtre « Nouvelle tâche / Modifier la tâche » (D-59). */}
+              <TaskSheetProvider
+                create={createTask.bind(null, first.organizationId)}
+                update={updateTask.bind(null, first.organizationId)}
+                remove={deleteTask.bind(null, first.organizationId)}
+                loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
+              >
+                {children}
+              </TaskSheetProvider>
             </NewPaymentSheet>
           </NewSessionSheet>
         ) : (
