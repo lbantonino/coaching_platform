@@ -5,7 +5,8 @@ import { NewSessionSheet } from "@/components/blocks/new-session-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { createPayment } from "@/features/billing/payment-actions";
-import { getCoachProfile } from "@/features/coach/profile";
+import { DEFAULT_PREFERENCES, getCoachProfile } from "@/features/coach/profile";
+import { enabledTotal } from "@/features/notifications/filter";
 import { countNotifications } from "@/features/notifications/queries";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createSession, listSessionAthletes } from "@/features/sessions/actions";
@@ -36,7 +37,10 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
         space: "coach",
         orgBase: first ? `/coach/o/${first.organizationId}` : null,
         unreadMessages: counts?.messages ?? 0,
-        notificationCount: counts?.total ?? 0,
+        // Cloche : seulement les catégories gardées dans Paramètres > Préférences (D-57).
+        notificationCount: counts
+          ? enabledTotal(counts, (profile?.preferences ?? DEFAULT_PREFERENCES).notify)
+          : 0,
         user: profile
           ? {
               name: profile.displayName,
@@ -54,6 +58,12 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
         <NewSessionSheet
           action={createSession.bind(null, first.organizationId)}
           loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
+          defaults={{
+            durationMinutes: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultSessionMinutes,
+            location: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultLocation,
+            priceCents: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultPriceCents,
+            paymentMethod: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultPaymentMethod,
+          }}
         >
           <NewPaymentSheet
             action={createPayment.bind(null, first.organizationId)}

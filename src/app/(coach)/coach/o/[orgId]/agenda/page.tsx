@@ -15,11 +15,13 @@ import {
   formatHours,
   layoutDays,
   layoutWeek,
+  withHours,
   mondayOf,
   parseDay,
   type WeekBlock,
 } from "@/features/agenda/week";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { getCoachProfile } from "@/features/coach/profile";
 import { moveSession } from "@/features/sessions/actions";
 import { listSessions, type CoachSession } from "@/features/sessions/queries";
 import { nowTimeInBrussels, todayIsoInBrussels } from "@/lib/format";
@@ -94,7 +96,7 @@ function weekTitle(monday: string): string {
 
 async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   // Garde-fou serveur : membre de CETTE organisation, sinon redirection.
-  const { membership } = await requireOrgAccess(orgId);
+  const { user, membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
   const base = `/coach/o/${organizationId}/agenda`;
   const today = todayIsoInBrussels();
@@ -119,7 +121,12 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   const monday = mondayOf(date);
   const month = date.slice(0, 7);
 
-  const sessions = await listSessions(organizationId);
+  const [sessions, profile] = await Promise.all([
+    listSessions(organizationId),
+    getCoachProfile(user),
+  ]);
+  // Heures affichées : celles des Paramètres (D-57), élargies par une séance hors plage.
+  const { agendaFirstHour, agendaLastHour } = profile.preferences;
   const shownSessions: CoachSession[] = sessions.filter(
     (session) =>
       kind === "toutes" ||
@@ -156,7 +163,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   let title: string;
   let content: ReactNode;
   if (view === "semaine") {
-    const layout = layoutWeek(shownSessions, monday);
+    const layout = withHours(layoutWeek(shownSessions, monday), agendaFirstHour, agendaLastHour);
     title = weekTitle(monday);
     content = (
       <WeekTimeGrid
@@ -190,7 +197,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   } else {
     // Jour ou Aujourd'hui : la même grille horaire que la vue « Aujourd'hui » du tableau de bord
     // (demande d'Antonino du 26/10), plutôt qu'une liste.
-    const dayLayout = layoutDays(shownSessions, [date]);
+    const dayLayout = withHours(layoutDays(shownSessions, [date]), agendaFirstHour, agendaLastHour);
     const count = dayLayout.days[0].blocks.length;
     title =
       view === "aujourdhui"

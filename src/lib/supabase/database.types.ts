@@ -623,10 +623,21 @@ export type Database = {
       };
       coach_profiles: {
         Row: {
+          agenda_first_hour: number;
+          agenda_last_hour: number;
           company_name: string | null;
           created_at: string;
+          default_location: string | null;
+          default_payment_method: string;
+          default_price_cents: number | null;
+          default_session_minutes: number;
           first_name: string | null;
           last_name: string | null;
+          notify_competitions: boolean;
+          notify_invoices: boolean;
+          notify_messages: boolean;
+          notify_profiles: boolean;
+          notify_tasks: boolean;
           phone: string | null;
           photo_path: string | null;
           updated_at: string;
@@ -634,20 +645,42 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          agenda_first_hour?: number;
+          agenda_last_hour?: number;
           company_name?: string | null;
           created_at?: string;
+          default_location?: string | null;
+          default_payment_method?: string;
+          default_price_cents?: number | null;
+          default_session_minutes?: number;
           first_name?: string | null;
           last_name?: string | null;
+          notify_competitions?: boolean;
+          notify_invoices?: boolean;
+          notify_messages?: boolean;
+          notify_profiles?: boolean;
+          notify_tasks?: boolean;
           phone?: string | null;
           photo_path?: string | null;
           updated_at?: string;
           user_id: string;
         };
         Update: {
+          agenda_first_hour?: number;
+          agenda_last_hour?: number;
           company_name?: string | null;
           created_at?: string;
+          default_location?: string | null;
+          default_payment_method?: string;
+          default_price_cents?: number | null;
+          default_session_minutes?: number;
           first_name?: string | null;
           last_name?: string | null;
+          notify_competitions?: boolean;
+          notify_invoices?: boolean;
+          notify_messages?: boolean;
+          notify_profiles?: boolean;
+          notify_tasks?: boolean;
           phone?: string | null;
           photo_path?: string | null;
           updated_at?: string;
@@ -870,6 +903,84 @@ export type Database = {
           },
           {
             foreignKeyName: "coach_tasks_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_legal_entities: {
+        Row: {
+          address_line: string | null;
+          bic: string | null;
+          billing_email: string | null;
+          city: string | null;
+          country: string;
+          created_at: string;
+          created_by: string | null;
+          enterprise_number: string | null;
+          iban: string | null;
+          id: string;
+          invoice_prefix: string;
+          is_default: boolean;
+          legal_form: string;
+          legal_mentions: string | null;
+          name: string;
+          organization_id: string;
+          postal_code: string | null;
+          updated_at: string;
+          vat_number: string | null;
+          vat_status: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          address_line?: string | null;
+          bic?: string | null;
+          billing_email?: string | null;
+          city?: string | null;
+          country?: string;
+          created_at?: string;
+          created_by?: string | null;
+          enterprise_number?: string | null;
+          iban?: string | null;
+          id?: string;
+          invoice_prefix?: string;
+          is_default?: boolean;
+          legal_form: string;
+          legal_mentions?: string | null;
+          name: string;
+          organization_id: string;
+          postal_code?: string | null;
+          updated_at?: string;
+          vat_number?: string | null;
+          vat_status: string;
+        };
+        Update: {
+          address_line?: string | null;
+          bic?: string | null;
+          billing_email?: string | null;
+          city?: string | null;
+          country?: string;
+          created_at?: string;
+          created_by?: string | null;
+          enterprise_number?: string | null;
+          iban?: string | null;
+          id?: string;
+          invoice_prefix?: string;
+          is_default?: boolean;
+          legal_form?: string;
+          legal_mentions?: string | null;
+          name?: string;
+          organization_id?: string;
+          postal_code?: string | null;
+          updated_at?: string;
+          vat_number?: string | null;
+          vat_status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_legal_entities_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";

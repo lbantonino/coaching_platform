@@ -129,6 +129,17 @@ export function layoutDays(sessions: WeekSession[], dates: string[]): WeekLayout
   };
 }
 
+// Heures affichées (Paramètres, D-57) : la plage choisie par le coach (ex. 7 h – 21 h), élargie si
+// une séance commence plus tôt ou finit plus tard, pour qu'aucune ne soit coupée.
+export function withHours(layout: WeekLayout, first: number, last: number): WeekLayout {
+  const blocks = layout.days.flatMap((day) => day.blocks);
+  return {
+    ...layout,
+    firstHour: Math.min(first, ...blocks.map((block) => Math.floor(block.start / 60))),
+    lastHour: Math.min(24, Math.max(last, ...blocks.map((block) => Math.ceil(block.end / 60)))),
+  };
+}
+
 // Séances qui se chevauchent : chacune prend la première colonne libre ; toutes celles d'un même
 // groupe de chevauchement partagent le même nombre de colonnes.
 function assignLanes(sorted: WeekBlock[]) {

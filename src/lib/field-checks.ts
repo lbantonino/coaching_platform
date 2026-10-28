@@ -1,11 +1,12 @@
 import { z } from "zod";
 
+import { normalizeEnterpriseNumber, normalizeIban } from "@/domain/billing/legal";
 import { parseEuros } from "@/domain/billing/payments";
 
 // Contrôles d'un champ au moment où on le quitte (audit apple-design du 28/10 : valider au fil de la
 // saisie, pas seulement à l'envoi). Règles PURES, mêmes messages que le serveur, qui revérifie tout.
 // Un champ vide n'est jamais en erreur ici : « obligatoire » reste vérifié à l'envoi.
-export type FieldRule = "email" | "phone" | "future-date" | "euros";
+export type FieldRule = "email" | "phone" | "future-date" | "euros" | "iban" | "enterprise-number";
 
 const PHONE = /^\+?[0-9 ().-]{6,24}$/;
 
@@ -24,6 +25,14 @@ export function checkField(rule: FieldRule, raw: string, today: string): string 
     case "euros":
       return parseEuros(value) === null
         ? "Montant invalide : écris par exemple 65 ou 65,50."
+        : null;
+    case "iban":
+      return normalizeIban(value) === null
+        ? "IBAN invalide : vérifie les chiffres (ex. BE68 5390 0754 7034)."
+        : null;
+    case "enterprise-number":
+      return normalizeEnterpriseNumber(value) === null
+        ? "Numéro d'entreprise invalide : 10 chiffres, ex. 0123.456.749."
         : null;
   }
 }

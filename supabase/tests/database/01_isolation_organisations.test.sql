@@ -90,11 +90,16 @@ select throws_ok(
   'Coach A ne peut pas s''ajouter lui-même à l''organisation B'
 );
 
-select throws_ok(
-  $$ update public.organizations set name = 'Piraté' where id = 'bbbbbbbb-0000-4000-8000-000000000002' $$,
-  '42501', null,
+-- Depuis D-57, un propriétaire peut renommer SON organisation : la RLS filtre l'organisation B
+-- (aucune ligne touchée, pas d'erreur). Le nom de B ne change pas.
+update public.organizations set name = 'Piraté' where id = 'bbbbbbbb-0000-4000-8000-000000000002';
+-- Vérifié sans RLS (le coach A ne voit pas B : il faut regarder avec les droits de la base).
+reset role;
+select is_empty(
+  $$ select 1 from public.organizations where name = 'Piraté' $$,
   'Coach A ne peut pas modifier l''organisation B'
 );
+set local role authenticated;
 
 -- ---------------------------------------------------------------------
 -- Coach B connecté (symétrie)

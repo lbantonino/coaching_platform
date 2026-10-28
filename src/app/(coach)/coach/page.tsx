@@ -34,6 +34,7 @@ import {
   isoWeek,
   layoutDays,
   layoutWeek,
+  withHours,
   mondayOf,
   parseDay,
   type WeekBlock,
@@ -188,8 +189,12 @@ async function Dashboard({
       kind === "toutes" ||
       (kind === "collectives" ? session.kind === "group" : session.kind === "individual"),
   );
-  const layout =
-    view === "jour" ? layoutDays(agendaSessions, [date]) : layoutWeek(agendaSessions, monday);
+  // Heures affichées : celles des Paramètres (D-57), élargies par une séance hors plage.
+  const layout = withHours(
+    view === "jour" ? layoutDays(agendaSessions, [date]) : layoutWeek(agendaSessions, monday),
+    profile.preferences.agendaFirstHour,
+    profile.preferences.agendaLastHour,
+  );
   const monthDates = monthGrid(month)
     .flat()
     .filter((day) => day.inMonth)

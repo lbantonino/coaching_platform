@@ -7,6 +7,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
 import { ListRow } from "@/components/blocks/list-row";
@@ -17,6 +18,8 @@ import { Card, CardEmpty } from "@/components/ui/card";
 import { CountBadge } from "@/components/ui/count-badge";
 import { formatEuros } from "@/domain/billing/invoices";
 import { requireCoach } from "@/features/auth/guards";
+import { getCoachProfile } from "@/features/coach/profile";
+import { NOTIFICATION_KINDS, notificationKindLabels } from "@/features/coach/settings";
 import { COMPETITION_NOTICE_DAYS, getNotifications } from "@/features/notifications/queries";
 import {
   dayShortLabel,
@@ -49,13 +52,21 @@ export default function NotificationsPage() {
 
 async function NotificationList() {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
-  const { memberships } = await requireCoach();
+  const { user, memberships } = await requireCoach();
   const organizationId = memberships[0].organizationId;
   const today = todayIsoInBrussels();
-  const { competitions, messages, tasks, invoices, profiles } = await getNotifications(
-    organizationId,
-    today,
-  );
+  const [all, profile] = await Promise.all([
+    getNotifications(organizationId, today),
+    getCoachProfile(user),
+  ]);
+  // Catégories gardées dans Paramètres > Préférences (D-57) : les autres ne s'affichent pas ici.
+  const { notify } = profile.preferences;
+  const competitions = notify.competitions ? all.competitions : [];
+  const messages = notify.messages ? all.messages : [];
+  const tasks = notify.tasks ? all.tasks : [];
+  const invoices = notify.invoices ? all.invoices : [];
+  const profiles = notify.profiles ? all.profiles : [];
+  const hidden = NOTIFICATION_KINDS.filter((kind) => !notify[kind]);
   const unread = messages.reduce((sum, conversation) => sum + conversation.unread, 0);
   const total = competitions.length + unread + tasks.length + invoices.length + profiles.length;
 
@@ -66,131 +77,153 @@ async function NotificationList() {
         subtitle={total > 0 ? `${total} à voir` : "Tout est à jour."}
       />
       <PageBody grid>
-        <Section
-          id="notif-competitions"
-          title={`Compétitions dans les ${COMPETITION_NOTICE_DAYS} jours`}
-          count={competitions.length}
-          icon={Flag}
-        >
-          {competitions.map((competition) => {
-            const gap = daysBetween(today, competition.date);
-            return (
+        {hidden.length > 0 ? (
+          <p className="text-small text-muted lg:col-span-12">
+            Masqué :{" "}
+            {hidden.map((kind) => notificationKindLabels[kind].label.toLowerCase()).join(", ")}.{" "}
+            <Link
+              href="/coach/profil?onglet=preferences"
+              className="font-medium text-text underline underline-offset-4"
+            >
+              Changer dans Paramètres
+            </Link>
+          </p>
+        ) : null}
+        {notify.competitions ? (
+          <Section
+            id="notif-competitions"
+            title={`Compétitions dans les ${COMPETITION_NOTICE_DAYS} jours`}
+            count={competitions.length}
+            icon={Flag}
+          >
+            {competitions.map((competition) => {
+              const gap = daysBetween(today, competition.date);
+              return (
+                <ListRow
+                  key={competition.id}
+                  href={`/coach/o/${organizationId}/sportifs/${competition.athleteId}?onglet=objectifs`}
+                  leading={
+                    <span className="flex w-[84px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
+                      <span className="text-accent-text">
+                        {dayShortLabel(competition.date, today)}
+                      </span>
+                      <span className="text-[13px] font-medium">
+                        {gap === 0 ? "Jour J" : `J-${gap}`}
+                      </span>
+                    </span>
+                  }
+                  title={`${competition.title} · ${competition.athleteName}`}
+                  sub={competition.detail || "Compétition"}
+                />
+              );
+            })}
+          </Section>
+        ) : null}
+
+        {notify.messages ? (
+          <Section id="notif-messages" title="Messages non lus" count={unread} icon={MessageSquare}>
+            {messages.map((conversation) => (
               <ListRow
-                key={competition.id}
-                href={`/coach/o/${organizationId}/sportifs/${competition.athleteId}?onglet=objectifs`}
+                key={conversation.athlete.id}
+                href={`/coach/messages?sportif=${conversation.athlete.id}`}
                 leading={
-                  <span className="flex w-[84px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
-                    <span className="text-accent-text">
-                      {dayShortLabel(competition.date, today)}
+                  <Avatar
+                    name={conversation.athlete.name}
+                    photoPath={conversation.athlete.photoPath}
+                    sex={conversation.athlete.sex}
+                  />
+                }
+                title={conversation.athlete.name}
+                sub={conversation.lastBody}
+                trailing={
+                  <span className="flex flex-col items-end gap-1">
+                    <span className="font-mono text-[11px] text-muted tabular">
+                      {messageTime(conversation.lastAt, today)}
                     </span>
-                    <span className="text-[13px] font-medium">
-                      {gap === 0 ? "Jour J" : `J-${gap}`}
-                    </span>
+                    <Badge tone="live">
+                      {conversation.unread} non lu{conversation.unread > 1 ? "s" : ""}
+                    </Badge>
                   </span>
                 }
-                title={`${competition.title} · ${competition.athleteName}`}
-                sub={competition.detail || "Compétition"}
               />
-            );
-          })}
-        </Section>
+            ))}
+          </Section>
+        ) : null}
 
-        <Section id="notif-messages" title="Messages non lus" count={unread} icon={MessageSquare}>
-          {messages.map((conversation) => (
-            <ListRow
-              key={conversation.athlete.id}
-              href={`/coach/messages?sportif=${conversation.athlete.id}`}
-              leading={
-                <Avatar
-                  name={conversation.athlete.name}
-                  photoPath={conversation.athlete.photoPath}
-                  sex={conversation.athlete.sex}
-                />
-              }
-              title={conversation.athlete.name}
-              sub={conversation.lastBody}
-              trailing={
-                <span className="flex flex-col items-end gap-1">
-                  <span className="font-mono text-[11px] text-muted tabular">
-                    {messageTime(conversation.lastAt, today)}
-                  </span>
-                  <Badge tone="live">
-                    {conversation.unread} non lu{conversation.unread > 1 ? "s" : ""}
-                  </Badge>
-                </span>
-              }
-            />
-          ))}
-        </Section>
+        {notify.tasks ? (
+          <Section
+            id="notif-tasks"
+            title="Tâches du jour ou en retard"
+            count={tasks.length}
+            icon={ListChecks}
+          >
+            {tasks.map((task) => (
+              <ListRow
+                key={task.id}
+                href="/coach/taches?onglet=aujourdhui"
+                title={task.title}
+                sub={task.athleteName ?? undefined}
+                trailing={
+                  <>
+                    {task.priority === "high" ? <StatusBadge label="Haute" /> : null}
+                    <StatusBadge
+                      label={
+                        dueLabel(task.dueOn, today) === "En retard" ? "En retard" : "Aujourd'hui"
+                      }
+                    />
+                  </>
+                }
+              />
+            ))}
+          </Section>
+        ) : null}
 
-        <Section
-          id="notif-tasks"
-          title="Tâches du jour ou en retard"
-          count={tasks.length}
-          icon={ListChecks}
-        >
-          {tasks.map((task) => (
-            <ListRow
-              key={task.id}
-              href="/coach/taches?onglet=aujourdhui"
-              title={task.title}
-              sub={task.athleteName ?? undefined}
-              trailing={
-                <>
-                  {task.priority === "high" ? <StatusBadge label="Haute" /> : null}
-                  <StatusBadge
-                    label={
-                      dueLabel(task.dueOn, today) === "En retard" ? "En retard" : "Aujourd'hui"
-                    }
-                  />
-                </>
-              }
-            />
-          ))}
-        </Section>
+        {notify.invoices ? (
+          <Section
+            id="notif-invoices"
+            title="Factures en retard"
+            count={invoices.length}
+            icon={FileWarning}
+          >
+            {invoices.map((invoice) => (
+              <ListRow
+                key={invoice.id}
+                href="/coach/facturation"
+                title={invoice.athleteName}
+                sub={`${invoice.label} · échéance ${dayShortLabel(invoice.dueOn, today).toLowerCase()}`}
+                trailing={
+                  <>
+                    <span className="text-[15px] font-semibold tabular">
+                      {formatEuros(invoice.amountCents)}
+                    </span>
+                    <StatusBadge label="En retard" />
+                  </>
+                }
+              />
+            ))}
+          </Section>
+        ) : null}
 
-        <Section
-          id="notif-invoices"
-          title="Factures en retard"
-          count={invoices.length}
-          icon={FileWarning}
-        >
-          {invoices.map((invoice) => (
-            <ListRow
-              key={invoice.id}
-              href="/coach/facturation"
-              title={invoice.athleteName}
-              sub={`${invoice.label} · échéance ${dayShortLabel(invoice.dueOn, today).toLowerCase()}`}
-              trailing={
-                <>
-                  <span className="text-[15px] font-semibold tabular">
-                    {formatEuros(invoice.amountCents)}
-                  </span>
-                  <StatusBadge label="En retard" />
-                </>
-              }
-            />
-          ))}
-        </Section>
-
-        <Section
-          id="notif-profiles"
-          title="Fiches à compléter"
-          count={profiles.length}
-          icon={UserPen}
-        >
-          {profiles.map((profile) => (
-            <ListRow
-              key={profile.id}
-              href={`/coach/o/${organizationId}/sportifs/${profile.id}?onglet=profil`}
-              leading={
-                <Avatar name={profile.name} photoPath={profile.photoPath} sex={profile.sex} />
-              }
-              title={profile.name}
-              sub={`Manque : ${profile.missing.join(", ")}`}
-            />
-          ))}
-        </Section>
+        {notify.profiles ? (
+          <Section
+            id="notif-profiles"
+            title="Fiches à compléter"
+            count={profiles.length}
+            icon={UserPen}
+          >
+            {profiles.map((profile) => (
+              <ListRow
+                key={profile.id}
+                href={`/coach/o/${organizationId}/sportifs/${profile.id}?onglet=profil`}
+                leading={
+                  <Avatar name={profile.name} photoPath={profile.photoPath} sex={profile.sex} />
+                }
+                title={profile.name}
+                sub={`Manque : ${profile.missing.join(", ")}`}
+              />
+            ))}
+          </Section>
+        ) : null}
       </PageBody>
     </>
   );
