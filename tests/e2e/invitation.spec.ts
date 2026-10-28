@@ -1,6 +1,12 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { fillAthleteName, goToCoachSection, logoutAthlete, openAthleteTab } from "./helpers";
+import {
+  fillAthleteName,
+  goToCoachSection,
+  isPhone,
+  logoutAthlete,
+  openAthleteTab,
+} from "./helpers";
 
 // Parcours d'invitation (P1-05) : le coach invite, le sportif crée son accès dans un AUTRE navigateur.
 const DEMO_PASSWORD = "demo-coach-local";
@@ -23,7 +29,13 @@ async function createAthleteAndOpenInvite(page: Page, name: string, email: strin
   await page.getByRole("button", { name: "Ajouter le sportif" }).click();
   await expect(page.getByRole("heading", { name: "Sportifs" })).toBeVisible();
 
-  await page.getByRole("link", { name: `Inviter ${name}` }).click();
+  // Téléphone (carte compacte, 28/10) : « Inviter » est dans le menu « ••• » de la carte.
+  if (isPhone(page)) {
+    await page.getByRole("button", { name: `Actions pour ${name}` }).click();
+    await page.getByRole("button", { name: "Inviter dans son espace" }).click();
+  } else {
+    await page.getByRole("link", { name: `Inviter ${name}` }).click();
+  }
   await expect(page.getByRole("heading", { name: `Inviter ${name}` })).toBeVisible();
 }
 
@@ -103,13 +115,22 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
   await athlete.getByRole("button", { name: "Se connecter" }).click();
   await expect(athlete).toHaveURL(/\/app$/);
 
-  // --- Coach : dans la liste, le compte activé se voit à l'icône « écrire » (plus de libellé) ---
+  // --- Coach : dans la liste, le compte activé se voit à l'icône « écrire » (plus de libellé).
+  // Téléphone (carte compacte, 28/10) : « Écrire un message » est dans le menu « ••• ». ---
   await page.goto(page.url().replace(/\/[^/]+\/inviter$/, ""));
   const row = page.getByRole("listitem").filter({ hasText: name });
-  await expect(row.getByRole("link", { name: `Écrire à ${name}` })).toHaveAttribute(
-    "href",
-    /\/coach\/messages\?sportif=/,
-  );
+  if (isPhone(page)) {
+    await row.getByRole("button", { name: `Actions pour ${name}` }).click();
+    const actions = page.getByRole("dialog", { name });
+    await expect(actions.getByRole("button", { name: "Écrire un message" })).toBeVisible();
+    await expect(actions.getByRole("button", { name: "Inviter dans son espace" })).toHaveCount(0);
+    await page.keyboard.press("Escape");
+  } else {
+    await expect(row.getByRole("link", { name: `Écrire à ${name}` })).toHaveAttribute(
+      "href",
+      /\/coach\/messages\?sportif=/,
+    );
+  }
   await expect(row.getByRole("link", { name: `Inviter ${name}` })).toHaveCount(0);
 
   // Sur la fiche, l'e-mail (identifiant de connexion) est verrouillé.

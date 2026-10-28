@@ -77,6 +77,12 @@ const statusPill: Record<AthleteStatus, string> = {
   paused: "border-warn/35 bg-warn-soft text-warn",
   archived: "border-line-2 bg-chip text-muted",
 };
+// Téléphone : le statut en texte coloré, sans pastille (carte compacte, demande d'Antonino du 28/10).
+const statusText: Record<AthleteStatus, string> = {
+  active: "text-ok",
+  paused: "text-warn",
+  archived: "text-muted",
+};
 
 const shortDate = new Intl.DateTimeFormat("fr-BE", {
   day: "numeric",
@@ -366,7 +372,9 @@ function Row({
   const TypeIcon = row.programType ? disciplineIcons[row.programType] : null;
   return (
     <li
-      className={`relative grid grid-cols-[44px_minmax(0,1fr)] gap-x-0 gap-y-2.5 border-b border-line px-4 py-3 last:border-b-0 ${grid} ${
+      // Téléphone (demande d'Antonino du 28/10) : une carte basse sur une seule rangée : case, photo,
+      // nom puis statut · type et objectif en petit, « ••• » à droite. Ordinateur : la ligne du tableau.
+      className={`relative grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-x-0 border-b border-line px-4 py-2 last:border-b-0 lg:py-3 ${grid} ${
         checked ? "bg-surface-2" : ""
       }`}
     >
@@ -419,7 +427,38 @@ function Row({
                 </span>
               ) : null}
             </span>
-            {row.sub ? <span className="truncate text-[13px] text-muted">{row.sub}</span> : null}
+            {row.sub ? (
+              <span className="truncate text-[13px] text-muted max-lg:hidden">{row.sub}</span>
+            ) : null}
+            {/* Téléphone : statut · type, puis l'objectif, en deux petites lignes. */}
+            <span className="flex min-w-0 items-center gap-1.5 text-[12px] font-medium lg:hidden">
+              <span className={`inline-flex shrink-0 items-center gap-1 ${statusText[row.status]}`}>
+                {row.status === "active" ? (
+                  <span aria-hidden className="size-1.5 rounded-full bg-ok" />
+                ) : row.status === "paused" ? (
+                  <CirclePause aria-hidden size={12} strokeWidth={2} />
+                ) : (
+                  <Archive aria-hidden size={11} strokeWidth={2} />
+                )}
+                {statusLabel[row.status]}
+              </span>
+              <span aria-hidden className="text-muted">
+                ·
+              </span>
+              <span
+                className={`inline-flex min-w-0 items-center gap-1 truncate ${
+                  row.programType ? disciplineStyles[row.programType].text : "text-muted"
+                }`}
+              >
+                {TypeIcon ? <TypeIcon aria-hidden size={12} strokeWidth={2} /> : null}
+                {row.programType ? disciplineLabels[row.programType] : "Sans type"}
+              </span>
+            </span>
+            <span className="truncate text-[12px] text-muted lg:hidden">
+              {row.objective
+                ? `${row.objective.date ? formatShort(row.objective.date) : "Sans date"} · ${row.objective.label}`
+                : "Aucun objectif"}
+            </span>
           </span>
         </Link>
       </div>
@@ -427,29 +466,8 @@ function Row({
       {/* Statut et type. Ordinateur : pastilles qui ouvrent leur choix. Téléphone : simples repères,
           non cliquables (pour ne pas ouvrir un choix en voulant ouvrir la fiche) ; on les change par
           « ••• ». */}
-      <div className="col-start-2 flex flex-wrap items-center gap-2 lg:contents">
-        <span
-          className={`inline-flex h-8 items-center gap-1.5 rounded-pill border px-2.5 text-[13px] font-medium lg:hidden ${statusPill[row.status]}`}
-        >
-          {row.status === "active" ? (
-            <span aria-hidden className="size-2 rounded-full bg-ok" />
-          ) : row.status === "paused" ? (
-            <CirclePause aria-hidden size={14} strokeWidth={2} />
-          ) : (
-            <Archive aria-hidden size={13} strokeWidth={2} />
-          )}
-          {statusLabel[row.status]}
-        </span>
-        <span
-          className={`inline-flex h-8 items-center gap-1.5 rounded-pill px-2.5 text-[13px] font-medium lg:hidden ${
-            row.programType
-              ? disciplineStyles[row.programType].icon
-              : "border border-dashed border-line-2 text-muted"
-          }`}
-        >
-          {TypeIcon ? <TypeIcon aria-hidden size={14} strokeWidth={2} /> : null}
-          {row.programType ? disciplineLabels[row.programType] : "Sans type"}
-        </span>
+      {/* Ordinateur : pastilles de statut et de type, qui ouvrent leur choix. */}
+      <div className="hidden lg:contents">
         <span className="hidden lg:block">
           <button
             type="button"
@@ -490,9 +508,9 @@ function Row({
         </span>
       </div>
 
-      {/* Objectif principal (téléphone : à gauche des actions). */}
-      <div className="col-span-2 flex items-center justify-between gap-3 lg:contents">
-        <span className="flex min-w-0 items-start gap-2 text-[13px] lg:pr-3">
+      {/* Objectif principal (ordinateur) et actions (téléphone : seulement « ••• », le reste est dedans). */}
+      <div className="col-start-3 flex items-center justify-end lg:contents">
+        <span className="flex min-w-0 items-start gap-2 text-[13px] max-lg:hidden lg:pr-3">
           <CalendarDays
             aria-hidden
             size={15}
@@ -517,14 +535,14 @@ function Row({
               href={`/coach/messages?sportif=${row.id}`}
               aria-label={`Écrire à ${row.name}`}
               title="Compte activé : écrire un message"
-              className={iconButtonClass()}
+              className={`${iconButtonClass()} max-lg:hidden`}
             >
               <MessageSquare aria-hidden size={17} strokeWidth={1.8} />
             </Link>
           ) : canInvite ? (
             <Link
               href={`${href}/inviter`}
-              className={buttonClass({ variant: "outline", size: "sm" })}
+              className={`${buttonClass({ variant: "outline", size: "sm" })} max-lg:hidden`}
               aria-label={`Inviter ${row.name}`}
             >
               Inviter

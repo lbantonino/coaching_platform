@@ -32,6 +32,16 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Liste des sportifs : carte compacte sur téléphone (D-53)
+```
+Date : 2026-10-28
+Demande : sur téléphone, la carte d'un sportif est trop haute
+Fait : une seule rangée (case, photo, nom ; statut · type en texte coloré ; objectif en une ligne),
+  « ••• » à droite ; « Écrire » et « Inviter » passent dans le menu « ••• » sur téléphone
+  (inchangés sur ordinateur). Carte de 165 px à 76 px
+Tests : test:e2e 122 + 6 ignorés (téléphone : accès et invitation par le menu « ••• »)
+```
+
 ### Prix des séances, dates payées, forfaits (D-52)
 ```
 Date : 2026-10-26
