@@ -23,7 +23,7 @@
 | 1. Jetons + composants | **Fait** le 23/10 (vitrine `/design/composants`, en développement seulement) |
 | 2. Coquilles de navigation | **Fait** le 23/10 (coach, sportif, admin, entrée, pages légales) |
 | 3. Pages d'entrée | **Fait** le 23/10 (connexion, inscription, vérification, bienvenue, mot de passe, invitation, erreurs, pages légales) |
-| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; liste des sportifs faite le 24/10 ; nouveau sportif complet le 28/10 (D-54) ; paramètres complets le 28/10 (D-57), ouverts en fenêtre depuis le menu du compte (D-58) : 4a terminée ; en cours : outils (Tâches, Documents, Notifications, Recherche) ; puis 4b à 4g |
+| 4. Espace coach | **En cours** : 4a partie 1 faite le 23/10 (tableau de bord, agenda interactif, détail de séance, premières pages Séances, Tâches, Messages et Facturation, D-35) ; liste des sportifs faite le 24/10 ; nouveau sportif complet le 28/10 (D-54) ; paramètres complets le 28/10 (D-57), ouverts en fenêtre depuis le menu du compte (D-58) : 4a terminée ; outils terminés le 28/10 (D-59 à D-62 : Tâches, Documents, Notifications, Recherche) ; puis 4b à 4g |
 | 5. Espace sportif | À faire |
 | 6. Administration | À faire |
 | 7. Recette finale | À faire |
@@ -31,6 +31,21 @@
 ## Dernière session
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+
+### Outils, tranche 4 : recherche globale (D-62)
+```
+Date : 2026-10-28
+Fait : page /coach/recherche (prompt §7) : grand champ, résultats rangés par groupe et filtrés en
+  direct (Sportifs, Programmes, Séances, Documents, Tâches ; 6 par groupe), l'adresse garde la
+  recherche (?q=), une tâche trouvée s'ouvre dans sa fenêtre ; action searchCoory (accès revérifié,
+  lecture seule, RLS) ; règles domain/search (2 lettres minimum, jokers SQL échappés, syntaxe des
+  filtres neutralisée) ; la recherche du haut de page (ordinateur, ⌘K) mène à cette page au lieu de
+  la liste des sportifs ; champ de recherche en tête du menu hamburger (téléphone). Commit
+  35c9b45 (poussé par Antonino).
+Tests : Vitest (search), e2e search.spec (téléphone et ordinateur : direct, adresse, aucune fuite
+  vers l'organisation B, joker « %% » sans résultat) ; athlete-overview adapté
+Étape 4e (Outils) terminée : tâches, documents, notifications, recherche.
+```
 
 ### Outils, tranche 3 : notifications lues et masquées (D-61)
 ```
