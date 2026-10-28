@@ -11,9 +11,9 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.*.*"],
   partialPrefetching: true,
   experimental: {
-    // Photos de profil jusqu'à 2 Mo (D-28) : 1 Mo par défaut pour une action serveur, plus la marge
-    // du formulaire. La taille réelle est revérifiée dans l'action.
-    serverActions: { bodySizeLimit: "3mb" },
+    // Photos de profil jusqu'à 2 Mo (D-28), documents jusqu'à 10 Mo (D-60) : 1 Mo par défaut pour une
+    // action serveur, plus la marge du formulaire. La taille réelle est revérifiée dans l'action.
+    serverActions: { bodySizeLimit: "11mb" },
   },
   turbopack: {
     rules: {
