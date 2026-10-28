@@ -638,6 +638,21 @@ select s.organization_id, s.athlete_id, date_trunc('week', current_date)::date, 
 from public.coach_sessions s
 where s.id in ('ca000000-0000-4000-8000-000000000201', 'ca000000-0000-4000-8000-000000000202');
 
+-- Structures légales (D-57), INVENTÉES : l'activité d'indépendant du coach A (assujetti à la TVA)
+-- et une ASBL de démonstration (non assujettie). Numéros fictifs mais valides (clé modulo 97).
+insert into public.organization_legal_entities (
+  organization_id, name, legal_form, enterprise_number, vat_status, vat_number, address_line,
+  postal_code, city, country, iban, bic, billing_email, invoice_prefix, legal_mentions, is_default,
+  created_by
+)
+values
+  ('0a000000-0000-4000-8000-0000000000a1', 'Bianchi Performance', 'independent', '0123456749',
+   'subject', 'BE0123456749', 'Rue de la Démo 12', '1000', 'Bruxelles', 'BE', 'BE68539007547034',
+   'GEBABEBB', 'factures@example.test', 'FAC', null, true, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'ASBL Club de démonstration', 'asbl', '0987654394',
+   'not_subject', null, 'Avenue du Parc 3', '1040', 'Etterbeek', 'BE', null, null, null, 'ASBL',
+   null, false, 'a0000000-0000-4000-8000-00000000000a');
+
 -- Profils des coachs de démonstration (D-28) : prénoms inventés ; leurs photos (libres de droits) sont
 -- chargées par scripts/seed-photos.mjs, lancé par `npm run db:reset`.
 insert into public.coach_profiles (user_id, first_name, last_name, company_name) values

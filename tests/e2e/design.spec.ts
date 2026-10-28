@@ -97,7 +97,7 @@ test("le menu de gauche : Assistant IA puis Messages, Notifications ; le menu du
   await expect(page.locator("html")).not.toHaveAttribute("data-theme", "dark");
   await settings.getByRole("link", { name: "Paramètres" }).click();
   await expect(page.getByRole("heading", { name: "Paramètres", level: 1 })).toBeVisible();
-  await expect(page).toHaveURL(/\/coach\/profil#theme$/);
+  await expect(page).toHaveURL(/\/coach\/profil$/);
 });
 
 test("dans les Paramètres, le thème se choisit : clair, sombre ou celui de l'appareil", async ({
@@ -105,7 +105,7 @@ test("dans les Paramètres, le thème se choisit : clair, sombre ou celui de l'a
 }) => {
   const html = page.locator("html");
   await loginAsCoachA(page);
-  await page.goto("/coach/profil");
+  await page.goto("/coach/profil?onglet=preferences");
   const theme = page.getByRole("region", { name: "Thème" });
   await theme.getByText("Sombre", { exact: true }).click();
   await expect(html).toHaveAttribute("data-theme", "dark");
@@ -119,5 +119,8 @@ test("dans les Paramètres, le thème se choisit : clair, sombre ou celui de l'a
   await page.emulateMedia({ colorScheme: "light" });
   await theme.getByText("Clair", { exact: true }).click();
   await expect(html).not.toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("region", { name: "Compte" })).toContainText("coach-a@example.test");
+  await page.goto("/coach/profil?onglet=securite");
+  await expect(page.getByRole("region", { name: "Adresse e-mail" })).toContainText(
+    "coach-a@example.test",
+  );
 });

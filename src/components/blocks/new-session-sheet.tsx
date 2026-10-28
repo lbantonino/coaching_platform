@@ -41,13 +41,28 @@ const DEFAULT_TIME = "19:00";
 const todayInBrussels = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
 
+// Valeurs proposées d'office (Paramètres > Préférences, D-57) : durée, lieu, prix et mode de
+// paiement ; la TVA suit le mode (virement = hors TVA, espèces = TVA comprise, D-52).
+export type SessionDefaults = {
+  durationMinutes: number;
+  location: string | null;
+  priceCents: number | null;
+  paymentMethod: "cash" | "transfer";
+};
+
+// 6500 -> « 65 » ; 6550 -> « 65,50 ».
+const priceText = (cents: number | null) =>
+  cents === null ? "" : (cents / 100).toFixed(2).replace(".", ",").replace(/,00$/, "");
+
 export function NewSessionSheet({
   action,
   loadAthletes,
+  defaults,
   children,
 }: {
   action: (previous: SessionFormState, formData: FormData) => Promise<SessionFormState>;
   loadAthletes: () => Promise<Athlete[]>;
+  defaults: SessionDefaults;
   children: ReactNode;
 }) {
   const [slot, setSlot] = useState<Slot | null>(null);
@@ -99,10 +114,10 @@ export function NewSessionSheet({
               kind: "individual",
               title: "",
               discipline: slot.discipline ?? "",
-              location: "",
+              location: defaults.location ?? "",
               startsOn: slot.date,
               startTime: slot.time,
-              durationMinutes: "60",
+              durationMinutes: String(defaults.durationMinutes),
               repeatsWeekly: false,
               endsOn: "",
               athleteId: slot.athleteId ?? "",
@@ -110,9 +125,9 @@ export function NewSessionSheet({
               newClient: false,
               newAthleteName: "",
               notes: "",
-              price: "",
-              vatIncluded: false,
-              paymentMethod: "transfer",
+              price: priceText(defaults.priceCents),
+              vatIncluded: defaults.paymentMethod === "cash",
+              paymentMethod: defaults.paymentMethod,
             }}
             locked={false}
             submitLabel="Créer la séance"

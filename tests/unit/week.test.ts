@@ -7,6 +7,7 @@ import {
   lastSessionFor,
   layoutWeek,
   mondayOf,
+  withHours,
   weekCounts,
   type WeekSession,
 } from "@/features/agenda/week";
@@ -110,5 +111,18 @@ describe("layoutDays et parseDay", () => {
     ]);
     expect(parseDay("2026-12-24", "2026-10-23")).toBe("2026-12-24");
     expect(parseDay("n'importe quoi", "2026-10-23")).toBe("2026-10-23");
+  });
+});
+
+describe("heures affichées (Paramètres, D-57)", () => {
+  it("garde la plage choisie, élargie par une séance hors plage", () => {
+    // Piste du mercredi : 19:00 – 20:30.
+    const layout = layoutWeek([piste], "2026-09-28");
+    expect(withHours(layout, 7, 21)).toMatchObject({ firstHour: 7, lastHour: 21 });
+    expect(withHours(layout, 8, 18)).toMatchObject({ firstHour: 8, lastHour: 21 });
+    expect(withHours(layoutWeek([], "2026-09-28"), 9, 20)).toMatchObject({
+      firstHour: 9,
+      lastHour: 20,
+    });
   });
 });

@@ -62,7 +62,7 @@ test("le coach ajoute puis retire la photo d'un sportif ; un autre coach ne peut
 test("le coach renseigne son identité et son entreprise dans Paramètres", async ({ page }) => {
   // Coach de démo B : le profil du coach A est celui qu'Antonino utilise pour regarder l'app.
   await login(page, "coach-b@example.test");
-  await page.goto("/coach/profil");
+  await page.goto("/coach/profil?onglet=profil");
   await expect(page.getByRole("heading", { name: "Paramètres", level: 1 })).toBeVisible();
   await page.getByRole("textbox", { name: /^Prénom/ }).fill("Marco");
   await page.getByLabel(/^Entreprise/).fill("Bianchi Performance");

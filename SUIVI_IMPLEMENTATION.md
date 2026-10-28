@@ -32,6 +32,26 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Paramètres complets (D-57)
+```
+Date : 2026-10-28
+Demande : une page Paramètres complète et qualitative, inspirée d'autres apps ; deux structures
+  légales (choix d'Antonino : l'activité d'indépendant et l'ASBL)
+Fait : migration 20261028120000 (préférences du coach : séance par défaut, heures de l'agenda,
+  cloche ; private.is_org_owner + renommage de l'organisation par son propriétaire ; table
+  organization_legal_entities avec RLS, une seule par défaut) ; cinq sections : Profil (photo,
+  identité + téléphone, organisation), Préférences (thème, valeurs par défaut d'une séance, heures de
+  l'agenda, interrupteurs de la cloche), Facturation et légal (structures : BCE et IBAN vérifiés par
+  leur clé modulo 97, TVA belge déduite, préfixe des factures ; ajouter, modifier, supprimer),
+  Sécurité (changer d'e-mail avec lien de confirmation, changer de mot de passe en revérifiant
+  l'actuel, déconnecter tous les appareils), Données (export JSON de toute l'organisation, RGPD
+  art. 20) ; branché pour de vrai : fenêtre « Nouvelle séance » préremplie, grilles du tableau de
+  bord et de l'Agenda (withHours), cloche et page Notifications filtrées (enabledTotal)
+Tests : Vitest 197, pgTAP 298 (22_parametres ; 01_isolation renforcé), test:e2e 134 + 10 ignorés
+Reste : suppression complète d'un compte (procédure d'effacement à concevoir : sportifs liés,
+  photos, admin) ; abonnement Coory en P8
+```
+
 ### Case « Notes » : blessures et points d'attention, notes libres (D-56)
 ```
 Date : 2026-10-28

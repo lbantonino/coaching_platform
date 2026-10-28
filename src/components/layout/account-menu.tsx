@@ -87,9 +87,12 @@ export function AccountMenu() {
     "flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[15px] font-medium whitespace-nowrap transition-colors duration-150 hover:bg-surface-2";
   const item = `${itemBase} text-text`;
   const close = () => setOpen(false);
-  // Paramètres : la section Thème de la page (le profil en est le haut).
+  // Coach (D-57) : « Mon profil » ouvre l'onglet Profil des Paramètres, « Paramètres » leur sommaire.
+  // Sportif : sa page profil, et sa section Thème.
   const settings = user.settingsHref
-    ? { profile: user.settingsHref, settings: `${user.settingsHref}#theme` }
+    ? user.settingsHref.startsWith("/coach")
+      ? { profile: `${user.settingsHref}?onglet=profil`, settings: user.settingsHref }
+      : { profile: user.settingsHref, settings: `${user.settingsHref}#theme` }
     : null;
 
   return (
