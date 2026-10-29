@@ -1,4 +1,4 @@
-import { splitVat } from "./money";
+import { addTo, splitVat, type ByCurrency, type Converter, type Currency } from "./money";
 
 // Paiements reçus (D-36) : le chiffre d'affaires suivi est l'argent RÉELLEMENT reçu, à la date du
 // paiement. Montants en centimes, TVA comprise ; HTVA et TVA se déduisent du taux. Règles PURES.
@@ -22,7 +22,13 @@ export function paymentMethodLabel(method: PaymentMethod, country: string): stri
 export const isBankMethod = (method: PaymentMethod) =>
   method === "transfer" || method === "bancontact";
 
-export type PaymentLike = { receivedOn: string; amountCents: number; vatRate: number };
+export type PaymentLike = {
+  receivedOn: string;
+  amountCents: number;
+  vatRate: number;
+  // Devise du paiement (D-69) ; sans devise, celle de l'organisation.
+  currency?: Currency;
+};
 
 // Calculs de TVA et saisie des montants : règles communes dans money.ts (taux libre, D-69).
 export { addVat, parseAmount, splitVat } from "./money";
@@ -32,18 +38,36 @@ export type PaymentTotals = {
   inclCents: number;
   exclCents: number;
   vatCents: number;
+  // Montants TVAC reçus par devise, avant conversion (D-70).
+  byCurrency: ByCurrency;
 };
 
-// Totaux des paiements reçus entre `from` et `to` inclus (dates AAAA-MM-JJ).
-export function paymentTotals(payments: PaymentLike[], from: string, to: string): PaymentTotals {
-  const totals: PaymentTotals = { count: 0, inclCents: 0, exclCents: 0, vatCents: 0 };
+// Totaux des paiements reçus entre `from` et `to` inclus (dates AAAA-MM-JJ). Après un changement de
+// devise (D-70), `convert` ramène chaque montant dans la devise de l'organisation (à titre indicatif).
+export function paymentTotals(
+  payments: PaymentLike[],
+  from: string,
+  to: string,
+  convert?: Converter,
+): PaymentTotals {
+  const totals: PaymentTotals = {
+    count: 0,
+    inclCents: 0,
+    exclCents: 0,
+    vatCents: 0,
+    byCurrency: {},
+  };
   for (const payment of payments) {
     if (payment.receivedOn < from || payment.receivedOn > to) continue;
-    const { exclCents, vatCents } = splitVat(payment.amountCents, payment.vatRate);
+    const { exclCents } = splitVat(payment.amountCents, payment.vatRate);
+    const currency = payment.currency;
+    const incl = convert && currency ? convert(payment.amountCents, currency) : payment.amountCents;
+    const excl = convert && currency ? convert(exclCents, currency) : exclCents;
     totals.count += 1;
-    totals.inclCents += payment.amountCents;
-    totals.exclCents += exclCents;
-    totals.vatCents += vatCents;
+    totals.inclCents += incl;
+    totals.exclCents += excl;
+    totals.vatCents += incl - excl;
+    if (currency) addTo(totals.byCurrency, currency, payment.amountCents);
   }
   return totals;
 }

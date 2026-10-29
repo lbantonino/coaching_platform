@@ -659,6 +659,21 @@ values
    'not_subject', null, null, 'Avenue du Parc 3', '1040', 'Etterbeek', 'BE', null, null, null, 'ASBL',
    null, false, 'a0000000-0000-4000-8000-00000000000a');
 
+-- Dépenses (D-73), INVENTÉES : le loyer de la salle chaque mois depuis août, du matériel et une
+-- assurance, rangés dans les catégories de départ de l'organisation A.
+insert into public.coach_expenses (organization_id, category_id, label, spent_on, amount_cents,
+  vat_rate, repeats_monthly, created_by)
+select '0a000000-0000-4000-8000-0000000000a1', category.id, demo.label, demo.spent_on::date,
+  demo.amount_cents, demo.vat_rate, demo.repeats_monthly, 'a0000000-0000-4000-8000-00000000000a'
+from (values
+  ('Loyer et salle', 'Location de la salle (démo)', '2026-08-01', 60500, 21, true),
+  ('Matériel', 'Kettlebells et élastiques (démo)', '2026-10-12', 12900, 21, false),
+  ('Assurance', 'Assurance responsabilité civile (démo)', '2026-09-15', 24000, 0, false)
+) as demo (category, label, spent_on, amount_cents, vat_rate, repeats_monthly)
+join public.expense_categories as category
+  on category.organization_id = '0a000000-0000-4000-8000-0000000000a1'
+ and category.name = demo.category;
+
 -- Profils des coachs de démonstration (D-28) : prénoms inventés ; leurs photos (libres de droits) sont
 -- chargées par scripts/seed-photos.mjs, lancé par `npm run db:reset`.
 insert into public.coach_profiles (user_id, first_name, last_name, company_name) values

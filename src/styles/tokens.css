@@ -55,6 +55,21 @@
   --inv: #2a2b30;
   --on-inv: #f5f5f2;
 
+  /* SÉLECTION (D-71, demande d'Antonino du 29/10/2026) : l'élément choisi (page du menu, section des
+     Paramètres, filtre, segment) et le survol des menus sont en JAUNE doré à faible opacité, jamais en
+     gris. Un jaune citron franc (#fde047), SANS contour (corrections du 29/10) : l'or de marque, puis un
+     jaune pâle, à faible opacité sur le graphite viraient au brun ou au kaki (comparaisons du 29/10). */
+  --selected: color-mix(in srgb, #fde047 26%, transparent);
+  --selected-hover: color-mix(in srgb, #fde047 11%, transparent);
+
+  /* Graphiques (D-72) : 4 couleurs de catégorie, validées par script (méthode dataviz) sur la carte
+     graphite, dans cet ordre en anneau : bleu, orange, turquoise, jaune (paires voisines distinctes,
+     daltonisme compris). Réservées aux graphiques ; les textes restent en couleurs de texte. */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+
   /* Statuts sobres (§2.4). */
   --ok: #7ccd93;
   --ok-soft: color-mix(in srgb, #7ccd93 12%, transparent);
@@ -130,6 +145,14 @@
 
   --inv: #141518;
   --on-inv: #ffffff;
+  /* Sélection en jaune doré (D-71) : même jaune, plus présent sur fond clair. */
+  --selected: color-mix(in srgb, #fde047 34%, transparent);
+  --selected-hover: color-mix(in srgb, #fde047 16%, transparent);
+  /* Graphiques (D-72) : mêmes teintes, validées sur carte blanche ; montants toujours écrits à côté. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
 
   --ok: #10703a;
   --ok-soft: color-mix(in srgb, #10703a 10%, transparent);

@@ -27,6 +27,8 @@
   --color-accent-line: var(--accent-line);
   --color-on-accent: var(--on-accent);
   --color-inv: var(--inv);
+  --color-selected: var(--selected);
+  --color-selected-hover: var(--selected-hover);
   --color-on-inv: var(--on-inv);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);

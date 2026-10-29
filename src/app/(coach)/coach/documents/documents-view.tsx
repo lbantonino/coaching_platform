@@ -50,7 +50,7 @@ import {
 import type { CategoryResult, DocumentFormState } from "@/features/documents/actions";
 import type { CoachDocument } from "@/features/documents/queries";
 
-import { CategoryManager } from "./category-manager";
+import { CategoryManager } from "@/components/blocks/category-manager";
 
 // Page Documents (prompt Claude Design §7 `/coach/documents`, 4e, D-60) : chiffres, recherche et
 // filtres en direct, liste ; un appui ouvre l'aperçu (PDF, image) avec Télécharger, Modifier et

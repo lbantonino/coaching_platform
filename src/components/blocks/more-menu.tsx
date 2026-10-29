@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis, Trash2 } from "lucide-react";
+import { CircleStop, Ellipsis, Trash2 } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 
 import { iconButtonClass } from "@/components/ui/button";
@@ -8,16 +8,19 @@ import { ActionMenu, ConfirmDialog } from "@/components/ui/overlay";
 
 // Menu « ••• » d'une page avec une action de suppression (prompt Claude Design §4 et §9) :
 // « Supprimer » ouvre la fenêtre de confirmation, qui seule envoie le formulaire (action serveur).
+// `stop` (D-73) : une action « Arrêter » avant « Supprimer », ex. une dépense mensuelle qui prend fin.
 export function DeleteMoreMenu({
   menuTitle,
   action,
   confirmTitle,
   confirmText,
+  stop,
 }: {
   menuTitle: string;
   action: (formData: FormData) => void | Promise<void>;
   confirmTitle: string;
   confirmText: ReactNode;
+  stop?: { label: string; action: () => Promise<void> };
 }) {
   const [menu, setMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -37,6 +40,9 @@ export function DeleteMoreMenu({
         onClose={() => setMenu(false)}
         title={menuTitle}
         items={[
+          ...(stop
+            ? [{ label: stop.label, icon: CircleStop, onSelect: () => void stop.action() }]
+            : []),
           { label: "Supprimer", icon: Trash2, destructive: true, onSelect: () => setConfirm(true) },
         ]}
       />

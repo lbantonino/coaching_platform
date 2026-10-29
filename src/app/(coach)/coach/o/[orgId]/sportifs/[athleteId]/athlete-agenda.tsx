@@ -207,7 +207,7 @@ export function AthleteAgendaSection({
               scroll={false}
               aria-current={view === link.view ? "page" : undefined}
               className={`inline-flex min-h-9 items-center rounded-pill px-3.5 text-[14px] font-medium transition-colors duration-150 ${
-                view === link.view ? "bg-inv text-on-inv" : "text-muted hover:text-text"
+                view === link.view ? "bg-selected text-text" : "text-muted hover:text-text"
               }`}
             >
               {link.label}

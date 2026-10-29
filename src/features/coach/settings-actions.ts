@@ -5,7 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireCoach, requireOrgAccess } from "@/features/auth/guards";
+import { isCurrency, parseExchangeRate } from "@/domain/billing/money";
 import { isCountryCode } from "@/domain/geo/countries";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 import { getSettingsData, type SettingsData } from "./settings-data";
@@ -148,6 +150,107 @@ export async function setOrganizationCountry(
   if (error || (data ?? []).length !== 1) {
     return { ok: false, error: "Le pays n'a pas pu être enregistré. Réessaie." };
   }
+  revalidatePath("/coach", "layout");
+  return { ok: true, error: null };
+}
+
+// Changement de devise (D-70, déménagement) : ce que le changement va convertir, et ce qui reste dans
+// l'ancienne devise. Mêmes critères que la fonction de la base (séances qui ont encore des dates,
+// brouillons sans paiement relié).
+export type CurrencyChangePreview = {
+  sessions: number;
+  drafts: number;
+  payments: number;
+  issued: number;
+};
+
+export async function previewCurrencyChange(
+  organizationId: string,
+): Promise<CurrencyChangePreview | null> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (membership.role !== "owner") return null;
+  const orgId = membership.organizationId;
+  const today = todayIsoInBrussels();
+  const supabase = await createClient();
+  const count = async (query: PromiseLike<{ count: number | null; error: unknown }>) => {
+    const { count: value, error } = await query;
+    if (error) throw new Error("Lecture de l'aperçu impossible.");
+    return value ?? 0;
+  };
+  const head = { count: "exact", head: true } as const;
+  const [repeating, single, drafts, payments, issued] = await Promise.all([
+    count(
+      supabase
+        .from("coach_sessions")
+        .select("id", head)
+        .eq("organization_id", orgId)
+        .eq("currency", membership.currency)
+        .not("price_cents", "is", null)
+        .eq("repeats_weekly", true)
+        .or(`ends_on.is.null,ends_on.gte.${today}`),
+    ),
+    count(
+      supabase
+        .from("coach_sessions")
+        .select("id", head)
+        .eq("organization_id", orgId)
+        .eq("currency", membership.currency)
+        .not("price_cents", "is", null)
+        .eq("repeats_weekly", false)
+        .gte("starts_on", today),
+    ),
+    count(
+      supabase
+        .from("athlete_invoices")
+        .select("id", head)
+        .eq("organization_id", orgId)
+        .eq("status", "draft")
+        .is("payment_id", null)
+        .eq("currency", membership.currency),
+    ),
+    count(
+      supabase
+        .from("athlete_payments")
+        .select("id", head)
+        .eq("organization_id", orgId)
+        .eq("currency", membership.currency),
+    ),
+    count(
+      supabase
+        .from("athlete_invoices")
+        .select("id", head)
+        .eq("organization_id", orgId)
+        .eq("status", "issued")
+        .eq("currency", membership.currency),
+    ),
+  ]);
+  return { sessions: repeating + single, drafts, payments, issued };
+}
+
+export async function changeOrganizationCurrency(
+  organizationId: string,
+  currency: string,
+  rateText: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (membership.role !== "owner") {
+    return { ok: false, error: "Seul le propriétaire peut changer la devise." };
+  }
+  if (!isCurrency(currency)) return { ok: false, error: "Choisis la nouvelle devise." };
+  if (currency === membership.currency) {
+    return { ok: false, error: "C'est déjà la devise de ton organisation." };
+  }
+  const rate = parseExchangeRate(rateText);
+  if (rate === null) {
+    return { ok: false, error: "Taux invalide : un nombre plus grand que 0 (ex. 0,94)." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("change_organization_currency", {
+    p_organization_id: membership.organizationId,
+    p_currency: currency,
+    p_rate: rate,
+  });
+  if (error) return { ok: false, error: "La devise n'a pas pu être changée. Réessaie." };
   revalidatePath("/coach", "layout");
   return { ok: true, error: null };
 }

@@ -17,7 +17,7 @@ describe("totaux des paiements", () => {
       { receivedOn: "2026-10-25", amountCents: 10000, vatRate: 21 }, // dimanche
       { receivedOn: "2026-10-26", amountCents: 9999, vatRate: 21 }, // semaine suivante
     ];
-    expect(paymentTotals(payments, "2026-10-19", "2026-10-25")).toEqual({
+    expect(paymentTotals(payments, "2026-10-19", "2026-10-25")).toMatchObject({
       count: 2,
       inclCents: 310000,
       exclCents: 247934 + 8264,

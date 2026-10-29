@@ -5,11 +5,17 @@ import { SkeletonLines } from "@/components/ui/skeleton";
 
 import { BackLink } from "./back-link";
 import { HeaderTools } from "./header-tools";
+import { PageIcon } from "./page-icon";
 
-// En-tête de page (prompt Claude Design §5.2). À gauche : lien retour (sous-page), H1 en Space
-// Grotesk (28 px téléphone, 34 px ordinateur), phrase en gris. À droite sur ordinateur : recherche,
-// assistant, cloche, puis les actions de la page (contour, bouton rouge, menu « ••• »).
-// Sur téléphone : les actions passent sous le titre, en pleine largeur.
+// En-tête de page (prompt Claude Design §5.2), le même pour toutes les pages depuis le 29/10/2026
+// (demande d'Antonino : « comme le tableau de bord, tout aligné »). Ordinateur : UNE ligne alignée sur
+// le logo du menu : retour éventuel, icône de la page (celle du menu), titre de 26 px, puis à droite la
+// recherche, l'assistant, la cloche et les actions. Pas de phrase sous le titre, ni sur ordinateur ni
+// sur téléphone (demandes d'Antonino du 29/10/2026) : elle reste pour les lecteurs d'écran. Seule
+// exception : une page de détail (pastilles d'une fiche sportif).
+// Téléphone : la barre du haut écrit déjà le nom de la page, le titre reste pour les lecteurs
+// d'écran ; une page de détail (avec retour) garde le sien (nom du sportif, de la facture…). Les
+// actions passent dessous, en pleine largeur.
 export function PageHeader({
   title,
   titleAside,
@@ -17,8 +23,7 @@ export function PageHeader({
   back,
   actions,
   tools = true,
-  inline = false,
-  icon: Icon,
+  icon,
 }: {
   title: ReactNode;
   // À côté du titre (ex. repère ♀ / ♂ d'un sportif)
@@ -28,45 +33,55 @@ export function PageHeader({
   actions?: ReactNode;
   // false : la page affiche elle-même la recherche, l'assistant et la cloche (page centrée).
   tools?: boolean;
-  // Tableau de bord (29/10/2026) : titre plus petit, la date juste à droite, puis la recherche, la
-  // cloche et les actions sur la même ligne, alignée sur le logo de la barre latérale.
+  // Ancien en-tête « en ligne » du tableau de bord : c'est maintenant celui de toutes les pages.
   inline?: boolean;
-  // En-tête en ligne : l'icône de la page, la même que dans le menu (ex. la maison du tableau de bord).
+  // Icône imposée ; sinon celle de la page dans le menu.
   icon?: LucideIcon;
 }) {
-  if (inline) {
-    return (
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 pt-4 pb-1 lg:px-8 lg:pt-[17px]">
-        {/* Téléphone : la barre du haut affiche déjà le nom de la page ; le titre ne reste que pour
-            les lecteurs d'écran (demande d'Antonino du 29/10/2026). */}
-        <div className="flex min-w-0 flex-[1_1_auto] flex-wrap items-center gap-x-3 gap-y-1 max-lg:sr-only">
-          {Icon ? (
-            <Icon aria-hidden size={22} strokeWidth={1.8} className="shrink-0 text-muted" />
-          ) : null}
-          <h1 className="font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] whitespace-nowrap lg:text-[26px]">
-            {title}
-          </h1>
-          {subtitle ? <p className="text-[14px] whitespace-nowrap text-muted">{subtitle}</p> : null}
-        </div>
-        <div className="flex flex-[1_1_100%] flex-wrap items-center gap-2 lg:flex-none [&>*]:flex-[1_1_auto] lg:[&>*]:flex-none">
-          {tools ? <HeaderTools /> : null}
-          {actions}
-        </div>
-      </header>
-    );
-  }
   return (
-    <header className="flex flex-wrap items-end gap-x-4 gap-y-3.5 px-4 pt-4 pb-1 lg:px-8 lg:pt-7">
-      <div className="flex min-w-0 flex-[1_1_320px] flex-col gap-1.5">
+    <header className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 pt-4 pb-1 lg:flex-nowrap lg:px-8 lg:pt-[17px]">
+      {/* Page de détail (avec retour) : le lien de retour au-dessus, puis la ligne du titre, dont la
+          phrase (pastilles d'une fiche sportif…) peut passer à la ligne. */}
+      <div
+        className={`flex min-w-0 flex-[1_1_auto] flex-col gap-1.5 ${back ? "lg:gap-0.5" : "lg:flex-row lg:items-center lg:gap-3"}`}
+      >
         {/* Retour « là où j'étais » (29/10/2026), voir back-link.tsx. */}
         {back ? <BackLink href={back.href} label={back.label} /> : null}
-        <div className="flex min-w-0 items-center gap-3">
-          <h1 className="font-display text-heading leading-[1.05] font-semibold break-words lg:text-heading-lg">
-            {title}
-          </h1>
-          {titleAside}
+        <div
+          className={`flex min-w-0 flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-3 ${back ? "lg:flex-wrap" : "lg:contents"}`}
+        >
+          <div
+            className={`flex min-w-0 items-center gap-3 lg:shrink-0 ${back ? "" : "max-lg:sr-only"}`}
+          >
+            {/* Icône imposée par la page : dessinée ici (une fonction ne passe pas au navigateur). */}
+            {icon ? (
+              (() => {
+                const Icon = icon;
+                return (
+                  <Icon
+                    aria-hidden
+                    size={22}
+                    strokeWidth={1.8}
+                    className="shrink-0 text-muted max-lg:hidden"
+                  />
+                );
+              })()
+            ) : (
+              <PageIcon />
+            )}
+            <h1 className="min-w-0 font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] break-words lg:text-[26px] lg:whitespace-nowrap">
+              {title}
+            </h1>
+            {titleAside}
+          </div>
+          {subtitle ? (
+            <div
+              className={`min-w-0 text-[14px] leading-[1.45] text-muted ${back ? "" : "sr-only"}`}
+            >
+              {subtitle}
+            </div>
+          ) : null}
         </div>
-        {subtitle ? <p className="text-[15px] leading-[1.45] text-muted">{subtitle}</p> : null}
       </div>
       <div className="flex flex-[1_1_100%] flex-wrap items-center gap-2 lg:flex-none [&>*]:flex-[1_1_auto] lg:[&>*]:flex-none">
         {tools ? <HeaderTools /> : null}

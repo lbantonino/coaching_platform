@@ -32,6 +32,62 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Dépenses et résultat (D-73) ; en-têtes de page et Facturation côte à côte (D-74)
+```
+Date : 2026-10-29
+Fait : migration 20261029220000_depenses (expense_categories avec couleur, 7 de départ par trigger ;
+  coach_expenses TVAC + taux, devise par trigger, répétition mensuelle et fin, clé composée vers la
+  catégorie ; RLS membres ; private.next_monthly_date ; change_organization_currency étendu : dépenses
+  à venir converties, dépense mensuelle en cours coupée). domain/billing/expenses.ts (expenseDates,
+  parseExpenseForm) ; accounting.ts : dépenses, résultat HTVA ou TVAC (ResultBasis) ;
+  expense-queries / expense-actions (créer, supprimer, arrêter, catégories) ; isVatSubject ;
+  CategoryManager partagé (components/blocks) ; DeleteMoreMenu « stop » ; comptabilite/expense-sheet,
+  bar-chart (barres Gagné / Dépensé) ; page Comptabilité en widgets (rangées à hauteur égale, liste
+  paiements / dépenses ?liste=). Seed : 3 dépenses de démo inventées.
+  D-74 : PageHeader unique (une ligne, PageIcon d'après le menu, titre 26 px, pas de phrase sur
+  ordinateur sauf page de détail ; titre caché sur téléphone hors page de détail) ; barre mobile :
+  AssistantButton ; Facturation en grille (2 × lg:col-span-6).
+Tests : check OK ; Vitest 256/256 ; pgTAP 401/401 (30_depenses 10) ; Playwright 165 réussis +
+  13 ignorés (dépense mensuelle : créer, arrêter, supprimer) ; captures téléphone et ordinateur.
+Suite : point 5, éditeur de programmes (étude + maquettes), ou modifier une dépense.
+```
+
+### Sélection en jaune (D-71) ; Comptabilité : graphique et tableau (D-72)
+```
+Date : 2026-10-29
+Fait : D-71, jetons --selected / --selected-hover (tokens.css, globals.css) ; navItemClass,
+  chipActiveClass, segmented (radio et liens), page-tabs, theme-choice, checkboxChipClass, sections
+  des Paramètres, menu du compte, pastilles de la fiche sportif : gris -> jaune, sans contour.
+  D-72, domain/billing/accounting.ts (periodOf, accountingPeriods, accountingRows, totalRow,
+  periodLabel, shareOf) ; jetons --chart-1 à 4 validés (validate_palette.js, sombre et clair, paires
+  voisines de l'anneau) ; comptabilite/donut-chart.tsx (anneau SVG, survol et légende au clavier) ;
+  page Comptabilité : Semaine / Mois / Année (?vue=), période choisie (?periode=), carte Répartition,
+  Tableau de comptabilité (colonne fixe sur téléphone, ligne Total), filtres des paiements gardés.
+Tests : check OK ; Vitest 247/247 (accounting 7) ; Playwright 163 réussis + 13 ignorés (tableau et
+  graphique) ; captures téléphone et ordinateur, sombre et clair.
+Suite : dépenses et résultat (proposé), sinon point 5 éditeur de programmes.
+```
+
+### Changement de devise, international étape 2 (D-70)
+```
+Date : 2026-10-29
+Fait : migration 20261029200000_changement_de_devise (table organization_currency_changes, lecture
+  par les membres, aucune écriture directe ; fonction change_organization_currency, propriétaire
+  seulement, une transaction : séances qui ont encore des dates, brouillons sans paiement, prix par
+  défaut convertis au taux saisi ; organisation passée dans la nouvelle devise ; historique).
+  money.ts : parseExchangeRate, makeConverter (taux direct, inverse ou en chaîne), describeTotal
+  (« ≈ » + détail par devise) ; paymentTotals, monthActivity et plannedIncome acceptent un
+  convertisseur et comptent par devise ; currency-queries.ts (historique, getConverter) ; tableau
+  de bord, Comptabilité et Facturation : totaux convertis ; Paramètres : « Changer de devise »
+  (currency-change-sheet.tsx : devise, taux, aperçu converti / reste, confirmation) et historique.
+Tests : check OK ; Vitest 240/240 ; pgTAP 391/391 (29_changement_de_devise : 14 tests) ;
+  Playwright 161 réussis + 13 ignorés (coach inscrit en euros qui passe en francs suisses) ;
+  captures téléphone (sombre) et ordinateur (clair).
+Limites : taux saisi par le coach, aucun service de change en ligne ; une séance passée modifiée
+  après le changement garde son prix tel quel si le prix n'est pas retouché.
+Suite : point 4, Comptabilité (dépenses, graphique sur 12 mois, résultat).
+```
+
 ### Coory à l'international, étape 1 (D-69) ; couleur des catégories de documents (D-68)
 ```
 Date : 2026-10-29

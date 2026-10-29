@@ -18,7 +18,7 @@ import {
 } from "@/domain/documents/documents";
 import type { CategoryResult } from "@/features/documents/actions";
 
-// « Gérer les catégories » de la page Documents (D-67) : le coach range ses documents à sa façon.
+// « Gérer les catégories » des Documents (D-67) et des Dépenses (D-73) : le coach range ses documents à sa façon.
 // Ajouter, renommer (le nom se modifie sur place, « Enregistrer » apparaît quand il change),
 // supprimer (confirmation ; les documents restent, « sans catégorie »). Le rond de couleur ouvre la
 // palette (D-68) : l'icône des documents de la catégorie prend cette couleur.

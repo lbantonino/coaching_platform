@@ -151,8 +151,8 @@ export function SettingsPanel({
                   onSection={onSection}
                   to={item.key}
                   current={active}
-                  className={`flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors duration-150 hover:bg-surface-2 active:bg-surface-2 active:duration-0 lg:min-h-11 lg:rounded-[12px] lg:px-3 lg:py-2 ${
-                    active ? "lg:bg-surface-2 lg:font-semibold" : ""
+                  className={`flex min-h-14 items-center gap-3 px-4 py-2.5 transition-colors duration-150 hover:bg-selected-hover active:bg-selected-hover active:duration-0 lg:min-h-11 lg:rounded-[12px] lg:px-3 lg:py-2 ${
+                    active ? "lg:bg-selected lg:font-semibold" : ""
                   }`}
                 >
                   <span
@@ -262,6 +262,8 @@ export function SettingsPanel({
                 country={data.organization.country}
                 currency={data.organization.currency}
                 isOwner={data.organization.isOwner}
+                changes={data.currencyChanges}
+                onChanged={onChanged}
               />
             </Card>
             <Card id="settings-invoice-cash" title="Factures">

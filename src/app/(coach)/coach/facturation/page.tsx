@@ -7,11 +7,12 @@ import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/l
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card, CardEmpty, CardTitle } from "@/components/ui/card";
 import { invoiceStatus, invoiceStatusLabels, monthActivity } from "@/domain/billing/invoices";
-import { formatMoney } from "@/domain/billing/money";
+import { describeTotal, formatMoney, type ByCurrency } from "@/domain/billing/money";
 import { paymentMethodLabel } from "@/domain/billing/payments";
 import { addDays } from "@/features/agenda/items";
 import { listAthletes } from "@/features/athletes/queries";
 import { requireCoach } from "@/features/auth/guards";
+import { getConverter } from "@/features/coach/currency-queries";
 import { listInvoiceablePayments } from "@/features/billing/invoice-queries";
 import { listInvoices } from "@/features/billing/queries";
 import { listLegalEntities } from "@/features/coach/legal-queries";
@@ -62,10 +63,14 @@ async function Billing() {
     listAthletes(organizationId, { status: "all", q: "" }),
     listLegalEntities(organizationId),
   ]);
+  // Après un changement de devise (D-70) : factures d'avant converties, total « ≈ ».
   const activity = monthActivity(
     invoices.filter((invoice) => invoice.status === "issued"),
     today,
+    await getConverter(memberships[0]),
   );
+  const tally = (cents: number, byCurrency: ByCurrency) =>
+    describeTotal(cents, byCurrency, currency).value;
 
   return (
     <>
@@ -90,9 +95,12 @@ async function Billing() {
           />
         }
       />
-      <PageBody>
+      {/* Ordinateur (demande d'Antonino du 29/10/2026) : « À facturer » et « Factures » côte à côte,
+          à la même hauteur ; téléphone : l'une sous l'autre. */}
+      <PageBody grid>
         <Card
           id="to-invoice-title"
+          className="lg:col-span-6"
           // Deux cartes bien distinctes (29/10) : « À facturer » en rouge, « Factures » en vert.
           title={
             <CardTitle icon={Landmark} color="var(--alert)">
@@ -140,12 +148,13 @@ async function Billing() {
 
         <Card
           id="invoices-title"
+          className="lg:col-span-6"
           title={
             <CardTitle icon={FileText} color="var(--ok)">
               Factures
             </CardTitle>
           }
-          subtitle={`${formatMoney(activity.sent.cents, currency)} émis ce mois-ci · ${formatMoney(activity.pending.cents, currency)} en attente`}
+          subtitle={`${tally(activity.sent.cents, activity.sent.byCurrency)} émis ce mois-ci · ${tally(activity.pending.cents, activity.pending.byCurrency)} en attente`}
         >
           {invoices.length === 0 ? (
             <CardEmpty icon={FileText}>Aucune facture pour l&apos;instant.</CardEmpty>

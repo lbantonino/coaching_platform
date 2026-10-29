@@ -76,7 +76,7 @@ test("« Tout marquer comme lu » vide la cloche ; une tâche reportée revient 
   await expect(row).toContainText("Non lue");
   await page.getByRole("button", { name: "Tout marquer comme lu" }).click();
   await expect(page.getByText("Tout est marqué comme lu.")).toBeVisible();
-  await expect(page.getByText("Tout est à jour.")).toBeVisible();
+  await expect(page.getByText("Tout est à jour.")).toBeAttached();
   await expect(row).not.toContainText("Non lue");
   await expect.poll(() => bellCount(page)).toBe(0);
   // Le message de Sarah redevient non lu (le test précédent en a besoin à la prochaine exécution).

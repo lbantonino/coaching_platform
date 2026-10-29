@@ -5,13 +5,16 @@ import { formatVatNumber, normalizeVatNumber } from "@/domain/billing/legal";
 import {
   addVat,
   currencyLabel,
+  describeTotal,
+  makeConverter,
+  parseExchangeRate,
   formatMoney,
   formatVatRate,
   parseAmount,
   parseVatRate,
   splitVat,
 } from "@/domain/billing/money";
-import { paymentMethodLabel } from "@/domain/billing/payments";
+import { paymentMethodLabel, paymentTotals } from "@/domain/billing/payments";
 import {
   countryFromAcceptLanguage,
   countryName,
@@ -136,5 +139,51 @@ describe("inscription : étape « Ta facturation »", () => {
   it("refuse un pays ou une devise inconnus", () => {
     expect(parseBillingSetup({ ...base, country: "XX" }).ok).toBe(false);
     expect(parseBillingSetup({ ...base, currency: "JPY" }).ok).toBe(false);
+  });
+});
+
+describe("changement de devise (D-70)", () => {
+  const changes = [{ from: "EUR" as const, to: "CHF" as const, rate: 0.94 }];
+
+  it("lit un taux de change", () => {
+    expect(parseExchangeRate("0,94")).toBe(0.94);
+    expect(parseExchangeRate("1.082512")).toBe(1.082512);
+    expect(parseExchangeRate("0")).toBeNull();
+    expect(parseExchangeRate("0,1234567")).toBeNull();
+    expect(parseExchangeRate("")).toBeNull();
+  });
+
+  it("convertit avec le taux saisi, dans les deux sens et en chaîne", () => {
+    const toChf = makeConverter("CHF", changes);
+    expect(toChf(10_000, "EUR")).toBe(9400);
+    expect(toChf(10_000, "CHF")).toBe(10_000);
+    expect(makeConverter("EUR", changes)(9400, "CHF")).toBe(10_000);
+    const toGbp = makeConverter("GBP", [...changes, { from: "CHF", to: "GBP", rate: 0.9 }]);
+    expect(toGbp(10_000, "EUR")).toBe(8460);
+  });
+
+  it("additionne un mois mélangé : total ≈ converti, détail par devise", () => {
+    const payments = [
+      { receivedOn: "2026-10-05", amountCents: 12100, vatRate: 21, currency: "EUR" as const },
+      { receivedOn: "2026-10-20", amountCents: 10810, vatRate: 8.1, currency: "CHF" as const },
+    ];
+    const totals = paymentTotals(
+      payments,
+      "2026-10-01",
+      "2026-10-31",
+      makeConverter("CHF", changes),
+    );
+    expect(totals.inclCents).toBe(11374 + 10810);
+    expect(totals.byCurrency).toEqual({ EUR: 12100, CHF: 10810 });
+    const shown = describeTotal(totals.inclCents, totals.byCurrency, "CHF");
+    expect(shown.approximate).toBe(true);
+    expect(plain(shown.value)).toBe("≈ 221,84 CHF");
+    expect(plain(shown.detail ?? "")).toBe("121,00 € + 108,10 CHF");
+  });
+
+  it("un total dans une seule devise reste exact", () => {
+    const shown = describeTotal(10810, { CHF: 10810 }, "CHF");
+    expect(shown).toMatchObject({ approximate: false, detail: null });
+    expect(plain(shown.value)).toBe("108,10 CHF");
   });
 });

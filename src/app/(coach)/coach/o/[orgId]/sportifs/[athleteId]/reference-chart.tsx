@@ -50,8 +50,8 @@ export function ReferenceChart({ series }: { series: ReferenceSeries[] }) {
                 onClick={() => setSelectedKey(item.key)}
                 className={`inline-flex h-9 shrink-0 items-center rounded-pill border px-3 text-caption transition-colors sm:h-7 sm:px-2.5 ${
                   active
-                    ? "border-inv bg-inv text-on-inv"
-                    : "border-line text-muted hover:bg-surface-2 hover:text-text"
+                    ? "border-transparent bg-selected text-text"
+                    : "border-line text-muted hover:bg-selected-hover hover:text-text"
                 }`}
               >
                 {item.title}
