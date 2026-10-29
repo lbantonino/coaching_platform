@@ -12,6 +12,7 @@ import {
   changeEmail,
   changePassword,
   renameOrganization,
+  setInvoiceCashPreference,
   setNotificationPreference,
   updatePreferences,
   updateProfile,
@@ -385,6 +386,42 @@ export function NotificationToggles({ values }: { values: Record<NotificationKin
         </li>
       ))}
     </ul>
+  );
+}
+
+// Facturation (D-66) : proposer aussi les paiements en espèces dans « À facturer ». Effet immédiat.
+export function InvoiceCashToggle({ value }: { value: boolean }) {
+  const toast = useToast();
+  const [, startTransition] = useTransition();
+  const [shown, setShown] = useOptimistic(value, (_state, on: boolean) => on);
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="flex min-w-0 flex-col">
+        <span className="text-[15px] font-medium">Proposer aussi les espèces à facturer</span>
+        <span className="text-[13px] text-muted">
+          Les paiements en espèces apparaissent dans « À facturer », comme les virements et
+          Bancontact.
+        </span>
+      </span>
+      <Toggle
+        label={<span className="sr-only">Proposer aussi les espèces à facturer</span>}
+        checked={shown}
+        onChange={(event) => {
+          const on = event.target.checked;
+          startTransition(async () => {
+            setShown(on);
+            const { ok } = await setInvoiceCashPreference(on);
+            toast(
+              ok
+                ? on
+                  ? "Les espèces seront proposées à facturer."
+                  : "Les espèces ne seront plus proposées à facturer."
+                : "Le réglage n'a pas pu être enregistré. Réessaie.",
+            );
+          });
+        }}
+      />
+    </div>
   );
 }
 

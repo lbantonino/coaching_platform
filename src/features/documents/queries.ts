@@ -7,7 +7,9 @@ import { createClient } from "@/lib/supabase/server";
 export type CoachDocument = {
   id: string;
   name: string;
-  category: DocumentCategory;
+  // Catégorie du coach (D-67) ; null = sans catégorie.
+  categoryId: string | null;
+  categoryName: string | null;
   kind: DocumentKind;
   mimeType: string;
   sizeBytes: number;
@@ -20,7 +22,7 @@ export type CoachDocument = {
 type Row = {
   id: string;
   name: string;
-  category: string;
+  category: { id: string; name: string } | null;
   mime_type: string;
   size_bytes: number;
   created_at: string;
@@ -29,13 +31,13 @@ type Row = {
 };
 
 const SELECT =
-  "id, name, category, mime_type, size_bytes, created_at, updated_at, athlete:athlete_profiles ( id, first_name, display_name )";
+  "id, name, category:document_categories ( id, name ), mime_type, size_bytes, created_at, updated_at, athlete:athlete_profiles ( id, first_name, display_name )";
 
 const toDocument = (row: Row): CoachDocument => ({
   id: row.id,
   name: row.name,
-  // Listes fermées garanties par les contraintes CHECK en base.
-  category: row.category as DocumentCategory,
+  categoryId: row.category?.id ?? null,
+  categoryName: row.category?.name ?? null,
   kind: kindOfMime(row.mime_type),
   mimeType: row.mime_type,
   sizeBytes: row.size_bytes,
@@ -46,14 +48,32 @@ const toDocument = (row: Row): CoachDocument => ({
 });
 
 // Les plus récemment modifiés d'abord. Bornée : au-delà, la recherche globale prendra le relais.
-export async function listDocuments(organizationId: string): Promise<CoachDocument[]> {
+// `athleteId` : seulement les documents de ce sportif (onglet Documents de sa fiche, D-67).
+export async function listDocuments(
+  organizationId: string,
+  athleteId?: string,
+): Promise<CoachDocument[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("coach_documents")
     .select(SELECT)
     .eq("organization_id", organizationId)
     .order("updated_at", { ascending: false })
     .limit(500);
+  if (athleteId) query = query.eq("athlete_id", athleteId);
+  const { data, error } = await query;
   if (error) throw new Error("Lecture des documents impossible.");
   return ((data ?? []) as unknown as Row[]).map(toDocument);
+}
+
+// Catégories de l'organisation (D-67), par ordre alphabétique.
+export async function listDocumentCategories(organizationId: string): Promise<DocumentCategory[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("document_categories")
+    .select("id, name")
+    .eq("organization_id", organizationId)
+    .order("name");
+  if (error) throw new Error("Lecture des catégories impossible.");
+  return (data ?? []).sort((a, b) => a.name.localeCompare(b.name, "fr"));
 }

@@ -141,7 +141,22 @@ const documents = [
   // Organisation B : invisible pour le coach A (isolation).
   ["d0c00000-0000-4000-8000-0000000000b1", ORG_B, "Règlement de la salle", "autre", null, COACH_B],
 ];
+// Catégories (D-67) : celles de départ, créées par la base pour chaque organisation.
+const labels = {
+  programme: "Programme",
+  facture: "Facture",
+  contrat: "Contrat",
+  bilan: "Bilan",
+  autre: "Autre",
+};
+const { data: categories, error: categoriesError } = await supabase
+  .from("document_categories")
+  .select("id, organization_id, name");
+if (categoriesError) throw new Error(`Catégories : ${categoriesError.message}`);
 for (const [id, org, name, category, athleteId, createdBy] of documents) {
+  const categoryId =
+    categories.find((item) => item.organization_id === org && item.name === labels[category])?.id ??
+    null;
   const bytes = demoPdf(name);
   const path = `org/${org}/${id}.pdf`;
   const { error: uploadError } = await supabase.storage
@@ -153,7 +168,7 @@ for (const [id, org, name, category, athleteId, createdBy] of documents) {
     organization_id: org,
     athlete_id: athleteId,
     name,
-    category,
+    category_id: categoryId,
     storage_path: path,
     mime_type: "application/pdf",
     size_bytes: bytes.length,

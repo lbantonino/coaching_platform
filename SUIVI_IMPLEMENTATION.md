@@ -32,6 +32,38 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Classement des Documents (option D) ; montant hors TVA et aperçu PDF des factures (D-67)
+```
+Date : 2026-10-29
+Fait : migration 20261029140000_categories_de_documents (table document_categories par
+  organisation, nom unique sans tenir compte des majuscules, 5 catégories de départ créées par un
+  trigger à chaque nouvelle organisation et pour les existantes ; coach_documents.category_id avec
+  clé composée, SET NULL à la suppression ; ancienne colonne category retirée) ; règles
+  domain/documents (parseCategoryName, guessCategoryId, catégorie facultative) ; actions créer /
+  renommer / supprimer une catégorie ; page Documents : catégories du coach en filtres, « Sans
+  catégorie », filtre par sportif, « Gérer les catégories », ?sportif= et ?importer ; onglet
+  « Documents » de la fiche ; recherche globale adaptée ; chargement de démo adapté.
+  Factures : champ montant partagé (amount-field.tsx) « Hors TVA » (défaut) / « TVA comprise » avec
+  le calcul en direct, refait côté serveur (totalsFromEntry ; aller-retour HTVA ↔ TVAC vérifié sans
+  écart pour 6, 12 et 21 % sur un million de montants) ; « Aperçu PDF » dans une fenêtre (PDF servi
+  en ligne avec ?apercu), Télécharger, Imprimer ; téléphone : « Ouvrir le PDF ».
+Tests : check ; Vitest 220/220 ; pgTAP 358/358 (27_categories_de_documents : 9 tests ;
+  24_documents adapté) ; e2e complet 159/159 + 12 ignorés (documents.spec : gestion des catégories,
+  onglet de la fiche ; invoices.spec : montant HTVA, aperçu). Aperçu relu dans le vrai Chrome.
+```
+
+### Facturation sans règle légale, espèces à facturer en option (D-66)
+```
+Date : 2026-10-29
+Fait : plus de mention de TVA écrite en dur (vatMention supprimée) : le PDF et la page n'impriment
+  que les mentions de la structure, écrites par le coach ; texte des Paramètres › Facturation
+  adapté (« à toi de les adapter aux règles de ton pays ») ; OPEN-17 fermé. Préférence
+  coach_profiles.invoice_cash (migration 20261029120000_facturer_especes) : interrupteur « Proposer
+  aussi les espèces à facturer » (Paramètres › Facturation), lu par « À facturer ».
+Tests : check ; Vitest 217/217 ; pgTAP 349/349 ; e2e invoices + settings 16/16 ; suite complète :
+  153 passés, 2 échecs sous charge (athletes, references), qui passent relancés seuls (16/16).
+```
+
 ### Factures émises : brouillon, émission numérotée, PDF (D-65)
 ```
 Date : 2026-10-29

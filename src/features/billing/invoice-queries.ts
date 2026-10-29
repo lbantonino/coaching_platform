@@ -120,7 +120,7 @@ export type InvoiceablePayment = {
   receivedOn: string;
   amountCents: number;
   label: string | null;
-  method: "transfer" | "bancontact";
+  method: "transfer" | "bancontact" | "cash";
   athleteName: string;
 };
 
@@ -135,11 +135,12 @@ type PaymentRow = {
 };
 
 // « À facturer » : les paiements reçus SUR LE COMPTE (virement, Bancontact) des 12 derniers mois,
-// d'un sportif connu, sans facture (brouillon compris). Les espèces n'y sont pas (règle de Gianluca,
-// qui ne les facture pas) ; un autre coach les facture avec « Créer une facture ».
+// d'un sportif connu, sans facture (brouillon compris). Les espèces seulement si le coach l'a choisi
+// dans ses Paramètres (D-66) : Gianluca ne les facture jamais, d'autres coachs oui.
 export async function listInvoiceablePayments(
   organizationId: string,
   since: string,
+  includeCash: boolean,
 ): Promise<InvoiceablePayment[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -148,7 +149,7 @@ export async function listInvoiceablePayments(
       "id, received_on, amount_cents, label, method, athlete:athlete_profiles ( first_name, last_name, display_name ), invoices:athlete_invoices ( id )",
     )
     .eq("organization_id", organizationId)
-    .in("method", ["transfer", "bancontact"])
+    .in("method", includeCash ? ["transfer", "bancontact", "cash"] : ["transfer", "bancontact"])
     .not("athlete_id", "is", null)
     .gte("received_on", since)
     .order("received_on", { ascending: false })
@@ -161,7 +162,7 @@ export async function listInvoiceablePayments(
       receivedOn: row.received_on,
       amountCents: row.amount_cents,
       label: row.label,
-      method: row.method === "bancontact" ? "bancontact" : "transfer",
+      method: row.method === "bancontact" || row.method === "cash" ? row.method : "transfer",
       athleteName: row.athlete
         ? (row.athlete.display_name ??
           [row.athlete.first_name, row.athlete.last_name].filter(Boolean).join(" "))

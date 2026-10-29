@@ -17,7 +17,6 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { documentCategoryLabels, type DocumentCategory } from "@/domain/documents/documents";
 import { SEARCH_MIN, cleanQuery } from "@/domain/search/search";
 import type { SearchResults } from "@/features/search/actions";
 
@@ -208,12 +207,7 @@ export function SearchView({
                 key={document.id}
                 href={`/documents/${document.id}`}
                 title={document.name}
-                trailing={
-                  <Badge>
-                    {documentCategoryLabels[document.category as DocumentCategory] ??
-                      document.category}
-                  </Badge>
-                }
+                trailing={<Badge>{document.category ?? "Sans catégorie"}</Badge>}
               />
             ))}
           </Group>

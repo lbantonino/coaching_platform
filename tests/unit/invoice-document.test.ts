@@ -5,7 +5,7 @@ import {
   defaultInvoiceLabel,
   invoiceFileName,
   invoiceTotals,
-  vatMention,
+  totalsFromEntry,
   vatRateFor,
 } from "@/domain/billing/invoice-document";
 
@@ -15,13 +15,25 @@ describe("Document d'une facture émise (D-65)", () => {
     expect(invoiceTotals(5000, 0)).toEqual({ exclCents: 5000, vatCents: 0, inclCents: 5000 });
   });
 
+  it("calcule la TVA d'un montant saisi hors TVA ou TVA comprise", () => {
+    // 65 € HTVA à 21 % (Gianluca) : 13,65 € de TVA, 78,65 € TVAC.
+    expect(totalsFromEntry(6500, "excl", 21)).toEqual({
+      exclCents: 6500,
+      vatCents: 1365,
+      inclCents: 7865,
+    });
+    expect(totalsFromEntry(7865, "incl", 21)).toEqual({
+      exclCents: 6500,
+      vatCents: 1365,
+      inclCents: 7865,
+    });
+    expect(totalsFromEntry(5000, "excl", 0).inclCents).toBe(5000);
+  });
+
   it("une structure non assujettie ne facture pas de TVA", () => {
     expect(vatRateFor("subject", 21)).toBe(21);
     expect(vatRateFor("franchise", 21)).toBe(0);
     expect(vatRateFor("not_subject", 6)).toBe(0);
-    expect(vatMention("subject")).toBeNull();
-    expect(vatMention("franchise")).toMatch(/franchise/);
-    expect(vatMention("not_subject")).toMatch(/non assujettie/);
   });
 
   it("écrit l'adresse sur deux lignes, le pays seulement hors Belgique", () => {

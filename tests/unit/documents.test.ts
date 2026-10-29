@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   checkDocument,
   formatBytes,
+  guessCategoryId,
   isDocumentPath,
   nameFromFile,
+  parseCategoryName,
   parseDocumentForm,
 } from "@/domain/documents/documents";
 
@@ -53,13 +55,40 @@ describe("documents du coach", () => {
   });
 
   it("valide nom, catégorie et sportif", () => {
-    expect(parseDocumentForm({ name: "  Bilan  ", category: "bilan", athleteId: "" })).toEqual({
+    const category = "c0000000-0000-4000-8000-000000000001";
+    expect(parseDocumentForm({ name: "  Bilan  ", categoryId: category, athleteId: "" })).toEqual({
       ok: true,
-      document: { name: "Bilan", category: "bilan", athleteId: null },
+      document: { name: "Bilan", categoryId: category, athleteId: null },
     });
-    expect(parseDocumentForm({ name: " ", category: "bilan", athleteId: "" }).ok).toBe(false);
-    expect(parseDocumentForm({ name: "X", category: "photo", athleteId: "" }).ok).toBe(false);
-    expect(parseDocumentForm({ name: "X", category: "autre", athleteId: "123" }).ok).toBe(false);
+    // Sans catégorie (D-67) : permis.
+    expect(parseDocumentForm({ name: "X", categoryId: "", athleteId: "" })).toMatchObject({
+      ok: true,
+      document: { categoryId: null },
+    });
+    expect(parseDocumentForm({ name: " ", categoryId: "", athleteId: "" }).ok).toBe(false);
+    expect(parseDocumentForm({ name: "X", categoryId: "photo", athleteId: "" }).ok).toBe(false);
+    expect(parseDocumentForm({ name: "X", categoryId: "", athleteId: "123" }).ok).toBe(false);
+  });
+
+  it("valide le nom d'une catégorie du coach (D-67)", () => {
+    expect(parseCategoryName("  Certificats médicaux ")).toEqual({
+      ok: true,
+      name: "Certificats médicaux",
+    });
+    expect(parseCategoryName("  ").ok).toBe(false);
+    expect(parseCategoryName("x".repeat(61)).ok).toBe(false);
+  });
+
+  it("devine la catégorie d'après le nom du fichier, parmi celles du coach", () => {
+    const categories = [
+      { id: "a", name: "Factures" },
+      { id: "b", name: "Bilans" },
+      { id: "c", name: "Divers" },
+    ];
+    expect(guessCategoryId("facture-octobre.pdf", categories)).toBe("a");
+    expect(guessCategoryId("Bilan de rentrée.pdf", categories)).toBe("b");
+    expect(guessCategoryId("contrat.pdf", categories)).toBeNull();
+    expect(guessCategoryId("photo.jpg", categories)).toBeNull();
   });
 
   it("écrit la taille d'un fichier en français", () => {

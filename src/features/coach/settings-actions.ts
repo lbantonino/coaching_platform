@@ -193,6 +193,18 @@ export async function setNotificationPreference(
   return { ok: !error };
 }
 
+// Facturation (D-66) : proposer aussi les espèces dans « À facturer ». Enregistré tout de suite.
+export async function setInvoiceCashPreference(enabled: boolean): Promise<{ ok: boolean }> {
+  const { user } = await requireCoach();
+  if (typeof enabled !== "boolean") return { ok: false };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("coach_profiles")
+    .upsert({ user_id: user.id, invoice_cash: enabled }, { onConflict: "user_id" });
+  revalidatePath("/coach", "layout");
+  return { ok: !error };
+}
+
 // --- Structures légales -------------------------------------------------------------------------
 function readLegalEntity(formData: FormData): LegalEntityInput {
   return {

@@ -2,7 +2,7 @@ import "server-only";
 
 import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 
-import { addressLines, invoiceTotals, vatMention } from "@/domain/billing/invoice-document";
+import { addressLines, invoiceTotals } from "@/domain/billing/invoice-document";
 import { formatEuros } from "@/domain/billing/invoices";
 import { formatEnterpriseNumber, formatIban } from "@/domain/billing/legal";
 import { formatDate } from "@/lib/format";
@@ -64,7 +64,6 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
   const seller = invoice.seller;
   const totals = invoiceTotals(invoice.amountCents, invoice.vatRate);
   const draft = invoice.status === "draft";
-  const mention = seller ? vatMention(seller.vatStatus) : null;
   return (
     <Document
       title={draft ? "Brouillon de facture" : `Facture ${invoice.number}`}
@@ -158,7 +157,6 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
               {seller.bic ? ` · BIC ${seller.bic}` : ""}
             </Text>
           ) : null}
-          {mention ? <Text style={styles.muted}>{mention}</Text> : null}
           {seller?.legalMentions ? <Text style={styles.muted}>{seller.legalMentions}</Text> : null}
         </View>
 

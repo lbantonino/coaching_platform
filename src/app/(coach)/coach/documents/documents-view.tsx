@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Pencil,
   Search,
+  Tags,
   Trash2,
   Upload,
   type LucideIcon,
@@ -36,22 +37,26 @@ import { ActionMenu, ConfirmDialog, PanelDialog, Sheet } from "@/components/ui/o
 import { useToast } from "@/components/ui/toast";
 import {
   DOCUMENT_ACCEPT,
-  DOCUMENT_CATEGORIES,
   DOCUMENT_MAX_BYTES,
   DOCUMENT_NAME_MAX,
-  documentCategoryLabels,
+  foldText as fold,
   formatBytes,
+  guessCategoryId,
   nameFromFile,
   type DocumentCategory,
   type DocumentKind,
 } from "@/domain/documents/documents";
-import type { DocumentFormState } from "@/features/documents/actions";
+import type { CategoryResult, DocumentFormState } from "@/features/documents/actions";
 import type { CoachDocument } from "@/features/documents/queries";
 
+import { CategoryManager } from "./category-manager";
+
 // Page Documents (prompt Claude Design §7 `/coach/documents`, 4e, D-60) : chiffres, recherche et
-// filtres en direct (Tous / Programme / Facture / Contrat / Bilan / Autre), liste ; un appui ouvre
-// l'aperçu (PDF, image) avec Télécharger, Modifier et Supprimer ; « Importer un fichier » : le
-// fichier, son nom, sa catégorie et le sportif concerné.
+// filtres en direct, liste ; un appui ouvre l'aperçu (PDF, image) avec Télécharger, Modifier et
+// Supprimer ; « Importer un fichier » : le fichier, son nom, sa catégorie et le sportif concerné.
+// Classement (option D, D-67) : les catégories du coach (créées, renommées, supprimées dans « Gérer
+// les catégories ») et le sportif comme second filtre ; ?sportif=<id> ouvre la page filtrée sur un
+// sportif (onglet Documents de sa fiche), ?importer ouvre l'import avec ce sportif déjà choisi.
 type Athlete = { id: string; name: string };
 type UploadAction = (previous: DocumentFormState, formData: FormData) => Promise<DocumentFormState>;
 type UpdateAction = (
@@ -87,33 +92,40 @@ const dayFormatter = new Intl.DateTimeFormat("fr-BE", {
 });
 const shortDay = (iso: string) => dayFormatter.format(new Date(iso));
 
-// Recherche sans accents ni majuscules (« Sophie » trouve « sophie », « Bilan » trouve « bilan »).
-const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+// Filtre de catégorie : toutes, une catégorie (son id), ou les documents sans catégorie.
+const ALL = "tous";
+const NONE = "sans";
+const categoryLabel = (document: CoachDocument) => document.categoryName ?? "Sans catégorie";
 
-// Catégorie devinée d'après le nom du fichier (le coach peut toujours la changer).
-function guessCategory(fileName: string): DocumentCategory {
-  const name = fold(fileName);
-  if (name.includes("facture") || name.includes("invoice")) return "facture";
-  if (name.includes("contrat")) return "contrat";
-  if (name.includes("bilan") || name.includes("test")) return "bilan";
-  if (name.includes("programme") || name.includes("plan")) return "programme";
-  return "autre";
-}
+type CategoryActions = {
+  create: (name: string) => Promise<CategoryResult>;
+  rename: (categoryId: string, name: string) => Promise<CategoryResult>;
+  remove: (categoryId: string) => Promise<CategoryResult>;
+};
 
 const fileUrl = (id: string) => `/documents/${id}`;
 const downloadUrl = (id: string) => `/documents/${id}?telecharger`;
 
 export function DocumentsView({
   documents,
+  categories,
   athletes,
   orgBase,
   monthStart,
+  initialAthleteId,
+  openImport,
   upload,
   update,
   remove,
+  categoryActions,
 }: {
   documents: CoachDocument[];
+  categories: DocumentCategory[];
   athletes: Athlete[];
+  // ?sportif=<id> : la page s'ouvre filtrée sur ce sportif ; ?importer : l'import s'ouvre aussi.
+  initialAthleteId: string;
+  openImport: boolean;
+  categoryActions: CategoryActions;
   orgBase: string;
   // Premier jour du mois à Bruxelles (AAAA-MM-JJ), pour « ajoutés ce mois-ci ».
   monthStart: string;
@@ -122,8 +134,10 @@ export function DocumentsView({
   remove: (documentId: string) => Promise<{ ok: boolean }>;
 }) {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<DocumentCategory | "tous">("tous");
-  const [importing, setImporting] = useState(false);
+  const [category, setCategory] = useState<string>(ALL);
+  const [athleteFilter, setAthleteFilter] = useState(initialAthleteId);
+  const [importing, setImporting] = useState(openImport);
+  const [managing, setManaging] = useState(false);
   const [previewed, setPreviewed] = useState<CoachDocument | null>(null);
   const [editing, setEditing] = useState<CoachDocument | null>(null);
   const [deleting, setDeleting] = useState<CoachDocument | null>(null);
@@ -134,15 +148,28 @@ export function DocumentsView({
 
   const words = fold(query).split(/\s+/).filter(Boolean);
   const shown = documents.filter((document) => {
-    if (category !== "tous" && document.category !== category) return false;
+    if (
+      category === NONE
+        ? document.categoryId !== null
+        : category !== ALL && document.categoryId !== category
+    ) {
+      return false;
+    }
+    if (athleteFilter && document.athleteId !== athleteFilter) return false;
     const haystack = fold(
-      [document.name, document.athleteName ?? "", documentCategoryLabels[document.category]].join(
-        " ",
-      ),
+      [document.name, document.athleteName ?? "", categoryLabel(document)].join(" "),
     );
     return words.every((word) => haystack.includes(word));
   });
 
+  const hasUncategorized = documents.some((document) => document.categoryId === null);
+  const categoryTitle =
+    category === ALL
+      ? "Tous les documents"
+      : category === NONE
+        ? "Sans catégorie"
+        : (categories.find((item) => item.id === category)?.name ?? "Tous les documents");
+  const filteredAthlete = athletes.find((athlete) => athlete.id === athleteFilter);
   const thisMonth = documents.filter((document) => document.createdAt.slice(0, 10) >= monthStart);
   const linked = documents.filter((document) => document.athleteId !== null);
   const totalBytes = documents.reduce((sum, document) => sum + document.sizeBytes, 0);
@@ -208,41 +235,73 @@ export function DocumentsView({
         </KpiGrid>
 
         <div className="flex flex-col gap-3">
-          <label className="flex h-11 items-center gap-2.5 rounded-control border border-line bg-surface px-3 text-[14px] focus-within:border-accent md:max-w-[420px]">
-            <Search aria-hidden size={16} strokeWidth={1.8} className="shrink-0 text-muted" />
-            <span className="sr-only">Rechercher un document</span>
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Rechercher un document, un sportif…"
-              autoComplete="off"
-              className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-text outline-none placeholder:text-muted md:text-[14px]"
-            />
-          </label>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <label className="flex h-11 items-center gap-2.5 rounded-control border border-line bg-surface px-3 text-[14px] focus-within:border-accent md:w-[420px]">
+              <Search aria-hidden size={16} strokeWidth={1.8} className="shrink-0 text-muted" />
+              <span className="sr-only">Rechercher un document</span>
+              <input
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Rechercher un document, un sportif…"
+                autoComplete="off"
+                className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-text outline-none placeholder:text-muted md:text-[14px]"
+              />
+            </label>
+            {/* Second filtre (D-67) : les documents d'un sportif. */}
+            <label className="flex flex-col gap-1 md:w-64">
+              <span className="sr-only">Filtrer par sportif</span>
+              <select
+                value={athleteFilter}
+                onChange={(event) => setAthleteFilter(event.target.value)}
+                className={`${inputClass} h-11 text-[14px]`}
+              >
+                <option value="">Tous les sportifs</option>
+                {athletes.map((athlete) => (
+                  <option key={athlete.id} value={athlete.id}>
+                    {athlete.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div
             role="group"
             aria-label="Catégories"
             className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
           >
-            {(["tous", ...DOCUMENT_CATEGORIES] as const).map((key) => (
+            {[
+              { key: ALL, label: "Tous" },
+              ...categories.map((item) => ({ key: item.id, label: item.name })),
+              ...(hasUncategorized ? [{ key: NONE, label: "Sans catégorie" }] : []),
+            ].map(({ key, label }) => (
               <button
                 key={key}
                 type="button"
                 aria-pressed={category === key}
                 onClick={() => setCategory(key)}
-                className={`${chipClass} ${category === key ? chipActiveClass : chipIdleClass}`}
+                className={`${chipClass} shrink-0 ${category === key ? chipActiveClass : chipIdleClass}`}
               >
-                {key === "tous" ? "Tous" : documentCategoryLabels[key]}
+                {label}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setManaging(true)}
+              className={`${chipClass} ${chipIdleClass} shrink-0 gap-1.5`}
+            >
+              <Tags aria-hidden size={14} strokeWidth={1.8} />
+              Gérer les catégories
+            </button>
           </div>
         </div>
 
         <Card
           id="documents-title"
-          title={category === "tous" ? "Tous les documents" : documentCategoryLabels[category]}
-          subtitle={`${shown.length} document${shown.length > 1 ? "s" : ""}`}
+          title={categoryTitle}
+          subtitle={`${shown.length} document${shown.length > 1 ? "s" : ""}${
+            filteredAthlete ? ` · ${filteredAthlete.name}` : ""
+          }`}
         >
           {documents.length === 0 ? (
             <div className="flex flex-col items-start gap-3 border-t border-line pt-3.5">
@@ -278,7 +337,7 @@ export function DocumentsView({
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className="truncate text-[15px] font-semibold">{document.name}</span>
                         <span className="truncate text-[13px] text-muted">
-                          {[documentCategoryLabels[document.category], document.athleteName]
+                          {[categoryLabel(document), document.athleteName]
                             .filter(Boolean)
                             .join(" · ")}
                         </span>
@@ -354,6 +413,8 @@ export function DocumentsView({
           <UploadForm
             action={upload}
             athletes={athletes}
+            categories={categories}
+            initialAthleteId={athleteFilter}
             onSaved={() => {
               setImporting(false);
               toast("Document importé.");
@@ -369,6 +430,7 @@ export function DocumentsView({
             key={editing.id}
             document={editing}
             athletes={athletes}
+            categories={categories}
             action={update.bind(null, editing.id)}
             onSaved={() => {
               setEditing(null);
@@ -378,6 +440,15 @@ export function DocumentsView({
             }}
           />
         ) : null}
+      </Sheet>
+
+      <Sheet
+        open={managing}
+        onClose={() => setManaging(false)}
+        title="Gérer les catégories"
+        subtitle="Supprimer une catégorie ne supprime pas ses documents : ils deviennent « sans catégorie »."
+      >
+        {managing ? <CategoryManager categories={categories} actions={categoryActions} /> : null}
       </Sheet>
 
       <ConfirmDialog
@@ -411,7 +482,7 @@ function Preview({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px] text-muted">
-        <Badge>{documentCategoryLabels[document.category]}</Badge>
+        <Badge>{categoryLabel(document)}</Badge>
         {document.athleteId && document.athleteName ? (
           <Link
             href={`${orgBase}/sportifs/${document.athleteId}`}
@@ -485,23 +556,29 @@ function Preview({
   );
 }
 
-// Pastilles de catégorie (cases radio), partagées par l'import et la modification.
+// Pastilles de catégorie (cases radio), partagées par l'import et la modification : les catégories
+// du coach (D-67), plus « Aucune ».
 function CategoryChoice({
+  categories,
   value,
   onChange,
 }: {
-  value: DocumentCategory;
-  onChange?: (value: DocumentCategory) => void;
+  categories: DocumentCategory[];
+  value: string;
+  onChange?: (value: string) => void;
 }) {
   return (
     <fieldset className="flex flex-col gap-1.5">
       <legend className={`${labelClass} mb-1.5`}>Catégorie</legend>
       <div className="flex flex-wrap gap-2">
-        {DOCUMENT_CATEGORIES.map((key) => (
-          <label key={key} className={checkboxChipClass}>
+        {[
+          ...categories.map((item) => ({ key: item.id, label: item.name })),
+          { key: "", label: "Aucune" },
+        ].map(({ key, label }) => (
+          <label key={key || "aucune"} className={checkboxChipClass}>
             <input
               type="radio"
-              name="category"
+              name="categoryId"
               value={key}
               checked={onChange ? value === key : undefined}
               defaultChecked={onChange ? undefined : value === key}
@@ -514,7 +591,7 @@ function CategoryChoice({
               strokeWidth={2.4}
               className="hidden group-has-checked:block"
             />
-            {documentCategoryLabels[key]}
+            {label}
           </label>
         ))}
       </div>
@@ -567,18 +644,23 @@ const initial: DocumentFormState = { error: null, attempt: 0, values: null, save
 function UploadForm({
   action,
   athletes,
+  categories,
+  initialAthleteId,
   onSaved,
 }: {
   action: UploadAction;
   athletes: Athlete[];
+  categories: DocumentCategory[];
+  // Sportif déjà choisi (filtre de la page, ou onglet Documents de sa fiche).
+  initialAthleteId: string;
   onSaved: () => void;
 }) {
   const [state, run, pending] = useActionState(action, initial);
   const [, startTransition] = useTransition();
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<DocumentCategory>("autre");
-  const [athleteId, setAthleteId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [athleteId, setAthleteId] = useState(initialAthleteId);
   const [localError, setLocalError] = useState<string | null>(null);
   useEffect(() => {
     if (state.saved) onSaved();
@@ -591,7 +673,7 @@ function UploadForm({
     if (picked.size > DOCUMENT_MAX_BYTES) setLocalError("Fichier trop lourd : 10 Mo maximum.");
     // Nom et catégorie proposés d'après le fichier, s'ils n'ont pas encore été choisis.
     if (!name.trim()) setName(nameFromFile(picked.name));
-    if (category === "autre") setCategory(guessCategory(picked.name));
+    if (!categoryId) setCategoryId(guessCategoryId(picked.name, categories) ?? "");
   };
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -604,7 +686,7 @@ function UploadForm({
     const formData = new FormData();
     formData.set("file", file);
     formData.set("name", name);
-    formData.set("category", category);
+    formData.set("categoryId", categoryId);
     formData.set("athleteId", athleteId);
     startTransition(() => run(formData));
   };
@@ -656,7 +738,7 @@ function UploadForm({
         />
       </div>
 
-      <CategoryChoice value={category} onChange={setCategory} />
+      <CategoryChoice categories={categories} value={categoryId} onChange={setCategoryId} />
       <AthleteSelect
         id="document-athlete"
         athletes={athletes}
@@ -681,11 +763,13 @@ function UploadForm({
 function EditForm({
   document,
   athletes,
+  categories,
   action,
   onSaved,
 }: {
   document: CoachDocument;
   athletes: Athlete[];
+  categories: DocumentCategory[];
   action: UploadAction;
   onSaved: () => void;
 }) {
@@ -695,7 +779,7 @@ function EditForm({
   }, [state, onSaved]);
   const values = state.values ?? {
     name: document.name,
-    category: document.category,
+    categoryId: document.categoryId ?? "",
     athleteId: document.athleteId ?? "",
   };
   return (
@@ -713,7 +797,7 @@ function EditForm({
           className={inputClass}
         />
       </div>
-      <CategoryChoice value={values.category as DocumentCategory} />
+      <CategoryChoice categories={categories} value={values.categoryId} />
       <AthleteSelect id="document-edit-athlete" athletes={athletes} value={values.athleteId} />
       <div className="flex flex-col gap-3">
         {state.error ? (

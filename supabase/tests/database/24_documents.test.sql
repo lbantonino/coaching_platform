@@ -20,9 +20,9 @@ insert into public.athlete_profiles (id, organization_id, first_name, athlete_us
   ('a1a1a1a1-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'Sportif A',
    '33333333-3333-4333-8333-333333333333'),
   ('b1b1b1b1-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002', 'Sportif B', null);
-insert into public.coach_documents (id, organization_id, name, category, storage_path, mime_type, size_bytes)
+insert into public.coach_documents (id, organization_id, name, storage_path, mime_type, size_bytes)
 values ('d0c00000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'Contrat',
-        'contrat', 'org/aaaaaaaa-0000-4000-8000-000000000001/d0c00000-0000-4000-8000-000000000001.pdf',
+        'org/aaaaaaaa-0000-4000-8000-000000000001/d0c00000-0000-4000-8000-000000000001.pdf',
         'application/pdf', 1200);
 insert into storage.objects (bucket_id, name) values
   ('coach-documents', 'org/aaaaaaaa-0000-4000-8000-000000000001/d0c00000-0000-4000-8000-000000000001.pdf');
@@ -63,7 +63,7 @@ select throws_ok(
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';
 select lives_ok(
-  $$ update public.coach_documents set name = 'Contrat signé', category = 'contrat',
+  $$ update public.coach_documents set name = 'Contrat signé',
      athlete_id = 'a1a1a1a1-0000-4000-8000-000000000001'
      where id = 'd0c00000-0000-4000-8000-000000000001' $$,
   'Coach A renomme son document et le relie à son sportif'

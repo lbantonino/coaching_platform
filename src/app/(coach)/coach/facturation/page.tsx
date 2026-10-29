@@ -18,6 +18,7 @@ import { requireCoach } from "@/features/auth/guards";
 import { listInvoiceablePayments } from "@/features/billing/invoice-queries";
 import { listInvoices } from "@/features/billing/queries";
 import { listLegalEntities } from "@/features/coach/legal-queries";
+import { getCoachProfile } from "@/features/coach/profile";
 import { dayShortLabel, formatDate, todayIsoInBrussels } from "@/lib/format";
 
 import { CreateInvoiceButton } from "./invoice-controls";
@@ -50,12 +51,14 @@ const short = (day: string) => shortDate.format(new Date(`${day}T00:00:00Z`));
 
 async function Billing() {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
-  const { memberships } = await requireCoach();
+  const { user, memberships } = await requireCoach();
   const organizationId = memberships[0].organizationId;
   const today = todayIsoInBrussels();
+  const profile = await getCoachProfile(user);
+  const includeCash = profile.preferences.invoiceCash;
   const [invoices, toInvoice, athletes, entities] = await Promise.all([
     listInvoices(organizationId),
-    listInvoiceablePayments(organizationId, addDays(today, -365)),
+    listInvoiceablePayments(organizationId, addDays(today, -365), includeCash),
     listAthletes(organizationId, { status: "all", q: "" }),
     listLegalEntities(organizationId),
   ]);
@@ -95,7 +98,11 @@ async function Billing() {
               À facturer
             </CardTitle>
           }
-          subtitle="Paiements reçus sur ton compte (virement, Bancontact) sans facture, sur 12 mois. Pour des espèces : « Créer une facture »."
+          subtitle={
+            includeCash
+              ? "Paiements reçus sans facture, sur 12 mois (virement, Bancontact, espèces)."
+              : "Paiements reçus sur ton compte (virement, Bancontact) sans facture, sur 12 mois. Les espèces : réglage dans Paramètres, ou « Créer une facture »."
+          }
         >
           {toInvoice.length === 0 ? (
             <CardEmpty icon={Landmark}>Tous les virements reçus ont leur facture.</CardEmpty>
@@ -112,7 +119,7 @@ async function Billing() {
                     title={payment.athleteName}
                     sub={[
                       payment.label,
-                      `${formatEuros(payment.amountCents)} par ${payment.method === "bancontact" ? "Bancontact" : "virement"}`,
+                      `${formatEuros(payment.amountCents)} ${payment.method === "cash" ? "en espèces" : payment.method === "bancontact" ? "par Bancontact" : "par virement"}`,
                     ]
                       .filter(Boolean)
                       .join(" · ")}

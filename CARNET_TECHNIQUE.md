@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda, factures émises).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda, factures émises, classement des Documents).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -369,6 +369,14 @@ La page Séances montrait les mêmes séances que l'Agenda, sous une autre forme
 Une facture est un document légal : une fois envoyée, elle ne doit plus changer, et les numéros doivent se suivre sans trou. On l'a donc modélisée en deux états : un **brouillon** qu'on corrige librement, puis une facture **émise**, figée. Le numéro n'est pas calculé dans l'application mais **par la base**, dans une fonction SQL qui verrouille un compteur par structure et par année : si deux clics « Émettre » arrivent en même temps, l'un attend l'autre, et si l'émission échoue, le numéro n'est pas consommé (tout est dans la même transaction). Même un développeur qui contournerait l'écran ne pourrait pas modifier une facture émise : un **trigger** l'interdit en base, et un test pgTAP le prouve hors RLS. La facture garde aussi une **copie** de la structure (raison sociale, TVA, IBAN) au moment de l'émission : changer d'adresse plus tard ne réécrit pas les anciennes factures.
 
 Le PDF est fabriqué avec **React-PDF** (note de décision ADR 0002) : la facture s'écrit en composants React, rendue sur le serveur sans navigateur. Il a été choisi parmi trois options parce qu'il reste léger et marche chez n'importe quel hébergeur ; il servira aussi aux programmes. Côté métier, deux règles de Gianluca se retrouvent dans le code : seuls les virements se facturent, et une facture « déjà payée » crée aussi le **vrai paiement** dans la Comptabilité, pour que le chiffre d'affaires reste juste.
+
+### Une app pour tous les pays : Coory ne joue pas au juriste (29/10)
+Première version des factures : des phrases légales belges écrites dans le code (« régime de franchise… »), et une liste de points « à faire valider par un comptable ». Antonino a pointé le problème : si Coory sert un jour en France ou ailleurs, l'app ne peut pas connaître les lois de chaque pays. La décision (D-66) : Coory fournit des **outils neutres** (numéro qui se suit, structure, TVA au choix, mentions libres, PDF) et le coach reste responsable de ce qu'il écrit. Techniquement, c'est surtout du code en moins : les phrases en dur ont disparu, et le PDF imprime les mentions saisies par le coach. Même logique pour les espèces : plutôt que d'imposer la règle d'un seul coach, un **réglage** laisse chacun choisir s'il veut les voir dans « À facturer ».
+
+### Des catégories que le coach choisit lui-même (29/10)
+Les Documents avaient cinq catégories fixes, écrites dans le code et dans une contrainte de la base. Pour que chaque coach range à sa façon, la catégorie est devenue une **table** : chaque organisation a ses propres catégories, et un document pointe vers l'une d'elles. Trois détails comptent. Une **clé étrangère composée** (identifiant + organisation) empêche un document de pointer vers la catégorie d'un autre coach, même en contournant l'écran. Supprimer une catégorie ne supprime pas ses documents : la base remet simplement leur catégorie à vide (`ON DELETE SET NULL`). Et un **trigger** donne les cinq catégories de départ à chaque nouvelle organisation, pour qu'un nouveau coach ne commence pas devant une liste vide. La migration a converti les documents existants : rien ne s'est perdu en route.
+
+Sur les factures, le coach saisit maintenant son prix **hors TVA** (c'est ainsi que Gianluca raisonne : 65 € HTVA) et voit la TVA s'ajouter en direct. Avant de changer, on a vérifié par un petit script que passer du HTVA au TVAC puis revenir ne perd jamais un centime (un million de montants testés pour chaque taux) : on peut donc garder un seul montant en base sans risque d'écart.
 
 ---
 

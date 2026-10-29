@@ -6,14 +6,17 @@ import { z } from "zod";
 import {
   checkDocument,
   DOCUMENT_MAX_BYTES,
+  parseCategoryName,
   parseDocumentForm,
   type DocumentFormValues,
 } from "@/domain/documents/documents";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
-// Documents du coach (4e, D-60) : importer, renommer / reclasser, supprimer. Chaque action revérifie
-// l'accès à l'organisation ; la RLS de la table ET du stockage protège en plus.
+// Documents du coach (4e, D-60) : importer, renommer / reclasser, supprimer ; et leurs catégories
+// (D-67) : créer, renommer, supprimer. Chaque action revérifie l'accès à l'organisation ; la RLS de
+// la table ET du stockage protège en plus (une catégorie d'une autre organisation est refusée par
+// la clé étrangère composée).
 const BUCKET = "coach-documents";
 
 export type DocumentFormState = {
@@ -27,7 +30,7 @@ type Client = Awaited<ReturnType<typeof createClient>>;
 
 const readValues = (formData: FormData): DocumentFormValues => ({
   name: String(formData.get("name") ?? ""),
-  category: String(formData.get("category") ?? ""),
+  categoryId: String(formData.get("categoryId") ?? ""),
   athleteId: String(formData.get("athleteId") ?? ""),
 });
 
@@ -44,6 +47,8 @@ async function athleteInOrg(supabase: Client, orgId: string, athleteId: string |
 
 function revalidateDocuments() {
   revalidatePath("/coach/documents");
+  // Onglet Documents de la fiche sportif (D-67).
+  revalidatePath("/coach/o", "layout");
 }
 
 export async function uploadDocument(
@@ -86,7 +91,7 @@ export async function uploadDocument(
     organization_id: orgId,
     athlete_id: parsed.document.athleteId,
     name: parsed.document.name,
-    category: parsed.document.category,
+    category_id: parsed.document.categoryId,
     storage_path: path,
     mime_type: check.mime,
     size_bytes: bytes.length,
@@ -129,7 +134,7 @@ export async function updateDocument(
     .from("coach_documents")
     .update({
       name: parsed.document.name,
-      category: parsed.document.category,
+      category_id: parsed.document.categoryId,
       athlete_id: parsed.document.athleteId,
     })
     .eq("id", documentId)
@@ -160,4 +165,82 @@ export async function deleteDocument(
   await supabase.storage.from(BUCKET).remove([data[0].storage_path]);
   revalidateDocuments();
   return { ok: true };
+}
+
+// --- Catégories (D-67) --------------------------------------------------------------------------
+export type CategoryResult = { ok: boolean; error: string | null };
+
+const duplicate = "Une catégorie porte déjà ce nom.";
+
+export async function createDocumentCategory(
+  organizationId: string,
+  rawName: string,
+): Promise<CategoryResult> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const parsed = parseCategoryName(String(rawName ?? ""));
+  if (!parsed.ok) return { ok: false, error: parsed.error };
+  const supabase = await createClient();
+  const { error } = await supabase.from("document_categories").insert({
+    organization_id: membership.organizationId,
+    name: parsed.name,
+    created_by: user.id,
+  });
+  if (error) {
+    return {
+      ok: false,
+      error: error.code === "23505" ? duplicate : "La catégorie n'a pas pu être créée.",
+    };
+  }
+  revalidateDocuments();
+  return { ok: true, error: null };
+}
+
+export async function renameDocumentCategory(
+  organizationId: string,
+  categoryId: string,
+  rawName: string,
+): Promise<CategoryResult> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (!z.uuid().safeParse(categoryId).success)
+    return { ok: false, error: "Catégorie introuvable." };
+  const parsed = parseCategoryName(String(rawName ?? ""));
+  if (!parsed.ok) return { ok: false, error: parsed.error };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("document_categories")
+    .update({ name: parsed.name })
+    .eq("id", categoryId)
+    .eq("organization_id", membership.organizationId)
+    .select("id");
+  if (error) {
+    return {
+      ok: false,
+      error: error.code === "23505" ? duplicate : "La catégorie n'a pas pu être renommée.",
+    };
+  }
+  if (!data?.length) return { ok: false, error: "Catégorie introuvable." };
+  revalidateDocuments();
+  return { ok: true, error: null };
+}
+
+// Supprimer une catégorie : ses documents restent, « sans catégorie » (clé étrangère SET NULL).
+export async function deleteDocumentCategory(
+  organizationId: string,
+  categoryId: string,
+): Promise<CategoryResult> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (!z.uuid().safeParse(categoryId).success)
+    return { ok: false, error: "Catégorie introuvable." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("document_categories")
+    .delete()
+    .eq("id", categoryId)
+    .eq("organization_id", membership.organizationId)
+    .select("id");
+  if (error || !data?.length) {
+    return { ok: false, error: "La catégorie n'a pas pu être supprimée." };
+  }
+  revalidateDocuments();
+  return { ok: true, error: null };
 }

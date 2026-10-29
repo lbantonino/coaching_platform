@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { isPhone } from "./helpers";
+
 // Factures émises (D-65) : un virement reçu apparaît « à facturer » ; « Créer la facture » ouvre un
 // brouillon (client et adresse repris de la fiche), modifiable ; « Émettre » donne un numéro et fige
 // la facture ; le PDF se télécharge. Les espèces ne se facturent pas. Libellé unique par test : les
@@ -54,6 +56,14 @@ test("un virement se facture : brouillon modifiable, émission numérotée, PDF"
   await page.getByLabel("Description de la prestation").fill(`${label} · corrigé`);
   await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
   await expect(page.getByText("Brouillon enregistré.")).toBeVisible();
+  // Aperçu dans une fenêtre (29/10) : le PDF s'affiche, avec Télécharger et Imprimer.
+  await page.getByRole("button", { name: "Aperçu PDF" }).click();
+  const preview = page.getByRole("dialog", { name: "Aperçu du brouillon" });
+  await expect(preview.getByRole("link", { name: "Télécharger" })).toBeVisible();
+  await expect(preview.getByRole("button", { name: "Imprimer" })).toBeVisible();
+  await preview.getByRole("button", { name: "Fermer" }).click();
+  const inline = await page.request.get(`${page.url()}/pdf?apercu`);
+  expect(inline.headers()["content-disposition"]).toMatch(/^inline/);
   const draftPdf = await page.request.get(`${page.url()}/pdf`);
   expect(draftPdf.headers()["content-type"]).toBe("application/pdf");
   expect(draftPdf.headers()["content-disposition"]).toContain("brouillon-facture.pdf");
@@ -148,8 +158,11 @@ test("« Créer une facture » : un nouveau sportif (sa fiche est créée), à p
   await dialog.getByLabel("Code postal").fill("1000");
   await dialog.getByLabel("Ville").fill("Bruxelles");
   await dialog.getByLabel("Description de la prestation").fill("Bilan de forme");
-  await dialog.getByLabel("Montant (TVAC)").fill("121");
-  await expect(dialog.getByText(/100,00\s€ HTVA · 21,00\s€ de TVA/)).toBeVisible();
+  // Montant saisi hors TVA (par défaut, 29/10) : la TVA de 21 % s'ajoute toute seule.
+  await dialog.getByLabel("Montant (HTVA)").fill("100");
+  await expect(
+    dialog.getByText(/100,00\s€ HTVA \+ 21,00\s€ de TVA \(21 %\) = 121,00\s€ TVAC/),
+  ).toBeVisible();
   await dialog.getByText("À payer", { exact: true }).click();
   await dialog.getByRole("button", { name: "Créer le brouillon" }).click();
 
@@ -157,7 +170,7 @@ test("« Créer une facture » : un nouveau sportif (sa fiche est créée), à p
   await expect(page.getByRole("heading", { name: "Brouillon de facture", level: 1 })).toBeVisible();
   await expect(page.getByLabel("Rue et numéro")).toHaveValue("Rue du Test 3");
   // Le montant d'un brouillon se corrige (29/10).
-  await page.getByLabel("Montant (TVAC)").fill("242");
+  await page.getByLabel("Montant (HTVA)").fill("200");
   await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
   await expect(page.getByText("Brouillon enregistré.")).toBeVisible();
   await expect(page.getByRole("region", { name: "Montants" })).toContainText(/200,00\s€/);
@@ -181,4 +194,33 @@ test("« Créer une facture » : un nouveau sportif (sa fiche est créée), à p
   await expect(paymentRow).toContainText("Espèces");
   await page.goto(`/coach/recherche?q=${lastName}`);
   await expect(page.getByRole("link", { name: new RegExp(lastName) }).first()).toBeVisible();
+});
+
+test("réglage : proposer aussi les espèces à facturer (D-66)", async ({ page }) => {
+  test.skip(isPhone(page), "Écrit les préférences du coach B : un seul projet.");
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-b@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+
+  const toggle = async (on: boolean) => {
+    await page.goto("/coach/profil?onglet=facturation");
+    const control = page.getByRole("switch", { name: "Proposer aussi les espèces à facturer" });
+    await (on ? control.check({ force: true }) : control.uncheck({ force: true }));
+    await expect(
+      page.getByText(on ? /seront proposées à facturer/ : /ne seront plus proposées/),
+    ).toBeVisible();
+  };
+  await toggle(true);
+  await page.goto("/coach/facturation");
+  await expect(page.getByRole("region", { name: "À facturer" })).toContainText(
+    "(virement, Bancontact, espèces)",
+  );
+  // Remis comme avant : les autres tests du coach B n'en dépendent pas.
+  await toggle(false);
+  await page.goto("/coach/facturation");
+  await expect(page.getByRole("region", { name: "À facturer" })).toContainText(
+    "Les espèces : réglage dans Paramètres",
+  );
 });
