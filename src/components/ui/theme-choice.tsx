@@ -19,18 +19,18 @@ const subscribe = (listener: () => void) => {
 function readPreference(): ThemePreference {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return stored === "dark" || stored === "system" ? stored : "light";
+    // Graphite par défaut (29/10/2026).
+    return stored === "light" || stored === "system" ? stored : "dark";
   } catch {
-    return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    return document.documentElement.dataset.theme === "light" ? "light" : "dark";
   }
 }
 
 export function applyThemePreference(preference: ThemePreference) {
-  const dark =
-    preference === "dark" ||
-    (preference === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
-  if (dark) document.documentElement.dataset.theme = "dark";
-  else delete document.documentElement.dataset.theme;
+  const light =
+    preference === "light" ||
+    (preference === "system" && !matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = light ? "light" : "dark";
   try {
     localStorage.setItem(THEME_STORAGE_KEY, preference);
   } catch {
@@ -53,11 +53,7 @@ export function ThemeChoice({
   name?: string;
   compact?: boolean;
 }) {
-  const preference = useSyncExternalStore(
-    subscribe,
-    readPreference,
-    (): ThemePreference => "light",
-  );
+  const preference = useSyncExternalStore(subscribe, readPreference, (): ThemePreference => "dark");
   return (
     <fieldset className="min-w-0">
       <legend className="sr-only">Thème</legend>

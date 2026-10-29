@@ -291,8 +291,8 @@ export function PreferencesForm({ values }: { values: PreferencesInput }) {
           Heures de l&apos;agenda
         </h3>
         <p className="-mt-2.5 text-small text-muted">
-          Heures affichées dans la grille ; une séance plus tôt ou plus tard élargit
-          l&apos;affichage.
+          Heures visibles à l&apos;ouverture de la grille ; elle défile de 00:00 à 24:00 pour noter
+          quelque chose plus tôt ou plus tard.
         </p>
         <div className="grid grid-cols-2 gap-4 md:w-2/3">
           <div className="flex flex-col gap-1.5">

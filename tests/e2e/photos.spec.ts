@@ -70,5 +70,6 @@ test("le coach renseigne son identité et son entreprise dans Paramètres", asyn
   await page.reload();
   await expect(page.getByLabel(/^Entreprise/)).toHaveValue("Bianchi Performance");
   await page.goto("/coach");
-  await expect(page.getByRole("heading", { name: /^Bonjour Marco/, level: 1 })).toBeVisible();
+  // Le prénom apparaît sur la carte du compte (menu de gauche, ou menu hamburger sur téléphone).
+  await expect(page.getByLabel(/^Menu du compte : Marco/).first()).toBeAttached();
 });

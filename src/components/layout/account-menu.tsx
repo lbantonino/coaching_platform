@@ -166,7 +166,7 @@ export function AccountMenu() {
           </div>
           <div className="mt-0.5 border-t border-line pt-1.5">
             <form action={logout}>
-              <button type="submit" className={`${itemBase} text-accent-text`}>
+              <button type="submit" className={`${itemBase} text-alert`}>
                 <LogOut aria-hidden size={18} strokeWidth={1.7} />
                 Se déconnecter
               </button>
@@ -189,11 +189,12 @@ export function AccountMenu() {
         }`}
       >
         {photo}
-        <span className="flex min-w-0 flex-1 flex-col">
+        <span data-account-text="" className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-[14px] font-semibold">{user.name}</span>
           <span className="truncate text-[12px] text-muted">{user.role}</span>
         </span>
         <ChevronDown
+          data-account-chevron=""
           aria-hidden
           size={17}
           strokeWidth={1.8}

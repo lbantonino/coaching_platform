@@ -89,7 +89,7 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   await page.getByLabel("Mot de passe", { exact: true }).fill(newPassword);
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
-  await expect(page.getByRole("heading", { name: /^Bonjour/, level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tableau de bord", level: 1 })).toBeVisible();
 });
 
 test("un lien falsifié mène à la page « lien invalide »", async ({ page }) => {

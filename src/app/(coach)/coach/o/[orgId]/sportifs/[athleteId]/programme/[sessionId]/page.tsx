@@ -81,7 +81,8 @@ function Figure({
   return (
     <div
       style={{ "--c": color } as CSSProperties}
-      className="flex h-full min-w-0 flex-col gap-1.5 rounded-card border border-[color-mix(in_srgb,var(--c)_30%,transparent)] bg-[color-mix(in_srgb,var(--c)_10%,var(--surface))] p-4"
+      // Carte neutre (29/10/2026) : la couleur va à l'icône et à l'intitulé, plus un contour léger.
+      className="flex h-full min-w-0 flex-col gap-1.5 rounded-card border border-[color-mix(in_srgb,var(--c)_30%,transparent)] bg-surface p-4"
     >
       <span
         aria-hidden
@@ -89,10 +90,8 @@ function Figure({
       >
         <Icon size={16} strokeWidth={1.8} />
       </span>
-      <span className="text-[13px] text-muted">{label}</span>
-      <span className="text-[16px] leading-snug font-semibold break-words text-[var(--c)]">
-        {value}
-      </span>
+      <span className="text-[13px] font-medium text-[var(--c)]">{label}</span>
+      <span className="text-[16px] leading-snug font-semibold break-words">{value}</span>
     </div>
   );
 }
@@ -101,7 +100,9 @@ function Step({ step, index, color }: { step: ProgramSessionStep; index: number;
   return (
     <li
       style={{ "--c": color } as CSSProperties}
-      className="flex gap-3.5 rounded-[14px] border border-[color-mix(in_srgb,var(--c)_35%,transparent)] border-l-4 border-l-[var(--c)] bg-[color-mix(in_srgb,var(--c)_8%,var(--surface))] p-3.5"
+      // Étape (29/10/2026) : plus de bordure gauche épaisse ni de fond teinté ; contour léger,
+      // numéro et titre en couleur.
+      className="flex gap-3.5 rounded-[14px] border border-[color-mix(in_srgb,var(--c)_35%,transparent)] bg-surface p-3.5"
     >
       <span
         aria-hidden
@@ -111,7 +112,7 @@ function Step({ step, index, color }: { step: ProgramSessionStep; index: number;
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-[16px] font-semibold">{step.title}</h3>
+          <h3 className="text-[16px] font-semibold text-[var(--c)]">{step.title}</h3>
           {step.badge ? (
             <span className="shrink-0 rounded-pill bg-[color-mix(in_srgb,var(--c)_18%,transparent)] px-2.5 py-1 font-mono text-[12px] font-semibold text-[var(--c)] tabular">
               {step.badge}

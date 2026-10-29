@@ -1,4 +1,5 @@
 import {
+  House,
   CalendarDays,
   Check,
   Clock,
@@ -13,6 +14,7 @@ import { Suspense, type CSSProperties } from "react";
 
 import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
+import { NextSessionCard } from "@/components/blocks/next-session-card";
 import { AgendaToolbar, periodLabel } from "@/components/blocks/agenda-toolbar";
 import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
@@ -31,7 +33,6 @@ import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
 import {
   formatHours,
-  isoWeek,
   layoutDays,
   layoutWeek,
   withHours,
@@ -244,68 +245,98 @@ async function Dashboard({
     .slice(0, 5);
   const activity = monthActivity(invoices, today);
 
+  // Prochaine séance (carte or, 29/10/2026) : la plus proche, avec son rang dans sa journée.
+  const next = upcoming[0] ?? null;
+  const nextDay = next ? layoutDays(sessions, [next.date]).days[0].blocks : [];
+  const nextSession = next ? sessions.find((session) => session.id === next.sessionId) : undefined;
+  const nextAthlete = next?.individual ? nextSession?.athletes[0] : undefined;
+
   return (
     <>
       <PageHeader
-        title={`Bonjour ${profile.firstName ?? profile.displayName}`}
-        subtitle={`${capitalize(longDay.format(utc(today)))} · semaine ${isoWeek(today)}`}
+        // Le nom de la page, comme les autres pages (demande d'Antonino du 29/10/2026 : plus de
+        // « Bonjour » ni de date).
+        title="Tableau de bord"
+        icon={House}
         actions={<CreateMenu orgBase={orgBase} />}
+        inline
       />
       <PageBody grid>
-        <div className="lg:col-span-12">
-          {/* Demande d'Antonino du 26/10 : en haut, seulement ce que le coach doit voir d'abord, ses
-              tâches et ce qu'il a encaissé cette semaine. Les chiffres de l'agenda passent sous le
-              calendrier. */}
-          <KpiGrid label="Chiffres clés" columns={2} equal>
-            <KpiListCard
-              href="/coach/taches"
-              color="strength"
-              icon={ListChecks}
-              value={String(tasks.openCount)}
-              label={tasks.openCount > 1 ? "tâches à faire" : "tâche à faire"}
-              shortLabel="Tâches"
-            >
-              <TaskList
-                tasks={tasks.items.map((task) => ({
-                  id: task.id,
-                  title: task.title,
-                  sub: [dueLabel(task.dueOn, today), task.athleteName].filter(Boolean).join(" · "),
-                  urgent: task.priority === "high",
-                  checked: task.done,
-                  label: `Tâche faite : ${task.title}`,
-                  edit: editableTask(task),
-                }))}
-                action={setTaskDone.bind(null, current.organizationId)}
-                empty="Aucune tâche à faire"
-                toasts={{ checked: "Tâche terminée.", unchecked: "Tâche rouverte." }}
-                removeOnToggle
+        {/* Rangée du haut (29/10/2026) : la carte or « Prochaine séance » tout à gauche, puis les
+            tâches et l'encaissé de la semaine (demande d'Antonino du 26/10). */}
+        <div className="grid gap-3 lg:col-span-12 lg:grid-cols-3">
+          <NextSessionCard
+            block={next}
+            rank={
+              next
+                ? {
+                    index: nextDay.findIndex((block) => block.key === next.key) + 1,
+                    total: nextDay.length,
+                  }
+                : null
+            }
+            dayLabel={next ? dayShortLabel(next.date, today) : ""}
+            today={today}
+            nowMinutes={nowMinutes}
+            sessionHref={next ? `${orgBase}/agenda/seances/${next.sessionId}` : null}
+            messageHref={nextAthlete ? `/coach/messages?sportif=${nextAthlete.id}` : null}
+            location={nextSession?.location ?? null}
+          />
+          {/* Même hauteur que la carte « Prochaine séance ». */}
+          <div className="lg:col-span-2 lg:[&>section]:h-full">
+            <KpiGrid label="Chiffres clés" columns={2} equal>
+              <KpiListCard
+                href="/coach/taches"
+                color="strength"
+                icon={ListChecks}
+                value={String(tasks.openCount)}
+                label={tasks.openCount > 1 ? "tâches à faire" : "tâche à faire"}
+                shortLabel="Tâches"
+              >
+                <TaskList
+                  tasks={tasks.items.map((task) => ({
+                    id: task.id,
+                    title: task.title,
+                    sub: [dueLabel(task.dueOn, today), task.athleteName]
+                      .filter(Boolean)
+                      .join(" · "),
+                    urgent: task.priority === "high",
+                    checked: task.done,
+                    label: `Tâche faite : ${task.title}`,
+                    edit: editableTask(task),
+                  }))}
+                  action={setTaskDone.bind(null, current.organizationId)}
+                  empty="Aucune tâche à faire"
+                  toasts={{ checked: "Tâche terminée.", unchecked: "Tâche rouverte." }}
+                  removeOnToggle
+                />
+              </KpiListCard>
+              {/* CA de la semaine (D-36) : l'argent réellement reçu, à la date du paiement. */}
+              <KpiCard
+                compact
+                href="/coach/comptabilite"
+                color="ok"
+                icon={Euro}
+                value={formatEuros(weekIncome.inclCents)}
+                shortLabel="Encaissé"
+                mobileLines={[
+                  "cette semaine",
+                  plural(weekIncome.count, "paiement"),
+                  ...(planned.count > 0 ? [`${formatEuros(planned.inclCents)} prévus`] : []),
+                ]}
+                label="encaissés cette semaine"
+                detail={[
+                  `${formatEuros(weekIncome.exclCents)} HTVA`,
+                  plural(weekIncome.count, "paiement"),
+                  planned.count > 0
+                    ? `${formatEuros(planned.inclCents)} prévus (${plural(planned.count, "séance")})`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               />
-            </KpiListCard>
-            {/* CA de la semaine (D-36) : l'argent réellement reçu, à la date du paiement. */}
-            <KpiCard
-              compact
-              href="/coach/comptabilite"
-              color="ok"
-              icon={Euro}
-              value={formatEuros(weekIncome.inclCents)}
-              shortLabel="Encaissé"
-              mobileLines={[
-                "cette semaine",
-                plural(weekIncome.count, "paiement"),
-                ...(planned.count > 0 ? [`${formatEuros(planned.inclCents)} prévus`] : []),
-              ]}
-              label="encaissés cette semaine"
-              detail={[
-                `${formatEuros(weekIncome.exclCents)} HTVA`,
-                plural(weekIncome.count, "paiement"),
-                planned.count > 0
-                  ? `${formatEuros(planned.inclCents)} prévus (${plural(planned.count, "séance")})`
-                  : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            />
-          </KpiGrid>
+            </KpiGrid>
+          </div>
         </div>
 
         <section
@@ -314,7 +345,7 @@ async function Dashboard({
           // toute la largeur de l'écran ; ordinateur : la carte.
           // Téléphone (26/10) : pas de carte, mais une bande de couleur d'un bord à l'autre qui sépare
           // l'agenda des autres sections ; la grille prend toute la largeur. Ordinateur : la carte.
-          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 max-lg:px-4 max-lg:py-4 lg:col-span-12"
+          className="flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 max-lg:px-4 max-lg:py-4 lg:col-span-8"
         >
           {/* Barre façon Google Agenda (26/10) : flèches, mois, vue ; plus de grand titre. */}
           <AgendaToolbar
@@ -425,149 +456,167 @@ async function Dashboard({
           />
         </section>
 
-        <Card
-          id="upcoming-title"
-          title="Séances à venir"
-          action={{ href: "/coach/seances", label: "Voir tout" }}
-          className="lg:col-span-4"
-        >
-          {upcoming.length === 0 ? (
-            <CardEmpty icon={CalendarDays}>
-              Aucune séance prévue dans les 30 prochains jours.
-            </CardEmpty>
-          ) : (
-            // Groupées par jour (demande d'Antonino du 26/10) : « Aujourd'hui » marqué d'une barre
-            // rouge, « Demain » d'une barre ambre, les jours suivants en gris ; chaque séance garde
-            // la barre de son jour, pour voir d'un coup d'œil où s'arrête la journée.
-            <div className="flex flex-col gap-3 pt-1">
-              {[...new Set(upcoming.map((block) => block.date))].map((day) => {
-                const gap = daysBetween(today, day);
-                const bar = gap === 0 ? "bg-accent" : gap === 1 ? "bg-amber" : "bg-line-2";
-                const text =
-                  gap === 0 ? "text-accent-text" : gap === 1 ? "text-amber" : "text-muted";
-                return (
-                  <section key={day} aria-label={dayShortLabel(day, today)} className="flex gap-3">
-                    <span aria-hidden className={`w-1 shrink-0 rounded-pill ${bar}`} />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <h3
-                        className={`text-[12px] font-semibold tracking-[0.04em] uppercase ${text}`}
+        {/* À droite de l'agenda (29/10/2026) : Séances à venir, Programmes en cours et Activité
+            financière, empilées dans une colonne qui prend exactement la hauteur de l'agenda (la
+            liste des séances défile si besoin). Téléphone : les cartes se suivent. */}
+        <div className="lg:relative lg:col-span-4">
+          <div className="flex flex-col gap-4 lg:absolute lg:inset-0">
+            <Card
+              id="upcoming-title"
+              title="Séances à venir"
+              action={{ href: "/coach/seances", label: "Voir tout" }}
+              className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+            >
+              {upcoming.length === 0 ? (
+                <CardEmpty icon={CalendarDays}>
+                  Aucune séance prévue dans les 30 prochains jours.
+                </CardEmpty>
+              ) : (
+                // Groupées par jour (demande d'Antonino du 26/10) : « Aujourd'hui » marqué d'une barre
+                // rouge, « Demain » d'une barre ambre, les jours suivants en gris ; chaque séance garde
+                // la barre de son jour, pour voir d'un coup d'œil où s'arrête la journée.
+                <div className="flex flex-col gap-3 pt-1">
+                  {[...new Set(upcoming.map((block) => block.date))].map((day) => {
+                    const gap = daysBetween(today, day);
+                    const bar = gap === 0 ? "bg-accent" : gap === 1 ? "bg-amber" : "bg-line-2";
+                    const text =
+                      gap === 0 ? "text-accent-text" : gap === 1 ? "text-amber" : "text-muted";
+                    return (
+                      <section
+                        key={day}
+                        aria-label={dayShortLabel(day, today)}
+                        className="flex gap-3"
                       >
-                        {dayShortLabel(day, today)}
-                      </h3>
-                      {upcoming
-                        .filter((block) => block.date === day)
-                        .map((block) => (
-                          <ListRow
-                            key={block.key}
-                            href={`${orgBase}/agenda/seances/${block.sessionId}`}
-                            leading={
-                              <span className="w-12 shrink-0 font-mono text-[14px] font-medium tabular">
-                                {block.label.slice(0, 5)}
-                              </span>
-                            }
-                            title={block.title}
-                            sub={
-                              block.individual ? block.subtitle : `Collective · ${block.subtitle}`
-                            }
-                            trailing={
-                              block.discipline ? (
-                                <Badge tone={disciplineTones[block.discipline]} dot={false}>
-                                  {disciplineLabels[block.discipline]}
-                                </Badge>
-                              ) : null
-                            }
-                          />
-                        ))}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+                        <span aria-hidden className={`w-1 shrink-0 rounded-pill ${bar}`} />
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <h3
+                            className={`text-[12px] font-semibold tracking-[0.04em] uppercase ${text}`}
+                          >
+                            {dayShortLabel(day, today)}
+                          </h3>
+                          {upcoming
+                            .filter((block) => block.date === day)
+                            .map((block) => (
+                              <ListRow
+                                key={block.key}
+                                href={`${orgBase}/agenda/seances/${block.sessionId}`}
+                                leading={
+                                  <span className="w-12 shrink-0 font-mono text-[14px] font-medium tabular">
+                                    {block.label.slice(0, 5)}
+                                  </span>
+                                }
+                                title={block.title}
+                                sub={
+                                  block.individual
+                                    ? block.subtitle
+                                    : `Collective · ${block.subtitle}`
+                                }
+                                trailing={
+                                  block.discipline ? (
+                                    <Badge tone={disciplineTones[block.discipline]} dot={false}>
+                                      {disciplineLabels[block.discipline]}
+                                    </Badge>
+                                  ) : null
+                                }
+                              />
+                            ))}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
 
-        <Card
-          id="programs-title"
-          title="Programmes en cours"
-          action={{ href: "/coach/programmes", label: "Programmes" }}
-          className="lg:col-span-4"
-        >
-          {programs.length === 0 ? (
-            <CardEmpty icon={FileText}>
-              Aucun programme pour l&apos;instant. Chaque programme apparaîtra ici avec son sportif
-              et sa progression (semaine 6 sur 12…).
-            </CardEmpty>
-          ) : (
-            <div className="flex flex-col">
-              {programs.slice(0, 4).map((program) => {
-                const week = currentWeekIndex(program.startDate, program.weeksCount, today);
-                return (
-                  <ListRow
-                    key={program.id}
-                    href={`${orgBase}/sportifs/${program.athleteId}?onglet=agenda`}
-                    leading={<Avatar name={program.athleteName} photoPath={program.photoPath} />}
-                    title={program.athleteName}
-                    sub={program.title}
-                    trailing={
-                      <span className="flex w-[84px] flex-col items-end gap-1">
-                        <span className="font-mono text-[12px] text-muted tabular">
-                          Sem. {week}/{program.weeksCount}
-                        </span>
-                        <span
-                          aria-hidden
-                          className="h-1.5 w-full overflow-hidden rounded-pill bg-bar"
-                        >
-                          <span
-                            className="block h-full rounded-pill bg-accent"
-                            style={{ width: `${(week / program.weeksCount) * 100}%` }}
-                          />
-                        </span>
-                      </span>
-                    }
-                  />
-                );
-              })}
-            </div>
-          )}
-        </Card>
+            <Card
+              id="programs-title"
+              title="Programmes en cours"
+              action={{ href: "/coach/programmes", label: "Voir tous les programmes" }}
+              className="lg:shrink-0"
+            >
+              {programs.length === 0 ? (
+                <CardEmpty icon={FileText}>
+                  Aucun programme pour l&apos;instant. Chaque programme apparaîtra ici avec son
+                  sportif et sa progression (semaine 6 sur 12…).
+                </CardEmpty>
+              ) : (
+                <div className="flex flex-col">
+                  {programs.slice(0, 3).map((program) => {
+                    const week = currentWeekIndex(program.startDate, program.weeksCount, today);
+                    return (
+                      <ListRow
+                        key={program.id}
+                        href={`${orgBase}/sportifs/${program.athleteId}?onglet=agenda`}
+                        leading={
+                          <Avatar name={program.athleteName} photoPath={program.photoPath} />
+                        }
+                        title={program.athleteName}
+                        sub={program.title}
+                        trailing={
+                          <span className="flex w-[84px] flex-col items-end gap-1">
+                            <span className="font-mono text-[12px] text-muted tabular">
+                              Sem. {week}/{program.weeksCount}
+                            </span>
+                            <span
+                              aria-hidden
+                              className="h-1.5 w-full overflow-hidden rounded-pill bg-bar"
+                            >
+                              <span
+                                className="block h-full rounded-pill bg-accent"
+                                style={{ width: `${(week / program.weeksCount) * 100}%` }}
+                              />
+                            </span>
+                          </span>
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
 
-        <Card
-          id="finance-title"
-          title="Activité financière"
-          action={{ href: "/coach/facturation", label: "Voir tout" }}
-          className="lg:col-span-4"
-        >
-          <div className="flex flex-col">
-            <ListRow
-              leading={<FinanceIcon icon={FileText} color="accent" />}
-              title={`${activity.sent.count} ${activity.sent.count > 1 ? "factures envoyées" : "facture envoyée"}`}
-              sub="Ce mois-ci"
-              trailing={<FinanceAmount cents={activity.sent.cents} />}
-            />
-            <ListRow
-              leading={<FinanceIcon icon={Check} color="ok" />}
-              title={`${monthIncome.count} ${monthIncome.count > 1 ? "paiements reçus" : "paiement reçu"}`}
-              sub="Ce mois-ci"
-              trailing={<FinanceAmount cents={monthIncome.inclCents} />}
-            />
-            <ListRow
-              leading={<FinanceIcon icon={Clock} color="amber" />}
-              title={`${activity.pending.count} paiement${activity.pending.count > 1 ? "s" : ""} en attente`}
-              sub={
-                activity.pending.overdue > 0
-                  ? activity.pending.overdue === activity.pending.count
-                    ? "En retard"
-                    : `Dont ${activity.pending.overdue} en retard`
-                  : activity.pending.count > 0
-                    ? "Dans les délais"
-                    : "Rien en attente"
-              }
-              trailing={
-                <FinanceAmount cents={activity.pending.cents} late={activity.pending.overdue > 0} />
-              }
-            />
+            <Card
+              id="finance-title"
+              title="Activité financière"
+              action={{ href: "/coach/facturation", label: "Voir tout" }}
+              className="lg:shrink-0"
+            >
+              <div className="flex flex-col">
+                <ListRow
+                  leading={<FinanceIcon icon={FileText} color="accent" />}
+                  title={`${activity.sent.count} ${activity.sent.count > 1 ? "factures envoyées" : "facture envoyée"}`}
+                  sub="Ce mois-ci"
+                  trailing={<FinanceAmount cents={activity.sent.cents} />}
+                />
+                <ListRow
+                  leading={<FinanceIcon icon={Check} color="ok" />}
+                  title={`${monthIncome.count} ${monthIncome.count > 1 ? "paiements reçus" : "paiement reçu"}`}
+                  sub="Ce mois-ci"
+                  trailing={<FinanceAmount cents={monthIncome.inclCents} />}
+                />
+                <ListRow
+                  leading={<FinanceIcon icon={Clock} color="amber" />}
+                  title={`${activity.pending.count} paiement${activity.pending.count > 1 ? "s" : ""} en attente`}
+                  sub={
+                    activity.pending.overdue > 0
+                      ? activity.pending.overdue === activity.pending.count
+                        ? "En retard"
+                        : `Dont ${activity.pending.overdue} en retard`
+                      : activity.pending.count > 0
+                        ? "Dans les délais"
+                        : "Rien en attente"
+                  }
+                  trailing={
+                    <FinanceAmount
+                      cents={activity.pending.cents}
+                      late={activity.pending.overdue > 0}
+                    />
+                  }
+                />
+              </div>
+            </Card>
           </div>
-        </Card>
+        </div>
       </PageBody>
     </>
   );
@@ -595,7 +644,7 @@ function FinanceIcon({
 // Montant d'une ligne : en rouge quand des paiements sont en retard.
 function FinanceAmount({ cents, late = false }: { cents: number; late?: boolean }) {
   return (
-    <span className={`text-[15px] font-semibold tabular ${late ? "text-accent-text" : ""}`}>
+    <span className={`text-[15px] font-semibold tabular ${late ? "text-warn" : ""}`}>
       {formatEuros(cents)}
     </span>
   );

@@ -9,8 +9,7 @@ import { navItemClass } from "@/components/ui/nav-item";
 import { navFor, type NavEntry } from "./navigation";
 import { useShell } from "./shell-context";
 
-// Listes du menu (prompt Claude Design §5.2) : lignes de 44 px, icône 19, élément actif sur fond
-// rouge doux. `large` : version du menu hamburger (texte 16 px, titres PRINCIPAL / PLUS).
+// Listes du menu : lignes de 44 px, icône 19, élément actif sur fond relevé. `large` : version du menu hamburger (texte 16 px, titres PRINCIPAL / PLUS).
 
 function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
   const pathname = usePathname();
@@ -36,16 +35,18 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
             <Link
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`${navItemClass(active)} ${large ? "text-[16px]" : ""}`}
+              // Menu replié : le nom de la page apparaît au survol de son icône.
+              title={large ? undefined : label}
+              className={`${navItemClass(active)} relative ${large ? "text-[16px]" : ""}`}
             >
               <Icon aria-hidden size={19} strokeWidth={1.7} className="shrink-0" />
-              <span className="flex-1 truncate">
+              <span data-nav-label="" className="flex-1 truncate">
                 {label}
                 {countFor(href) > 0 ? (
                   <span className="sr-only">{countLabel(href, countFor(href))}</span>
                 ) : null}
               </span>
-              <CountBadge count={countFor(href)} />
+              <CountBadge count={countFor(href)} className="nav-count" />
             </Link>
           </li>
         );

@@ -26,7 +26,7 @@ export function ErrorState({
       role="alert"
       className="flex flex-col items-start gap-2 rounded-card border border-accent-line bg-accent-soft p-4"
     >
-      <WifiOff aria-hidden size={22} strokeWidth={1.8} className="text-accent-text" />
+      <WifiOff aria-hidden size={22} strokeWidth={1.8} className="text-alert" />
       <p className="text-[15px] font-semibold">{title}</p>
       <p className="text-[13px] leading-[1.45]">{children}</p>
       <button

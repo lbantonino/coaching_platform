@@ -5,8 +5,8 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // hebdomadaire demande « seulement cette date » ou « toute la série ». Semaines de 2027, une par test
 // et une heure par profil (les tests tournent en parallèle sur la même base) : rien ne dépend du jour
 // où il tourne. Chaque séance créée est supprimée à la fin.
-const FIRST_HOUR = 6; // grille 06:00 - 22:00 de ces semaines (seed)
-const SPAN = 16;
+const FIRST_HOUR = 0; // grille complète, 00:00 - 24:00 (elle défile dans sa carte)
+const SPAN = 24;
 
 const unique = (testInfo: { project: { name: string } }) =>
   `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;

@@ -57,7 +57,7 @@ export function SettingsDialogProvider({
       <PanelDialog open={open} onClose={() => setOpen(false)} title="Paramètres">
         <div ref={body}>
           {failed ? (
-            <p role="alert" className="text-small text-accent-text">
+            <p role="alert" className="text-small text-alert">
               Les paramètres n&apos;ont pas pu être chargés. Ferme la fenêtre et réessaie.
             </p>
           ) : data ? (

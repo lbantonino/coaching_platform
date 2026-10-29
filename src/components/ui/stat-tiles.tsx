@@ -25,7 +25,7 @@ export function StatTiles({ label, tiles }: { label: string; tiles: StatTile[] }
         <li
           key={tile.text}
           style={{ "--c": `var(--${tile.color})` } as CSSProperties}
-          className="flex min-w-0 flex-col items-center gap-0.5 rounded-[14px] border border-[color-mix(in_srgb,var(--c)_30%,transparent)] bg-[color-mix(in_srgb,var(--c)_10%,var(--surface))] px-1.5 py-2.5 text-center lg:flex-row lg:justify-center lg:gap-2"
+          className="flex min-w-0 flex-col items-center gap-0.5 rounded-[14px] border border-line bg-surface px-1.5 py-2.5 text-center lg:flex-row lg:justify-center lg:gap-2"
         >
           <tile.icon
             aria-hidden

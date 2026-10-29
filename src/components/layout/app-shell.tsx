@@ -6,7 +6,9 @@ import { CooryLogo } from "@/components/ui/coory-logo";
 import { AthleteTabBar, MobileTopBar } from "./mobile-bar";
 import { homeHref } from "./navigation";
 import { AccountMenu } from "./account-menu";
+import { NavigationMemory } from "./back-link";
 import { ShellProvider, type ShellValue } from "./shell-context";
+import { HideSidebarButton, ShowSidebarButton } from "./sidebar-toggle";
 import { SideNav } from "./side-nav";
 
 // Coquille des espaces coach, sportif et admin (prompt Claude Design §5.2 et §5.3).
@@ -16,22 +18,33 @@ import { SideNav } from "./side-nav";
 export function AppShell({ value, children }: { value: ShellValue; children: ReactNode }) {
   return (
     <ShellProvider value={value}>
+      {/* Retient la page précédente pour les liens « retour » (29/10/2026). */}
+      <NavigationMemory />
       <div className="flex min-h-dvh flex-1">
-        <aside className="sticky top-0 hidden h-dvh w-[252px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line px-3.5 py-[22px] lg:flex">
-          <Link
-            href={homeHref[value.space]}
-            aria-label="Accueil"
-            className="w-fit rounded-sm px-2.5 pb-1.5"
-          >
-            <CooryLogo size={26} />
-          </Link>
+        <aside
+          data-app-sidebar=""
+          className="sticky top-0 hidden h-dvh w-[252px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-panel px-3.5 py-[22px] lg:flex"
+        >
+          {/* Replié (29/10/2026, comme ChatGPT) : la boucle du logo seule et les icônes des pages. */}
+          <div data-sidebar-head="" className="flex items-center justify-between gap-2 pb-1.5">
+            <Link
+              href={homeHref[value.space]}
+              aria-label="Accueil"
+              data-logo-full=""
+              className="w-fit rounded-sm px-2.5"
+            >
+              <CooryLogo size={26} />
+            </Link>
+            <HideSidebarButton />
+            <ShowSidebarButton />
+          </div>
           <SideNav />
           {/* Menu du compte : Mon profil, Paramètres, Changer de compte, Se déconnecter. */}
           <div className="mt-auto">
             <AccountMenu />
           </div>
         </aside>
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div data-app-main="" className="flex min-w-0 flex-1 flex-col">
           <MobileTopBar />
           {children}
           {value.space === "athlete" ? <AthleteTabBar /> : null}

@@ -63,7 +63,7 @@ test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, filtres, et aucune co
 
 test("le tableau de bord montre la semaine du coach avec ses vraies séances", async ({ page }) => {
   await loginAsCoachA(page);
-  await expect(page.getByRole("heading", { name: /^Bonjour/, level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tableau de bord", level: 1 })).toBeVisible();
   // Semaine fixée dans l'adresse : le mercredi 6 janvier 2027 a la piste collective (19:00).
   await page.goto("/coach?date=2027-01-06");
   const week = page.getByRole("region", { name: "Semaine du 4 au 10 janvier" });

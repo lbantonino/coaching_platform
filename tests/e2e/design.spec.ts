@@ -1,10 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Identité visuelle Coory (COORY_DESIGN_SYSTEM.md, COORY_LOGO.md) : logo, icônes et thème.
+// Identité visuelle Coory (design system Graphite & Or, 29/10/2026) : logo, icônes et thème.
 
-test("le logo Coory est annoncé par son nom et le favicon est le symbole rouge", async ({
-  page,
-}) => {
+test("le logo Coory est annoncé par son nom et le favicon est la boucle or", async ({ page }) => {
   await page.goto("/");
   // Le wordmark « C + boucle infinie + ry » est lu « Coory » par un lecteur d'écran.
   await expect(page.getByRole("img", { name: "Coory" })).toBeVisible();
@@ -18,24 +16,25 @@ test("le logo Coory est annoncé par son nom et le favicon est le symbole rouge"
   );
 });
 
-test("le thème clair est le défaut, le sombre se choisit et reste après rechargement", async ({
+test("le graphite (sombre) est le défaut, le clair se choisit et reste après rechargement", async ({
   page,
 }) => {
+  // Design system « Graphite & Or » (29/10/2026) : sombre par défaut.
   const html = page.locator("html");
   await page.goto("/login");
-  await expect(html).not.toHaveAttribute("data-theme", "dark");
-
-  await page.getByRole("button", { name: "Passer au thème sombre" }).click();
-  await expect(html).toHaveAttribute("data-theme", "dark");
-
-  // Le choix est retenu dans ce navigateur et appliqué avant l'affichage.
-  await page.reload();
   await expect(html).toHaveAttribute("data-theme", "dark");
 
   await page.getByRole("button", { name: "Passer au thème clair" }).click();
-  await expect(html).not.toHaveAttribute("data-theme", "dark");
+  await expect(html).toHaveAttribute("data-theme", "light");
+
+  // Le choix est retenu dans ce navigateur et appliqué avant l'affichage.
   await page.reload();
-  await expect(html).not.toHaveAttribute("data-theme", "dark");
+  await expect(html).toHaveAttribute("data-theme", "light");
+
+  await page.getByRole("button", { name: "Passer au thème sombre" }).click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await page.reload();
+  await expect(html).toHaveAttribute("data-theme", "dark");
 });
 
 async function loginAsCoachA(page: Page) {
