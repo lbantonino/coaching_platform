@@ -6,7 +6,14 @@ import { startTransition, useActionState, useState } from "react";
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { ConfirmDialog } from "@/components/ui/overlay";
-import { VAT_RATES } from "@/domain/billing/payments";
+import { formatEuros } from "@/domain/billing/invoices";
+import {
+  PAYMENT_METHODS,
+  VAT_RATES,
+  parseEuros,
+  paymentMethodLabels,
+  splitVat,
+} from "@/domain/billing/payments";
 import { COUNTRIES } from "@/features/athletes/schemas";
 import {
   createInvoiceFromPayment,
@@ -159,6 +166,7 @@ export function DeleteDraftButton({
 export type DraftValues = {
   legalEntityId: string;
   label: string;
+  amount: string;
   serviceOn: string;
   vatRate: string;
   clientName: string;
@@ -173,18 +181,25 @@ export function InvoiceDraftForm({
   invoiceId,
   values,
   entities,
+  hasPayment,
 }: {
   organizationId: string;
   invoiceId: string;
   values: DraftValues;
   entities: { id: string; name: string; vatSubject: boolean }[];
+  // Brouillon relié à un paiement reçu : son montant suit celui de la facture.
+  hasPayment: boolean;
 }) {
   const [state, action, pending] = useActionState(
     updateInvoiceDraft.bind(null, organizationId, invoiceId),
     initial,
   );
   const [entityId, setEntityId] = useState(values.legalEntityId);
+  const [amount, setAmount] = useState(values.amount);
+  const [vatRate, setVatRate] = useState(values.vatRate);
   const vatSubject = entities.find((entity) => entity.id === entityId)?.vatSubject ?? true;
+  const cents = parseEuros(amount);
+  const split = cents === null ? null : splitVat(cents, vatSubject ? Number(vatRate) : 0);
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
@@ -214,7 +229,8 @@ export function InvoiceDraftForm({
             <select
               id="invoice-vat"
               name="vatRate"
-              defaultValue={values.vatRate}
+              value={vatRate}
+              onChange={(event) => setVatRate(event.target.value)}
               className={inputClass}
             >
               {VAT_RATES.map((rate) => (
@@ -245,6 +261,27 @@ export function InvoiceDraftForm({
             defaultValue={values.label}
             className={inputClass}
           />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="invoice-amount" className={labelClass}>
+            Montant (TVAC)
+          </label>
+          <input
+            id="invoice-amount"
+            name="amount"
+            inputMode="decimal"
+            autoComplete="off"
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            aria-describedby="invoice-amount-hint"
+            className={inputClass}
+          />
+          <p id="invoice-amount-hint" aria-live="polite" className={hintClass}>
+            {split
+              ? `${formatEuros(split.exclCents)} HTVA · ${formatEuros(split.vatCents)} de TVA`
+              : "Montant TVA comprise, ex. : 78,65."}
+            {hasPayment ? " Le paiement relié est corrigé aussi." : ""}
+          </p>
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="invoice-service" className={labelClass}>
@@ -393,8 +430,11 @@ export function MarkPaidForm({
             Mode
           </label>
           <select id="paid-method" name="method" defaultValue="transfer" className={inputClass}>
-            <option value="transfer">Virement</option>
-            <option value="bancontact">Bancontact</option>
+            {PAYMENT_METHODS.map((method) => (
+              <option key={method} value={method}>
+                {paymentMethodLabels[method]}
+              </option>
+            ))}
           </select>
         </div>
       </div>

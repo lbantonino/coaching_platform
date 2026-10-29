@@ -95,7 +95,7 @@ async function Billing() {
               À facturer
             </CardTitle>
           }
-          subtitle="Paiements par virement sans facture, sur 12 mois. Les espèces ne se facturent pas."
+          subtitle="Paiements reçus sur ton compte (virement, Bancontact) sans facture, sur 12 mois. Pour des espèces : « Créer une facture »."
         >
           {toInvoice.length === 0 ? (
             <CardEmpty icon={Landmark}>Tous les virements reçus ont leur facture.</CardEmpty>
@@ -110,7 +110,10 @@ async function Billing() {
                       </span>
                     }
                     title={payment.athleteName}
-                    sub={[payment.label, `${formatEuros(payment.amountCents)} par virement`]
+                    sub={[
+                      payment.label,
+                      `${formatEuros(payment.amountCents)} par ${payment.method === "bancontact" ? "Bancontact" : "virement"}`,
+                    ]
                       .filter(Boolean)
                       .join(" · ")}
                     trailing={

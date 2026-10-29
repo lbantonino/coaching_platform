@@ -5,14 +5,15 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { defaultInvoiceLabel, vatRateFor } from "@/domain/billing/invoice-document";
-import { VAT_RATES, parseEuros } from "@/domain/billing/payments";
+import { PAYMENT_METHODS, VAT_RATES, parseEuros } from "@/domain/billing/payments";
 import { addressSchema, newAthleteSchema } from "@/features/athletes/schemas";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { listLegalEntities } from "@/features/coach/legal-queries";
 import { createClient } from "@/lib/supabase/server";
 import { todayIsoInBrussels } from "@/lib/format";
 
-// Factures émises (D-65) : un brouillon naît d'un paiement par virement, se modifie, puis s'émet
+// Factures émises (D-65) : un brouillon naît d'un paiement reçu (ou du bouton « Créer une facture »),
+// se modifie, puis s'émet
 // (numéro attribué par la base, facture figée) ; un brouillon se supprime, une facture émise jamais.
 // Chaque action revérifie l'organisation ; la RLS n'autorise l'écriture que sur les brouillons.
 
@@ -22,8 +23,9 @@ const billingPath = "/coach/facturation";
 const invoicePath = (id: string) => `${billingPath}/${id}`;
 const idSchema = z.uuid();
 
-// Créer le brouillon d'un paiement par virement de SON organisation : structure par défaut, client
-// et adresse repris de la fiche du sportif. Un paiement a déjà sa facture : on l'ouvre.
+// Créer le brouillon d'un paiement de SON organisation : structure par défaut, client et adresse
+// repris de la fiche du sportif. Un paiement a déjà sa facture : on l'ouvre. Tous les modes se
+// facturent (29/10/2026 : l'app sert à tous les coachs, pas seulement à Gianluca).
 export async function createInvoiceFromPayment(
   organizationId: string,
   paymentId: string,
@@ -45,8 +47,6 @@ export async function createInvoiceFromPayment(
   if (!payment || !payment.athlete) return fail("Paiement introuvable.");
   const existing = (payment.invoices as { id: string }[])[0];
   if (existing) redirect(invoicePath(existing.id));
-  // Règle de Gianluca (28/10) : virement = facturé ; espèces, jamais.
-  if (payment.method !== "transfer") return fail("Seuls les paiements par virement se facturent.");
 
   const entity = (await listLegalEntities(membership.organizationId))[0];
   if (!entity) {
@@ -107,8 +107,9 @@ const draftSchema = z
   })
   .extend(addressSchema.shape);
 
-// Modifier un brouillon : structure, description, date de la prestation, TVA, client et adresse. Le
-// montant reste celui du paiement reçu.
+// Modifier un brouillon : structure, description, montant, date de la prestation, TVA, client et
+// adresse. Un brouillon relié à un paiement reçu le garde d'accord : montant et TVA du paiement sont
+// corrigés en même temps (demande d'Antonino du 29/10 : le montant d'un brouillon se modifie).
 export async function updateInvoiceDraft(
   organizationId: string,
   invoiceId: string,
@@ -130,11 +131,14 @@ export async function updateInvoiceDraft(
     country: formData.get("country") ?? "BE",
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
+  const amountCents = parseEuros(String(formData.get("amount") ?? ""));
+  if (amountCents === null) return fail("Indique le montant TVA comprise (ex. : 78,65).");
 
   const entity = (await listLegalEntities(membership.organizationId)).find(
     (item) => item.id === parsed.data.legalEntityId,
   );
   if (!entity) return fail("Choisis la structure qui facture.");
+  const vatRate = vatRateFor(entity.vatStatus, parsed.data.vatRate);
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -142,8 +146,9 @@ export async function updateInvoiceDraft(
     .update({
       legal_entity_id: entity.id,
       label: parsed.data.label,
+      amount_cents: amountCents,
       service_on: parsed.data.serviceOn,
-      vat_rate: vatRateFor(entity.vatStatus, parsed.data.vatRate),
+      vat_rate: vatRate,
       client_name: parsed.data.clientName,
       client_address_line: parsed.data.addressLine,
       client_postal_code: parsed.data.postalCode,
@@ -153,9 +158,21 @@ export async function updateInvoiceDraft(
     .eq("organization_id", membership.organizationId)
     .eq("id", invoiceId)
     .eq("status", "draft")
-    .select("id");
+    .select("id, payment_id");
   if (error || !data?.length) {
     return fail("Le brouillon n'a pas pu être enregistré (une facture émise ne se modifie plus).");
+  }
+  const paymentId = data[0].payment_id;
+  if (paymentId) {
+    const { error: paymentError } = await supabase
+      .from("athlete_payments")
+      .update({ amount_cents: amountCents, vat_rate: vatRate })
+      .eq("organization_id", membership.organizationId)
+      .eq("id", paymentId);
+    if (paymentError) {
+      return fail("Brouillon enregistré, mais le paiement relié n'a pas pu être corrigé.");
+    }
+    revalidatePath("/coach/comptabilite");
   }
   revalidatePath(billingPath, "layout");
   return { error: null, saved: true, attempt: previous.attempt + 1 };
@@ -235,8 +252,6 @@ export type NewInvoiceState = {
   values: NewInvoiceValues | null;
 };
 
-const PAID_METHODS = ["transfer", "bancontact"] as const;
-
 const newInvoiceSchema = z.object({
   legalEntityId: z.uuid({ error: "Choisis la structure qui facture." }),
   label: z
@@ -296,7 +311,7 @@ export async function createInvoice(
     if (!z.iso.date().safeParse(values.receivedOn).success || values.receivedOn > today) {
       return fail("Indique la date du paiement (pas dans le futur).");
     }
-    if (!(PAID_METHODS as readonly string[]).includes(values.method)) {
+    if (!(PAYMENT_METHODS as readonly string[]).includes(values.method)) {
       return fail("Choisis le mode de paiement.");
     }
   } else if (!z.iso.date().safeParse(values.dueOn).success || values.dueOn < today) {
@@ -432,7 +447,7 @@ export async function markInvoicePaid(
   if (!z.iso.date().safeParse(receivedOn).success || receivedOn > todayIsoInBrussels()) {
     return fail("Indique la date du paiement (pas dans le futur).");
   }
-  if (!(PAID_METHODS as readonly string[]).includes(method)) {
+  if (!(PAYMENT_METHODS as readonly string[]).includes(method)) {
     return fail("Choisis le mode de paiement.");
   }
   const supabase = await createClient();
