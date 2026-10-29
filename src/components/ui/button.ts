@@ -31,12 +31,6 @@ export function buttonClass({
   return `${base} ${variants[variant]} ${sizes[size]} ${className}`.trim();
 }
 
-// Lien d'action dans le texte : souligné de 1 px rouge (action) ou gris (lien secondaire).
-export function linkClass({ tone = "action" }: { tone?: "action" | "quiet" } = {}) {
-  const line = tone === "action" ? "border-accent" : "border-line-2";
-  return `border-b ${line} pb-px font-medium text-text transition-colors duration-150 hover:border-text`;
-}
-
 // Bouton icône seule (§4 IconButton) : 44 × 44, rayon 12, fond surface, filet fin, icône 18.
 // Toujours avec un aria-label. Taille sm (36 px) pour les barres compactes (barre du haut mobile).
 export function iconButtonClass({ size = "md" }: { size?: "sm" | "md" } = {}) {
