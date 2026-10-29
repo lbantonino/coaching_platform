@@ -15,10 +15,10 @@ import { Suspense, type CSSProperties } from "react";
 import { ListRow } from "@/components/blocks/list-row";
 import { MonthGrid } from "@/components/blocks/month-grid";
 import { NextSessionCard } from "@/components/blocks/next-session-card";
+import { SessionDayList } from "@/components/blocks/session-day-list";
 import { AgendaToolbar, periodLabel } from "@/components/blocks/agenda-toolbar";
 import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardEmpty } from "@/components/ui/card";
 import { TaskList } from "@/components/blocks/task-list";
 import { KpiCard, KpiGrid, KpiListCard } from "@/components/ui/kpi-card";
@@ -28,7 +28,6 @@ import { FilterChips } from "@/components/ui/filter-chips";
 import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
 import { formatEuros, monthActivity } from "@/domain/billing/invoices";
 import { coveredByPackage, paymentTotals } from "@/domain/billing/payments";
-import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
 import {
@@ -50,13 +49,7 @@ import { listSessions } from "@/features/sessions/queries";
 import { setTaskDone } from "@/features/tasks/actions";
 import { editableTask } from "@/features/tasks/editable";
 import { getDashboardTasks } from "@/features/tasks/queries";
-import {
-  dayShortLabel,
-  daysBetween,
-  dueLabel,
-  nowTimeInBrussels,
-  todayIsoInBrussels,
-} from "@/lib/format";
+import { dayShortLabel, dueLabel, nowTimeInBrussels, todayIsoInBrussels } from "@/lib/format";
 
 import { CreateMenu } from "./create-menu";
 
@@ -464,7 +457,7 @@ async function Dashboard({
             <Card
               id="upcoming-title"
               title="Séances à venir"
-              action={{ href: "/coach/seances", label: "Voir tout" }}
+              action={{ href: `${orgBase}/agenda?vue=liste`, label: "Voir tout" }}
               className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
             >
               {upcoming.length === 0 ? (
@@ -472,59 +465,12 @@ async function Dashboard({
                   Aucune séance prévue dans les 30 prochains jours.
                 </CardEmpty>
               ) : (
-                // Groupées par jour (demande d'Antonino du 26/10) : « Aujourd'hui » marqué d'une barre
-                // rouge, « Demain » d'une barre ambre, les jours suivants en gris ; chaque séance garde
-                // la barre de son jour, pour voir d'un coup d'œil où s'arrête la journée.
-                <div className="flex flex-col gap-3 pt-1">
-                  {[...new Set(upcoming.map((block) => block.date))].map((day) => {
-                    const gap = daysBetween(today, day);
-                    const bar = gap === 0 ? "bg-accent" : gap === 1 ? "bg-amber" : "bg-line-2";
-                    const text =
-                      gap === 0 ? "text-accent-text" : gap === 1 ? "text-amber" : "text-muted";
-                    return (
-                      <section
-                        key={day}
-                        aria-label={dayShortLabel(day, today)}
-                        className="flex gap-3"
-                      >
-                        <span aria-hidden className={`w-1 shrink-0 rounded-pill ${bar}`} />
-                        <div className="flex min-w-0 flex-1 flex-col">
-                          <h3
-                            className={`text-[12px] font-semibold tracking-[0.04em] uppercase ${text}`}
-                          >
-                            {dayShortLabel(day, today)}
-                          </h3>
-                          {upcoming
-                            .filter((block) => block.date === day)
-                            .map((block) => (
-                              <ListRow
-                                key={block.key}
-                                href={`${orgBase}/agenda/seances/${block.sessionId}`}
-                                leading={
-                                  <span className="w-12 shrink-0 font-mono text-[14px] font-medium tabular">
-                                    {block.label.slice(0, 5)}
-                                  </span>
-                                }
-                                title={block.title}
-                                sub={
-                                  block.individual
-                                    ? block.subtitle
-                                    : `Collective · ${block.subtitle}`
-                                }
-                                trailing={
-                                  block.discipline ? (
-                                    <Badge tone={disciplineTones[block.discipline]} dot={false}>
-                                      {disciplineLabels[block.discipline]}
-                                    </Badge>
-                                  ) : null
-                                }
-                              />
-                            ))}
-                        </div>
-                      </section>
-                    );
-                  })}
-                </div>
+                // Groupées par jour (barre or aujourd'hui, ambre demain), comme la vue Liste de l'Agenda.
+                <SessionDayList
+                  blocks={upcoming}
+                  today={today}
+                  sessionHref={(id) => `${orgBase}/agenda/seances/${id}`}
+                />
               )}
             </Card>
 

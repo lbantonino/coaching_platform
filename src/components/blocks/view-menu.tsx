@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Columns3,
   LayoutGrid,
+  List,
   type LucideIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,10 +16,10 @@ import { ActionMenu } from "@/components/ui/overlay";
 
 // Bouton « Vue » de l'agenda sur téléphone (demande d'Antonino du 26/10, comme Google Agenda) : il
 // montre la vue en cours et ouvre le choix Aujourd'hui, 3 jours, Semaine (les 7 jours dans l'écran)
-// ou Mois. Chaque choix est une adresse (?vue=…&jours=7) : le bouton retour et le partage marchent.
+// ou Mois, puis Liste (les séances jour par jour, 29/10/2026). Chaque choix est une adresse (?vue=…&jours=7) : le bouton retour et le partage marchent.
 // Les icônes sont désignées par une clé : une fonction ne passe pas du serveur au navigateur.
 export type ViewOption = {
-  key: "jour" | "3jours" | "semaine" | "mois";
+  key: "jour" | "3jours" | "semaine" | "mois" | "liste";
   label: string;
   href: string;
   selected: boolean;
@@ -29,6 +30,7 @@ const icons: Record<ViewOption["key"], LucideIcon> = {
   "3jours": Columns3,
   semaine: CalendarRange,
   mois: LayoutGrid,
+  liste: List,
 };
 
 export function ViewMenu({ options }: { options: ViewOption[] }) {

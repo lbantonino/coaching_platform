@@ -126,7 +126,7 @@ test("une séance individuelle demande son sportif (ou un nouveau client), et la
 }, testInfo) => {
   const title = `Force ${unique(testInfo)}`;
   await loginAsCoachA(page);
-  await page.goto("/coach/seances");
+  await page.goto(`/coach/o/${ORG_A}/agenda`);
   const dialog = await openNewSession(page);
 
   await expect(dialog.getByRole("radio", { name: "Individuelle" })).toBeChecked();
@@ -168,7 +168,7 @@ test("un nouveau sportif tapé dans « Nouvelle séance » a aussitôt sa fiche,
   // Un seul mot : un prénom, sans nom de famille ni contact (unique, les tests tournent en parallèle).
   const name = `John${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   await loginAsCoachA(page);
-  await page.goto("/coach/seances");
+  await page.goto(`/coach/o/${ORG_A}/agenda`);
   const dialog = await openNewSession(page);
 
   await dialog.getByLabel("Titre").fill(title);
@@ -261,19 +261,29 @@ test("une date de séance se marque payée, compte dans la comptabilité, puis s
   await expect(row).toContainText("Pas encore payée");
 });
 
-test("la page Séances liste les séances à venir, avec ses filtres", async ({ page }) => {
+test("la vue Liste de l'Agenda montre les séances jour par jour, avec ses filtres (remplace la page Séances)", async ({
+  page,
+}) => {
   await loginAsCoachA(page);
-  await page.goto("/coach/seances");
-  await expect(page.getByRole("heading", { name: "Séances", level: 1 })).toBeVisible();
-  const upcoming = page.getByRole("region", { name: "À venir" });
-  // « Piste du mercredi » (collective, chaque semaine, sans fin) est toujours à venir.
-  await expect(upcoming.getByRole("link", { name: /Piste du mercredi/ }).first()).toBeVisible();
+  // « Voir tout » des Séances à venir du tableau de bord ouvre la vue Liste.
   await page
-    .getByRole("navigation", { name: "Filtrer les séances" })
+    .getByRole("region", { name: "Séances à venir" })
+    .getByRole("link", { name: "Voir tout" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`/coach/o/${ORG_A}/agenda\\?vue=liste$`));
+  const list = page.getByRole("region", { name: /^Séances du / });
+  // « Piste du mercredi » (collective, chaque semaine, sans fin) est toujours dans les 4 semaines.
+  await expect(list.getByRole("link", { name: /Piste du mercredi/ }).first()).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Filtrer l'agenda" })
     .getByRole("link", { name: "Individuelles" })
     .click();
-  await expect(page).toHaveURL(/type=individuelles/);
-  await expect(upcoming.getByRole("link", { name: /Piste du mercredi/ })).toHaveCount(0);
+  await expect(page).toHaveURL(/vue=liste&type=individuelles/);
+  await expect(list.getByRole("link", { name: /Piste du mercredi/ })).toHaveCount(0);
+  // L'ancienne page Séances n'existe plus, ni dans le menu.
+  await expect(
+    page.getByRole("navigation").getByRole("link", { name: "Séances", exact: true }),
+  ).toHaveCount(0);
 });
 
 test("le coach A ne voit ni ne modifie de séance de l'organisation B", async ({ page }) => {
