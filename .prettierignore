@@ -10,5 +10,3 @@ supabase/.branches/
 test-results/
 playwright-report/
 blob-report/
-# Prototypes exportés de Claude Design : référence visuelle, gardés tels quels
-docs/design/prototypes/

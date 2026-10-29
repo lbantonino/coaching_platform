@@ -60,8 +60,8 @@ Construire progressivement une application web responsive/PWA de programmation e
 ## Mobile first (demande d'Antonino, 23/10/2026, priorité haute)
 Tout nouvel écran ou toute retouche se conçoit **d'abord pour le téléphone** (≈ 390 px), puis s'élargit vers la tablette et l'ordinateur. Concrètement : écrire les classes de base pour le mobile et ajouter `md:` / `lg:` pour les grands écrans ; cibles tactiles ≥ 44 px ; pas de tableau ou de grille illisible sur téléphone (liste, colonnes défilantes ou cartes à la place) ; chaque story est vérifiée et capturée **en premier sur téléphone**, puis sur ordinateur, en sombre et en clair.
 
-## Charte visuelle (D-16 et D-19, 22/10/2026)
-`COORY_DESIGN_SYSTEM.md` et `COORY_LOGO.md` (racine) sont la source de vérité du style : jetons uniquement (jamais de couleur en dur), un seul bouton rouge par écran, sombre par défaut et clair via `data-theme="light"`, logo « C∞ry » via `<CooryLogo />` ; trois polices : Space Grotesk (`font-display`) pour les titres H1–H3 et les grands chiffres, jamais sous 18 px, Geist pour l'interface, Geist Mono pour les données. Vérifier chaque écran modifié en sombre ET en clair, sur ordinateur ET téléphone.
+## Charte visuelle (refonte en cours, 29/10/2026)
+Les anciennes références de style (COORY_DESIGN_SYSTEM.md rouge, COORY_LOGO.md, COORY_AUTH_PAGES.md, docs/10_DESIGN_UI_UX.md, maquettes et prototypes de docs/design, pilotes V2 et V3) ont été **supprimées à la demande d'Antonino** : il fournit un nouveau design system et de nouvelles images de référence, qui deviendront la source de vérité du style. `COORY_PROMPT_CLAUDE_CODE.md` reste la référence du **contenu** de chaque page, pas de son style. En attendant : jetons de `src/styles/tokens.css` uniquement (jamais de couleur en dur), logo via `<CooryLogo />`, et chaque écran modifié vérifié sur téléphone ET ordinateur, en sombre ET en clair.
 
 ## Conventions de code
 - `src/domain/` = règles et types indépendants de l'UI ; `src/features/` = cas d'usage ; `src/app/` = pages ; `src/components/` = UI réutilisable ; `supabase/migrations/` = SQL.

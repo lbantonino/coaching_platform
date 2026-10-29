@@ -9,11 +9,6 @@ export const TERMS_VERSION = "2026-10-23-provisoire";
 
 export const ACCOUNT_KINDS = ["coach", "athlete"] as const;
 export type AccountKind = (typeof ACCOUNT_KINDS)[number];
-export const accountKindLabels: Record<AccountKind, string> = {
-  coach: "Coach",
-  athlete: "Sportif",
-};
-
 const name = (label: string) =>
   z
     .string()

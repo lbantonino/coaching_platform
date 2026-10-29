@@ -49,17 +49,6 @@ export function nowTimeInBrussels(): string {
   }).format(new Date());
 }
 
-// Minuit aujourd'hui à Bruxelles, en horodatage (« 2026-10-23T00:00:00+02:00 »), pour filtrer ce qui
-// s'est passé aujourd'hui. À appeler uniquement dans du code exécuté à la requête.
-export function startOfTodayInBrussels(): string {
-  const offset =
-    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Brussels", timeZoneName: "longOffset" })
-      .formatToParts(new Date())
-      .find((part) => part.type === "timeZoneName")
-      ?.value.replace("GMT", "") || "+00:00";
-  return `${todayIsoInBrussels()}T00:00:00${offset}`;
-}
-
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const shortDay = new Intl.DateTimeFormat("fr-BE", {
   weekday: "short",

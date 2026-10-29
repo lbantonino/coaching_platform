@@ -24,15 +24,6 @@ export type DocumentFormat = { mime: string; ext: string; kind: DocumentKind };
 const WORD = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 const EXCEL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
-export const DOCUMENT_MIME_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  WORD,
-  EXCEL,
-] as const;
-
 // Ce que le sélecteur de fichier propose (le serveur revérifie de toute façon).
 export const DOCUMENT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.docx,.xlsx";
 
