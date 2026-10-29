@@ -1,5 +1,4 @@
 import {
-  Activity,
   Bell,
   BookOpen,
   Bug,
@@ -73,7 +72,6 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
     });
   }
   main.push(
-    moduleEntry("seances", Activity),
     moduleEntry("facturation", Receipt),
     moduleEntry("comptabilite", Calculator),
     moduleEntry("bibliotheque", BookOpen),

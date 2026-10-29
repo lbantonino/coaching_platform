@@ -15,7 +15,7 @@ async function loginAsCoachA(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, filtres, et aucune compétition", async ({
+test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, Liste, filtres, et aucune compétition", async ({
   page,
 }) => {
   await loginAsCoachA(page);
@@ -33,11 +33,12 @@ test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, filtres, et aucune co
       "3 jours",
       "Semaine",
       "Mois",
+      "Liste",
     ]);
     await menu.getByRole("button", { name: "Fermer" }).click();
   } else {
     const views = page.getByRole("navigation", { name: "Vue de l'agenda" });
-    await expect(views.getByRole("link")).toHaveText(["Aujourd'hui", "Semaine", "Mois"]);
+    await expect(views.getByRole("link")).toHaveText(["Aujourd'hui", "Semaine", "Mois", "Liste"]);
   }
   const filters = page.getByRole("navigation", { name: "Filtrer l'agenda" });
   await expect(filters.getByRole("link")).toHaveText(["Toutes", "Individuelles", "Collectives"]);

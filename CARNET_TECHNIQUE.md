@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **28/10/2026** (case Notes, Paramètres en fenêtre, et les outils : tâches, documents, notifications, recherche).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -356,6 +356,14 @@ Les notifications de Coory ne sont pas stockées : elles sont calculées à part
 
 ### Les outils, tranche 4 : une recherche qui ne fait pas confiance à la saisie (28/10)
 La recherche globale interroge cinq tables à la fois et range les résultats par groupe pendant qu'on tape. Le point délicat : ce que le coach tape finit dans une requête SQL de type « contient ». Les caractères spéciaux de cette requête (`%`, `_`) sont donc échappés, et ceux qui servent à combiner des filtres (virgules, parenthèses) deviennent des espaces : taper « %% » ne renvoie pas toute la base, et un test le vérifie. Comme partout, l'action revérifie l'organisation et la RLS fait le reste : le document d'un autre coach ne sort jamais. Côté écran, seule la dernière réponse compte : si une recherche lente arrive après une plus récente, elle est ignorée. Leçon : un état React ne se met pas à jour dans un effet ; la recherche part du gestionnaire de saisie, ce qui est aussi plus simple à lire.
+
+### Le design « Graphite & Or », sans toucher à l'architecture (29/10)
+Antonino a fourni un nouveau design system et des images de référence. Consigne : changer **le style seul**, pas la structure ni les fonctionnalités. Les **tokens** ont tout rendu possible : couleurs, polices et rayons sont déclarés à un seul endroit (`tokens.css`, `globals.css`), donc la plupart des écrans ont changé sans être ouverts. La palette des disciplines a été recalculée en **OKLCH**, un espace de couleur où la luminosité est fiable : toutes les couleurs ont la même clarté et seule la teinte change, d'où un ensemble qui « va ensemble », lisible en sombre comme en clair. Chaque couleur a un rôle fixe : l'or pour l'action, le rouge pour les erreurs et les suppressions, l'orange pour les retards.
+
+Trois petites mécaniques méritent d'être expliquées. Le **menu repliable** retient son état dans le navigateur, et un script lu avant l'affichage évite que le menu « saute » au chargement (comme pour le thème). La **flèche retour** se souvient de la page précédente et de son titre (dans `sessionStorage`, propre à l'onglet) : ouverte depuis le tableau de bord, une séance ramène au tableau de bord et l'annonce. On ne se sert pas du « précédent » du navigateur, car les onglets d'une fiche ajoutent des étapes à l'historique. L'**agenda sur 24 h** garde une grille complète mais n'en montre que la plage choisie dans les Paramètres, et défile dans sa carte. Leçon de test : les tests du glisser-déposer calculaient la position d'une heure à partir d'une grille de 6 h à 22 h ; ils ont été adaptés, et c'est exactement le genre de casse qu'on veut voir arriver dans un test plutôt que chez le coach.
+
+### Une page de moins : la vue Liste de l'Agenda (29/10)
+La page Séances montrait les mêmes séances que l'Agenda, sous une autre forme : deux endroits pour une seule information, c'est deux endroits à maintenir et un coach qui se demande où regarder. Elle devient une **vue de l'Agenda**, à côté de Semaine et Mois, comme le « Planning » de Google Agenda. Rien ne change en base : la vue lit les mêmes séances avec le même garde-fou. La liste par jour du tableau de bord a été sortie dans un **composant partagé**, pour que les deux écrans restent identiques sans copier le code. Supprimer une page, c'est aussi retirer son entrée de menu, son module et les liens qui y menaient : un test vérifie maintenant que « Voir tout » arrive bien sur la vue Liste.
 
 ---
 

@@ -5,8 +5,10 @@ import { Suspense, type ReactNode } from "react";
 import { MonthGrid } from "@/components/blocks/month-grid";
 import { AgendaToolbar, periodLabel } from "@/components/blocks/agenda-toolbar";
 import { NewSessionButton } from "@/components/blocks/new-session-sheet";
+import { SessionDayList } from "@/components/blocks/session-day-list";
 import { WeekTimeGrid } from "@/components/blocks/week-time-grid";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
+import { CardEmpty } from "@/components/ui/card";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { StatTiles } from "@/components/ui/stat-tiles";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
@@ -33,17 +35,22 @@ export const metadata: Metadata = {
 // Agenda du coach (prompt Claude Design §6 et §7.2) : SES séances encadrées, collectives et
 // individuelles. Demande d'Antonino du 26/10 : les compétitions des sportifs ne sont plus dans son
 // planning (rappels dans les Notifications) ; vues Aujourd'hui, Semaine, Mois ; filtres Toutes,
-// Individuelles, Collectives. La vue Jour reste accessible en touchant un jour du mois.
-// Adresse : ?vue=semaine|jour|mois|aujourdhui, ?date=AAAA-MM-JJ, ?type=individuelles|collectives.
-type View = "semaine" | "jour" | "mois" | "aujourdhui";
+// Individuelles, Collectives. La vue Jour reste accessible en touchant un jour du mois. Vue Liste
+// (29/10/2026, remplace la page Séances) : les séances de 4 semaines, jour par jour, à la façon du
+// « Planning » de Google Agenda (les jours sans séance sont sautés).
+// Adresse : ?vue=semaine|jour|mois|aujourdhui|liste, ?date=AAAA-MM-JJ, ?type=individuelles|collectives.
+type View = "semaine" | "jour" | "mois" | "aujourdhui" | "liste";
 type Kind = "toutes" | "individuelles" | "collectives";
 
 const views: { key: View; label: string }[] = [
   { key: "aujourdhui", label: "Aujourd'hui" },
   { key: "semaine", label: "Semaine" },
   { key: "mois", label: "Mois" },
+  { key: "liste", label: "Liste" },
 ];
-const viewKeys: View[] = ["semaine", "jour", "mois", "aujourdhui"];
+const viewKeys: View[] = ["semaine", "jour", "mois", "aujourdhui", "liste"];
+// Vue Liste : 4 semaines à partir du jour choisi (aujourd'hui par défaut).
+const LIST_DAYS = 28;
 const kinds: { key: Kind; label: string }[] = [
   { key: "toutes", label: "Toutes" },
   { key: "individuelles", label: "Individuelles" },
@@ -150,7 +157,9 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
       ? `${shiftMonth(month, direction)}-01`
       : view === "semaine"
         ? addDays(monday, 7 * direction)
-        : addDays(date, direction);
+        : view === "liste"
+          ? addDays(date, LIST_DAYS * direction)
+          : addDays(date, direction);
 
   // Chiffres de la semaine affichée, toutes séances confondues.
   const week = layoutWeek(sessions, monday);
@@ -176,6 +185,21 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         onMove={moveSession.bind(null, organizationId)}
       />
     );
+  } else if (view === "liste") {
+    const listLayout = layoutDays(
+      shownSessions,
+      Array.from({ length: LIST_DAYS }, (_, i) => addDays(date, i)),
+    );
+    const blocks = listLayout.days.flatMap((day) => day.blocks);
+    title = `Séances du ${dayAndMonth.format(utc(date))} au ${dayAndMonth.format(utc(addDays(date, LIST_DAYS - 1)))}`;
+    content =
+      blocks.length === 0 ? (
+        <CardEmpty icon={CalendarDays}>
+          Aucune séance sur ces 4 semaines. Ajoute-en une avec « Nouvelle séance ».
+        </CardEmpty>
+      ) : (
+        <SessionDayList blocks={blocks} today={today} sessionHref={sessionHref} detailed />
+      );
   } else if (view === "mois") {
     const dates = monthGrid(month)
       .flat()
@@ -239,14 +263,18 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
                 ? capitalize(monthLabel(month))
                 : view === "semaine"
                   ? periodLabel(monday, addDays(monday, 6))
-                  : capitalize(longDay.format(utc(date)))
+                  : view === "liste"
+                    ? periodLabel(date, addDays(date, LIST_DAYS - 1))
+                    : capitalize(longDay.format(utc(date)))
             }
             shortLabel={
               view === "mois"
                 ? periodLabel(`${month}-01`, `${month}-01`, true)
                 : view === "semaine"
                   ? periodLabel(monday, addDays(monday, 6), true)
-                  : capitalize(shortDayLabel.format(utc(date)).replace(".", ""))
+                  : view === "liste"
+                    ? periodLabel(date, addDays(date, LIST_DAYS - 1), true)
+                    : capitalize(shortDayLabel.format(utc(date)).replace(".", ""))
             }
             prevHref={href({ vue: view === "aujourdhui" ? "jour" : view, date: step(-1) })}
             nextHref={href({ vue: view === "aujourdhui" ? "jour" : view, date: step(1) })}
@@ -274,6 +302,12 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
                 label: "Mois",
                 href: href({ vue: "mois" }),
                 selected: view === "mois",
+              },
+              {
+                key: "liste",
+                label: "Liste",
+                href: href({ vue: "liste" }),
+                selected: view === "liste",
               },
             ]}
             desktopViews={views.map((item) => ({

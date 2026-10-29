@@ -14,7 +14,6 @@ const BUILT = new Set([
   "taches",
   "messages",
   "facturation",
-  "seances",
   "comptabilite",
   "notifications",
   "documents",

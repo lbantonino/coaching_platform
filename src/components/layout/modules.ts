@@ -1,5 +1,4 @@
 import {
-  Activity,
   Bell,
   BookOpen,
   Bug,
@@ -48,15 +47,6 @@ export const COACH_MODULES = {
     emptyTitle: "Aucun programme pour l'instant",
     emptyText:
       "Tu créeras ici les programmes de tes sportifs sur plusieurs semaines, à partir de tes modèles, puis tu les publieras dans leur espace.",
-  },
-  seances: {
-    label: "Séances",
-    h1: "Séances",
-    sub: "Prépare les entraînements et suis les résultats.",
-    icon: Activity,
-    emptyTitle: "Aucune séance programmée",
-    emptyText:
-      "Les séances des programmes publiés et les retours de tes sportifs (ressenti, commentaires) apparaîtront ici.",
   },
   facturation: {
     label: "Facturation",

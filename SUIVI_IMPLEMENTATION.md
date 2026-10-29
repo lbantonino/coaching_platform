@@ -32,6 +32,42 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Vue « Liste » de l'Agenda, fin de la page Séances (D-64)
+```
+Date : 2026-10-29
+Fait : vue ?vue=liste dans la page Agenda (4 semaines à partir du jour choisi, flèches ±4 semaines,
+  filtres Toutes / Individuelles / Collectives) ; composant partagé SessionDayList (blocks/
+  session-day-list.tsx), utilisé aussi par les Séances à venir du tableau de bord ; « Liste »
+  dans le bouton « Vue » (téléphone) et les onglets (ordinateur) ; page /coach/seances supprimée,
+  ainsi que son entrée de menu et son module ; « Voir tout » du tableau de bord → vue Liste.
+  Aucun changement en base (lecture seule, même garde-fou requireOrgAccess + RLS).
+Tests : check, Vitest 213/213 ; e2e complet 145 passés + 12 ignorés + 1 échec attendu (liste des
+  vues de agenda.spec, corrigée) ; agenda.spec + sessions.spec relancés : 26/26. Captures
+  téléphone et ordinateur, sombre et clair.
+```
+
+### Design « Graphite & Or » sur toute l'app (D-63)
+```
+Date : 2026-10-29
+Fait : jetons (src/styles/tokens.css) graphite par défaut + clair, or pour l'action, palette OKLCH
+  harmonieuse (run, strength, hyrox, hybrid, ok, warn, alert, female, male), rouge --alert pour
+  erreurs et suppressions (bouton « danger »), orange --warn pour retards ; polices Inter Tight,
+  Geist Mono, Space Grotesk (logo) ; rayons et titres du design system ; logo, favicon, icônes
+  (boucle or) ; menu de gauche repliable (src/lib/sidebar.ts, sidebar-toggle.tsx, préférence
+  gardée dans le navigateur) ; en-tête de page en ligne avec icône (PageHeader inline/icon) ;
+  tableau de bord : NextSessionCard, cartes du haut à même hauteur, colonne de droite à la
+  hauteur du calendrier ; cartes neutres (couleur sur icône, chiffre, titre ; CardTitle) ; grille
+  d'agenda 00:00 → 24:00 qui défile dans sa carte, ouverte sur les heures du réglage ; flèche
+  retour vers la page précédente avec son titre (back-link.tsx : NavigationMemory + BackLink,
+  sessionStorage) ; chiffres clés de Sportifs cliquables ; pages d'erreur ; chevron des select
+  (globals.css). Code mort retiré (formatHoursShort, isoWeek, linkClass, Card tone).
+  Commits e84dd99 (nettoyage) et 30261b7 (poussé par Antonino).
+Tests : check, Vitest 213/213 ; e2e complet 139 passés + 12 ignorés, puis les 7 en échec corrigés
+  (agenda-interactive : grille 0-24 ; athlete-overview : onglet de la fiche gardé au retour) et
+  relancés : 10 passés + 2 ignorés. Captures téléphone et ordinateur, sombre et clair.
+Piège : `npx playwright test` reconstruit l'app et arrête `npm run dev` : relancer le serveur après.
+```
+
 ### Outils, tranche 4 : recherche globale (D-62)
 ```
 Date : 2026-10-28
