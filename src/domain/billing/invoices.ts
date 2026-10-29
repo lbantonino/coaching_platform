@@ -54,10 +54,3 @@ export function monthActivity(invoices: InvoiceLike[], today: string): MonthActi
   }
   return activity;
 }
-
-// « 450,00 € » (espace insécable avant l'euro, comme en Belgique).
-const euros = new Intl.NumberFormat("fr-BE", { style: "currency", currency: "EUR" });
-
-export function formatEuros(cents: number): string {
-  return euros.format(cents / 100);
-}

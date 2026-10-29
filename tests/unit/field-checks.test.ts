@@ -7,7 +7,7 @@ describe("checkField", () => {
   const today = "2026-10-28";
 
   it("ne signale jamais un champ vide (l'obligatoire se vérifie à l'envoi)", () => {
-    for (const rule of ["email", "phone", "future-date", "euros"] as const) {
+    for (const rule of ["email", "phone", "future-date", "amount"] as const) {
       expect(checkField(rule, "  ", today)).toBeNull();
     }
   });
@@ -29,7 +29,7 @@ describe("checkField", () => {
   it("refuse une date passée et un montant illisible", () => {
     expect(checkField("future-date", "2026-10-28", today)).toBeNull();
     expect(checkField("future-date", "2026-10-27", today)).toBe("Cette date est déjà passée.");
-    expect(checkField("euros", "65,50", today)).toBeNull();
-    expect(checkField("euros", "abc", today)).toMatch(/^Montant invalide/);
+    expect(checkField("amount", "65,50", today)).toBeNull();
+    expect(checkField("amount", "abc", today)).toMatch(/^Montant invalide/);
   });
 });

@@ -32,6 +32,39 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Coory à l'international, étape 1 (D-69) ; couleur des catégories de documents (D-68)
+```
+Date : 2026-10-29
+Fait : D-68, migration 20261029160000_couleur_des_categories (document_categories.color, palette
+  fermée de 9 couleurs, couleurs des 5 catégories de départ) ; icône des documents colorée par
+  catégorie (page Documents, fiche sportif), rond de couleur dans les filtres, palette dans « Gérer
+  les catégories » (setDocumentCategoryColor) ; nextCategoryColor.
+  D-69, migration 20261029180000_international : organizations.country / currency
+  (private.is_supported_currency, 20 devises à 2 décimales) ; colonne currency sur paiements,
+  factures et séances, posée par trigger (SECURITY INVOKER : la devise de l'organisation pour une
+  écriture du coach, celle de la facture dans mark_athlete_invoice_paid) ; vat_rate en numeric(5,2)
+  0..100 ; structures : default_vat_rate (obligatoire si assujettie), payment_details, numéros
+  libres hors Belgique (contrôle BE seulement si country = BE) ; issue_athlete_invoice fige aussi
+  les coordonnées de paiement ; complete_signup à 11 paramètres (pays, devise, TVA facultative,
+  1re structure). Code : domain/billing/money.ts (formatMoney, parseAmount, parseVatRate,
+  splitVat/addVat en nombres entiers), domain/geo (liste figée des pays en français,
+  defaultCurrencyFor, countryFromAcceptLanguage), legal.ts (normalizeVatNumber, formatVatNumber),
+  CoachMembership.country / currency, MoneyProvider (devise, pays, taux habituel pour les écrans),
+  VatRateInput ; étape « Ta facturation » de /bienvenue (billing-setup-fields.tsx,
+  parseBillingSetup) ; Paramètres : carte « Pays et devise » (setOrganizationCountry), structure
+  avec pays en tête, taux habituel, n° de TVA, autres coordonnées ; factures, paiements, séances,
+  tableau de bord, comptabilité, notifications et PDF dans la devise de chaque montant ;
+  « Carte bancaire » hors Belgique ; icône Euro remplacée par Coins.
+Tests : check OK ; Vitest 236/236 ; pgTAP 377/377 (nouveaux : 28_international 16 tests,
+  27_categories 12) ; Playwright 159 réussis + 13 ignorés (inscription d'un coach suisse en CHF
+  à 8,1 %, couleur d'une catégorie) ; captures téléphone et ordinateur, sombre et clair.
+Limites : les totaux (tableau de bord, comptabilité) additionnent les montants dans la devise de
+  l'organisation : correct tant qu'elle n'a jamais changé (étape 2). Interface en français
+  (traduction = dernière étape avant la mise en ligne).
+Suite : étape 2, changement de devise (taux saisi, conversion des prix à venir et des brouillons,
+  totaux par devise) ; puis Comptabilité (point 4).
+```
+
 ### Classement des Documents (option D) ; montant hors TVA et aperçu PDF des factures (D-67)
 ```
 Date : 2026-10-29

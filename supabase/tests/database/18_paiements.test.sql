@@ -28,8 +28,8 @@ select throws_ok(
 );
 select throws_ok(
   $$ insert into public.athlete_payments (organization_id, athlete_id, received_on, amount_cents, vat_rate, method)
-     values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', '2026-10-20', 100, 19, 'cash') $$,
-  '23514', null, 'Le taux de TVA est 0, 6, 12 ou 21 %'
+     values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', '2026-10-20', 100, 100.5, 'cash') $$,
+  '23514', null, 'Le taux de TVA est entre 0 et 100 % (taux libre, D-69)'
 );
 select throws_ok(
   $$ insert into public.athlete_payments (organization_id, athlete_id, received_on, amount_cents, method)

@@ -1,3 +1,4 @@
+import { currencyOf, type Currency } from "@/domain/billing/money";
 import "server-only";
 
 import type { Discipline } from "@/domain/training/discipline";
@@ -27,13 +28,15 @@ export type CoachSession = {
   // Prix (D-52), en centimes : TVA comprise si priceVatIncluded, sinon sans TVA. Null : pas de prix.
   priceCents: number | null;
   priceVatIncluded: boolean;
+  // Devise du prix (D-69).
+  currency: Currency;
   paymentMethod: SessionPaymentMethod | null;
 };
 
 // Le sportif direct (séance individuelle) et les inscrits (collective) passent par deux relations
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
 const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes,
-  repeats_weekly, ends_on, notes, price_cents, price_vat_included, payment_method,
+  repeats_weekly, ends_on, notes, price_cents, price_vat_included, currency, payment_method,
   individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name ),
   enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name ) ),
   exceptions:coach_session_exceptions ( original_date, new_date, new_start_time )`;
@@ -53,6 +56,7 @@ type Row = {
   notes: string | null;
   price_cents: number | null;
   price_vat_included: boolean;
+  currency: string;
   payment_method: string | null;
   individual: Profile;
   enrolled: { athlete: Profile }[];
@@ -92,6 +96,7 @@ function toSession(row: Row): CoachSession {
     })),
     priceCents: row.price_cents,
     priceVatIncluded: row.price_vat_included,
+    currency: currencyOf(row.currency),
     paymentMethod: row.payment_method as SessionPaymentMethod | null,
   };
 }
@@ -129,6 +134,7 @@ export type SessionPayment = {
   sessionDate: string;
   receivedOn: string;
   amountCents: number;
+  currency: Currency;
   method: string;
 };
 
@@ -139,7 +145,7 @@ export async function listSessionPayments(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("athlete_payments")
-    .select("id, session_date, received_on, amount_cents, method")
+    .select("id, session_date, received_on, amount_cents, currency, method")
     .eq("organization_id", organizationId)
     .eq("session_id", sessionId);
   if (error) throw new Error("Lecture des paiements de la séance impossible.");
@@ -151,6 +157,7 @@ export async function listSessionPayments(
             sessionDate: row.session_date,
             receivedOn: row.received_on,
             amountCents: row.amount_cents,
+            currency: currencyOf(row.currency),
             method: row.method,
           },
         ]

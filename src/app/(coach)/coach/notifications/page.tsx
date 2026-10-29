@@ -17,7 +17,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card, CardEmpty } from "@/components/ui/card";
 import { CountBadge } from "@/components/ui/count-badge";
-import { formatEuros } from "@/domain/billing/invoices";
+import { formatMoney } from "@/domain/billing/money";
 import { requireCoach } from "@/features/auth/guards";
 import { getCoachProfile } from "@/features/coach/profile";
 import { NOTIFICATION_KINDS, notificationKindLabels } from "@/features/coach/settings";
@@ -231,7 +231,7 @@ async function NotificationList() {
                 trailing={
                   <>
                     <span className="text-[15px] font-semibold tabular">
-                      {formatEuros(invoice.amountCents)}
+                      {formatMoney(invoice.amountCents, invoice.currency)}
                     </span>
                     <StatusBadge label="En retard" />
                   </>

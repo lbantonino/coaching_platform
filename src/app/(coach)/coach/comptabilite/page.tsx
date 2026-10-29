@@ -1,4 +1,4 @@
-import { Banknote, CalendarRange, Euro, Landmark } from "lucide-react";
+import { Banknote, CalendarRange, Coins, Landmark } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
@@ -9,10 +9,10 @@ import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/l
 import { Card, CardEmpty } from "@/components/ui/card";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
-import { formatEuros } from "@/domain/billing/invoices";
+import { formatMoney, formatVatRate } from "@/domain/billing/money";
 import {
   isBankMethod,
-  paymentMethodLabels,
+  paymentMethodLabel,
   paymentTotals,
   splitVat,
 } from "@/domain/billing/payments";
@@ -61,6 +61,8 @@ async function Accounting({ filter }: { filter: Filter }) {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
   const { memberships } = await requireCoach();
   const organizationId = memberships[0].organizationId;
+  // Totaux dans la devise de l'organisation ; chaque paiement dans la sienne (D-69).
+  const money = (cents: number) => formatMoney(cents, memberships[0].currency);
   const today = todayIsoInBrussels();
   const payments = await listPayments(organizationId);
 
@@ -90,31 +92,31 @@ async function Accounting({ filter }: { filter: Filter }) {
         <KpiGrid label="Chiffres de la comptabilité">
           <KpiCard
             color="ok"
-            icon={Euro}
-            value={formatEuros(week.inclCents)}
+            icon={Coins}
+            value={money(week.inclCents)}
             label="cette semaine"
-            detail={`${formatEuros(week.exclCents)} HTVA · ${plural(week.count, "paiement")}`}
+            detail={`${money(week.exclCents)} HTVA · ${plural(week.count, "paiement")}`}
           />
           <KpiCard
             color="run"
             icon={CalendarRange}
-            value={formatEuros(month.inclCents)}
+            value={money(month.inclCents)}
             label="ce mois-ci"
-            detail={`${formatEuros(month.exclCents)} HTVA · ${plural(month.count, "paiement")}`}
+            detail={`${money(month.exclCents)} HTVA · ${plural(month.count, "paiement")}`}
           />
           <KpiCard
             color="amber"
             icon={Landmark}
-            value={formatEuros(month.vatCents)}
+            value={money(month.vatCents)}
             label="de TVA ce mois-ci"
             detail="Comprise dans les montants reçus"
           />
           <KpiCard
             color="strength"
             icon={Banknote}
-            value={formatEuros(bank.inclCents)}
+            value={money(bank.inclCents)}
             label="sur le compte bancaire"
-            detail={`Ce mois-ci · espèces et autres : ${formatEuros(month.inclCents - bank.inclCents)}`}
+            detail={`Ce mois-ci · espèces et autres : ${money(month.inclCents - bank.inclCents)}`}
           />
         </KpiGrid>
         <FilterChips
@@ -129,10 +131,10 @@ async function Accounting({ filter }: { filter: Filter }) {
         <Card
           id="payments-title"
           title="Paiements reçus"
-          subtitle={`${plural(shownTotals.count, "paiement")} · ${formatEuros(shownTotals.inclCents)} TVAC · ${formatEuros(shownTotals.exclCents)} HTVA`}
+          subtitle={`${plural(shownTotals.count, "paiement")} · ${money(shownTotals.inclCents)} TVAC · ${money(shownTotals.exclCents)} HTVA`}
         >
           {shown.length === 0 ? (
-            <CardEmpty icon={Euro}>
+            <CardEmpty icon={Coins}>
               Aucun paiement pour l&apos;instant. Note l&apos;argent reçu avec « Nouveau paiement ».
             </CardEmpty>
           ) : (
@@ -150,11 +152,11 @@ async function Accounting({ filter }: { filter: Filter }) {
                       title={payment.athleteName}
                       // Le mode d'abord : sur téléphone, la fin de la ligne est coupée.
                       sub={[
-                        paymentMethodLabels[payment.method],
+                        paymentMethodLabel(payment.method, memberships[0].country),
                         payment.coversFrom && payment.coversTo
                           ? `Forfait du ${shortDate.format(new Date(`${payment.coversFrom}T00:00:00Z`))} au ${shortDate.format(new Date(`${payment.coversTo}T00:00:00Z`))}`
                           : null,
-                        `${formatEuros(exclCents)} HTVA (TVA ${payment.vatRate} %)`,
+                        `${formatMoney(exclCents, payment.currency)} HTVA (TVA ${formatVatRate(payment.vatRate)})`,
                         payment.label ?? "Paiement",
                       ]
                         .filter(Boolean)
@@ -162,7 +164,7 @@ async function Accounting({ filter }: { filter: Filter }) {
                       trailing={
                         <>
                           <span className="text-[15px] font-semibold tabular">
-                            {formatEuros(payment.amountCents)}
+                            {formatMoney(payment.amountCents, payment.currency)}
                           </span>
                           <DeleteMoreMenu
                             menuTitle={`Paiement de ${payment.athleteName}`}

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { PAYMENT_METHODS, VAT_RATES, parseEuros } from "@/domain/billing/payments";
+import { vatRateField } from "@/domain/billing/money";
+import { PAYMENT_METHODS, parseAmount } from "@/domain/billing/payments";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
@@ -36,9 +37,7 @@ const schema = z.object({
     .refine((d) => d >= "2000-01-01", {
       error: "Indique la date du paiement.",
     }),
-  vatRate: z.coerce.number().refine((rate) => (VAT_RATES as readonly number[]).includes(rate), {
-    error: "Taux de TVA invalide.",
-  }),
+  vatRate: vatRateField,
   method: z.enum(PAYMENT_METHODS, { error: "Choisis le mode de paiement." }),
   label: z.string().trim().max(120, { error: "Libellé trop long (120 caractères maximum)." }),
 });
@@ -79,7 +78,7 @@ export async function createPayment(
     saved: false,
   });
 
-  const amountCents = parseEuros(values.amount);
+  const amountCents = parseAmount(values.amount);
   if (amountCents === null) return fail("Indique le montant reçu, par exemple 3000 ou 85,50.");
   const parsed = schema.safeParse(values);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Saisie invalide.");

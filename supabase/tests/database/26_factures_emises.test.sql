@@ -19,17 +19,18 @@ insert into public.organization_members (organization_id, user_id, role) values
 insert into public.athlete_profiles (id, organization_id, first_name) values
   ('a1a1a1a1-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'Sportif A');
 insert into public.organization_legal_entities (id, organization_id, name, legal_form, vat_status,
-  vat_number, invoice_prefix, is_default) values
+  vat_number, default_vat_rate, invoice_prefix, is_default) values
   ('e1e1e1e1-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'Structure TVA',
-   'independent', 'subject', 'BE0123456749', 'TST', true),
+   'independent', 'subject', 'BE0123456749', 21, 'TST', true),
   ('e2e2e2e2-0000-4000-8000-000000000002', 'aaaaaaaa-0000-4000-8000-000000000001', 'ASBL test',
-   'asbl', 'not_subject', null, 'ASBL', false);
-insert into public.athlete_payments (id, organization_id, athlete_id, received_on, amount_cents, method)
+   'asbl', 'not_subject', null, null, 'ASBL', false);
+insert into public.athlete_payments (id, organization_id, athlete_id, received_on, amount_cents,
+  vat_rate, method)
 values
   ('f1f1f1f1-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001',
-   'a1a1a1a1-0000-4000-8000-000000000001', '2026-10-20', 7865, 'transfer'),
+   'a1a1a1a1-0000-4000-8000-000000000001', '2026-10-20', 7865, 21, 'transfer'),
   ('f2f2f2f2-0000-4000-8000-000000000002', 'aaaaaaaa-0000-4000-8000-000000000001',
-   'a1a1a1a1-0000-4000-8000-000000000001', '2026-10-21', 7865, 'transfer');
+   'a1a1a1a1-0000-4000-8000-000000000001', '2026-10-21', 7865, 21, 'transfer');
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';

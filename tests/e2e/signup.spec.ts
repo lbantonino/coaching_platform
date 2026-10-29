@@ -60,6 +60,12 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   await expect(page).toHaveURL(/\/bienvenue$/);
   await expect(page.getByRole("heading", { name: "Bienvenue, Léa." })).toBeVisible();
   await expect(page.getByText("Studio Léa")).toBeVisible();
+  // Étape « Ta facturation » (D-69) : le pays propose sa devise ; la TVA crée la 1re structure.
+  await page.getByLabel("Pays").selectOption("CH");
+  await expect(page.getByLabel("Devise")).toHaveValue("CHF");
+  await page.getByText("Je suis soumis à la TVA").click();
+  await page.getByLabel("Taux habituel").fill("8,1");
+  await page.getByLabel("Numéro de TVA").fill("CHE-123.456.789 TVA");
   await page.getByRole("button", { name: "Accéder à mon tableau de bord" }).click();
 
   // Son espace est vide et n'a rien en commun avec les organisations de démonstration.
@@ -67,9 +73,16 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   await expect(page.getByRole("heading", { name: "Tableau de bord", level: 1 })).toBeVisible();
   await expect(page.getByLabel(/^Menu du compte : Léa/).first()).toBeAttached();
   await expect(page.getByRole("link", { name: /^0\s*tâche à faire/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /encaissés cette semaine/ })).toContainText("0,00");
+  await expect(page.getByRole("link", { name: /encaissés cette semaine/ })).toContainText(
+    /0,00\sCHF/,
+  );
   await expect(page.getByText("Aucune séance prévue dans les 30 prochains jours.")).toBeVisible();
   await expect(page.getByText("Organisation Démo A")).toHaveCount(0);
+  // Sa structure suisse est prête : Paramètres › Facturation et légal.
+  await page.goto("/coach/profil?onglet=facturation");
+  await expect(page.getByRole("region", { name: "Studio Léa" })).toContainText(
+    "Assujetti à la TVA · CHE-123.456.789 TVA · taux habituel 8,1 %",
+  );
 });
 
 test("un sportif s'inscrit seul et attend que son coach le rattache", async ({

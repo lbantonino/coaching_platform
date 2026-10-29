@@ -7,7 +7,11 @@ import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { Sheet } from "@/components/ui/overlay";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
-import { PAYMENT_METHODS, VAT_RATES, paymentMethodLabels } from "@/domain/billing/payments";
+import { useMoney } from "@/components/blocks/money-context";
+import { useOpenSettings } from "@/components/blocks/settings-context";
+import { VatRateInput } from "@/components/ui/vat-rate-input";
+import { parseVatRate } from "@/domain/billing/money";
+import { PAYMENT_METHODS } from "@/domain/billing/payments";
 import { COUNTRIES } from "@/features/athletes/schemas";
 import {
   createInvoice,
@@ -22,7 +26,10 @@ import { AmountField } from "./amount-field";
 // (sa fiche est créée : nom, adresse, contact). « Déjà payée » note aussi le paiement reçu ; « À
 // payer » met une échéance. On arrive ensuite sur le brouillon, à relire puis émettre.
 type Choice = { id: string; name: string };
-type Entity = { id: string; name: string; vatSubject: boolean };
+// Taux habituel de chaque structure (D-69) : pré-rempli, modifiable facture par facture.
+type Entity = { id: string; name: string; vatSubject: boolean; defaultVatRate: number | null };
+const rateText = (rate: number | null | undefined) =>
+  rate === null || rate === undefined ? "0" : String(rate).replace(".", ",");
 
 const initial: NewInvoiceState = { error: null, attempt: 0, values: null };
 
@@ -40,6 +47,8 @@ export function NewInvoiceButton({
   dueDefault: string;
 }) {
   const [open, setOpen] = useState(false);
+  // Pays du coach (D-69) : celui proposé pour l'adresse d'un nouveau sportif.
+  const { country } = useMoney();
   const [state, action, pending] = useActionState(
     createInvoice.bind(null, organizationId),
     initial,
@@ -61,10 +70,7 @@ export function NewInvoiceButton({
         subtitle="Un brouillon, à relire puis émettre."
       >
         {entities.length === 0 ? (
-          <p className="text-[14px] text-muted">
-            Ajoute d&apos;abord ta structure légale (Paramètres, Structures légales) : elle figure
-            sur chaque facture.
-          </p>
+          <NoEntity onOpen={() => setOpen(false)} />
         ) : (
           <InvoiceFields
             key={state.attempt}
@@ -85,11 +91,11 @@ export function NewInvoiceButton({
                 addressLine: "",
                 postalCode: "",
                 city: "",
-                country: "BE",
+                country,
                 label: "",
                 amount: "",
                 amountMode: "excl",
-                vatRate: "21",
+                vatRate: rateText(entities[0].defaultVatRate),
                 serviceOn: "",
                 paid: true,
                 receivedOn: today,
@@ -150,7 +156,13 @@ function InvoiceFields({
   const [vatRate, setVatRate] = useState(v.vatRate);
   const [paid, setPaid] = useState(v.paid);
   const vatSubject = entities.find((entity) => entity.id === entityId)?.vatSubject ?? true;
-  const rate = vatSubject ? Number(vatRate) : 0;
+  const rate = vatSubject ? (parseVatRate(vatRate) ?? 0) : 0;
+  const { methodLabel } = useMoney();
+  const chooseEntity = (id: string) => {
+    setEntityId(id);
+    const entity = entities.find((item) => item.id === id);
+    if (entity?.vatSubject) setVatRate(rateText(entity.defaultVatRate));
+  };
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
@@ -160,7 +172,7 @@ function InvoiceFields({
             id="new-invoice-entity"
             name="legalEntityId"
             value={entityId}
-            onChange={(event) => setEntityId(event.target.value)}
+            onChange={(event) => chooseEntity(event.target.value)}
             className={inputClass}
           >
             {entities.map((entity) => (
@@ -307,21 +319,9 @@ function InvoiceFields({
             className={inputClass}
           />
         </Field>
-        <Field id="new-invoice-vat" label="TVA">
+        <Field id="new-invoice-vat" label="Taux de TVA">
           {vatSubject ? (
-            <select
-              id="new-invoice-vat"
-              name="vatRate"
-              value={vatRate}
-              onChange={(event) => setVatRate(event.target.value)}
-              className={inputClass}
-            >
-              {VAT_RATES.map((item) => (
-                <option key={item} value={item}>
-                  {item} %
-                </option>
-              ))}
-            </select>
+            <VatRateInput id="new-invoice-vat" value={vatRate} onChange={setVatRate} />
           ) : (
             <>
               <input type="hidden" name="vatRate" value="0" />
@@ -397,7 +397,7 @@ function InvoiceFields({
               >
                 {PAYMENT_METHODS.map((method) => (
                   <option key={method} value={method}>
-                    {paymentMethodLabels[method]}
+                    {methodLabel(method)}
                   </option>
                 ))}
               </select>
@@ -429,5 +429,31 @@ function InvoiceFields({
         {pending ? "Création…" : "Créer le brouillon"}
       </button>
     </form>
+  );
+}
+
+// Pas encore de structure (étape « Ta facturation » passée à l'inscription, D-69) : Coory la demande
+// maintenant, avec un raccourci vers Paramètres › Facturation et légal.
+function NoEntity({ onOpen }: { onOpen: () => void }) {
+  const openSettings = useOpenSettings();
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-[14px] text-muted">
+        Pour facturer, Coory a besoin de ta structure : son nom, son pays et sa TVA. Elle figure sur
+        chaque facture.
+      </p>
+      {openSettings ? (
+        <button
+          type="button"
+          onClick={() => {
+            onOpen();
+            openSettings("facturation");
+          }}
+          className={buttonClass({ variant: "primary", size: "md" })}
+        >
+          Ajouter ma structure
+        </button>
+      ) : null}
+    </div>
   );
 }

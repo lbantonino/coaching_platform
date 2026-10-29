@@ -1,11 +1,11 @@
 -- Catégories de documents (D-67) : 5 catégories de départ pour chaque organisation, noms uniques
 -- par organisation (sans tenir compte des majuscules), un document ne pointe que vers une catégorie
--- de SON organisation, supprimer une catégorie laisse ses documents « sans catégorie », isolation.
+-- de SON organisation, une couleur de la palette (D-68), supprimer une catégorie laisse ses documents « sans catégorie », isolation.
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(9);
+select plan(12);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -22,6 +22,13 @@ select results_eq(
      where organization_id = 'aaaaaaaa-0000-4000-8000-000000000001' order by name $$,
   $$ values ('Autre'::text), ('Bilan'), ('Contrat'), ('Facture'), ('Programme') $$,
   'Une nouvelle organisation reçoit les 5 catégories de départ'
+);
+select results_eq(
+  $$ select name || ':' || color from public.document_categories
+     where organization_id = 'aaaaaaaa-0000-4000-8000-000000000001' order by name $$,
+  $$ values ('Autre:grey'::text), ('Bilan:blue'), ('Contrat:violet'), ('Facture:gold'),
+       ('Programme:green') $$,
+  'Chaque catégorie de départ a sa couleur (D-68)'
 );
 
 select throws_ok(
@@ -55,6 +62,17 @@ select is(
   (select name from public.document_categories where id = 'cacacaca-0000-4000-8000-000000000001'),
   'Certificats', 'Coach A renomme sa catégorie'
 );
+update public.document_categories set color = 'pink'
+where id = 'cacacaca-0000-4000-8000-000000000001';
+select is(
+  (select color from public.document_categories where id = 'cacacaca-0000-4000-8000-000000000001'),
+  'pink', 'Coach A change la couleur de sa catégorie'
+);
+select throws_ok(
+  $$ update public.document_categories set color = '#ff0000'
+     where id = 'cacacaca-0000-4000-8000-000000000001' $$,
+  '23514', null, 'Une couleur hors de la palette est refusée'
+);
 
 insert into public.coach_documents (id, organization_id, name, category_id, storage_path, mime_type,
   size_bytes, created_by)
@@ -80,7 +98,7 @@ select is(
    where organization_id = 'aaaaaaaa-0000-4000-8000-000000000001'),
   0, 'Le coach B ne lit aucune catégorie de l''organisation A'
 );
-update public.document_categories set name = 'Piraté'
+update public.document_categories set name = 'Piraté', color = 'pink'
 where organization_id = 'aaaaaaaa-0000-4000-8000-000000000001';
 reset role;
 select is(

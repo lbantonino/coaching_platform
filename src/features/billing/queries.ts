@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { InvoiceLike } from "@/domain/billing/invoices";
+import { currencyOf, type Currency } from "@/domain/billing/money";
 import { createClient } from "@/lib/supabase/server";
 
 export type AthleteInvoice = InvoiceLike & {
@@ -12,6 +13,8 @@ export type AthleteInvoice = InvoiceLike & {
   // brouillon et pour les factures de simple suivi d'avant D-65).
   status: "draft" | "issued";
   number: string | null;
+  // Devise de la facture (D-69).
+  currency: Currency;
 };
 
 type Row = {
@@ -23,11 +26,12 @@ type Row = {
   paid_on: string | null;
   status: string;
   number: string | null;
+  currency: string;
   athlete: { id: string; first_name: string; display_name: string | null } | null;
 };
 
 const SELECT =
-  "id, label, amount_cents, issued_on, due_on, paid_on, status, number, athlete:athlete_profiles ( id, first_name, display_name )";
+  "id, label, amount_cents, issued_on, due_on, paid_on, status, number, currency, athlete:athlete_profiles ( id, first_name, display_name )";
 
 const toInvoice = (row: Row): AthleteInvoice => ({
   id: row.id,
@@ -38,6 +42,7 @@ const toInvoice = (row: Row): AthleteInvoice => ({
   paidOn: row.paid_on,
   status: row.status === "draft" ? "draft" : "issued",
   number: row.number,
+  currency: currencyOf(row.currency),
   // La clé étrangère garantit le sportif ; le repli ne sert qu'au typage.
   athleteId: row.athlete?.id ?? "",
   athleteName: row.athlete ? (row.athlete.display_name ?? row.athlete.first_name) : "Sportif",

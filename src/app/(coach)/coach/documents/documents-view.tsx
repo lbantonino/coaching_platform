@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState, useTransition, type FormEvent } from "react";
 
+import { categoryDotClass, tileClassFor } from "@/components/blocks/category-color";
 import { PageBody, PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
@@ -71,12 +72,6 @@ const kindIcons: Record<DocumentKind, LucideIcon> = {
   word: FileText,
   excel: FileSpreadsheet,
 };
-const kindTiles: Record<DocumentKind, string> = {
-  pdf: "bg-accent-soft text-accent-text",
-  image: "bg-run-soft text-run",
-  word: "bg-strength-soft text-strength",
-  excel: "bg-ok-soft text-ok",
-};
 const kindLabels: Record<DocumentKind, string> = {
   pdf: "PDF",
   image: "Image",
@@ -101,6 +96,7 @@ type CategoryActions = {
   create: (name: string) => Promise<CategoryResult>;
   rename: (categoryId: string, name: string) => Promise<CategoryResult>;
   remove: (categoryId: string) => Promise<CategoryResult>;
+  recolor: (categoryId: string, color: string) => Promise<CategoryResult>;
 };
 
 const fileUrl = (id: string) => `/documents/${id}`;
@@ -271,17 +267,23 @@ export function DocumentsView({
             className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
           >
             {[
-              { key: ALL, label: "Tous" },
-              ...categories.map((item) => ({ key: item.id, label: item.name })),
-              ...(hasUncategorized ? [{ key: NONE, label: "Sans catégorie" }] : []),
-            ].map(({ key, label }) => (
+              { key: ALL, label: "Tous", color: null },
+              ...categories.map((item) => ({ key: item.id, label: item.name, color: item.color })),
+              ...(hasUncategorized
+                ? [{ key: NONE, label: "Sans catégorie", color: "grey" as const }]
+                : []),
+            ].map(({ key, label, color }) => (
               <button
                 key={key}
                 type="button"
                 aria-pressed={category === key}
                 onClick={() => setCategory(key)}
-                className={`${chipClass} shrink-0 ${category === key ? chipActiveClass : chipIdleClass}`}
+                className={`${chipClass} shrink-0 gap-2 ${category === key ? chipActiveClass : chipIdleClass}`}
               >
+                {/* Rond de la couleur de la catégorie : le lien avec l'icône des documents. */}
+                {color ? (
+                  <span aria-hidden className={`size-2 rounded-full ${categoryDotClass[color]}`} />
+                ) : null}
                 {label}
               </button>
             ))}
@@ -330,7 +332,7 @@ export function DocumentsView({
                     >
                       <span
                         aria-hidden
-                        className={`inline-flex size-10 shrink-0 items-center justify-center rounded-[11px] ${kindTiles[document.kind]}`}
+                        className={`inline-flex size-10 shrink-0 items-center justify-center rounded-[11px] ${tileClassFor(document.categoryColor)}`}
                       >
                         <Icon size={18} strokeWidth={1.8} />
                       </span>
@@ -502,7 +504,7 @@ function Preview({
         <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface px-4 py-6 text-center md:hidden">
           <span
             aria-hidden
-            className={`inline-flex size-16 items-center justify-center rounded-[18px] ${kindTiles.pdf}`}
+            className={`inline-flex size-16 items-center justify-center rounded-[18px] ${tileClassFor(document.categoryColor)}`}
           >
             <FileText size={28} strokeWidth={1.7} />
           </span>

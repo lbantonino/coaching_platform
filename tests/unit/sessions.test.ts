@@ -234,8 +234,11 @@ describe("prix d'une séance (D-52)", () => {
   });
 
   it("calcule le montant reçu : prix direct, ou prix HTVA plus 21 %", () => {
-    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: true })).toBe(6500);
-    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false })).toBe(7865);
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: true }, 21)).toBe(6500);
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false }, 21)).toBe(7865);
+    // Taux libre (D-69) : 8,1 % en Suisse, 0 % sans TVA.
+    expect(sessionAmountCents({ priceCents: 10000, priceVatIncluded: false }, 8.1)).toBe(10810);
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false }, 0)).toBe(6500);
     expect(defaultVatIncluded("cash")).toBe(true);
     expect(defaultVatIncluded("transfer")).toBe(false);
   });
@@ -280,7 +283,7 @@ describe("prix d'une séance (D-52)", () => {
     };
     const free = { ...weekly, priceCents: null, exceptions: [] };
     // Deux dates facturées (78,65 €) et une en espèces (65 €).
-    expect(plannedIncome([weekly, once, free], "2026-10-26", "2026-11-01")).toEqual({
+    expect(plannedIncome([weekly, once, free], "2026-10-26", "2026-11-01", 21)).toEqual({
       count: 3,
       inclCents: 22230,
     });
@@ -310,7 +313,7 @@ describe("forfaits (D-52)", () => {
     };
     const other = { ...session, athleteId: OTHER };
     expect(
-      plannedIncome([session, other], "2026-10-26", "2026-11-01", (s, date) =>
+      plannedIncome([session, other], "2026-10-26", "2026-11-01", 21, (s, date) =>
         coveredByPackage(covers, s.athleteId, date),
       ),
     ).toEqual({ count: 1, inclCents: 6500 });

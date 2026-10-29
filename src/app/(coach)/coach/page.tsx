@@ -5,7 +5,7 @@ import {
   Clock,
   FileText,
   ListChecks,
-  Euro,
+  Coins,
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -26,7 +26,8 @@ import { StatTiles } from "@/components/ui/stat-tiles";
 import { Avatar } from "@/components/ui/avatar";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
-import { formatEuros, monthActivity } from "@/domain/billing/invoices";
+import { monthActivity } from "@/domain/billing/invoices";
+import { formatMoney, type Currency } from "@/domain/billing/money";
 import { coveredByPackage, paymentTotals } from "@/domain/billing/payments";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
@@ -42,6 +43,7 @@ import {
 import { requireCoach } from "@/features/auth/guards";
 import { listPackageCovers, listPayments } from "@/features/billing/payment-queries";
 import { listMonthInvoices } from "@/features/billing/queries";
+import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { getCoachProfile } from "@/features/coach/profile";
 import { moveSession } from "@/features/sessions/actions";
 import { plannedIncome } from "@/features/sessions/prices";
@@ -145,15 +147,19 @@ async function Dashboard({
   // Paiements depuis le lundi ou le 1er du mois (le plus ancien des deux) : semaine et mois.
   const monthStart = `${today.slice(0, 7)}-01`;
   const weekStart = mondayOf(today);
-  const [profile, sessions, tasks, invoices, payments, programs, covers] = await Promise.all([
-    getCoachProfile(user),
-    listSessions(current.organizationId),
-    getDashboardTasks(current.organizationId),
-    listMonthInvoices(current.organizationId, today),
-    listPayments(current.organizationId, weekStart < monthStart ? weekStart : monthStart),
-    listActivePrograms(current.organizationId),
-    listPackageCovers(current.organizationId),
-  ]);
+  const [profile, sessions, tasks, invoices, payments, programs, covers, vatRate] =
+    await Promise.all([
+      getCoachProfile(user),
+      listSessions(current.organizationId),
+      getDashboardTasks(current.organizationId),
+      listMonthInvoices(current.organizationId, today),
+      listPayments(current.organizationId, weekStart < monthStart ? weekStart : monthStart),
+      listActivePrograms(current.organizationId),
+      listPackageCovers(current.organizationId),
+      getDefaultVatRate(current.organizationId),
+    ]);
+  // Montants dans la devise de l'organisation (D-69).
+  const money = (cents: number) => formatMoney(cents, current.currency);
   const weekIncome = paymentTotals(payments, weekStart, addDays(weekStart, 6));
   const monthIncome = paymentTotals(payments, monthStart, today);
   // Ce que les séances de la semaine pourraient rapporter (D-52) : leurs prix, payées ou non, sauf
@@ -162,6 +168,7 @@ async function Dashboard({
     sessions,
     weekStart,
     addDays(weekStart, 6),
+    vatRate,
     (session, date) =>
       session.kind === "individual" && coveredByPackage(covers, session.athletes[0]?.id, date),
   );
@@ -309,20 +316,20 @@ async function Dashboard({
                 compact
                 href="/coach/comptabilite"
                 color="ok"
-                icon={Euro}
-                value={formatEuros(weekIncome.inclCents)}
+                icon={Coins}
+                value={money(weekIncome.inclCents)}
                 shortLabel="Encaissé"
                 mobileLines={[
                   "cette semaine",
                   plural(weekIncome.count, "paiement"),
-                  ...(planned.count > 0 ? [`${formatEuros(planned.inclCents)} prévus`] : []),
+                  ...(planned.count > 0 ? [`${money(planned.inclCents)} prévus`] : []),
                 ]}
                 label="encaissés cette semaine"
                 detail={[
-                  `${formatEuros(weekIncome.exclCents)} HTVA`,
+                  `${money(weekIncome.exclCents)} HTVA`,
                   plural(weekIncome.count, "paiement"),
                   planned.count > 0
-                    ? `${formatEuros(planned.inclCents)} prévus (${plural(planned.count, "séance")})`
+                    ? `${money(planned.inclCents)} prévus (${plural(planned.count, "séance")})`
                     : null,
                 ]
                   .filter(Boolean)
@@ -532,13 +539,17 @@ async function Dashboard({
                   leading={<FinanceIcon icon={FileText} color="accent" />}
                   title={`${activity.sent.count} ${activity.sent.count > 1 ? "factures envoyées" : "facture envoyée"}`}
                   sub="Ce mois-ci"
-                  trailing={<FinanceAmount cents={activity.sent.cents} />}
+                  trailing={
+                    <FinanceAmount currency={current.currency} cents={activity.sent.cents} />
+                  }
                 />
                 <ListRow
                   leading={<FinanceIcon icon={Check} color="ok" />}
                   title={`${monthIncome.count} ${monthIncome.count > 1 ? "paiements reçus" : "paiement reçu"}`}
                   sub="Ce mois-ci"
-                  trailing={<FinanceAmount cents={monthIncome.inclCents} />}
+                  trailing={
+                    <FinanceAmount currency={current.currency} cents={monthIncome.inclCents} />
+                  }
                 />
                 <ListRow
                   leading={<FinanceIcon icon={Clock} color="amber" />}
@@ -554,6 +565,7 @@ async function Dashboard({
                   }
                   trailing={
                     <FinanceAmount
+                      currency={current.currency}
                       cents={activity.pending.cents}
                       late={activity.pending.overdue > 0}
                     />
@@ -588,10 +600,18 @@ function FinanceIcon({
 }
 
 // Montant d'une ligne : en rouge quand des paiements sont en retard.
-function FinanceAmount({ cents, late = false }: { cents: number; late?: boolean }) {
+function FinanceAmount({
+  cents,
+  currency,
+  late = false,
+}: {
+  cents: number;
+  currency: Currency;
+  late?: boolean;
+}) {
   return (
     <span className={`text-[15px] font-semibold tabular ${late ? "text-warn" : ""}`}>
-      {formatEuros(cents)}
+      {formatMoney(cents, currency)}
     </span>
   );
 }

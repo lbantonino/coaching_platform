@@ -30,7 +30,7 @@ test("le coach note un paiement reçu en espèces et le retrouve dans sa comptab
     .click();
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Sophie Lambert" });
-  await dialog.getByLabel("Montant reçu (TVAC)").fill("3000");
+  await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("3000");
   await expect(dialog.getByText(/2\s479,34\s€ HTVA · 520,66\s€ de TVA/)).toBeVisible();
   await dialog.getByText("Espèces", { exact: true }).click();
   // Forfait (D-52) : 3 mois payés d'avance, la période couverte est notée.
@@ -80,7 +80,7 @@ test("le montant reçu est obligatoire, et la saisie est gardée après l'erreur
   await page.getByRole("button", { name: "Nouveau paiement" }).click();
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Thomas Peeters" });
-  await dialog.getByLabel("Montant reçu (TVAC)").fill("abc");
+  await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("abc");
   await dialog.getByRole("button", { name: "Enregistrer le paiement" }).click();
   await expect(dialog.getByRole("alert")).toContainText("Indique le montant reçu");
   await expect(dialog.getByRole("combobox", { name: "Sportif" })).toHaveValue(

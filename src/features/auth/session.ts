@@ -2,6 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 
+import { currencyOf, type Currency } from "@/domain/billing/money";
 import { createClient } from "@/lib/supabase/server";
 
 export type CurrentUser = {
@@ -13,6 +14,9 @@ export type CoachMembership = {
   organizationId: string;
   organizationName: string;
   role: "owner" | "coach";
+  // Pays et devise de l'organisation (D-69) : chaque écran d'argent les lit ici.
+  country: string;
+  currency: Currency;
 };
 
 // Utilisateur connecté, vérifié côté serveur (getClaims valide le jeton). null si non connecté.
@@ -46,7 +50,7 @@ export async function getCoachMemberships(
   const supabase = client ?? (await createClient());
   const { data, error } = await supabase
     .from("organization_members")
-    .select("organization_id, role, organizations ( name )")
+    .select("organization_id, role, organizations ( name, country, currency )")
     .eq("user_id", userId)
     .eq("status", "active");
 
@@ -57,6 +61,8 @@ export async function getCoachMemberships(
     organizationName: row.organizations.name,
     // La contrainte CHECK en base garantit 'owner' ou 'coach'.
     role: row.role as CoachMembership["role"],
+    country: row.organizations.country,
+    currency: currencyOf(row.organizations.currency),
   }));
 }
 

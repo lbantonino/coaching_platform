@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isBankMethod, parseEuros, paymentTotals, splitVat } from "@/domain/billing/payments";
+import { isBankMethod, parseAmount, paymentTotals, splitVat } from "@/domain/billing/payments";
 
 describe("TVA d'un paiement reçu (D-36)", () => {
   it("déduit le HTVA et la TVA du montant TVA comprise, au centime près", () => {
@@ -28,12 +28,12 @@ describe("totaux des paiements", () => {
 
 describe("saisie d'un montant", () => {
   it("lit les écritures belges courantes", () => {
-    expect(parseEuros("3000")).toBe(300000);
-    expect(parseEuros("3 000,50")).toBe(300050);
-    expect(parseEuros("3000.5 €")).toBe(300050);
-    expect(parseEuros("0")).toBeNull();
-    expect(parseEuros("12,345")).toBeNull();
-    expect(parseEuros("abc")).toBeNull();
+    expect(parseAmount("3000")).toBe(300000);
+    expect(parseAmount("3 000,50")).toBe(300050);
+    expect(parseAmount("3000.5 €")).toBe(300050);
+    expect(parseAmount("0")).toBeNull();
+    expect(parseAmount("12,345")).toBeNull();
+    expect(parseAmount("abc")).toBeNull();
   });
   it("distingue l'argent qui arrive sur le compte bancaire", () => {
     expect(isBankMethod("transfer")).toBe(true);

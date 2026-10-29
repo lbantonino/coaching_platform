@@ -1,13 +1,15 @@
 // Structures légales d'un coach (D-57) : règles PURES de saisie, testées par Vitest. Les mêmes
-// formats sont vérifiés en base (supabase/migrations/*_parametres.sql).
+// formats sont vérifiés en base (supabase/migrations/*_parametres.sql, *_international.sql).
+// International (D-69) : les formats belges (BCE, « BE… ») ne s'appliquent qu'à une structure belge ;
+// ailleurs, numéros libres (lettres, chiffres, espaces, points, tirets, barres obliques).
 
 export const LEGAL_FORMS = ["independent", "asbl", "srl", "sa", "other"] as const;
 export type LegalForm = (typeof LEGAL_FORMS)[number];
 export const legalFormLabels: Record<LegalForm, string> = {
   independent: "Indépendant (personne physique)",
-  asbl: "ASBL",
-  srl: "SRL",
-  sa: "SA",
+  asbl: "Association (ASBL…)",
+  srl: "Société (SRL, SARL, Ltd…)",
+  sa: "Société anonyme (SA, AG…)",
   other: "Autre",
 };
 
@@ -15,7 +17,7 @@ export const VAT_STATUSES = ["subject", "franchise", "not_subject"] as const;
 export type VatStatus = (typeof VAT_STATUSES)[number];
 export const vatStatusLabels: Record<VatStatus, string> = {
   subject: "Assujetti à la TVA",
-  franchise: "Franchise de TVA (petite entreprise)",
+  franchise: "Franchise ou exonération de TVA",
   not_subject: "Non assujetti",
 };
 
@@ -32,9 +34,34 @@ export function normalizeEnterpriseNumber(raw: string): string | null {
   return 97 - (base % 97) === check ? digits : null;
 }
 
-// « 0123456749 » -> « 0123.456.749 » (affichage).
-export function formatEnterpriseNumber(digits: string): string {
-  return `${digits.slice(0, 4)}.${digits.slice(4, 7)}.${digits.slice(7)}`;
+// « 0123456749 » -> « 0123.456.749 » (affichage d'un numéro belge) ; un autre numéro tel quel.
+export function formatEnterpriseNumber(value: string): string {
+  if (!/^[01][0-9]{9}$/.test(value)) return value;
+  return `${value.slice(0, 4)}.${value.slice(4, 7)}.${value.slice(7)}`;
+}
+
+// « BE0123456749 » -> « BE0123.456.749 » (affichage) ; un numéro d'un autre pays tel quel.
+export function formatVatNumber(value: string): string {
+  return /^BE[01][0-9]{9}$/.test(value) ? `BE${formatEnterpriseNumber(value.slice(2))}` : value;
+}
+
+const FREE_NUMBER = /^[A-Z0-9 ./-]{2,30}$/;
+const freeNumber = (raw: string): string | null => {
+  const text = raw.trim().toUpperCase().replace(/\s+/g, " ");
+  return FREE_NUMBER.test(text) ? text : null;
+};
+
+// Numéro d'entreprise selon le pays de la structure : BCE vérifié en Belgique, libre ailleurs.
+export function normalizeCompanyNumber(raw: string, country: string): string | null {
+  return country === "BE" ? normalizeEnterpriseNumber(raw) : freeNumber(raw);
+}
+
+// Numéro de TVA selon le pays : en Belgique « BE » + un numéro d'entreprise valide (« BE 0123.456.749 »
+// ou « 0123456749 » -> « BE0123456749 ») ; ailleurs libre (« FR40303265045 », « CHE-123.456.789 TVA »).
+export function normalizeVatNumber(raw: string, country: string): string | null {
+  if (country !== "BE") return freeNumber(raw);
+  const digits = normalizeEnterpriseNumber(raw);
+  return digits ? vatNumberFor(digits) : null;
 }
 
 // En Belgique, le numéro de TVA est le numéro d'entreprise précédé de « BE ».

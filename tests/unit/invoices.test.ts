@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { formatEuros, invoiceStatus, monthActivity } from "@/domain/billing/invoices";
+import { invoiceStatus, monthActivity } from "@/domain/billing/invoices";
+import { formatMoney } from "@/domain/billing/money";
 
 const TODAY = "2026-10-23";
 const invoice = (issuedOn: string, dueOn: string, paidOn: string | null, amountCents: number) => ({
@@ -49,6 +50,6 @@ describe("activité financière du mois", () => {
 
 describe("montants", () => {
   it("s'affichent en euros à la belge", () => {
-    expect(formatEuros(45000).replace(/\s/g, " ")).toBe("450,00 €");
+    expect(formatMoney(45000, "EUR").replace(/\s/g, " ")).toBe("450,00 €");
   });
 });

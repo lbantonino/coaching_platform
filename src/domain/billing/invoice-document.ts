@@ -1,8 +1,10 @@
 // Factures émises (D-65) : règles PURES du document (totaux, adresses), testées par Vitest. Le numéro
 // est attribué par la base à l'émission (issue_athlete_invoice), jamais ici. Coory ne décide d'aucune
 // règle légale (D-66) : les mentions imprimées sont celles que le coach écrit dans sa structure.
-import { addVat, splitVat } from "./payments";
+import { countryName } from "@/domain/geo/countries";
+
 import type { VatStatus } from "./legal";
+import { addVat, splitVat } from "./money";
 
 export type InvoiceTotals = { exclCents: number; vatCents: number; inclCents: number };
 
@@ -14,7 +16,7 @@ export function invoiceTotals(inclCents: number, vatRate: number): InvoiceTotals
 
 // Montant saisi par le coach (demande d'Antonino du 29/10/2026) : hors TVA (« 65 € HTVA », la TVA
 // s'ajoute) ou TVA comprise. La facture garde le total TVAC ; le HTVA s'en déduit sans écart (vérifié
-// pour 6, 12 et 21 % sur un million de montants).
+// pour 6, 12 et 21 % sur un million de montants ; calcul en nombres entiers pour tout taux libre, D-69).
 export type AmountMode = "excl" | "incl";
 
 export function totalsFromEntry(cents: number, mode: AmountMode, vatRate: number): InvoiceTotals {
@@ -34,11 +36,12 @@ export type PostalAddress = {
   country: string | null;
 };
 
-// Adresse sur deux lignes au plus : « Rue de l'Exemple 1 », « 1000 Bruxelles » (pays seulement s'il
-// n'est pas la Belgique).
-export function addressLines(address: PostalAddress): string[] {
+// Adresse sur deux lignes au plus : « Rue de l'Exemple 1 », « 1000 Bruxelles », puis le nom du pays
+// s'il n'est pas celui du vendeur (`homeCountry`).
+export function addressLines(address: PostalAddress, homeCountry = "BE"): string[] {
   const town = [address.postalCode, address.city].filter(Boolean).join(" ");
-  const country = address.country && address.country !== "BE" ? address.country : null;
+  const country =
+    address.country && address.country !== homeCountry ? countryName(address.country) : null;
   return [address.addressLine, town, country].filter((line): line is string => Boolean(line));
 }
 

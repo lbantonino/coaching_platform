@@ -14,13 +14,16 @@ import {
   type OnboardingState,
   type SignupValues,
 } from "@/features/auth/signup-actions";
-import type { AccountKind } from "@/features/auth/signup-schemas";
+import type { AccountKind, BillingSetupInput } from "@/features/auth/signup-schemas";
+
+import { BillingSetupFields } from "./billing-setup-fields";
 
 // Dernière étape quand l'inscription n'a pas tout fourni (Google, Facebook, Apple) : type de compte,
-// identité, entreprise et conditions, pré-remplis avec ce que le fournisseur a transmis.
-type Props = { initial: SignupValues; termsAlreadyAccepted: boolean };
+// identité, entreprise, facturation du coach (D-69) et conditions, pré-remplis avec ce que le
+// fournisseur a transmis.
+type Props = { initial: SignupValues; billing: BillingSetupInput; termsAlreadyAccepted: boolean };
 
-export function OnboardingForm({ initial, termsAlreadyAccepted }: Props) {
+export function OnboardingForm({ initial, billing, termsAlreadyAccepted }: Props) {
   const [state, formAction, pending] = useActionState(completeSignup, {
     error: null,
     attempt: 0,
@@ -33,6 +36,7 @@ export function OnboardingForm({ initial, termsAlreadyAccepted }: Props) {
       pending={pending}
       error={state.error}
       values={state.values ?? initial}
+      billing={state.billing ?? billing}
       termsChecked={state.values ? false : termsAlreadyAccepted}
     />
   );
@@ -43,12 +47,14 @@ function OnboardingFields({
   pending,
   error,
   values: v,
+  billing,
   termsChecked,
 }: {
   formAction: (formData: FormData) => void;
   pending: boolean;
   error: string | null;
   values: SignupValues;
+  billing: BillingSetupInput;
   termsChecked: boolean;
 }) {
   const [kind, setKind] = useState<AccountKind>(v.kind === "athlete" ? "athlete" : "coach");
@@ -106,6 +112,8 @@ function OnboardingFields({
           </Field>
         ) : null}
       </div>
+
+      {kind === "coach" ? <BillingSetupFields initial={billing} /> : null}
 
       <Checkbox
         name="terms"

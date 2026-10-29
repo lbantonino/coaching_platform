@@ -217,6 +217,7 @@ export type Database = {
           client_postal_code: string | null;
           created_at: string;
           created_by: string | null;
+          currency: string;
           due_on: string;
           id: string;
           issued_at: string | null;
@@ -246,6 +247,7 @@ export type Database = {
           client_postal_code?: string | null;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           due_on: string;
           id?: string;
           issued_at?: string | null;
@@ -274,6 +276,7 @@ export type Database = {
           client_postal_code?: string | null;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           due_on?: string;
           id?: string;
           issued_at?: string | null;
@@ -411,6 +414,7 @@ export type Database = {
           covers_to: string | null;
           created_at: string;
           created_by: string | null;
+          currency: string;
           id: string;
           label: string | null;
           method: string;
@@ -429,6 +433,7 @@ export type Database = {
           covers_to?: string | null;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           id?: string;
           label?: string | null;
           method: string;
@@ -437,7 +442,7 @@ export type Database = {
           session_date?: string | null;
           session_id?: string | null;
           updated_at?: string;
-          vat_rate?: number;
+          vat_rate: number;
         };
         Update: {
           amount_cents?: number;
@@ -446,6 +451,7 @@ export type Database = {
           covers_to?: string | null;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           id?: string;
           label?: string | null;
           method?: string;
@@ -950,6 +956,7 @@ export type Database = {
           athlete_id: string | null;
           created_at: string;
           created_by: string | null;
+          currency: string;
           discipline: string | null;
           duration_minutes: number;
           ends_on: string | null;
@@ -972,6 +979,7 @@ export type Database = {
           athlete_id?: string | null;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           discipline?: string | null;
           duration_minutes: number;
           ends_on?: string | null;
@@ -993,6 +1001,7 @@ export type Database = {
           athlete_id?: string | null;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           discipline?: string | null;
           duration_minutes?: number;
           ends_on?: string | null;
@@ -1093,6 +1102,7 @@ export type Database = {
       };
       document_categories: {
         Row: {
+          color: string;
           created_at: string;
           created_by: string | null;
           id: string;
@@ -1102,6 +1112,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          color?: string;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -1110,6 +1121,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          color?: string;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -1136,6 +1148,7 @@ export type Database = {
           country: string;
           created_at: string;
           created_by: string | null;
+          default_vat_rate: number | null;
           enterprise_number: string | null;
           iban: string | null;
           id: string;
@@ -1145,6 +1158,7 @@ export type Database = {
           legal_mentions: string | null;
           name: string;
           organization_id: string;
+          payment_details: string | null;
           postal_code: string | null;
           updated_at: string;
           vat_number: string | null;
@@ -1159,6 +1173,7 @@ export type Database = {
           country?: string;
           created_at?: string;
           created_by?: string | null;
+          default_vat_rate?: number | null;
           enterprise_number?: string | null;
           iban?: string | null;
           id?: string;
@@ -1168,6 +1183,7 @@ export type Database = {
           legal_mentions?: string | null;
           name: string;
           organization_id: string;
+          payment_details?: string | null;
           postal_code?: string | null;
           updated_at?: string;
           vat_number?: string | null;
@@ -1181,6 +1197,7 @@ export type Database = {
           country?: string;
           created_at?: string;
           created_by?: string | null;
+          default_vat_rate?: number | null;
           enterprise_number?: string | null;
           iban?: string | null;
           id?: string;
@@ -1190,6 +1207,7 @@ export type Database = {
           legal_mentions?: string | null;
           name?: string;
           organization_id?: string;
+          payment_details?: string | null;
           postal_code?: string | null;
           updated_at?: string;
           vat_number?: string | null;
@@ -1246,8 +1264,10 @@ export type Database = {
       };
       organizations: {
         Row: {
+          country: string;
           created_at: string;
           created_by: string | null;
+          currency: string;
           id: string;
           name: string;
           slug: string;
@@ -1257,8 +1277,10 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          country?: string;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           id?: string;
           name: string;
           slug: string;
@@ -1267,8 +1289,10 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          country?: string;
           created_at?: string;
           created_by?: string | null;
+          currency?: string;
           id?: string;
           name?: string;
           slug?: string;
@@ -1463,12 +1487,17 @@ export type Database = {
       };
       complete_signup: {
         Args: {
+          p_country?: string;
+          p_currency?: string;
           p_first_name: string;
           p_kind: string;
           p_last_name: string;
           p_organization_name: string;
           p_phone: string;
           p_terms_version: string;
+          p_vat_number?: string;
+          p_vat_rate?: number;
+          p_vat_status?: string;
         };
         Returns: string;
       };

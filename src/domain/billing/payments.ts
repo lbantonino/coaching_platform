@@ -1,3 +1,5 @@
+import { splitVat } from "./money";
+
 // Paiements reçus (D-36) : le chiffre d'affaires suivi est l'argent RÉELLEMENT reçu, à la date du
 // paiement. Montants en centimes, TVA comprise ; HTVA et TVA se déduisent du taux. Règles PURES.
 export const PAYMENT_METHODS = ["cash", "transfer", "bancontact", "other"] as const;
@@ -10,29 +12,20 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
   other: "Autre",
 };
 
-// Taux belges possibles ; 21 % par défaut pour le coaching personnel (à confirmer, OPEN-17).
-export const VAT_RATES = [21, 12, 6, 0] as const;
-export type VatRate = (typeof VAT_RATES)[number];
+// Bancontact n'existe qu'en Belgique (D-69) : ailleurs, le même moyen s'appelle « Carte bancaire ».
+export function paymentMethodLabel(method: PaymentMethod, country: string): string {
+  if (method === "bancontact" && country !== "BE") return "Carte bancaire";
+  return paymentMethodLabels[method];
+}
 
-// Argent qui arrive sur le compte bancaire (virement, Bancontact) ou non (espèces, autre).
+// Argent qui arrive sur le compte bancaire (virement, Bancontact / carte) ou non (espèces, autre).
 export const isBankMethod = (method: PaymentMethod) =>
   method === "transfer" || method === "bancontact";
 
 export type PaymentLike = { receivedOn: string; amountCents: number; vatRate: number };
 
-// 3 000,00 € TVAC à 21 % -> 2 479,34 € HTVA + 520,66 € de TVA (arrondi au centime, total exact).
-export function splitVat(
-  amountCents: number,
-  vatRate: number,
-): { exclCents: number; vatCents: number } {
-  const exclCents = Math.round((amountCents * 100) / (100 + vatRate));
-  return { exclCents, vatCents: amountCents - exclCents };
-}
-
-// 65,00 € HTVA à 21 % -> 78,65 € TVAC (arrondi au centime).
-export function addVat(exclCents: number, vatRate: number): number {
-  return Math.round((exclCents * (100 + vatRate)) / 100);
-}
+// Calculs de TVA et saisie des montants : règles communes dans money.ts (taux libre, D-69).
+export { addVat, parseAmount, splitVat } from "./money";
 
 export type PaymentTotals = {
   count: number;
@@ -69,12 +62,4 @@ export function coveredByPackage(
   return covers.some(
     (cover) => cover.athleteId === athleteId && date >= cover.coversFrom && date <= cover.coversTo,
   );
-}
-
-// Montant saisi (« 3000 », « 3 000,50 », « 3000.5 ») -> centimes, ou null s'il n'est pas valide.
-export function parseEuros(text: string): number | null {
-  const cleaned = text.replace(/[\s €]/g, "").replace(",", ".");
-  if (!/^\d+(\.\d{1,2})?$/.test(cleaned)) return null;
-  const cents = Math.round(Number(cleaned) * 100);
-  return cents >= 1 && cents <= 100_000_000 ? cents : null;
 }

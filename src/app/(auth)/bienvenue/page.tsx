@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { EntryTitle } from "@/components/layout/entry-ui";
 import { SkeletonBar } from "@/components/ui/skeleton";
+import { countryFromAcceptLanguage, defaultCurrencyFor } from "@/domain/geo/countries";
 import { getHomePath } from "@/features/auth/guards";
 import { requireUser } from "@/features/auth/session";
 import { TERMS_VERSION } from "@/features/auth/signup-schemas";
@@ -63,6 +65,15 @@ async function Welcome() {
     organizationName: text(meta.organization_name),
   };
   const termsAccepted = text(meta.terms_version) === TERMS_VERSION;
+  // Étape « Ta facturation » d'un coach (D-69) : pays deviné d'après la langue du navigateur.
+  const country = countryFromAcceptLanguage((await headers()).get("accept-language"));
+  const billing = {
+    country,
+    currency: defaultCurrencyFor(country),
+    vatChoice: "",
+    vatRate: "",
+    vatNumber: "",
+  };
   // Tout vient de l'inscription par e-mail (type, nom, conditions acceptées) : écran de bienvenue.
   const ready =
     (text(meta.kind) === "coach" || text(meta.kind) === "athlete") &&
@@ -70,7 +81,7 @@ async function Welcome() {
     initial.lastName !== "" &&
     termsAccepted;
 
-  if (ready) return <WelcomeReady values={initial} />;
+  if (ready) return <WelcomeReady values={initial} billing={billing} />;
 
   return (
     <>
@@ -79,7 +90,7 @@ async function Welcome() {
       >
         Bienvenue sur Coory
       </EntryTitle>
-      <OnboardingForm initial={initial} termsAlreadyAccepted={termsAccepted} />
+      <OnboardingForm initial={initial} billing={billing} termsAlreadyAccepted={termsAccepted} />
     </>
   );
 }

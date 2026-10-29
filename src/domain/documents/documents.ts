@@ -7,7 +7,41 @@ import { z } from "zod";
 // Catégories (D-67) : propres à chaque organisation, créées, renommées et supprimées par le coach.
 // Les 5 de départ (Programme, Facture, Contrat, Bilan, Autre) sont créées par la base.
 export const CATEGORY_NAME_MAX = 60;
-export type DocumentCategory = { id: string; name: string };
+
+// Couleur d'une catégorie (D-68) : l'icône de ses documents la prend. Palette fermée, la même que la
+// base (contrainte CHECK) ; chaque couleur est un jeton du design system (voir category-color.ts).
+export const CATEGORY_COLORS = [
+  "gold",
+  "blue",
+  "violet",
+  "orange",
+  "teal",
+  "green",
+  "pink",
+  "sky",
+  "grey",
+] as const;
+export type CategoryColor = (typeof CATEGORY_COLORS)[number];
+export const categoryColorLabels: Record<CategoryColor, string> = {
+  gold: "Jaune",
+  blue: "Bleu",
+  violet: "Violet",
+  orange: "Orange",
+  teal: "Turquoise",
+  green: "Vert",
+  pink: "Rose",
+  sky: "Ciel",
+  grey: "Gris",
+};
+export const isCategoryColor = (value: unknown): value is CategoryColor =>
+  (CATEGORY_COLORS as readonly unknown[]).includes(value);
+
+// Nouvelle catégorie : la première couleur que le coach n'utilise pas encore (sinon gris).
+export function nextCategoryColor(used: readonly string[]): CategoryColor {
+  return CATEGORY_COLORS.find((color) => color !== "grey" && !used.includes(color)) ?? "grey";
+}
+
+export type DocumentCategory = { id: string; name: string; color: CategoryColor };
 
 const categoryNameSchema = z
   .string()
@@ -41,7 +75,10 @@ const HINTS: [string[], string][] = [
   [["bilan", "test"], "bilan"],
   [["programme", "plan"], "programme"],
 ];
-export function guessCategoryId(fileName: string, categories: DocumentCategory[]): string | null {
+export function guessCategoryId(
+  fileName: string,
+  categories: Pick<DocumentCategory, "id" | "name">[],
+): string | null {
   const name = foldText(fileName);
   for (const [words, stem] of HINTS) {
     if (!words.some((word) => name.includes(word))) continue;

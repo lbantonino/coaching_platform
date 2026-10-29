@@ -1,19 +1,24 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useOptimistic, useState, useTransition } from "react";
 
+import { useMoney } from "@/components/blocks/money-context";
 import { Toggle } from "@/components/ui/checkbox";
 import { buttonClass } from "@/components/ui/button";
 import { FieldCheck } from "@/components/ui/field-check";
 import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { useToast } from "@/components/ui/toast";
+import { currencyLabel, currencySymbol, type Currency } from "@/domain/billing/money";
+import { COUNTRY_NAMES } from "@/domain/geo/country-names";
 import {
   changeEmail,
   changePassword,
   renameOrganization,
   setInvoiceCashPreference,
   setNotificationPreference,
+  setOrganizationCountry,
   updatePreferences,
   updateProfile,
   type SettingsState,
@@ -184,6 +189,80 @@ export function OrganizationForm({
   );
 }
 
+// Pays et devise de l'organisation (D-69). Le pays se change ici (propriétaire) : il décide du nom
+// des moyens de paiement (« Bancontact » en Belgique, « Carte bancaire » ailleurs). La devise est
+// affichée ; tous les montants de l'organisation sont dans cette devise.
+export function CountryCurrencyForm({
+  organizationId,
+  country,
+  currency,
+  isOwner,
+}: {
+  organizationId: string;
+  country: string;
+  currency: Currency;
+  isOwner: boolean;
+}) {
+  const [value, setValue] = useState(country);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const toast = useToast();
+  const router = useRouter();
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="organization-country" className={labelClass}>
+            Pays
+          </label>
+          <select
+            id="organization-country"
+            value={value}
+            disabled={!isOwner || pending}
+            onChange={(event) => {
+              const next = event.target.value;
+              setValue(next);
+              startTransition(async () => {
+                const result = await setOrganizationCountry(organizationId, next);
+                setError(result.error);
+                if (result.ok) {
+                  toast("Pays enregistré.");
+                  router.refresh();
+                } else setValue(country);
+              });
+            }}
+            aria-describedby="organization-country-hint"
+            className={inputClass}
+          >
+            {COUNTRY_NAMES.map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <p id="organization-country-hint" className={hintClass}>
+            {isOwner
+              ? "Proposé pour les adresses ; nomme les moyens de paiement de ton pays."
+              : "Seul le propriétaire peut changer le pays."}
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className={labelClass}>Devise</span>
+          <p className="flex min-h-[50px] items-center text-[15px] font-medium">
+            {currencyLabel(currency)}
+          </p>
+          <p className={hintClass}>Tous tes montants sont dans cette devise.</p>
+        </div>
+      </div>
+      {error ? (
+        <p role="alert" className={errorTextClass}>
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 // --- Préférences --------------------------------------------------------------------------------
 const hours = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
@@ -195,6 +274,8 @@ export function PreferencesForm({ values }: { values: PreferencesInput }) {
   );
   const v = state.values ?? values;
   const [method, setMethod] = useState(v.defaultPaymentMethod || "transfer");
+  const { currency } = useMoney();
+  const symbol = currencySymbol(currency);
   return (
     <form key={state.attempt} action={formAction} className="flex flex-col gap-6" noValidate>
       <div role="group" aria-labelledby="pref-session-title" className="flex flex-col gap-4">
@@ -202,7 +283,7 @@ export function PreferencesForm({ values }: { values: PreferencesInput }) {
           Quand tu crées une séance
         </h3>
         <p className="-mt-2.5 text-small text-muted">
-          Ex. : 60 min, à la salle, 65 € par virement, déjà remplis dans « Nouvelle séance ».
+          Ex. : 60 min, à la salle, 65 {symbol} par virement, déjà remplis dans « Nouvelle séance ».
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
@@ -236,7 +317,7 @@ export function PreferencesForm({ values }: { values: PreferencesInput }) {
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="pref-price" className={labelClass}>
-              Prix (€) <span className="font-normal text-muted">(facultatif)</span>
+              Prix ({symbol}) <span className="font-normal text-muted">(facultatif)</span>
             </label>
             <input
               id="pref-price"
@@ -247,7 +328,7 @@ export function PreferencesForm({ values }: { values: PreferencesInput }) {
               aria-describedby="pref-price-hint"
               className={`${inputClass} font-mono`}
             />
-            <FieldCheck htmlFor="pref-price" rule="euros" />
+            <FieldCheck htmlFor="pref-price" rule="amount" />
             <p id="pref-price-hint" className={hintClass}>
               {method === "cash"
                 ? "En espèces : prix direct, TVA comprise."
@@ -391,6 +472,7 @@ export function NotificationToggles({ values }: { values: Record<NotificationKin
 
 // Facturation (D-66) : proposer aussi les paiements en espèces dans « À facturer ». Effet immédiat.
 export function InvoiceCashToggle({ value }: { value: boolean }) {
+  const { methodLabel } = useMoney();
   const toast = useToast();
   const [, startTransition] = useTransition();
   const [shown, setShown] = useOptimistic(value, (_state, on: boolean) => on);
@@ -399,8 +481,8 @@ export function InvoiceCashToggle({ value }: { value: boolean }) {
       <span className="flex min-w-0 flex-col">
         <span className="text-[15px] font-medium">Proposer aussi les espèces à facturer</span>
         <span className="text-[13px] text-muted">
-          Les paiements en espèces apparaissent dans « À facturer », comme les virements et
-          Bancontact.
+          Les paiements en espèces apparaissent dans « À facturer », comme les virements et{" "}
+          {methodLabel("bancontact")}.
         </span>
       </span>
       <Toggle

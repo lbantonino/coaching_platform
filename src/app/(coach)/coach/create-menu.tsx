@@ -3,7 +3,7 @@
 import {
   CalendarPlus,
   ClipboardList,
-  Euro,
+  Coins,
   FilePlus,
   Plus,
   ReceiptText,
@@ -50,7 +50,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
           { label: "Tâche", icon: ClipboardList, onSelect: () => openTask?.() },
           { label: "Sportif", icon: UserPlus, onSelect: go(`${orgBase}/sportifs/nouveau`) },
           { label: "Facture", icon: ReceiptText, onSelect: go("/coach/facturation") },
-          { label: "Paiement reçu", icon: Euro, onSelect: () => openNewPayment?.() },
+          { label: "Paiement reçu", icon: Coins, onSelect: () => openNewPayment?.() },
         ]}
       />
     </>

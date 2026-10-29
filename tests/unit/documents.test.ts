@@ -4,8 +4,10 @@ import {
   checkDocument,
   formatBytes,
   guessCategoryId,
+  isCategoryColor,
   isDocumentPath,
   nameFromFile,
+  nextCategoryColor,
   parseCategoryName,
   parseDocumentForm,
 } from "@/domain/documents/documents";
@@ -89,6 +91,15 @@ describe("documents du coach", () => {
     expect(guessCategoryId("Bilan de rentrée.pdf", categories)).toBe("b");
     expect(guessCategoryId("contrat.pdf", categories)).toBeNull();
     expect(guessCategoryId("photo.jpg", categories)).toBeNull();
+  });
+
+  it("donne à une nouvelle catégorie la première couleur pas encore prise (D-68)", () => {
+    expect(nextCategoryColor([])).toBe("gold");
+    expect(nextCategoryColor(["green", "gold", "violet", "blue", "grey"])).toBe("orange");
+    const allButGrey = ["gold", "blue", "violet", "orange", "teal", "green", "pink", "sky"];
+    expect(nextCategoryColor(allButGrey)).toBe("grey");
+    expect(isCategoryColor("teal")).toBe(true);
+    expect(isCategoryColor("red")).toBe(false);
   });
 
   it("écrit la taille d'un fichier en français", () => {

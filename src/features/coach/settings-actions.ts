@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { requireCoach, requireOrgAccess } from "@/features/auth/guards";
+import { isCountryCode } from "@/domain/geo/countries";
 import { createClient } from "@/lib/supabase/server";
 
 import { getSettingsData, type SettingsData } from "./settings-data";
@@ -127,6 +128,30 @@ export async function renameOrganization(
   return { error: null, saved: true, attempt, values: null };
 }
 
+// Pays de l'organisation (D-69) : propriétaire seulement (même règle que le nom). Il décide du nom
+// des moyens de paiement et du pays proposé par défaut ; la devise, elle, ne change pas ici.
+export async function setOrganizationCountry(
+  organizationId: string,
+  country: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (membership.role !== "owner") {
+    return { ok: false, error: "Seul le propriétaire peut changer le pays." };
+  }
+  if (!isCountryCode(country)) return { ok: false, error: "Pays invalide." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organizations")
+    .update({ country })
+    .eq("id", membership.organizationId)
+    .select("id");
+  if (error || (data ?? []).length !== 1) {
+    return { ok: false, error: "Le pays n'a pas pu être enregistré. Réessaie." };
+  }
+  revalidatePath("/coach", "layout");
+  return { ok: true, error: null };
+}
+
 // --- Préférences --------------------------------------------------------------------------------
 export async function updatePreferences(
   previous: SettingsState<PreferencesInput>,
@@ -212,12 +237,15 @@ function readLegalEntity(formData: FormData): LegalEntityInput {
     legalForm: field(formData, "legalForm"),
     enterpriseNumber: field(formData, "enterpriseNumber"),
     vatStatus: field(formData, "vatStatus"),
+    vatNumber: field(formData, "vatNumber"),
+    defaultVatRate: field(formData, "defaultVatRate"),
     addressLine: field(formData, "addressLine"),
     postalCode: field(formData, "postalCode"),
     city: field(formData, "city"),
     country: field(formData, "country"),
     iban: field(formData, "iban"),
     bic: field(formData, "bic"),
+    paymentDetails: field(formData, "paymentDetails"),
     billingEmail: field(formData, "billingEmail"),
     invoicePrefix: field(formData, "invoicePrefix"),
     legalMentions: field(formData, "legalMentions"),
