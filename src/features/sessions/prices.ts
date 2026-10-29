@@ -1,3 +1,5 @@
+import type { Converter, Currency } from "@/domain/billing/money";
+
 import {
   sessionAmountCents,
   sessionOccurrences,
@@ -15,6 +17,8 @@ export type PricedSessionLike = ScheduleLike & {
   exceptions?: SessionException[];
   priceCents: number | null;
   priceVatIncluded: boolean;
+  // Devise du prix (D-69) ; sans devise, celle de l'organisation.
+  currency?: Currency;
 };
 
 export function plannedIncome<T extends PricedSessionLike>(
@@ -24,6 +28,8 @@ export function plannedIncome<T extends PricedSessionLike>(
   // Taux de TVA habituel de l'organisation (D-69), pour les prix hors TVA.
   vatRate: number,
   covered: (session: T, date: string) => boolean = () => false,
+  // Après un changement de devise (D-70) : prix ramenés dans la devise de l'organisation.
+  convert?: Converter,
 ): { count: number; inclCents: number } {
   let count = 0;
   let inclCents = 0;
@@ -33,8 +39,8 @@ export function plannedIncome<T extends PricedSessionLike>(
       (occurrence) => !covered(session, occurrence.originalDate),
     ).length;
     count += dates;
-    inclCents +=
-      dates * sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate);
+    const amount = sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate);
+    inclCents += dates * (convert && session.currency ? convert(amount, session.currency) : amount);
   }
   return { count, inclCents };
 }

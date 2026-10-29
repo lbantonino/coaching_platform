@@ -85,6 +85,39 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   );
 });
 
+test("un coach qui déménage change de devise : le futur passe en francs suisses", async ({
+  page,
+  request,
+}, testInfo) => {
+  const email = `devise-${unique(testInfo)}@example.test`;
+  await fillSignup(page, { kind: "Je suis coach", first: "Noé", last: "Keller", email });
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await expect(page).toHaveURL(/\/verifier-email$/);
+  await page.goto(await confirmationLink(request, email));
+  await page.getByLabel("Pays").selectOption("BE");
+  await page.getByRole("button", { name: "Accéder à mon tableau de bord" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+
+  // Paramètres › Facturation : « Changer de devise » (D-70), taux saisi, aperçu, confirmation.
+  await page.goto("/coach/profil?onglet=facturation");
+  await page.getByRole("button", { name: "Changer de devise" }).click();
+  const sheet = page.getByRole("dialog", { name: "Changer de devise" });
+  await sheet.getByLabel("Nouvelle devise").selectOption("CHF");
+  await sheet.getByLabel(/^Taux : 1 EUR/).fill("0,94");
+  await expect(sheet.getByText(/100,00\s€ deviendront 94,00\sCHF/)).toBeVisible();
+  await expect(sheet.getByRole("region", { name: "Reste en" })).toContainText("0 paiement reçu");
+  await sheet.getByRole("button", { name: "Passer en CHF" }).click();
+  await expect(page.getByText("Devise changée : Franc suisse (CHF).")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Changements de devise" })).toContainText(
+    "EUR → CHF (1 EUR = 0,94 CHF)",
+  );
+
+  await page.goto("/coach");
+  await expect(page.getByRole("link", { name: /encaissés cette semaine/ })).toContainText(
+    /0,00\sCHF/,
+  );
+});
+
 test("un sportif s'inscrit seul et attend que son coach le rattache", async ({
   page,
   request,
@@ -100,7 +133,8 @@ test("un sportif s'inscrit seul et attend que son coach le rattache", async ({
   await page.getByRole("button", { name: "Compris" }).click();
   await expect(page).toHaveURL(/\/app$/);
   await expect(page.getByRole("heading", { name: "Ton compte est prêt" })).toBeVisible();
-  await expect(page.getByText(email).first()).toBeVisible();
+  // Phrase sous le titre : affichée sur téléphone, masquée sur ordinateur (29/10/2026).
+  await expect(page.getByText(email).first()).toBeAttached();
 });
 
 test("l'e-mail de confirmation peut être renvoyé depuis « Vérifie ta boîte mail »", async ({

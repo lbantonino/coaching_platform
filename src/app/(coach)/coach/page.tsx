@@ -27,7 +27,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
 import { monthActivity } from "@/domain/billing/invoices";
-import { formatMoney, type Currency } from "@/domain/billing/money";
+import { describeTotal, formatMoney, type ByCurrency, type Currency } from "@/domain/billing/money";
 import { coveredByPackage, paymentTotals } from "@/domain/billing/payments";
 import { monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
@@ -43,6 +43,7 @@ import {
 import { requireCoach } from "@/features/auth/guards";
 import { listPackageCovers, listPayments } from "@/features/billing/payment-queries";
 import { listMonthInvoices } from "@/features/billing/queries";
+import { getConverter } from "@/features/coach/currency-queries";
 import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { getCoachProfile } from "@/features/coach/profile";
 import { moveSession } from "@/features/sessions/actions";
@@ -160,8 +161,10 @@ async function Dashboard({
     ]);
   // Montants dans la devise de l'organisation (D-69).
   const money = (cents: number) => formatMoney(cents, current.currency);
-  const weekIncome = paymentTotals(payments, weekStart, addDays(weekStart, 6));
-  const monthIncome = paymentTotals(payments, monthStart, today);
+  // Après un changement de devise (D-70) : les montants d'avant sont convertis, total « ≈ ».
+  const convert = await getConverter(current);
+  const weekIncome = paymentTotals(payments, weekStart, addDays(weekStart, 6), convert);
+  const monthIncome = paymentTotals(payments, monthStart, today, convert);
   // Ce que les séances de la semaine pourraient rapporter (D-52) : leurs prix, payées ou non, sauf
   // les dates comprises dans un forfait déjà réglé.
   const planned = plannedIncome(
@@ -171,6 +174,7 @@ async function Dashboard({
     vatRate,
     (session, date) =>
       session.kind === "individual" && coveredByPackage(covers, session.athletes[0]?.id, date),
+    convert,
   );
 
   const now = nowTimeInBrussels();
@@ -243,7 +247,7 @@ async function Dashboard({
     .days.flatMap((day) => day.blocks)
     .filter((block) => block.date > today || block.start >= nowMinutes)
     .slice(0, 5);
-  const activity = monthActivity(invoices, today);
+  const activity = monthActivity(invoices, today, convert);
 
   // Prochaine séance (carte or, 29/10/2026) : la plus proche, avec son rang dans sa journée.
   const next = upcoming[0] ?? null;
@@ -317,7 +321,9 @@ async function Dashboard({
                 href="/coach/comptabilite"
                 color="ok"
                 icon={Coins}
-                value={money(weekIncome.inclCents)}
+                value={
+                  describeTotal(weekIncome.inclCents, weekIncome.byCurrency, current.currency).value
+                }
                 shortLabel="Encaissé"
                 mobileLines={[
                   "cette semaine",
@@ -540,7 +546,11 @@ async function Dashboard({
                   title={`${activity.sent.count} ${activity.sent.count > 1 ? "factures envoyées" : "facture envoyée"}`}
                   sub="Ce mois-ci"
                   trailing={
-                    <FinanceAmount currency={current.currency} cents={activity.sent.cents} />
+                    <FinanceAmount
+                      currency={current.currency}
+                      cents={activity.sent.cents}
+                      byCurrency={activity.sent.byCurrency}
+                    />
                   }
                 />
                 <ListRow
@@ -548,7 +558,11 @@ async function Dashboard({
                   title={`${monthIncome.count} ${monthIncome.count > 1 ? "paiements reçus" : "paiement reçu"}`}
                   sub="Ce mois-ci"
                   trailing={
-                    <FinanceAmount currency={current.currency} cents={monthIncome.inclCents} />
+                    <FinanceAmount
+                      currency={current.currency}
+                      cents={monthIncome.inclCents}
+                      byCurrency={monthIncome.byCurrency}
+                    />
                   }
                 />
                 <ListRow
@@ -567,6 +581,7 @@ async function Dashboard({
                     <FinanceAmount
                       currency={current.currency}
                       cents={activity.pending.cents}
+                      byCurrency={activity.pending.byCurrency}
                       late={activity.pending.overdue > 0}
                     />
                   }
@@ -603,15 +618,18 @@ function FinanceIcon({
 function FinanceAmount({
   cents,
   currency,
+  byCurrency,
   late = false,
 }: {
   cents: number;
   currency: Currency;
+  // Montants par devise (D-70) : « ≈ » si le total mélange deux devises.
+  byCurrency: ByCurrency;
   late?: boolean;
 }) {
   return (
     <span className={`text-[15px] font-semibold tabular ${late ? "text-warn" : ""}`}>
-      {formatMoney(cents, currency)}
+      {describeTotal(cents, byCurrency, currency).value}
     </span>
   );
 }

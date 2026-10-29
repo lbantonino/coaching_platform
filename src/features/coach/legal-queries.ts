@@ -74,3 +74,19 @@ export async function getDefaultVatRate(organizationId: string): Promise<number>
   if (error) throw new Error("Lecture du taux de TVA impossible.");
   return data?.default_vat_rate ?? 0;
 }
+
+// Le coach est-il soumis à la TVA (D-73) ? Selon sa structure par défaut : son résultat est alors
+// HTVA et il récupère la TVA de ses dépenses. Sans structure : non.
+export async function isVatSubject(organizationId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organization_legal_entities")
+    .select("vat_status")
+    .eq("organization_id", organizationId)
+    .order("is_default", { ascending: false })
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error("Lecture du statut TVA impossible.");
+  return data?.vat_status === "subject";
+}

@@ -4,12 +4,12 @@ import Link from "next/link";
 // Accessible : c'est un groupe de boutons radio natifs, utilisable au clavier et dans un formulaire.
 // Classes partagées avec le sélecteur contrôlé du calculateur de test.
 // Prompt Claude Design §4 : groupe sur fond surface, filet fin, rayon 12, marge 4 ; options de 36 px,
-// rayon 9, 14/500. Option choisie = aplat noir (blanc en sombre), comme les pastilles cochées :
-// le rouge reste à l'action principale (audit apple-design du 28/10, un seul rouge par écran).
+// rayon 9, 14/500. Option choisie = jaune doré à faible opacité, sans contour (D-71), comme les
+// pastilles et le menu.
 export const segmentedGroupClass =
   "inline-flex w-full gap-1.5 rounded-control border border-line bg-surface p-1 sm:w-fit";
 export const segmentedItemClass =
-  "flex h-9 items-center justify-center rounded-[9px] px-3.5 text-[14px] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text peer-checked:bg-inv peer-checked:text-on-inv";
+  "flex h-9 items-center justify-center rounded-[9px] px-3.5 text-[14px] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text peer-checked:bg-selected peer-checked:text-text";
 
 export function Segmented<T extends string>({
   name,
@@ -63,7 +63,7 @@ export function SegmentedNav({
           scroll={false}
           aria-current={item.active ? "page" : undefined}
           className={`flex h-9 items-center justify-center rounded-[9px] px-3 text-[14px] font-medium whitespace-nowrap transition-colors duration-150 ${
-            item.active ? "bg-inv text-on-inv" : "text-muted hover:text-text"
+            item.active ? "bg-selected text-text" : "text-muted hover:text-text"
           }`}
         >
           {item.label}

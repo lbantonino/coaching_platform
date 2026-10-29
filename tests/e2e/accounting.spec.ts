@@ -87,3 +87,79 @@ test("le montant reçu est obligatoire, et la saisie est gardée après l'erreur
     "da000000-0000-4000-8000-000000000002",
   );
 });
+
+test("le tableau de comptabilité montre l'argent reçu par mode et par période, avec son graphique", async ({
+  page,
+}) => {
+  await loginAsCoachA(page);
+  await page.goto("/coach/comptabilite");
+  // Mois par défaut : le graphique montre le mois en cours, les modes sont écrits avec leur montant.
+  const share = page.getByRole("region", { name: /^Répartition · / });
+  await expect(share.getByRole("figure")).toContainText("Total reçu");
+  await expect(share.getByRole("button", { name: /^Virement/ })).toBeVisible();
+  const table = page.getByRole("table", { name: /par mois$/ });
+  await expect(table.getByRole("columnheader", { name: /Espèces/ })).toBeVisible();
+  await expect(table.getByRole("rowheader", { name: "Total" })).toBeVisible();
+  await expect(table.getByRole("row")).toHaveCount(14);
+
+  // Une autre période : la ligne choisie s'affiche dans le graphique.
+  const previous = table.getByRole("rowheader").nth(1).getByRole("link");
+  await previous.click();
+  await expect(previous).toHaveAttribute("aria-current", "true");
+  await expect(page).toHaveURL(/periode=/);
+
+  // Par année et par semaine.
+  await page
+    .getByRole("navigation", { name: "Période du tableau" })
+    .getByRole("link", { name: "Année" })
+    .click();
+  await expect(page.getByRole("table", { name: /par année$/ })).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Période du tableau" })
+    .getByRole("link", { name: "Semaine" })
+    .click();
+  await expect(page.getByRole("table", { name: /par semaine$/ })).toBeVisible();
+  await expect(page.getByRole("region", { name: /^Répartition · Semaine du / })).toBeVisible();
+});
+
+test("une dépense mensuelle compte chaque mois, s'arrête, puis se supprime", async ({
+  page,
+}, testInfo) => {
+  const label = `Loyer test ${testInfo.project.name} ${Date.now().toString(36)}`;
+  await loginAsCoachA(page);
+  await page.goto("/coach/comptabilite?liste=depenses");
+  await page.getByRole("button", { name: "Nouvelle dépense" }).click();
+  const sheet = page.getByRole("dialog", { name: "Nouvelle dépense" });
+  await sheet.getByLabel("Description").fill(label);
+  await sheet.getByLabel("Catégorie", { exact: true }).selectOption({ label: "Loyer et salle" });
+  await sheet.getByLabel(/^Montant payé/).fill("121");
+  // Coach A est soumis à la TVA : la TVA récupérable se calcule.
+  await expect(sheet.getByText(/100,00\s€ HTVA \+ 21,00\s€ de TVA récupérable/)).toBeVisible();
+  await sheet.getByText("Se répète chaque mois").click();
+  await sheet.getByRole("button", { name: "Enregistrer la dépense" }).click();
+  await expect(page.getByText("Dépense enregistrée.")).toBeVisible();
+
+  const row = page
+    .getByRole("list", { name: "Liste des dépenses" })
+    .getByRole("listitem")
+    .filter({ hasText: label });
+  await expect(row).toContainText("Chaque mois");
+  await expect(row).toContainText(/121,00\s€/);
+
+  // « Arrêter » : elle ne compte plus après aujourd'hui, le passé reste.
+  await row.getByRole("button", { name: "Plus d'actions" }).click();
+  await page.getByRole("button", { name: /^Arrêter/ }).click();
+  await expect(row).toContainText("Chaque mois jusqu'au");
+
+  // Rangement : la dépense de test est supprimée.
+  await row.getByRole("button", { name: "Plus d'actions" }).click();
+  await page
+    .getByRole("dialog", { name: label })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Supprimer cette dépense ?" })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await expect(page.getByRole("listitem").filter({ hasText: label })).toHaveCount(0);
+});

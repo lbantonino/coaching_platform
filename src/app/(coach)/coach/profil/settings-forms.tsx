@@ -12,6 +12,7 @@ import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segment
 import { useToast } from "@/components/ui/toast";
 import { currencyLabel, currencySymbol, type Currency } from "@/domain/billing/money";
 import { COUNTRY_NAMES } from "@/domain/geo/country-names";
+import { formatDate } from "@/lib/format";
 import {
   changeEmail,
   changePassword,
@@ -29,6 +30,8 @@ import {
   type PreferencesInput,
   type ProfileInput,
 } from "@/features/coach/settings";
+
+import { CurrencyChangeButton } from "./currency-change-sheet";
 
 // Formulaires de la page Paramètres (D-57). Chacun garde la saisie après une erreur (`attempt`
 // reconstruit le formulaire) et confirme sous son bouton. Bouton noir : plusieurs formulaires
@@ -190,18 +193,22 @@ export function OrganizationForm({
 }
 
 // Pays et devise de l'organisation (D-69). Le pays se change ici (propriétaire) : il décide du nom
-// des moyens de paiement (« Bancontact » en Belgique, « Carte bancaire » ailleurs). La devise est
-// affichée ; tous les montants de l'organisation sont dans cette devise.
+// des moyens de paiement (« Bancontact » en Belgique, « Carte bancaire » ailleurs). La devise se
+// change par « Changer de devise » (D-70, déménagement), avec l'historique des changements.
 export function CountryCurrencyForm({
   organizationId,
   country,
   currency,
   isOwner,
+  changes,
+  onChanged,
 }: {
   organizationId: string;
   country: string;
   currency: Currency;
   isOwner: boolean;
+  changes: { from: Currency; to: Currency; rate: number; changedOn: string }[];
+  onChanged?: () => void;
 }) {
   const [value, setValue] = useState(country);
   const [error, setError] = useState<string | null>(null);
@@ -251,9 +258,31 @@ export function CountryCurrencyForm({
           <p className="flex min-h-[50px] items-center text-[15px] font-medium">
             {currencyLabel(currency)}
           </p>
-          <p className={hintClass}>Tous tes montants sont dans cette devise.</p>
+          <p className={hintClass}>Tes nouveaux montants sont dans cette devise.</p>
         </div>
       </div>
+      {changes.length > 0 ? (
+        <ul
+          aria-label="Changements de devise"
+          className="flex flex-col gap-1 text-[13px] text-muted"
+        >
+          {changes.map((change) => (
+            <li key={`${change.changedOn}-${change.from}-${change.to}`}>
+              {formatDate(change.changedOn)} : {change.from} → {change.to} (1 {change.from} ={" "}
+              {change.rate.toLocaleString("fr-BE", { maximumFractionDigits: 6 })} {change.to})
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {isOwner ? (
+        <div>
+          <CurrencyChangeButton
+            organizationId={organizationId}
+            currency={currency}
+            onChanged={onChanged}
+          />
+        </div>
+      ) : null}
       {error ? (
         <p role="alert" className={errorTextClass}>
           {error}

@@ -74,8 +74,8 @@ export function ThemeChoice({
             <span
               className={`flex items-center justify-center gap-1.5 rounded-[9px] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text ${
                 compact
-                  ? "h-9 px-1.5 text-[13px] peer-checked:bg-accent-soft peer-checked:text-text"
-                  : "h-9 px-3 text-[14px] peer-checked:bg-inv peer-checked:text-on-inv"
+                  ? "h-9 px-1.5 text-[13px] peer-checked:bg-selected peer-checked:text-text"
+                  : "h-9 px-3 text-[14px] peer-checked:bg-selected peer-checked:text-text"
               }`}
             >
               <Icon aria-hidden size={compact ? 14 : 15} strokeWidth={1.8} />

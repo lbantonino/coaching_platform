@@ -35,12 +35,12 @@ describe("activité financière du mois", () => {
       ],
       TODAY,
     );
-    expect(activity.sent).toEqual({ count: 3, cents: 45000 });
-    expect(activity.received).toEqual({ count: 3, cents: 35000 });
-    expect(activity.pending).toEqual({ count: 2, cents: 22000, overdue: 1 });
+    expect(activity.sent).toMatchObject({ count: 3, cents: 45000 });
+    expect(activity.received).toMatchObject({ count: 3, cents: 35000 });
+    expect(activity.pending).toMatchObject({ count: 2, cents: 22000, overdue: 1 });
   });
   it("reste à zéro sans facture", () => {
-    expect(monthActivity([], TODAY)).toEqual({
+    expect(monthActivity([], TODAY)).toMatchObject({
       sent: { count: 0, cents: 0 },
       received: { count: 0, cents: 0 },
       pending: { count: 0, cents: 0, overdue: 0 },

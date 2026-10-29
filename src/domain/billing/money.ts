@@ -145,3 +145,76 @@ export function splitVat(
 export function addVat(exclCents: number, vatRate: number): number {
   return Math.round((exclCents * (10_000 + basisPoints(vatRate))) / 10_000);
 }
+
+// --- Changement de devise (D-70) ------------------------------------------------------------------
+// Le coach qui déménage saisit le taux : « 1 EUR = 0,94 CHF ». Le passé reste dans sa devise ; les
+// totaux qui mélangent deux devises sont convertis « à titre indicatif » avec ces taux.
+export type CurrencyChange = { from: Currency; to: Currency; rate: number };
+
+// « 0,94 », « 1.0825 » -> 0.94, 1.0825 ; null si vide, nul ou plus de 6 décimales.
+export function parseExchangeRate(text: string): number | null {
+  const cleaned = text.replace(/[\s  ]/g, "").replace(",", ".");
+  if (!/^\d{1,7}(\.\d{1,6})?$/.test(cleaned)) return null;
+  const rate = Number(cleaned);
+  return rate > 0 && rate <= 1_000_000 ? rate : null;
+}
+
+// Convertisseur vers `target` : taux direct, inverse, ou en chaîne (EUR -> CHF -> GBP). Un montant
+// déjà dans `target` reste tel quel ; une devise sans lien connu aussi (cas impossible en pratique :
+// chaque montant est dans une devise que l'organisation a eue).
+export function makeConverter(target: Currency, changes: CurrencyChange[]) {
+  const edges = new Map<Currency, { to: Currency; rate: number }[]>();
+  const link = (from: Currency, to: Currency, rate: number) =>
+    edges.set(from, [...(edges.get(from) ?? []), { to, rate }]);
+  for (const change of changes) {
+    link(change.from, change.to, change.rate);
+    link(change.to, change.from, 1 / change.rate);
+  }
+  const factorOf = (from: Currency): number | null => {
+    const seen = new Set<Currency>([from]);
+    const queue: { currency: Currency; factor: number }[] = [{ currency: from, factor: 1 }];
+    while (queue.length > 0) {
+      const { currency, factor } = queue.shift()!;
+      if (currency === target) return factor;
+      for (const edge of edges.get(currency) ?? []) {
+        if (seen.has(edge.to)) continue;
+        seen.add(edge.to);
+        queue.push({ currency: edge.to, factor: factor * edge.rate });
+      }
+    }
+    return null;
+  };
+  return (cents: number, currency: Currency): number => {
+    if (currency === target) return cents;
+    const factor = factorOf(currency);
+    return factor === null ? cents : Math.round(cents * factor);
+  };
+}
+export type Converter = ReturnType<typeof makeConverter>;
+
+// Somme par devise, pour le détail sous un total converti.
+export type ByCurrency = Partial<Record<Currency, number>>;
+export const addTo = (byCurrency: ByCurrency, currency: Currency, cents: number) => {
+  byCurrency[currency] = (byCurrency[currency] ?? 0) + cents;
+};
+
+// Un total : exact s'il n'a qu'une devise (celle de l'organisation), sinon « ≈ » avec son détail
+// (« 1 200,00 € + 340,00 CHF »).
+export function describeTotal(
+  cents: number,
+  byCurrency: ByCurrency,
+  target: Currency,
+): { value: string; approximate: boolean; detail: string | null } {
+  const parts = Object.entries(byCurrency).filter(([, amount]) => amount !== 0) as [
+    Currency,
+    number,
+  ][];
+  const approximate = parts.some(([currency]) => currency !== target);
+  return {
+    value: `${approximate ? "≈ " : ""}${formatMoney(cents, target)}`,
+    approximate,
+    detail: approximate
+      ? parts.map(([currency, amount]) => formatMoney(amount, currency)).join(" + ")
+      : null,
+  };
+}

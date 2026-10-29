@@ -24,13 +24,19 @@ export function HeaderTools() {
       ) : (
         <SearchLink href={space === "athlete" ? "/app/recherche" : "/admin/recherche"} />
       )}
-      {space === "coach" ? (
-        <Link href="/coach/assistant" aria-label="Assistant IA" className={iconButtonClass()}>
-          <Sparkles aria-hidden size={18} strokeWidth={1.8} />
-        </Link>
-      ) : null}
+      {space === "coach" ? <AssistantButton /> : null}
       <NotificationBell />
     </div>
+  );
+}
+
+// Assistant IA (coach) : dans l'en-tête des pages sur ordinateur, et dans la barre du haut sur
+// téléphone (demande d'Antonino du 29/10/2026 : « super important »).
+export function AssistantButton() {
+  return (
+    <Link href="/coach/assistant" aria-label="Assistant IA" className={iconButtonClass()}>
+      <Sparkles aria-hidden size={18} strokeWidth={1.8} />
+    </Link>
   );
 }
 

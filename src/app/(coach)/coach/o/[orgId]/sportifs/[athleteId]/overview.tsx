@@ -310,7 +310,7 @@ function AvailabilityCard({ athlete, editHref }: { athlete: AthleteDetail; editH
               <li
                 key={day}
                 className={`rounded-pill border px-3 py-1 text-caption ${
-                  available ? "border-inv bg-inv text-on-inv" : "border-line text-faint"
+                  available ? "border-transparent bg-selected text-text" : "border-line text-faint"
                 }`}
               >
                 {weekDayLabels[day]}

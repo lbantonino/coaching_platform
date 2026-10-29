@@ -8,27 +8,29 @@ import { useEffect, useRef, useState } from "react";
 import { iconButtonClass } from "@/components/ui/button";
 import { CooryLogo } from "@/components/ui/coory-logo";
 
-import { NotificationBell } from "./header-tools";
+import { AssistantButton, NotificationBell } from "./header-tools";
 import { athleteTabs, homeHref, pageTitle } from "./navigation";
 import { AccountMenu } from "./account-menu";
 import { SideNav } from "./side-nav";
 import { useShell } from "./shell-context";
 
-// Téléphone (prompt Claude Design §5.2 et §5.3). Barre du haut collante : logo · titre de la page
-// centré · cloche (+ hamburger pour le coach et l'admin). Le sportif a une barre du bas à la place.
+// Téléphone (prompt Claude Design §5.2 et §5.3). Barre du haut collante : logo · titre de la page ·
+// assistant IA (coach, 29/10/2026) · cloche (+ hamburger pour le coach et l'admin). Le titre de la
+// page n'est écrit qu'ici sur téléphone (PageHeader le cache). Le sportif a une barre du bas.
 export function MobileTopBar() {
   const { space } = useShell();
   const pathname = usePathname();
   return (
     // Matière translucide (audit apple-design du 28/10) : le contenu défile sous la barre, flouté.
-    <header className="material sticky top-0 z-30 grid grid-cols-[1fr_auto_1fr] items-center gap-2 border-b px-3.5 py-2 lg:hidden">
+    <header className="material sticky top-0 z-30 flex items-center gap-2 border-b px-3.5 py-2 lg:hidden">
       <Link href={homeHref[space]} aria-label="Accueil" className="flex w-fit rounded-sm">
         <CooryLogo size={19} />
       </Link>
-      <span className="max-w-[170px] truncate font-display text-[16px] font-semibold">
+      <span className="min-w-0 flex-1 truncate text-center font-display text-[16px] font-semibold">
         {pageTitle(space, pathname)}
       </span>
-      <div className="flex justify-end gap-1.5">
+      <div className="flex shrink-0 justify-end gap-1.5">
+        {space === "coach" ? <AssistantButton /> : null}
         <NotificationBell />
         {space === "athlete" ? null : <MobileMenu />}
       </div>

@@ -442,7 +442,7 @@ export type Database = {
           session_date?: string | null;
           session_id?: string | null;
           updated_at?: string;
-          vat_rate: number;
+          vat_rate?: number;
         };
         Update: {
           amount_cents?: number;
@@ -756,6 +756,70 @@ export type Database = {
           },
           {
             foreignKeyName: "coach_documents_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      coach_expenses: {
+        Row: {
+          amount_cents: number;
+          category_id: string | null;
+          created_at: string;
+          created_by: string | null;
+          currency: string;
+          ends_on: string | null;
+          id: string;
+          label: string;
+          organization_id: string;
+          repeats_monthly: boolean;
+          spent_on: string;
+          updated_at: string;
+          vat_rate: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          amount_cents: number;
+          category_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          ends_on?: string | null;
+          id?: string;
+          label: string;
+          organization_id: string;
+          repeats_monthly?: boolean;
+          spent_on: string;
+          updated_at?: string;
+          vat_rate?: number;
+        };
+        Update: {
+          amount_cents?: number;
+          category_id?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          currency?: string;
+          ends_on?: string | null;
+          id?: string;
+          label?: string;
+          organization_id?: string;
+          repeats_monthly?: boolean;
+          spent_on?: string;
+          updated_at?: string;
+          vat_rate?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_expenses_category_id_organization_id_fkey";
+            columns: ["category_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "expense_categories";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "coach_expenses_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";
@@ -1139,6 +1203,87 @@ export type Database = {
           },
         ];
       };
+      expense_categories: {
+        Row: {
+          color: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          color?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      organization_currency_changes: {
+        Row: {
+          changed_on: string;
+          created_at: string;
+          created_by: string | null;
+          from_currency: string;
+          id: string;
+          organization_id: string;
+          rate: number;
+          to_currency: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          changed_on: string;
+          created_at?: string;
+          created_by?: string | null;
+          from_currency: string;
+          id?: string;
+          organization_id: string;
+          rate: number;
+          to_currency: string;
+        };
+        Update: {
+          changed_on?: string;
+          created_at?: string;
+          created_by?: string | null;
+          from_currency?: string;
+          id?: string;
+          organization_id?: string;
+          rate?: number;
+          to_currency?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "organization_currency_changes_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       organization_legal_entities: {
         Row: {
           address_line: string | null;
@@ -1484,6 +1629,10 @@ export type Database = {
       accept_invitation: {
         Args: { p_adult_confirmed: boolean; p_token_hash: string };
         Returns: string;
+      };
+      change_organization_currency: {
+        Args: { p_currency: string; p_organization_id: string; p_rate: number };
+        Returns: Json;
       };
       complete_signup: {
         Args: {

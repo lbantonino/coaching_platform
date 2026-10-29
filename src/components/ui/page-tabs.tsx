@@ -25,7 +25,7 @@ export function PageTabs({
               aria-current={item.active ? "page" : undefined}
               className={`inline-flex h-10 items-center rounded-pill px-3.5 text-[15px] whitespace-nowrap transition-colors duration-150 md:-mb-px md:h-11 md:rounded-none md:border-b-2 md:px-0.5 ${
                 item.active
-                  ? "bg-inv font-medium text-on-inv md:border-accent md:bg-transparent md:text-text"
+                  ? "bg-selected font-medium text-text md:border-accent md:bg-transparent md:text-text"
                   : "text-muted hover:text-text md:border-transparent"
               }`}
             >
@@ -55,7 +55,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
             aria-current={active ? "step" : undefined}
             className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-pill px-3.5 text-[15px] whitespace-nowrap md:-mb-px md:h-11 md:rounded-none md:border-b-2 md:px-0.5 ${
               active
-                ? "bg-inv font-medium text-on-inv md:border-accent md:bg-transparent md:text-text"
+                ? "bg-selected font-medium text-text md:border-accent md:bg-transparent md:text-text"
                 : "text-muted md:border-transparent"
             }`}
           >

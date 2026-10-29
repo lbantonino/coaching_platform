@@ -87,7 +87,7 @@ export function AccountMenu() {
 
   const photo = <Photo name={user.name} photoPath={user.photoPath} sex={user.sex} />;
   const itemBase =
-    "flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[15px] font-medium whitespace-nowrap transition-colors duration-150 hover:bg-surface-2";
+    "flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[15px] font-medium whitespace-nowrap transition-colors duration-150 hover:bg-selected-hover focus-visible:bg-selected-hover";
   const item = `${itemBase} text-text`;
   const close = () => setOpen(false);
   // Téléphone : le menu hamburger est lui-même une fenêtre ; on le referme d'abord, pour retrouver
