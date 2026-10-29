@@ -15,6 +15,8 @@ export type SettingsData = {
   profile: ProfileInput;
   preferences: PreferencesInput;
   notify: Record<NotificationKind, boolean>;
+  // Facturation (D-66) : proposer aussi les espèces dans « À facturer ».
+  invoiceCash: boolean;
   organization: { id: string; name: string; isOwner: boolean };
   entities: LegalEntity[];
 };
@@ -50,6 +52,7 @@ export async function getSettingsData(
       agendaLastHour: String(p.agendaLastHour),
     },
     notify: p.notify,
+    invoiceCash: p.invoiceCash,
     organization: {
       id: membership.organizationId,
       name: membership.organizationName,

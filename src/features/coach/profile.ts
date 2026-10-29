@@ -11,6 +11,8 @@ export type CoachPreferences = {
   // Agenda : heures affichées au minimum (une séance plus tôt ou plus tard les élargit).
   agendaFirstHour: number;
   agendaLastHour: number;
+  // Facturation (D-66) : proposer aussi les paiements en espèces dans « À facturer ».
+  invoiceCash: boolean;
   // Ce qui compte dans la cloche et s'affiche dans Notifications.
   notify: {
     competitions: boolean;
@@ -39,6 +41,7 @@ export const DEFAULT_PREFERENCES: CoachPreferences = {
   defaultPaymentMethod: "transfer",
   agendaFirstHour: 6,
   agendaLastHour: 22,
+  invoiceCash: false,
   notify: { competitions: true, messages: true, tasks: true, invoices: true, profiles: true },
 };
 
@@ -54,7 +57,7 @@ export async function getCoachProfile(user: {
       `first_name, last_name, company_name, phone, photo_path, default_session_minutes,
        default_location, default_price_cents, default_payment_method, agenda_first_hour,
        agenda_last_hour, notify_competitions, notify_messages, notify_tasks, notify_invoices,
-       notify_profiles`,
+       notify_profiles, invoice_cash`,
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -75,6 +78,7 @@ export async function getCoachProfile(user: {
           defaultPaymentMethod: data.default_payment_method as "cash" | "transfer",
           agendaFirstHour: data.agenda_first_hour,
           agendaLastHour: data.agenda_last_hour,
+          invoiceCash: data.invoice_cash,
           notify: {
             competitions: data.notify_competitions,
             messages: data.notify_messages,

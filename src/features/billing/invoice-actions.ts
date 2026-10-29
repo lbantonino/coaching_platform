@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { defaultInvoiceLabel, vatRateFor } from "@/domain/billing/invoice-document";
+import {
+  defaultInvoiceLabel,
+  totalsFromEntry,
+  vatRateFor,
+  type AmountMode,
+} from "@/domain/billing/invoice-document";
 import { PAYMENT_METHODS, VAT_RATES, parseEuros } from "@/domain/billing/payments";
 import { addressSchema, newAthleteSchema } from "@/features/athletes/schemas";
 import { requireOrgAccess } from "@/features/auth/guards";
@@ -22,6 +27,8 @@ export type InvoiceActionState = { error: string | null; saved: boolean; attempt
 const billingPath = "/coach/facturation";
 const invoicePath = (id: string) => `${billingPath}/${id}`;
 const idSchema = z.uuid();
+const amountModeOf = (formData: FormData): AmountMode =>
+  formData.get("amountMode") === "incl" ? "incl" : "excl";
 
 // Créer le brouillon d'un paiement de SON organisation : structure par défaut, client et adresse
 // repris de la fiche du sportif. Un paiement a déjà sa facture : on l'ouvre. Tous les modes se
@@ -131,14 +138,16 @@ export async function updateInvoiceDraft(
     country: formData.get("country") ?? "BE",
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
-  const amountCents = parseEuros(String(formData.get("amount") ?? ""));
-  if (amountCents === null) return fail("Indique le montant TVA comprise (ex. : 78,65).");
+  const entered = parseEuros(String(formData.get("amount") ?? ""));
+  if (entered === null) return fail("Indique le montant (ex. : 65).");
 
   const entity = (await listLegalEntities(membership.organizationId)).find(
     (item) => item.id === parsed.data.legalEntityId,
   );
   if (!entity) return fail("Choisis la structure qui facture.");
   const vatRate = vatRateFor(entity.vatStatus, parsed.data.vatRate);
+  // Montant saisi hors TVA (la TVA s'ajoute) ou TVA comprise ; la facture garde le total TVAC.
+  const amountCents = totalsFromEntry(entered, amountModeOf(formData), vatRate).inclCents;
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -239,6 +248,8 @@ export type NewInvoiceValues = {
   country: string;
   label: string;
   amount: string;
+  // Montant saisi hors TVA (« excl », par défaut) ou TVA comprise (« incl »).
+  amountMode: AmountMode;
   vatRate: string;
   serviceOn: string;
   paid: boolean;
@@ -289,6 +300,7 @@ export async function createInvoice(
     country: text("country") || "BE",
     label: text("label"),
     amount: text("amount"),
+    amountMode: amountModeOf(formData),
     vatRate: text("vatRate") || "21",
     serviceOn: text("serviceOn"),
     paid: text("paid") !== "no",
@@ -304,8 +316,8 @@ export async function createInvoice(
 
   const parsed = newInvoiceSchema.safeParse(values);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
-  const amountCents = parseEuros(values.amount);
-  if (amountCents === null) return fail("Indique le montant TVA comprise (ex. : 78,65).");
+  const entered = parseEuros(values.amount);
+  if (entered === null) return fail("Indique le montant (ex. : 65).");
   const today = todayIsoInBrussels();
   if (values.paid) {
     if (!z.iso.date().safeParse(values.receivedOn).success || values.receivedOn > today) {
@@ -322,6 +334,7 @@ export async function createInvoice(
     (item) => item.id === parsed.data.legalEntityId,
   );
   if (!entity) return fail("Choisis la structure qui facture.");
+  const vatRate = vatRateFor(entity.vatStatus, parsed.data.vatRate);
 
   const supabase = await createClient();
   // Le client : un sportif de SON organisation, ou une nouvelle fiche.
@@ -399,8 +412,8 @@ export async function createInvoice(
       status: "draft",
       legal_entity_id: entity.id,
       label: parsed.data.label,
-      amount_cents: amountCents,
-      vat_rate: vatRateFor(entity.vatStatus, parsed.data.vatRate),
+      amount_cents: totalsFromEntry(entered, values.amountMode, vatRate).inclCents,
+      vat_rate: vatRate,
       issued_on: today,
       due_on: values.paid ? today : values.dueOn,
       service_on: parsed.data.serviceOn,

@@ -695,7 +695,7 @@ export type Database = {
       coach_documents: {
         Row: {
           athlete_id: string | null;
-          category: string;
+          category_id: string | null;
           created_at: string;
           created_by: string | null;
           id: string;
@@ -709,7 +709,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           athlete_id?: string | null;
-          category?: string;
+          category_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -722,7 +722,7 @@ export type Database = {
         };
         Update: {
           athlete_id?: string | null;
-          category?: string;
+          category_id?: string | null;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -739,6 +739,13 @@ export type Database = {
             columns: ["athlete_id", "organization_id"];
             isOneToOne: false;
             referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "coach_documents_category_fkey";
+            columns: ["category_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "document_categories";
             referencedColumns: ["id", "organization_id"];
           },
           {
@@ -797,6 +804,7 @@ export type Database = {
           default_price_cents: number | null;
           default_session_minutes: number;
           first_name: string | null;
+          invoice_cash: boolean;
           last_name: string | null;
           notify_competitions: boolean;
           notify_invoices: boolean;
@@ -819,6 +827,7 @@ export type Database = {
           default_price_cents?: number | null;
           default_session_minutes?: number;
           first_name?: string | null;
+          invoice_cash?: boolean;
           last_name?: string | null;
           notify_competitions?: boolean;
           notify_invoices?: boolean;
@@ -840,6 +849,7 @@ export type Database = {
           default_price_cents?: number | null;
           default_session_minutes?: number;
           first_name?: string | null;
+          invoice_cash?: boolean;
           last_name?: string | null;
           notify_competitions?: boolean;
           notify_invoices?: boolean;
@@ -1074,6 +1084,42 @@ export type Database = {
           },
           {
             foreignKeyName: "coach_tasks_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      document_categories: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "document_categories_organization_id_fkey";
             columns: ["organization_id"];
             isOneToOne: false;
             referencedRelation: "organizations";

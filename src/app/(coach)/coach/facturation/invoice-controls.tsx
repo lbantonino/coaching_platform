@@ -1,19 +1,13 @@
 "use client";
 
-import { FileCheck2, FilePlus2, Trash2 } from "lucide-react";
-import { startTransition, useActionState, useState } from "react";
+import { Download, Eye, FileCheck2, FilePlus2, Printer, Trash2 } from "lucide-react";
+import { startTransition, useActionState, useRef, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
-import { ConfirmDialog } from "@/components/ui/overlay";
-import { formatEuros } from "@/domain/billing/invoices";
-import {
-  PAYMENT_METHODS,
-  VAT_RATES,
-  parseEuros,
-  paymentMethodLabels,
-  splitVat,
-} from "@/domain/billing/payments";
+import { ConfirmDialog, PanelDialog } from "@/components/ui/overlay";
+import type { AmountMode } from "@/domain/billing/invoice-document";
+import { PAYMENT_METHODS, VAT_RATES, paymentMethodLabels } from "@/domain/billing/payments";
 import { COUNTRIES } from "@/features/athletes/schemas";
 import {
   createInvoiceFromPayment,
@@ -23,6 +17,8 @@ import {
   updateInvoiceDraft,
   type InvoiceActionState,
 } from "@/features/billing/invoice-actions";
+
+import { AmountField } from "./amount-field";
 
 // Commandes de la facturation (D-65) : créer le brouillon d'un virement, modifier le brouillon,
 // l'émettre (avec confirmation : c'est définitif), le supprimer. Les actions revérifient tout.
@@ -166,6 +162,7 @@ export function DeleteDraftButton({
 export type DraftValues = {
   legalEntityId: string;
   label: string;
+  // Montant HORS TVA (le brouillon s'ouvre en « Hors TVA »).
   amount: string;
   serviceOn: string;
   vatRate: string;
@@ -196,10 +193,9 @@ export function InvoiceDraftForm({
   );
   const [entityId, setEntityId] = useState(values.legalEntityId);
   const [amount, setAmount] = useState(values.amount);
+  const [amountMode, setAmountMode] = useState<AmountMode>("excl");
   const [vatRate, setVatRate] = useState(values.vatRate);
   const vatSubject = entities.find((entity) => entity.id === entityId)?.vatSubject ?? true;
-  const cents = parseEuros(amount);
-  const split = cents === null ? null : splitVat(cents, vatSubject ? Number(vatRate) : 0);
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
@@ -262,27 +258,15 @@ export function InvoiceDraftForm({
             className={inputClass}
           />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="invoice-amount" className={labelClass}>
-            Montant (TVAC)
-          </label>
-          <input
-            id="invoice-amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            aria-describedby="invoice-amount-hint"
-            className={inputClass}
-          />
-          <p id="invoice-amount-hint" aria-live="polite" className={hintClass}>
-            {split
-              ? `${formatEuros(split.exclCents)} HTVA · ${formatEuros(split.vatCents)} de TVA`
-              : "Montant TVA comprise, ex. : 78,65."}
-            {hasPayment ? " Le paiement relié est corrigé aussi." : ""}
-          </p>
-        </div>
+        <AmountField
+          id="invoice-amount"
+          amount={amount}
+          onAmount={setAmount}
+          mode={amountMode}
+          onMode={setAmountMode}
+          vatRate={vatSubject ? Number(vatRate) : 0}
+          note={hasPayment ? "Le paiement relié est corrigé aussi." : undefined}
+        />
         <div className="flex flex-col gap-1.5">
           <label htmlFor="invoice-service" className={labelClass}>
             Date de la prestation <span className="font-normal text-muted">(facultatif)</span>
@@ -449,5 +433,80 @@ export function MarkPaidForm({
         <ErrorText error={state.error} />
       </div>
     </form>
+  );
+}
+
+// « Aperçu PDF » (demande d'Antonino du 29/10/2026) : la facture s'affiche dans une fenêtre, telle
+// qu'elle sera envoyée, avec Télécharger et Imprimer. Téléphone : le PDF s'ouvre dans la visionneuse
+// du téléphone (un PDF dans un cadre y est illisible), comme pour les Documents.
+export function PdfPreviewButton({ invoiceId, draft }: { invoiceId: string; draft: boolean }) {
+  const [open, setOpen] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const pdf = `/coach/facturation/${invoiceId}/pdf`;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={buttonClass({
+          variant: draft ? "outline" : "primary",
+          size: "md",
+          className: "max-lg:w-full",
+        })}
+      >
+        <Eye aria-hidden size={17} strokeWidth={1.8} />
+        {draft ? "Aperçu PDF" : "Voir le PDF"}
+      </button>
+      <PanelDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        title={draft ? "Aperçu du brouillon" : "Facture en PDF"}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2.5 [&>*]:flex-1 sm:[&>*]:flex-none">
+            <a href={pdf} download className={buttonClass({ variant: "outline" })}>
+              <Download aria-hidden size={15} strokeWidth={1.8} />
+              Télécharger
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                // Imprime le PDF affiché ; sinon (téléphone, cadre masqué) l'ouvre pour l'imprimer.
+                const view = frame.current?.contentWindow;
+                if (view && frame.current?.offsetParent) view.print();
+                else window.open(`${pdf}?apercu`, "_blank", "noopener");
+              }}
+              className={buttonClass({ variant: "outline" })}
+            >
+              <Printer aria-hidden size={15} strokeWidth={1.8} />
+              Imprimer
+            </button>
+          </div>
+          {draft ? (
+            <p className="text-[13px] text-muted">
+              Brouillon : le PDF porte la mention « Brouillon, non valable » tant que la facture
+              n&apos;est pas émise.
+            </p>
+          ) : null}
+          <a
+            href={`${pdf}?apercu`}
+            target="_blank"
+            rel="noopener"
+            className={buttonClass({ variant: "inverse", className: "w-full md:hidden" })}
+          >
+            <Eye aria-hidden size={15} strokeWidth={1.8} />
+            Ouvrir le PDF
+          </a>
+          {open ? (
+            <iframe
+              ref={frame}
+              src={`${pdf}?apercu`}
+              title={draft ? "Aperçu du brouillon de facture" : "Facture en PDF"}
+              className="h-[72vh] w-full rounded-card border border-line bg-white max-md:hidden"
+            />
+          ) : null}
+        </div>
+      </PanelDialog>
+    </>
   );
 }

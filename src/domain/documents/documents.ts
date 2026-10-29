@@ -4,16 +4,52 @@ import { z } from "zod";
 // 20261028160000). On ne croit ni le type annoncé par le navigateur ni le nom du fichier seul : on
 // lit les premiers octets (signature du format) ; Word et Excel sont des archives ZIP, distinguées
 // par leur extension.
-export const DOCUMENT_CATEGORIES = ["programme", "facture", "contrat", "bilan", "autre"] as const;
-export type DocumentCategory = (typeof DOCUMENT_CATEGORIES)[number];
+// Catégories (D-67) : propres à chaque organisation, créées, renommées et supprimées par le coach.
+// Les 5 de départ (Programme, Facture, Contrat, Bilan, Autre) sont créées par la base.
+export const CATEGORY_NAME_MAX = 60;
+export type DocumentCategory = { id: string; name: string };
 
-export const documentCategoryLabels: Record<DocumentCategory, string> = {
-  programme: "Programme",
-  facture: "Facture",
-  contrat: "Contrat",
-  bilan: "Bilan",
-  autre: "Autre",
-};
+const categoryNameSchema = z
+  .string()
+  .trim()
+  .min(1, { error: "Donne un nom à la catégorie." })
+  .max(CATEGORY_NAME_MAX, {
+    error: `Nom trop long (${CATEGORY_NAME_MAX} caractères maximum).`,
+  });
+
+export function parseCategoryName(
+  raw: string,
+): { ok: true; name: string } | { ok: false; error: string } {
+  const result = categoryNameSchema.safeParse(raw);
+  return result.success
+    ? { ok: true, name: result.data }
+    : { ok: false, error: result.error.issues[0].message };
+}
+
+// Recherche sans accents ni majuscules (« Bilans » trouve « bilan »).
+export const foldText = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+// Catégorie devinée d'après le nom du fichier, parmi celles du coach (il peut toujours la changer) :
+// « facture-octobre.pdf » -> sa catégorie « Facture » (ou « Factures »), si elle existe.
+const HINTS: [string[], string][] = [
+  [["facture", "invoice"], "factur"],
+  [["contrat"], "contrat"],
+  [["bilan", "test"], "bilan"],
+  [["programme", "plan"], "programme"],
+];
+export function guessCategoryId(fileName: string, categories: DocumentCategory[]): string | null {
+  const name = foldText(fileName);
+  for (const [words, stem] of HINTS) {
+    if (!words.some((word) => name.includes(word))) continue;
+    const match = categories.find((category) => foldText(category.name).startsWith(stem));
+    if (match) return match.id;
+  }
+  return null;
+}
 
 export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
 export const DOCUMENT_NAME_MAX = 160;
@@ -85,10 +121,11 @@ export function isDocumentPath(path: string): boolean {
   return PATH.test(path);
 }
 
-export type DocumentFormValues = { name: string; category: string; athleteId: string };
+export type DocumentFormValues = { name: string; categoryId: string; athleteId: string };
 export type DocumentInput = {
   name: string;
-  category: DocumentCategory;
+  // « » = sans catégorie.
+  categoryId: string | null;
   athleteId: string | null;
 };
 
@@ -98,7 +135,7 @@ const schema = z.object({
     .trim()
     .min(1, { error: "Donne un nom au document." })
     .max(DOCUMENT_NAME_MAX, { error: `Nom trop long (${DOCUMENT_NAME_MAX} caractères maximum).` }),
-  category: z.enum(DOCUMENT_CATEGORIES, { error: "Choisis une catégorie." }),
+  categoryId: z.union([z.literal(""), z.uuid({ error: "Catégorie invalide." })]),
   athleteId: z.union([z.literal(""), z.uuid({ error: "Sportif invalide." })]),
 });
 
@@ -111,7 +148,7 @@ export function parseDocumentForm(
     ok: true,
     document: {
       name: result.data.name,
-      category: result.data.category,
+      categoryId: result.data.categoryId === "" ? null : result.data.categoryId,
       athleteId: result.data.athleteId === "" ? null : result.data.athleteId,
     },
   };

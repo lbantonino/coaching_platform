@@ -5,8 +5,9 @@ import { getInvoice } from "@/features/billing/invoice-queries";
 
 // Téléchargement du PDF d'une facture (D-65), lu avec la session du coach : la RLS ne laisse sortir
 // que les factures de SON organisation ; une autre facture répond « introuvable », sans fuite.
+// ?apercu : le PDF s'affiche dans la page (fenêtre « Aperçu », 29/10/2026) au lieu d'être téléchargé.
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: RouteContext<"/coach/facturation/[invoiceId]/pdf">,
 ) {
   const { invoiceId } = await params;
@@ -19,7 +20,9 @@ export async function GET(
   return new Response(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${invoiceFileName(invoice.number)}"`,
+      "Content-Disposition": `${
+        new URL(request.url).searchParams.has("apercu") ? "inline" : "attachment"
+      }; filename="${invoiceFileName(invoice.number)}"`,
       "Cache-Control": "private, no-store",
     },
   });

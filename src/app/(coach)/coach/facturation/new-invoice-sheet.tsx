@@ -4,24 +4,18 @@ import { Plus } from "lucide-react";
 import { useActionState, useState, type ReactNode } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { FieldCheck } from "@/components/ui/field-check";
 import { errorTextClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { Sheet } from "@/components/ui/overlay";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
-import { formatEuros } from "@/domain/billing/invoices";
-import {
-  PAYMENT_METHODS,
-  VAT_RATES,
-  parseEuros,
-  paymentMethodLabels,
-  splitVat,
-} from "@/domain/billing/payments";
+import { PAYMENT_METHODS, VAT_RATES, paymentMethodLabels } from "@/domain/billing/payments";
 import { COUNTRIES } from "@/features/athletes/schemas";
 import {
   createInvoice,
   type NewInvoiceState,
   type NewInvoiceValues,
 } from "@/features/billing/invoice-actions";
+
+import { AmountField } from "./amount-field";
 
 // Bouton « Créer une facture » de la page Facturation (demande d'Antonino du 29/10/2026) : une
 // fenêtre avec tout ce qu'il faut pour une facture, pour un sportif existant ou un NOUVEAU sportif
@@ -94,6 +88,7 @@ export function NewInvoiceButton({
                 country: "BE",
                 label: "",
                 amount: "",
+                amountMode: "excl",
                 vatRate: "21",
                 serviceOn: "",
                 paid: true,
@@ -151,12 +146,11 @@ function InvoiceFields({
   const [entityId, setEntityId] = useState(v.legalEntityId);
   const [newAthlete, setNewAthlete] = useState(v.newAthlete);
   const [amount, setAmount] = useState(v.amount);
+  const [amountMode, setAmountMode] = useState(v.amountMode);
   const [vatRate, setVatRate] = useState(v.vatRate);
   const [paid, setPaid] = useState(v.paid);
   const vatSubject = entities.find((entity) => entity.id === entityId)?.vatSubject ?? true;
   const rate = vatSubject ? Number(vatRate) : 0;
-  const cents = parseEuros(amount);
-  const split = cents === null ? null : splitVat(cents, rate);
 
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
@@ -313,19 +307,6 @@ function InvoiceFields({
             className={inputClass}
           />
         </Field>
-        <Field id="new-invoice-amount" label="Montant (TVAC)">
-          <input
-            id="new-invoice-amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="Ex. : 78,65"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            className={inputClass}
-          />
-          <FieldCheck htmlFor="new-invoice-amount" rule="euros" />
-        </Field>
         <Field id="new-invoice-vat" label="TVA">
           {vatSubject ? (
             <select
@@ -353,12 +334,15 @@ function InvoiceFields({
             </>
           )}
         </Field>
+        <AmountField
+          id="new-invoice-amount"
+          amount={amount}
+          onAmount={setAmount}
+          mode={amountMode}
+          onMode={setAmountMode}
+          vatRate={rate}
+        />
       </div>
-      <p aria-live="polite" className="-mt-2 text-[13px] text-muted">
-        {split
-          ? `${formatEuros(split.exclCents)} HTVA · ${formatEuros(split.vatCents)} de TVA`
-          : "Le HTVA se calcule à partir du montant TVA comprise."}
-      </p>
       <Field id="new-invoice-service" label="Date de la prestation" optional>
         <input
           id="new-invoice-service"

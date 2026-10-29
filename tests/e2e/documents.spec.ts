@@ -94,3 +94,81 @@ test("un document s'importe, se retrouve, se renomme et se supprime ; il reste p
   await expect(renamed).toHaveCount(0);
   expect((await page.request.get(url)).status()).toBe(404);
 });
+
+// Classement, option D (D-67) : le coach crée, renomme et supprime ses catégories ; les documents
+// d'une catégorie supprimée restent, « sans catégorie ». Nom unique par projet (tests en parallèle).
+test("le coach gère ses catégories : ajouter, ranger, renommer, supprimer", async ({
+  page,
+}, testInfo) => {
+  const stamp = `${testInfo.project.name}${Date.now().toString(36)}`;
+  const category = `Certificats ${stamp}`;
+  await login(page, "coach-b@example.test");
+  await page.goto("/coach/documents");
+
+  await page.getByRole("button", { name: "Gérer les catégories" }).click();
+  const manager = page.getByRole("dialog", { name: "Gérer les catégories" });
+  await manager.getByLabel("Nouvelle catégorie").fill(category);
+  await manager.getByRole("button", { name: "Ajouter" }).click();
+  await expect(manager.getByLabel(`Nom de la catégorie ${category}`)).toBeVisible();
+  await manager.getByRole("button", { name: "Fermer" }).click();
+
+  // Un document rangé dans la nouvelle catégorie.
+  await page.getByRole("button", { name: "Importer un fichier" }).click();
+  const sheet = page.getByRole("dialog", { name: "Importer un fichier" });
+  await sheet
+    .getByLabel("Fichier à importer")
+    .setInputFiles({ name: `certif-${stamp}.pdf`, mimeType: "application/pdf", buffer: PDF });
+  await sheet.getByText(category, { exact: true }).click();
+  await sheet.getByRole("button", { name: "Importer", exact: true }).click();
+  await expect(sheet).toBeHidden();
+  await page.getByRole("button", { name: category, exact: true }).click();
+  const list = page.getByRole("region", { name: category });
+  await expect(list.getByText(`certif-${stamp}`)).toBeVisible();
+
+  // Renommer, puis supprimer : le document reste, « sans catégorie ».
+  await page.getByRole("button", { name: "Gérer les catégories" }).click();
+  await manager.getByLabel(`Nom de la catégorie ${category}`).fill(`${category} bis`);
+  await manager.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(manager.getByLabel(`Nom de la catégorie ${category} bis`)).toBeVisible();
+  await manager.getByRole("button", { name: `Supprimer la catégorie ${category} bis` }).click();
+  await page
+    .getByRole("dialog", { name: "Supprimer cette catégorie ?" })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await expect(manager.getByLabel(`Nom de la catégorie ${category} bis`)).toHaveCount(0);
+  await manager.getByRole("button", { name: "Fermer" }).click();
+  await page.getByRole("button", { name: "Sans catégorie", exact: true }).click();
+  const row = page
+    .getByRole("region", { name: "Sans catégorie" })
+    .getByRole("listitem")
+    .filter({ hasText: `certif-${stamp}` });
+  await expect(row).toBeVisible();
+
+  // Rangement : le document de test est supprimé.
+  await row.getByRole("button", { name: /^Plus d'actions/ }).click();
+  await page.getByRole("button", { name: "Supprimer", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Supprimer ce document ?" })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await expect(page.getByText(`certif-${stamp}`)).toHaveCount(0);
+});
+
+test("l'onglet Documents de la fiche montre les documents du sportif et importe pour lui", async ({
+  page,
+}) => {
+  await login(page, "coach-a@example.test");
+  const fiche =
+    "/coach/o/0a000000-0000-4000-8000-0000000000a1/sportifs/da000000-0000-4000-8000-000000000001";
+  await page.goto(`${fiche}?onglet=documents`);
+  const tab = page.getByRole("region", { name: "Documents" });
+  await expect(tab.getByRole("link", { name: /Contrat de coaching 2026/ })).toBeVisible();
+  await expect(tab.getByRole("link", { name: /Bilan de rentrée/ })).toHaveCount(0);
+  await tab.getByRole("link", { name: "Importer un document" }).click();
+  await expect(page.getByRole("dialog", { name: "Importer un fichier" })).toBeVisible();
+  await expect(page.getByLabel(/^Sportif/)).toHaveValue("da000000-0000-4000-8000-000000000001");
+  // La page Documents est filtrée sur ce sportif.
+  await expect(page.getByRole("combobox", { name: "Filtrer par sportif" })).toHaveValue(
+    "da000000-0000-4000-8000-000000000001",
+  );
+});

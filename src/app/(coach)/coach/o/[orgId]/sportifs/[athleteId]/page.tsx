@@ -30,6 +30,7 @@ import {
 } from "./athlete-agenda";
 import { AthleteEditForm } from "./athlete-edit-form";
 import { ProgramWeeksSection } from "./program-weeks";
+import { AthleteDocuments } from "./athlete-documents";
 import { ActivityTimeline } from "./activity-timeline";
 import { AthleteHeader, KeyFigures } from "./athlete-header";
 import { AvailabilitySection } from "./availability-section";
@@ -56,6 +57,8 @@ const TABS = [
   { key: "disponibilites", label: "Disponibilités" },
   { key: "reperes", label: "Repères" },
   { key: "notes", label: "Notes" },
+  // Documents liés au sportif (D-67).
+  { key: "documents", label: "Documents" },
   { key: "historique", label: "Historique" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
@@ -358,6 +361,13 @@ async function AthleteSection({
             ) : null}
             {tab === "notes" ? (
               <NotesSection organizationId={organizationId} athlete={athlete} />
+            ) : null}
+            {tab === "documents" ? (
+              <AthleteDocuments
+                organizationId={organizationId}
+                athleteId={athlete.id}
+                athleteName={athlete.displayName}
+              />
             ) : null}
             {tab === "historique" ? (
               <section

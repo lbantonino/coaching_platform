@@ -29,6 +29,7 @@ import { LegalEntityButton } from "./legal-entity-sheet";
 import { SECTIONS } from "./sections";
 import {
   EmailForm,
+  InvoiceCashToggle,
   NotificationToggles,
   OrganizationForm,
   PasswordForm,
@@ -251,10 +252,15 @@ export function SettingsPanel({
 
         {shown === "facturation" ? (
           <>
+            <Card id="settings-invoice-cash" title="Factures">
+              <InvoiceCashToggle value={data.invoiceCash} />
+            </Card>
+            {/* Coory ne décide d'aucune règle légale (D-66) : la structure s'imprime telle que le
+                coach l'a saisie ; à lui de l'adapter à son pays, avec son comptable s'il en a un. */}
             <p className="text-small text-muted">
               Une structure par activité : par exemple ton activité d&apos;indépendant et ton ASBL.
-              Tes factures prendront les infos de la structure choisie. Règles à faire valider par
-              ton comptable (TVA, mentions).
+              Tes factures reprennent telles quelles les infos de la structure choisie, mentions
+              comprises : à toi de les adapter aux règles de ton pays.
             </p>
             {data.entities.length === 0 ? (
               <Card>

@@ -1,7 +1,7 @@
-// Factures émises (D-65) : règles PURES du document (totaux, mentions de TVA, adresses), testées par
-// Vitest. Le numéro est attribué par la base à l'émission (issue_athlete_invoice), jamais ici.
-// Les mentions légales restent à confirmer par le comptable (OPEN-17).
-import { splitVat } from "./payments";
+// Factures émises (D-65) : règles PURES du document (totaux, adresses), testées par Vitest. Le numéro
+// est attribué par la base à l'émission (issue_athlete_invoice), jamais ici. Coory ne décide d'aucune
+// règle légale (D-66) : les mentions imprimées sont celles que le coach écrit dans sa structure.
+import { addVat, splitVat } from "./payments";
 import type { VatStatus } from "./legal";
 
 export type InvoiceTotals = { exclCents: number; vatCents: number; inclCents: number };
@@ -12,19 +12,19 @@ export function invoiceTotals(inclCents: number, vatRate: number): InvoiceTotals
   return { exclCents, vatCents, inclCents };
 }
 
+// Montant saisi par le coach (demande d'Antonino du 29/10/2026) : hors TVA (« 65 € HTVA », la TVA
+// s'ajoute) ou TVA comprise. La facture garde le total TVAC ; le HTVA s'en déduit sans écart (vérifié
+// pour 6, 12 et 21 % sur un million de montants).
+export type AmountMode = "excl" | "incl";
+
+export function totalsFromEntry(cents: number, mode: AmountMode, vatRate: number): InvoiceTotals {
+  return invoiceTotals(mode === "excl" ? addVat(cents, vatRate) : cents, vatRate);
+}
+
 // Taux imposé par la structure : une structure qui n'est pas assujettie (franchise, ASBL non
 // assujettie) ne facture pas de TVA ; sinon, le taux du paiement.
 export function vatRateFor(vatStatus: VatStatus, paymentRate: number): number {
   return vatStatus === "subject" ? paymentRate : 0;
-}
-
-// Mention de TVA imprimée sous les totaux.
-export function vatMention(vatStatus: VatStatus): string | null {
-  if (vatStatus === "franchise") {
-    return "Régime particulier de franchise des petites entreprises : TVA non applicable.";
-  }
-  if (vatStatus === "not_subject") return "Structure non assujettie à la TVA.";
-  return null;
 }
 
 export type PostalAddress = {

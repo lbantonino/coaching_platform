@@ -1,13 +1,12 @@
-import { Download, FileText, Landmark, Receipt, UserRound } from "lucide-react";
+import { FileText, Landmark, Receipt, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
-import { buttonClass } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { addressLines, invoiceTotals, vatMention } from "@/domain/billing/invoice-document";
+import { addressLines, invoiceTotals } from "@/domain/billing/invoice-document";
 import { formatEuros } from "@/domain/billing/invoices";
 import { formatEnterpriseNumber } from "@/domain/billing/legal";
 import { requireCoach } from "@/features/auth/guards";
@@ -20,6 +19,7 @@ import {
   InvoiceDraftForm,
   IssueInvoiceButton,
   MarkPaidForm,
+  PdfPreviewButton,
 } from "../invoice-controls";
 
 export const metadata: Metadata = {
@@ -72,7 +72,6 @@ async function Invoice({
   const entities = draft ? await listLegalEntities(organizationId) : [];
   const totals = invoiceTotals(invoice.amountCents, invoice.vatRate);
   const seller = invoice.seller;
-  const mention = seller ? vatMention(seller.vatStatus) : null;
 
   return (
     <>
@@ -85,18 +84,7 @@ async function Invoice({
         }`}
         actions={
           <>
-            <a
-              href={`/coach/facturation/${invoice.id}/pdf`}
-              download
-              className={buttonClass({
-                variant: draft ? "outline" : "primary",
-                size: "md",
-                className: "max-lg:w-full",
-              })}
-            >
-              <Download aria-hidden size={17} strokeWidth={1.8} />
-              {draft ? "Aperçu PDF" : "Télécharger le PDF"}
-            </a>
+            <PdfPreviewButton invoiceId={invoice.id} draft={draft} />
             {draft ? (
               <IssueInvoiceButton organizationId={organizationId} invoiceId={invoice.id} />
             ) : null}
@@ -153,8 +141,8 @@ async function Invoice({
             <p className="text-[13px] text-muted">
               La date et le numéro sont donnés à l&apos;émission.
             </p>
-          ) : mention ? (
-            <p className="text-[13px] text-muted">{mention}</p>
+          ) : seller?.legalMentions ? (
+            <p className="text-[13px] text-muted">{seller.legalMentions}</p>
           ) : null}
         </Card>
 
@@ -180,7 +168,7 @@ async function Invoice({
               values={{
                 legalEntityId: invoice.legalEntityId ?? entities[0]?.id ?? "",
                 label: invoice.label,
-                amount: (invoice.amountCents / 100).toFixed(2).replace(".", ","),
+                amount: (totals.exclCents / 100).toFixed(2).replace(".", ","),
                 serviceOn: invoice.serviceOn ?? "",
                 vatRate: String(invoice.vatRate),
                 clientName: invoice.client.name,

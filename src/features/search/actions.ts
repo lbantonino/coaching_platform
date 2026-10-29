@@ -26,7 +26,8 @@ export type SearchResults = {
     location: string | null;
     startsOn: string;
   }[];
-  documents: { id: string; name: string; category: string }[];
+  // Catégorie du coach (D-67) ; null = sans catégorie.
+  documents: { id: string; name: string; category: string | null }[];
   tasks: {
     id: string;
     title: string;
@@ -77,7 +78,7 @@ export async function searchCoory(organizationId: string, query: string): Promis
       .limit(LIMIT),
     supabase
       .from("coach_documents")
-      .select("id, name, category")
+      .select("id, name, category:document_categories ( name )")
       .eq("organization_id", orgId)
       .ilike("name", pattern)
       .order("updated_at", { ascending: false })
@@ -118,7 +119,11 @@ export async function searchCoory(organizationId: string, query: string): Promis
       location: row.location,
       startsOn: row.starts_on,
     })),
-    documents: documents.data ?? [],
+    documents: (documents.data ?? []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      category: (row.category as { name: string } | null)?.name ?? null,
+    })),
     tasks: (tasks.data ?? []).map((row) => ({
       id: row.id,
       title: row.title,
