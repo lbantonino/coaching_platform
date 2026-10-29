@@ -141,6 +141,11 @@ export type AthleteDetail = {
   experience: string | null;
   trainingPlaces: TrainingPlace[];
   equipment: string | null;
+  // Adresse (D-65), reprise sur les factures.
+  addressLine: string | null;
+  postalCode: string | null;
+  city: string | null;
+  country: string;
   sessionsPerWeek: number | null;
   availableDays: WeekDay[];
   maxSessionMinutes: number | null;
@@ -167,7 +172,7 @@ export async function getAthlete(
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, last_name, sex, photo_path, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, program_type, athlete_user_id, created_at",
+      "id, first_name, last_name, sex, photo_path, display_name, email, phone, preferred_contact, level, experience, training_places, equipment, address_line, postal_code, city, country, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_constraints, health_consent_at, status, program_type, athlete_user_id, created_at",
     )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
@@ -191,6 +196,10 @@ export async function getAthlete(
     experience: data.experience,
     trainingPlaces: data.training_places as TrainingPlace[],
     equipment: data.equipment,
+    addressLine: data.address_line,
+    postalCode: data.postal_code,
+    city: data.city,
+    country: data.country,
     sessionsPerWeek: data.sessions_per_week,
     availableDays: data.available_days as WeekDay[],
     maxSessionMinutes: data.max_session_minutes,

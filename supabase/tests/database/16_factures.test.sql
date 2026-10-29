@@ -41,12 +41,14 @@ select throws_ok(
              '2026-10-15', '2026-10-01') $$,
   '23514', null, 'L''échéance ne précède pas l''envoi'
 );
-select throws_ok(
+-- D-65 : une facture faite après coup pour un paiement déjà reçu est payée avant sa date (annulé ici).
+select lives_ok(
   $$ insert into public.athlete_invoices (organization_id, athlete_id, label, amount_cents, issued_on, due_on, paid_on)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', 'Payée avant', 100,
              '2026-10-15', '2026-10-30', '2026-10-01') $$,
-  '23514', null, 'Un paiement ne précède pas l''envoi'
+  'Un paiement déjà reçu peut précéder la facture (D-65)'
 );
+delete from public.athlete_invoices where label = 'Payée avant';
 select throws_ok(
   $$ insert into public.athlete_invoices (organization_id, athlete_id, label, amount_cents, issued_on, due_on)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'b1b1b1b1-0000-4000-8000-000000000001', 'Sportif de B', 100,
@@ -55,7 +57,7 @@ select throws_ok(
 );
 
 -- ---------------------------------------------------------------------
--- Coach A : lecture de SON organisation, aucune écriture pour l'instant
+-- Coach A : lecture de SON organisation ; il n'écrit que des brouillons (D-65, voir 26_factures_emises)
 -- ---------------------------------------------------------------------
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';
@@ -68,15 +70,16 @@ select throws_ok(
   $$ insert into public.athlete_invoices (organization_id, athlete_id, label, amount_cents, issued_on, due_on)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', 'Nouvelle', 100,
              '2026-10-01', '2026-10-15') $$,
-  '42501', null, 'Pas encore de saisie de facture (page Facturation, 4f)'
+  '42501', null, 'Une facture créée par le coach naît en brouillon, jamais déjà émise'
 );
 select throws_ok(
   $$ update public.athlete_invoices set paid_on = '2026-10-10' where id = 'fa000000-0000-4000-8000-000000000001' $$,
-  '42501', null, 'Pas encore de saisie de paiement (page Facturation, 4f)'
+  '42501', null, 'La date de paiement ne se modifie pas directement'
 );
-select throws_ok(
-  $$ delete from public.athlete_invoices where id = 'fa000000-0000-4000-8000-000000000001' $$,
-  '42501', null, 'Une facture ne se supprime pas'
+delete from public.athlete_invoices where id = 'fa000000-0000-4000-8000-000000000001';
+select isnt_empty(
+  $$ select 1 from public.athlete_invoices where id = 'fa000000-0000-4000-8000-000000000001' $$,
+  'Une facture émise ne se supprime pas (seuls les brouillons)'
 );
 
 -- ---------------------------------------------------------------------

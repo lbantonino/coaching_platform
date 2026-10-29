@@ -94,6 +94,7 @@ export async function countNotifications(
       .from("athlete_invoices")
       .select("id, due_on")
       .eq("organization_id", organizationId)
+      .eq("status", "issued")
       .is("paid_on", null)
       .lt("due_on", today),
     // Même règle que features/athletes/completeness : sans nom de famille, ou sans aucun contact.

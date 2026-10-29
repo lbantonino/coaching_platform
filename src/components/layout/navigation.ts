@@ -184,6 +184,7 @@ const coachTitles: [RegExp, string][] = [
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/nouvelle$/, "Nouvelle séance"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+\/modifier$/, "Modifier la séance"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+$/, "Séance"],
+  [/^\/coach\/facturation\/[^/]+$/, "Facture"],
 ];
 
 function moduleTitle(modules: Record<string, ModuleInfo>, prefix: string, pathname: string) {

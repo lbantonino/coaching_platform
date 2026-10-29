@@ -7,19 +7,26 @@ import { errorTextClass, hintClass } from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import {
   updateAthlete,
+  type AddressFormValues,
   type AthleteFormValues,
   type UpdateAthleteState,
 } from "@/features/athletes/actions";
 import type { AthleteStatus } from "@/features/athletes/schemas";
 
-import { ContactFields, IdentityFields, Part, SportProfileFields } from "../athlete-fields";
+import {
+  AddressFields,
+  ContactFields,
+  IdentityFields,
+  Part,
+  SportProfileFields,
+} from "../athlete-fields";
 
 type Props = {
   organizationId: string;
   athleteId: string;
   hasAccount: boolean;
   // Valeurs enregistrées, en chaînes (« » = non renseigné), au même format que la saisie.
-  values: AthleteFormValues;
+  values: AthleteFormValues & AddressFormValues;
 };
 
 const initialState: UpdateAthleteState = { error: null, saved: false, attempt: 0, values: null };
@@ -42,6 +49,10 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
 
       <Part title="Contact">
         <ContactFields values={shown} hasAccount={hasAccount} />
+      </Part>
+
+      <Part title="Adresse">
+        <AddressFields values={shown} />
       </Part>
 
       <Part title="Profil sportif">

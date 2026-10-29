@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda, factures émises).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -364,6 +364,11 @@ Trois petites mécaniques méritent d'être expliquées. Le **menu repliable** r
 
 ### Une page de moins : la vue Liste de l'Agenda (29/10)
 La page Séances montrait les mêmes séances que l'Agenda, sous une autre forme : deux endroits pour une seule information, c'est deux endroits à maintenir et un coach qui se demande où regarder. Elle devient une **vue de l'Agenda**, à côté de Semaine et Mois, comme le « Planning » de Google Agenda. Rien ne change en base : la vue lit les mêmes séances avec le même garde-fou. La liste par jour du tableau de bord a été sortie dans un **composant partagé**, pour que les deux écrans restent identiques sans copier le code. Supprimer une page, c'est aussi retirer son entrée de menu, son module et les liens qui y menaient : un test vérifie maintenant que « Voir tout » arrive bien sur la vue Liste.
+
+### Des factures qu'on ne peut plus trafiquer (29/10)
+Une facture est un document légal : une fois envoyée, elle ne doit plus changer, et les numéros doivent se suivre sans trou. On l'a donc modélisée en deux états : un **brouillon** qu'on corrige librement, puis une facture **émise**, figée. Le numéro n'est pas calculé dans l'application mais **par la base**, dans une fonction SQL qui verrouille un compteur par structure et par année : si deux clics « Émettre » arrivent en même temps, l'un attend l'autre, et si l'émission échoue, le numéro n'est pas consommé (tout est dans la même transaction). Même un développeur qui contournerait l'écran ne pourrait pas modifier une facture émise : un **trigger** l'interdit en base, et un test pgTAP le prouve hors RLS. La facture garde aussi une **copie** de la structure (raison sociale, TVA, IBAN) au moment de l'émission : changer d'adresse plus tard ne réécrit pas les anciennes factures.
+
+Le PDF est fabriqué avec **React-PDF** (note de décision ADR 0002) : la facture s'écrit en composants React, rendue sur le serveur sans navigateur. Il a été choisi parmi trois options parce qu'il reste léger et marche chez n'importe quel hébergeur ; il servira aussi aux programmes. Côté métier, deux règles de Gianluca se retrouvent dans le code : seuls les virements se facturent, et une facture « déjà payée » crée aussi le **vrai paiement** dans la Comptabilité, pour que le chiffre d'affaires reste juste.
 
 ---
 

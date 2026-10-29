@@ -83,6 +83,34 @@ export type AthleteStatus = keyof typeof athleteStatusLabels;
 
 export const ATHLETE_STATUSES = ["active", "paused", "archived"] as const;
 
+// Adresse postale (D-65) : sur la fiche du sportif, reprise sur ses factures. Alignée sur les
+// contraintes CHECK de supabase/migrations/*_factures_emises.sql.
+export const COUNTRIES = [
+  ["BE", "Belgique"],
+  ["FR", "France"],
+  ["LU", "Luxembourg"],
+  ["NL", "Pays-Bas"],
+  ["DE", "Allemagne"],
+] as const;
+export const addressSchema = z.object({
+  addressLine: optionalText(
+    z.string().max(160, { error: "L'adresse est trop longue (160 caractères maximum)." }),
+  ),
+  postalCode: optionalText(
+    z
+      .string()
+      .transform((value) => value.toUpperCase())
+      .pipe(z.string().regex(/^[A-Z0-9 -]{2,10}$/, { error: "Code postal invalide." })),
+  ),
+  city: optionalText(
+    z.string().max(80, { error: "Le nom de la ville est trop long (80 caractères maximum)." }),
+  ),
+  country: z.enum(
+    COUNTRIES.map(([code]) => code),
+    { error: "Pays invalide." },
+  ),
+});
+
 // Modification d'une fiche : identité et contact, statut, puis le profil sportif (P2-02 partie 1).
 export const athleteUpdateSchema = newAthleteSchema.extend({
   status: z.enum(ATHLETE_STATUSES, { error: "Statut invalide." }),
