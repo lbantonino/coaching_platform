@@ -328,6 +328,10 @@ async function AthleteSection({
                     experience: athlete.experience ?? "",
                     trainingPlaces: athlete.trainingPlaces,
                     equipment: athlete.equipment ?? "",
+                    addressLine: athlete.addressLine ?? "",
+                    postalCode: athlete.postalCode ?? "",
+                    city: athlete.city ?? "",
+                    country: athlete.country,
                   }}
                 />
               </section>

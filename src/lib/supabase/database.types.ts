@@ -210,42 +210,87 @@ export type Database = {
         Row: {
           amount_cents: number;
           athlete_id: string;
+          client_address_line: string | null;
+          client_city: string | null;
+          client_country: string | null;
+          client_name: string | null;
+          client_postal_code: string | null;
           created_at: string;
           created_by: string | null;
           due_on: string;
           id: string;
+          issued_at: string | null;
           issued_on: string;
           label: string;
+          legal_entity_id: string | null;
+          number: string | null;
+          number_seq: number | null;
+          number_year: number | null;
           organization_id: string;
           paid_on: string | null;
+          payment_id: string | null;
+          seller: Json | null;
+          service_on: string | null;
+          status: string;
           updated_at: string;
+          vat_rate: number | null;
         };
         ComputedFields: never;
         Insert: {
           amount_cents: number;
           athlete_id: string;
+          client_address_line?: string | null;
+          client_city?: string | null;
+          client_country?: string | null;
+          client_name?: string | null;
+          client_postal_code?: string | null;
           created_at?: string;
           created_by?: string | null;
           due_on: string;
           id?: string;
+          issued_at?: string | null;
           issued_on: string;
           label: string;
+          legal_entity_id?: string | null;
+          number?: string | null;
+          number_seq?: number | null;
+          number_year?: number | null;
           organization_id: string;
           paid_on?: string | null;
+          payment_id?: string | null;
+          seller?: Json | null;
+          service_on?: string | null;
+          status?: string;
           updated_at?: string;
+          vat_rate?: number | null;
         };
         Update: {
           amount_cents?: number;
           athlete_id?: string;
+          client_address_line?: string | null;
+          client_city?: string | null;
+          client_country?: string | null;
+          client_name?: string | null;
+          client_postal_code?: string | null;
           created_at?: string;
           created_by?: string | null;
           due_on?: string;
           id?: string;
+          issued_at?: string | null;
           issued_on?: string;
           label?: string;
+          legal_entity_id?: string | null;
+          number?: string | null;
+          number_seq?: number | null;
+          number_year?: number | null;
           organization_id?: string;
           paid_on?: string | null;
+          payment_id?: string | null;
+          seller?: Json | null;
+          service_on?: string | null;
+          status?: string;
           updated_at?: string;
+          vat_rate?: number | null;
         };
         Relationships: [
           {
@@ -253,6 +298,20 @@ export type Database = {
             columns: ["athlete_id", "organization_id"];
             isOneToOne: false;
             referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "athlete_invoices_legal_entity_fkey";
+            columns: ["legal_entity_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organization_legal_entities";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "athlete_invoices_payment_fkey";
+            columns: ["payment_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "athlete_payments";
             referencedColumns: ["id", "organization_id"];
           },
         ];
@@ -464,8 +523,11 @@ export type Database = {
       };
       athlete_profiles: {
         Row: {
+          address_line: string | null;
           athlete_user_id: string | null;
           available_days: string[];
+          city: string | null;
+          country: string;
           created_at: string;
           created_by: string | null;
           display_name: string | null;
@@ -482,6 +544,7 @@ export type Database = {
           organization_id: string;
           phone: string | null;
           photo_path: string | null;
+          postal_code: string | null;
           preferred_contact: string | null;
           program_type: string | null;
           schedule_constraints: string | null;
@@ -493,8 +556,11 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          address_line?: string | null;
           athlete_user_id?: string | null;
           available_days?: string[];
+          city?: string | null;
+          country?: string;
           created_at?: string;
           created_by?: string | null;
           display_name?: never;
@@ -511,6 +577,7 @@ export type Database = {
           organization_id: string;
           phone?: string | null;
           photo_path?: string | null;
+          postal_code?: string | null;
           preferred_contact?: string | null;
           program_type?: string | null;
           schedule_constraints?: string | null;
@@ -521,8 +588,11 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          address_line?: string | null;
           athlete_user_id?: string | null;
           available_days?: string[];
+          city?: string | null;
+          country?: string;
           created_at?: string;
           created_by?: string | null;
           display_name?: never;
@@ -539,6 +609,7 @@ export type Database = {
           organization_id?: string;
           phone?: string | null;
           photo_path?: string | null;
+          postal_code?: string | null;
           preferred_contact?: string | null;
           program_type?: string | null;
           schedule_constraints?: string | null;
@@ -1369,6 +1440,11 @@ export type Database = {
       grant_health_consent: {
         Args: { p_athlete_id: string; p_coach_proof?: string };
         Returns: undefined;
+      };
+      issue_athlete_invoice: { Args: { p_invoice_id: string }; Returns: string };
+      mark_athlete_invoice_paid: {
+        Args: { p_invoice_id: string; p_method: string; p_received_on: string };
+        Returns: string;
       };
       move_session_series: {
         Args: { p_session_id: string; p_shift_days: number; p_start_time: string };

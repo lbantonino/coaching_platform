@@ -568,6 +568,12 @@ values
 
 -- Suivi des factures (4a, D-35 / D-17 étape A), inventé : trois factures envoyées ces deux dernières
 -- semaines (450 €), deux payées (300 €), celle de Sophie en retard (150 €). Dates relatives au reset.
+-- Adresses de démonstration (D-65), FICTIVES : reprises sur les factures de ces sportifs.
+update public.athlete_profiles set address_line = 'Rue de l''Exemple 1', postal_code = '1000', city = 'Bruxelles'
+where id = 'da000000-0000-4000-8000-000000000001';
+update public.athlete_profiles set address_line = 'Avenue de la Démo 25', postal_code = '1050', city = 'Ixelles'
+where id = 'da000000-0000-4000-8000-000000000002';
+
 insert into public.athlete_invoices (
   id, organization_id, athlete_id, label, amount_cents, issued_on, due_on, paid_on, created_by
 )

@@ -9,7 +9,11 @@ import {
   labelClass,
 } from "@/components/ui/form-styles";
 import { FieldCheck } from "@/components/ui/field-check";
-import type { AthleteFormValues, AvailabilityFormValues } from "@/features/athletes/actions";
+import type {
+  AddressFormValues,
+  AthleteFormValues,
+  AvailabilityFormValues,
+} from "@/features/athletes/actions";
 import {
   ATHLETE_LEVELS,
   athleteLevelLabels,
@@ -17,6 +21,7 @@ import {
   sexLabels,
   CONTACT_CHANNELS,
   contactChannelLabels,
+  COUNTRIES,
   TRAINING_PLACES,
   trainingPlaceLabels,
   WEEK_DAYS,
@@ -169,6 +174,66 @@ export function ContactFields({
           {CONTACT_CHANNELS.map((channel) => (
             <option key={channel} value={channel}>
               {contactChannelLabels[channel]}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+// Adresse postale (D-65) : reprise sur les factures du sportif.
+export function AddressFields({ values }: { values: AddressFormValues }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex flex-col gap-1.5 md:col-span-2">
+        <label htmlFor="addressLine" className={labelClass}>
+          Rue et numéro
+        </label>
+        <input
+          id="addressLine"
+          name="addressLine"
+          autoComplete="off"
+          defaultValue={values.addressLine}
+          aria-describedby="address-hint"
+          className={inputClass}
+        />
+        <p id="address-hint" className={hintClass}>
+          Reprise sur ses factures.
+        </p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="postalCode" className={labelClass}>
+          Code postal
+        </label>
+        <input
+          id="postalCode"
+          name="postalCode"
+          autoComplete="off"
+          defaultValue={values.postalCode}
+          className={inputClass}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="city" className={labelClass}>
+          Ville
+        </label>
+        <input
+          id="city"
+          name="city"
+          autoComplete="off"
+          defaultValue={values.city}
+          className={inputClass}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="country" className={labelClass}>
+          Pays
+        </label>
+        <select id="country" name="country" defaultValue={values.country} className={inputClass}>
+          {COUNTRIES.map(([code, label]) => (
+            <option key={code} value={code}>
+              {label}
             </option>
           ))}
         </select>

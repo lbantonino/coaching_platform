@@ -32,6 +32,28 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Factures émises : brouillon, émission numérotée, PDF (D-65)
+```
+Date : 2026-10-29
+Fait : migration 20261029100000_factures_emises (adresse du sportif ; factures brouillon / émise
+  liées à une structure légale et à un paiement ; compteur privé par structure et par année ;
+  issue_athlete_invoice : numéro sans trou ni doublon sous verrou, copie figée de la structure ;
+  mark_athlete_invoice_paid : crée le paiement reçu et le relie ; trigger : une facture numérotée
+  ne se modifie ni ne se supprime, seul son paiement peut changer ; RLS : écriture des brouillons
+  seulement). Règles pures domain/billing/invoice-document ; requêtes et actions billing/invoice-* ;
+  PDF React-PDF (features/billing/invoice-pdf.tsx, route /coach/facturation/[id]/pdf, ADR 0002) ;
+  page Facturation : « À facturer » (virements sans facture, titre rouge) et « Factures » (titre
+  vert), bouton « Créer une facture » (sportif existant ou nouveau, payée ou à payer) ; page d'une
+  facture (brouillon modifiable, émettre, supprimer, aperçu PDF ; émise en lecture seule ; « Marquer
+  comme payée ») ; adresse dans l'onglet Profil de la fiche.
+Tests : check ; Vitest 217/217 ; pgTAP 349/349 (26_factures_emises : 17 tests ; 16_factures adapté :
+  une facture peut être payée avant sa date, seuls les brouillons se suppriment) ; e2e complet
+  154/154 + 12 ignorés (invoices.spec : virement → brouillon → émission → PDF, suppression d'un
+  brouillon, isolation, création directe nouveau sportif → à payer → payée). PDF relu.
+Reste : note de crédit, export comptable (BIZ-06), mentions légales à confirmer (OPEN-17), montant
+  modifiable dans un brouillon créé directement.
+```
+
 ### Vue « Liste » de l'Agenda, fin de la page Séances (D-64)
 ```
 Date : 2026-10-29

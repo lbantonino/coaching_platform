@@ -14,6 +14,7 @@ import { parseNewAthleteForm, type NewAthleteFormInput } from "./new-athlete";
 import { getAthlete } from "./queries";
 import {
   ATHLETE_STATUSES,
+  addressSchema,
   athleteUpdateSchema,
   availabilitySchema,
   type AthleteStatus,
@@ -147,6 +148,14 @@ export type AthleteFormValues = {
   equipment: string;
 };
 
+// Adresse (D-65), modifiée avec la fiche (onglet Profil) et reprise sur les factures.
+export type AddressFormValues = {
+  addressLine: string;
+  postalCode: string;
+  city: string;
+  country: string;
+};
+
 // `values` : saisie renvoyée en cas d'erreur, car React 19 vide le formulaire après chaque envoi.
 // `attempt` augmente à chaque réponse : le formulaire est reconstruit avec ces valeurs (listes
 // déroulantes et cases comprises, que la remise à zéro de React ne mettrait pas à jour sinon).
@@ -154,7 +163,7 @@ export type UpdateAthleteState = {
   error: string | null;
   saved: boolean;
   attempt: number;
-  values: AthleteFormValues | null;
+  values: (AthleteFormValues & AddressFormValues) | null;
 };
 
 // Modification d'une fiche : identité, contact, statut et profil sportif.
@@ -175,7 +184,7 @@ export async function updateAthlete(
       values: null,
     };
 
-  const values: AthleteFormValues = {
+  const values: AthleteFormValues & AddressFormValues = {
     firstName: String(formData.get("firstName") ?? ""),
     lastName: String(formData.get("lastName") ?? ""),
     sex: String(formData.get("sex") ?? ""),
@@ -188,11 +197,16 @@ export async function updateAthlete(
     // Plusieurs cases cochées portent le même nom : getAll les récupère toutes.
     trainingPlaces: formData.getAll("trainingPlaces").map(String),
     equipment: String(formData.get("equipment") ?? ""),
+    addressLine: String(formData.get("addressLine") ?? ""),
+    postalCode: String(formData.get("postalCode") ?? ""),
+    city: String(formData.get("city") ?? ""),
+    country: String(formData.get("country") ?? "BE"),
   };
   const parsed = athleteUpdateSchema.safeParse(values);
-  if (!parsed.success) {
+  const address = addressSchema.safeParse(values);
+  if (!parsed.success || !address.success) {
     return {
-      error: parsed.error.issues[0]?.message ?? "Formulaire invalide.",
+      error: (parsed.error ?? address.error)?.issues[0]?.message ?? "Formulaire invalide.",
       saved: false,
       attempt: previous.attempt + 1,
       values,
@@ -227,6 +241,10 @@ export async function updateAthlete(
       experience: parsed.data.experience,
       training_places: parsed.data.trainingPlaces,
       equipment: parsed.data.equipment,
+      address_line: address.data.addressLine,
+      postal_code: address.data.postalCode,
+      city: address.data.city,
+      country: address.data.country,
     })
     .eq("id", current.id)
     .eq("organization_id", membership.organizationId);
