@@ -156,8 +156,15 @@ test("« Créer une facture » : un nouveau sportif (sa fiche est créée), à p
   await expect(page).toHaveURL(/\/coach\/facturation\/[0-9a-f-]{36}$/);
   await expect(page.getByRole("heading", { name: "Brouillon de facture", level: 1 })).toBeVisible();
   await expect(page.getByLabel("Rue et numéro")).toHaveValue("Rue du Test 3");
+  // Le montant d'un brouillon se corrige (29/10).
+  await page.getByLabel("Montant (TVAC)").fill("242");
+  await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
+  await expect(page.getByText("Brouillon enregistré.")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Montants" })).toContainText(/200,00\s€/);
   const toPay = page.getByRole("region", { name: "À payer" });
   await expect(toPay).toBeVisible();
+  // Tous les modes se facturent (l'app sert à tous les coachs) : ici, des espèces.
+  await toPay.getByLabel("Mode").selectOption({ label: "Espèces" });
   await toPay.getByRole("button", { name: "Marquer comme payée" }).click();
   await expect(toPay).toHaveCount(0);
   await expect(page.locator("main header").filter({ visible: true }).first()).toContainText(
@@ -166,14 +173,12 @@ test("« Créer une facture » : un nouveau sportif (sa fiche est créée), à p
 
   // Le paiement reçu est dans la Comptabilité, et la fiche du sportif existe.
   await page.goto("/coach/comptabilite");
-  await expect(
-    page
-      .getByRole("list", { name: "Liste des paiements" })
-      .getByRole("listitem")
-      .filter({
-        hasText: `Testine ${lastName}`,
-      }),
-  ).toContainText(/121,00\s€/);
+  const paymentRow = page
+    .getByRole("list", { name: "Liste des paiements" })
+    .getByRole("listitem")
+    .filter({ hasText: `Testine ${lastName}` });
+  await expect(paymentRow).toContainText(/242,00\s€/);
+  await expect(paymentRow).toContainText("Espèces");
   await page.goto(`/coach/recherche?q=${lastName}`);
   await expect(page.getByRole("link", { name: new RegExp(lastName) }).first()).toBeVisible();
 });

@@ -50,8 +50,10 @@ Tests : check ; Vitest 217/217 ; pgTAP 349/349 (26_factures_emises : 17 tests ; 
   une facture peut être payée avant sa date, seuls les brouillons se suppriment) ; e2e complet
   154/154 + 12 ignorés (invoices.spec : virement → brouillon → émission → PDF, suppression d'un
   brouillon, isolation, création directe nouveau sportif → à payer → payée). PDF relu.
-Reste : note de crédit, export comptable (BIZ-06), mentions légales à confirmer (OPEN-17), montant
-  modifiable dans un brouillon créé directement.
+Complément (29/10 soir) : tous les modes de paiement se facturent (espèces comprises, pour les
+  autres coachs) ; « À facturer » = virement + Bancontact ; montant modifiable dans un brouillon
+  (paiement relié corrigé avec lui). e2e invoices + accounting : 12/12.
+Reste : note de crédit, export comptable (BIZ-06), mentions légales à confirmer (OPEN-17).
 ```
 
 ### Vue « Liste » de l'Agenda, fin de la page Séances (D-64)

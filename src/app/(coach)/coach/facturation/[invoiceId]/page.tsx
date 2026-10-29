@@ -151,9 +151,6 @@ async function Invoice({
           </div>
           {draft ? (
             <p className="text-[13px] text-muted">
-              {invoice.paymentId
-                ? "Le montant est celui du paiement reçu. "
-                : "Montant TVA comprise. "}
               La date et le numéro sont donnés à l&apos;émission.
             </p>
           ) : mention ? (
@@ -174,6 +171,7 @@ async function Invoice({
             <InvoiceDraftForm
               organizationId={organizationId}
               invoiceId={invoice.id}
+              hasPayment={invoice.paymentId !== null}
               entities={entities.map((entity) => ({
                 id: entity.id,
                 name: entity.name,
@@ -182,6 +180,7 @@ async function Invoice({
               values={{
                 legalEntityId: invoice.legalEntityId ?? entities[0]?.id ?? "",
                 label: invoice.label,
+                amount: (invoice.amountCents / 100).toFixed(2).replace(".", ","),
                 serviceOn: invoice.serviceOn ?? "",
                 vatRate: String(invoice.vatRate),
                 clientName: invoice.client.name,

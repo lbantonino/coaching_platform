@@ -9,7 +9,13 @@ import { errorTextClass, inputClass, labelClass } from "@/components/ui/form-sty
 import { Sheet } from "@/components/ui/overlay";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { formatEuros } from "@/domain/billing/invoices";
-import { VAT_RATES, parseEuros, splitVat } from "@/domain/billing/payments";
+import {
+  PAYMENT_METHODS,
+  VAT_RATES,
+  parseEuros,
+  paymentMethodLabels,
+  splitVat,
+} from "@/domain/billing/payments";
 import { COUNTRIES } from "@/features/athletes/schemas";
 import {
   createInvoice,
@@ -405,8 +411,11 @@ function InvoiceFields({
                 defaultValue={v.method}
                 className={inputClass}
               >
-                <option value="transfer">Virement</option>
-                <option value="bancontact">Bancontact</option>
+                {PAYMENT_METHODS.map((method) => (
+                  <option key={method} value={method}>
+                    {paymentMethodLabels[method]}
+                  </option>
+                ))}
               </select>
             </Field>
           </div>

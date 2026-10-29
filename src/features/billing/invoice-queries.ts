@@ -4,7 +4,7 @@ import type { VatStatus } from "@/domain/billing/legal";
 import { listLegalEntities, type LegalEntity } from "@/features/coach/legal-queries";
 import { createClient } from "@/lib/supabase/server";
 
-// Factures émises (D-65) : une facture complète (brouillon ou émise) et les paiements par virement
+// Factures émises (D-65) : une facture complète (brouillon ou émise) et les paiements sur le compte
 // encore sans facture. Organisation DÉJÀ vérifiée par l'appelant (requireCoach / requireOrgAccess) ;
 // la RLS limite de toute façon la lecture à SON organisation.
 
@@ -120,6 +120,7 @@ export type InvoiceablePayment = {
   receivedOn: string;
   amountCents: number;
   label: string | null;
+  method: "transfer" | "bancontact";
   athleteName: string;
 };
 
@@ -128,12 +129,14 @@ type PaymentRow = {
   received_on: string;
   amount_cents: number;
   label: string | null;
+  method: string;
   athlete: { first_name: string; last_name: string | null; display_name: string | null } | null;
   invoices: { id: string }[];
 };
 
-// Règle de Gianluca (28/10) : on facture les paiements par VIREMENT, jamais les espèces. Ceux des
-// 12 derniers mois, d'un sportif connu, qui n'ont pas encore de facture (brouillon compris).
+// « À facturer » : les paiements reçus SUR LE COMPTE (virement, Bancontact) des 12 derniers mois,
+// d'un sportif connu, sans facture (brouillon compris). Les espèces n'y sont pas (règle de Gianluca,
+// qui ne les facture pas) ; un autre coach les facture avec « Créer une facture ».
 export async function listInvoiceablePayments(
   organizationId: string,
   since: string,
@@ -142,10 +145,10 @@ export async function listInvoiceablePayments(
   const { data, error } = await supabase
     .from("athlete_payments")
     .select(
-      "id, received_on, amount_cents, label, athlete:athlete_profiles ( first_name, last_name, display_name ), invoices:athlete_invoices ( id )",
+      "id, received_on, amount_cents, label, method, athlete:athlete_profiles ( first_name, last_name, display_name ), invoices:athlete_invoices ( id )",
     )
     .eq("organization_id", organizationId)
-    .eq("method", "transfer")
+    .in("method", ["transfer", "bancontact"])
     .not("athlete_id", "is", null)
     .gte("received_on", since)
     .order("received_on", { ascending: false })
@@ -158,6 +161,7 @@ export async function listInvoiceablePayments(
       receivedOn: row.received_on,
       amountCents: row.amount_cents,
       label: row.label,
+      method: row.method === "bancontact" ? "bancontact" : "transfer",
       athleteName: row.athlete
         ? (row.athlete.display_name ??
           [row.athlete.first_name, row.athlete.last_name].filter(Boolean).join(" "))
