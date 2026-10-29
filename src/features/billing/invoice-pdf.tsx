@@ -3,8 +3,8 @@ import "server-only";
 import { Document, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
 
 import { addressLines, invoiceTotals } from "@/domain/billing/invoice-document";
-import { formatEuros } from "@/domain/billing/invoices";
-import { formatEnterpriseNumber, formatIban } from "@/domain/billing/legal";
+import { formatEnterpriseNumber, formatIban, formatVatNumber } from "@/domain/billing/legal";
+import { formatMoney, formatVatRate, type Currency } from "@/domain/billing/money";
 import { formatDate } from "@/lib/format";
 
 import type { InvoiceDetail } from "./invoice-queries";
@@ -16,7 +16,8 @@ import type { InvoiceDetail } from "./invoice-queries";
 
 // Helvetica (police standard du PDF) n'a pas l'espace fine insécable des montants à la belge.
 const plain = (text: string) => text.replace(/[  ]/g, " ");
-const euros = (cents: number) => plain(formatEuros(cents));
+// Montants dans la devise de la facture (D-69).
+const amount = (cents: number, currency: Currency) => plain(formatMoney(cents, currency));
 
 const INK = "#141518";
 const MUTED = "#5f6168";
@@ -63,6 +64,8 @@ const styles = StyleSheet.create({
 function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
   const seller = invoice.seller;
   const totals = invoiceTotals(invoice.amountCents, invoice.vatRate);
+  const euros = (cents: number) => amount(cents, invoice.currency);
+  const rate = plain(formatVatRate(invoice.vatRate));
   const draft = invoice.status === "draft";
   return (
     <Document
@@ -75,7 +78,7 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
           <View>
             <Text style={styles.sellerName}>{seller?.name ?? "Structure à choisir"}</Text>
             {seller
-              ? addressLines(seller).map((line) => (
+              ? addressLines(seller, seller.country ?? "BE").map((line) => (
                   <Text key={line} style={styles.muted}>
                     {line}
                   </Text>
@@ -86,7 +89,9 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
                 N° d&apos;entreprise {formatEnterpriseNumber(seller.enterpriseNumber)}
               </Text>
             ) : null}
-            {seller?.vatNumber ? <Text style={styles.muted}>TVA {seller.vatNumber}</Text> : null}
+            {seller?.vatNumber ? (
+              <Text style={styles.muted}>TVA {formatVatNumber(seller.vatNumber)}</Text>
+            ) : null}
             {seller?.email ? <Text style={styles.muted}>{seller.email}</Text> : null}
           </View>
           <View>
@@ -107,7 +112,7 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
         <View>
           <Text style={styles.label}>Facturé à</Text>
           <Text style={{ fontFamily: "Helvetica-Bold" }}>{invoice.client.name}</Text>
-          {addressLines(invoice.client).map((line) => (
+          {addressLines(invoice.client, seller?.country ?? "BE").map((line) => (
             <Text key={line}>{line}</Text>
           ))}
         </View>
@@ -122,7 +127,7 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
           <View style={styles.row}>
             <Text style={styles.description}>{invoice.label}</Text>
             <Text style={styles.cell}>{euros(totals.exclCents)}</Text>
-            <Text style={styles.cell}>{invoice.vatRate} %</Text>
+            <Text style={styles.cell}>{rate}</Text>
             <Text style={styles.cell}>{euros(totals.inclCents)}</Text>
           </View>
         </View>
@@ -133,7 +138,7 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
             <Text>{euros(totals.exclCents)}</Text>
           </View>
           <View style={styles.totalRow}>
-            <Text style={styles.muted}>TVA {invoice.vatRate} %</Text>
+            <Text style={styles.muted}>TVA {rate}</Text>
             <Text>{euros(totals.vatCents)}</Text>
           </View>
           <View style={styles.grandTotal}>
@@ -156,6 +161,9 @@ function InvoiceDocument({ invoice }: { invoice: InvoiceDetail }) {
               IBAN {formatIban(seller.iban)}
               {seller.bic ? ` · BIC ${seller.bic}` : ""}
             </Text>
+          ) : null}
+          {seller?.paymentDetails ? (
+            <Text style={styles.muted}>{seller.paymentDetails}</Text>
           ) : null}
           {seller?.legalMentions ? <Text style={styles.muted}>{seller.legalMentions}</Text> : null}
         </View>

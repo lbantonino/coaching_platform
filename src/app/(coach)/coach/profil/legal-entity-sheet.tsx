@@ -19,26 +19,31 @@ import {
   VAT_STATUSES,
   formatEnterpriseNumber,
   legalFormLabels,
-  normalizeEnterpriseNumber,
-  vatNumberFor,
+  normalizeVatNumber,
   vatStatusLabels,
 } from "@/domain/billing/legal";
+import { countryOptions } from "@/domain/geo/countries";
 import { saveLegalEntity, type SettingsState } from "@/features/coach/settings-actions";
 import type { LegalEntityInput } from "@/features/coach/settings";
 
-// Fenêtre « Structure légale » (D-57) : ajout ou modification. Le numéro de TVA belge se déduit du
-// numéro d'entreprise (BE + 10 chiffres) et s'affiche en direct pour un assujetti.
+// Fenêtre « Structure légale » (D-57) : ajout ou modification. International (D-69) : le pays vient
+// en premier, il décide des formats (BCE et « BE… » seulement en Belgique) ; un assujetti donne son
+// taux de TVA habituel, proposé ensuite sur chaque facture. En Belgique, le numéro de TVA se déduit
+// du numéro d'entreprise s'il n'est pas saisi.
 const empty: LegalEntityInput = {
   name: "",
   legalForm: "independent",
   enterpriseNumber: "",
   vatStatus: "subject",
+  vatNumber: "",
+  defaultVatRate: "",
   addressLine: "",
   postalCode: "",
   city: "",
   country: "BE",
   iban: "",
   bic: "",
+  paymentDetails: "",
   billingEmail: "",
   invoicePrefix: "FAC",
   legalMentions: "",
@@ -146,8 +151,12 @@ function Fields({
   v: LegalEntityInput;
 }) {
   const [vatStatus, setVatStatus] = useState(v.vatStatus);
+  const [country, setCountry] = useState(v.country);
   const [enterprise, setEnterprise] = useState(v.enterpriseNumber);
-  const normalized = normalizeEnterpriseNumber(enterprise);
+  const countries = countryOptions();
+  const be = country === "BE";
+  const subject = vatStatus === "subject";
+  const derivedVat = be ? normalizeVatNumber(enterprise, "BE") : null;
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
       <div className="flex flex-col gap-1.5">
@@ -158,12 +167,30 @@ function Fields({
           id="legal-name"
           name="name"
           maxLength={120}
-          placeholder="Ex. : ton nom et prénom, ou le nom de l'ASBL"
+          placeholder="Ex. : ton nom et prénom, ou le nom de ton association"
           defaultValue={v.name}
           className={inputClass}
         />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="legal-country" className={labelClass}>
+            Pays
+          </label>
+          <select
+            id="legal-country"
+            name="country"
+            value={country}
+            onChange={(event) => setCountry(event.target.value)}
+            className={inputClass}
+          >
+            {countries.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="legal-form" className={labelClass}>
             Forme juridique
@@ -181,49 +208,83 @@ function Fields({
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="legal-vat-status" className={labelClass}>
-            TVA
-          </label>
-          <select
-            id="legal-vat-status"
-            name="vatStatus"
-            value={vatStatus}
-            onChange={(event) => setVatStatus(event.target.value)}
-            className={inputClass}
-          >
-            {VAT_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {vatStatusLabels[status]}
-              </option>
-            ))}
-          </select>
-        </div>
       </div>
       <div className="flex flex-col gap-1.5">
+        <label htmlFor="legal-vat-status" className={labelClass}>
+          TVA
+        </label>
+        <select
+          id="legal-vat-status"
+          name="vatStatus"
+          value={vatStatus}
+          onChange={(event) => setVatStatus(event.target.value)}
+          className={inputClass}
+        >
+          {VAT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {vatStatusLabels[status]}
+            </option>
+          ))}
+        </select>
+      </div>
+      {subject ? (
+        <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="legal-vat-rate" className={labelClass}>
+              Taux habituel (%)
+            </label>
+            <input
+              id="legal-vat-rate"
+              name="defaultVatRate"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder={be ? "21" : "Ex. : 20"}
+              defaultValue={v.defaultVatRate}
+              aria-describedby="legal-vat-rate-hint"
+              className={`${inputClass} font-mono`}
+            />
+            <p id="legal-vat-rate-hint" className={hintClass}>
+              Proposé sur chaque facture, modifiable.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="legal-vat-number" className={labelClass}>
+              Numéro de TVA{" "}
+              {be ? (
+                <span className="font-normal text-muted">(sinon : BE + n° d&apos;entreprise)</span>
+              ) : null}
+            </label>
+            <input
+              id="legal-vat-number"
+              name="vatNumber"
+              autoComplete="off"
+              placeholder={be ? (derivedVat ?? "BE0123456749") : "Ex. : FR40303265045"}
+              defaultValue={v.vatNumber}
+              className={`${inputClass} font-mono uppercase`}
+            />
+          </div>
+        </div>
+      ) : null}
+      <div className="flex flex-col gap-1.5">
         <label htmlFor="legal-enterprise" className={labelClass}>
-          Numéro d&apos;entreprise (BCE){" "}
-          {vatStatus === "subject" ? null : (
-            <span className="font-normal text-muted">(facultatif)</span>
-          )}
+          {be ? "Numéro d'entreprise (BCE)" : "Numéro d'entreprise"}{" "}
+          <span className="font-normal text-muted">(facultatif)</span>
         </label>
         <input
           id="legal-enterprise"
           name="enterpriseNumber"
-          inputMode="numeric"
-          placeholder="0123.456.749"
+          inputMode={be ? "numeric" : "text"}
+          placeholder={be ? "0123.456.749" : "Ex. : SIRET, numéro d'immatriculation"}
           value={enterprise}
           onChange={(event) => setEnterprise(event.target.value)}
-          aria-describedby="legal-vat-preview"
+          aria-describedby="legal-enterprise-hint"
           className={`${inputClass} font-mono`}
         />
-        <FieldCheck htmlFor="legal-enterprise" rule="enterprise-number" />
-        <p id="legal-vat-preview" className={hintClass}>
-          {vatStatus === "subject"
-            ? normalized
-              ? `Numéro de TVA : ${vatNumberFor(normalized).slice(0, 2)}${formatEnterpriseNumber(normalized)}`
-              : "Ton numéro de TVA sera BE suivi de ce numéro."
-            : "Sans TVA, le numéro d'entreprise reste utile sur les factures d'une ASBL ou d'une société."}
+        {be ? <FieldCheck htmlFor="legal-enterprise" rule="enterprise-number" /> : null}
+        <p id="legal-enterprise-hint" className={hintClass}>
+          {subject && be && derivedVat
+            ? `Numéro de TVA déduit : BE${formatEnterpriseNumber(derivedVat.slice(2))}`
+            : "Imprimé sur tes factures s'il est rempli."}
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
@@ -250,7 +311,7 @@ function Fields({
             name="postalCode"
             maxLength={10}
             autoComplete="postal-code"
-            inputMode="numeric"
+            inputMode={be ? "numeric" : "text"}
             defaultValue={v.postalCode}
             className={`${inputClass} font-mono`}
           />
@@ -267,24 +328,6 @@ function Fields({
             defaultValue={v.city}
             className={inputClass}
           />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="legal-country" className={labelClass}>
-            Pays
-          </label>
-          <select id="legal-country" name="country" defaultValue={v.country} className={inputClass}>
-            {[
-              ["BE", "Belgique"],
-              ["FR", "France"],
-              ["LU", "Luxembourg"],
-              ["NL", "Pays-Bas"],
-              ["DE", "Allemagne"],
-            ].map(([code, label]) => (
-              <option key={code} value={code}>
-                {label}
-              </option>
-            ))}
-          </select>
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
@@ -315,6 +358,25 @@ function Fields({
             className={`${inputClass} font-mono`}
           />
         </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="legal-payment-details" className={labelClass}>
+          Autres coordonnées de paiement{" "}
+          <span className="font-normal text-muted">(facultatif)</span>
+        </label>
+        <textarea
+          id="legal-payment-details"
+          name="paymentDetails"
+          rows={2}
+          maxLength={300}
+          placeholder="Ex. : numéro de compte hors IBAN, routing number, lien de paiement"
+          defaultValue={v.paymentDetails}
+          aria-describedby="legal-payment-details-hint"
+          className={textareaClass}
+        />
+        <p id="legal-payment-details-hint" className={hintClass}>
+          Imprimées sur la facture, utiles dans les pays sans IBAN.
+        </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
@@ -357,7 +419,7 @@ function Fields({
           name="legalMentions"
           rows={3}
           maxLength={1000}
-          placeholder="Ex. : Régime particulier de franchise des petites entreprises."
+          placeholder="Ex. : Régime particulier de franchise des petites entreprises, ou « TVA non applicable »."
           defaultValue={v.legalMentions}
           className={textareaClass}
         />

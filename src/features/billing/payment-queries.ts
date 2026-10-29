@@ -1,5 +1,6 @@
 import "server-only";
 
+import { currencyOf, type Currency } from "@/domain/billing/money";
 import type { PaymentLike, PaymentMethod } from "@/domain/billing/payments";
 import { createClient } from "@/lib/supabase/server";
 
@@ -8,6 +9,8 @@ export type AthletePayment = PaymentLike & {
   athleteId: string;
   athleteName: string;
   method: PaymentMethod;
+  // Devise du montant reçu (D-69).
+  currency: Currency;
   label: string | null;
   // Forfait (D-52) : période couverte ; sinon null.
   coversFrom: string | null;
@@ -19,6 +22,7 @@ type Row = {
   received_on: string;
   amount_cents: number;
   vat_rate: number;
+  currency: string;
   method: string;
   label: string | null;
   covers_from: string | null;
@@ -36,7 +40,7 @@ export async function listPayments(
   let query = supabase
     .from("athlete_payments")
     .select(
-      "id, received_on, amount_cents, vat_rate, method, label, covers_from, covers_to, athlete:athlete_profiles ( id, first_name, display_name )",
+      "id, received_on, amount_cents, vat_rate, currency, method, label, covers_from, covers_to, athlete:athlete_profiles ( id, first_name, display_name )",
     )
     .eq("organization_id", organizationId)
     .order("received_on", { ascending: false })
@@ -50,6 +54,7 @@ export async function listPayments(
     receivedOn: row.received_on,
     amountCents: row.amount_cents,
     vatRate: row.vat_rate,
+    currency: currencyOf(row.currency),
     // La contrainte CHECK en base garantit cette liste fermée.
     method: row.method as PaymentMethod,
     label: row.label,

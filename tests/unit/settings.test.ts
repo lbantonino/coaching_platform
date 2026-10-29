@@ -68,12 +68,15 @@ describe("structures légales", () => {
     legalForm: "independent",
     enterpriseNumber: "0123.456.749",
     vatStatus: "subject",
+    vatNumber: "",
+    defaultVatRate: "21",
     addressLine: "Rue de la Loi 16",
     postalCode: "1000",
     city: "Bruxelles",
     country: "be",
     iban: "be68 5390 0754 7034",
     bic: "gebabebb",
+    paymentDetails: "",
     billingEmail: "factures@example.test",
     invoicePrefix: "fac",
     legalMentions: "",
@@ -89,9 +92,50 @@ describe("structures légales", () => {
       iban: "BE68539007547034",
       bic: "GEBABEBB",
       country: "BE",
+      default_vat_rate: 21,
       invoice_prefix: "FAC",
       is_default: true,
     });
+  });
+
+  // International (D-69) : formats belges seulement en Belgique, taux habituel libre.
+  it("accepte une structure étrangère avec ses propres numéros et son taux", () => {
+    const parsed = parseLegalEntity({
+      ...base,
+      country: "CH",
+      enterpriseNumber: "che-123.456.789",
+      vatNumber: "CHE-123.456.789 TVA",
+      defaultVatRate: "8,1",
+      iban: "",
+      bic: "",
+      paymentDetails: "Twint : +41 79 000 00 00",
+    });
+    expect(parsed.ok && parsed.values).toMatchObject({
+      country: "CH",
+      enterprise_number: "CHE-123.456.789",
+      vat_number: "CHE-123.456.789 TVA",
+      default_vat_rate: 8.1,
+      payment_details: "Twint : +41 79 000 00 00",
+    });
+  });
+
+  it("en Belgique, déduit le numéro d'entreprise du numéro de TVA saisi", () => {
+    const parsed = parseLegalEntity({
+      ...base,
+      enterpriseNumber: "",
+      vatNumber: "BE 0123.456.749",
+    });
+    expect(parsed.ok && parsed.values).toMatchObject({
+      enterprise_number: "0123456749",
+      vat_number: "BE0123456749",
+    });
+  });
+
+  it("un assujetti donne un taux habituel valable ; un non-assujetti n'en a pas", () => {
+    expect(parseLegalEntity({ ...base, defaultVatRate: "" }).ok).toBe(false);
+    expect(parseLegalEntity({ ...base, defaultVatRate: "150" }).ok).toBe(false);
+    const asbl = parseLegalEntity({ ...base, vatStatus: "not_subject", defaultVatRate: "21" });
+    expect(asbl.ok && asbl.values.default_vat_rate).toBeNull();
   });
 
   it("une ASBL non assujettie n'a pas de numéro de TVA", () => {
@@ -102,7 +146,7 @@ describe("structures légales", () => {
   it("refuse un assujetti sans numéro, un IBAN ou un numéro d'entreprise faux", () => {
     expect(parseLegalEntity({ ...base, enterpriseNumber: "" })).toEqual({
       ok: false,
-      error: "Un assujetti à la TVA a besoin de son numéro d'entreprise.",
+      error: "Un assujetti à la TVA a besoin de son numéro de TVA.",
     });
     expect(parseLegalEntity({ ...base, iban: "BE68 5390 0754 7035" }).ok).toBe(false);
     expect(parseLegalEntity({ ...base, enterpriseNumber: "0123.456.748" }).ok).toBe(false);

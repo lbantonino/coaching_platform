@@ -130,6 +130,14 @@ test("le coach gère ses catégories : ajouter, ranger, renommer, supprimer", as
   await manager.getByLabel(`Nom de la catégorie ${category}`).fill(`${category} bis`);
   await manager.getByRole("button", { name: "Enregistrer" }).click();
   await expect(manager.getByLabel(`Nom de la catégorie ${category} bis`)).toBeVisible();
+  // Couleur (D-68) : le rond ouvre la palette, le choix est enregistré.
+  const color = manager.getByRole("button", { name: `Couleur de la catégorie ${category} bis :` });
+  await color.click();
+  await manager
+    .getByRole("radiogroup", { name: `Couleur de la catégorie ${category} bis` })
+    .getByRole("radio", { name: "Rose" })
+    .click();
+  await expect(color).toHaveAccessibleName(`Couleur de la catégorie ${category} bis : Rose`);
   await manager.getByRole("button", { name: `Supprimer la catégorie ${category} bis` }).click();
   await page
     .getByRole("dialog", { name: "Supprimer cette catégorie ?" })

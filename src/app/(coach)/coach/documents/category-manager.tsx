@@ -1,19 +1,27 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Check, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { categoryDotClass } from "@/components/blocks/category-color";
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, inputClass } from "@/components/ui/form-styles";
 import { ConfirmDialog } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { CATEGORY_NAME_MAX, type DocumentCategory } from "@/domain/documents/documents";
+import {
+  CATEGORY_COLORS,
+  CATEGORY_NAME_MAX,
+  categoryColorLabels,
+  type CategoryColor,
+  type DocumentCategory,
+} from "@/domain/documents/documents";
 import type { CategoryResult } from "@/features/documents/actions";
 
 // « Gérer les catégories » de la page Documents (D-67) : le coach range ses documents à sa façon.
 // Ajouter, renommer (le nom se modifie sur place, « Enregistrer » apparaît quand il change),
-// supprimer (confirmation ; les documents restent, « sans catégorie »).
+// supprimer (confirmation ; les documents restent, « sans catégorie »). Le rond de couleur ouvre la
+// palette (D-68) : l'icône des documents de la catégorie prend cette couleur.
 export function CategoryManager({
   categories,
   actions,
@@ -23,6 +31,7 @@ export function CategoryManager({
     create: (name: string) => Promise<CategoryResult>;
     rename: (categoryId: string, name: string) => Promise<CategoryResult>;
     remove: (categoryId: string) => Promise<CategoryResult>;
+    recolor: (categoryId: string, color: string) => Promise<CategoryResult>;
   };
 }) {
   const router = useRouter();
@@ -54,6 +63,9 @@ export function CategoryManager({
             category={category}
             pending={pending}
             onRename={(name) => run(() => actions.rename(category.id, name), "Catégorie renommée.")}
+            onRecolor={(color) =>
+              run(() => actions.recolor(category.id, color), "Couleur enregistrée.")
+            }
             onDelete={() => setDeleting(category)}
           />
         ))}
@@ -128,50 +140,97 @@ function CategoryRow({
   category,
   pending,
   onRename,
+  onRecolor,
   onDelete,
 }: {
   category: DocumentCategory;
   pending: boolean;
   onRename: (name: string) => void;
+  onRecolor: (color: CategoryColor) => void;
   onDelete: () => void;
 }) {
   const [name, setName] = useState(category.name);
+  const [picking, setPicking] = useState(false);
   const changed = name.trim() !== category.name && name.trim() !== "";
   return (
-    <li className="flex items-center gap-2 border-t border-line py-2 first:border-t-0">
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (changed) onRename(name);
-        }}
-        className="flex min-w-0 flex-1 items-center gap-2"
-      >
-        <input
-          value={name}
-          maxLength={CATEGORY_NAME_MAX}
-          onChange={(event) => setName(event.target.value)}
-          aria-label={`Nom de la catégorie ${category.name}`}
-          autoComplete="off"
-          className={`${inputClass} min-w-0 flex-1`}
-        />
-        {changed ? (
-          <button
-            type="submit"
-            disabled={pending}
-            className={buttonClass({ variant: "primary", className: "h-[50px] shrink-0" })}
-          >
-            Enregistrer
-          </button>
-        ) : null}
-      </form>
-      <button
-        type="button"
-        onClick={onDelete}
-        aria-label={`Supprimer la catégorie ${category.name}`}
-        className="inline-flex size-11 shrink-0 items-center justify-center rounded-control text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-alert"
-      >
-        <Trash2 aria-hidden size={17} strokeWidth={1.8} />
-      </button>
+    <li className="flex flex-col gap-2 border-t border-line py-2 first:border-t-0">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setPicking((open) => !open)}
+          aria-expanded={picking}
+          aria-label={`Couleur de la catégorie ${category.name} : ${categoryColorLabels[category.color]}`}
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-control transition-colors duration-150 hover:bg-surface-2"
+        >
+          <span aria-hidden className={`size-5 rounded-full ${categoryDotClass[category.color]}`} />
+        </button>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (changed) onRename(name);
+          }}
+          className="flex min-w-0 flex-1 items-center gap-2"
+        >
+          <input
+            value={name}
+            maxLength={CATEGORY_NAME_MAX}
+            onChange={(event) => setName(event.target.value)}
+            aria-label={`Nom de la catégorie ${category.name}`}
+            autoComplete="off"
+            className={`${inputClass} min-w-0 flex-1`}
+          />
+          {changed ? (
+            <button
+              type="submit"
+              disabled={pending}
+              className={buttonClass({ variant: "primary", className: "h-[50px] shrink-0" })}
+            >
+              Enregistrer
+            </button>
+          ) : null}
+        </form>
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label={`Supprimer la catégorie ${category.name}`}
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-control text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-alert"
+        >
+          <Trash2 aria-hidden size={17} strokeWidth={1.8} />
+        </button>
+      </div>
+      {picking ? (
+        <div
+          role="radiogroup"
+          aria-label={`Couleur de la catégorie ${category.name}`}
+          className="flex flex-wrap gap-1 pl-1"
+        >
+          {CATEGORY_COLORS.map((color) => {
+            const current = color === category.color;
+            return (
+              <button
+                key={color}
+                type="button"
+                role="radio"
+                aria-checked={current}
+                aria-label={categoryColorLabels[color]}
+                disabled={pending}
+                onClick={() => {
+                  setPicking(false);
+                  if (!current) onRecolor(color);
+                }}
+                className="inline-flex size-11 items-center justify-center rounded-control transition-colors duration-150 hover:bg-surface-2"
+              >
+                <span
+                  aria-hidden
+                  className={`inline-flex size-7 items-center justify-center rounded-full ${categoryDotClass[color]} ${current ? "ring-2 ring-text ring-offset-2 ring-offset-surface" : ""}`}
+                >
+                  {current ? <Check size={14} strokeWidth={2.4} className="text-page" /> : null}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </li>
   );
 }

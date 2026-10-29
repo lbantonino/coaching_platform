@@ -47,7 +47,11 @@ describe("Document d'une facture émise (D-65)", () => {
     ).toEqual(["Rue de l'Exemple 1", "1000 Bruxelles"]);
     expect(
       addressLines({ addressLine: null, postalCode: null, city: "Lille", country: "FR" }),
-    ).toEqual(["Lille", "FR"]);
+    ).toEqual(["Lille", "France"]);
+    // Vendeur français (D-69) : c'est la Belgique qui s'écrit, pas la France.
+    expect(
+      addressLines({ addressLine: null, postalCode: null, city: "Lille", country: "FR" }, "FR"),
+    ).toEqual(["Lille"]);
     expect(
       addressLines({ addressLine: null, postalCode: null, city: null, country: null }),
     ).toEqual([]);

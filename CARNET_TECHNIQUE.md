@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda, factures émises, classement des Documents).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda, factures émises, classement des Documents, Coory à l'international).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -380,6 +380,11 @@ Sur les factures, le coach saisit maintenant son prix **hors TVA** (c'est ainsi 
 
 ---
 
+
+### Une app vendable hors de Belgique (29/10)
+Jusqu'ici, l'euro et la TVA belge (21, 12, 6, 0 %) étaient écrits partout. Pour vendre Coory ailleurs, trois idées. **Le taux de TVA devient libre** : plutôt que de tenir une liste de taux pour chaque pays (et de la suivre à chaque changement de loi), le coach écrit le sien une fois dans sa structure, et Coory le propose sur chaque facture. Les calculs se font en **nombres entiers** (8,1 % devient 810 centièmes de point) : en JavaScript, 0,1 + 0,2 ne fait pas exactement 0,3, et un centime perdu sur une facture, ça se voit. **Chaque montant garde sa devise** : un paiement reçu en euros reste en euros, même si le coach déménage en Suisse ; c'est la base (un trigger) qui pose la devise, jamais le navigateur. Et le **pays décide des formats** : le contrôle du numéro belge ne s'applique qu'à une structure belge.
+
+L'inscription demande tout cela tout de suite (pays deviné d'après la langue du navigateur, devise proposée d'après le pays), mais la TVA peut attendre : un coach qui ne facture pas avec Coory utilise quand même l'agenda et les programmes. Détail appris en route : dans une fonction SQL `SECURITY DEFINER`, `current_user` est le propriétaire de la fonction, pas la personne qui l'appelle ; le trigger de devise est donc en `SECURITY INVOKER` pour savoir qui écrit. Autre détail : les noms des pays sont **figés dans un fichier** plutôt que calculés à la volée, pour que le serveur et chaque navigateur affichent exactement le même texte. Les icônes des documents ont aussi pris la **couleur de leur catégorie** (Facture en or, Bilan en bleu), choisie dans une palette fermée de jetons du design system.
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
 
 Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraiment.
@@ -449,4 +454,6 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Mise à jour optimiste** : l'écran montre tout de suite le résultat d'un clic, avant la réponse du serveur, et revient en arrière si elle échoue.
 - **Exception (de récurrence)** : une date d'une série hebdomadaire qui a lieu ailleurs (autre jour ou autre heure), notée à part sans toucher à la série.
 - **Déclencheur (trigger)** : petit programme de la base lancé automatiquement à chaque écriture, pour vérifier ou compléter une ligne.
+- **Devise ISO 4217** : code à trois lettres d'une monnaie (EUR, CHF, USD) ; Coory ne garde que celles qui ont des centimes.
+- **SECURITY INVOKER** : fonction de la base qui s'exécute avec les droits de celui qui l'appelle (le contraire de SECURITY DEFINER).
 - **Clé secrète (service role)** : clé Supabase qui contourne la RLS ; réservée au serveur, à quelques procédures précises.

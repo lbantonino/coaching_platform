@@ -6,12 +6,9 @@ import { ListRow } from "@/components/blocks/list-row";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card, CardEmpty, CardTitle } from "@/components/ui/card";
-import {
-  formatEuros,
-  invoiceStatus,
-  invoiceStatusLabels,
-  monthActivity,
-} from "@/domain/billing/invoices";
+import { invoiceStatus, invoiceStatusLabels, monthActivity } from "@/domain/billing/invoices";
+import { formatMoney } from "@/domain/billing/money";
+import { paymentMethodLabel } from "@/domain/billing/payments";
 import { addDays } from "@/features/agenda/items";
 import { listAthletes } from "@/features/athletes/queries";
 import { requireCoach } from "@/features/auth/guards";
@@ -53,6 +50,9 @@ async function Billing() {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
   const { user, memberships } = await requireCoach();
   const organizationId = memberships[0].organizationId;
+  // Devise et pays de l'organisation (D-69) : totaux, et « Bancontact » ou « Carte bancaire ».
+  const { currency, country } = memberships[0];
+  const bankCard = paymentMethodLabel("bancontact", country);
   const today = todayIsoInBrussels();
   const profile = await getCoachProfile(user);
   const includeCash = profile.preferences.invoiceCash;
@@ -83,6 +83,7 @@ async function Billing() {
               id: entity.id,
               name: entity.name,
               vatSubject: entity.vatStatus === "subject",
+              defaultVatRate: entity.defaultVatRate,
             }))}
             today={today}
             dueDefault={addDays(today, 15)}
@@ -100,8 +101,8 @@ async function Billing() {
           }
           subtitle={
             includeCash
-              ? "Paiements reçus sans facture, sur 12 mois (virement, Bancontact, espèces)."
-              : "Paiements reçus sur ton compte (virement, Bancontact) sans facture, sur 12 mois. Les espèces : réglage dans Paramètres, ou « Créer une facture »."
+              ? `Paiements reçus sans facture, sur 12 mois (virement, ${bankCard}, espèces).`
+              : `Paiements reçus sur ton compte (virement, ${bankCard}) sans facture, sur 12 mois. Les espèces : réglage dans Paramètres, ou « Créer une facture ».`
           }
         >
           {toInvoice.length === 0 ? (
@@ -119,7 +120,7 @@ async function Billing() {
                     title={payment.athleteName}
                     sub={[
                       payment.label,
-                      `${formatEuros(payment.amountCents)} ${payment.method === "cash" ? "en espèces" : payment.method === "bancontact" ? "par Bancontact" : "par virement"}`,
+                      `${formatMoney(payment.amountCents, payment.currency)} ${payment.method === "cash" ? "en espèces" : payment.method === "bancontact" ? `par ${bankCard}` : "par virement"}`,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
@@ -144,7 +145,7 @@ async function Billing() {
               Factures
             </CardTitle>
           }
-          subtitle={`${formatEuros(activity.sent.cents)} émis ce mois-ci · ${formatEuros(activity.pending.cents)} en attente`}
+          subtitle={`${formatMoney(activity.sent.cents, currency)} émis ce mois-ci · ${formatMoney(activity.pending.cents, currency)} en attente`}
         >
           {invoices.length === 0 ? (
             <CardEmpty icon={FileText}>Aucune facture pour l&apos;instant.</CardEmpty>
@@ -177,7 +178,7 @@ async function Billing() {
                       trailing={
                         <span className="flex flex-col items-end gap-1 lg:flex-row lg:items-center lg:gap-3">
                           <span className="text-[15px] font-semibold tabular">
-                            {formatEuros(invoice.amountCents)}
+                            {formatMoney(invoice.amountCents, invoice.currency)}
                           </span>
                           {draft ? (
                             <Badge>Brouillon</Badge>

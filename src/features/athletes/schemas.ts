@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { COUNTRY_NAMES } from "@/domain/geo/country-names";
+import { isCountryCode } from "@/domain/geo/countries";
+
 // Champ texte facultatif : une chaîne vide (champ laissé blanc) devient null.
 const optionalText = (schema: z.ZodType<string, string>) =>
   z
@@ -85,13 +88,8 @@ export const ATHLETE_STATUSES = ["active", "paused", "archived"] as const;
 
 // Adresse postale (D-65) : sur la fiche du sportif, reprise sur ses factures. Alignée sur les
 // contraintes CHECK de supabase/migrations/*_factures_emises.sql.
-export const COUNTRIES = [
-  ["BE", "Belgique"],
-  ["FR", "France"],
-  ["LU", "Luxembourg"],
-  ["NL", "Pays-Bas"],
-  ["DE", "Allemagne"],
-] as const;
+// Pays d'une adresse (D-69) : tous les pays, noms en français (liste figée, triée).
+export const COUNTRIES = COUNTRY_NAMES;
 export const addressSchema = z.object({
   addressLine: optionalText(
     z.string().max(160, { error: "L'adresse est trop longue (160 caractères maximum)." }),
@@ -105,10 +103,7 @@ export const addressSchema = z.object({
   city: optionalText(
     z.string().max(80, { error: "Le nom de la ville est trop long (80 caractères maximum)." }),
   ),
-  country: z.enum(
-    COUNTRIES.map(([code]) => code),
-    { error: "Pays invalide." },
-  ),
+  country: z.string().refine(isCountryCode, { error: "Pays invalide." }),
 });
 
 // Modification d'une fiche : identité et contact, statut, puis le profil sportif (P2-02 partie 1).

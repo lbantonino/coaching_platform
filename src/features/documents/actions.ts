@@ -6,6 +6,8 @@ import { z } from "zod";
 import {
   checkDocument,
   DOCUMENT_MAX_BYTES,
+  isCategoryColor,
+  nextCategoryColor,
   parseCategoryName,
   parseDocumentForm,
   type DocumentFormValues,
@@ -180,9 +182,14 @@ export async function createDocumentCategory(
   const parsed = parseCategoryName(String(rawName ?? ""));
   if (!parsed.ok) return { ok: false, error: parsed.error };
   const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("document_categories")
+    .select("color")
+    .eq("organization_id", membership.organizationId);
   const { error } = await supabase.from("document_categories").insert({
     organization_id: membership.organizationId,
     name: parsed.name,
+    color: nextCategoryColor((existing ?? []).map((row) => row.color)),
     created_by: user.id,
   });
   if (error) {
@@ -219,6 +226,30 @@ export async function renameDocumentCategory(
     };
   }
   if (!data?.length) return { ok: false, error: "Catégorie introuvable." };
+  revalidateDocuments();
+  return { ok: true, error: null };
+}
+
+// Couleur d'une catégorie (D-68) : l'icône de ses documents la prend.
+export async function setDocumentCategoryColor(
+  organizationId: string,
+  categoryId: string,
+  color: string,
+): Promise<CategoryResult> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (!z.uuid().safeParse(categoryId).success)
+    return { ok: false, error: "Catégorie introuvable." };
+  if (!isCategoryColor(color)) return { ok: false, error: "Couleur invalide." };
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("document_categories")
+    .update({ color })
+    .eq("id", categoryId)
+    .eq("organization_id", membership.organizationId)
+    .select("id");
+  if (error || !data?.length) {
+    return { ok: false, error: "La couleur n'a pas pu être changée." };
+  }
   revalidateDocuments();
   return { ok: true, error: null };
 }

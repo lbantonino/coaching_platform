@@ -16,10 +16,14 @@ import {
   type OnboardingState,
   type SignupValues,
 } from "@/features/auth/signup-actions";
+import type { BillingSetupInput } from "@/features/auth/signup-schemas";
+
+import { BillingSetupFields } from "./billing-setup-fields";
 
 // Bienvenue (prompt Claude Design §7.1) pour une inscription par e-mail : le type de compte, le nom
-// et l'acceptation des conditions sont connus. Le bouton finalise le compte (complete_signup :
-// organisation du coach, ou compte sportif en attente d'invitation) puis ouvre l'espace.
+// et l'acceptation des conditions sont connus. Le coach règle encore sa facturation (pays, devise,
+// TVA facultative, D-69). Le bouton finalise le compte (complete_signup : organisation du coach,
+// ou compte sportif en attente d'invitation) puis ouvre l'espace.
 const firstSteps = [
   { icon: UserPlus, label: "Ajoute ton premier sportif", time: "2 min" },
   { icon: CalendarPlus, label: "Planifie une séance", time: "1 min" },
@@ -32,7 +36,13 @@ const athleteSteps = [
   "Ta séance du jour t'attend dans « Aujourd'hui »",
 ];
 
-export function WelcomeReady({ values }: { values: SignupValues }) {
+export function WelcomeReady({
+  values,
+  billing,
+}: {
+  values: SignupValues;
+  billing: BillingSetupInput;
+}) {
   const [state, formAction, pending] = useActionState(completeSignup, {
     error: null,
     attempt: 0,
@@ -71,6 +81,7 @@ export function WelcomeReady({ values }: { values: SignupValues }) {
               </span>
             </div>
           </InfoCard>
+          <BillingSetupFields key={state.attempt} initial={state.billing ?? billing} />
           <div className="flex flex-col gap-2">
             <p className="font-mono text-[12px] font-medium tracking-[0.06em] text-muted uppercase">
               Pour bien démarrer

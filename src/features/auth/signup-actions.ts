@@ -10,7 +10,13 @@ import { getHomePath } from "./guards";
 import { enabledProviders, type OAuthProvider } from "./providers";
 import { requireUser } from "./session";
 import { readSignupEmail, rememberSignupEmail } from "./signup-cookie";
-import { onboardingSchema, signupSchema, TERMS_VERSION } from "./signup-schemas";
+import {
+  onboardingSchema,
+  parseBillingSetup,
+  signupSchema,
+  TERMS_VERSION,
+  type BillingSetupInput,
+} from "./signup-schemas";
 
 // Saisie renvoyée après une erreur (jamais les mots de passe) : React 19 vide le formulaire.
 export type SignupValues = {
@@ -144,6 +150,8 @@ export type OnboardingState = {
   error: string | null;
   attempt: number;
   values: SignupValues | null;
+  // Étape « Ta facturation » du coach (D-69), renvoyée après une erreur.
+  billing?: BillingSetupInput | null;
 };
 
 const onboardingErrors: Record<string, string> = {
@@ -167,13 +175,29 @@ export async function completeSignup(
     phone: field("phone"),
     organizationName: field("organizationName"),
   };
-  const fail = (error: string) => ({ error, attempt: previous.attempt + 1, values });
+  const billingInput: BillingSetupInput = {
+    country: field("country"),
+    currency: field("currency"),
+    vatChoice: field("vatChoice"),
+    vatRate: field("vatRate"),
+    vatNumber: field("vatNumber"),
+  };
+  const fail = (error: string) => ({
+    error,
+    attempt: previous.attempt + 1,
+    values,
+    billing: billingInput,
+  });
 
   const parsed = onboardingSchema.safeParse({
     ...values,
     terms: formData.get("terms") ?? undefined,
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
+  // Coach : pays, devise et TVA (facultative). Sportif : rien à demander.
+  const billing = parsed.data.kind === "coach" ? parseBillingSetup(billingInput) : null;
+  if (billing && !billing.ok) return fail(billing.error);
+  const setup = billing?.ok ? billing.setup : null;
 
   const supabase = await createClient();
   const { error } = await supabase.rpc("complete_signup", {
@@ -183,6 +207,15 @@ export async function completeSignup(
     p_phone: parsed.data.phone ?? "",
     p_organization_name: parsed.data.organizationName ?? "",
     p_terms_version: TERMS_VERSION,
+    ...(setup
+      ? {
+          p_country: setup.country,
+          p_currency: setup.currency,
+          p_vat_status: setup.vatStatus ?? undefined,
+          p_vat_rate: setup.vatRate ?? undefined,
+          p_vat_number: setup.vatNumber ?? undefined,
+        }
+      : {}),
   });
   if (error && error.message !== "deja_inscrit") {
     return fail(onboardingErrors[error.message] ?? "Ton espace n'a pas pu être créé. Réessaie.");

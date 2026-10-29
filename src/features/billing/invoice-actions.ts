@@ -10,7 +10,8 @@ import {
   vatRateFor,
   type AmountMode,
 } from "@/domain/billing/invoice-document";
-import { PAYMENT_METHODS, VAT_RATES, parseEuros } from "@/domain/billing/payments";
+import { vatRateField } from "@/domain/billing/money";
+import { PAYMENT_METHODS, parseAmount } from "@/domain/billing/payments";
 import { addressSchema, newAthleteSchema } from "@/features/athletes/schemas";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { listLegalEntities } from "@/features/coach/legal-queries";
@@ -103,9 +104,7 @@ const draftSchema = z
       (value) => (value === "" ? null : value),
       z.iso.date({ error: "Date de la prestation invalide." }).nullable(),
     ),
-    vatRate: z.coerce.number().refine((rate) => (VAT_RATES as readonly number[]).includes(rate), {
-      error: "Taux de TVA invalide.",
-    }),
+    vatRate: vatRateField,
     clientName: z
       .string()
       .trim()
@@ -130,7 +129,7 @@ export async function updateInvoiceDraft(
     legalEntityId: formData.get("legalEntityId"),
     label: formData.get("label") ?? "",
     serviceOn: formData.get("serviceOn") ?? "",
-    vatRate: formData.get("vatRate") ?? "21",
+    vatRate: formData.get("vatRate") ?? "0",
     clientName: formData.get("clientName") ?? "",
     addressLine: formData.get("addressLine") ?? "",
     postalCode: formData.get("postalCode") ?? "",
@@ -138,7 +137,7 @@ export async function updateInvoiceDraft(
     country: formData.get("country") ?? "BE",
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
-  const entered = parseEuros(String(formData.get("amount") ?? ""));
+  const entered = parseAmount(String(formData.get("amount") ?? ""));
   if (entered === null) return fail("Indique le montant (ex. : 65).");
 
   const entity = (await listLegalEntities(membership.organizationId)).find(
@@ -270,9 +269,7 @@ const newInvoiceSchema = z.object({
     .trim()
     .min(1, { error: "Décris la prestation." })
     .max(120, { error: "Description trop longue (120 caractères maximum)." }),
-  vatRate: z.coerce.number().refine((rate) => (VAT_RATES as readonly number[]).includes(rate), {
-    error: "Taux de TVA invalide.",
-  }),
+  vatRate: vatRateField,
   serviceOn: z.preprocess(
     (value) => (value === "" ? null : value),
     z.iso.date({ error: "Date de la prestation invalide." }).nullable(),
@@ -301,7 +298,7 @@ export async function createInvoice(
     label: text("label"),
     amount: text("amount"),
     amountMode: amountModeOf(formData),
-    vatRate: text("vatRate") || "21",
+    vatRate: text("vatRate") || "0",
     serviceOn: text("serviceOn"),
     paid: text("paid") !== "no",
     receivedOn: text("receivedOn"),
@@ -316,7 +313,7 @@ export async function createInvoice(
 
   const parsed = newInvoiceSchema.safeParse(values);
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
-  const entered = parseEuros(values.amount);
+  const entered = parseAmount(values.amount);
   if (entered === null) return fail("Indique le montant (ex. : 65).");
   const today = todayIsoInBrussels();
   if (values.paid) {

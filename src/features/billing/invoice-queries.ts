@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { VatStatus } from "@/domain/billing/legal";
+import { currencyOf, type Currency } from "@/domain/billing/money";
 import { listLegalEntities, type LegalEntity } from "@/features/coach/legal-queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,6 +22,8 @@ export type InvoiceSeller = {
   country: string | null;
   iban: string | null;
   bic: string | null;
+  // Coordonnées de paiement libres (D-69) ; absentes des factures émises avant.
+  paymentDetails?: string | null;
   email: string | null;
   legalMentions: string | null;
 };
@@ -32,6 +35,7 @@ export type InvoiceDetail = {
   label: string;
   amountCents: number;
   vatRate: number;
+  currency: Currency;
   issuedOn: string;
   dueOn: string;
   paidOn: string | null;
@@ -60,6 +64,7 @@ const sellerFromEntity = (entity: LegalEntity): InvoiceSeller => ({
   country: entity.country,
   iban: entity.iban,
   bic: entity.bic,
+  paymentDetails: entity.paymentDetails,
   email: entity.billingEmail,
   legalMentions: entity.legalMentions,
 });
@@ -72,7 +77,7 @@ export async function getInvoice(
   const { data, error } = await supabase
     .from("athlete_invoices")
     .select(
-      "id, status, number, label, amount_cents, vat_rate, issued_on, due_on, paid_on, service_on, athlete_id, payment_id, legal_entity_id, client_name, client_address_line, client_postal_code, client_city, client_country, seller",
+      "id, status, number, label, amount_cents, vat_rate, currency, issued_on, due_on, paid_on, service_on, athlete_id, payment_id, legal_entity_id, client_name, client_address_line, client_postal_code, client_city, client_country, seller",
     )
     .eq("organization_id", organizationId)
     .eq("id", invoiceId)
@@ -96,7 +101,8 @@ export async function getInvoice(
     number: data.number,
     label: data.label,
     amountCents: data.amount_cents,
-    vatRate: data.vat_rate ?? 21,
+    vatRate: data.vat_rate ?? 0,
+    currency: currencyOf(data.currency),
     issuedOn: data.issued_on,
     dueOn: data.due_on,
     paidOn: data.paid_on,
@@ -119,6 +125,7 @@ export type InvoiceablePayment = {
   id: string;
   receivedOn: string;
   amountCents: number;
+  currency: Currency;
   label: string | null;
   method: "transfer" | "bancontact" | "cash";
   athleteName: string;
@@ -128,13 +135,14 @@ type PaymentRow = {
   id: string;
   received_on: string;
   amount_cents: number;
+  currency: string;
   label: string | null;
   method: string;
   athlete: { first_name: string; last_name: string | null; display_name: string | null } | null;
   invoices: { id: string }[];
 };
 
-// « À facturer » : les paiements reçus SUR LE COMPTE (virement, Bancontact) des 12 derniers mois,
+// « À facturer » : les paiements reçus SUR LE COMPTE (virement, Bancontact / carte) des 12 derniers mois,
 // d'un sportif connu, sans facture (brouillon compris). Les espèces seulement si le coach l'a choisi
 // dans ses Paramètres (D-66) : Gianluca ne les facture jamais, d'autres coachs oui.
 export async function listInvoiceablePayments(
@@ -146,7 +154,7 @@ export async function listInvoiceablePayments(
   const { data, error } = await supabase
     .from("athlete_payments")
     .select(
-      "id, received_on, amount_cents, label, method, athlete:athlete_profiles ( first_name, last_name, display_name ), invoices:athlete_invoices ( id )",
+      "id, received_on, amount_cents, currency, label, method, athlete:athlete_profiles ( first_name, last_name, display_name ), invoices:athlete_invoices ( id )",
     )
     .eq("organization_id", organizationId)
     .in("method", includeCash ? ["transfer", "bancontact", "cash"] : ["transfer", "bancontact"])
@@ -161,6 +169,7 @@ export async function listInvoiceablePayments(
       id: row.id,
       receivedOn: row.received_on,
       amountCents: row.amount_cents,
+      currency: currencyOf(row.currency),
       label: row.label,
       method: row.method === "bancontact" || row.method === "cash" ? row.method : "transfer",
       athleteName: row.athlete

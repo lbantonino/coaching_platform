@@ -1,12 +1,13 @@
-import { FileText, FolderOpen, Upload } from "lucide-react";
+import { FileSpreadsheet, FileText, FolderOpen, ImageIcon, Upload } from "lucide-react";
 import Link from "next/link";
 
 import { ListRow } from "@/components/blocks/list-row";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardEmpty } from "@/components/ui/card";
+import { tileClassFor } from "@/components/blocks/category-color";
 import { formatBytes } from "@/domain/documents/documents";
-import { listDocuments } from "@/features/documents/queries";
+import { listDocuments, type CoachDocument } from "@/features/documents/queries";
 import { formatDate } from "@/lib/format";
 
 // Onglet « Documents » de la fiche sportif (option D du classement, D-67) : les documents liés à ce
@@ -49,6 +50,7 @@ export async function AthleteDocuments({
             <li key={document.id}>
               <ListRow
                 href={`/documents/${document.id}`}
+                leading={<DocumentTile document={document} />}
                 title={document.name}
                 sub={`${formatBytes(document.sizeBytes)} · ${formatDate(document.updatedAt.slice(0, 10))}`}
                 trailing={<Badge>{document.categoryName ?? "Sans catégorie"}</Badge>}
@@ -58,5 +60,19 @@ export async function AthleteDocuments({
         </ul>
       )}
     </Card>
+  );
+}
+
+// Icône du type de fichier, dans la couleur de sa catégorie (D-68), comme sur la page Documents.
+function DocumentTile({ document }: { document: CoachDocument }) {
+  const Icon =
+    document.kind === "image" ? ImageIcon : document.kind === "excel" ? FileSpreadsheet : FileText;
+  return (
+    <span
+      aria-hidden
+      className={`inline-flex size-10 shrink-0 items-center justify-center rounded-[11px] ${tileClassFor(document.categoryColor)}`}
+    >
+      <Icon size={18} strokeWidth={1.8} />
+    </span>
   );
 }

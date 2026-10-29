@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Currency } from "@/domain/billing/money";
 import type { CoachMembership, CurrentUser } from "@/features/auth/session";
 
 import { listLegalEntities, type LegalEntity } from "./legal-queries";
@@ -17,7 +18,8 @@ export type SettingsData = {
   notify: Record<NotificationKind, boolean>;
   // Facturation (D-66) : proposer aussi les espèces dans « À facturer ».
   invoiceCash: boolean;
-  organization: { id: string; name: string; isOwner: boolean };
+  // Pays et devise de l'organisation (D-69).
+  organization: { id: string; name: string; isOwner: boolean; country: string; currency: Currency };
   entities: LegalEntity[];
 };
 
@@ -57,6 +59,8 @@ export async function getSettingsData(
       id: membership.organizationId,
       name: membership.organizationName,
       isOwner: membership.role === "owner",
+      country: membership.country,
+      currency: membership.currency,
     },
     entities,
   };

@@ -13,9 +13,12 @@ import { Card, CardEmpty } from "@/components/ui/card";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { LogoutButton } from "@/components/ui/logout-button";
 import { ThemeChoice } from "@/components/ui/theme-choice";
+import { formatVatRate } from "@/domain/billing/money";
+import { countryName } from "@/domain/geo/countries";
 import {
   formatEnterpriseNumber,
   formatIban,
+  formatVatNumber,
   legalFormLabels,
   vatStatusLabels,
 } from "@/domain/billing/legal";
@@ -29,6 +32,7 @@ import { LegalEntityButton } from "./legal-entity-sheet";
 import { SECTIONS } from "./sections";
 import {
   EmailForm,
+  CountryCurrencyForm,
   InvoiceCashToggle,
   NotificationToggles,
   OrganizationForm,
@@ -252,6 +256,14 @@ export function SettingsPanel({
 
         {shown === "facturation" ? (
           <>
+            <Card id="settings-country" title="Pays et devise">
+              <CountryCurrencyForm
+                organizationId={data.organization.id}
+                country={data.organization.country}
+                currency={data.organization.currency}
+                isOwner={data.organization.isOwner}
+              />
+            </Card>
             <Card id="settings-invoice-cash" title="Factures">
               <InvoiceCashToggle value={data.invoiceCash} />
             </Card>
@@ -363,16 +375,22 @@ function LegalEntityCard({
     ],
     [
       "TVA",
-      entity.vatNumber
-        ? `${vatStatusLabels[entity.vatStatus]} · BE${formatEnterpriseNumber(entity.vatNumber.slice(2))}`
-        : vatStatusLabels[entity.vatStatus],
+      [
+        vatStatusLabels[entity.vatStatus],
+        entity.vatNumber ? formatVatNumber(entity.vatNumber) : null,
+        entity.defaultVatRate !== null
+          ? `taux habituel ${formatVatRate(entity.defaultVatRate)}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
     ],
     [
       "Adresse",
       [
         entity.addressLine,
         [entity.postalCode, entity.city].filter(Boolean).join(" "),
-        entity.country,
+        countryName(entity.country),
       ]
         .filter(Boolean)
         .join(", ") || null,
@@ -381,6 +399,7 @@ function LegalEntityCard({
       "IBAN",
       entity.iban ? `${formatIban(entity.iban)}${entity.bic ? ` · ${entity.bic}` : ""}` : null,
     ],
+    ["Paiement", entity.paymentDetails],
     ["Facturation", entity.billingEmail],
     ["Factures", `${entity.invoicePrefix}-${new Date().getFullYear()}-001, -002…`],
   ];
@@ -411,12 +430,18 @@ function LegalEntityCard({
                 ? formatEnterpriseNumber(entity.enterpriseNumber)
                 : "",
               vatStatus: entity.vatStatus,
+              vatNumber: entity.vatNumber ? formatVatNumber(entity.vatNumber) : "",
+              defaultVatRate:
+                entity.defaultVatRate !== null
+                  ? String(entity.defaultVatRate).replace(".", ",")
+                  : "",
               addressLine: entity.addressLine ?? "",
               postalCode: entity.postalCode ?? "",
               city: entity.city ?? "",
               country: entity.country,
               iban: entity.iban ? formatIban(entity.iban) : "",
               bic: entity.bic ?? "",
+              paymentDetails: entity.paymentDetails ?? "",
               billingEmail: entity.billingEmail ?? "",
               invoicePrefix: entity.invoicePrefix,
               legalMentions: entity.legalMentions ?? "",

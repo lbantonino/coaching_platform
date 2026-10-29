@@ -4,13 +4,15 @@ import {
   LEGAL_FORMS,
   VAT_STATUSES,
   normalizeBic,
-  normalizeEnterpriseNumber,
+  normalizeCompanyNumber,
   normalizeIban,
-  vatNumberFor,
+  normalizeVatNumber,
   type LegalForm,
   type VatStatus,
 } from "@/domain/billing/legal";
-import { parseEuros } from "@/domain/billing/payments";
+import { parseVatRate } from "@/domain/billing/money";
+import { parseAmount } from "@/domain/billing/payments";
+import { isCountryCode } from "@/domain/geo/countries";
 import { emailField, newPasswordField } from "@/features/auth/schemas";
 
 // Page Paramètres (D-57) : règles PURES des formulaires, testées par Vitest. Les actions serveur les
@@ -77,7 +79,7 @@ export function parsePreferences(
   }
   let price: number | null = null;
   if (input.defaultPrice.trim() !== "") {
-    price = parseEuros(input.defaultPrice);
+    price = parseAmount(input.defaultPrice);
     if (price === null)
       return { ok: false, error: "Prix invalide : écris par exemple 65 ou 65,50." };
   }
@@ -143,12 +145,17 @@ export type LegalEntityInput = {
   legalForm: string;
   enterpriseNumber: string;
   vatStatus: string;
+  // Assujetti (D-69) : son numéro de TVA (en Belgique, déduit du numéro d'entreprise s'il est vide)
+  // et son taux habituel.
+  vatNumber: string;
+  defaultVatRate: string;
   addressLine: string;
   postalCode: string;
   city: string;
   country: string;
   iban: string;
   bic: string;
+  paymentDetails: string;
   billingEmail: string;
   invoicePrefix: string;
   legalMentions: string;
@@ -161,12 +168,14 @@ export type LegalEntityValues = {
   enterprise_number: string | null;
   vat_status: VatStatus;
   vat_number: string | null;
+  default_vat_rate: number | null;
   address_line: string | null;
   postal_code: string | null;
   city: string | null;
   country: string;
   iban: string | null;
   bic: string | null;
+  payment_details: string | null;
   billing_email: string | null;
   invoice_prefix: string;
   legal_mentions: string | null;
@@ -186,22 +195,52 @@ export function parseLegalEntity(
   if (!vatStatus) return { ok: false, error: "Choisis le régime de TVA." };
 
   const country = (input.country.trim() || "BE").toUpperCase();
-  if (!/^[A-Z]{2}$/.test(country))
-    return { ok: false, error: "Pays invalide (code à 2 lettres, ex. BE)." };
+  if (!isCountryCode(country)) return { ok: false, error: "Choisis le pays de la structure." };
 
+  // Numéros (D-69) : formats belges vérifiés pour une structure belge, libres ailleurs.
+  const be = country === "BE";
   let enterpriseNumber: string | null = null;
   if (input.enterpriseNumber.trim() !== "") {
-    enterpriseNumber = normalizeEnterpriseNumber(input.enterpriseNumber);
+    enterpriseNumber = normalizeCompanyNumber(input.enterpriseNumber, country);
     if (!enterpriseNumber) {
-      return { ok: false, error: "Numéro d'entreprise invalide : 10 chiffres, ex. 0123.456.749." };
+      return {
+        ok: false,
+        error: be
+          ? "Numéro d'entreprise invalide : 10 chiffres, ex. 0123.456.749."
+          : "Numéro d'entreprise invalide : lettres, chiffres, points ou tirets (30 maximum).",
+      };
     }
   }
-  // En Belgique, le numéro de TVA = BE + numéro d'entreprise : obligatoire pour un assujetti.
-  if (vatStatus === "subject" && !enterpriseNumber) {
-    return { ok: false, error: "Un assujetti à la TVA a besoin de son numéro d'entreprise." };
+  let vatNumber: string | null = null;
+  let defaultVatRate: number | null = null;
+  if (vatStatus === "subject") {
+    const typed = input.vatNumber.trim();
+    // Belgique : sans numéro de TVA saisi, celui du numéro d'entreprise (BE + les 10 chiffres).
+    vatNumber = typed
+      ? normalizeVatNumber(typed, country)
+      : be && enterpriseNumber
+        ? normalizeVatNumber(enterpriseNumber, country)
+        : null;
+    if (!vatNumber) {
+      return {
+        ok: false,
+        error: typed
+          ? be
+            ? "Numéro de TVA invalide : BE suivi de 10 chiffres, ex. BE0123.456.749."
+            : "Numéro de TVA invalide : lettres, chiffres, points ou tirets (30 maximum)."
+          : "Un assujetti à la TVA a besoin de son numéro de TVA.",
+      };
+    }
+    // Belgique : le numéro d'entreprise est celui du numéro de TVA, s'il n'a pas été donné.
+    if (be && !enterpriseNumber) enterpriseNumber = vatNumber.slice(2);
+    defaultVatRate = parseVatRate(input.defaultVatRate);
+    if (defaultVatRate === null) {
+      return {
+        ok: false,
+        error: "Taux de TVA habituel : un nombre entre 0 et 100 (ex. 21 ou 8,1).",
+      };
+    }
   }
-  const vatNumber =
-    vatStatus === "subject" && enterpriseNumber ? vatNumberFor(enterpriseNumber) : null;
 
   let iban: string | null = null;
   if (input.iban.trim() !== "") {
@@ -236,6 +275,10 @@ export function parseLegalEntity(
     return { ok: false, error: "Adresse trop longue." };
   const city = blankToNull(input.city);
   if (city !== null && city.length > 80) return { ok: false, error: "Nom de ville trop long." };
+  const paymentDetails = blankToNull(input.paymentDetails);
+  if (paymentDetails !== null && paymentDetails.length > 300) {
+    return { ok: false, error: "Coordonnées de paiement limitées à 300 caractères." };
+  }
   const mentions = blankToNull(input.legalMentions);
   if (mentions !== null && mentions.length > 1000) {
     return { ok: false, error: "Mentions légales limitées à 1000 caractères." };
@@ -249,12 +292,14 @@ export function parseLegalEntity(
       enterprise_number: enterpriseNumber,
       vat_status: vatStatus,
       vat_number: vatNumber,
+      default_vat_rate: defaultVatRate,
       address_line: addressLine,
       postal_code: postalCode,
       city,
       country,
       iban,
       bic,
+      payment_details: paymentDetails,
       billing_email: billingEmail,
       invoice_prefix: prefix,
       legal_mentions: mentions,

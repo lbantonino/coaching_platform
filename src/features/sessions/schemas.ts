@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { addVat, parseEuros } from "@/domain/billing/payments";
+import { addVat, parseAmount } from "@/domain/billing/payments";
 import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { formatDate } from "@/lib/format";
 
@@ -57,18 +57,18 @@ export type SessionValues = {
 export const SESSION_PAYMENT_METHODS = ["transfer", "cash"] as const;
 export type SessionPaymentMethod = (typeof SESSION_PAYMENT_METHODS)[number];
 
-// TVA d'une séance : 21 %. Règle de Gianluca (26/10) : par virement, la séance est facturée et le
-// prix est hors TVA (65 € HTVA -> 78,65 € payés) ; en espèces, le prix est « direct », TVA comprise.
-export const SESSION_VAT_RATE = 21;
+// TVA d'une séance : le taux habituel de la structure par défaut (D-69, 0 sans structure assujettie).
+// Règle de Gianluca (26/10) : par virement, la séance est facturée et le prix est hors TVA
+// (65 € HTVA -> 78,65 € payés à 21 %) ; en espèces, le prix est « direct », TVA comprise.
 export const defaultVatIncluded = (method: SessionPaymentMethod) => method === "cash";
 
 // Montant reçu pour une date, TVA comprise : le prix tel quel s'il est TVA comprise, sinon le prix
-// HTVA plus 21 %.
-export function sessionAmountCents(price: {
-  priceCents: number;
-  priceVatIncluded: boolean;
-}): number {
-  return price.priceVatIncluded ? price.priceCents : addVat(price.priceCents, SESSION_VAT_RATE);
+// HTVA plus la TVA au taux donné.
+export function sessionAmountCents(
+  price: { priceCents: number; priceVatIncluded: boolean },
+  vatRate: number,
+): number {
+  return price.priceVatIncluded ? price.priceCents : addVat(price.priceCents, vatRate);
 }
 
 // Nouveau sportif à créer avant la séance (fiche minimale : prénom, et nom s'il est donné).
@@ -136,7 +136,7 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
   let priceCents: number | null = null;
   let paymentMethod: SessionPaymentMethod | null = null;
   if (input.price.trim() !== "") {
-    priceCents = parseEuros(input.price);
+    priceCents = parseAmount(input.price);
     if (priceCents === null) {
       return { ok: false, error: "Prix invalide : écris par exemple 65 ou 65,50." };
     }

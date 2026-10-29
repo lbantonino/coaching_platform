@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { listAthletes } from "@/features/athletes/queries";
+import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { coveredByPackage } from "@/domain/billing/payments";
 import { dayLabel } from "@/features/agenda/calendar";
@@ -13,13 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { todayIsoInBrussels } from "@/lib/format";
 
 import { getSession } from "./queries";
-import {
-  occursOn,
-  parseSessionForm,
-  SESSION_VAT_RATE,
-  sessionAmountCents,
-  type SessionFormInput,
-} from "./schemas";
+import { occursOn, parseSessionForm, sessionAmountCents, type SessionFormInput } from "./schemas";
 
 // `attempt` change à CHAQUE réponse : le formulaire est reconstruit avec la saisie renvoyée
 // (React 19 remet sinon les menus déroulants et les cases à leur valeur de départ).
@@ -385,13 +380,14 @@ export async function markSessionPaid(
   if (coveredByPackage(await listPackageCovers(orgId), athleteId, sessionDate))
     return { ok: false };
 
+  const vatRate = await getDefaultVatRate(orgId);
   const supabase = await createClient();
   const { error } = await supabase.from("athlete_payments").insert({
     organization_id: orgId,
     athlete_id: athleteId,
     received_on: todayIsoInBrussels(),
-    amount_cents: sessionAmountCents({ ...session, priceCents: session.priceCents }),
-    vat_rate: SESSION_VAT_RATE,
+    amount_cents: sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate),
+    vat_rate: vatRate,
     method: session.paymentMethod,
     label: `${session.title} · ${dayLabel(sessionDate)}`.slice(0, 120),
     session_id: session.id,

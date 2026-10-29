@@ -8,6 +8,7 @@ import {
   deleteDocument,
   deleteDocumentCategory,
   renameDocumentCategory,
+  setDocumentCategoryColor,
   updateDocument,
   uploadDocument,
 } from "@/features/documents/actions";
@@ -65,6 +66,7 @@ async function Documents({ athleteId, openImport }: { athleteId: string; openImp
         create: createDocumentCategory.bind(null, organizationId),
         rename: renameDocumentCategory.bind(null, organizationId),
         remove: deleteDocumentCategory.bind(null, organizationId),
+        recolor: setDocumentCategoryColor.bind(null, organizationId),
       }}
     />
   );

@@ -7,7 +7,7 @@ import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/l
 import { Badge } from "@/components/ui/badge";
 import { Card, CardTitle } from "@/components/ui/card";
 import { addressLines, invoiceTotals } from "@/domain/billing/invoice-document";
-import { formatEuros } from "@/domain/billing/invoices";
+import { formatMoney, formatVatRate } from "@/domain/billing/money";
 import { formatEnterpriseNumber } from "@/domain/billing/legal";
 import { requireCoach } from "@/features/auth/guards";
 import { getInvoice } from "@/features/billing/invoice-queries";
@@ -71,6 +71,8 @@ async function Invoice({
   const draft = invoice.status === "draft";
   const entities = draft ? await listLegalEntities(organizationId) : [];
   const totals = invoiceTotals(invoice.amountCents, invoice.vatRate);
+  // Montants dans la devise de la facture (D-69).
+  const money = (cents: number) => formatMoney(cents, invoice.currency);
   const seller = invoice.seller;
 
   return (
@@ -79,7 +81,7 @@ async function Invoice({
         back={{ href: "/coach/facturation", label: "Facturation" }}
         title={draft ? "Brouillon de facture" : `Facture ${invoice.number}`}
         titleAside={draft ? <Badge>Brouillon</Badge> : <Badge tone="ok">Émise</Badge>}
-        subtitle={`${invoice.client.name} · ${formatEuros(invoice.amountCents)}${
+        subtitle={`${invoice.client.name} · ${money(invoice.amountCents)}${
           invoice.paidOn ? ` · payée le ${formatDate(invoice.paidOn)}` : ""
         }`}
         actions={
@@ -129,9 +131,9 @@ async function Invoice({
           className="lg:col-span-5"
         >
           <div className="flex flex-col">
-            <Line label="Total HTVA" value={formatEuros(totals.exclCents)} />
-            <Line label={`TVA ${invoice.vatRate} %`} value={formatEuros(totals.vatCents)} />
-            <Line label="Total TVAC" value={formatEuros(totals.inclCents)} />
+            <Line label="Total HTVA" value={money(totals.exclCents)} />
+            <Line label={`TVA ${formatVatRate(invoice.vatRate)}`} value={money(totals.vatCents)} />
+            <Line label="Total TVAC" value={money(totals.inclCents)} />
             <Line label="Date" value={formatDate(invoice.issuedOn)} />
             {invoice.serviceOn ? (
               <Line label="Prestation" value={formatDate(invoice.serviceOn)} />
@@ -164,13 +166,14 @@ async function Invoice({
                 id: entity.id,
                 name: entity.name,
                 vatSubject: entity.vatStatus === "subject",
+                defaultVatRate: entity.defaultVatRate,
               }))}
               values={{
                 legalEntityId: invoice.legalEntityId ?? entities[0]?.id ?? "",
                 label: invoice.label,
                 amount: (totals.exclCents / 100).toFixed(2).replace(".", ","),
                 serviceOn: invoice.serviceOn ?? "",
-                vatRate: String(invoice.vatRate),
+                vatRate: String(invoice.vatRate).replace(".", ","),
                 clientName: invoice.client.name,
                 addressLine: invoice.client.addressLine ?? "",
                 postalCode: invoice.client.postalCode ?? "",
@@ -198,9 +201,11 @@ async function Invoice({
                   Facturé à
                 </span>
                 <span className="font-semibold">{invoice.client.name}</span>
-                {addressLines(invoice.client).map((line) => (
-                  <span key={line}>{line}</span>
-                ))}
+                {addressLines(invoice.client, seller?.country ?? memberships[0].country).map(
+                  (line) => (
+                    <span key={line}>{line}</span>
+                  ),
+                )}
               </div>
               {seller ? (
                 <div className="flex flex-col gap-0.5 text-[14px]">
@@ -208,7 +213,7 @@ async function Invoice({
                     Émise par
                   </span>
                   <span className="font-semibold">{seller.name}</span>
-                  {addressLines(seller).map((line) => (
+                  {addressLines(seller, memberships[0].country).map((line) => (
                     <span key={line}>{line}</span>
                   ))}
                   {seller.enterpriseNumber ? (

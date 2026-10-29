@@ -1,6 +1,12 @@
 import "server-only";
 
-import { kindOfMime, type DocumentCategory, type DocumentKind } from "@/domain/documents/documents";
+import {
+  isCategoryColor,
+  kindOfMime,
+  type CategoryColor,
+  type DocumentCategory,
+  type DocumentKind,
+} from "@/domain/documents/documents";
 import { createClient } from "@/lib/supabase/server";
 
 // Documents du coach (4e, D-60), pour une organisation DÉJÀ vérifiée (requireOrgAccess, requireCoach).
@@ -10,6 +16,7 @@ export type CoachDocument = {
   // Catégorie du coach (D-67) ; null = sans catégorie.
   categoryId: string | null;
   categoryName: string | null;
+  categoryColor: CategoryColor | null;
   kind: DocumentKind;
   mimeType: string;
   sizeBytes: number;
@@ -22,7 +29,7 @@ export type CoachDocument = {
 type Row = {
   id: string;
   name: string;
-  category: { id: string; name: string } | null;
+  category: { id: string; name: string; color: string } | null;
   mime_type: string;
   size_bytes: number;
   created_at: string;
@@ -31,13 +38,16 @@ type Row = {
 };
 
 const SELECT =
-  "id, name, category:document_categories ( id, name ), mime_type, size_bytes, created_at, updated_at, athlete:athlete_profiles ( id, first_name, display_name )";
+  "id, name, category:document_categories ( id, name, color ), mime_type, size_bytes, created_at, updated_at, athlete:athlete_profiles ( id, first_name, display_name )";
+
+const colorOf = (value: string): CategoryColor => (isCategoryColor(value) ? value : "grey");
 
 const toDocument = (row: Row): CoachDocument => ({
   id: row.id,
   name: row.name,
   categoryId: row.category?.id ?? null,
   categoryName: row.category?.name ?? null,
+  categoryColor: row.category ? colorOf(row.category.color) : null,
   kind: kindOfMime(row.mime_type),
   mimeType: row.mime_type,
   sizeBytes: row.size_bytes,
@@ -71,9 +81,11 @@ export async function listDocumentCategories(organizationId: string): Promise<Do
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("document_categories")
-    .select("id, name")
+    .select("id, name, color")
     .eq("organization_id", organizationId)
     .order("name");
   if (error) throw new Error("Lecture des catégories impossible.");
-  return (data ?? []).sort((a, b) => a.name.localeCompare(b.name, "fr"));
+  return (data ?? [])
+    .map((row) => ({ id: row.id, name: row.name, color: colorOf(row.color) }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fr"));
 }

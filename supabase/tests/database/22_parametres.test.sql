@@ -47,9 +47,9 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';
 select lives_ok(
   $$ insert into public.organization_legal_entities (id, organization_id, name, legal_form, enterprise_number,
-       vat_status, vat_number, is_default, created_by)
+       vat_status, vat_number, default_vat_rate, is_default, created_by)
      values ('7e000000-0000-4000-8000-000000000001', 'aaaaaaaa-0000-4000-8000-000000000001', 'Activité',
-             'independent', '0123456749', 'subject', 'BE0123456749', true, '11111111-1111-4111-8111-111111111111') $$,
+             'independent', '0123456749', 'subject', 'BE0123456749', 21, true, '11111111-1111-4111-8111-111111111111') $$,
   'Le propriétaire ajoute une structure par défaut'
 );
 select throws_ok(

@@ -21,6 +21,8 @@ export function plannedIncome<T extends PricedSessionLike>(
   sessions: T[],
   from: string,
   to: string,
+  // Taux de TVA habituel de l'organisation (D-69), pour les prix hors TVA.
+  vatRate: number,
   covered: (session: T, date: string) => boolean = () => false,
 ): { count: number; inclCents: number } {
   let count = 0;
@@ -31,7 +33,8 @@ export function plannedIncome<T extends PricedSessionLike>(
       (occurrence) => !covered(session, occurrence.originalDate),
     ).length;
     count += dates;
-    inclCents += dates * sessionAmountCents({ ...session, priceCents: session.priceCents });
+    inclCents +=
+      dates * sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate);
   }
   return { count, inclCents };
 }

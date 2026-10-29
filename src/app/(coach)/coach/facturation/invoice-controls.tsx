@@ -3,11 +3,14 @@
 import { Download, Eye, FileCheck2, FilePlus2, Printer, Trash2 } from "lucide-react";
 import { startTransition, useActionState, useRef, useState } from "react";
 
+import { useMoney } from "@/components/blocks/money-context";
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { ConfirmDialog, PanelDialog } from "@/components/ui/overlay";
 import type { AmountMode } from "@/domain/billing/invoice-document";
-import { PAYMENT_METHODS, VAT_RATES, paymentMethodLabels } from "@/domain/billing/payments";
+import { VatRateInput } from "@/components/ui/vat-rate-input";
+import { parseVatRate } from "@/domain/billing/money";
+import { PAYMENT_METHODS } from "@/domain/billing/payments";
 import { COUNTRIES } from "@/features/athletes/schemas";
 import {
   createInvoiceFromPayment,
@@ -183,7 +186,8 @@ export function InvoiceDraftForm({
   organizationId: string;
   invoiceId: string;
   values: DraftValues;
-  entities: { id: string; name: string; vatSubject: boolean }[];
+  // Taux habituel de chaque structure (D-69) : proposé quand le coach change de structure.
+  entities: { id: string; name: string; vatSubject: boolean; defaultVatRate: number | null }[];
   // Brouillon relié à un paiement reçu : son montant suit celui de la facture.
   hasPayment: boolean;
 }) {
@@ -196,6 +200,11 @@ export function InvoiceDraftForm({
   const [amountMode, setAmountMode] = useState<AmountMode>("excl");
   const [vatRate, setVatRate] = useState(values.vatRate);
   const vatSubject = entities.find((entity) => entity.id === entityId)?.vatSubject ?? true;
+  const chooseEntity = (id: string) => {
+    setEntityId(id);
+    const rate = entities.find((entity) => entity.id === id)?.defaultVatRate;
+    if (rate !== null && rate !== undefined) setVatRate(String(rate).replace(".", ","));
+  };
   return (
     <form action={action} className="flex flex-col gap-5" noValidate>
       <div className="grid gap-4 md:grid-cols-2">
@@ -207,7 +216,7 @@ export function InvoiceDraftForm({
             id="invoice-entity"
             name="legalEntityId"
             value={entityId}
-            onChange={(event) => setEntityId(event.target.value)}
+            onChange={(event) => chooseEntity(event.target.value)}
             className={inputClass}
           >
             {entities.map((entity) => (
@@ -222,19 +231,7 @@ export function InvoiceDraftForm({
             Taux de TVA
           </label>
           {vatSubject ? (
-            <select
-              id="invoice-vat"
-              name="vatRate"
-              value={vatRate}
-              onChange={(event) => setVatRate(event.target.value)}
-              className={inputClass}
-            >
-              {VAT_RATES.map((rate) => (
-                <option key={rate} value={rate}>
-                  {rate} %
-                </option>
-              ))}
-            </select>
+            <VatRateInput id="invoice-vat" value={vatRate} onChange={setVatRate} />
           ) : (
             <>
               <input type="hidden" name="vatRate" value="0" />
@@ -264,7 +261,7 @@ export function InvoiceDraftForm({
           onAmount={setAmount}
           mode={amountMode}
           onMode={setAmountMode}
-          vatRate={vatSubject ? Number(vatRate) : 0}
+          vatRate={vatSubject ? (parseVatRate(vatRate) ?? 0) : 0}
           note={hasPayment ? "Le paiement relié est corrigé aussi." : undefined}
         />
         <div className="flex flex-col gap-1.5">
@@ -393,6 +390,7 @@ export function MarkPaidForm({
     markInvoicePaid.bind(null, organizationId, invoiceId),
     initial,
   );
+  const { methodLabel } = useMoney();
   return (
     <form key={state.attempt} action={action} className="flex flex-col gap-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -416,7 +414,7 @@ export function MarkPaidForm({
           <select id="paid-method" name="method" defaultValue="transfer" className={inputClass}>
             {PAYMENT_METHODS.map((method) => (
               <option key={method} value={method}>
-                {paymentMethodLabels[method]}
+                {methodLabel(method)}
               </option>
             ))}
           </select>

@@ -2,13 +2,14 @@
 
 import { hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
+import { useMoney } from "@/components/blocks/money-context";
 import { totalsFromEntry, type AmountMode } from "@/domain/billing/invoice-document";
-import { formatEuros } from "@/domain/billing/invoices";
-import { parseEuros } from "@/domain/billing/payments";
+import { formatVatRate, parseAmount } from "@/domain/billing/money";
 
 // Montant d'une facture (demande d'Antonino du 29/10/2026) : le coach choisit s'il saisit le
 // montant HORS TVA (par défaut : « 65 € HTVA », la TVA s'ajoute) ou TVA COMPRISE, et voit le calcul
 // en direct (« 65,00 € HTVA + 13,65 € de TVA (21 %) = 78,65 € TVAC »). Le serveur refait le calcul.
+// Devise de l'organisation et taux libre (D-69).
 export function AmountField({
   id,
   amount,
@@ -27,7 +28,8 @@ export function AmountField({
   vatRate: number;
   note?: string;
 }) {
-  const cents = parseEuros(amount);
+  const { currency, format } = useMoney();
+  const cents = parseAmount(amount);
   const totals = cents === null ? null : totalsFromEntry(cents, mode, vatRate);
   return (
     <div className="flex flex-col gap-3 sm:col-span-2">
@@ -59,7 +61,7 @@ export function AmountField({
       </fieldset>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={id} className={labelClass}>
-          {mode === "excl" ? "Montant (HTVA)" : "Montant (TVAC)"}
+          {mode === "excl" ? `Montant (HTVA, ${currency})` : `Montant (TVAC, ${currency})`}
         </label>
         <input
           id={id}
@@ -75,11 +77,9 @@ export function AmountField({
         <p id={`${id}-calcul`} aria-live="polite" className={hintClass}>
           {totals ? (
             <>
-              {formatEuros(totals.exclCents)} HTVA + {formatEuros(totals.vatCents)} de TVA (
-              {vatRate} %) ={" "}
-              <strong className="font-semibold text-text">
-                {formatEuros(totals.inclCents)} TVAC
-              </strong>
+              {format(totals.exclCents)} HTVA + {format(totals.vatCents)} de TVA (
+              {formatVatRate(vatRate)}) ={" "}
+              <strong className="font-semibold text-text">{format(totals.inclCents)} TVAC</strong>
             </>
           ) : (
             "Écris le montant, la TVA se calcule toute seule."

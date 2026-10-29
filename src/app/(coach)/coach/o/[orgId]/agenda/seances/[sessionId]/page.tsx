@@ -1,4 +1,4 @@
-import { CalendarDays, ClipboardList, Euro, Pencil, Users } from "lucide-react";
+import { CalendarDays, ClipboardList, Coins, Pencil, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -13,11 +13,12 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardEmpty, CardTitle } from "@/components/ui/card";
-import { formatEuros } from "@/domain/billing/invoices";
-import { addVat, coveredByPackage, paymentMethodLabels, splitVat } from "@/domain/billing/payments";
+import { formatMoney, formatVatRate } from "@/domain/billing/money";
+import { addVat, coveredByPackage, paymentMethodLabel, splitVat } from "@/domain/billing/payments";
 import { disciplineLabels } from "@/domain/training/discipline";
 import { dayLabel } from "@/features/agenda/calendar";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { listPackageCovers } from "@/features/billing/payment-queries";
 import { addDays } from "@/features/agenda/items";
 import { mondayOf } from "@/features/agenda/week";
@@ -29,7 +30,6 @@ import {
   formatDuration,
   sessionOccurrences,
   sessionKindLabels,
-  SESSION_VAT_RATE,
 } from "@/features/sessions/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
@@ -87,12 +87,15 @@ async function SessionDetail({
   const { membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
   if (!z.uuid().safeParse(sessionId).success) notFound();
-  const [session, payments, covers] = await Promise.all([
+  const [session, payments, covers, vatRate] = await Promise.all([
     getSession(organizationId, sessionId),
     listSessionPayments(organizationId, sessionId),
     listPackageCovers(organizationId),
+    getDefaultVatRate(organizationId),
   ]);
   if (!session) notFound();
+  // Prix dans la devise de la séance (D-69).
+  const money = (cents: number) => formatMoney(cents, session.currency);
 
   const today = todayIsoInBrussels();
   const horizon = new Date(Date.parse(`${today}T00:00:00Z`) + 180 * 86_400_000)
@@ -235,14 +238,14 @@ async function SessionDetail({
         <Card
           id="price-title"
           title={
-            <CardTitle icon={Euro} color="var(--ok)">
+            <CardTitle icon={Coins} color="var(--ok)">
               Prix et paiements
             </CardTitle>
           }
           className="lg:col-span-12"
         >
           {!priced && !hasPackage ? (
-            <CardEmpty icon={Euro}>
+            <CardEmpty icon={Coins}>
               Pas de prix pour cette séance. Ajoute-le avec « Modifier » : chaque date payée
               comptera dans l&apos;encaissé de la semaine.
             </CardEmpty>
@@ -256,15 +259,15 @@ async function SessionDetail({
                       session.priceCents === null ? (
                         <span className="text-muted">Pas de prix à la séance</span>
                       ) : session.priceVatIncluded ? (
-                        `${formatEuros(session.priceCents)} TVAC · ${formatEuros(splitVat(session.priceCents, SESSION_VAT_RATE).exclCents)} HTVA`
+                        `${money(session.priceCents)} TVAC · ${money(splitVat(session.priceCents, vatRate).exclCents)} HTVA`
                       ) : (
-                        `${formatEuros(session.priceCents)} HTVA · ${formatEuros(addVat(session.priceCents, SESSION_VAT_RATE))} TVAC, facturé`
+                        `${money(session.priceCents)} HTVA · ${money(addVat(session.priceCents, vatRate))} TVAC (${formatVatRate(vatRate)}), facturé`
                       ),
                   },
                   {
                     label: "Paiement",
                     value: session.paymentMethod ? (
-                      paymentMethodLabels[session.paymentMethod]
+                      paymentMethodLabel(session.paymentMethod, membership.country)
                     ) : (
                       <span className="text-muted">Par forfait</span>
                     ),
@@ -276,10 +279,10 @@ async function SessionDetail({
                 amountLabel={
                   session.priceCents === null
                     ? ""
-                    : formatEuros(
+                    : money(
                         session.priceVatIncluded
                           ? session.priceCents
-                          : addVat(session.priceCents, SESSION_VAT_RATE),
+                          : addVat(session.priceCents, vatRate),
                       )
                 }
                 mark={markSessionPaid.bind(null, organizationId, session.id)}
@@ -299,7 +302,7 @@ async function SessionDetail({
                           ? "future"
                           : "unpaid",
                     paidLabel: paid
-                      ? `Payée le ${shortDate.format(utc(paid.receivedOn))} · ${formatEuros(paid.amountCents)}`
+                      ? `Payée le ${shortDate.format(utc(paid.receivedOn))} · ${formatMoney(paid.amountCents, paid.currency)}`
                       : null,
                   };
                 })}

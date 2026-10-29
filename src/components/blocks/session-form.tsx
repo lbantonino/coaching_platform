@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 
+import { useMoney } from "@/components/blocks/money-context";
 import { buttonClass } from "@/components/ui/button";
 import {
   checkboxChipClass,
@@ -14,13 +15,12 @@ import {
 } from "@/components/ui/form-styles";
 import { FieldCheck } from "@/components/ui/field-check";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
-import { formatEuros } from "@/domain/billing/invoices";
-import { addVat, parseEuros, splitVat } from "@/domain/billing/payments";
+import { currencySymbol, formatVatRate } from "@/domain/billing/money";
+import { addVat, parseAmount, splitVat } from "@/domain/billing/payments";
 import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
 import {
   SESSION_KINDS,
-  SESSION_VAT_RATE,
   defaultVatIncluded,
   sessionKindLabels,
   type SessionFormInput,
@@ -92,9 +92,11 @@ function SessionFields({
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
   const [newClient, setNewClient] = useState(v.newClient);
   const [price, setPrice] = useState(v.price);
+  // Devise et taux de TVA habituel de l'organisation (D-69).
+  const { currency, vatRate, format } = useMoney();
   const [vatIncluded, setVatIncluded] = useState(v.vatIncluded);
   const [paymentMethod, setPaymentMethod] = useState(v.paymentMethod || "transfer");
-  const priceCents = parseEuros(price);
+  const priceCents = parseAmount(price);
   const individualName = athletes.find((athlete) => athlete.id === v.athleteId)?.name;
 
   return (
@@ -352,7 +354,8 @@ function SessionFields({
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="session-price" className={labelClass}>
-              {kind === "group" ? "Prix pour toute la séance (€)" : "Prix de la séance (€)"}
+              {kind === "group" ? "Prix pour toute la séance" : "Prix de la séance"} (
+              {currencySymbol(currency)})
             </label>
             <input
               id="session-price"
@@ -365,7 +368,7 @@ function SessionFields({
               aria-describedby="session-price-hint"
               className={`${inputClass} font-mono`}
             />
-            <FieldCheck htmlFor="session-price" rule="euros" />
+            <FieldCheck htmlFor="session-price" rule="amount" />
           </div>
           <fieldset className="flex flex-col gap-1.5">
             <legend className={`${labelClass} mb-1.5`}>Paiement</legend>
@@ -410,9 +413,11 @@ function SessionFields({
         <p id="session-price-hint" className={hintClass}>
           {priceCents === null
             ? "Sans prix, la séance ne compte pas dans l'encaissé."
-            : vatIncluded
-              ? `${formatEuros(priceCents)} reçus, TVA comprise : ${formatEuros(splitVat(priceCents, SESSION_VAT_RATE).exclCents)} HTVA et ${formatEuros(splitVat(priceCents, SESSION_VAT_RATE).vatCents)} de TVA.`
-              : `${formatEuros(priceCents)} HTVA : le sportif paie ${formatEuros(addVat(priceCents, SESSION_VAT_RATE))}, TVA de ${SESSION_VAT_RATE} % comprise.`}
+            : vatRate === 0
+              ? `${format(priceCents)} reçus, sans TVA (ta structure n'en facture pas).`
+              : vatIncluded
+                ? `${format(priceCents)} reçus, TVA comprise : ${format(splitVat(priceCents, vatRate).exclCents)} HTVA et ${format(splitVat(priceCents, vatRate).vatCents)} de TVA (${formatVatRate(vatRate)}).`
+                : `${format(priceCents)} HTVA : le sportif paie ${format(addVat(priceCents, vatRate))}, TVA de ${formatVatRate(vatRate)} comprise.`}
         </p>
       </fieldset>
 

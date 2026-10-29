@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { useMoney } from "@/components/blocks/money-context";
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { FieldCheck } from "@/components/ui/field-check";
@@ -19,19 +20,15 @@ import { Sheet } from "@/components/ui/overlay";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
-import { formatEuros } from "@/domain/billing/invoices";
-import {
-  PAYMENT_METHODS,
-  VAT_RATES,
-  parseEuros,
-  paymentMethodLabels,
-  splitVat,
-} from "@/domain/billing/payments";
+import { VatRateInput } from "@/components/ui/vat-rate-input";
+import { formatVatRate, parseVatRate } from "@/domain/billing/money";
+import { PAYMENT_METHODS, parseAmount, splitVat } from "@/domain/billing/payments";
 import type { PaymentFormState, PaymentFormValues } from "@/features/billing/payment-actions";
 
 // Fenêtre « Nouveau paiement » de l'espace coach (D-36), la même partout : « Créer → Paiement » et le
-// bouton de la page Comptabilité. Le coach note l'argent reçu (TVA comprise), le taux de TVA et le
-// mode ; le HTVA s'affiche en direct. On reste sur la page ; un toast confirme.
+// bouton de la page Comptabilité. Le coach note l'argent reçu (TVA comprise), le taux de TVA (libre,
+// pré-rempli avec son taux habituel, D-69) et le mode ; le HTVA s'affiche en direct. On reste sur la
+// page ; un toast confirme.
 type Athlete = { id: string; name: string };
 type Action = (previous: PaymentFormState, formData: FormData) => Promise<PaymentFormState>;
 
@@ -103,6 +100,7 @@ function PaymentForm({
     router.refresh();
   }, [state, toast, onSaved, router]);
 
+  const { vatRate } = useMoney();
   return (
     <PaymentFields
       key={state.attempt}
@@ -114,7 +112,7 @@ function PaymentForm({
           athleteId: "",
           receivedOn: todayInBrussels(),
           amount: "",
-          vatRate: "21",
+          vatRate: String(vatRate).replace(".", ","),
           method: "transfer",
           label: "",
           package: false,
@@ -143,8 +141,10 @@ function PaymentFields({
   const [amount, setAmount] = useState(v.amount);
   const [vatRate, setVatRate] = useState(v.vatRate);
   const [isPackage, setIsPackage] = useState(v.package);
-  const cents = parseEuros(amount);
-  const split = cents === null ? null : splitVat(cents, Number(vatRate));
+  const { currency, format, methodLabel } = useMoney();
+  const cents = parseAmount(amount);
+  const rate = parseVatRate(vatRate);
+  const split = cents === null || rate === null ? null : splitVat(cents, rate);
 
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
@@ -170,7 +170,7 @@ function PaymentFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="payment-amount" className={labelClass}>
-            Montant reçu (TVAC)
+            Montant reçu (TVAC, {currency})
           </label>
           <input
             id="payment-amount"
@@ -182,30 +182,18 @@ function PaymentFields({
             onChange={(event) => setAmount(event.target.value)}
             className={inputClass}
           />
-          <FieldCheck htmlFor="payment-amount" rule="euros" />
+          <FieldCheck htmlFor="payment-amount" rule="amount" />
         </div>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="payment-vat" className={labelClass}>
-            TVA
+            Taux de TVA
           </label>
-          <select
-            id="payment-vat"
-            name="vatRate"
-            value={vatRate}
-            onChange={(event) => setVatRate(event.target.value)}
-            className={inputClass}
-          >
-            {VAT_RATES.map((rate) => (
-              <option key={rate} value={rate}>
-                {rate} %
-              </option>
-            ))}
-          </select>
+          <VatRateInput id="payment-vat" value={vatRate} onChange={setVatRate} />
         </div>
       </div>
       <p aria-live="polite" className="-mt-2 text-[13px] text-muted">
         {split
-          ? `${formatEuros(split.exclCents)} HTVA · ${formatEuros(split.vatCents)} de TVA`
+          ? `${format(split.exclCents)} HTVA · ${format(split.vatCents)} de TVA (${formatVatRate(rate ?? 0)})`
           : "Le HTVA se calcule à partir du montant reçu."}
       </p>
 
@@ -302,7 +290,7 @@ function PaymentFields({
                 defaultChecked={v.method === method}
                 className="peer sr-only"
               />
-              <span className={segmentedItemClass}>{paymentMethodLabels[method]}</span>
+              <span className={segmentedItemClass}>{methodLabel(method)}</span>
             </label>
           ))}
         </div>

@@ -19,7 +19,7 @@ async function notePayment(page: Page, label: string, method: "Virement" | "Esp�
   await page.getByRole("button", { name: "Nouveau paiement" }).click();
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Sophie Lambert" });
-  await dialog.getByLabel("Montant reçu (TVAC)").fill("78,65");
+  await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("78,65");
   await dialog.getByText(method, { exact: true }).click();
   await dialog.getByLabel(/^Libellé/).fill(label);
   await dialog.getByRole("button", { name: "Enregistrer le paiement" }).click();
@@ -159,7 +159,7 @@ test("« Créer une facture » : un nouveau sportif (sa fiche est créée), à p
   await dialog.getByLabel("Ville").fill("Bruxelles");
   await dialog.getByLabel("Description de la prestation").fill("Bilan de forme");
   // Montant saisi hors TVA (par défaut, 29/10) : la TVA de 21 % s'ajoute toute seule.
-  await dialog.getByLabel("Montant (HTVA)").fill("100");
+  await dialog.getByLabel(/^Montant \(HTVA/).fill("100");
   await expect(
     dialog.getByText(/100,00\s€ HTVA \+ 21,00\s€ de TVA \(21 %\) = 121,00\s€ TVAC/),
   ).toBeVisible();
@@ -170,7 +170,7 @@ test("« Créer une facture » : un nouveau sportif (sa fiche est créée), à p
   await expect(page.getByRole("heading", { name: "Brouillon de facture", level: 1 })).toBeVisible();
   await expect(page.getByLabel("Rue et numéro")).toHaveValue("Rue du Test 3");
   // Le montant d'un brouillon se corrige (29/10).
-  await page.getByLabel("Montant (HTVA)").fill("200");
+  await page.getByLabel(/^Montant \(HTVA/).fill("200");
   await page.getByRole("button", { name: "Enregistrer le brouillon" }).click();
   await expect(page.getByText("Brouillon enregistré.")).toBeVisible();
   await expect(page.getByRole("region", { name: "Montants" })).toContainText(/200,00\s€/);

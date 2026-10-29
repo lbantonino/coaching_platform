@@ -136,7 +136,9 @@ test("une structure légale s'ajoute, se modifie et se supprime, numéros vérif
   const sheet = page.getByRole("dialog", { name: "Nouvelle structure" });
   await sheet.getByLabel("Raison sociale").fill("Structure de test");
   await sheet.getByLabel(/^Numéro d'entreprise/).fill("0123.456.749");
-  await expect(sheet.getByText("Numéro de TVA : BE0123.456.749")).toBeVisible();
+  await expect(sheet.getByText("Numéro de TVA déduit : BE0123.456.749")).toBeVisible();
+  // Taux habituel (D-69) : libre, proposé ensuite sur chaque facture.
+  await sheet.getByLabel("Taux habituel (%)").fill("21");
   // IBAN faux : signalé dès qu'on quitte le champ, puis refusé à l'envoi.
   const iban = sheet.getByRole("textbox", { name: /^IBAN/ });
   await iban.fill("BE68 5390 0754 7035");
@@ -148,7 +150,7 @@ test("une structure légale s'ajoute, se modifie et se supprime, numéros vérif
 
   const card = page.getByRole("region", { name: "Structure de test" });
   await expect(card).toContainText("BE68 5390 0754 7034");
-  await expect(card).toContainText("Assujetti à la TVA · BE0123.456.749");
+  await expect(card).toContainText("Assujetti à la TVA · BE0123.456.749 · taux habituel 21 %");
   // Première structure de l'organisation : par défaut d'office.
   await expect(card).toContainText("Par défaut");
 
