@@ -10,3 +10,5 @@ supabase/.branches/
 test-results/
 playwright-report/
 blob-report/
+# Référence du design system Graphite & Or : gardée telle qu'Antonino l'a fournie
+coory-design-system/

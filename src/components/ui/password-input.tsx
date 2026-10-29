@@ -44,14 +44,8 @@ export function PasswordInput({
   );
 }
 
-const segmentColor = ["bg-accent", "bg-accent", "bg-warn", "bg-ok", "bg-ok"] as const;
-const textColor = [
-  "text-accent-text",
-  "text-accent-text",
-  "text-warn",
-  "text-ok",
-  "text-ok",
-] as const;
+const segmentColor = ["bg-alert-fill", "bg-alert-fill", "bg-warn", "bg-ok", "bg-ok"] as const;
+const textColor = ["text-alert", "text-alert", "text-warn", "text-ok", "text-ok"] as const;
 
 // Jauge de robustesse : 4 segments de 4 px. Rouge (0–1), orange (2), vert (3–4).
 export function PasswordGauge({ password }: { password: string }) {

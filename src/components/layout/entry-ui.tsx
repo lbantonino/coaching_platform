@@ -19,7 +19,7 @@ export function EntryTitle({ children, sub }: { children: ReactNode; sub?: React
 }
 
 const iconTones = {
-  accent: "bg-accent-soft text-accent-text",
+  accent: "bg-chip text-text",
   ok: "bg-ok-soft text-ok",
 } as const;
 
@@ -47,14 +47,9 @@ export function FormAlert({ id, children }: { id?: string; children: ReactNode }
     <div
       id={id}
       role="alert"
-      className="flex items-start gap-3 rounded-wide border border-accent-line bg-accent-soft px-4 py-3.5 text-[14px] leading-normal text-text"
+      className="flex items-start gap-3 rounded-wide border border-alert/40 bg-alert-soft px-4 py-3.5 text-[14px] leading-normal text-text"
     >
-      <CircleAlert
-        aria-hidden
-        size={18}
-        strokeWidth={2}
-        className="mt-0.5 shrink-0 text-accent-text"
-      />
+      <CircleAlert aria-hidden size={18} strokeWidth={2} className="mt-0.5 shrink-0 text-alert" />
       <span>{children}</span>
     </div>
   );

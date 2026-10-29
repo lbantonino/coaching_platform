@@ -48,7 +48,7 @@ export function KpiCard({
         className={`flex gap-2 ${long ? "flex-col items-start gap-1" : "items-center justify-between"}`}
       >
         <span className="truncate text-[15px] font-semibold text-[var(--kpi)]">{shortLabel}</span>
-        <span className="font-display text-[22px] leading-none font-semibold tracking-[-0.02em] tabular">
+        <span className="font-display text-[22px] leading-none font-semibold tracking-[-0.02em] text-[var(--kpi)] tabular">
           {value}
         </span>
       </span>
@@ -63,7 +63,7 @@ export function KpiCard({
     <>
       {widget}
       <div className={`flex items-center justify-between gap-2 ${widget ? "max-lg:hidden" : ""}`}>
-        <span className="font-display text-[20px] leading-none font-semibold tracking-[-0.02em] tabular lg:text-[24px]">
+        <span className="font-display text-[20px] leading-none font-semibold tracking-[-0.02em] text-[var(--kpi)] tabular lg:text-[24px]">
           {value}
         </span>
         {Icon ? (
@@ -88,7 +88,7 @@ export function KpiCard({
     <>
       <div className="flex items-start justify-between gap-2">
         <span
-          className={`font-display leading-[1.05] font-semibold tracking-[-0.03em] tabular ${size}`}
+          className={`font-display leading-[1.05] font-semibold tracking-[-0.03em] text-[var(--kpi)] tabular ${size}`}
         >
           {value}
         </span>
@@ -105,7 +105,7 @@ export function KpiCard({
       {detail ? <span className="text-[12px] leading-snug text-muted">{detail}</span> : null}
     </>
   );
-  const className = `flex min-w-0 flex-col rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] text-text ${
+  const className = `flex min-w-0 flex-col rounded-kpi border border-line bg-surface text-text ${
     compact ? "gap-1 px-3.5 py-3" : "gap-1.5 p-4"
   }`;
   const style = { "--kpi": `var(--${color})` } as CSSProperties;
@@ -152,7 +152,7 @@ export function KpiListCard({
   return (
     <div
       style={{ "--kpi": `var(--${color})` } as CSSProperties}
-      className="flex min-w-0 flex-col gap-0.5 rounded-kpi border border-[color-mix(in_srgb,var(--kpi)_30%,transparent)] bg-[color-mix(in_srgb,var(--kpi)_var(--tint-card),var(--surface))] px-3.5 py-3 text-text"
+      className="flex min-w-0 flex-col gap-0.5 rounded-kpi border border-line bg-surface px-3.5 py-3 text-text"
     >
       <Link
         href={href}
@@ -161,14 +161,14 @@ export function KpiListCard({
       >
         <span className="flex items-center justify-between gap-2 lg:hidden">
           <span className="text-[15px] font-semibold text-[var(--kpi)]">{shortLabel}</span>
-          <span className="font-display text-[24px] leading-none font-semibold tabular">
+          <span className="font-display text-[24px] leading-none font-semibold text-[var(--kpi)] tabular">
             {value}
           </span>
         </span>
         {/* Ordinateur : chiffre, libellé et pastille sur une ligne (carte basse, 26/10). */}
         <span className="hidden items-center justify-between gap-2 lg:flex">
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="font-display text-[24px] leading-none font-semibold tracking-[-0.02em] tabular">
+            <span className="font-display text-[24px] leading-none font-semibold tracking-[-0.02em] text-[var(--kpi)] tabular">
               {value}
             </span>
             <span className="truncate text-[13px] font-medium">{label}</span>

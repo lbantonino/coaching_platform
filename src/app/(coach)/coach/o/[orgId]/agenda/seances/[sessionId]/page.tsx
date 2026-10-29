@@ -1,4 +1,4 @@
-import { CalendarDays, Euro, Pencil, Users } from "lucide-react";
+import { CalendarDays, ClipboardList, Euro, Pencil, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,7 +12,7 @@ import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/l
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
-import { Card, CardEmpty } from "@/components/ui/card";
+import { Card, CardEmpty, CardTitle } from "@/components/ui/card";
 import { formatEuros } from "@/domain/billing/invoices";
 import { addVat, coveredByPackage, paymentMethodLabels, splitVat } from "@/domain/billing/payments";
 import { disciplineLabels } from "@/domain/training/discipline";
@@ -158,7 +158,15 @@ async function SessionDetail({
           </p>
         ) : null}
 
-        <Card id="details-title" title="Détails" className="lg:col-span-6">
+        <Card
+          id="details-title"
+          title={
+            <CardTitle icon={ClipboardList} color="var(--run)">
+              Détails
+            </CardTitle>
+          }
+          className="lg:col-span-6"
+        >
           <KeyValueList
             items={[
               {
@@ -195,7 +203,11 @@ async function SessionDetail({
 
         <Card
           id="enrolled-title"
-          title={session.kind === "group" ? `Inscrits · ${enrolled}` : "Sportif"}
+          title={
+            <CardTitle icon={Users} color="var(--strength)">
+              {session.kind === "group" ? `Inscrits · ${enrolled}` : "Sportif"}
+            </CardTitle>
+          }
           className="lg:col-span-6"
         >
           {enrolled === 0 ? (
@@ -220,7 +232,15 @@ async function SessionDetail({
           </p>
         </Card>
 
-        <Card id="price-title" title="Prix et paiements" className="lg:col-span-12">
+        <Card
+          id="price-title"
+          title={
+            <CardTitle icon={Euro} color="var(--ok)">
+              Prix et paiements
+            </CardTitle>
+          }
+          className="lg:col-span-12"
+        >
           {!priced && !hasPackage ? (
             <CardEmpty icon={Euro}>
               Pas de prix pour cette séance. Ajoute-le avec « Modifier » : chaque date payée
@@ -293,7 +313,15 @@ async function SessionDetail({
           )}
         </Card>
 
-        <Card id="next-title" title="Prochaines dates" className="lg:col-span-12">
+        <Card
+          id="next-title"
+          title={
+            <CardTitle icon={CalendarDays} color="var(--accent-text)">
+              Prochaines dates
+            </CardTitle>
+          }
+          className="lg:col-span-12"
+        >
           {next.length === 0 ? (
             <CardEmpty icon={CalendarDays}>Aucune date à venir.</CardEmpty>
           ) : (

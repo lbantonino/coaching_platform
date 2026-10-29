@@ -2,18 +2,18 @@ import type { CSSProperties } from "react";
 
 import { BRAND } from "@/config/brand";
 
-// Logo Coory (COORY_LOGO.md) : « C∞ry » en Space Grotesk Bold. Les deux « o » sont fusionnés en une seule
-// boucle infinie, le lien continu entre le coach et son sportif. Lettres en couleur texte, SEULE la boucle
-// est rouge.
+// Logo Coory : « C∞ry » en Space Grotesk Bold. Les deux « o » sont fusionnés en une seule boucle infinie,
+// le lien continu entre le coach et son sportif. Graphite & Or (demande d'Antonino du 29/10/2026) : SEULE
+// la boucle est en or ; les lettres C, r, y suivent le thème (blanc en graphite, noir en clair).
 type Tone = "theme" | "dark" | "red" | "light";
 
 const tones: Record<Tone, { ink: string; loop: string }> = {
-  // Dans l'app : suit le thème actif. --logo-loop = #FF3347 en sombre, #D91E32 en clair (COORY_LOGO.md §3).
+  // Dans l'app : suit le thème actif. --logo-loop = or #E2C47A en graphite, or ancien #C9A24A en clair.
   theme: { ink: "var(--text)", loop: "var(--logo-loop)" },
   // Couleurs fixes de la charte (e-mails, exports), indépendantes du thème.
-  dark: { ink: "#F4F2EF", loop: "#FF3347" },
-  red: { ink: "#FFFFFF", loop: "#FFFFFF" },
-  light: { ink: "#141416", loop: "#D91E32" },
+  dark: { ink: "#F5F5F2", loop: "#E2C47A" },
+  red: { ink: "#141518", loop: "#141518" },
+  light: { ink: "#141518", loop: "#C9A24A" },
 };
 
 // Tracé de la boucle (§4), dessiné d'après le « o » de Space Grotesk Bold (unités de 1/1000 em) :
@@ -37,10 +37,10 @@ function Loop({
   );
 }
 
-// Tuiles d'icône (§5) : boucle rouge sur graphite (principale), boucle blanche sur rouge (petites tailles).
+// Tuiles d'icône : boucle or sur graphite (principale), boucle graphite sur or (petites tailles).
 const iconTiles = {
-  dark: { background: "#0B0B0C", loop: "#FF3347" },
-  red: { background: "#FF3347", loop: "#FFFFFF" },
+  dark: { background: "#141518", loop: "#E2C47A" },
+  red: { background: "#E2C47A", loop: "#141518" },
 };
 
 // wordmark = « C » + boucle + « ry » ; `size` = taille du texte en px.
@@ -88,7 +88,7 @@ export function CooryLogo({
     <span
       role="img"
       aria-label={BRAND.name}
-      className="inline-block font-display leading-none font-bold tracking-[-0.03em] whitespace-nowrap"
+      className="inline-block font-logo leading-none font-bold tracking-[-0.03em] whitespace-nowrap"
       style={{ fontSize: size, color: colors.ink }}
     >
       C

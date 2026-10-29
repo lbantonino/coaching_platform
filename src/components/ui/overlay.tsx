@@ -488,7 +488,7 @@ export function ActionMenu({
                 item.onSelect();
               }}
               className={`flex min-h-[52px] w-full items-center gap-3.5 border-t border-line text-left text-[16px] font-medium transition-colors duration-150 hover:bg-surface ${
-                item.destructive ? "text-accent-text" : "text-text"
+                item.destructive ? "text-alert" : "text-text"
               }`}
             >
               <item.icon aria-hidden size={19} strokeWidth={1.8} />
@@ -535,7 +535,7 @@ export function ConfirmDialog({
       <div data-sheet-grab className="flex touch-none flex-col gap-2.5">
         <span
           aria-hidden
-          className="inline-flex size-12 items-center justify-center rounded-wide bg-accent-soft text-accent-text"
+          className="inline-flex size-12 items-center justify-center rounded-wide bg-alert-soft text-alert"
         >
           <TriangleAlert size={22} strokeWidth={1.8} />
         </span>
@@ -560,7 +560,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={pending}
-          className={buttonClass({ className: "flex-1" })}
+          className={buttonClass({ variant: "danger", className: "flex-1" })}
         >
           {confirmLabel}
         </button>

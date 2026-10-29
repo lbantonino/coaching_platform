@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import type { Discipline } from "@/domain/training/discipline";
 import { dayLabel } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
-import { formatHoursShort, type WeekLayout } from "@/features/agenda/week";
+import { type WeekLayout } from "@/features/agenda/week";
 import type { MoveSessionInput } from "@/features/sessions/actions";
 
 import { DraggableBlock, DropPreview, GridInteractions } from "./grid-interactions";
@@ -12,7 +12,10 @@ import { ScrollToDay } from "./scroll-to-day";
 import { SlotLayer } from "./slot-layer";
 
 // Grille horaire de la semaine (prompt Claude Design §6), au tableau de bord et dans l'Agenda.
-// Toute la journée (06:00 → 22:00 par défaut) est visible sans défilement vertical : la page défile.
+// La grille couvre toute la journée, de 00:00 à 24:00 (demande d'Antonino du 29/10/2026 : un coach
+// peut aussi y noter quelque chose tôt le matin ou tard le soir), mais n'en montre que les heures du
+// réglage « Heures de l'agenda » (06:00 → 22:00 par défaut, élargies par une séance plus tôt ou plus
+// tard) : le reste se découvre en défilant DANS la carte, la page ne bouge pas.
 // Interactive (D-35) : un clic sur un créneau vide ajoute une séance (`creatable`, dans un
 // NewSessionSheet), une séance se déplace au glisser-déposer (`onMove`).
 // Une heure = 44 px sur téléphone, 48 px sur ordinateur (variable CSS --hour). Ordinateur : 7 colonnes
@@ -60,8 +63,7 @@ export function WeekTimeGrid({
   // option, le téléphone montre 3 jours et l'on fait glisser. L'ordinateur montre toujours 7 jours.
   fullWeek?: boolean;
   // Tableau de bord, ordinateur seulement (demandes d'Antonino) : 48 px par heure comme la page
-  // Agenda, en-tête des jours plus bas, blocs de 45 min au plus sur une ligne, et la grille défile
-  // dans sa carte à la hauteur de l'écran (ScrollToDay). Sur téléphone, plus aucune différence avec la
+  // Agenda, en-tête des jours plus bas, blocs de 45 min au plus sur une ligne. Sur téléphone, plus aucune différence avec la
   // page Agenda (demande d'Antonino du 26/10 au soir : la grille du tableau de bord, adaptée à la
   // hauteur de l'écran, était « beaucoup trop petite en hauteur ») : 44 px par heure, 56 px en vue
   // d'un seul jour, et le détail des blocs.
@@ -69,21 +71,11 @@ export function WeekTimeGrid({
   creatable?: boolean;
   onMove?: (input: MoveSessionInput) => Promise<{ ok: boolean; error?: string }>;
 }) {
-  const span = layout.lastHour - layout.firstHour;
-  const hours = Array.from({ length: span + 1 }, (_, i) => layout.firstHour + i);
-  const nowHours = Number(now.slice(0, 2)) + Number(now.slice(3, 5)) / 60 - layout.firstHour;
-  const showNow = nowHours >= 0 && nowHours <= span;
-  // Ouverture de la grille qui défile (ordinateur) : 1 h 30 avant maintenant si aujourd'hui est
-  // affiché, sinon juste avant la première séance, sinon 08:00.
-  const firstStart = Math.min(...layout.days.flatMap((day) => day.blocks.map((b) => b.start)));
-  const scrollHour = Math.max(
-    0,
-    layout.days.some((day) => day.date === today) && showNow
-      ? nowHours - 1.5
-      : Number.isFinite(firstStart)
-        ? firstStart / 60 - layout.firstHour - 0.5
-        : 8 - layout.firstHour,
-  );
+  // Grille complète (24 heures) ; fenêtre visible = layout.firstHour → layout.lastHour.
+  const span = 24;
+  const visible = layout.lastHour - layout.firstHour;
+  const hours = Array.from({ length: span + 1 }, (_, i) => i);
+  const nowHours = Number(now.slice(0, 2)) + Number(now.slice(3, 5)) / 60;
   // Colonne d'ouverture sur téléphone : la veille d'aujourd'hui si elle est dans la semaine.
   const dates = layout.days.map((day) => day.date);
   const yesterday = addDays(today, -1);
@@ -103,11 +95,14 @@ export function WeekTimeGrid({
           // Téléphone : la grille va d'un bord à l'autre de l'écran (-mx-4 = marge de la page).
           // Hauteur d'une heure : téléphone 56 px pour un seul jour, sinon 44 px ; ordinateur 48 px,
           // sauf la vue d'un seul jour de la page Agenda (56 px).
-          className={`@container snap-x snap-mandatory scroll-pl-12 overflow-x-auto rounded-wide border border-line bg-bg max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 ${
+          // Hauteur de la carte = les heures visibles + l'en-tête des jours (+ 2 px de bordure).
+          className={`@container max-h-[calc(var(--hour)*var(--visible)+3.5rem+2px)] snap-x snap-mandatory scroll-pl-12 overflow-auto rounded-wide border border-line bg-surface max-lg:-mx-4 max-lg:rounded-none max-lg:border-x-0 ${
             single ? "[--hour:56px]" : "[--hour:44px]"
-          } ${fit || !single ? "lg:[--hour:48px]" : ""}`}
-          fitPage={fit}
-          scrollHour={scrollHour}
+          } ${fit || !single ? "lg:[--hour:48px]" : ""} ${fit ? "lg:max-h-[calc(var(--hour)*var(--visible)+2.75rem+2px)]" : ""}`}
+          // Un quart d'heure de marge en haut et en bas : les libellés 06:00 et 22:00, centrés sur
+          // leur ligne, restent lisibles entiers (sinon coupés par l'en-tête des jours et le bas).
+          style={{ "--visible": visible + 0.5 } as CSSProperties}
+          scrollHour={layout.firstHour - 0.25}
         >
           <div className={`flex ${single || fullWeek ? "w-full" : "w-max min-w-full lg:w-full"}`}>
             {/* Heures, collées à gauche pendant le défilement. */}
@@ -127,7 +122,7 @@ export function WeekTimeGrid({
                       fullWeek ? "text-[9px] lg:text-[11px]" : "text-[11px]"
                     }`}
                     style={{
-                      top: at(hour - layout.firstHour),
+                      top: at(hour),
                       transform:
                         index === 0
                           ? "translateY(0)"
@@ -154,19 +149,17 @@ export function WeekTimeGrid({
                   <div
                     // Collé en haut quand la grille défile dans sa carte (ordinateur, tableau de bord).
                     className={`sticky top-0 z-[15] flex h-14 flex-col items-center justify-center border-b border-line ${fit ? "lg:h-11" : ""} ${
+                      // Jour actuel (§6 Agenda) : trait or de 2 px en haut, textes or, fond or très doux.
                       isToday
-                        ? "bg-[color-mix(in_srgb,var(--accent)_10%,var(--bg))] text-accent-text"
-                        : "bg-bg"
+                        ? "bg-[color-mix(in_srgb,var(--accent)_9%,var(--surface))] text-accent-text shadow-[inset_0_2px_0_var(--accent)]"
+                        : "bg-surface"
                     }`}
                   >
                     <span
                       className={`text-[12px] whitespace-nowrap ${isToday ? "" : "text-muted"}`}
                     >
+                      {/* Le nom du jour seul (demande d'Antonino du 29/10 : plus les heures). */}
                       {name}
-                      <span className={fullWeek ? "max-lg:hidden" : ""}>
-                        {" "}
-                        {formatHoursShort(day.minutes)}
-                      </span>
                     </span>
                     <span className="font-display text-[18px] leading-tight font-semibold tabular">
                       {number}
@@ -175,9 +168,9 @@ export function WeekTimeGrid({
                   <div
                     // Repères du glisser-déposer : le jour et la plage horaire de la colonne.
                     data-drop-date={day.date}
-                    data-first-hour={layout.firstHour}
+                    data-first-hour={0}
                     data-span={span}
-                    className={`relative ${isToday ? "bg-[color-mix(in_srgb,var(--accent)_4%,transparent)]" : ""}`}
+                    className={`relative ${isToday ? "bg-[color-mix(in_srgb,var(--text)_2%,transparent)]" : ""}`}
                     style={{
                       height: at(span),
                       backgroundImage:
@@ -188,12 +181,12 @@ export function WeekTimeGrid({
                       <SlotLayer
                         date={day.date}
                         dayLabel={capitalize(dayLabel(day.date))}
-                        firstHour={layout.firstHour}
+                        firstHour={0}
                         span={span}
                       />
                     ) : null}
                     {day.blocks.map((block) => {
-                      const top = (block.start - layout.firstHour * 60) / 60;
+                      const top = block.start / 60;
                       const length = (block.end - block.start) / 60;
                       // Détail (sportif, inscrits) affiché seulement si le bloc mesure au moins 56 px,
                       // selon la hauteur d'une heure de chaque écran : téléphone 56 px (un seul jour)
@@ -233,13 +226,9 @@ export function WeekTimeGrid({
                           href={sessionHref(block.sessionId)}
                           title={`${block.label} · ${block.title} · ${block.subtitle}`}
                           style={style}
-                          // Collective (demande d'Antonino du 26/10) : contour en pointillés et icône
+                          // Graphite & Or (§6) : fond teinté de la discipline, sans contour ni liseré. Collective : icône
                           // « groupe », pour la distinguer d'un coup d'œil d'une séance individuelle.
-                          className={`absolute flex flex-col overflow-hidden rounded-[8px] border-l-[3px] border-l-[var(--c)] bg-[color-mix(in_srgb,var(--c)_12%,var(--surface))] px-1.5 transition-[filter,opacity] duration-150 hover:brightness-110 ${
-                            block.individual
-                              ? ""
-                              : "outline-1 -outline-offset-1 outline-[var(--c)] outline-dashed"
-                          } max-lg:py-1 ${compactDesktop ? "lg:justify-center lg:py-0" : "lg:py-1"} ${
+                          className={`absolute flex flex-col overflow-hidden rounded-[7px] bg-[color-mix(in_srgb,var(--c)_var(--tint-block),var(--surface))] px-1.5 transition-[filter,opacity] duration-150 hover:brightness-110 max-lg:py-1 ${compactDesktop ? "lg:justify-center lg:py-0" : "lg:py-1"} ${
                             fullWeek ? "max-lg:justify-start max-lg:px-0.5 max-lg:py-0.5" : ""
                           }`}
                         >
@@ -282,7 +271,10 @@ export function WeekTimeGrid({
                                   className="shrink-0"
                                 />
                               )}
-                              {block.label.replace(" - ", " – ")}
+                              {/* Dans un élément à part : les points de suspension marchent dans une flexbox. */}
+                              <span className="min-w-0 truncate">
+                                {block.label.replace(" - ", " – ")}
+                              </span>
                             </span>
                             <span
                               className={`truncate text-[12px] leading-tight font-semibold ${compactDesktop ? "lg:hidden" : ""}`}
@@ -302,8 +294,8 @@ export function WeekTimeGrid({
                         </DraggableBlock>
                       );
                     })}
-                    {onMove ? <DropPreview date={day.date} firstHour={layout.firstHour} /> : null}
-                    {isToday && showNow ? (
+                    {onMove ? <DropPreview date={day.date} firstHour={0} /> : null}
+                    {isToday ? (
                       <span
                         aria-hidden
                         className="pointer-events-none absolute inset-x-0 z-10 h-0.5 bg-accent"
@@ -322,13 +314,13 @@ export function WeekTimeGrid({
           <KindLegend />
           <span>
             {single ? (
-              `1 jour · ${span} heures visibles`
+              `1 jour · ${visible} heures visibles`
             ) : (
               <>
                 <span className="lg:hidden">
                   {fullWeek ? "7 jours" : "Glisse pour changer de jour"}
                 </span>
-                <span className="hidden lg:inline">7 jours · {span} heures visibles</span>
+                <span className="hidden lg:inline">7 jours · {visible} heures visibles</span>
               </>
             )}
           </span>
@@ -346,17 +338,11 @@ export function KindLegend() {
   return (
     <span aria-label="Légende" className="flex items-center gap-3">
       <span className="inline-flex items-center gap-1.5">
-        <span
-          aria-hidden
-          className="h-3 w-4 rounded-[3px] border-l-[3px] border-l-muted bg-surface-2"
-        />
+        <span aria-hidden className="h-3 w-4 rounded-[3px] bg-surface-2" />
         Individuelle
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span
-          aria-hidden
-          className="h-3 w-4 rounded-[3px] border-l-[3px] border-l-muted bg-surface-2 outline-1 -outline-offset-1 outline-muted outline-dashed"
-        />
+        <span aria-hidden className="h-3 w-4 rounded-[3px] bg-surface-2" />
         <Users aria-hidden size={12} strokeWidth={2.2} />
         Collective
       </span>

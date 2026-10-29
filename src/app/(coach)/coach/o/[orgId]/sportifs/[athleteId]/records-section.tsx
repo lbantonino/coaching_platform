@@ -78,7 +78,7 @@ export async function RecordsSection({
                   <button
                     type="submit"
                     aria-label={`Supprimer la performance ${recordTitle(entry.event, entry.hyroxCategory)} du ${formatDate(entry.achievedOn)}`}
-                    className="inline-flex size-8 items-center justify-center rounded-[7px] text-muted hover:bg-surface-2 hover:text-accent-text"
+                    className="inline-flex size-8 items-center justify-center rounded-[7px] text-muted hover:bg-surface-2 hover:text-alert"
                   >
                     <Trash2 aria-hidden size={15} strokeWidth={1.7} />
                   </button>

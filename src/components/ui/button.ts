@@ -1,9 +1,9 @@
 // Boutons du design system Coory (prompt Claude Design §4) : aplats, sans dégradé ni ombre, uniquement
-// des jetons. primary = action principale (rouge, UNE seule par écran) · inverse = action forte neutre
+// des jetons. primary = action principale (OR, UNE seule par écran) · inverse = action forte neutre
 // (clair sur sombre) · outline = action secondaire · ghost = action discrète (Annuler).
 // Tailles : sm 36 px · md 44 px (cible tactile minimale) · lg 54 px (pleine largeur sur téléphone).
 
-type Variant = "primary" | "inverse" | "outline" | "ghost";
+type Variant = "primary" | "inverse" | "outline" | "ghost" | "danger";
 type Size = "sm" | "md" | "lg";
 
 // Appui = léger enfoncement (scale .98), sans rebond. Désactivé = opacité .45.
@@ -15,6 +15,8 @@ const variants: Record<Variant, string> = {
   inverse: "bg-inv text-on-inv hover:bg-inv/85 disabled:hover:bg-inv",
   outline: "border border-line-2 text-text hover:bg-surface",
   ghost: "text-muted hover:bg-surface hover:text-text",
+  // Confirmation d'une suppression ou d'une action irréversible : rouge, jamais l'or.
+  danger: "bg-alert-fill text-danger hover:bg-alert-fill/90 disabled:hover:bg-alert-fill",
 };
 
 const sizes: Record<Size, string> = {

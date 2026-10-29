@@ -129,6 +129,8 @@ async function AthleteList({
     ? (query.tri as SortColumn)
     : "sportif";
   const desc = query.ordre === "desc";
+  // Carte « Fiches à compléter » (29/10/2026) : la liste ne montre que les fiches incomplètes.
+  const onlyIncomplete = query.fiche === "a-completer";
 
   // Une seule lecture : les chiffres clés portent sur toute l'organisation, la liste sur le filtre.
   const everyone = await listAthletes(membership.organizationId, { status: "all", q: filter.q });
@@ -139,6 +141,7 @@ async function AthleteList({
   const ofType = everyone.filter((a) => !discipline || a.programType === discipline);
   const athletes = ofType
     .filter((a) => filter.status === "all" || a.status === filter.status)
+    .filter((a) => !onlyIncomplete || (a.status !== "archived" && a.missingInfo.length > 0))
     .sort(compare(sortColumn));
   if (desc) athletes.reverse();
   const statusCount = (status: AthleteListFilter["status"]) =>
@@ -215,9 +218,11 @@ async function AthleteList({
       />
       <PageBody>
         <KpiGrid label="Chiffres des sportifs">
+          {/* Cartes cliquables (29/10/2026) : chacune mène à la liste filtrée correspondante. */}
           <KpiCard
             color="run"
             icon={Users}
+            href={hrefFor({ status: "active" })}
             value={String(active.length)}
             label={active.length > 1 ? "Sportifs actifs" : "Sportif actif"}
             detail={
@@ -226,10 +231,17 @@ async function AthleteList({
                 : "Aucun nouveau ce mois-ci"
             }
           />
-          <KpiCard color="warn" icon={CirclePause} value={String(paused.length)} label="En pause" />
+          <KpiCard
+            color="warn"
+            icon={CirclePause}
+            href={hrefFor({ status: "paused" })}
+            value={String(paused.length)}
+            label="En pause"
+          />
           <KpiCard
             color="accent"
             icon={Flag}
+            href="/coach/notifications#notif-competitions"
             value={String(competitions.length)}
             label={competitions.length > 1 ? "Compétitions à venir" : "Compétition à venir"}
             detail={competitions[0] ? `Prochaine : ${formatShort(competitions[0].date)}` : "Aucune"}
@@ -237,6 +249,7 @@ async function AthleteList({
           <KpiCard
             color="amber"
             icon={UserPen}
+            href={`${basePath}?fiche=a-completer`}
             value={String(incomplete.length)}
             label={incomplete.length > 1 ? "Fiches à compléter" : "Fiche à compléter"}
             detail="Nom ou contact manquant"
@@ -345,6 +358,19 @@ async function AthleteList({
             })}
           </FilterGroup>
         </div>
+
+        {onlyIncomplete ? (
+          <p className="flex flex-wrap items-center gap-2 text-[14px] text-muted">
+            <UserPen aria-hidden size={15} strokeWidth={1.8} className="text-amber" />
+            Seulement les fiches à compléter.
+            <Link
+              href={basePath}
+              className="border-b border-accent-line pb-px font-medium text-accent-text hover:text-text"
+            >
+              Tout afficher
+            </Link>
+          </p>
+        ) : null}
 
         {athletes.length === 0 ? (
           <div

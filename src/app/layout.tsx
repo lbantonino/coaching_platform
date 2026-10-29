@@ -1,19 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Geist_Mono, Inter_Tight, Space_Grotesk } from "next/font/google";
 
 import { PressFeedback } from "@/components/ui/press-feedback";
 import { ToastProvider } from "@/components/ui/toast";
 import { BRAND } from "@/config/brand";
+import { sidebarInitScript } from "@/lib/sidebar";
 import { themeInitScript } from "@/lib/theme";
 
 import "./globals.css";
 
-// Trois polices (COORY_DESIGN_SYSTEM.md §4) : Space Grotesk pour le logo, les titres et les grands chiffres
-// (jamais sous 18 px), Geist pour tout le reste de l'interface, Geist Mono pour les données.
+// Polices (29/10/2026, choix d'Antonino) : Inter Tight pour les titres ET le texte de l'interface, Geist Mono
+// pour les heures et les données, Space Grotesk seulement pour le logo « C∞ry » (la marque ne change pas).
 // next/font télécharge les polices au build et les sert depuis notre domaine : aucun appel à Google
 // dans le navigateur des visiteurs (plus rapide, et pas d'adresse IP transmise à un tiers).
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
 });
 
@@ -33,21 +34,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FFFFFF", // fond du thème clair, le défaut depuis D-33
+  themeColor: "#141518", // fond graphite, le défaut depuis le 29/10/2026
   colorScheme: "light",
 };
 
-// suppressHydrationWarning sur <html> : themeInitScript peut y poser data-theme="dark" avant React,
+// suppressHydrationWarning sur <html> : themeInitScript y pose data-theme ("dark" ou "light") avant React,
 // c'est voulu ; sans cette option, React signalerait une différence entre le serveur et le navigateur.
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${interTight.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <script dangerouslySetInnerHTML={{ __html: sidebarInitScript }} />
       </head>
       <body className="flex min-h-full flex-col bg-bg text-text">
         <PressFeedback />

@@ -28,7 +28,7 @@ test("le coach A se connecte, voit uniquement son organisation, puis se déconne
   await login(page, COACH_A);
 
   await expect(page).toHaveURL(/\/coach$/);
-  await expect(page.getByRole("heading", { name: /^Bonjour/, level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tableau de bord", level: 1 })).toBeVisible();
   // Rien de l'organisation B n'apparaît : ni son nom, ni ses sportifs (Sarah Vermeulen).
   await expect(page.getByText("Organisation Démo B")).toHaveCount(0);
   await goToCoachSection(page, "Sportifs");

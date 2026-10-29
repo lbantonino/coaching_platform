@@ -4,7 +4,7 @@ import { buttonClass } from "./button";
 // fond surface, contour line-2, contour rouge au focus et en erreur. Texte en 16 px partout : en
 // dessous, iOS zoome sur le champ quand on le touche.
 const fieldBase =
-  "w-full rounded-control border border-line-2 bg-surface text-[16px] text-text placeholder:text-faint outline-none transition-colors duration-150 focus:border-accent aria-[invalid=true]:border-accent read-only:text-muted";
+  "w-full rounded-control border border-line-2 bg-field text-[16px] text-text placeholder:text-faint outline-none transition-colors duration-150 focus:border-accent aria-[invalid=true]:border-alert read-only:text-muted";
 
 export const inputClass = `${fieldBase} h-[50px] px-4`;
 
@@ -24,9 +24,9 @@ export const primaryButtonClass = buttonClass({
   className: "w-full",
 });
 
-// Message d'erreur : rouge en TEXTE (accent-text), lisible en sombre comme en clair (contraste ≥ 4,5:1).
+// Message d'erreur : rouge d'alerte en TEXTE (--alert), lisible en sombre comme en clair (≥ 4,5:1).
 // Le composant FieldError (field.tsx) y ajoute l'icône « circle-alert ».
-export const errorTextClass = "text-[13px] font-medium text-accent-text";
+export const errorTextClass = "text-[13px] font-medium text-alert";
 
 // Pastille cochable (lieux, jours, disciplines…) : c'est le <label> qui porte ce style, la vraie case
 // reste dans la page (classe sr-only) pour le clavier et les lecteurs d'écran. Cochée = couleurs

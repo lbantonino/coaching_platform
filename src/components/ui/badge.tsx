@@ -3,12 +3,12 @@ import type { ReactNode } from "react";
 // Pastilles (prompt Claude Design §4 « Badge ») : 12/500, 4 × 10 px, fond teinté + texte de la couleur.
 // Sens des couleurs :
 // ok = fait, actif, publié, payé · warn = en pause, en attente, à livrer, partiel
-// live = en retard, manqué, sauté, priorité haute (rouge en TEXTE) · neutral = brouillon, archivé
+// live = en retard, manqué, sauté, priorité haute (orange « attention ») · neutral = brouillon, archivé
 // planned = en cours, prévu, à venir (bleu) · moved = reporté, à envoyer (violet)
 // danger = douleur, alerte : rouge PLEIN et texte blanc, pour ne jamais ressembler à « en retard ».
 const tones = {
   ok: "bg-ok-soft text-ok",
-  live: "bg-accent-soft text-accent-text",
+  live: "bg-warn-soft text-warn",
   warn: "bg-warn-soft text-warn",
   danger: "bg-danger-soft font-semibold text-danger",
   neutral: "bg-chip text-muted",

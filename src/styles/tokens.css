@@ -1,160 +1,172 @@
 /*
- * Jetons de couleur Coory, d'après COORY_DESIGN_SYSTEM.md §3 (version rouge, 22/10/2026), avec les
- * ajustements décidés par Antonino et mesurés (formule WCAG) : D-22 (contraste), D-23 (fond graphite,
- * couleurs par discipline), D-24 (touches de couleur sur la fiche) et D-29 (fond bleu nuit des maquettes).
+ * Jetons de couleur Coory : design system « Graphite & Or » (coory-design-system/COORY_DESIGN_SYSTEM_V2.md,
+ * §2 et §9), appliqué le 29/10/2026 à la demande d'Antonino. Il remplace les anciens styles (rouge).
  * Les composants n'écrivent JAMAIS ces valeurs en dur : ils passent par les classes Tailwind
  * (bg-surface, text-muted, bg-accent…) déclarées dans globals.css, qui lisent ces variables.
- * CLAIR par défaut depuis le 23/10/2026 (D-33, demande d'Antonino) ; <html data-theme="dark"> bascule
- * tout le site en sombre d'un coup. data-theme="light" / "dark" fonctionne aussi sur une partie de page
- * (vitrine des composants).
- * Règle du rouge : rare. Un seul bouton principal par écran, une seule stat héro par ligne,
- * l'onglet actif. Jamais en fond de page, jamais en texte long, jamais de texte sombre sur rouge.
- * Prompt Claude Design (COORY_PROMPT_CLAUDE_CODE.md §2, 23/10/2026) : « garde les couleurs existantes » ;
- * seuls les jetons qui manquaient sont ajoutés (--panel, --accent-line, --ok-line).
+ *
+ * Correspondance avec le design system : --bg = fond, --surface = --card, --surface-2 = --card-hover,
+ * --panel = --topbar, --chip, --bar = --bar-idle, --line / --line-2 = --line / --line-strong,
+ * --muted, et --accent = l'OR (action principale, actif, aujourd'hui / maintenant, pastilles).
+ * Règles du §2.2 : l'or reste rare (un seul bouton or par écran, jamais en grande surface ni en texte
+ * de paragraphe) ; les couleurs de discipline seulement sur les séances, leurs badges et barres.
+ * Erreur et suppression : rouge (--alert) ; en retard / attention : orange (--warn). Jamais l'or.
+ *
+ * PALETTE (29/10/2026, demande d'Antonino : « des couleurs qui se marient ») : construite en OKLCH.
+ * Graphite : toutes les couleurs à la même luminosité (L 0,78) et la même intensité (C 0,115), seule
+ * la teinte change (bleu 262°, violet 300°, rose 355°, rouge 25°, orange 58°, ambre 66°, or 88°,
+ * vert 152°, turquoise 190°, ciel 235°) ; l'or garde sa valeur de marque, le rouge d'erreur est un peu
+ * plus soutenu pour se lire comme une erreur. Clair : les MÊMES teintes à L 0,48, d'où une palette
+ * jumelle. Chaque texte mesuré ≥ 4,5:1 sur carte, fond et pastille, dans les deux thèmes.
+ *
+ * SOMBRE (graphite) par défaut. Le clair existe toujours au choix (Paramètres) : même logique, or
+ * ancien plus foncé pour rester lisible. Contrastes mesurés (WCAG) : texte ≥ 4,5:1 sur chaque fond.
  */
 :root,
-[data-theme="light"] {
-  /* Clair (par défaut, D-33). */
-  --page: #e6e4e0;
-  --bg: #ffffff;
-  --panel: #f9f8f6;
-  --surface: #f5f4f2;
-  --surface-2: #ecebe8;
-  --chip: #e6e5e2;
-  --bar: #deddd9;
-  --line: rgba(0, 0, 0, 0.08);
-  --line-2: rgba(0, 0, 0, 0.14);
-  --text: #141416;
-  /* Gris, rouge texte et couleurs de statut assombris le 23/10/2026 (audit) : chaque texte mesuré
-     ≥ 4,5:1 sur fond, panneau, survol, pastille, cartes teintées et menu actif. */
-  --muted: #5d5d64;
-  --faint: #62626a;
-
-  --accent: #d91f34; /* plus profond : texte blanc du bouton à 5:1 (4,47 avant l'audit) */
-  --accent-hover: #ff3347;
-  --accent-text: #bb1529; /* rouge en texte sur fond clair */
-  --accent-soft: rgba(217, 31, 52, 0.1);
-  --accent-line: rgba(217, 31, 52, 0.3);
-  --on-accent: #ffffff;
-  --logo-loop: #d91e32; /* boucle du logo sur fond clair (COORY_LOGO.md §3) */
-
-  --inv: #141416;
-  --on-inv: #ffffff;
-
-  --ok: #166534;
-  --ok-soft: rgba(22, 101, 52, 0.1);
-  --ok-line: rgba(22, 101, 52, 0.3);
-  --warn: #8a4b06;
-  --warn-soft: rgba(138, 75, 6, 0.12);
-  --danger: #ffffff;
-  --danger-soft: var(--accent);
-
-  --run: #1d4ed8;
-  --run-soft: rgba(29, 78, 216, 0.1);
-  --strength: #6d28d9;
-  --strength-soft: rgba(109, 40, 217, 0.1);
-  --hyrox: #9a3412;
-  --hyrox-soft: rgba(154, 52, 18, 0.1);
-  --hybrid: #115e59;
-  --hybrid-soft: rgba(17, 94, 89, 0.1);
-
-  --blue: #1d4ed8;
-  --blue-soft: rgba(29, 78, 216, 0.12);
-  --amber: #924207;
-  --amber-soft: rgba(146, 66, 7, 0.12);
-  --green: #166534;
-  --green-soft: rgba(22, 101, 52, 0.12);
-
-  --female: #be185d;
-  --female-soft: rgba(190, 24, 93, 0.1);
-  --male: #0369a1;
-  --male-soft: rgba(3, 105, 161, 0.1);
-
-  --shadow-frame: 0 30px 70px rgba(0, 0, 0, 0.1);
-
-  --tint-card: 10%;
-  --tint-nav: 16%;
-  --tint-block: 12%;
-
-  color-scheme: light;
-}
-
-/* Après le bloc clair : à spécificité égale avec :root, le sombre l'emporte quand il est choisi. */
 [data-theme="dark"] {
-  /* Sombre (au choix). BLEU NUIT des maquettes d'Antonino (D-29, couleurs mesurées sur les images),
-     après le graphite de D-23/D-24 : fond #0b1019, panneaux #121821, cartes teintées par couleur. */
-  --page: #070b12; /* autour du cadre de l'app */
-  --bg: #0b1019; /* fond de l'app */
-  --panel: #0f1520; /* panneau de marque des pages d'entrée */
-  --surface: #121821; /* cartes, panneaux */
-  --surface-2: #1a2331; /* survol, en-têtes de tableau */
-  --chip: #243044; /* pastilles, avatars */
-  --bar: #2b3648; /* pistes de progression, barres prévues */
-  /* Filets et textes secondaires renforcés (D-22), revérifiés sur le graphite (D-23) :
-     texte ≥ 4,5:1, contour des champs ≥ 3:1. */
-  --line: rgba(255, 255, 255, 0.14); /* bordures de carte, séparateurs */
-  --line-2: rgba(255, 255, 255, 0.36); /* contours de champs, zones d'ajout en pointillés */
-  --text: #f1f4f8;
-  /* Gris bleutés des maquettes (D-29), mesurés : ≥ 4,5:1 sur fond, panneau, survol, pastille,
-     cartes teintées et menu actif. */
-  --muted: #9ba6b5;
-  --faint: #97a2b2;
+  --page: #0c0d0f;
+  --bg: #141518;
+  --panel: #17181b; /* barre du haut */
+  --surface: #1b1c20; /* cartes, panneaux, agenda */
+  --surface-2: #212226; /* survol */
+  --field: #1d1e22;
+  --chip: #25262b;
+  --avatar: #2a2b30;
+  --bar: #34363c;
+  --checkbox: #55575e;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-soft: rgba(255, 255, 255, 0.05);
+  --line-2: rgba(255, 255, 255, 0.1); /* bordure des boutons secondaires et des champs */
+  --text: #f5f5f2;
+  --text-2: #c8c9cc;
+  --muted: #9a9ca3; /* 6,2:1 sur une carte */
+  --faint: #8a8c93; /* 5,1:1 sur une carte */
 
-  --accent: #ff3347; /* aplats : bouton principal, stat héro, segment actif */
-  --accent-hover: #ff5c6c;
-  /* Rouge utilisé comme texte : plus clair que l'aplat (D-23, D-24) pour rester ≥ 4,5:1 sur les cartes
-     et les pastilles rouges. Le logo garde le rouge de marque exact via --logo-loop. */
-  --accent-text: #ff6b79;
-  --accent-soft: rgba(255, 51, 71, 0.11); /* fond de pastille teintée */
-  --accent-line: rgba(255, 51, 71, 0.35); /* bordure de l'élément actif, bandeau d'erreur */
-  --on-accent: #ffffff; /* TOUJOURS du blanc sur le rouge */
-  --logo-loop: #ff3347; /* boucle du logo sur fond sombre (COORY_LOGO.md §3) */
+  /* L'or, couleur Coory (§2.2). */
+  --accent: #e2c47a;
+  --accent-hover: #ebd193;
+  --accent-text: #e2c47a; /* 10:1 sur une carte */
+  --accent-soft: color-mix(in srgb, #e2c47a 9%, transparent);
+  --accent-line: color-mix(in srgb, #e2c47a 38%, transparent);
+  --on-accent: #141518; /* texte sur l'or, 10,8:1 */
+  --gold-surface: #1d1c19;
+  --logo-loop: #e2c47a;
 
-  --inv: #f1f4f8; /* bouton inversé, pastille de filtre sélectionnée */
-  --on-inv: #0b1019;
+  /* Choix actif (filtres, segments) : fond --avatar et texte principal (§6 « Filtre »). */
+  --inv: #2a2b30;
+  --on-inv: #f5f5f2;
 
-  --ok: #4ade80;
-  --ok-soft: rgba(74, 222, 128, 0.12);
-  --ok-line: rgba(74, 222, 128, 0.3);
-  --warn: #fbbf24;
-  --warn-soft: rgba(251, 191, 36, 0.12);
-  --danger: #ffffff; /* alerte = pastille rouge pleine, texte blanc */
-  --danger-soft: var(--accent);
+  /* Statuts sobres (§2.4). */
+  --ok: #7ccd93;
+  --ok-soft: color-mix(in srgb, #7ccd93 12%, transparent);
+  --ok-line: color-mix(in srgb, #7ccd93 30%, transparent);
+  --warn: #e9a864; /* attention, en retard, priorité haute */
+  --warn-soft: color-mix(in srgb, #e9a864 12%, transparent);
+  --alert: #f47b74; /* erreur, suppression (6,4:1 sur une carte) */
+  --alert-soft: color-mix(in srgb, #f47b74 13%, transparent);
+  --alert-fill: #c13c3b; /* fond rouge sous texte blanc (5,3:1) */
+  --danger: #ffffff;
+  --danger-soft: #c13c3b;
 
-  /* Couleurs par discipline (D-23) : elles DISENT quelque chose (course, muscu, Hyrox, hybride),
-     jamais de la décoration. Texte ≥ 4,5:1 sur carte et sur sa pastille. */
-  --run: #60a5fa;
-  --run-soft: rgba(96, 165, 250, 0.12);
-  --strength: #a78bfa;
-  --strength-soft: rgba(167, 139, 250, 0.12);
-  --hyrox: #fb923c;
-  --hyrox-soft: rgba(251, 146, 60, 0.12);
-  --hybrid: #2dd4bf;
-  --hybrid-soft: rgba(45, 212, 191, 0.12);
+  /* Disciplines (§2.3) : séances, badges, petites barres, progressions. */
+  --run: #8fb7ff;
+  --run-soft: color-mix(in srgb, #8fb7ff 14%, transparent);
+  --strength: #c3a6f6;
+  --strength-soft: color-mix(in srgb, #c3a6f6 14%, transparent);
+  --hyrox: #efa46b;
+  --hyrox-soft: color-mix(in srgb, #efa46b 14%, transparent);
+  --hybrid: #48cfc8;
+  --hybrid-soft: color-mix(in srgb, #48cfc8 14%, transparent);
 
-  /* Teintes des icônes de chiffres clés (D-24) : séances (bleu), durée (ambre), canal de contact (vert). */
-  --blue: #60a5fa;
-  --blue-soft: rgba(96, 165, 250, 0.18);
-  --amber: #fbbf24;
-  --amber-soft: rgba(251, 191, 36, 0.18);
-  --green: #4ade80;
-  --green-soft: rgba(74, 222, 128, 0.18);
+  /* Teintes héritées (icônes de chiffres clés) : ramenées aux statuts, sans nouvelle couleur. */
+  --blue: #8fb7ff;
+  --blue-soft: color-mix(in srgb, #8fb7ff 14%, transparent);
+  --amber: #e9a864;
+  --amber-soft: color-mix(in srgb, #e9a864 14%, transparent);
+  --green: #7ccd93;
+  --green-soft: color-mix(in srgb, #7ccd93 14%, transparent);
 
-  /* Repère ♀ / ♂ à côté du nom (D-25). Le symbole porte le sens, la couleur aide à le repérer. */
-  --female: #f472b6;
-  --female-soft: rgba(244, 114, 182, 0.12);
-  --male: #38bdf8;
-  --male-soft: rgba(56, 189, 248, 0.12);
+  --female: #f198bb;
+  --female-soft: color-mix(in srgb, #f198bb 14%, transparent);
+  --male: #66c3f6;
+  --male-soft: color-mix(in srgb, #66c3f6 14%, transparent);
 
-  --shadow-frame: 0 30px 80px rgba(0, 0, 0, 0.55); /* seule ombre autorisée : le cadre extérieur */
+  --shadow-frame: none; /* aplats : pas d'ombre (§1.5) */
 
-  /* Intensité des teintes de couleur (D-29), propre à chaque thème : franche en sombre comme les
-     maquettes, plus légère en clair pour garder le texte gris ≥ 4,5:1. */
-  /* Prompt §2 (23/10/2026) : cartes chiffrées 10 %, blocs d'agenda 12 %, dans les deux thèmes
-     (texte gris mesuré ≥ 4,5:1 sur ces teintes en clair). */
-  --tint-card: 10%; /* cartes chiffrées teintées */
-  --tint-nav: 24%; /* élément actif du menu */
-  --tint-block: 12%; /* blocs de séance dans l'agenda */
+  --tint-card: 0%; /* cartes chiffrées : fond gris ; la couleur va sur l'icône, le chiffre et les ronds (29/10) */
+  --tint-nav: 0%;
+  --tint-block: 16%; /* cases de séance : discipline à 16 % (§6 Agenda) */
 
   color-scheme: dark;
+}
+
+/* Clair, au choix dans les Paramètres : mêmes règles, or ancien. */
+[data-theme="light"] {
+  --page: #e9e8e3;
+  --bg: #f4f3ef;
+  --panel: #fbfaf7;
+  --surface: #ffffff;
+  --surface-2: #f1f0ec;
+  --field: #ffffff;
+  --chip: #ebeae5;
+  --avatar: #e4e3de;
+  --bar: #d9d8d2;
+  --checkbox: #a3a29c;
+  --line: rgba(0, 0, 0, 0.08);
+  --line-soft: rgba(0, 0, 0, 0.05);
+  --line-2: rgba(0, 0, 0, 0.16);
+  --text: #141518;
+  --text-2: #3a3b40;
+  --muted: #5f6168;
+  --faint: #66686f;
+
+  --accent: #cba553; /* or ancien, même teinte que l'or du graphite ; texte foncé dessus, 7,9:1 */
+  --accent-hover: #d4b05d;
+  --accent-text: #7d5e07; /* or en texte, 6:1 sur blanc */
+  --accent-soft: color-mix(in srgb, #cba553 12%, transparent);
+  --accent-line: color-mix(in srgb, #cba553 45%, transparent);
+  --on-accent: #141518;
+  --gold-surface: #fbf6ea;
+  --logo-loop: #cba553;
+
+  --inv: #141518;
+  --on-inv: #ffffff;
+
+  --ok: #10703a;
+  --ok-soft: color-mix(in srgb, #10703a 10%, transparent);
+  --ok-line: color-mix(in srgb, #10703a 30%, transparent);
+  --warn: #8a4c00;
+  --warn-soft: color-mix(in srgb, #8a4c00 11%, transparent);
+  --alert: #963d3a;
+  --alert-soft: color-mix(in srgb, #963d3a 9%, transparent);
+  --alert-fill: #ac3031;
+  --danger: #ffffff;
+  --danger-soft: #ac3031;
+
+  --run: #365ba1;
+  --run-soft: color-mix(in srgb, #365ba1 10%, transparent);
+  --strength: #694b96;
+  --strength-soft: color-mix(in srgb, #694b96 10%, transparent);
+  --hyrox: #8e4900;
+  --hyrox-soft: color-mix(in srgb, #8e4900 10%, transparent);
+  --hybrid: #00726d;
+  --hybrid-soft: color-mix(in srgb, #00726d 10%, transparent);
+
+  --blue: #365ba1;
+  --blue-soft: color-mix(in srgb, #365ba1 10%, transparent);
+  --amber: #8a4c00;
+  --amber-soft: color-mix(in srgb, #8a4c00 10%, transparent);
+  --green: #10703a;
+  --green-soft: color-mix(in srgb, #10703a 10%, transparent);
+
+  --female: #903c61;
+  --female-soft: color-mix(in srgb, #903c61 10%, transparent);
+  --male: #006697;
+  --male-soft: color-mix(in srgb, #006697 10%, transparent);
+
+  --shadow-frame: none;
+  --tint-card: 0%;
+  --tint-nav: 0%;
+  --tint-block: 14%;
+
+  color-scheme: light;
 }

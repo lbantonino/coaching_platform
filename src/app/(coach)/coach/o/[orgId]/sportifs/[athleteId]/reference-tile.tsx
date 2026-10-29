@@ -9,22 +9,22 @@ import { formatDate } from "@/lib/format";
 // Classes de chaque couleur de repère (la règle de couleur est dans referenceTone, D-25).
 export const tileTones = {
   run: {
-    tile: "border-run/40 bg-[color-mix(in_srgb,var(--run)_7%,var(--bg))]",
+    tile: "border-run/40 bg-surface",
     icon: "border border-run/50 bg-run-soft text-run",
     text: "text-run",
   },
   hyrox: {
-    tile: "border-hyrox/40 bg-[color-mix(in_srgb,var(--hyrox)_7%,var(--bg))]",
+    tile: "border-hyrox/40 bg-surface",
     icon: "border border-hyrox/50 bg-hyrox-soft text-hyrox",
     text: "text-hyrox",
   },
   heart: {
-    tile: "border-accent/40 bg-[color-mix(in_srgb,var(--accent)_6%,var(--bg))]",
+    tile: "border-accent/40 bg-surface",
     icon: "border border-accent/50 bg-accent-soft text-accent-text",
     text: "text-accent-text",
   },
   strength: {
-    tile: "border-strength/40 bg-[color-mix(in_srgb,var(--strength)_7%,var(--bg))]",
+    tile: "border-strength/40 bg-surface",
     icon: "border border-strength/50 bg-strength-soft text-strength",
     text: "text-strength",
   },

@@ -117,7 +117,7 @@ function HistoryList({
             <button
               type="submit"
               aria-label={`Supprimer la mesure ${referenceKindLabels[entry.kind]} du ${formatDate(entry.measuredOn)}`}
-              className="inline-flex size-8 items-center justify-center rounded-[7px] text-muted hover:bg-surface-2 hover:text-accent-text"
+              className="inline-flex size-8 items-center justify-center rounded-[7px] text-muted hover:bg-surface-2 hover:text-alert"
             >
               <Trash2 aria-hidden size={15} strokeWidth={1.7} />
             </button>

@@ -9,42 +9,22 @@ export function ScrollToDay({
   children,
   className,
   style,
-  fitPage = false,
   scrollHour = 0,
 }: {
   children: ReactNode;
   className: string;
   style?: CSSProperties;
-  // Tableau de bord sur ordinateur (D-35) : la grille défile dans sa carte, à la hauteur de l'écran.
-  fitPage?: boolean;
-  // Grille qui défile verticalement (ordinateur) : heure d'ouverture, comptée depuis la première ligne.
+  // La grille de 24 heures défile dans sa carte : heure placée en haut à l'ouverture (06:00 par
+  // défaut, réglage « Heures de l'agenda »).
   scrollHour?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const scroller = ref.current;
     const hours = scroller?.querySelector<HTMLElement>("[data-drop-date]");
-    const card = scroller?.closest("section");
-    if (!fitPage || !scroller || !hours || !card) return;
-    // Tout ce qui entoure la zone qui défile : au-dessus (page, chiffres clés, en-tête de la carte)
-    // et en dessous (légende, bas de la carte), + 16 px pour ne pas toucher le bas de l'écran.
-    const measure = () => {
-      const box = scroller.getBoundingClientRect();
-      const below = card.getBoundingClientRect().bottom - box.bottom;
-      scroller.style.setProperty(
-        "--grid-chrome-lg",
-        `${Math.round(box.top + window.scrollY + below + 16)}px`,
-      );
-    };
-    measure();
-    if (scroller.scrollHeight > scroller.clientHeight) {
-      scroller.scrollTop = (scrollHour * hours.offsetHeight) / Number(hours.dataset.span || 16);
-    }
-    const observer = new ResizeObserver(measure);
-    const main = card.closest("main");
-    if (main) observer.observe(main);
-    return () => observer.disconnect();
-  }, [fitPage, scrollHour]);
+    if (!scroller || !hours) return;
+    scroller.scrollTop = (scrollHour * hours.offsetHeight) / Number(hours.dataset.span || 24);
+  }, [scrollHour]);
   useEffect(() => {
     const scroller = ref.current;
     const start = scroller?.querySelector<HTMLElement>("[data-start]");

@@ -53,7 +53,7 @@ function DeleteGoalButton({
         type="submit"
         aria-label={`Supprimer : ${goalTitle(goal)}`}
         title="Supprimer (objectif saisi par erreur)"
-        className="inline-flex size-8 items-center justify-center rounded-sm text-muted hover:bg-surface-2 hover:text-accent-text"
+        className="inline-flex size-8 items-center justify-center rounded-sm text-muted hover:bg-surface-2 hover:text-alert"
       >
         <Trash2 aria-hidden size={15} strokeWidth={1.7} />
       </button>

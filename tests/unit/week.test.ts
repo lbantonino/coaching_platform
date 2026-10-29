@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatHours,
-  formatHoursShort,
-  isoWeek,
   lastSessionFor,
   layoutWeek,
   mondayOf,
@@ -69,18 +67,6 @@ describe("plage horaire, heures courtes et numéro de semaine", () => {
   it("élargit la grille pour ne couper aucune séance", () => {
     const late = { ...piste, id: "late", startTime: "21:30", durationMinutes: 75 };
     expect(layoutWeek([late], "2026-10-19").lastHour).toBe(23);
-  });
-
-  it("écrit les heures d'un jour en décimal", () => {
-    expect(formatHoursShort(150)).toBe("2,5 h");
-    expect(formatHoursShort(225)).toBe("3,75 h");
-    expect(formatHoursShort(0)).toBe("");
-  });
-
-  it("donne le numéro de semaine ISO", () => {
-    expect(isoWeek("2026-10-23")).toBe(43);
-    expect(isoWeek("2026-01-01")).toBe(1);
-    expect(isoWeek("2027-01-01")).toBe(53);
   });
 });
 

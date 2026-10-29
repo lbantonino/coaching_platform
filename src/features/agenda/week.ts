@@ -170,30 +170,6 @@ export function formatHours(minutes: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, "0")}`;
 }
 
-// Heures en nombre décimal pour les en-têtes de jour : « 2,5 h », « 3,75 h » ; rien sans séance.
-const decimalHours = new Intl.NumberFormat("fr-BE", { maximumFractionDigits: 2 });
-
-export function formatHoursShort(minutes: number): string {
-  return minutes > 0 ? `${decimalHours.format(minutes / 60)} h` : "";
-}
-
-// Numéro de semaine ISO 8601 (la semaine 1 contient le premier jeudi de l'année).
-export function isoWeek(day: string): number {
-  const date = new Date(`${day}T00:00:00Z`);
-  const thursday = new Date(date);
-  thursday.setUTCDate(date.getUTCDate() + 3 - ((date.getUTCDay() + 6) % 7));
-  const firstThursday = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 4));
-  return (
-    1 +
-    Math.round(
-      ((thursday.getTime() - firstThursday.getTime()) / 86_400_000 -
-        3 +
-        ((firstThursday.getUTCDay() + 6) % 7)) /
-        7,
-    )
-  );
-}
-
 // Dernière séance passée d'un sportif (jusqu'à `now` inclus), dans les 60 derniers jours.
 export function lastSessionFor(
   athleteId: string,

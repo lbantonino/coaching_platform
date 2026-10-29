@@ -33,7 +33,9 @@ export default function AccessDeniedPage() {
   return (
     <div className="flex flex-col gap-[22px]">
       <EntryIcon icon={ShieldX} />
-      <p className="font-mono text-[12px] font-medium tracking-[0.06em] text-muted">ERREUR 403</p>
+      <p className="text-[13px] font-semibold tracking-[0.08em] text-accent-text uppercase">
+        Erreur 403
+      </p>
       <EntryTitle sub="Cette page appartient à un autre espace ou ton compte n'a pas les droits nécessaires.">
         Accès refusé
       </EntryTitle>
