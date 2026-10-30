@@ -1203,6 +1203,166 @@ export type Database = {
           },
         ];
       };
+      exercise_favorites: {
+        Row: {
+          created_at: string;
+          exercise_id: string;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          exercise_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          exercise_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exercise_favorites_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      exercises: {
+        Row: {
+          aliases_en: string[];
+          aliases_fr: string[];
+          archived_at: string | null;
+          attribution_required: boolean;
+          bodyweight: boolean;
+          category: string;
+          created_at: string;
+          created_by: string | null;
+          difficulty: string | null;
+          disciplines: string[];
+          equipment: string[];
+          exportable: boolean;
+          family: string | null;
+          hyrox_station: number | null;
+          id: string;
+          image_end: string | null;
+          image_main: string | null;
+          image_source: string | null;
+          image_start: string | null;
+          instructions_fr: string[];
+          key: string | null;
+          metrics: string[];
+          name_en: string | null;
+          name_fr: string;
+          organization_id: string | null;
+          primary_muscles: string[];
+          review_status: string;
+          secondary_muscles: string[];
+          source: string;
+          source_ids: string[];
+          tags: string[];
+          unilateral: boolean;
+          updated_at: string;
+          variant_of: string | null;
+          video_url: string | null;
+          visibility: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          aliases_en?: string[];
+          aliases_fr?: string[];
+          archived_at?: string | null;
+          attribution_required?: boolean;
+          bodyweight?: boolean;
+          category: string;
+          created_at?: string;
+          created_by?: string | null;
+          difficulty?: string | null;
+          disciplines?: string[];
+          equipment?: string[];
+          exportable?: boolean;
+          family?: string | null;
+          hyrox_station?: number | null;
+          id?: string;
+          image_end?: string | null;
+          image_main?: string | null;
+          image_source?: string | null;
+          image_start?: string | null;
+          instructions_fr?: string[];
+          key?: string | null;
+          metrics?: string[];
+          name_en?: string | null;
+          name_fr: string;
+          organization_id?: string | null;
+          primary_muscles?: string[];
+          review_status?: string;
+          secondary_muscles?: string[];
+          source: string;
+          source_ids?: string[];
+          tags?: string[];
+          unilateral?: boolean;
+          updated_at?: string;
+          variant_of?: string | null;
+          video_url?: string | null;
+          visibility?: string;
+        };
+        Update: {
+          aliases_en?: string[];
+          aliases_fr?: string[];
+          archived_at?: string | null;
+          attribution_required?: boolean;
+          bodyweight?: boolean;
+          category?: string;
+          created_at?: string;
+          created_by?: string | null;
+          difficulty?: string | null;
+          disciplines?: string[];
+          equipment?: string[];
+          exportable?: boolean;
+          family?: string | null;
+          hyrox_station?: number | null;
+          id?: string;
+          image_end?: string | null;
+          image_main?: string | null;
+          image_source?: string | null;
+          image_start?: string | null;
+          instructions_fr?: string[];
+          key?: string | null;
+          metrics?: string[];
+          name_en?: string | null;
+          name_fr?: string;
+          organization_id?: string | null;
+          primary_muscles?: string[];
+          review_status?: string;
+          secondary_muscles?: string[];
+          source?: string;
+          source_ids?: string[];
+          tags?: string[];
+          unilateral?: boolean;
+          updated_at?: string;
+          variant_of?: string | null;
+          video_url?: string | null;
+          visibility?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "exercises_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "exercises_variant_of_fkey";
+            columns: ["variant_of"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       expense_categories: {
         Row: {
           color: string;

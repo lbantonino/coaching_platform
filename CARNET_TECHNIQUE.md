@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **29/10/2026** (design « Graphite & Or », vue Liste de l'Agenda, factures émises, classement des Documents, Coory à l'international).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **30/10/2026** (bibliothèque d'exercices : catalogue RepDB + Hyrox Coory, exercices du coach).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -71,11 +71,14 @@ Coaching_Platform/
 │   ├── lib/                        Outils techniques (clients Supabase, variables d'env, dates)
 │   └── proxy.ts                    S'exécute avant chaque requête (session, redirections)
 ├── public/logo/                    Les symboles du logo en SVG (pour les e-mails et exports à venir)
+├── public/exercises/               Les images de la bibliothèque (RepDB et Hyrox Coory), une par clé
+├── resources/exercise-library/     La préparation du catalogue d'exercices (données, décisions, rapport)
 ├── supabase/
 │   ├── migrations/                 L'historique du schéma de la base, en SQL
 │   ├── seed.sql                    Les données de démonstration (fictives)
 │   ├── tests/database/             Les tests SQL de sécurité
 │   └── config.toml                 La configuration de Supabase local
+├── scripts/catalog-*.mjs           Catalogue d'exercices -> images et migration SQL
 └── tests/e2e/                      Les tests Playwright
 ```
 
@@ -398,6 +401,18 @@ Autre leçon, sur le jaune de sélection : un or légèrement transparent posé 
 La Comptabilité sait maintenant ce que le coach dépense, et donc ce qu'il gagne vraiment. Deux idées. Une dépense qui revient (le loyer) n'est écrite **qu'une fois**, avec « chaque mois » : le calcul la fait compter chaque mois (un 31 compte le 28 février), et « Arrêter » lui donne une date de fin sans effacer le passé. Et le résultat suit le **statut TVA** : pour un coach soumis à la TVA, la TVA n'est pas à lui (il la reverse ou la récupère), donc on compare gagné HTVA et dépensé HTVA. Le changement de devise a dû apprendre à **couper** une dépense mensuelle en cours : la partie passée reste en euros, une copie convertie reprend à la prochaine date.
 
 Côté mise en page, chaque rangée de widgets a la même hauteur. L'astuce vient du tableau de bord : la colonne de droite est posée « par-dessus » sa case (position absolue), si bien que c'est le tableau de gauche qui décide de la hauteur, et la liste de droite défile à l'intérieur. Enfin, l'en-tête de toutes les pages a été unifié ; un piège rencontré : une icône est une fonction, et une fonction ne peut pas être envoyée d'un composant serveur à un composant du navigateur. L'icône imposée est donc dessinée côté serveur.
+### La bibliothèque d'exercices : préparer les données avant de coder (30/10)
+Avant d'écrire une ligne de l'application, on a préparé le **catalogue** à part, dans `resources/exercise-library` : 701 exercices de RepDB (une base d'exercices sous licence) et 115 propositions du kit d'Antonino. Ce travail de préparation a montré des pièges qu'aucun écran n'aurait révélés : des doublons qui ne portent pas le même nom (« Wall balls avec cible » et « Wall Ball »), des « exercices » qui sont en fait des réglages (« SkiErg 500 m » est le SkiErg avec une distance), des tags qui promettaient qu'un mouvement est « sans risque pour les genoux ». Les 701 noms et consignes ont été traduits en français. Le résultat est un **catalogue maître** reproductible : on corrige une décision, on relance le script, et les identifiants ne bougent pas. Chaque exercice a une clé lisible (`sled-pull`) et un identifiant calculé à partir d'elle, le même en développement et en production.
+
+**La licence a guidé l'architecture.** RepDB autorise l'usage dans une application, avec une mention visible, mais interdit de republier ses données. D'où une colonne `exportable` (toujours fausse pour RepDB) et la mention affichée sur la page et sur chaque fiche. Antonino a tranché le reste : la musculation et le cardio gardent les images RepDB, la section Hyrox utilise ses propres illustrations, et la mobilité et la course sont **masquées plutôt que supprimées**. Ce sont des données, pas du code : on les réactive en changeant une ligne.
+
+**Dans l'application**, le catalogue est une table en lecture seule (la base refuse toute modification venant de l'app), chargée par une migration générée depuis le catalogue maître. Les favoris sont propres à chaque personne, et la sécurité empêche de mettre en favori l'exercice privé d'une autre organisation. La liste (607 exercices) est filtrée directement dans la page, et les filtres restent dans l'adresse pour retrouver la liste en revenant d'une fiche. Un piège de design : les illustrations Hyrox sont détourées, avec un short et un traîneau noirs, qui disparaissaient sur le fond sombre. Elles sont donc posées sur une tuile claire, dans les deux thèmes.
+
+### Les exercices du coach : la même table, d'autres droits (30/10)
+Un coach peut maintenant ajouter ses propres exercices, avec une photo et un lien vidéo. On n'a pas créé de nouvelle table : la table des exercices avait déjà une colonne « organisation », vide pour le catalogue commun. Une ligne avec une organisation appartient à ce coach. La base l'impose de trois façons : des **droits par colonne** (l'app ne peut écrire que les champs d'un exercice du coach), des **règles par ligne** (seulement dans SON organisation, jamais le catalogue) et une **contrainte** (un exercice de coach ne porte jamais de donnée RepDB, et sa photo est rangée dans le dossier de son organisation). Les tests SQL le vérifient avec deux coachs de deux organisations.
+
+La photo est réduite **dans le téléphone**, avant l'envoi (1 200 px au plus) : une photo de 5 Mo devient quelques centaines de Ko, et la bibliothèque reste rapide. Le serveur vérifie quand même les premiers octets du fichier, sans croire son nom. Pour la vidéo, on garde un simple lien qui s'ouvre dans l'application concernée. Intégrer Instagram ou TikTok dans la page aurait chargé leurs traceurs, et donc demandé un consentement RGPD. « Créer ma variante » reprend la rubrique, les muscles et le matériel d'un exercice du catalogue, mais pas ses consignes RepDB : l'exercice du coach reste 100 % à lui.
+
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
 
 Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraiment.

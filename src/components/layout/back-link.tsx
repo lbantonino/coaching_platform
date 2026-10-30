@@ -66,7 +66,16 @@ function previousPage() {
   const previous =
     current && current.split("?")[0] !== path ? current : sessionStorage.getItem(PREVIOUS);
   const previousPath = previous?.split("?")[0];
-  if (!previous || !previousPath || previousPath === path || previousPath.startsWith(`${path}/`)) {
+  // Une page de création (« Créer un exercice », « Nouveau sportif »…) n'est jamais une destination de
+  // retour : après l'enregistrement, revenir sur un formulaire vide n'a pas de sens.
+  const creation = /\/(nouveau|nouvelle)$/.test(previousPath ?? "");
+  if (
+    !previous ||
+    !previousPath ||
+    creation ||
+    previousPath === path ||
+    previousPath.startsWith(`${path}/`)
+  ) {
     return null;
   }
   return { href: previous, title: sessionStorage.getItem(TITLE + previousPath) };

@@ -8,7 +8,7 @@
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
-| P3 Bibliothèque | À faire | Aucun | - |
+| P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris) ; P3-02 à P3-06 à faire | db:test 417/417, test 267/267, test:e2e 167 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Session du 30/10/2026 |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
 | P6 Sportif/feedback | À faire | Aucun | - |
@@ -31,6 +31,52 @@
 ## Dernière session
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+
+### « Créer un exercice » pour le coach (D-76)
+```
+Date : 2026-10-30 (soir)
+Fait : migration 20261030120000_exercices_du_coach (video_url https ; droits par colonne + RLS
+  d'organisation sur exercises ; contrainte : ligne d'organisation = source coach, sans clé ni donnée
+  RepDB, photo dans org/<org>/ ; bucket privé exercise-images de 5 Mo et ses 3 politiques).
+  domain/exercises/coach-exercise.ts (formulaire, lien vidéo, plateforme, chemin de la photo) ;
+  groupes musculaires utilisables comme muscles ; checkPhoto(maxBytes) ; features/exercises/
+  coach-actions.ts (créer, modifier, supprimer) ; queries : catalogue + exercices de l'organisation,
+  fiche par clé ou identifiant ; route /exercices/images/[exerciseId] ; pages /coach/bibliotheque/nouveau
+  (?variante=) et /[cle]/modifier ; exercise-form.tsx (photo réduite à 1 200 px dans le navigateur) ;
+  fiche : Mon exercice, Modifier, Supprimer, Créer ma variante, Voir la vidéo ; liste : Créer un
+  exercice, filtre Mes exercices, Mobilité visible si le coach en a ; lien retour : jamais vers /nouveau.
+Tests : lint et format OK ; Vitest 278/278 (coach-exercise 11) ; pgTAP 433/433 (32_exercices_du_coach
+  16, 31_bibliotheque adapté) ; Playwright : 169 réussis + 13 ignorés ; library.spec 2 échecs dus à un
+  exercice de démonstration laissé par mes captures (base remise à zéro, 8/8 ensuite avec
+  coach-exercises.spec) ; athlete-overview 2 échecs liés à la date (30/10) ; captures téléphone et
+  ordinateur ; db:reset OK.
+Suite : revoir le design de la fiche d'un exercice (demande d'Antonino), puis « Envoyer au sportif ».
+```
+
+### Bibliothèque d'exercices (D-75, P3-01)
+```
+Date : 2026-10-30
+Préparation (T0, hors app) : resources/exercise-library (kit d'Antonino + RepDB), scripts/build-master-catalog.mjs,
+  décisions dans curation/, livrables dans catalog/ (catalogue maître 747 exercices, doublons, séances types,
+  à valider, illustrations, rapport RAPPORT_T0.md). Noms et consignes RepDB traduits ; tags médicaux retirés.
+Fait : migration 20261030100000_bibliotheque_exercices (exercises : catalogue commun en lecture seule,
+  prête pour les exercices d'organisation ; exercise_favorites par personne ; RLS) et
+  20261030100100_catalogue_exercices (générée par scripts/catalog-to-sql.mjs : 605 visibles = Musculation 580,
+  Cardio 17, Hyrox 8 ; 142 masqués = mobilité, course, créations sans contenu, 2 variantes de Sled pull). Images :
+  scripts/catalog-images.mjs -> public/exercises/<clé>/<pose>.webp (1 089 RepDB, 8 Hyrox d'Antonino
+  converties). domain/exercises (vocabulary, library : recherche
+  sans accents FR/EN/alias, filtres, ordre des stations, filtres dans l'adresse) ; features/exercises
+  (queries, actions : favori) ; /coach/bibliotheque (rubriques, recherche, muscle, matériel, favoris,
+  30 par 30, mention RepDB) et /coach/bibliotheque/[cle] (images, muscles et matériel, consignes, mention ; les
+  réglages de séance restent en base pour la création de programme) ; components/blocks exercise-image (tuile claire --illustration, remplacement) et
+  favorite-button (tuile --illustration = bleu des images RepDB, #daf1fd) ; menu : la fiche allume Bibliothèque ; resources/ exclu de lint et Prettier.
+Tests : check OK ; Vitest 267/267 (exercise-library 11) ; pgTAP 417/417 (31_bibliotheque 16) ;
+  Playwright 167 réussis + 13 ignorés, 2 échecs hors bibliothèque (athlete-overview attend
+  « Sam 31 10:00 », l'app écrit « Demain 10:00 » le 30/10) ; library.spec 4/4 ; captures téléphone et
+  ordinateur, sombre et clair ; db:reset OK.
+Reste : relecture des traductions par un coach ; consignes des 3 exercices Hyrox Coory visibles ; « Créer un exercice » (image importée, lien vidéo) ; lier les séances aux
+  exercices (éditeur, P4).
+```
 
 ### Dépenses et résultat (D-73) ; en-têtes de page et Facturation côte à côte (D-74)
 ```

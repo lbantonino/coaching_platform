@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maquette · Bibliothèque Coory</title>
+<!-- Maquette (30/10/2026), PAS du code de l'app : elle sert à valider la page Bibliothèque avant de la
+     construire. Couleurs : les vrais jetons de Coory (src/styles/tokens.css). Illustrations : RepDB
+     (licence gratuite, mention obligatoire en bas de page). -->
+<link rel="stylesheet" href="../../../src/styles/tokens.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 500 15px/1.45 "Inter Tight", system-ui, sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  .mono { font-family: "Geist Mono", ui-monospace, monospace; }
+  .muted { color: var(--muted); }
+  /* Coquille */
+  .shell { display: flex; min-height: 100vh; }
+  .side { display: none; }
+  .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .logo { font: 700 19px "Space Grotesk"; letter-spacing: -0.03em; }
+  .logo b { color: var(--accent); }
+  .topbar .title { flex: 1; text-align: center; font-weight: 600; font-size: 16px; }
+  .icon-btn { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+  main { flex: 1; min-width: 0; padding: 16px 16px 120px; display: flex; flex-direction: column; gap: 16px; }
+  .head { display: none; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--line-2); background: transparent; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn-gold { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+  .btn-full { width: 100%; }
+  /* Onglets */
+  .tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+  .tab { flex: none; height: 40px; padding: 0 14px; border-radius: 999px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .tab.on { background: var(--selected); color: var(--text); font-weight: 600; }
+  .tab .soon { font: 500 10px "Geist Mono"; color: var(--faint); border: 1px solid var(--line-2); border-radius: 6px; padding: 1px 5px; }
+  /* Recherche et filtres */
+  .search { display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--field); }
+  .search input { flex: 1; border: 0; background: transparent; outline: none; font-size: 16px; }
+  .filters { display: flex; flex-direction: column; gap: 10px; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+  .chip { flex: none; height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap; font-size: 14px; }
+  .chip.on { background: var(--selected); border-color: transparent; }
+  .chip .count { font: 500 11px "Geist Mono"; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .selects { display: flex; gap: 8px; }
+  .selects select { flex: 1; min-width: 0; height: 44px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--field); padding: 0 12px; }
+  /* Bandeau Hyrox */
+  .stations { display: none; border: 1px solid var(--line); background: var(--surface); border-radius: 16px; padding: 14px; gap: 10px; flex-direction: column; }
+  .stations.show { display: flex; }
+  .stations ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 14px; font-size: 14px; }
+  .stations li { display: flex; gap: 8px; align-items: baseline; }
+  .stations li .n { font: 500 11px "Geist Mono"; color: var(--hyrox); }
+  /* Grille */
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .card { position: relative; display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 16px; padding: 8px 8px 12px; text-align: left; cursor: pointer; transition: background .15s; }
+  .card:hover { background: var(--surface-2); }
+  .thumb { position: relative; aspect-ratio: 1 / 1; border-radius: 11px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb svg { width: 40px; height: 40px; }
+  .star { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 10px; border: 0; display: inline-flex; align-items: center; justify-content: center; background: rgba(12,13,15,.55); color: #f5f5f2; cursor: pointer; }
+  .star.on { color: var(--accent); }
+  .star.on svg { fill: var(--accent); }
+  .station-tag { position: absolute; left: 14px; top: 14px; font: 500 11px "Geist Mono"; background: rgba(12,13,15,.6); color: #f5f5f2; border-radius: 7px; padding: 3px 7px; }
+  .card h3 { margin: 0 4px; font-size: 15px; font-weight: 600; line-height: 1.25; }
+  .meta { margin: 0 4px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); }
+  .badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 7px; padding: 3px 8px; font-size: 12px; font-weight: 500; }
+  .src { font: 500 10.5px "Geist Mono"; color: var(--faint); }
+  .credit { font-size: 12.5px; color: var(--muted); text-align: center; padding: 8px 0; }
+  .credit a { color: var(--text); }
+  .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 40px 0; }
+  /* Fenêtres */
+  dialog { border: 0; padding: 0; background: transparent; color: var(--text); max-width: 100vw; max-height: 100vh; }
+  dialog::backdrop { background: rgba(8,9,10,.6); }
+  .sheet { position: fixed; inset: auto 0 0 0; max-height: 92vh; overflow-y: auto; background: var(--surface); border-radius: 20px 20px 0 0; padding: 10px 18px 28px; display: flex; flex-direction: column; gap: 16px; }
+  .grip { width: 36px; height: 4px; border-radius: 4px; background: var(--bar); margin: 0 auto; }
+  .sheet-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .sheet-head h2 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .imgs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .imgs img { width: 100%; border-radius: 12px; }
+  .imgs.one { grid-template-columns: 1fr; }
+  .imgs.one img { max-height: 260px; object-fit: cover; }
+  .section { display: flex; flex-direction: column; gap: 8px; }
+  .section h4 { margin: 0; font: 500 11.5px "Geist Mono"; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 10px; font-size: 13px; }
+  .tag.primary { border-color: transparent; background: var(--chip); }
+  ol.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+  .measure { display: inline-flex; align-items: center; gap: 6px; border-radius: 10px; padding: 6px 10px; background: var(--chip); font-size: 13.5px; }
+  .video { display: flex; align-items: center; gap: 10px; border: 1px dashed var(--line-2); border-radius: 12px; padding: 12px; font-size: 14px; }
+  .actions { display: flex; flex-direction: column; gap: 8px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13.5px; font-weight: 500; }
+  .field input, .field textarea, .field select { height: 48px; border-radius: 12px; border: 1px solid var(--line-2); background: var(--field); padding: 0 14px; font-size: 16px; }
+  .field textarea { height: 90px; padding: 10px 14px; resize: vertical; }
+  .seg { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); flex-wrap: wrap; }
+  .seg button { flex: 1; height: 38px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; padding: 0 10px; }
+  .seg button.on { background: var(--selected); color: var(--text); font-weight: 600; }
+  .togg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .togg button { height: 38px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; cursor: pointer; }
+  .togg button.on { background: var(--selected); border-color: transparent; }
+  .hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+  .theme-switch { position: fixed; right: 14px; bottom: 14px; z-index: 30; background: var(--surface); }
+
+  /* Ordinateur */
+  @media (min-width: 1024px) {
+    .topbar { display: none; }
+    .side { display: flex; flex-direction: column; gap: 4px; width: 250px; flex: none; padding: 20px 14px; background: var(--panel); border-right: 1px solid var(--line); position: sticky; top: 0; height: 100vh; }
+    .side .logo { font-size: 24px; padding: 4px 10px 18px; }
+    .nav { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 12px; color: var(--muted); font-size: 15px; }
+    .nav.on { background: var(--selected); color: var(--text); }
+    .nav.on svg { color: var(--accent-text); }
+    .nav svg { width: 19px; height: 19px; }
+    main { padding: 17px 32px 56px; gap: 18px; }
+    .head { display: flex; align-items: center; gap: 12px; }
+    .head h1 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.03em; white-space: nowrap; }
+    .head .spacer { flex: 1; }
+    .head .fake-search { width: 260px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: flex; align-items: center; gap: 10px; padding: 0 12px; color: var(--muted); font-size: 14px; }
+    .mobile-only { display: none; }
+    .tabs, .chips { margin: 0; padding: 0; }
+    .filters { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .filters .search { flex: 1 1 320px; }
+    .selects select { width: 190px; flex: none; }
+    .chips { flex-wrap: wrap; overflow: visible; }
+    .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .stations ol { grid-template-columns: repeat(4, 1fr); }
+    .sheet { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 680px; max-height: 88vh; border-radius: 18px; padding: 22px 24px; }
+    .grip { display: none; }
+    .actions { flex-direction: row; }
+    .fiche-body { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  }
+  @media (min-width: 1280px) { .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side" aria-label="Menu (maquette)">
+    <div class="logo">C<b>∞</b>ry</div>
+    <div class="nav"><i data-lucide="house"></i>Tableau de bord</div>
+    <div class="nav"><i data-lucide="users"></i>Sportifs</div>
+    <div class="nav"><i data-lucide="file-text"></i>Programmes</div>
+    <div class="nav"><i data-lucide="calendar"></i>Agenda</div>
+    <div class="nav"><i data-lucide="receipt"></i>Facturation</div>
+    <div class="nav"><i data-lucide="calculator"></i>Comptabilité</div>
+    <div class="nav on"><i data-lucide="book-open"></i>Bibliothèque</div>
+  </aside>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header class="topbar">
+      <span class="logo">C<b>∞</b>ry</span>
+      <span class="title">Bibliothèque</span>
+      <span class="icon-btn"><i data-lucide="sparkles"></i></span>
+      <span class="icon-btn"><i data-lucide="bell"></i></span>
+      <span class="icon-btn"><i data-lucide="menu"></i></span>
+    </header>
+    <main>
+      <div class="head">
+        <i data-lucide="book-open" class="muted"></i>
+        <h1>Bibliothèque</h1>
+        <span class="spacer"></span>
+        <span class="fake-search"><i data-lucide="search" style="width:16px"></i>Rechercher dans Coory…</span>
+        <span class="icon-btn"><i data-lucide="sparkles"></i></span>
+        <span class="icon-btn"><i data-lucide="bell"></i></span>
+        <button class="btn btn-gold" data-open-create><i data-lucide="plus"></i>Créer un exercice</button>
+      </div>
+      <button class="btn btn-gold btn-full mobile-only" data-open-create><i data-lucide="plus"></i>Créer un exercice</button>
+
+      <nav class="tabs" aria-label="Rubriques de la bibliothèque">
+        <button class="tab on">Exercices</button>
+        <button class="tab">Blocs <span class="soon">P3</span></button>
+        <button class="tab">Séances types <span class="soon">P3</span></button>
+        <button class="tab">Semaines types <span class="soon">P3</span></button>
+      </nav>
+
+      <div class="filters">
+        <label class="search"><i data-lucide="search" class="muted"></i><input id="q" placeholder="Exercice, muscle, matériel…" autocomplete="off"></label>
+        <div class="selects">
+          <select id="muscle"><option value="">Tous les muscles</option></select>
+          <select id="equip"><option value="">Tout le matériel</option></select>
+        </div>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Type d'exercice"></div>
+
+      <section class="stations" id="stations" aria-label="Les 8 stations Hyrox">
+        <strong>Les 8 stations Hyrox, dans l'ordre de la course</strong>
+        <ol>
+          <li><span class="n">1</span>SkiErg · 1000 m</li><li><span class="n">2</span>Sled Push · 50 m</li>
+          <li><span class="n">3</span>Sled Pull · 50 m</li><li><span class="n">4</span>Burpee Broad Jump · 80 m</li>
+          <li><span class="n">5</span>Rameur · 1000 m</li><li><span class="n">6</span>Farmers Carry · 200 m</li>
+          <li><span class="n">7</span>Sandbag Lunges · 100 m</li><li><span class="n">8</span>Wall Balls · 100 reps</li>
+        </ol>
+        <p class="hint">1 km de course entre chaque station.</p>
+      </section>
+
+      <div class="grid" id="grid"></div>
+      <p class="credit">Données et illustrations d'exercices : <a href="https://repdb.co" rel="nofollow">Exercise data by RepDB (repdb.co)</a></p>
+    </main>
+  </div>
+</div>
+
+<dialog id="fiche"><div class="sheet" id="fiche-body"></div></dialog>
+<dialog id="create"><div class="sheet" id="create-body"></div></dialog>
+<button class="btn theme-switch" id="theme" title="Changer de thème"><i data-lucide="sun-moon"></i>Thème</button>
+
+<script>
+const DATA = [{"id": "squat", "name": "Squat", "alias": "Barbell Back Squat", "type": "musculation", "source": "repdb", "station": null, "equipment": "Barre", "level": "Intermédiaire", "primary": ["Fessiers", "Quadriceps"], "secondary": ["Lombaires", "Ischio-jambiers"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/squat-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/squat-peak.webp"], "measures": ["Séries", "Répétitions", "Charge (kg)", "Repos"], "instructions": ["Barre posée sur le haut du dos, pieds largeur d'épaules.", "Descends en poussant les hanches en arrière, genoux dans l'axe des pieds.", "Remonte en poussant dans le sol jusqu'à l'extension complète."], "tips": ["Garde le dos neutre et la poitrine haute."], "fav": true, "used": 4}, {"id": "bench-press", "name": "Développé couché", "alias": "Barbell Bench Press", "type": "musculation", "source": "repdb", "station": null, "equipment": "Barre", "level": "Intermédiaire", "primary": ["Pectoraux"], "secondary": ["Deltoïde antérieur", "Triceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/bench-press-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/bench-press-peak.webp"], "measures": ["Séries", "Répétitions", "Charge (kg)", "Repos"], "instructions": ["Allonge-toi sur le banc, les yeux sous la barre.", "Prends la barre un peu plus large que les épaules.", "Décroche la barre et descends-la au milieu de la poitrine.", "Pousse jusqu'à bras tendus, puis recommence."], "tips": ["Pieds bien à plat au sol.", "Garde une légère cambrure du bas du dos.", "Pousse dans les jambes pour rester stable."], "fav": false, "used": 2}, {"id": "deadlift", "name": "Soulevé de terre", "alias": "Barbell Deadlift", "type": "musculation", "source": "repdb", "station": null, "equipment": "Barre", "level": "Intermédiaire", "primary": ["Lombaires", "Fessiers", "Ischio-jambiers"], "secondary": ["Quadriceps", "Trapèzes"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/deadlift-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/deadlift-peak.webp"], "measures": ["Séries", "Répétitions", "Charge (kg)", "Repos"], "instructions": ["Pieds sous la barre, prise juste à l'extérieur des jambes.", "Dos neutre, pousse le sol pour décoller la barre.", "Verrouille hanches et genoux en haut, puis redescends contrôlé."], "tips": ["La barre reste au contact des jambes."], "fav": false, "used": 0}, {"id": "romanian-deadlift", "name": "Soulevé de terre roumain", "alias": "Romanian Deadlift", "type": "musculation", "source": "repdb", "station": null, "equipment": "Barre", "level": "Intermédiaire", "primary": ["Fessiers", "Ischio-jambiers"], "secondary": ["Lombaires"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/romanian-deadlift-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/romanian-deadlift-peak.webp"], "measures": ["Séries", "Répétitions", "Charge (kg)", "Repos"], "instructions": ["Debout, barre en main, genoux légèrement fléchis.", "Bascule le buste en reculant les hanches, barre le long des cuisses.", "Remonte en serrant les fessiers."], "tips": ["Le dos reste plat du début à la fin."], "fav": false, "used": 0}, {"id": "pull-up", "name": "Traction", "alias": "Pull-Up", "type": "musculation", "source": "repdb", "station": null, "equipment": "Barre de traction", "level": "Intermédiaire", "primary": ["Grand dorsal"], "secondary": ["Biceps", "Deltoïde postérieur", "Rhomboïdes"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/pull-up-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/pull-up-peak.webp"], "measures": ["Séries", "Répétitions", "Charge (kg)", "Repos"], "instructions": ["Suspends-toi à la barre, mains en pronation.", "Tire jusqu'à passer le menton au-dessus de la barre.", "Redescends bras tendus, sous contrôle."], "tips": ["Pas d'élan avec les jambes."], "fav": false, "used": 0}, {"id": "dumbbell-shoulder-press", "name": "Développé épaules haltères", "alias": "Dumbbell Shoulder Press", "type": "musculation", "source": "repdb", "station": null, "equipment": "Haltères", "level": "Intermédiaire", "primary": ["Deltoïde antérieur", "Deltoïde latéral"], "secondary": ["Trapèzes", "Triceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/dumbbell-shoulder-press-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/dumbbell-shoulder-press-peak.webp"], "measures": ["Séries", "Répétitions", "Charge (kg)", "Repos"], "instructions": ["Assis ou debout, haltères à hauteur d'épaules.", "Pousse au-dessus de la tête jusqu'à bras tendus.", "Redescends lentement à hauteur d'épaules."], "tips": ["Gaine les abdos pour ne pas cambrer."], "fav": false, "used": 0}, {"id": "kettlebell-swing", "name": "Swing kettlebell", "alias": "Kettlebell Swing", "type": "musculation", "source": "repdb", "station": null, "equipment": "Kettlebell", "level": "Intermédiaire", "primary": ["Fessiers", "Ischio-jambiers"], "secondary": ["Lombaires", "Quadriceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/kettlebell-swing-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/kettlebell-swing-peak.webp"], "measures": ["Répétitions", "Charge (kg)"], "instructions": ["Kettlebell devant toi, charnière de hanche.", "Lance la kettlebell entre les jambes puis projette les hanches vers l'avant.", "Laisse-la redescendre et enchaîne."], "tips": ["La force vient des hanches, pas des bras."], "fav": false, "used": 0}, {"id": "plank", "name": "Gainage planche", "alias": "Plank", "type": "musculation", "source": "repdb", "station": null, "equipment": "Poids du corps", "level": "Débutant", "primary": ["Abdominaux", "Transverse"], "secondary": ["Lombaires"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/plank-main.webp"], "measures": ["Séries", "Durée (s)", "Repos"], "instructions": ["Appuis sur les avant-bras et la pointe des pieds.", "Corps aligné des épaules aux talons.", "Tiens la position en respirant calmement."], "tips": ["Ne laisse pas tomber le bassin."], "fav": false, "used": 0}, {"id": "ski-erg", "name": "SkiErg", "alias": "SkiErg", "type": "hyrox", "source": "repdb", "station": 1, "equipment": "SkiErg", "level": "Intermédiaire", "primary": ["Grand dorsal", "Abdominaux", "Triceps"], "secondary": ["Fessiers", "Ischio-jambiers", "Quadriceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/ski-erg-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/ski-erg-peak.webp"], "measures": ["Distance (m)", "Temps", "Calories", "Watts"], "instructions": ["Debout face à la machine, une poignée dans chaque main.", "Tire vers le bas en fléchissant hanches et genoux.", "Remonte les bras et recommence en rythme."], "tips": ["En course Hyrox : 1000 m."], "fav": false, "used": 2}, {"id": "sled-push", "name": "Sled Push", "alias": "Sled Push", "type": "hyrox", "source": "repdb", "station": 2, "equipment": "Traîneau", "level": "Intermédiaire", "primary": ["Mollets", "Fessiers", "Quadriceps"], "secondary": ["Ischio-jambiers", "Abdominaux", "Triceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/sled-push-main.webp"], "measures": ["Distance (m)", "Charge (kg)"], "instructions": ["Mains hautes sur les montants, corps penché vers l'avant.", "Pousse avec les jambes, petits pas rapides.", "Garde le dos plat jusqu'au bout de la ligne."], "tips": ["En course Hyrox : 4 × 12,5 m."], "fav": true, "used": 3}, {"id": "rowing-machine", "name": "Rameur", "alias": "Rowing Machine", "type": "hyrox", "source": "repdb", "station": 5, "equipment": "Rameur", "level": "Débutant", "primary": ["Grand dorsal", "Quadriceps"], "secondary": ["Biceps", "Lombaires", "Fessiers", "Ischio-jambiers", "Rhomboïdes", "Trapèzes"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/rowing-machine-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/rowing-machine-peak.webp"], "measures": ["Distance (m)", "Temps", "Calories", "Watts"], "instructions": ["Pieds sanglés, poignée en main, bras tendus.", "Pousse avec les jambes, puis tire la poignée vers le bas des côtes.", "Reviens dans l'ordre inverse : bras, buste, jambes."], "tips": ["En course Hyrox : 1000 m."], "fav": false, "used": 0}, {"id": "kettlebell-farmers-walk", "name": "Farmers Carry", "alias": "Kettlebell Farmer's Walk", "type": "hyrox", "source": "repdb", "station": 6, "equipment": "Kettlebell", "level": "Intermédiaire", "primary": ["Avant-bras", "Trapèzes"], "secondary": ["Lombaires", "Fessiers", "Quadriceps", "Abdominaux"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/kettlebell-farmers-walk-main.webp"], "measures": ["Distance (m)", "Charge (kg)"], "instructions": ["Une kettlebell dans chaque main, bras le long du corps.", "Marche d'un pas rapide en gardant les épaules basses.", "Pose les charges sans arrondir le dos."], "tips": ["En course Hyrox : 200 m."], "fav": false, "used": 0}, {"id": "wall-ball", "name": "Wall Ball", "alias": "Wall Ball", "type": "hyrox", "source": "repdb", "station": 8, "equipment": "Médecine-ball", "level": "Intermédiaire", "primary": ["Fessiers", "Quadriceps"], "secondary": ["Deltoïde antérieur", "Abdominaux", "Triceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/wall-ball-main.webp"], "measures": ["Répétitions", "Charge (kg)", "Hauteur cible"], "instructions": ["Ballon contre la poitrine, pieds largeur d'épaules.", "Descends en squat puis lance le ballon vers la cible en te relevant.", "Rattrape-le et enchaîne directement le squat suivant."], "tips": ["En course Hyrox : 100 répétitions."], "fav": true, "used": 3}, {"id": "burpees", "name": "Burpees", "alias": "Burpees", "type": "hyrox", "source": "repdb", "station": null, "equipment": "Poids du corps", "level": "Intermédiaire", "primary": ["Fessiers", "Pectoraux", "Quadriceps"], "secondary": ["Deltoïde antérieur", "Abdominaux", "Triceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/burpees-main.webp"], "measures": ["Répétitions"], "instructions": ["Descends mains au sol, saute les pieds en arrière.", "Poitrine au sol, puis ramène les pieds sous toi.", "Saute bras en l'air."], "tips": [], "fav": false, "used": 0}, {"id": "walking-lunge", "name": "Fentes marchées", "alias": "Walking Lunge", "type": "hyrox", "source": "repdb", "station": null, "equipment": "Poids du corps", "level": "Intermédiaire", "primary": ["Fessiers", "Quadriceps"], "secondary": ["Moyen fessier", "Ischio-jambiers"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/walking-lunge-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/walking-lunge-peak.webp"], "measures": ["Distance (m)", "Charge (kg)"], "instructions": ["Grand pas en avant, genou arrière proche du sol.", "Pousse sur la jambe avant pour enchaîner l'autre pas.", "Avance ainsi sur la distance prévue."], "tips": [], "fav": false, "used": 0}, {"id": "sled-row", "name": "Sled Row", "alias": "Sled Row", "type": "hyrox", "source": "repdb", "station": null, "equipment": "Traîneau", "level": "Intermédiaire", "primary": ["Grand dorsal"], "secondary": ["Biceps", "Fessiers", "Deltoïde postérieur", "Rhomboïdes", "Trapèzes"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/sled-row-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/sled-row-peak.webp"], "measures": ["Distance (m)", "Charge (kg)"], "instructions": ["Face au traîneau, une poignée dans chaque main.", "Recule en tirant les coudes vers l'arrière.", "Garde le dos plat."], "tips": [], "fav": false, "used": 0}, {"id": "running", "name": "Course", "alias": "Running", "type": "course", "source": "repdb", "station": null, "equipment": "Poids du corps", "level": "Débutant", "primary": ["Mollets", "Quadriceps"], "secondary": ["Fessiers", "Ischio-jambiers", "Fléchisseurs de hanche", "Soléaire"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/running-main.webp"], "measures": ["Distance", "Durée", "Allure"], "instructions": ["Course continue ou fractionnée selon la séance."], "tips": [], "fav": false, "used": 0}, {"id": "high-knees", "name": "Montées de genoux", "alias": "High Knees", "type": "course", "source": "repdb", "station": null, "equipment": "Poids du corps", "level": "Débutant", "primary": ["Fléchisseurs de hanche", "Quadriceps"], "secondary": ["Mollets", "Abdominaux"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/high-knees-main.webp"], "measures": ["Distance (m)", "Répétitions"], "instructions": ["Cours sur place ou en avançant lentement.", "Monte les genoux à hauteur de hanches.", "Reste sur l'avant du pied, bras actifs."], "tips": ["Gamme d'échauffement."], "fav": true, "used": 0}, {"id": "jump-rope", "name": "Corde à sauter", "alias": "Jump Rope", "type": "course", "source": "repdb", "station": null, "equipment": "Corde à sauter", "level": "Débutant", "primary": ["Mollets", "Soléaire"], "secondary": ["Avant-bras", "Quadriceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/jump-rope-main.webp"], "measures": ["Durée", "Répétitions"], "instructions": ["Petits sauts sur l'avant du pied.", "Tourne la corde avec les poignets."], "tips": [], "fav": false, "used": 0}, {"id": "box-jump", "name": "Box jump", "alias": "Box Jump", "type": "course", "source": "repdb", "station": null, "equipment": "Box", "level": "Intermédiaire", "primary": ["Fessiers", "Quadriceps"], "secondary": ["Mollets", "Ischio-jambiers", "Soléaire"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/box-jump-start.webp", "https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/box-jump-peak.webp"], "measures": ["Répétitions", "Hauteur (cm)"], "instructions": ["Face à la box, pieds largeur de hanches.", "Saute à deux pieds et réceptionne-toi en douceur.", "Redescends en marchant."], "tips": [], "fav": false, "used": 0}, {"id": "kneeling-hip-flexor-stretch", "name": "Étirement fléchisseurs de hanche", "alias": "Kneeling Hip Flexor Stretch", "type": "mobilite", "source": "repdb", "station": null, "equipment": "Poids du corps", "level": "Débutant", "primary": ["Fléchisseurs de hanche"], "secondary": ["Adducteurs", "Quadriceps"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/kneeling-hip-flexor-stretch-main.webp"], "measures": ["Durée (s)", "Côtés"], "instructions": ["Un genou au sol, l'autre pied devant.", "Avance doucement le bassin.", "Tiens puis change de côté."], "tips": [], "fav": false, "used": 0}, {"id": "pigeon-stretch", "name": "Posture du pigeon", "alias": "Pigeon Stretch", "type": "mobilite", "source": "repdb", "station": null, "equipment": "Poids du corps", "level": "Débutant", "primary": ["Fessiers"], "secondary": ["Moyen fessier", "Fléchisseurs de hanche"], "images": ["https://raw.githubusercontent.com/RepDB/exercise-dataset/main/images/flat/pigeon-stretch-main.webp"], "measures": ["Durée (s)", "Côtés"], "instructions": ["Une jambe pliée devant toi, l'autre tendue derrière.", "Descends le buste vers l'avant.", "Respire calmement puis change de côté."], "tips": [], "fav": false, "used": 0}, {"id": "sled-pull", "name": "Sled Pull", "alias": "Sled Pull", "type": "hyrox", "source": "coory", "station": 3, "equipment": "Traîneau, corde", "level": "Intermédiaire", "primary": ["Grand dorsal", "Biceps"], "secondary": ["Fessiers", "Ischio-jambiers"], "images": [], "measures": ["Distance (m)", "Charge (kg)"], "instructions": ["Recule dans la zone, corde en main.", "Tire le traîneau vers toi, main après main.", "Garde le dos plat et les jambes fléchies."], "tips": ["En course Hyrox : 4 × 12,5 m."], "fav": false, "used": 3}, {"id": "burpee-broad-jump", "name": "Burpee Broad Jump", "alias": "Burpee Broad Jump", "type": "hyrox", "source": "coory", "station": 4, "equipment": "Poids du corps", "level": "Intermédiaire", "primary": ["Quadriceps", "Fessiers", "Pectoraux"], "secondary": ["Mollets", "Épaules"], "images": [], "measures": ["Distance (m)", "Répétitions"], "instructions": ["Burpee : poitrine au sol, puis relève-toi.", "Enchaîne un saut en longueur à deux pieds.", "Recommence là où tu as atterri."], "tips": ["En course Hyrox : 80 m."], "fav": false, "used": 2}, {"id": "sandbag-lunges", "name": "Sandbag Lunges", "alias": "Sandbag Lunges", "type": "hyrox", "source": "coory", "station": 7, "equipment": "Sandbag", "level": "Intermédiaire", "primary": ["Quadriceps", "Fessiers"], "secondary": ["Abdominaux", "Ischio-jambiers"], "images": [], "measures": ["Distance (m)", "Charge (kg)"], "instructions": ["Sandbag sur les épaules, derrière la nuque.", "Fente avant, genou arrière qui touche le sol.", "Avance pas après pas sur la distance."], "tips": ["En course Hyrox : 100 m."], "fav": false, "used": 2}, {"id": "talons-fesses", "name": "Talons-fesses", "alias": "Butt kicks", "type": "course", "source": "coory", "station": null, "equipment": "Poids du corps", "level": "Débutant", "primary": ["Ischio-jambiers"], "secondary": ["Mollets"], "images": [], "measures": ["Distance (m)", "Répétitions"], "instructions": ["Cours lentement en ramenant les talons vers les fessiers.", "Reste sur l'avant du pied, fréquence rapide."], "tips": ["Gamme d'échauffement."], "fav": false, "used": 5}, {"id": "skipping-a", "name": "Skipping A", "alias": "A-skip", "type": "course", "source": "coory", "station": null, "equipment": "Poids du corps", "level": "Intermédiaire", "primary": ["Fléchisseurs de hanche", "Mollets"], "secondary": ["Quadriceps"], "images": [], "measures": ["Distance (m)", "Répétitions"], "instructions": ["Monte un genou en sautillant sur l'autre pied.", "Alterne, bras opposé au genou.", "Pose l'avant du pied sous le bassin."], "tips": ["Gamme d'échauffement."], "fav": true, "used": 5}, {"id": "mobilite-coach", "name": "Routine mobilité hanches", "alias": "", "type": "mobilite", "source": "moi", "station": null, "equipment": "Tapis", "level": "Débutant", "primary": ["Fléchisseurs de hanche", "Fessiers"], "secondary": [], "images": [], "measures": ["Durée (s)", "Côtés"], "instructions": ["Suis la vidéo : 6 mouvements, 40 s chacun."], "tips": [], "video": "Vidéo YouTube du coach", "fav": false, "used": 1}]
+;
+const TYPES = {
+  musculation: { label: "Musculation", color: "var(--strength)", soft: "var(--strength-soft)", icon: "dumbbell" },
+  hyrox: { label: "Hyrox", color: "var(--hyrox)", soft: "var(--hyrox-soft)", icon: "flame" },
+  course: { label: "Course", color: "var(--run)", soft: "var(--run-soft)", icon: "footprints" },
+  mobilite: { label: "Mobilité", color: "var(--ok)", soft: "var(--ok-soft)", icon: "person-standing" },
+};
+const SOURCE = { repdb: "", coory: "Coory", moi: "Mon exercice" };
+let filter = "tous";
+const $ = (s) => document.querySelector(s);
+const icons = () => window.lucide && lucide.createIcons();
+
+function chips() {
+  const count = (fn) => DATA.filter(fn).length;
+  const list = [
+    ["tous", "Tous", null, DATA.length],
+    ...Object.entries(TYPES).map(([k, t]) => [k, t.label, t.color, count((e) => e.type === k)]),
+    ["moi", "Mes exercices", null, count((e) => e.source === "moi")],
+    ["fav", "Favoris", "star", count((e) => e.fav)],
+  ];
+  $("#chips").innerHTML = list.map(([k, l, c, n]) =>
+    `<button class="chip ${filter === k ? "on" : ""}" data-f="${k}">${c === "star" ? '<i data-lucide="star" style="width:15px"></i>' : c ? `<span class="dot" style="background:${c}"></span>` : ""}${l} <span class="count">${n}</span></button>`).join("");
+  $("#chips").querySelectorAll("button").forEach((b) => b.onclick = () => { filter = b.dataset.f; render(); });
+}
+
+function card(e) {
+  const t = TYPES[e.type];
+  const thumb = e.images.length
+    ? `<img src="${e.images[e.images.length > 1 ? 1 : 0]}" alt="" loading="lazy">`
+    : `<i data-lucide="${e.source === "moi" ? "circle-play" : t.icon}" style="color:${t.color}"></i>`;
+  return `<button class="card" data-id="${e.id}">
+    <div class="thumb" style="background:${t.soft}">${thumb}</div>
+    ${e.station ? `<span class="station-tag">Station ${e.station}</span>` : ""}
+    <span class="star ${e.fav ? "on" : ""}" data-star="${e.id}" role="button" aria-label="Favori"><i data-lucide="star" style="width:17px"></i></span>
+    <h3>${e.name}</h3>
+    <div class="meta"><span class="badge" style="background:${t.soft};color:${t.color}">${t.label}</span>${e.equipment}${SOURCE[e.source] ? `<span class="src">· ${SOURCE[e.source]}</span>` : ""}</div>
+  </button>`;
+}
+
+function render() {
+  chips();
+  const q = $("#q").value.trim().toLowerCase();
+  const mu = $("#muscle").value, eq = $("#equip").value;
+  const shown = DATA.filter((e) =>
+    (filter === "tous" || e.type === filter || (filter === "moi" && e.source === "moi") || (filter === "fav" && e.fav)) &&
+    (!mu || e.primary.includes(mu) || e.secondary.includes(mu)) && (!eq || e.equipment === eq) &&
+    (!q || [e.name, e.alias, e.equipment, ...e.primary, ...e.secondary].join(" ").toLowerCase().includes(q)))
+    .sort((a, b) => filter === "hyrox" ? (a.station ?? 99) - (b.station ?? 99) : 0);
+  $("#stations").classList.toggle("show", filter === "hyrox");
+  $("#grid").innerHTML = shown.length ? shown.map(card).join("") : `<p class="empty">Aucun exercice. Crée le tien avec « Créer un exercice ».</p>`;
+  $("#grid").querySelectorAll(".card").forEach((c) => c.onclick = (ev) => {
+    const star = ev.target.closest("[data-star]");
+    if (star) { const e = DATA.find((x) => x.id === star.dataset.star); e.fav = !e.fav; render(); return; }
+    openFiche(c.dataset.id);
+  });
+  icons();
+}
+
+function openFiche(id) {
+  const e = DATA.find((x) => x.id === id), t = TYPES[e.type];
+  const imgs = e.images.length
+    ? `<div class="imgs ${e.images.length === 1 ? "one" : ""}">${e.images.map((s) => `<img src="${s}" alt="">`).join("")}</div>`
+    : `<div class="thumb" style="background:${t.soft};aspect-ratio:16/7"><i data-lucide="${e.source === "moi" ? "circle-play" : t.icon}" style="color:${t.color}"></i></div>`;
+  $("#fiche-body").innerHTML = `
+    <div class="grip"></div>
+    <div class="sheet-head"><div>
+      <h2>${e.name}</h2>
+      <div class="meta" style="margin:6px 0 0"><span class="badge" style="background:${t.soft};color:${t.color}">${t.label}</span>
+      ${e.station ? `<span class="badge" style="background:var(--chip)">Station Hyrox ${e.station}</span>` : ""}
+      <span>${e.level}</span>${e.alias && e.alias !== e.name ? `<span class="src">· ${e.alias}</span>` : ""}</div>
+    </div><button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    ${imgs}
+    <div class="fiche-body">
+      <div class="section"><h4>Dans une séance, tu règles</h4><div class="tags">${e.measures.map((m) => `<span class="measure">${m}</span>`).join("")}</div>
+        <p class="hint">Ce sont les cases de l'éditeur de programmes pour cet exercice.</p></div>
+      <div class="section"><h4>Muscles</h4><div class="tags">${e.primary.map((m) => `<span class="tag primary">${m}</span>`).join("")}${e.secondary.map((m) => `<span class="tag">${m}</span>`).join("")}</div>
+        <p class="hint">Matériel : ${e.equipment}</p></div>
+      <div class="section"><h4>Consignes</h4><ol class="steps">${e.instructions.map((s) => `<li>${s}</li>`).join("")}</ol></div>
+      <div class="section"><h4>Conseils</h4>${e.tips.length ? `<ul class="steps" style="padding-left:18px">${e.tips.map((s) => `<li>${s}</li>`).join("")}</ul>` : `<p class="hint">—</p>`}
+        <h4 style="margin-top:8px">Ta vidéo</h4>
+        <div class="video"><i data-lucide="${e.video ? "circle-play" : "link"}"></i>${e.video ?? "Ajouter le lien de ta vidéo (YouTube, Instagram…)"}</div></div>
+    </div>
+    <p class="hint">${e.used ? `Utilisé dans ${e.used} programme${e.used > 1 ? "s" : ""}.` : "Pas encore utilisé dans un programme."} ${e.source === "repdb" ? "Exercice du catalogue Coory : tu peux en créer une variante à ton nom." : ""}</p>
+    <div class="actions">
+      <button class="btn btn-gold"><i data-lucide="plus"></i>Ajouter à une séance</button>
+      <button class="btn"><i data-lucide="copy"></i>${e.source === "moi" ? "Modifier" : "Créer ma variante"}</button>
+      <button class="btn" data-star-fiche><i data-lucide="star"></i>${e.fav ? "Retirer des favoris" : "Ajouter aux favoris"}</button>
+    </div>`;
+  $("#fiche-body").querySelector("[data-close]").onclick = () => $("#fiche").close();
+  $("#fiche-body").querySelector("[data-star-fiche]").onclick = () => { e.fav = !e.fav; render(); openFiche(id); };
+  if (!$("#fiche").open) $("#fiche").showModal();
+  icons();
+}
+
+const PRESETS = {
+  musculation: ["Séries", "Répétitions", "Charge (kg)", "Repos", "Tempo", "Durée (s)"],
+  hyrox: ["Distance (m)", "Charge (kg)", "Répétitions", "Temps", "Calories", "Watts"],
+  course: ["Distance", "Durée", "Allure", "Répétitions", "Fréquence cardiaque"],
+  mobilite: ["Durée (s)", "Répétitions", "Côtés"],
+};
+const DEFAULTS = { musculation: 4, hyrox: 2, course: 3, mobilite: 2 };
+function openCreate(type = "musculation") {
+  $("#create-body").innerHTML = `
+    <div class="grip"></div>
+    <div class="sheet-head"><div><h2>Créer un exercice</h2><p class="hint" style="margin-top:4px">Il sera à toi : visible seulement dans ton organisation.</p></div>
+      <button class="icon-btn" data-close><i data-lucide="x"></i></button></div>
+    <div class="field"><label>Nom</label><input placeholder="Ex. : Skipping B"></div>
+    <div class="field"><label>Type</label><div class="seg">${Object.entries(TYPES).map(([k, t]) => `<button data-type="${k}" class="${k === type ? "on" : ""}">${t.label}</button>`).join("")}</div></div>
+    <div class="field"><label>Ce qu'on règle dans une séance</label><div class="togg">${PRESETS[type].map((m, i) => `<button class="${i < DEFAULTS[type] ? "on" : ""}">${m}</button>`).join("")}</div>
+      <p class="hint">Pré-choisi selon le type ; ce sont les cases de l'éditeur de programmes.</p></div>
+    <div class="field"><label>Matériel <span class="muted">(facultatif)</span></label><input placeholder="Ex. : élastique, haies basses"></div>
+    <div class="field"><label>Consignes <span class="muted">(facultatif)</span></label><textarea placeholder="Une étape par ligne"></textarea></div>
+    <div class="field"><label>Lien de ta vidéo <span class="muted">(facultatif)</span></label><input placeholder="https://youtube.com/…"></div>
+    <button class="btn btn-gold btn-full">Créer l'exercice</button>`;
+  $("#create-body").querySelector("[data-close]").onclick = () => $("#create").close();
+  $("#create-body").querySelectorAll("[data-type]").forEach((b) => b.onclick = () => openCreate(b.dataset.type));
+  $("#create-body").querySelectorAll(".togg button").forEach((b) => b.onclick = () => b.classList.toggle("on"));
+  if (!$("#create").open) $("#create").showModal();
+  icons();
+}
+
+const muscles = [...new Set(DATA.flatMap((e) => [...e.primary, ...e.secondary]))].sort((a, b) => a.localeCompare(b, "fr"));
+$("#muscle").innerHTML += muscles.map((m) => `<option>${m}</option>`).join("");
+const equips = [...new Set(DATA.map((e) => e.equipment))].sort((a, b) => a.localeCompare(b, "fr"));
+$("#equip").innerHTML += equips.map((m) => `<option>${m}</option>`).join("");
+["#q", "#muscle", "#equip"].forEach((s) => $(s).addEventListener("input", render));
+document.querySelectorAll("[data-open-create]").forEach((b) => b.onclick = () => openCreate());
+document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (ev) => { if (ev.target === d) d.close(); }));
+$("#theme").onclick = () => { const h = document.documentElement; h.dataset.theme = h.dataset.theme === "dark" ? "light" : "dark"; };
+const params = new URLSearchParams(location.search);
+if (params.get("theme")) document.documentElement.dataset.theme = params.get("theme");
+if (params.get("filtre")) filter = params.get("filtre");
+render();
+if (params.get("fiche")) openFiche(params.get("fiche"));
+if (params.has("creer")) openCreate();
+</script>
+</body>
+</html>

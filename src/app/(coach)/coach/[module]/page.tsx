@@ -18,6 +18,7 @@ const BUILT = new Set([
   "notifications",
   "documents",
   "recherche",
+  "bibliotheque",
 ]);
 
 export function generateStaticParams() {

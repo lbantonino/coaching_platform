@@ -74,7 +74,8 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
   main.push(
     moduleEntry("facturation", Receipt),
     moduleEntry("comptabilite", Calculator),
-    moduleEntry("bibliotheque", BookOpen),
+    // La fiche d'un exercice (/coach/bibliotheque/<clé>) allume la Bibliothèque.
+    { ...moduleEntry("bibliotheque", BookOpen), match: under("/coach/bibliotheque") },
   );
   // D-38 : Assistant IA, puis Messages juste en dessous (demande d'Antonino du 24/10), Tâches,
   // Documents, Notifications ; Paramètres passe dans la roue dentée en bas du menu (avec Thème,
@@ -185,6 +186,7 @@ const coachTitles: [RegExp, string][] = [
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+\/modifier$/, "Modifier la séance"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+$/, "Séance"],
   [/^\/coach\/facturation\/[^/]+$/, "Facture"],
+  [/^\/coach\/bibliotheque\/[^/]+$/, "Exercice"],
 ];
 
 function moduleTitle(modules: Record<string, ModuleInfo>, prefix: string, pathname: string) {
