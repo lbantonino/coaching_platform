@@ -29,6 +29,8 @@
   --color-inv: var(--inv);
   --color-selected: var(--selected);
   --color-selected-hover: var(--selected-hover);
+  --color-illustration: var(--illustration);
+  --color-on-illustration: var(--on-illustration);
   --color-on-inv: var(--on-inv);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);

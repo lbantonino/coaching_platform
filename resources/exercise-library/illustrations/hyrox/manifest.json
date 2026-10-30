@@ -1,0 +1,42 @@
+[
+  {
+    "filename": "01-skierg.png",
+    "exercise": "SkiErg",
+    "status": "illustration_a_valider"
+  },
+  {
+    "filename": "02-sled-push.png",
+    "exercise": "Sled Push",
+    "status": "illustration_a_valider"
+  },
+  {
+    "filename": "03-sled-pull.png",
+    "exercise": "Sled Pull",
+    "status": "illustration_a_valider"
+  },
+  {
+    "filename": "04-burpee-broad-jump.png",
+    "exercise": "Burpee Broad Jump",
+    "status": "illustration_a_valider"
+  },
+  {
+    "filename": "05-rameur.png",
+    "exercise": "Rameur",
+    "status": "illustration_a_valider"
+  },
+  {
+    "filename": "06-farmer-carry.png",
+    "exercise": "Farmer Carry",
+    "status": "illustration_a_valider"
+  },
+  {
+    "filename": "07-sandbag-lunges.png",
+    "exercise": "Sandbag Lunges",
+    "status": "illustration_a_valider"
+  },
+  {
+    "filename": "08-wall-ball-avec-cible.png",
+    "exercise": "Wall Ball",
+    "status": "illustration_a_valider"
+  }
+]

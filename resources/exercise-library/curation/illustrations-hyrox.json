@@ -1,0 +1,13 @@
+{
+  "_lisez_moi": "Correspondance entre les fichiers déposés par Antonino dans illustrations/hyrox/ et les clés du catalogue (clé/pose). Statut d'origine : illustration_a_valider (manifest.json). Sled pull en marche arrière et Sled pull assis n'ont pas encore d'image.",
+  "files": {
+    "01-skierg.png": "ski-erg/main",
+    "02-sled-push.png": "sled-push/main",
+    "03-sled-pull.png": "sled-pull/main",
+    "04-burpee-broad-jump.png": "burpee-broad-jump/main",
+    "05-rameur.png": "rowing-machine/main",
+    "06-farmer-carry.png": "kettlebell-farmers-walk/main",
+    "07-sandbag-lunges.png": "sandbag-walking-lunge/main",
+    "08-wall-ball-avec-cible.png": "wall-ball/main"
+  }
+}

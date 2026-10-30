@@ -1,0 +1,129 @@
+{
+  "generated_at": "2026-10-30T22:09:07.395Z",
+  "input": {
+    "repdb": 701,
+    "kit": 115,
+    "total": 816
+  },
+  "library": {
+    "active": 605,
+    "hidden": 142,
+    "active_by_category": {
+      "strength": 580,
+      "cardio": 17,
+      "hyrox": 8,
+      "mobility": 0
+    },
+    "hidden_by_reason": {
+      "mobility": 108,
+      "running": 4,
+      "coory_without_content": 28,
+      "removed": 2
+    },
+    "active_images": {
+      "from_repdb": 597,
+      "repdb_main_image": 105,
+      "repdb_start_end_only": 492,
+      "coory_to_import": 8,
+      "coory_files_expected": 20
+    },
+    "active_missing": {
+      "instructions_fr": 3,
+      "primary_muscles": 3,
+      "difficulty": 3
+    },
+    "active_review": {
+      "NOM_TRADUIT": 602,
+      "CONSIGNES_TRADUITES": 602,
+      "NOM_PROPOSE": 3,
+      "MOUVEMENT_A_VALIDER": 3,
+      "CONSIGNES_ABSENTES": 3,
+      "MUSCLES_ABSENTS": 3,
+      "DIFFICULTE_ABSENTE": 3,
+      "DOUBLON_POSSIBLE": 1,
+      "VARIANTE_A_CONFIRMER": 0,
+      "NOTE_TRADUCTION": 36,
+      "FORMULATION_MEDICALE_NEUTRALISEE": 1,
+      "NOM_LONG": 5,
+      "NOM_EN_DOUBLE": 0
+    }
+  },
+  "output": {
+    "exercises": 747,
+    "from_repdb": 694,
+    "from_kit": 53,
+    "kit_variants": 17,
+    "duplicates_merged": 17,
+    "session_types": 52,
+    "session_types_by_kind": {
+      "preset": 20,
+      "technique": 9,
+      "seance": 19,
+      "bloc": 4
+    }
+  },
+  "by_discipline_any": {
+    "strength": 602,
+    "hyrox": 12,
+    "running": 22,
+    "cardio": 20,
+    "mobility": 111,
+    "warmup": 49
+  },
+  "by_discipline_primary": {
+    "strength": 597,
+    "hyrox": 5,
+    "running": 0,
+    "cardio": 19,
+    "mobility": 108,
+    "warmup": 18
+  },
+  "multi_discipline": 62,
+  "hyrox_stations": [
+    "1. SkiErg",
+    "2. Sled push",
+    "3. Sled pull",
+    "4. Burpee broad jump",
+    "5. Rameur",
+    "6. Farmers carry kettlebells",
+    "7. Sandbag lunges",
+    "8. Wall ball"
+  ],
+  "by_difficulty": {
+    "beginner": 297,
+    "intermediate": 343,
+    "advanced": 54,
+    "missing": 53
+  },
+  "missing": {
+    "instructions_fr": 53,
+    "primary_muscles": 54,
+    "difficulty": 53,
+    "equipment_listed_as_bodyweight": 234,
+    "illustrations_without_any_source": 48
+  },
+  "review": {
+    "NOM_TRADUIT": 694,
+    "CONSIGNES_TRADUITES": 694,
+    "NOM_PROPOSE": 53,
+    "MOUVEMENT_A_VALIDER": 53,
+    "CONSIGNES_ABSENTES": 53,
+    "MUSCLES_ABSENTS": 54,
+    "DIFFICULTE_ABSENTE": 53,
+    "DOUBLON_POSSIBLE": 3,
+    "VARIANTE_A_CONFIRMER": 1,
+    "NOTE_TRADUCTION": 41,
+    "FORMULATION_MEDICALE_NEUTRALISEE": 1,
+    "NOM_LONG": 5,
+    "NOM_EN_DOUBLE": 0
+  },
+  "licensing": {
+    "attribution_required": 694,
+    "exportable": 53
+  },
+  "medical": {
+    "tags_removed": 1330,
+    "goals_removed": 29,
+    "instructions_neutralized": 1
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "_lisez_moi": "Illustrations que Coory doit produire elle-même (30/10/2026 soir) : uniquement l'Hyrox. Musculation et cardio utilisent les images RepDB ; mobilité, course et créations sans contenu sont masquées. Le script refuse une clé inconnue.",
+  "tiers": [
+    {
+      "code": "P1",
+      "label": "Hyrox, images Coory à importer",
+      "reason": "Section signature de Coory : images originales, jamais d'image RepDB, ni affichée ni donnée en modèle à une IA.",
+      "keys": [
+        "ski-erg",
+        "sled-push",
+        "sled-pull",
+        "burpee-broad-jump",
+        "rowing-machine",
+        "kettlebell-farmers-walk",
+        "sandbag-walking-lunge",
+        "wall-ball"
+      ]
+    }
+  ]
+}

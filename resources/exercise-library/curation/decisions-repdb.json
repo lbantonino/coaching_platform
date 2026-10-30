@@ -1,0 +1,38 @@
+{
+  "_lisez_moi": "Décisions sur les 701 exercices RepDB. merges = vrais doublons internes à RepDB. presets = exercices RepDB qui ne sont qu'un réglage d'un autre (mis de côté dans seances-types.json). overrides = corrections de nom, disciplines ajoutées, station Hyrox, mesures. Tout le reste est repris tel quel puis normalisé par le script.",
+  "merges": {
+    "rear-delt-fly": { "target": "dumbbell-reverse-fly", "reason": "Même mouvement (oiseau buste penché avec deux haltères), mêmes consignes à la formulation près ; RepDB le compte deux fois." }
+  },
+  "presets": {
+    "pause-squat": { "exercise": "squat", "parameters": { "tempo": "pause en bas" }, "confidence": "a_confirmer", "reason": "Back squat avec une pause : la pause se règle dans le tempo de la séance." },
+    "pause-deadlift": { "exercise": "deadlift", "parameters": { "tempo": "pause en cours de montée" }, "confidence": "a_confirmer", "reason": "Soulevé de terre avec une pause : réglage de tempo." },
+    "pause-pull-up": { "exercise": "pull-up", "parameters": { "tempo": "pause en haut" }, "confidence": "a_confirmer", "reason": "Tractions avec une pause : réglage de tempo." },
+    "paused-bench-press": { "exercise": "bench-press", "parameters": { "tempo": "pause sur la poitrine" }, "confidence": "a_confirmer", "reason": "Développé couché avec une pause : réglage de tempo." },
+    "paused-incline-bench-press": { "exercise": "incline-bench-press", "parameters": { "tempo": "pause sur la poitrine" }, "confidence": "a_confirmer", "reason": "Développé incliné avec une pause : réglage de tempo." },
+    "paused-ohp": { "exercise": "ohp", "parameters": { "tempo": "pause en bas" }, "confidence": "a_confirmer", "reason": "Développé militaire avec une pause : réglage de tempo." }
+  },
+  "overrides": {
+    "ski-erg": { "hyrox_station": 1, "add_disciplines": ["hyrox"], "metrics": ["distance_m", "duration_s", "calories_kcal", "pace_s_per_500m"] },
+    "sled-push": { "name_fr": "Sled push", "aliases_fr": ["Poussée de traîneau"], "hyrox_station": 2, "add_disciplines": ["hyrox"], "metrics": ["distance_m", "lengths", "load_kg", "duration_s"] },
+    "rowing-machine": { "aliases_fr": ["RowErg", "Aviron en salle"], "hyrox_station": 5, "add_disciplines": ["hyrox"], "metrics": ["distance_m", "duration_s", "calories_kcal", "pace_s_per_500m"] },
+    "kettlebell-farmers-walk": { "hyrox_station": 6, "add_disciplines": ["hyrox"], "metrics": ["distance_m", "duration_s", "load_kg"] },
+    "wall-ball": { "aliases_fr": ["Wall balls"], "hyrox_station": 8, "add_disciplines": ["hyrox"], "metrics": ["reps", "load_kg", "height_cm"] },
+    "running": { "add_disciplines": ["running", "hyrox"], "metrics": ["distance_m", "duration_s", "pace_s_per_km"] },
+    "treadmill-running": { "add_disciplines": ["running"], "metrics": ["distance_m", "duration_s", "pace_s_per_km", "speed_kmh", "incline_pct"] },
+    "incline-treadmill-walk": { "metrics": ["duration_s", "distance_m", "speed_kmh", "incline_pct"] },
+    "walking": { "metrics": ["duration_s", "distance_m"] },
+    "high-knees": { "name_fr": "Montées de genoux", "aliases_fr": ["High knees"], "add_disciplines": ["warmup", "running"], "metrics": ["distance_m", "duration_s", "reps"] },
+    "heel-flicks": { "name_fr": "Talons-fesses", "aliases_fr": ["Montées de talons aux fessiers", "Heel flicks"], "add_disciplines": ["warmup", "running"], "metrics": ["distance_m", "duration_s", "reps"] },
+    "jumping-jacks": { "add_disciplines": ["warmup"] },
+    "sled-row": { "metrics": ["distance_m", "lengths", "load_kg"] },
+    "banded-lateral-walk": { "metrics": ["reps", "distance_m"] },
+    "bench-couch-stretch": { "name_fr": "Couch stretch", "aliases_fr": ["Étirement des fléchisseurs de hanche sur banc", "Étirement du canapé"] },
+    "leg-swing-front-to-back": { "name_fr": "Balancés de jambe avant-arrière" },
+    "one-arm-single-leg-dumbbell-romanian-deadlift": { "name_fr": "Soulevé de terre roumain une jambe, un haltère" },
+    "one-arm-single-leg-kettlebell-romanian-deadlift": { "name_fr": "Soulevé de terre roumain une jambe, kettlebell" },
+    "single-leg-rdl-hold": { "name_fr": "Soulevé de terre roumain une jambe isométrique" },
+    "overhead-tricep-extension": { "name_fr": "Extension triceps nuque, un haltère", "aliases_fr": ["Extension triceps haltère au-dessus de la tête"] },
+    "dumbbell-tricep-extension": { "name_fr": "Extension triceps nuque, deux haltères", "aliases_fr": ["Extension triceps haltères au-dessus de la tête"] },
+    "seated-db-press": { "review_reasons": ["DOUBLON_POSSIBLE"], "review_note": "Proche de Développé épaules haltères (dumbbell-shoulder-press), qui se fait assis ou debout ; seul le dossier diffère." }
+  }
+}

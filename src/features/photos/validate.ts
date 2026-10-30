@@ -20,10 +20,11 @@ function detectFormat(bytes: Uint8Array): PhotoFormat | null {
   return null;
 }
 
-export function checkPhoto(bytes: Uint8Array): PhotoCheck {
+// `maxBytes` : 2 Mo pour une photo de profil, davantage pour la photo d'un exercice (D-76).
+export function checkPhoto(bytes: Uint8Array, maxBytes = PHOTO_MAX_BYTES): PhotoCheck {
   if (bytes.length === 0) return { ok: false, error: "Choisis une photo." };
-  if (bytes.length > PHOTO_MAX_BYTES) {
-    return { ok: false, error: "Photo trop lourde : 2 Mo maximum." };
+  if (bytes.length > maxBytes) {
+    return { ok: false, error: `Photo trop lourde : ${maxBytes / (1024 * 1024)} Mo maximum.` };
   }
   const format = detectFormat(bytes);
   if (!format) return { ok: false, error: "Format non accepté : JPEG, PNG ou WebP." };

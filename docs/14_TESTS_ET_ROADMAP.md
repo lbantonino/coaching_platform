@@ -46,7 +46,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 ### P3 — Catalogue/templates
 > **Maquettes cibles (D-28, 23/10/2026)** : chaque page de l'espace coach a une maquette (`docs/design/MAQUETTES.md`). Elle est construite à son image quand sa phase arrive : Bibliothèque et Séances (modèles) en P3, Programmes en P4, Documents (PDF) en P5, Séances (retours) en P6, Messages en P7, Facturation et Comptabilité après P6 (D-17), Tâches avec les modules qui les produisent. Faits : tableau de bord, fiche sportif, agenda (refonte visuelle à faire), Paramètres (profil coach).
 
-- [ ] `P3-01` Catalogue exercices, métriques permises, alias, recherche, favoris.
+- [x] `P3-01` Catalogue exercices, métriques permises, alias, recherche, favoris. **Fait le 30/10/2026 (D-75)** : catalogue commun (musculation, cardio, Hyrox), fiche, favoris ; « Créer un exercice » fait le 30/10 (D-76 : photo, lien vidéo, variante) ; restent « Envoyer au sportif » et l'affichage des exercices dans le programme du sportif.
 - [ ] `P3-02` Constructeur blocs typés et validation schéma versionnée.
 - [ ] `P3-03` Modèles séances Running/Force/Hyrox/Hybride, édition et copie.
 - [ ] `P3-04` Modèles semaines N slots, répartition et sélection.
@@ -141,7 +141,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-04` Conservation/effacement et données sensibles, conditions juridiques SaaS.
 - `OPEN-05` Consentement/messagerie/WhatsApp provider, coûts et modèles.
 - `OPEN-06` Charte graphique/PDF, anonymisation source et propriété marque.
-- `OPEN-07` Liste exacte des exercices et formats validés par coach.
+- `OPEN-07` Liste exacte des exercices et formats validés par coach. **En partie tranché le 30/10 (D-75)** : liste choisie par Antonino ; reste la relecture par un coach (Gianluca ?) des 602 traductions et l'écriture des consignes des 5 exercices Hyrox créés par Coory.
 - `OPEN-08` Propositions de progression (interdit d'appliquer sans validation).
 - `OPEN-09` Abonnements, paiement, TVA/règles commerciales.
 - `OPEN-10` Connecteurs Garmin/Strava/calendriers si voulus.
@@ -153,6 +153,7 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - `OPEN-16` Fournisseur d'IA, coûts, hébergement des données et consentement (avant `DIF-08` et `DIF-11`, l'agent IA qui agit dans l'app).
 - ~~`OPEN-17` Règles de facturation du coach~~ **Fermé le 29/10/2026 par D-66** : Coory ne décide d'aucune règle légale ; le coach écrit ses mentions dans sa structure et reste responsable de la conformité (avec son comptable). Plus rien à faire valider pour que l'app fonctionne.
 - `OPEN-18` Séances encadrées (D-27) : annuler ou déplacer **une seule date** d'une séance récurrente (exception), visibilité des séances et inscriptions côté sportif (P6), pointage des présences, conflit avec les disponibilités du sportif (avertissement docs/03 §3). À trancher avec Gianluca.
+- `OPEN-19` **Bibliothèque personnelle du sportif** (idée d'Antonino, 30/10/2026) : un sportif qui ne trouve pas un exercice l'ajoute à SA propre bibliothèque. À trancher avec l'espace sportif : qui le voit (le sportif seul, ou aussi son coach ?), peut-il le proposer à son coach, photo ou vidéo autorisées ?
 
 **Différenciateurs `DIF-01` à `DIF-10`** (décision du 20/10/2026) : voir `docs/16_POSITIONNEMENT.md` §4–5 pour leur phase d'insertion. Ils ne modifient pas l'ordre P2 → P6.
 

@@ -1,0 +1,2767 @@
+{
+  "schema_version": "1.0",
+  "count": 115,
+  "exercises": [
+    {
+      "id": "coory-skierg-500-m",
+      "slug": "skierg-500-m",
+      "name_fr": "SkiErg 500 m",
+      "name_en": "SkiErg 500 m",
+      "discipline": "hyrox",
+      "equipment": [
+        "ski_erg"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/skierg-500-m/main.png",
+        "start": "/exercises/skierg-500-m/start.png",
+        "end": "/exercises/skierg-500-m/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-skierg-1000-m",
+      "slug": "skierg-1000-m",
+      "name_fr": "SkiErg 1000 m",
+      "name_en": "SkiErg 1000 m",
+      "discipline": "hyrox",
+      "equipment": [
+        "ski_erg"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/skierg-1000-m/main.png",
+        "start": "/exercises/skierg-1000-m/start.png",
+        "end": "/exercises/skierg-1000-m/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-skierg-power-intervals",
+      "slug": "skierg-power-intervals",
+      "name_fr": "Intervalles de puissance SkiErg",
+      "name_en": "SkiErg power intervals",
+      "discipline": "hyrox",
+      "equipment": [
+        "ski_erg"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/skierg-power-intervals/main.png",
+        "start": "/exercises/skierg-power-intervals/start.png",
+        "end": "/exercises/skierg-power-intervals/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-skierg-technique-drill",
+      "slug": "skierg-technique-drill",
+      "name_fr": "Technique SkiErg",
+      "name_en": "SkiErg technique drill",
+      "discipline": "hyrox",
+      "equipment": [
+        "ski_erg"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/skierg-technique-drill/main.png",
+        "start": "/exercises/skierg-technique-drill/start.png",
+        "end": "/exercises/skierg-technique-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sled-push-heavy",
+      "slug": "sled-push-heavy",
+      "name_fr": "Poussée de traîneau lourde",
+      "name_en": "Sled push heavy",
+      "discipline": "hyrox",
+      "equipment": [
+        "sled"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sled-push-heavy/main.png",
+        "start": "/exercises/sled-push-heavy/start.png",
+        "end": "/exercises/sled-push-heavy/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sled-push-moderate",
+      "slug": "sled-push-moderate",
+      "name_fr": "Poussée de traîneau modérée",
+      "name_en": "Sled push moderate",
+      "discipline": "hyrox",
+      "equipment": [
+        "sled"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sled-push-moderate/main.png",
+        "start": "/exercises/sled-push-moderate/start.png",
+        "end": "/exercises/sled-push-moderate/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sled-push-acceleration",
+      "slug": "sled-push-acceleration",
+      "name_fr": "Accélération avec traîneau",
+      "name_en": "Sled push acceleration",
+      "discipline": "hyrox",
+      "equipment": [
+        "sled"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sled-push-acceleration/main.png",
+        "start": "/exercises/sled-push-acceleration/start.png",
+        "end": "/exercises/sled-push-acceleration/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sled-pull-hand-over-hand",
+      "slug": "sled-pull-hand-over-hand",
+      "name_fr": "Traction de traîneau main sur main",
+      "name_en": "Sled pull hand over hand",
+      "discipline": "hyrox",
+      "equipment": [
+        "sled_rope"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sled-pull-hand-over-hand/main.png",
+        "start": "/exercises/sled-pull-hand-over-hand/start.png",
+        "end": "/exercises/sled-pull-hand-over-hand/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sled-pull-backward-walk",
+      "slug": "sled-pull-backward-walk",
+      "name_fr": "Traction du traîneau en marche arrière",
+      "name_en": "Sled pull backward walk",
+      "discipline": "hyrox",
+      "equipment": [
+        "sled_rope"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sled-pull-backward-walk/main.png",
+        "start": "/exercises/sled-pull-backward-walk/start.png",
+        "end": "/exercises/sled-pull-backward-walk/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sled-pull-seated",
+      "slug": "sled-pull-seated",
+      "name_fr": "Traction de traîneau assise",
+      "name_en": "Sled pull seated",
+      "discipline": "hyrox",
+      "equipment": [
+        "sled_rope"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sled-pull-seated/main.png",
+        "start": "/exercises/sled-pull-seated/start.png",
+        "end": "/exercises/sled-pull-seated/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-burpee-broad-jump",
+      "slug": "burpee-broad-jump",
+      "name_fr": "Burpee saut en longueur",
+      "name_en": "Burpee broad jump",
+      "discipline": "hyrox",
+      "equipment": [
+        "bodyweight"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/burpee-broad-jump/main.png",
+        "start": "/exercises/burpee-broad-jump/start.png",
+        "end": "/exercises/burpee-broad-jump/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-burpee-broad-jump-technique",
+      "slug": "burpee-broad-jump-technique",
+      "name_fr": "Technique burpee saut en longueur",
+      "name_en": "Burpee broad jump technique",
+      "discipline": "hyrox",
+      "equipment": [
+        "bodyweight"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/burpee-broad-jump-technique/main.png",
+        "start": "/exercises/burpee-broad-jump-technique/start.png",
+        "end": "/exercises/burpee-broad-jump-technique/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-rowerg-500-m",
+      "slug": "rowerg-500-m",
+      "name_fr": "Rameur 500 m",
+      "name_en": "RowErg 500 m",
+      "discipline": "hyrox",
+      "equipment": [
+        "rower"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/rowerg-500-m/main.png",
+        "start": "/exercises/rowerg-500-m/start.png",
+        "end": "/exercises/rowerg-500-m/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-rowerg-1000-m",
+      "slug": "rowerg-1000-m",
+      "name_fr": "Rameur 1000 m",
+      "name_en": "RowErg 1000 m",
+      "discipline": "hyrox",
+      "equipment": [
+        "rower"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/rowerg-1000-m/main.png",
+        "start": "/exercises/rowerg-1000-m/start.png",
+        "end": "/exercises/rowerg-1000-m/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-rowerg-tempo-intervals",
+      "slug": "rowerg-tempo-intervals",
+      "name_fr": "Rameur intervalles tempo",
+      "name_en": "RowErg tempo intervals",
+      "discipline": "hyrox",
+      "equipment": [
+        "rower"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/rowerg-tempo-intervals/main.png",
+        "start": "/exercises/rowerg-tempo-intervals/start.png",
+        "end": "/exercises/rowerg-tempo-intervals/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-farmers-carry-heavy",
+      "slug": "farmers-carry-heavy",
+      "name_fr": "Marche du fermier lourde",
+      "name_en": "Farmers carry heavy",
+      "discipline": "hyrox",
+      "equipment": [
+        "kettlebell"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/farmers-carry-heavy/main.png",
+        "start": "/exercises/farmers-carry-heavy/start.png",
+        "end": "/exercises/farmers-carry-heavy/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-farmers-carry-turning-drill",
+      "slug": "farmers-carry-turning-drill",
+      "name_fr": "Marche du fermier avec demi-tour",
+      "name_en": "Farmers carry turning drill",
+      "discipline": "hyrox",
+      "equipment": [
+        "kettlebell"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/farmers-carry-turning-drill/main.png",
+        "start": "/exercises/farmers-carry-turning-drill/start.png",
+        "end": "/exercises/farmers-carry-turning-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sandbag-walking-lunge",
+      "slug": "sandbag-walking-lunge",
+      "name_fr": "Fente marchée avec sac de sable",
+      "name_en": "Sandbag walking lunge",
+      "discipline": "hyrox",
+      "equipment": [
+        "sandbag"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sandbag-walking-lunge/main.png",
+        "start": "/exercises/sandbag-walking-lunge/start.png",
+        "end": "/exercises/sandbag-walking-lunge/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sandbag-reverse-lunge",
+      "slug": "sandbag-reverse-lunge",
+      "name_fr": "Fente arrière avec sac de sable",
+      "name_en": "Sandbag reverse lunge",
+      "discipline": "hyrox",
+      "equipment": [
+        "sandbag"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sandbag-reverse-lunge/main.png",
+        "start": "/exercises/sandbag-reverse-lunge/start.png",
+        "end": "/exercises/sandbag-reverse-lunge/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-wall-balls-target",
+      "slug": "wall-balls-target",
+      "name_fr": "Wall balls avec cible",
+      "name_en": "Wall balls target",
+      "discipline": "hyrox",
+      "equipment": [
+        "wall_ball"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/wall-balls-target/main.png",
+        "start": "/exercises/wall-balls-target/start.png",
+        "end": "/exercises/wall-balls-target/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-wall-balls-breathing-drill",
+      "slug": "wall-balls-breathing-drill",
+      "name_fr": "Wall balls respiration",
+      "name_en": "Wall balls breathing drill",
+      "discipline": "hyrox",
+      "equipment": [
+        "wall_ball"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/wall-balls-breathing-drill/main.png",
+        "start": "/exercises/wall-balls-breathing-drill/start.png",
+        "end": "/exercises/wall-balls-breathing-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hyrox-station-transition-run",
+      "slug": "hyrox-station-transition-run",
+      "name_fr": "Course de transition HYROX",
+      "name_en": "HYROX station transition run",
+      "discipline": "hyrox",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hyrox-station-transition-run/main.png",
+        "start": "/exercises/hyrox-station-transition-run/start.png",
+        "end": "/exercises/hyrox-station-transition-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hyrox-compromised-run",
+      "slug": "hyrox-compromised-run",
+      "name_fr": "Course après effort HYROX",
+      "name_en": "HYROX compromised run",
+      "discipline": "hyrox",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hyrox-compromised-run/main.png",
+        "start": "/exercises/hyrox-compromised-run/start.png",
+        "end": "/exercises/hyrox-compromised-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hyrox-sled-to-run-transition",
+      "slug": "hyrox-sled-to-run-transition",
+      "name_fr": "Transition traîneau vers course",
+      "name_en": "HYROX sled to run transition",
+      "discipline": "hyrox",
+      "equipment": [
+        "sled"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hyrox-sled-to-run-transition/main.png",
+        "start": "/exercises/hyrox-sled-to-run-transition/start.png",
+        "end": "/exercises/hyrox-sled-to-run-transition/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hyrox-row-to-carry-transition",
+      "slug": "hyrox-row-to-carry-transition",
+      "name_fr": "Transition rameur vers portage",
+      "name_en": "HYROX row to carry transition",
+      "discipline": "hyrox",
+      "equipment": [
+        "rower"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hyrox-row-to-carry-transition/main.png",
+        "start": "/exercises/hyrox-row-to-carry-transition/start.png",
+        "end": "/exercises/hyrox-row-to-carry-transition/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-easy-run",
+      "slug": "easy-run",
+      "name_fr": "Footing facile",
+      "name_en": "Easy run",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/easy-run/main.png",
+        "start": "/exercises/easy-run/start.png",
+        "end": "/exercises/easy-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-recovery-jog",
+      "slug": "recovery-jog",
+      "name_fr": "Footing de récupération",
+      "name_en": "Recovery jog",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/recovery-jog/main.png",
+        "start": "/exercises/recovery-jog/start.png",
+        "end": "/exercises/recovery-jog/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-long-slow-distance-run",
+      "slug": "long-slow-distance-run",
+      "name_fr": "Sortie longue à allure facile",
+      "name_en": "Long slow distance run",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/long-slow-distance-run/main.png",
+        "start": "/exercises/long-slow-distance-run/start.png",
+        "end": "/exercises/long-slow-distance-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-progression-run",
+      "slug": "progression-run",
+      "name_fr": "Course progressive",
+      "name_en": "Progression run",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/progression-run/main.png",
+        "start": "/exercises/progression-run/start.png",
+        "end": "/exercises/progression-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-tempo-run",
+      "slug": "tempo-run",
+      "name_fr": "Course tempo",
+      "name_en": "Tempo run",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/tempo-run/main.png",
+        "start": "/exercises/tempo-run/start.png",
+        "end": "/exercises/tempo-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-threshold-intervals",
+      "slug": "threshold-intervals",
+      "name_fr": "Intervalles au seuil",
+      "name_en": "Threshold intervals",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/threshold-intervals/main.png",
+        "start": "/exercises/threshold-intervals/start.png",
+        "end": "/exercises/threshold-intervals/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-vo2-max-intervals",
+      "slug": "vo2-max-intervals",
+      "name_fr": "Intervalles VO2 max",
+      "name_en": "VO2 max intervals",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/vo2-max-intervals/main.png",
+        "start": "/exercises/vo2-max-intervals/start.png",
+        "end": "/exercises/vo2-max-intervals/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-short-hill-sprints",
+      "slug": "short-hill-sprints",
+      "name_fr": "Sprints courts en côte",
+      "name_en": "Short hill sprints",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/short-hill-sprints/main.png",
+        "start": "/exercises/short-hill-sprints/start.png",
+        "end": "/exercises/short-hill-sprints/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hill-repeats",
+      "slug": "hill-repeats",
+      "name_fr": "Répétitions en côte",
+      "name_en": "Hill repeats",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hill-repeats/main.png",
+        "start": "/exercises/hill-repeats/start.png",
+        "end": "/exercises/hill-repeats/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-downhill-running-drills",
+      "slug": "downhill-running-drills",
+      "name_fr": "Technique de descente",
+      "name_en": "Downhill running drills",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/downhill-running-drills/main.png",
+        "start": "/exercises/downhill-running-drills/start.png",
+        "end": "/exercises/downhill-running-drills/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-strides-80-meters",
+      "slug": "strides-80-meters",
+      "name_fr": "Lignes droites 80 mètres",
+      "name_en": "Strides 80 meters",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/strides-80-meters/main.png",
+        "start": "/exercises/strides-80-meters/start.png",
+        "end": "/exercises/strides-80-meters/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-strides-100-meters",
+      "slug": "strides-100-meters",
+      "name_fr": "Lignes droites 100 mètres",
+      "name_en": "Strides 100 meters",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/strides-100-meters/main.png",
+        "start": "/exercises/strides-100-meters/start.png",
+        "end": "/exercises/strides-100-meters/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-cadence-drill",
+      "slug": "cadence-drill",
+      "name_fr": "Exercice de cadence",
+      "name_en": "Cadence drill",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/cadence-drill/main.png",
+        "start": "/exercises/cadence-drill/start.png",
+        "end": "/exercises/cadence-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-run-walk-intervals",
+      "slug": "run-walk-intervals",
+      "name_fr": "Intervalles course-marche",
+      "name_en": "Run-walk intervals",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/run-walk-intervals/main.png",
+        "start": "/exercises/run-walk-intervals/start.png",
+        "end": "/exercises/run-walk-intervals/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-fartlek-session",
+      "slug": "fartlek-session",
+      "name_fr": "Séance fartlek",
+      "name_en": "Fartlek session",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/fartlek-session/main.png",
+        "start": "/exercises/fartlek-session/start.png",
+        "end": "/exercises/fartlek-session/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-track-200-m-repeats",
+      "slug": "track-200-m-repeats",
+      "name_fr": "Répétitions de 200 m sur piste",
+      "name_en": "Track 200 m repeats",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/track-200-m-repeats/main.png",
+        "start": "/exercises/track-200-m-repeats/start.png",
+        "end": "/exercises/track-200-m-repeats/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-track-400-m-repeats",
+      "slug": "track-400-m-repeats",
+      "name_fr": "Répétitions de 400 m sur piste",
+      "name_en": "Track 400 m repeats",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/track-400-m-repeats/main.png",
+        "start": "/exercises/track-400-m-repeats/start.png",
+        "end": "/exercises/track-400-m-repeats/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-track-800-m-repeats",
+      "slug": "track-800-m-repeats",
+      "name_fr": "Répétitions de 800 m sur piste",
+      "name_en": "Track 800 m repeats",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/track-800-m-repeats/main.png",
+        "start": "/exercises/track-800-m-repeats/start.png",
+        "end": "/exercises/track-800-m-repeats/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-pace-control-drill",
+      "slug": "pace-control-drill",
+      "name_fr": "Exercice de contrôle d'allure",
+      "name_en": "Pace control drill",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/pace-control-drill/main.png",
+        "start": "/exercises/pace-control-drill/start.png",
+        "end": "/exercises/pace-control-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-running-form-drill",
+      "slug": "running-form-drill",
+      "name_fr": "Technique de course",
+      "name_en": "Running form drill",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/running-form-drill/main.png",
+        "start": "/exercises/running-form-drill/start.png",
+        "end": "/exercises/running-form-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-treadmill-incline-intervals",
+      "slug": "treadmill-incline-intervals",
+      "name_fr": "Intervalles inclinés sur tapis",
+      "name_en": "Treadmill incline intervals",
+      "discipline": "running",
+      "equipment": [
+        "treadmill"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/treadmill-incline-intervals/main.png",
+        "start": "/exercises/treadmill-incline-intervals/start.png",
+        "end": "/exercises/treadmill-incline-intervals/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-treadmill-tempo",
+      "slug": "treadmill-tempo",
+      "name_fr": "Course tempo sur tapis",
+      "name_en": "Treadmill tempo",
+      "discipline": "running",
+      "equipment": [
+        "treadmill"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/treadmill-tempo/main.png",
+        "start": "/exercises/treadmill-tempo/start.png",
+        "end": "/exercises/treadmill-tempo/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-trail-technical-run",
+      "slug": "trail-technical-run",
+      "name_fr": "Trail technique",
+      "name_en": "Trail technical run",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/trail-technical-run/main.png",
+        "start": "/exercises/trail-technical-run/start.png",
+        "end": "/exercises/trail-technical-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-barefoot-grass-drill",
+      "slug": "barefoot-grass-drill",
+      "name_fr": "Technique pieds nus sur herbe",
+      "name_en": "Barefoot grass drill",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/barefoot-grass-drill/main.png",
+        "start": "/exercises/barefoot-grass-drill/start.png",
+        "end": "/exercises/barefoot-grass-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sprint-acceleration-20-m",
+      "slug": "sprint-acceleration-20-m",
+      "name_fr": "Accélération 20 m",
+      "name_en": "Sprint acceleration 20 m",
+      "discipline": "running",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sprint-acceleration-20-m/main.png",
+        "start": "/exercises/sprint-acceleration-20-m/start.png",
+        "end": "/exercises/sprint-acceleration-20-m/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hip-90-90-lift-off",
+      "slug": "hip-90-90-lift-off",
+      "name_fr": "Décollage de hanche 90-90",
+      "name_en": "Hip 90-90 lift off",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hip-90-90-lift-off/main.png",
+        "start": "/exercises/hip-90-90-lift-off/start.png",
+        "end": "/exercises/hip-90-90-lift-off/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hip-controlled-articular-rotations",
+      "slug": "hip-controlled-articular-rotations",
+      "name_fr": "Rotations articulaires contrôlées de hanche",
+      "name_en": "Hip controlled articular rotations",
+      "discipline": "mobility",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hip-controlled-articular-rotations/main.png",
+        "start": "/exercises/hip-controlled-articular-rotations/start.png",
+        "end": "/exercises/hip-controlled-articular-rotations/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-shoulder-controlled-articular-rotations",
+      "slug": "shoulder-controlled-articular-rotations",
+      "name_fr": "Rotations articulaires contrôlées d'épaule",
+      "name_en": "Shoulder controlled articular rotations",
+      "discipline": "mobility",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/shoulder-controlled-articular-rotations/main.png",
+        "start": "/exercises/shoulder-controlled-articular-rotations/start.png",
+        "end": "/exercises/shoulder-controlled-articular-rotations/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-ankle-dorsiflexion-wall-drill",
+      "slug": "ankle-dorsiflexion-wall-drill",
+      "name_fr": "Mobilité de cheville au mur",
+      "name_en": "Ankle dorsiflexion wall drill",
+      "discipline": "mobility",
+      "equipment": [
+        "wall"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/ankle-dorsiflexion-wall-drill/main.png",
+        "start": "/exercises/ankle-dorsiflexion-wall-drill/start.png",
+        "end": "/exercises/ankle-dorsiflexion-wall-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-knee-to-wall-ankle-mobilization",
+      "slug": "knee-to-wall-ankle-mobilization",
+      "name_fr": "Mobilisation cheville genou au mur",
+      "name_en": "Knee to wall ankle mobilization",
+      "discipline": "mobility",
+      "equipment": [
+        "wall"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/knee-to-wall-ankle-mobilization/main.png",
+        "start": "/exercises/knee-to-wall-ankle-mobilization/start.png",
+        "end": "/exercises/knee-to-wall-ankle-mobilization/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-deep-squat-prying",
+      "slug": "deep-squat-prying",
+      "name_fr": "Ouverture en squat profond",
+      "name_en": "Deep squat prying",
+      "discipline": "mobility",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/deep-squat-prying/main.png",
+        "start": "/exercises/deep-squat-prying/start.png",
+        "end": "/exercises/deep-squat-prying/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-cossack-squat-mobility",
+      "slug": "cossack-squat-mobility",
+      "name_fr": "Mobilité squat cosaque",
+      "name_en": "Cossack squat mobility",
+      "discipline": "mobility",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/cossack-squat-mobility/main.png",
+        "start": "/exercises/cossack-squat-mobility/start.png",
+        "end": "/exercises/cossack-squat-mobility/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-world-greatest-stretch-with-rotation",
+      "slug": "world-greatest-stretch-with-rotation",
+      "name_fr": "Étirement complet avec rotation",
+      "name_en": "World greatest stretch with rotation",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/world-greatest-stretch-with-rotation/main.png",
+        "start": "/exercises/world-greatest-stretch-with-rotation/start.png",
+        "end": "/exercises/world-greatest-stretch-with-rotation/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-thoracic-open-book",
+      "slug": "thoracic-open-book",
+      "name_fr": "Ouverture thoracique livre",
+      "name_en": "Thoracic open book",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/thoracic-open-book/main.png",
+        "start": "/exercises/thoracic-open-book/start.png",
+        "end": "/exercises/thoracic-open-book/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-thoracic-extension-foam-roller",
+      "slug": "thoracic-extension-foam-roller",
+      "name_fr": "Extension thoracique rouleau",
+      "name_en": "Thoracic extension foam roller",
+      "discipline": "mobility",
+      "equipment": [
+        "foam_roller"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/thoracic-extension-foam-roller/main.png",
+        "start": "/exercises/thoracic-extension-foam-roller/start.png",
+        "end": "/exercises/thoracic-extension-foam-roller/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-cat-cow-spinal-mobility",
+      "slug": "cat-cow-spinal-mobility",
+      "name_fr": "Mobilité dos chat-vache",
+      "name_en": "Cat cow spinal mobility",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/cat-cow-spinal-mobility/main.png",
+        "start": "/exercises/cat-cow-spinal-mobility/start.png",
+        "end": "/exercises/cat-cow-spinal-mobility/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-segmental-spinal-flexion",
+      "slug": "segmental-spinal-flexion",
+      "name_fr": "Flexion segmentaire du dos",
+      "name_en": "Segmental spinal flexion",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/segmental-spinal-flexion/main.png",
+        "start": "/exercises/segmental-spinal-flexion/start.png",
+        "end": "/exercises/segmental-spinal-flexion/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-wrist-extension-rocks",
+      "slug": "wrist-extension-rocks",
+      "name_fr": "Mobilisation extension du poignet",
+      "name_en": "Wrist extension rocks",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/wrist-extension-rocks/main.png",
+        "start": "/exercises/wrist-extension-rocks/start.png",
+        "end": "/exercises/wrist-extension-rocks/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-scapular-wall-slides",
+      "slug": "scapular-wall-slides",
+      "name_fr": "Glissement scapulaire au mur",
+      "name_en": "Scapular wall slides",
+      "discipline": "mobility",
+      "equipment": [
+        "wall"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/scapular-wall-slides/main.png",
+        "start": "/exercises/scapular-wall-slides/start.png",
+        "end": "/exercises/scapular-wall-slides/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-banded-shoulder-dislocates",
+      "slug": "banded-shoulder-dislocates",
+      "name_fr": "Passages d'épaules avec élastique",
+      "name_en": "Banded shoulder dislocates",
+      "discipline": "mobility",
+      "equipment": [
+        "resistance_band"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/banded-shoulder-dislocates/main.png",
+        "start": "/exercises/banded-shoulder-dislocates/start.png",
+        "end": "/exercises/banded-shoulder-dislocates/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-pigeon-hip-flow",
+      "slug": "pigeon-hip-flow",
+      "name_fr": "Enchaînement pigeon de hanche",
+      "name_en": "Pigeon hip flow",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/pigeon-hip-flow/main.png",
+        "start": "/exercises/pigeon-hip-flow/start.png",
+        "end": "/exercises/pigeon-hip-flow/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-adductor-rock-back",
+      "slug": "adductor-rock-back",
+      "name_fr": "Mobilisation adducteurs arrière",
+      "name_en": "Adductor rock back",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/adductor-rock-back/main.png",
+        "start": "/exercises/adductor-rock-back/start.png",
+        "end": "/exercises/adductor-rock-back/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-couch-stretch",
+      "slug": "couch-stretch",
+      "name_fr": "Étirement fléchisseur de hanche au canapé",
+      "name_en": "Couch stretch",
+      "discipline": "mobility",
+      "equipment": [
+        "bench"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/couch-stretch/main.png",
+        "start": "/exercises/couch-stretch/start.png",
+        "end": "/exercises/couch-stretch/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-hamstring-flossing",
+      "slug": "hamstring-flossing",
+      "name_fr": "Mobilisation dynamique ischio-jambiers",
+      "name_en": "Hamstring flossing",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/hamstring-flossing/main.png",
+        "start": "/exercises/hamstring-flossing/start.png",
+        "end": "/exercises/hamstring-flossing/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-quadruped-t-spine-rotation",
+      "slug": "quadruped-t-spine-rotation",
+      "name_fr": "Rotation thoracique à quatre pattes",
+      "name_en": "Quadruped T spine rotation",
+      "discipline": "mobility",
+      "equipment": [
+        "mat"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/quadruped-t-spine-rotation/main.png",
+        "start": "/exercises/quadruped-t-spine-rotation/start.png",
+        "end": "/exercises/quadruped-t-spine-rotation/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-seated-ankle-circles",
+      "slug": "seated-ankle-circles",
+      "name_fr": "Cercles de cheville assis",
+      "name_en": "Seated ankle circles",
+      "discipline": "mobility",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/seated-ankle-circles/main.png",
+        "start": "/exercises/seated-ankle-circles/start.png",
+        "end": "/exercises/seated-ankle-circles/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-standing-hip-airplanes",
+      "slug": "standing-hip-airplanes",
+      "name_fr": "Équilibre et rotation de hanche",
+      "name_en": "Standing hip airplanes",
+      "discipline": "mobility",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/standing-hip-airplanes/main.png",
+        "start": "/exercises/standing-hip-airplanes/start.png",
+        "end": "/exercises/standing-hip-airplanes/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-neck-gentle-rotations",
+      "slug": "neck-gentle-rotations",
+      "name_fr": "Rotations douces du cou",
+      "name_en": "Neck gentle rotations",
+      "discipline": "mobility",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/neck-gentle-rotations/main.png",
+        "start": "/exercises/neck-gentle-rotations/start.png",
+        "end": "/exercises/neck-gentle-rotations/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-soleus-knee-over-toe-drill",
+      "slug": "soleus-knee-over-toe-drill",
+      "name_fr": "Mobilité soléaire genou avancé",
+      "name_en": "Soleus knee over toe drill",
+      "discipline": "mobility",
+      "equipment": [
+        "wall"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/soleus-knee-over-toe-drill/main.png",
+        "start": "/exercises/soleus-knee-over-toe-drill/start.png",
+        "end": "/exercises/soleus-knee-over-toe-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-foam-roll-quads",
+      "slug": "foam-roll-quads",
+      "name_fr": "Auto-massage quadriceps au rouleau",
+      "name_en": "Foam roll quads",
+      "discipline": "mobility",
+      "equipment": [
+        "foam_roller"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/foam-roll-quads/main.png",
+        "start": "/exercises/foam-roll-quads/start.png",
+        "end": "/exercises/foam-roll-quads/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-a-skip-marching",
+      "slug": "a-skip-marching",
+      "name_fr": "Marche éducative A-skip",
+      "name_en": "A-skip marching",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/a-skip-marching/main.png",
+        "start": "/exercises/a-skip-marching/start.png",
+        "end": "/exercises/a-skip-marching/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-a-skip-running",
+      "slug": "a-skip-running",
+      "name_fr": "Course éducative A-skip",
+      "name_en": "A-skip running",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/a-skip-running/main.png",
+        "start": "/exercises/a-skip-running/start.png",
+        "end": "/exercises/a-skip-running/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-b-skip-drill",
+      "slug": "b-skip-drill",
+      "name_fr": "Éducatif B-skip",
+      "name_en": "B-skip drill",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/b-skip-drill/main.png",
+        "start": "/exercises/b-skip-drill/start.png",
+        "end": "/exercises/b-skip-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-high-knees-march",
+      "slug": "high-knees-march",
+      "name_fr": "Marche montée de genoux",
+      "name_en": "High knees march",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/high-knees-march/main.png",
+        "start": "/exercises/high-knees-march/start.png",
+        "end": "/exercises/high-knees-march/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-high-knees-running",
+      "slug": "high-knees-running",
+      "name_fr": "Course montée de genoux",
+      "name_en": "High knees running",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/high-knees-running/main.png",
+        "start": "/exercises/high-knees-running/start.png",
+        "end": "/exercises/high-knees-running/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-butt-kicks-drill",
+      "slug": "butt-kicks-drill",
+      "name_fr": "Talons-fesses",
+      "name_en": "Butt kicks drill",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/butt-kicks-drill/main.png",
+        "start": "/exercises/butt-kicks-drill/start.png",
+        "end": "/exercises/butt-kicks-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-ankling-drill",
+      "slug": "ankling-drill",
+      "name_fr": "Travail de cheville ankling",
+      "name_en": "Ankling drill",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/ankling-drill/main.png",
+        "start": "/exercises/ankling-drill/start.png",
+        "end": "/exercises/ankling-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-pogo-jumps",
+      "slug": "pogo-jumps",
+      "name_fr": "Petits rebonds pieds joints",
+      "name_en": "Pogo jumps",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/pogo-jumps/main.png",
+        "start": "/exercises/pogo-jumps/start.png",
+        "end": "/exercises/pogo-jumps/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-single-leg-pogo-hops",
+      "slug": "single-leg-pogo-hops",
+      "name_fr": "Petits rebonds sur une jambe",
+      "name_en": "Single leg pogo hops",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/single-leg-pogo-hops/main.png",
+        "start": "/exercises/single-leg-pogo-hops/start.png",
+        "end": "/exercises/single-leg-pogo-hops/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-lateral-line-hops",
+      "slug": "lateral-line-hops",
+      "name_fr": "Sauts latéraux de ligne",
+      "name_en": "Lateral line hops",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/lateral-line-hops/main.png",
+        "start": "/exercises/lateral-line-hops/start.png",
+        "end": "/exercises/lateral-line-hops/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-forward-line-hops",
+      "slug": "forward-line-hops",
+      "name_fr": "Sauts avant arrière sur ligne",
+      "name_en": "Forward line hops",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/forward-line-hops/main.png",
+        "start": "/exercises/forward-line-hops/start.png",
+        "end": "/exercises/forward-line-hops/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-carioca-crossover-drill",
+      "slug": "carioca-crossover-drill",
+      "name_fr": "Pas croisés carioca",
+      "name_en": "Carioca crossover drill",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/carioca-crossover-drill/main.png",
+        "start": "/exercises/carioca-crossover-drill/start.png",
+        "end": "/exercises/carioca-crossover-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-side-shuffle-drill",
+      "slug": "side-shuffle-drill",
+      "name_fr": "Déplacements latéraux chassés",
+      "name_en": "Side shuffle drill",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/side-shuffle-drill/main.png",
+        "start": "/exercises/side-shuffle-drill/start.png",
+        "end": "/exercises/side-shuffle-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-backpedal-run",
+      "slug": "backpedal-run",
+      "name_fr": "Course arrière",
+      "name_en": "Backpedal run",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/backpedal-run/main.png",
+        "start": "/exercises/backpedal-run/start.png",
+        "end": "/exercises/backpedal-run/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-skipping-for-height",
+      "slug": "skipping-for-height",
+      "name_fr": "Bondissements en hauteur",
+      "name_en": "Skipping for height",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/skipping-for-height/main.png",
+        "start": "/exercises/skipping-for-height/start.png",
+        "end": "/exercises/skipping-for-height/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-skipping-for-distance",
+      "slug": "skipping-for-distance",
+      "name_fr": "Bondissements en longueur",
+      "name_en": "Skipping for distance",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/skipping-for-distance/main.png",
+        "start": "/exercises/skipping-for-distance/start.png",
+        "end": "/exercises/skipping-for-distance/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-dynamic-leg-swings-front-back",
+      "slug": "dynamic-leg-swings-front-back",
+      "name_fr": "Balancements de jambe avant-arrière",
+      "name_en": "Dynamic leg swings front back",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/dynamic-leg-swings-front-back/main.png",
+        "start": "/exercises/dynamic-leg-swings-front-back/start.png",
+        "end": "/exercises/dynamic-leg-swings-front-back/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-dynamic-leg-swings-lateral",
+      "slug": "dynamic-leg-swings-lateral",
+      "name_fr": "Balancements de jambe latéraux",
+      "name_en": "Dynamic leg swings lateral",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/dynamic-leg-swings-lateral/main.png",
+        "start": "/exercises/dynamic-leg-swings-lateral/start.png",
+        "end": "/exercises/dynamic-leg-swings-lateral/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-walking-quad-stretch",
+      "slug": "walking-quad-stretch",
+      "name_fr": "Étirement quadriceps en marchant",
+      "name_en": "Walking quad stretch",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/walking-quad-stretch/main.png",
+        "start": "/exercises/walking-quad-stretch/start.png",
+        "end": "/exercises/walking-quad-stretch/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-walking-hamstring-sweep",
+      "slug": "walking-hamstring-sweep",
+      "name_fr": "Balayage ischio-jambiers en marchant",
+      "name_en": "Walking hamstring sweep",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/walking-hamstring-sweep/main.png",
+        "start": "/exercises/walking-hamstring-sweep/start.png",
+        "end": "/exercises/walking-hamstring-sweep/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-walking-lunge-with-rotation",
+      "slug": "walking-lunge-with-rotation",
+      "name_fr": "Fente marchée avec rotation",
+      "name_en": "Walking lunge with rotation",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/walking-lunge-with-rotation/main.png",
+        "start": "/exercises/walking-lunge-with-rotation/start.png",
+        "end": "/exercises/walking-lunge-with-rotation/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-inchworm-walkout",
+      "slug": "inchworm-walkout",
+      "name_fr": "Marche des mains vers planche",
+      "name_en": "Inchworm walkout",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/inchworm-walkout/main.png",
+        "start": "/exercises/inchworm-walkout/start.png",
+        "end": "/exercises/inchworm-walkout/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-arm-circles-warmup",
+      "slug": "arm-circles-warmup",
+      "name_fr": "Cercles de bras échauffement",
+      "name_en": "Arm circles warmup",
+      "discipline": "warmup",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/arm-circles-warmup/main.png",
+        "start": "/exercises/arm-circles-warmup/start.png",
+        "end": "/exercises/arm-circles-warmup/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-band-pull-apart-warmup",
+      "slug": "band-pull-apart-warmup",
+      "name_fr": "Écarté élastique échauffement",
+      "name_en": "Band pull apart warmup",
+      "discipline": "warmup",
+      "equipment": [
+        "resistance_band"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/band-pull-apart-warmup/main.png",
+        "start": "/exercises/band-pull-apart-warmup/start.png",
+        "end": "/exercises/band-pull-apart-warmup/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-glute-activation-mini-band-walk",
+      "slug": "glute-activation-mini-band-walk",
+      "name_fr": "Marche latérale activation fessiers",
+      "name_en": "Glute activation mini band walk",
+      "discipline": "warmup",
+      "equipment": [
+        "mini_band"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/glute-activation-mini-band-walk/main.png",
+        "start": "/exercises/glute-activation-mini-band-walk/start.png",
+        "end": "/exercises/glute-activation-mini-band-walk/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-landmine-rotational-press",
+      "slug": "landmine-rotational-press",
+      "name_fr": "Développé rotation landmine",
+      "name_en": "Landmine rotational press",
+      "discipline": "strength",
+      "equipment": [
+        "landmine"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/landmine-rotational-press/main.png",
+        "start": "/exercises/landmine-rotational-press/start.png",
+        "end": "/exercises/landmine-rotational-press/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-landmine-lateral-lunge",
+      "slug": "landmine-lateral-lunge",
+      "name_fr": "Fente latérale landmine",
+      "name_en": "Landmine lateral lunge",
+      "discipline": "strength",
+      "equipment": [
+        "landmine"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/landmine-lateral-lunge/main.png",
+        "start": "/exercises/landmine-lateral-lunge/start.png",
+        "end": "/exercises/landmine-lateral-lunge/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sandbag-shouldering",
+      "slug": "sandbag-shouldering",
+      "name_fr": "Épaulé de sac de sable",
+      "name_en": "Sandbag shouldering",
+      "discipline": "strength",
+      "equipment": [
+        "sandbag"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sandbag-shouldering/main.png",
+        "start": "/exercises/sandbag-shouldering/start.png",
+        "end": "/exercises/sandbag-shouldering/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-sandbag-bear-hug-carry",
+      "slug": "sandbag-bear-hug-carry",
+      "name_fr": "Portage de sac en étreinte",
+      "name_en": "Sandbag bear hug carry",
+      "discipline": "strength",
+      "equipment": [
+        "sandbag"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/sandbag-bear-hug-carry/main.png",
+        "start": "/exercises/sandbag-bear-hug-carry/start.png",
+        "end": "/exercises/sandbag-bear-hug-carry/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-offset-kettlebell-front-rack-walk",
+      "slug": "offset-kettlebell-front-rack-walk",
+      "name_fr": "Marche kettlebell asymétrique en rack",
+      "name_en": "Offset kettlebell front rack walk",
+      "discipline": "strength",
+      "equipment": [
+        "kettlebell"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/offset-kettlebell-front-rack-walk/main.png",
+        "start": "/exercises/offset-kettlebell-front-rack-walk/start.png",
+        "end": "/exercises/offset-kettlebell-front-rack-walk/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-single-arm-suitcase-carry",
+      "slug": "single-arm-suitcase-carry",
+      "name_fr": "Marche valise unilatérale",
+      "name_en": "Single arm suitcase carry",
+      "discipline": "strength",
+      "equipment": [
+        "dumbbell"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/single-arm-suitcase-carry/main.png",
+        "start": "/exercises/single-arm-suitcase-carry/start.png",
+        "end": "/exercises/single-arm-suitcase-carry/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-tempo-goblet-squat-3-1-1",
+      "slug": "tempo-goblet-squat-3-1-1",
+      "name_fr": "Goblet squat tempo 3-1-1",
+      "name_en": "Tempo goblet squat 3-1-1",
+      "discipline": "strength",
+      "equipment": [
+        "kettlebell"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/tempo-goblet-squat-3-1-1/main.png",
+        "start": "/exercises/tempo-goblet-squat-3-1-1/start.png",
+        "end": "/exercises/tempo-goblet-squat-3-1-1/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-paused-front-squat",
+      "slug": "paused-front-squat",
+      "name_fr": "Front squat avec pause",
+      "name_en": "Paused front squat",
+      "discipline": "strength",
+      "equipment": [
+        "barbell"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/paused-front-squat/main.png",
+        "start": "/exercises/paused-front-squat/start.png",
+        "end": "/exercises/paused-front-squat/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-eccentric-calf-raise-step",
+      "slug": "eccentric-calf-raise-step",
+      "name_fr": "Mollets excentriques sur marche",
+      "name_en": "Eccentric calf raise step",
+      "discipline": "strength",
+      "equipment": [
+        "step"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/eccentric-calf-raise-step/main.png",
+        "start": "/exercises/eccentric-calf-raise-step/start.png",
+        "end": "/exercises/eccentric-calf-raise-step/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-nordic-hamstring-assisted",
+      "slug": "nordic-hamstring-assisted",
+      "name_fr": "Nordic curl assisté",
+      "name_en": "Nordic hamstring assisted",
+      "discipline": "strength",
+      "equipment": [
+        "partner"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/nordic-hamstring-assisted/main.png",
+        "start": "/exercises/nordic-hamstring-assisted/start.png",
+        "end": "/exercises/nordic-hamstring-assisted/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-spanish-squat-band",
+      "slug": "spanish-squat-band",
+      "name_fr": "Spanish squat avec bande",
+      "name_en": "Spanish squat band",
+      "discipline": "strength",
+      "equipment": [
+        "resistance_band"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/spanish-squat-band/main.png",
+        "start": "/exercises/spanish-squat-band/start.png",
+        "end": "/exercises/spanish-squat-band/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-banded-hip-hinge-drill",
+      "slug": "banded-hip-hinge-drill",
+      "name_fr": "Charnière de hanche avec élastique",
+      "name_en": "Banded hip hinge drill",
+      "discipline": "strength",
+      "equipment": [
+        "resistance_band"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/banded-hip-hinge-drill/main.png",
+        "start": "/exercises/banded-hip-hinge-drill/start.png",
+        "end": "/exercises/banded-hip-hinge-drill/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-isometric-split-squat-hold",
+      "slug": "isometric-split-squat-hold",
+      "name_fr": "Maintien isométrique en fente",
+      "name_en": "Isometric split squat hold",
+      "discipline": "strength",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/isometric-split-squat-hold/main.png",
+        "start": "/exercises/isometric-split-squat-hold/start.png",
+        "end": "/exercises/isometric-split-squat-hold/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-single-leg-rdl-reach",
+      "slug": "single-leg-rdl-reach",
+      "name_fr": "Soulevé de terre une jambe avec extension",
+      "name_en": "Single leg RDL reach",
+      "discipline": "strength",
+      "equipment": [],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/single-leg-rdl-reach/main.png",
+        "start": "/exercises/single-leg-rdl-reach/start.png",
+        "end": "/exercises/single-leg-rdl-reach/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    },
+    {
+      "id": "coory-pallof-press-march",
+      "slug": "pallof-press-march",
+      "name_fr": "Pallof press avec marche",
+      "name_en": "Pallof press march",
+      "discipline": "strength",
+      "equipment": [
+        "cable"
+      ],
+      "primary_muscles": [],
+      "secondary_muscles": [],
+      "difficulty": null,
+      "description_fr": null,
+      "instructions_fr": [],
+      "tags": [],
+      "source": "coory_original_proposal",
+      "review_status": "needs_coach_validation",
+      "image_status": "missing",
+      "images": {
+        "main": "/exercises/pallof-press-march/main.png",
+        "start": "/exercises/pallof-press-march/start.png",
+        "end": "/exercises/pallof-press-march/end.png"
+      },
+      "image_license": "coory_original_when_created"
+    }
+  ]
+}

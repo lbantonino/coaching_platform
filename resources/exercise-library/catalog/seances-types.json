@@ -1,0 +1,1429 @@
+{
+  "schema_version": "coory-session-types/1.0",
+  "generated_at": "2026-10-30T22:09:07.395Z",
+  "_lisez_moi": "Configurations d'entraînement retirées du catalogue d'exercices (T0). Elles serviront aux onglets Blocs et Séances types (P3-02 et P3-03). Les paramètres ne reprennent que ce que dit le nom d'origine : rien n'est inventé. Toutes sont à valider par un coach.",
+  "counts": {
+    "preset": 20,
+    "technique": 9,
+    "seance": 19,
+    "bloc": 4
+  },
+  "kinds": {
+    "preset": "Réglage d'un exercice",
+    "technique": "Travail technique",
+    "seance": "Séance type",
+    "bloc": "Bloc (enchaînement)"
+  },
+  "items": [
+    {
+      "source_id": "coory-skierg-500-m",
+      "provider": "coory_kit",
+      "name_fr": "SkiErg 500 m",
+      "name_en": "SkiErg 500 m",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "ski-erg",
+          "id": "9d067da6-31ce-58a6-95a7-c3d1c66c93fb",
+          "name_fr": "SkiErg"
+        }
+      ],
+      "parameters": {
+        "distance_m": 500
+      },
+      "reason": "Même mouvement que SkiErg : seule la distance change, elle se règle dans la séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-skierg-1000-m",
+      "provider": "coory_kit",
+      "name_fr": "SkiErg 1000 m",
+      "name_en": "SkiErg 1000 m",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "ski-erg",
+          "id": "9d067da6-31ce-58a6-95a7-c3d1c66c93fb",
+          "name_fr": "SkiErg"
+        }
+      ],
+      "parameters": {
+        "distance_m": 1000
+      },
+      "reason": "Même mouvement que SkiErg : seule la distance change.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-skierg-power-intervals",
+      "provider": "coory_kit",
+      "name_fr": "Intervalles de puissance SkiErg",
+      "name_en": "SkiErg power intervals",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "ski-erg",
+          "id": "9d067da6-31ce-58a6-95a7-c3d1c66c93fb",
+          "name_fr": "SkiErg"
+        }
+      ],
+      "parameters": {},
+      "reason": "Organisation de séance (intervalles), pas un mouvement.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-skierg-technique-drill",
+      "provider": "coory_kit",
+      "name_fr": "Technique SkiErg",
+      "name_en": "SkiErg technique drill",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "ski-erg",
+          "id": "9d067da6-31ce-58a6-95a7-c3d1c66c93fb",
+          "name_fr": "SkiErg"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail technique du SkiErg : un objectif de séance, pas un autre mouvement.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-sled-push-heavy",
+      "provider": "coory_kit",
+      "name_fr": "Poussée de traîneau lourde",
+      "name_en": "Sled push heavy",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "sled-push",
+          "id": "18823f4f-dbb1-564b-99f9-44bc211490dc",
+          "name_fr": "Sled push"
+        }
+      ],
+      "parameters": {
+        "load": "lourde, fixée par le coach"
+      },
+      "reason": "Même mouvement que Sled push : seule la charge change.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-sled-push-moderate",
+      "provider": "coory_kit",
+      "name_fr": "Poussée de traîneau modérée",
+      "name_en": "Sled push moderate",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "sled-push",
+          "id": "18823f4f-dbb1-564b-99f9-44bc211490dc",
+          "name_fr": "Sled push"
+        }
+      ],
+      "parameters": {
+        "load": "modérée, fixée par le coach"
+      },
+      "reason": "Même mouvement que Sled push : seule la charge change.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-sled-push-acceleration",
+      "provider": "coory_kit",
+      "name_fr": "Accélération avec traîneau",
+      "name_en": "Sled push acceleration",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "sled-push",
+          "id": "18823f4f-dbb1-564b-99f9-44bc211490dc",
+          "name_fr": "Sled push"
+        }
+      ],
+      "parameters": {
+        "intent": "accélération sur courte distance"
+      },
+      "reason": "Même mouvement que Sled push : distance courte et intensité maximale sont des réglages.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-burpee-broad-jump-technique",
+      "provider": "coory_kit",
+      "name_fr": "Technique burpee saut en longueur",
+      "name_en": "Burpee broad jump technique",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "burpee-broad-jump",
+          "id": "7b9138a6-1b3c-5d01-bb32-67c7144fae66",
+          "name_fr": "Burpee broad jump"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail technique d'un mouvement déjà au catalogue.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-rowerg-500-m",
+      "provider": "coory_kit",
+      "name_fr": "Rameur 500 m",
+      "name_en": "RowErg 500 m",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "rowing-machine",
+          "id": "54ea1af0-9baa-5df6-8edb-f486a9861605",
+          "name_fr": "Rameur"
+        }
+      ],
+      "parameters": {
+        "distance_m": 500
+      },
+      "reason": "Même mouvement que Rameur : seule la distance change.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-rowerg-1000-m",
+      "provider": "coory_kit",
+      "name_fr": "Rameur 1000 m",
+      "name_en": "RowErg 1000 m",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "rowing-machine",
+          "id": "54ea1af0-9baa-5df6-8edb-f486a9861605",
+          "name_fr": "Rameur"
+        }
+      ],
+      "parameters": {
+        "distance_m": 1000
+      },
+      "reason": "Même mouvement que Rameur : seule la distance change.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-rowerg-tempo-intervals",
+      "provider": "coory_kit",
+      "name_fr": "Rameur intervalles tempo",
+      "name_en": "RowErg tempo intervals",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "rowing-machine",
+          "id": "54ea1af0-9baa-5df6-8edb-f486a9861605",
+          "name_fr": "Rameur"
+        }
+      ],
+      "parameters": {},
+      "reason": "Organisation de séance (intervalles au tempo).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-farmers-carry-heavy",
+      "provider": "coory_kit",
+      "name_fr": "Marche du fermier lourde",
+      "name_en": "Farmers carry heavy",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "kettlebell-farmers-walk",
+          "id": "df809454-b21c-5cfc-a7d1-1ee03f7fa4b9",
+          "name_fr": "Farmers carry kettlebells"
+        }
+      ],
+      "parameters": {
+        "load": "lourde, fixée par le coach"
+      },
+      "reason": "Même mouvement que Farmers carry : seule la charge change.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-farmers-carry-turning-drill",
+      "provider": "coory_kit",
+      "name_fr": "Marche du fermier avec demi-tour",
+      "name_en": "Farmers carry turning drill",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "kettlebell-farmers-walk",
+          "id": "df809454-b21c-5cfc-a7d1-1ee03f7fa4b9",
+          "name_fr": "Farmers carry kettlebells"
+        }
+      ],
+      "parameters": {},
+      "reason": "Exercice technique du demi-tour en Farmers carry : même mouvement, objectif de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-wall-balls-breathing-drill",
+      "provider": "coory_kit",
+      "name_fr": "Wall balls respiration",
+      "name_en": "Wall balls breathing drill",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "wall-ball",
+          "id": "2d6dcf9a-85a7-57c7-9e50-0866dd847960",
+          "name_fr": "Wall ball"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail de respiration sur un mouvement déjà au catalogue.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-hyrox-station-transition-run",
+      "provider": "coory_kit",
+      "name_fr": "Course de transition HYROX",
+      "name_en": "HYROX station transition run",
+      "kind": "bloc",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Enchaînement de course entre deux stations : un bloc de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-hyrox-compromised-run",
+      "provider": "coory_kit",
+      "name_fr": "Course après effort HYROX",
+      "name_en": "HYROX compromised run",
+      "kind": "bloc",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Course juste après une station : un bloc de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-hyrox-sled-to-run-transition",
+      "provider": "coory_kit",
+      "name_fr": "Transition traîneau vers course",
+      "name_en": "HYROX sled to run transition",
+      "kind": "bloc",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "sled-push",
+          "id": "18823f4f-dbb1-564b-99f9-44bc211490dc",
+          "name_fr": "Sled push"
+        },
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Enchaînement de deux mouvements du catalogue.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-hyrox-row-to-carry-transition",
+      "provider": "coory_kit",
+      "name_fr": "Transition rameur vers portage",
+      "name_en": "HYROX row to carry transition",
+      "kind": "bloc",
+      "future_type": "block_template",
+      "disciplines": [
+        "hyrox"
+      ],
+      "exercises": [
+        {
+          "key": "rowing-machine",
+          "id": "54ea1af0-9baa-5df6-8edb-f486a9861605",
+          "name_fr": "Rameur"
+        },
+        {
+          "key": "kettlebell-farmers-walk",
+          "id": "df809454-b21c-5cfc-a7d1-1ee03f7fa4b9",
+          "name_fr": "Farmers carry kettlebells"
+        }
+      ],
+      "parameters": {},
+      "reason": "Enchaînement de deux mouvements du catalogue.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-easy-run",
+      "provider": "coory_kit",
+      "name_fr": "Footing facile",
+      "name_en": "Easy run",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (allure facile).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-recovery-jog",
+      "provider": "coory_kit",
+      "name_fr": "Footing de récupération",
+      "name_en": "Recovery jog",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (récupération).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-long-slow-distance-run",
+      "provider": "coory_kit",
+      "name_fr": "Sortie longue à allure facile",
+      "name_en": "Long slow distance run",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (sortie longue).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-progression-run",
+      "provider": "coory_kit",
+      "name_fr": "Course progressive",
+      "name_en": "Progression run",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (allure progressive).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-tempo-run",
+      "provider": "coory_kit",
+      "name_fr": "Course tempo",
+      "name_en": "Tempo run",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (tempo).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-threshold-intervals",
+      "provider": "coory_kit",
+      "name_fr": "Intervalles au seuil",
+      "name_en": "Threshold intervals",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (seuil).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-vo2-max-intervals",
+      "provider": "coory_kit",
+      "name_fr": "Intervalles VO2 max",
+      "name_en": "VO2 max intervals",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (VO2 max).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-short-hill-sprints",
+      "provider": "coory_kit",
+      "name_fr": "Sprints courts en côte",
+      "name_en": "Short hill sprints",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (sprints en côte).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-hill-repeats",
+      "provider": "coory_kit",
+      "name_fr": "Répétitions en côte",
+      "name_en": "Hill repeats",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (répétitions en côte).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-downhill-running-drills",
+      "provider": "coory_kit",
+      "name_fr": "Technique de descente",
+      "name_en": "Downhill running drills",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail technique de la descente, pas un mouvement distinct.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-strides-80-meters",
+      "provider": "coory_kit",
+      "name_fr": "Lignes droites 80 mètres",
+      "name_en": "Strides 80 meters",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {
+        "distance_m": 80,
+        "intent": "ligne droite en accélération"
+      },
+      "reason": "Course sur 80 m : la distance est un réglage.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-strides-100-meters",
+      "provider": "coory_kit",
+      "name_fr": "Lignes droites 100 mètres",
+      "name_en": "Strides 100 meters",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {
+        "distance_m": 100,
+        "intent": "ligne droite en accélération"
+      },
+      "reason": "Course sur 100 m : la distance est un réglage.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-cadence-drill",
+      "provider": "coory_kit",
+      "name_fr": "Exercice de cadence",
+      "name_en": "Cadence drill",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail de cadence : objectif de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-run-walk-intervals",
+      "provider": "coory_kit",
+      "name_fr": "Intervalles course-marche",
+      "name_en": "Run-walk intervals",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        },
+        {
+          "key": "walking",
+          "id": "893e720c-c71b-54b9-be67-3207b529db6b",
+          "name_fr": "Marche"
+        }
+      ],
+      "parameters": {},
+      "reason": "Alternance course et marche : organisation de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-fartlek-session",
+      "provider": "coory_kit",
+      "name_fr": "Séance fartlek",
+      "name_en": "Fartlek session",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Type de séance de course (fartlek).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-track-200-m-repeats",
+      "provider": "coory_kit",
+      "name_fr": "Répétitions de 200 m sur piste",
+      "name_en": "Track 200 m repeats",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {
+        "distance_m": 200
+      },
+      "reason": "Répétitions sur piste : organisation de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-track-400-m-repeats",
+      "provider": "coory_kit",
+      "name_fr": "Répétitions de 400 m sur piste",
+      "name_en": "Track 400 m repeats",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {
+        "distance_m": 400
+      },
+      "reason": "Répétitions sur piste : organisation de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-track-800-m-repeats",
+      "provider": "coory_kit",
+      "name_fr": "Répétitions de 800 m sur piste",
+      "name_en": "Track 800 m repeats",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {
+        "distance_m": 800
+      },
+      "reason": "Répétitions sur piste : organisation de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-pace-control-drill",
+      "provider": "coory_kit",
+      "name_fr": "Exercice de contrôle d'allure",
+      "name_en": "Pace control drill",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail du contrôle d'allure : objectif de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-running-form-drill",
+      "provider": "coory_kit",
+      "name_fr": "Technique de course",
+      "name_en": "Running form drill",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail de technique de course générique ; les éducatifs précis sont des exercices à part (A-skip, B-skip…).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-treadmill-incline-intervals",
+      "provider": "coory_kit",
+      "name_fr": "Intervalles inclinés sur tapis",
+      "name_en": "Treadmill incline intervals",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "treadmill-running",
+          "id": "a75fa2a5-b5b1-563f-a887-782b42c581b1",
+          "name_fr": "Course sur tapis"
+        }
+      ],
+      "parameters": {},
+      "reason": "Organisation de séance sur tapis (intervalles en pente).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-treadmill-tempo",
+      "provider": "coory_kit",
+      "name_fr": "Course tempo sur tapis",
+      "name_en": "Treadmill tempo",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "treadmill-running",
+          "id": "a75fa2a5-b5b1-563f-a887-782b42c581b1",
+          "name_fr": "Course sur tapis"
+        }
+      ],
+      "parameters": {},
+      "reason": "Organisation de séance sur tapis (tempo).",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-trail-technical-run",
+      "provider": "coory_kit",
+      "name_fr": "Trail technique",
+      "name_en": "Trail technical run",
+      "kind": "seance",
+      "future_type": "session_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Séance sur terrain technique : le terrain est un réglage de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-barefoot-grass-drill",
+      "provider": "coory_kit",
+      "name_fr": "Technique pieds nus sur herbe",
+      "name_en": "Barefoot grass drill",
+      "kind": "technique",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {},
+      "reason": "Travail technique pieds nus : objectif de séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-sprint-acceleration-20-m",
+      "provider": "coory_kit",
+      "name_fr": "Accélération 20 m",
+      "name_en": "Sprint acceleration 20 m",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "running"
+      ],
+      "exercises": [
+        {
+          "key": "running",
+          "id": "6b29ea26-9521-560e-bc49-a9845abf1e14",
+          "name_fr": "Course à pied"
+        }
+      ],
+      "parameters": {
+        "distance_m": 20,
+        "intent": "accélération"
+      },
+      "reason": "Course sur 20 m : la distance et l'intensité sont des réglages.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-tempo-goblet-squat-3-1-1",
+      "provider": "coory_kit",
+      "name_fr": "Goblet squat tempo 3-1-1",
+      "name_en": "Tempo goblet squat 3-1-1",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "goblet-squat",
+          "id": "90d201e1-5bf0-5e09-a057-68df0fd1d970",
+          "name_fr": "Goblet squat"
+        }
+      ],
+      "parameters": {
+        "tempo": "3-1-1"
+      },
+      "reason": "Même mouvement que Goblet squat : le tempo se règle dans la séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-paused-front-squat",
+      "provider": "coory_kit",
+      "name_fr": "Front squat avec pause",
+      "name_en": "Paused front squat",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "front-squat",
+          "id": "93c8b777-8b64-5230-93da-db51ac8b85cf",
+          "name_fr": "Front squat"
+        }
+      ],
+      "parameters": {
+        "tempo": "pause en bas"
+      },
+      "reason": "Même mouvement que Front squat : la pause se règle dans le tempo.",
+      "review": {
+        "status": "pending",
+        "confidence": "sure",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "coory-eccentric-calf-raise-step",
+      "provider": "coory_kit",
+      "name_fr": "Mollets excentriques sur marche",
+      "name_en": "Eccentric calf raise step",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "bodyweight-calf-raise",
+          "id": "f4a5891b-91c1-5d86-8c32-c6d33c28c7fd",
+          "name_fr": "Extension des mollets au poids du corps"
+        }
+      ],
+      "parameters": {
+        "tempo": "descente lente",
+        "support": "sur une marche"
+      },
+      "reason": "Extension des mollets sur une marche avec descente lente : tempo et support sont des réglages. À confirmer : un coach peut préférer un exercice à part.",
+      "review": {
+        "status": "pending",
+        "confidence": "a_confirmer",
+        "reason": "coach_validation_required"
+      }
+    },
+    {
+      "source_id": "repdb-pause-squat",
+      "provider": "repdb",
+      "name_fr": "Squat avec pause",
+      "name_en": "Pause Squat",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "squat",
+          "id": "23bb6605-e34b-5e09-a775-823e52f1ef10",
+          "name_fr": "Back squat"
+        }
+      ],
+      "parameters": {
+        "tempo": "pause en bas"
+      },
+      "reason": "Back squat avec une pause : la pause se règle dans le tempo de la séance.",
+      "review": {
+        "status": "pending",
+        "confidence": "a_confirmer",
+        "reason": "coach_validation_required"
+      },
+      "instructions_fr_source": [
+        "Décroche une barre et pose-la sur le haut du dos.",
+        "Tiens-toi debout, pieds à largeur d'épaules.",
+        "Descends jusqu'à ce que les cuisses soient parallèles au sol.",
+        "Maintiens la position basse pendant 2 à 3 secondes.",
+        "Pousse dans les talons pour te relever.",
+        "Répète pour le nombre de répétitions voulu."
+      ]
+    },
+    {
+      "source_id": "repdb-pause-deadlift",
+      "provider": "repdb",
+      "name_fr": "Soulevé de terre avec pause",
+      "name_en": "Pause Deadlift",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "deadlift",
+          "id": "24c44764-91f1-53d1-ad99-45398754a2f7",
+          "name_fr": "Soulevé de terre barre"
+        }
+      ],
+      "parameters": {
+        "tempo": "pause en cours de montée"
+      },
+      "reason": "Soulevé de terre avec une pause : réglage de tempo.",
+      "review": {
+        "status": "pending",
+        "confidence": "a_confirmer",
+        "reason": "coach_validation_required"
+      },
+      "instructions_fr_source": [
+        "Installe-toi comme pour un soulevé de terre classique.",
+        "Décolle la barre du sol et marque une pause quand elle passe les genoux.",
+        "Maintiens 2 à 3 secondes, puis termine le mouvement.",
+        "Redescends sous contrôle.",
+        "Répète."
+      ]
+    },
+    {
+      "source_id": "repdb-pause-pull-up",
+      "provider": "repdb",
+      "name_fr": "Tractions pronation avec pause",
+      "name_en": "Pause Pull-Up",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "pull-up",
+          "id": "697cc21a-fced-58b5-bc1b-aff830ac525c",
+          "name_fr": "Tractions pronation"
+        }
+      ],
+      "parameters": {
+        "tempo": "pause en haut"
+      },
+      "reason": "Tractions avec une pause : réglage de tempo.",
+      "review": {
+        "status": "pending",
+        "confidence": "a_confirmer",
+        "reason": "coach_validation_required"
+      },
+      "instructions_fr_source": [
+        "Suspends-toi à une barre de traction en pronation, bras en extension complète.",
+        "Tire-toi jusqu'à ce que le menton passe au-dessus de la barre.",
+        "Marque une pause et tiens la position haute un instant.",
+        "Redescends en contrôlant jusqu'à la suspension complète.",
+        "Répète pour le nombre de répétitions voulu."
+      ]
+    },
+    {
+      "source_id": "repdb-paused-bench-press",
+      "provider": "repdb",
+      "name_fr": "Développé couché barre avec pause",
+      "name_en": "Paused Bench Press",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "bench-press",
+          "id": "922f5540-60d1-5443-bc49-55c3f5964cf3",
+          "name_fr": "Développé couché barre"
+        }
+      ],
+      "parameters": {
+        "tempo": "pause sur la poitrine"
+      },
+      "reason": "Développé couché avec une pause : réglage de tempo.",
+      "review": {
+        "status": "pending",
+        "confidence": "a_confirmer",
+        "reason": "coach_validation_required"
+      },
+      "instructions_fr_source": [
+        "Allonge-toi sur un banc plat et prends la barre un peu plus large que les épaules.",
+        "Décroche la barre et descends-la vers la poitrine.",
+        "Marque une pause de 1 à 2 secondes sur la poitrine.",
+        "Repousse la barre jusqu'à l'extension complète des bras.",
+        "Contrôle la descente à chaque répétition.",
+        "Répète pour le nombre de répétitions voulu."
+      ]
+    },
+    {
+      "source_id": "repdb-paused-incline-bench-press",
+      "provider": "repdb",
+      "name_fr": "Développé incliné barre avec pause",
+      "name_en": "Paused Incline Bench Press",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "incline-bench-press",
+          "id": "331f43bb-8f2d-5063-8e44-a0b5b4abc7d5",
+          "name_fr": "Développé incliné barre"
+        }
+      ],
+      "parameters": {
+        "tempo": "pause sur la poitrine"
+      },
+      "reason": "Développé incliné avec une pause : réglage de tempo.",
+      "review": {
+        "status": "pending",
+        "confidence": "a_confirmer",
+        "reason": "coach_validation_required"
+      },
+      "instructions_fr_source": [
+        "Allonge-toi sur un banc incliné et prends la barre un peu plus large que les épaules.",
+        "Décroche la barre et descends-la vers le haut de la poitrine.",
+        "Marque une pause de 1 à 2 secondes sur la poitrine.",
+        "Repousse la barre jusqu'à l'extension complète des bras.",
+        "Garde les omoplates serrées tout au long de l'exercice.",
+        "Répète pour le nombre de répétitions voulu."
+      ]
+    },
+    {
+      "source_id": "repdb-paused-ohp",
+      "provider": "repdb",
+      "name_fr": "Développé militaire avec pause",
+      "name_en": "Paused Overhead Press",
+      "kind": "preset",
+      "future_type": "block_template",
+      "disciplines": [
+        "strength"
+      ],
+      "exercises": [
+        {
+          "key": "ohp",
+          "id": "82832fb6-48a3-56a2-ae74-fe6dc99165e8",
+          "name_fr": "Développé militaire"
+        }
+      ],
+      "parameters": {
+        "tempo": "pause en bas"
+      },
+      "reason": "Développé militaire avec une pause : réglage de tempo.",
+      "review": {
+        "status": "pending",
+        "confidence": "a_confirmer",
+        "reason": "coach_validation_required"
+      },
+      "instructions_fr_source": [
+        "Installe-toi avec une barre en rack à hauteur d'épaules, pieds à largeur d'épaules et abdominaux gainés.",
+        "Pousse la barre à la verticale au-dessus de la tête jusqu'à verrouiller complètement les coudes.",
+        "Redescends la barre de façon contrôlée devant les épaules.",
+        "Marque une pause complète d'une seconde sur les épaules, en gardant la tension et sans rebond.",
+        "Repousse depuis l'arrêt complet, sans élan des jambes."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "_lisez_moi": "Périmètre visible de la bibliothèque (décision d'Antonino, 30/10/2026 soir). Musculation, Cardio et Hyrox sont visibles. Mobilité, course et créations Coory sans contenu sont masquées, jamais supprimées : on les réactive en changeant ce fichier. Images : celles de RepDB pour les exercices RepDB, sauf l'Hyrox, illustré par Coory.",
+  "categories": {
+    "strength": "Musculation",
+    "cardio": "Cardio",
+    "hyrox": "Hyrox",
+    "mobility": "Mobilité"
+  },
+  "visible_categories": [
+    "strength",
+    "cardio",
+    "hyrox"
+  ],
+  "repdb_category_to_category": {
+    "strength": "strength",
+    "olympic": "strength",
+    "plyometrics": "cardio",
+    "cardio": "cardio",
+    "stretching": "mobility"
+  },
+  "coory_discipline_to_category": {
+    "strength": "strength",
+    "hyrox": "hyrox",
+    "mobility": "mobility",
+    "warmup": "cardio",
+    "running": "cardio"
+  },
+  "hyrox": [
+    "ski-erg",
+    "sled-push",
+    "sled-pull",
+    "burpee-broad-jump",
+    "rowing-machine",
+    "kettlebell-farmers-walk",
+    "sandbag-walking-lunge",
+    "wall-ball",
+    "sled-pull-backward-walk",
+    "sled-pull-seated"
+  ],
+  "running": [
+    "running",
+    "treadmill-running",
+    "walking",
+    "incline-treadmill-walk"
+  ],
+  "hidden_reasons": {
+    "mobility": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo.",
+    "running": "Course retirée : une séance de course se construit dans l'éditeur running, étape par étape.",
+    "coory_without_content": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même.",
+    "removed": "Retiré de la bibliothèque par Antonino (30/10/2026)."
+  },
+  "repdb_image_base_url": "https://exercise-dataset.com/",
+  "hidden_keys": [
+    "sled-pull-seated",
+    "sled-pull-backward-walk"
+  ]
+}
