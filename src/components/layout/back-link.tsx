@@ -90,7 +90,17 @@ const previousTitle = () => {
   }
 };
 
-export function BackLink({ href, label }: { href: string; label: string }) {
+export function BackLink({
+  href,
+  label,
+  variant = "text",
+}: {
+  href: string;
+  label: string;
+  // « icon » : rond posé sur une image (fiche d'un exercice, maquette 5), le libellé pour les lecteurs
+  // d'écran.
+  variant?: "text" | "icon";
+}) {
   const router = useRouter();
   // Libellé : le titre de la page précédente, lu dans le navigateur (le serveur rend le libellé
   // habituel). Relu à chaque rendu, donc à chaque changement de page.
@@ -109,10 +119,23 @@ export function BackLink({ href, label }: { href: string; label: string }) {
           // Stockage bloqué : lien normal.
         }
       }}
-      className="inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
+      aria-label={variant === "icon" ? `Retour : ${shown}` : undefined}
+      className={
+        variant === "icon"
+          ? "inline-flex size-11 items-center justify-center rounded-full transition-transform duration-100 active:scale-95"
+          : "inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
+      }
     >
-      <ArrowLeft aria-hidden size={16} strokeWidth={1.8} />
-      {shown}
+      {variant === "icon" ? (
+        <span className="inline-flex size-8 items-center justify-center rounded-full bg-surface/90 text-text">
+          <ArrowLeft aria-hidden size={18} strokeWidth={1.9} />
+        </span>
+      ) : (
+        <>
+          <ArrowLeft aria-hidden size={16} strokeWidth={1.8} />
+          {shown}
+        </>
+      )}
     </Link>
   );
 }

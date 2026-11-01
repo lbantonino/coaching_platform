@@ -1,48 +1,48 @@
 {
-  "generated_at": "2026-10-30T22:09:07.395Z",
+  "generated_at": "2026-10-31T20:30:19.049Z",
   "input": {
     "repdb": 701,
     "kit": 115,
     "total": 816
   },
   "library": {
-    "active": 605,
-    "hidden": 142,
+    "active": 693,
+    "hidden": 54,
     "active_by_category": {
       "strength": 580,
       "cardio": 17,
       "hyrox": 8,
-      "mobility": 0
+      "mobility": 88
     },
     "hidden_by_reason": {
-      "mobility": 108,
+      "mobility": 0,
       "running": 4,
-      "coory_without_content": 28,
+      "coory_without_content": 48,
       "removed": 2
     },
     "active_images": {
-      "from_repdb": 597,
-      "repdb_main_image": 105,
-      "repdb_start_end_only": 492,
+      "from_repdb": 685,
+      "repdb_main_image": 178,
+      "repdb_start_end_only": 507,
       "coory_to_import": 8,
       "coory_files_expected": 20
     },
     "active_missing": {
-      "instructions_fr": 3,
-      "primary_muscles": 3,
+      "instructions_fr": 0,
+      "primary_muscles": 1,
       "difficulty": 3
     },
     "active_review": {
-      "NOM_TRADUIT": 602,
-      "CONSIGNES_TRADUITES": 602,
+      "NOM_TRADUIT": 690,
+      "CONSIGNES_TRADUITES": 690,
       "NOM_PROPOSE": 3,
       "MOUVEMENT_A_VALIDER": 3,
-      "CONSIGNES_ABSENTES": 3,
-      "MUSCLES_ABSENTS": 3,
+      "CONSIGNES_ABSENTES": 0,
+      "MUSCLES_ABSENTS": 1,
       "DIFFICULTE_ABSENTE": 3,
       "DOUBLON_POSSIBLE": 1,
       "VARIANTE_A_CONFIRMER": 0,
-      "NOTE_TRADUCTION": 36,
+      "NOTE_TRADUCTION": 41,
       "FORMULATION_MEDICALE_NEUTRALISEE": 1,
       "NOM_LONG": 5,
       "NOM_EN_DOUBLE": 0
@@ -96,8 +96,8 @@
     "missing": 53
   },
   "missing": {
-    "instructions_fr": 53,
-    "primary_muscles": 54,
+    "instructions_fr": 50,
+    "primary_muscles": 51,
     "difficulty": 53,
     "equipment_listed_as_bodyweight": 234,
     "illustrations_without_any_source": 48
@@ -107,8 +107,8 @@
     "CONSIGNES_TRADUITES": 694,
     "NOM_PROPOSE": 53,
     "MOUVEMENT_A_VALIDER": 53,
-    "CONSIGNES_ABSENTES": 53,
-    "MUSCLES_ABSENTS": 54,
+    "CONSIGNES_ABSENTES": 50,
+    "MUSCLES_ABSENTS": 51,
     "DIFFICULTE_ABSENTE": 53,
     "DOUBLON_POSSIBLE": 3,
     "VARIANTE_A_CONFIRMER": 1,

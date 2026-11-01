@@ -1,6 +1,6 @@
 {
   "schema_version": "coory-session-types/1.0",
-  "generated_at": "2026-10-30T22:09:07.395Z",
+  "generated_at": "2026-10-31T20:30:19.049Z",
   "_lisez_moi": "Configurations d'entraînement retirées du catalogue d'exercices (T0). Elles serviront aux onglets Blocs et Séances types (P3-02 et P3-03). Les paramètres ne reprennent que ce que dit le nom d'origine : rien n'est inventé. Toutes sont à valider par un coach.",
   "counts": {
     "preset": 20,

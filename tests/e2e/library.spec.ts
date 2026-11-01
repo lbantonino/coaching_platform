@@ -84,9 +84,9 @@ test("la bibliothèque se parcourt : rubriques, recherche, fiche et favori", asy
   await expect(page.getByRole("link", { name: new RegExp(`^${mine.name}`) })).toHaveCount(0);
 });
 
-test("un exercice masqué (mobilité) ou inconnu n'a pas de fiche", async ({ page }) => {
+test("un exercice masqué ou inconnu n'a pas de fiche", async ({ page }) => {
   await login(page, "coach-b@example.test");
-  await page.goto("/coach/bibliotheque/cat-cow");
+  await page.goto("/coach/bibliotheque/sled-pull-seated");
   await expect(page.getByRole("heading", { name: "Page introuvable" })).toBeVisible();
   await page.goto("/coach/bibliotheque/n-existe-pas");
   await expect(page.getByRole("heading", { name: "Page introuvable" })).toBeVisible();

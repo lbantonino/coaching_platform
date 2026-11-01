@@ -136,7 +136,7 @@ export function LibraryView({
             aria-label="Rubriques"
             className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
           >
-            {/* Mobilité : seulement si le coach a créé des exercices de mobilité (D-76). */}
+            {/* Une rubrique vide n'apparaît pas (la Mobilité, si on la masque de nouveau). */}
             {(["all", ...LIBRARY_CATEGORIES] as const)
               .filter((category) => category !== "mobility" || countOf(category) > 0)
               .map((category) => {

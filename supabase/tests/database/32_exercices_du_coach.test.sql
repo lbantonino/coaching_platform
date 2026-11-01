@@ -113,7 +113,7 @@ select results_eq(
 );
 select is(
   (select count(*)::int from public.exercises where organization_id is null and visibility = 'active'),
-  605, 'Le catalogue commun est intact'
+  693, 'Le catalogue commun est intact'
 );
 
 select * from finish();

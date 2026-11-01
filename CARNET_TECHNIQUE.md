@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **30/10/2026** (bibliothèque d'exercices : catalogue RepDB + Hyrox Coory, exercices du coach).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **31/10/2026** (mobilité visible, consignes Hyrox écrites par Coory, maquettes de la fiche d'un exercice).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -412,6 +412,11 @@ Avant d'écrire une ligne de l'application, on a préparé le **catalogue** à p
 Un coach peut maintenant ajouter ses propres exercices, avec une photo et un lien vidéo. On n'a pas créé de nouvelle table : la table des exercices avait déjà une colonne « organisation », vide pour le catalogue commun. Une ligne avec une organisation appartient à ce coach. La base l'impose de trois façons : des **droits par colonne** (l'app ne peut écrire que les champs d'un exercice du coach), des **règles par ligne** (seulement dans SON organisation, jamais le catalogue) et une **contrainte** (un exercice de coach ne porte jamais de donnée RepDB, et sa photo est rangée dans le dossier de son organisation). Les tests SQL le vérifient avec deux coachs de deux organisations.
 
 La photo est réduite **dans le téléphone**, avant l'envoi (1 200 px au plus) : une photo de 5 Mo devient quelques centaines de Ko, et la bibliothèque reste rapide. Le serveur vérifie quand même les premiers octets du fichier, sans croire son nom. Pour la vidéo, on garde un simple lien qui s'ouvre dans l'application concernée. Intégrer Instagram ou TikTok dans la page aurait chargé leurs traceurs, et donc demandé un consentement RGPD. « Créer ma variante » reprend la rubrique, les muscles et le matériel d'un exercice du catalogue, mais pas ses consignes RepDB : l'exercice du coach reste 100 % à lui.
+
+### La mobilité revient, et les premières consignes signées Coory (31/10)
+Masquer plutôt que supprimer a payé : réafficher la mobilité a tenu en **une ligne** du fichier de périmètre, puis une nouvelle génération du catalogue. Seuls les 88 exercices RepDB qui ont une image et des consignes sont apparus ; les 20 idées du kit Coory, encore vides, restent cachées, comme les autres créations sans contenu. Les consignes et les muscles principaux des trois exercices Hyrox d'Antonino vivent dans leur propre fichier, recopiés mot pour mot, et le script refuse d'y mettre une clé qui n'est pas un exercice Coory (on ne peut pas écraser par erreur un texte RepDB) ou un muscle qu'il ne connaît pas. La migration du catalogue a été régénérée sur place, ce qui n'est acceptable que parce que rien n'est encore en ligne ; après la mise en ligne, chaque changement sera une nouvelle migration.
+
+Pour la fiche d'un exercice, plutôt que des dessins, des **maquettes dans la vraie application** (une adresse `?maquette=1` à `5`) : mêmes composants, mêmes couleurs, mêmes données, et Antonino peut les essayer sur son téléphone avant de choisir.
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
 

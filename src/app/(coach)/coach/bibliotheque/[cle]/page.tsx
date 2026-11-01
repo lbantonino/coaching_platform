@@ -25,6 +25,14 @@ import { deleteCoachExercise } from "@/features/exercises/coach-actions";
 import { getExerciseSheet, type ExerciseSheet } from "@/features/exercises/queries";
 
 import { DeleteExerciseButton } from "./delete-exercise-button";
+import {
+  Maquette1,
+  Maquette2,
+  Maquette3,
+  Maquette4,
+  Maquette5,
+  type SheetParts,
+} from "./maquettes";
 
 export const metadata: Metadata = {
   title: "Exercice",
@@ -44,19 +52,41 @@ const categoryTones: Record<ExerciseCategory, BadgeTone> = {
 
 const KEY = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-export default function ExercisePage({ params }: PageProps<"/coach/bibliotheque/[cle]">) {
+// MAQUETTES TEMPORAIRES (31/10/2026) : ?maquette=1 à 5 ouvre une des mises en page
+// proposées à Antonino (maquettes.tsx).
+const MAQUETTES = {
+  "1": Maquette1,
+  "2": Maquette2,
+  "3": Maquette3,
+  "4": Maquette4,
+  "5": Maquette5,
+} as const;
+
+export default function ExercisePage({
+  params,
+  searchParams,
+}: PageProps<"/coach/bibliotheque/[cle]">) {
   return (
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading />}>
-        {params.then(({ cle }) => (
-          <Exercise exerciseKey={cle} />
+        {Promise.all([params, searchParams]).then(([{ cle }, query]) => (
+          <Exercise
+            exerciseKey={cle}
+            maquette={typeof query.maquette === "string" ? query.maquette : null}
+          />
         ))}
       </Suspense>
     </main>
   );
 }
 
-async function Exercise({ exerciseKey }: { exerciseKey: string }) {
+async function Exercise({
+  exerciseKey,
+  maquette,
+}: {
+  exerciseKey: string;
+  maquette: string | null;
+}) {
   const { user, memberships } = await requireCoach();
   if (!KEY.test(exerciseKey)) notFound();
   const sheet = await getExerciseSheet(exerciseKey, user.id);
@@ -64,6 +94,9 @@ async function Exercise({ exerciseKey }: { exerciseKey: string }) {
   const labels = (codes: string[], dict: Record<string, { label: string }>) =>
     codes.map((code) => dict[code]?.label ?? code).join(", ");
   const platform = sheet.videoUrl ? videoPlatform(sheet.videoUrl) : null;
+
+  const Maquette = maquette && maquette in MAQUETTES ? MAQUETTES[maquette as "1"] : null;
+  if (Maquette) return <Maquette {...sheetParts(sheet, memberships[0].organizationId)} />;
 
   return (
     <>
@@ -267,4 +300,146 @@ function Illustrations({ sheet }: { sheet: ExerciseSheet }) {
       ) : null}
     </div>
   );
+}
+
+// Les morceaux de la fiche, pour les maquettes : les mêmes contenus, rangés autrement.
+function sheetParts(sheet: ExerciseSheet, organizationId: string): SheetParts {
+  const names = (codes: string[], dict: Record<string, { label: string }>) =>
+    codes.map((code) => dict[code]?.label ?? code);
+  const platform = sheet.videoUrl ? videoPlatform(sheet.videoUrl) : null;
+  const favorite = (variant: "icon" | "button") => (
+    <FavoriteButton
+      variant={variant}
+      name={sheet.nameFr}
+      favorite={sheet.favorite}
+      setFavorite={setExerciseFavorite.bind(null, sheet.id)}
+    />
+  );
+  const more = sheet.mine ? (
+    <>
+      <Link
+        href={`/coach/bibliotheque/${sheet.id}/modifier`}
+        className={buttonClass({ variant: "outline" })}
+      >
+        <Pencil aria-hidden size={16} strokeWidth={1.8} />
+        Modifier
+      </Link>
+      <DeleteExerciseButton
+        name={sheet.nameFr}
+        remove={deleteCoachExercise.bind(null, organizationId, sheet.id)}
+      />
+    </>
+  ) : (
+    <Link
+      href={`/coach/bibliotheque/nouveau?variante=${sheet.key}`}
+      className={buttonClass({ variant: "outline" })}
+    >
+      <Copy aria-hidden size={16} strokeWidth={1.8} />
+      Créer ma variante
+    </Link>
+  );
+  return {
+    sheet,
+    badges: (
+      <span className="flex flex-wrap gap-1.5">
+        {sheet.mine ? <Badge tone="moved">Mon exercice</Badge> : null}
+        <Badge tone={categoryTones[sheet.category]}>{exerciseCategoryLabels[sheet.category]}</Badge>
+        {sheet.hyroxStation ? <Badge tone="hyrox">Station {sheet.hyroxStation}</Badge> : null}
+        {sheet.difficulty ? <Badge>{difficultyLabels[sheet.difficulty]}</Badge> : null}
+        {sheet.unilateral ? <Badge>Un côté à la fois</Badge> : null}
+      </span>
+    ),
+    actions: (
+      <>
+        {favorite("button")}
+        {more}
+      </>
+    ),
+    favoriteIcon: favorite("icon"),
+    moreActions: more,
+    video: sheet.videoUrl ? (
+      <a
+        href={sheet.videoUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={buttonClass({ variant: "inverse", className: "self-start" })}
+      >
+        <Play aria-hidden size={16} strokeWidth={1.8} />
+        {platform ? `Voir la vidéo sur ${platform}` : "Voir la vidéo"}
+      </a>
+    ) : null,
+    instructions:
+      sheet.instructions.length > 0 ? (
+        <ol className="flex flex-col gap-2.5">
+          {sheet.instructions.map((step, index) => (
+            <li key={index} className="flex gap-3 text-[15px] leading-[1.5]">
+              <span
+                aria-hidden
+                className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-chip text-[12px] font-semibold tabular"
+              >
+                {index + 1}
+              </span>
+              <span className="min-w-0">{step}</span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="text-[14px] text-muted">
+          Consignes à venir : elles seront écrites puis validées par un coach.
+        </p>
+      ),
+    facts: [
+      {
+        label: "Muscles principaux",
+        items: sheet.primaryMuscles.length ? names(sheet.primaryMuscles, muscleInfo) : ["À venir"],
+      },
+      ...(sheet.secondaryMuscles.length
+        ? [{ label: "Muscles secondaires", items: names(sheet.secondaryMuscles, muscleInfo) }]
+        : []),
+      {
+        label: "Matériel",
+        items: sheet.equipment.length ? names(sheet.equipment, equipmentInfo) : ["Poids du corps"],
+      },
+      ...(sheet.variantOf
+        ? [
+            {
+              label: "Variante de",
+              items: [
+                <Link
+                  key="variant"
+                  href={`/coach/bibliotheque/${sheet.variantOf.key}`}
+                  className="underline underline-offset-2 hover:text-accent-text"
+                >
+                  {sheet.variantOf.nameFr}
+                </Link>,
+              ],
+            },
+          ]
+        : []),
+    ],
+    credits: (
+      <p className="text-[13px] leading-[1.5] text-muted">
+        {sheet.attributionRequired ? (
+          <>
+            Données de l&apos;exercice :{" "}
+            <a
+              href="https://repdb.co"
+              target="_blank"
+              rel="nofollow noopener noreferrer"
+              className="underline underline-offset-2 hover:text-text"
+            >
+              Exercise data by RepDB (repdb.co)
+            </a>
+            .{" "}
+          </>
+        ) : null}
+        {sheet.mine
+          ? "Exercice créé par ton organisation. "
+          : sheet.category === "hyrox"
+            ? "Illustration : Coory. "
+            : null}
+        Contenu informatif, pas un avis médical.
+      </p>
+    ),
+  };
 }
