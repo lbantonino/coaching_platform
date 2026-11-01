@@ -2,7 +2,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { iconButtonClass } from "@/components/ui/button";
 import { SegmentedNav } from "@/components/ui/segmented";
 
 import { ViewMenu, type ViewOption } from "./view-menu";
@@ -43,6 +42,10 @@ export function periodLabel(from: string, to: string, short = false): string {
   );
 }
 
+// Flèches (D-77) : 32 px sur ordinateur, 44 px sur téléphone (cible du doigt), filet fin.
+const arrow =
+  "inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-line text-text-2 transition-colors duration-150 hover:bg-selected-hover lg:size-8";
+
 export function AgendaToolbar({
   titleId,
   srTitle,
@@ -76,22 +79,22 @@ export function AgendaToolbar({
           href={prevHref}
           scroll={false}
           aria-label="Période précédente"
-          className={iconButtonClass()}
+          className={arrow}
         >
-          <ChevronLeft aria-hidden size={18} strokeWidth={1.8} />
+          <ChevronLeft aria-hidden size={15} strokeWidth={1.8} />
         </Link>
         <Link
           href={nextHref}
           scroll={false}
           aria-label="Période suivante"
-          className={iconButtonClass()}
+          className={arrow}
         >
-          <ChevronRight aria-hidden size={18} strokeWidth={1.8} />
+          <ChevronRight aria-hidden size={15} strokeWidth={1.8} />
         </Link>
       </nav>
       <p
         aria-hidden
-        className="min-w-0 truncate font-display text-[17px] font-semibold tracking-[-0.01em] lg:text-[20px]"
+        className="ml-1 min-w-0 truncate text-[13px] font-medium text-text-2 tabular lg:text-[12px]"
       >
         <span className="lg:hidden">{shortLabel}</span>
         <span className="max-lg:hidden">{label}</span>
@@ -101,7 +104,7 @@ export function AgendaToolbar({
           <ViewMenu options={viewOptions} />
         </span>
         <span className="hidden lg:block">
-          <SegmentedNav label="Vue de l'agenda" items={desktopViews} />
+          <SegmentedNav label="Vue de l'agenda" items={desktopViews} size="sm" />
         </span>
         {extra}
       </span>

@@ -1,30 +1,36 @@
-import { Users } from "lucide-react";
 import Link from "next/link";
 
 import type { Discipline } from "@/domain/training/discipline";
 import { monthGrid } from "@/features/agenda/calendar";
 import type { WeekBlock } from "@/features/agenda/week";
 
-// Vue Mois de l'agenda (prompt Claude Design §6) : grille 7 colonnes, cases carrées, un point de
-// couleur par séance (couleur de la discipline), aujourd'hui en rouge plein. Ordinateur : l'heure et
-// le nom des deux premières séances. Un jour ouvre sa journée. Séance collective (26/10) : point creux
-// (cerclé) sur téléphone, icône « groupe » sur ordinateur ; individuelle : point plein.
+// Vue Mois de l'agenda (maquette v6, D-77) : grille de 7 colonnes, une case sobre par jour : son
+// numéro, le total d'heures de coaching (ordinateur seulement, demande d'Antonino du 01/11) et un point
+// par séance dans la couleur de sa discipline (plein pour une individuelle, cerclé pour une
+// collective, 26/10).
+// Aujourd'hui : case teintée de violet, numéro dans un rond violet. Ordinateur : cases de 96 px de haut,
+// pour que la colonne de droite du tableau de bord (calée sur la hauteur de l'agenda) ne soit pas coupée. Un jour ouvre sa journée ; son nom
+// lu par un lecteur d'écran dit aussi quelles séances il contient.
 const dotClasses: Record<Discipline | "none", string> = {
-  running: "bg-run",
-  strength: "bg-strength",
-  hyrox: "bg-hyrox",
-  hybrid: "bg-hybrid",
+  running: "bg-run-fill",
+  strength: "bg-strength-fill",
+  hyrox: "bg-hyrox-fill",
+  hybrid: "bg-hybrid-fill",
   none: "bg-muted",
 };
-const textClasses: Record<Discipline | "none", string> = {
-  running: "text-run",
-  strength: "text-strength",
-  hyrox: "text-hyrox",
-  hybrid: "text-hybrid",
-  none: "text-muted",
+const ringClasses: Record<Discipline | "none", string> = {
+  running: "border-run-fill",
+  strength: "border-strength-fill",
+  hyrox: "border-hyrox-fill",
+  hybrid: "border-hybrid-fill",
+  none: "border-muted",
 };
 
 const weekDayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+// Durée courte : « 1h30 », « 0h45 », « 6h ».
+const hoursLabel = (minutes: number) =>
+  `${Math.floor(minutes / 60)}h${minutes % 60 ? String(minutes % 60).padStart(2, "0") : ""}`;
 
 export function MonthGrid({
   month,
@@ -38,72 +44,61 @@ export function MonthGrid({
   dayHref: (date: string) => string;
 }) {
   return (
-    // Téléphone : la grille du mois prend toute la largeur de l'écran.
-    <div className="flex flex-col gap-1.5 max-lg:-mx-3">
-      <div className="grid grid-cols-7 text-center font-mono text-[11px] text-muted uppercase">
+    <div className="flex flex-col gap-1.5">
+      <div aria-hidden className="grid grid-cols-7 text-center text-[11px] text-muted">
         {weekDayNames.map((name) => (
-          <span key={name} className="py-1">
+          <span key={name} className="pb-1.5">
             {name}
           </span>
         ))}
       </div>
-      <ol className="grid grid-cols-7 gap-1 lg:gap-1.5">
+      <ol className="grid grid-cols-7 gap-1.5">
         {monthGrid(month)
           .flat()
           .map((day) => {
             const blocks = monthBlocks.get(day.iso) ?? [];
             if (!day.inMonth) return <li key={day.iso} aria-hidden />;
             const isToday = day.iso === today;
+            const minutes = blocks.reduce((sum, block) => sum + block.end - block.start, 0);
             return (
               <li key={day.iso}>
                 <Link
                   href={dayHref(day.iso)}
-                  // Le nom dit aussi QUELLES séances (le téléphone n'affiche que des points).
                   aria-label={`${day.day} : ${blocks.length} séance${blocks.length > 1 ? "s" : ""}${
                     blocks.length > 0 ? ` · ${blocks.map((block) => block.title).join(", ")}` : ""
                   }`}
-                  className="flex aspect-square flex-col items-center gap-1 rounded-[10px] border border-line p-1 transition-colors duration-150 hover:bg-surface-2 lg:aspect-auto lg:min-h-24 lg:items-stretch lg:p-1.5"
+                  className={`flex min-h-[58px] flex-col gap-1 rounded-lg border p-1.5 lg:min-h-24 transition-colors duration-150 ${
+                    isToday
+                      ? "border-transparent bg-today-col shadow-[inset_0_0_0_1px_var(--violet-line)]"
+                      : "border-line-soft hover:border-line"
+                  }`}
                 >
                   <span
-                    className={`inline-flex size-7 shrink-0 items-center justify-center self-center rounded-full text-[13px] tabular lg:self-start ${
-                      isToday ? "bg-accent font-semibold text-on-accent" : ""
+                    className={`grid size-5 place-items-center rounded-full text-[11px] font-medium tabular ${
+                      isToday ? "bg-accent text-on-accent" : "text-text"
                     }`}
                   >
                     {day.day}
                   </span>
-                  <span className="flex flex-wrap justify-center gap-0.5 lg:hidden">
-                    {blocks.slice(0, 4).map((block) => (
-                      <span
-                        key={block.key}
-                        className={`size-1.5 rounded-full ${
-                          block.individual
-                            ? dotClasses[block.discipline ?? "none"]
-                            : `border border-current ${textClasses[block.discipline ?? "none"]}`
-                        }`}
-                      />
-                    ))}
-                  </span>
-                  <span className="hidden min-w-0 flex-col gap-0.5 lg:flex">
-                    {blocks.slice(0, 2).map((block) => (
-                      <span key={block.key} className="truncate text-[11px] leading-tight">
-                        {block.individual ? null : (
-                          <Users
-                            aria-hidden
-                            size={10}
-                            strokeWidth={2.4}
-                            className={`mr-0.5 inline align-[-1px] ${textClasses[block.discipline ?? "none"]}`}
-                          />
-                        )}
-                        <span className={`font-mono ${textClasses[block.discipline ?? "none"]}`}>
-                          {block.label.slice(0, 5)}
-                        </span>{" "}
-                        {block.title}
+                  {blocks.length > 0 ? (
+                    <>
+                      <span className="hidden text-[11px] text-muted tabular lg:block">
+                        {hoursLabel(minutes)}
                       </span>
-                    ))}
-                    {blocks.length > 2 ? (
-                      <span className="text-[11px] text-muted">+{blocks.length - 2}</span>
-                    ) : null}
-                  </span>
+                      <span className="flex flex-wrap gap-[3px]">
+                        {blocks.map((block) => (
+                          <span
+                            key={block.key}
+                            className={`size-[5px] shrink-0 rounded-full ${
+                              block.individual
+                                ? dotClasses[block.discipline ?? "none"]
+                                : `border ${ringClasses[block.discipline ?? "none"]}`
+                            }`}
+                          />
+                        ))}
+                      </span>
+                    </>
+                  ) : null}
                 </Link>
               </li>
             );

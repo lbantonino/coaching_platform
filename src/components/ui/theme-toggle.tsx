@@ -36,7 +36,14 @@ function applyTheme(theme: Theme) {
   listeners.forEach((listener) => listener());
 }
 
-export function ThemeToggle({ size = "md" }: { size?: "sm" | "md" }) {
+export function ThemeToggle({
+  size = "md",
+  className,
+}: {
+  size?: "sm" | "md";
+  // Classe à la place du bouton icône standard (en-tête des pages, D-77).
+  className?: string;
+}) {
   const theme = useSyncExternalStore(subscribe, readTheme, (): Theme => "dark");
   const next: Theme = theme === "light" ? "dark" : "light";
   const label = next === "light" ? "Passer au thème clair" : "Passer au thème sombre";
@@ -47,9 +54,9 @@ export function ThemeToggle({ size = "md" }: { size?: "sm" | "md" }) {
       onClick={() => applyTheme(next)}
       aria-label={label}
       title={label}
-      className={iconButtonClass({ size })}
+      className={className ?? iconButtonClass({ size })}
     >
-      <Icon aria-hidden size={18} strokeWidth={1.7} />
+      <Icon aria-hidden size={className ? 15 : 18} strokeWidth={1.7} />
     </button>
   );
 }

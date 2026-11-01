@@ -1,10 +1,13 @@
-// Ligne de menu : 44 px, icône 19, 15/500. Sélection en JAUNE doré à faible opacité (D-71, demande
-// d'Antonino du 29/10/2026) : fond --selected sans contour, icône or ; survol en jaune plus léger.
-// Partagée par le menu latéral (ordinateur) et le menu hamburger (téléphone).
-export function navItemClass(active: boolean) {
-  return `flex min-h-11 items-center gap-3 rounded-control border px-3 text-[15px] font-medium transition-colors duration-150 ${
+// Ligne de menu (D-77, maquette v6) : sur ordinateur, 32 px, icône 16, 13 px ; dans le menu hamburger du
+// téléphone (`large`), 44 px et 16 px pour le doigt. Page active : fond violet léger sans contour, icône
+// violette ; survol : fond neutre très léger.
+export function navItemClass(active: boolean, large = false) {
+  const size = large
+    ? "min-h-11 gap-3 rounded-control px-3 text-[16px]"
+    : "h-8 gap-2.5 rounded-lg px-2.5 text-[13px]";
+  return `flex items-center ${size} border border-transparent transition-colors duration-150 ${
     active
-      ? "border-transparent bg-selected text-text [&>svg]:text-accent-text"
-      : "border-transparent text-muted hover:bg-selected-hover hover:text-text"
+      ? "bg-selected font-medium text-text [&>svg]:text-violet-text"
+      : "text-muted hover:bg-selected-hover hover:text-text"
   }`;
 }

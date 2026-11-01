@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#08080a">
+    <title>Coory, tableau de bord (maquette v6 violet)</title>
+    <link rel="icon" href="../coory-brand/favicon.svg" type="image/svg+xml">
+    <!--
+      MAQUETTE v6 (1er novembre 2026) : la v5 + la charte NOIR, BLANC et VIOLET d'Antonino, d'après
+      docs/design/COORY_VIOLET_ACCENTS.md (16 accents violets, rien d'autre) et le nouveau logo
+      (docs/design/coory-brand). Thème clair : neutres violacés de la fiche.
+      Historique, MAQUETTE v5 (1er novembre 2026), hors de l'application. Demande d'Antonino : charte MONOCHROME noir et
+      blanc (logo compris), thèmes sombre et clair, style Linear (épuré, respirant, sobre, moins gros, moins
+      gras). Couleurs gardées seulement là où elles ont un sens : les disciplines (Running, Musculation, Hyrox,
+      Hybride), « demain » et « prévus » en vert, le compteur de tâches en jaune, « En retard » en rose.
+      « Créer » : blanc en sombre, noir en clair. Agenda : grille horaire fine sur 7 jours, une séance d'une
+      heure = toujours la même hauteur, les plus longues plus hautes ; sportifs en « Prénom I. ».
+      Mise en page de départ : la v4 (design Gemini). Contenu : tableau de bord du 1er novembre (démo A).
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+        @theme inline {
+            --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+            --color-bg: var(--bg);
+            --color-card: var(--card);
+            --color-well: var(--well);
+            --color-line: var(--line);
+            --color-line-soft: var(--line-soft);
+            --color-fill: var(--fill);
+            --color-fill-strong: var(--fill-strong);
+            --color-fg: var(--fg);
+            --color-fg-2: var(--fg-2);
+            --color-muted: var(--muted);
+            --color-faint: var(--faint);
+            --color-cta: var(--cta);
+            --color-on-cta: var(--on-cta);
+            --color-ok: var(--ok);
+            --color-ok-bg: var(--ok-bg);
+            --color-warn: var(--warn);
+            --color-warn-bg: var(--warn-bg);
+            --color-alert: var(--alert);
+            --color-line-2: var(--line-2);
+            --color-brand: var(--violet);
+            --color-brand-soft: var(--violet-soft);
+            --color-brand-soft-2: var(--violet-soft-2);
+            --color-brand-line: var(--violet-line);
+            --color-brand-text: var(--violet-text);
+            --color-today-col: var(--today-col);
+            --color-ai-bg: var(--ai-bg);
+            --color-ai-border: var(--ai-border);
+            --color-ai-text: var(--ai-text);
+        }
+    </style>
+    <style>
+        /* Jetons des deux thèmes. Monochrome : gris neutres ; couleurs seulement pour le sens. */
+        :root, [data-theme="dark"] {
+            --bg: #08080a;
+            --card: rgba(255, 255, 255, 0.025);
+            --card-solid: #111113;
+            --well: rgba(255, 255, 255, 0.03);
+            --line: rgba(255, 255, 255, 0.08);
+            --line-soft: rgba(255, 255, 255, 0.05);
+            --fill: rgba(255, 255, 255, 0.05);
+            --fill-strong: rgba(255, 255, 255, 0.09);
+            --fg: #f4f4f5;
+            --fg-2: #d4d4d8;
+            --muted: #a1a1aa;
+            --faint: #8b8b94;
+            --cta: #f4f4f5;
+            --on-cta: #09090b;
+            --glow: rgba(255, 255, 255, 0.03);
+            --ok: #34d399; --ok-bg: rgba(52, 211, 153, 0.1);
+            --warn: #fbbf24; --warn-bg: rgba(251, 191, 36, 0.1);
+            --alert: #fb7185;
+            /* Disciplines : fond teinté, texte clair. */
+            --run: #7776ff; --run-bg: #7776ff; --run-fg: #18181b;
+            --str: #dd2d4a; --str-bg: #dd2d4a; --str-fg: #ffffff;
+            --hyr: #ffc04f; --hyr-bg: #ffc04f; --hyr-fg: #18181b;
+            --hyb: #26cbb8; --hyb-bg: #26cbb8; --hyb-fg: #18181b;
+            --run-t: #7776ff; --str-t: #ea4d66; --hyr-t: #ffc04f; --hyb-t: #26cbb8;
+            --line-2: rgba(255, 255, 255, 0.14);
+            /* Accents violets (COORY_VIOLET_ACCENTS.md §1). */
+            --violet: #8B5CF6;
+            --violet-soft: rgba(139, 92, 246, .16);
+            --violet-soft-2: rgba(139, 92, 246, .18);
+            --violet-line: rgba(139, 92, 246, .35);
+            --violet-text: #B9A3FF;
+            --violet-ring: rgba(139, 92, 246, .30);
+            --today-col: #1A1626;
+            --ai-bg: rgba(139, 92, 246, .22);
+            --ai-border: rgba(139, 92, 246, .55);
+            --ai-text: #E4DBFF;
+            --card-glow: radial-gradient(120% 90% at 100% 0%, rgba(139, 92, 246, .20) 0%, rgba(139, 92, 246, 0) 55%);
+            color-scheme: dark;
+        }
+        [data-theme="light"] {
+            /* Neutres violacés de la fiche (§1) : page #F3F2F7, carte #FFFFFF, chip #EEEDF3, colonnes #F8F7FB. */
+            --bg: #F3F2F7;
+            --card: #FFFFFF;
+            --card-solid: #FFFFFF;
+            --well: #F8F7FB;
+            --line: rgba(22, 18, 40, .08);
+            --line-2: rgba(22, 18, 40, .14);
+            --line-soft: rgba(22, 18, 40, .06);
+            --fill: rgba(22, 18, 40, .04);
+            --fill-strong: #EEEDF3;
+            --fg: #17151D;
+            --fg-2: #3B3946;
+            --muted: #64626E;
+            --faint: #8B8996;
+            --cta: #18181b;
+            --on-cta: #ffffff;
+            --glow: rgba(0, 0, 0, 0.025);
+            --ok: #047857; --ok-bg: rgba(16, 185, 129, 0.12);
+            --warn: #a16207; --warn-bg: rgba(234, 179, 8, 0.14);
+            --alert: #be123c;
+            --run: #7776ff; --run-bg: #7776ff; --run-fg: #18181b;
+            --str: #dd2d4a; --str-bg: #dd2d4a; --str-fg: #ffffff;
+            --hyr: #ffc04f; --hyr-bg: #ffc04f; --hyr-fg: #18181b;
+            --hyb: #26cbb8; --hyb-bg: #26cbb8; --hyb-fg: #18181b;
+            --run-t: #4b4ad6; --str-t: #b81d38; --hyr-t: #9a5b00; --hyb-t: #0b7468;
+            --violet: #8B5CF6;
+            --violet-soft: rgba(139, 92, 246, .10);
+            --violet-soft-2: rgba(139, 92, 246, .12);
+            --violet-line: rgba(139, 92, 246, .35);
+            --violet-text: #6A3EE0;
+            --violet-ring: rgba(139, 92, 246, .22);
+            --today-col: #F1ECFF;
+            --ai-bg: #8B5CF6;
+            --ai-border: rgba(139, 92, 246, .55);
+            --ai-text: #FFFFFF;
+            --card-glow: radial-gradient(120% 90% at 100% 0%, rgba(139, 92, 246, .13) 0%, rgba(139, 92, 246, 0) 55%);
+            color-scheme: light;
+        }
+        html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: var(--bg);
+            color: var(--fg-2);
+            background-image:
+                radial-gradient(circle at 10% 0%, var(--glow) 0%, transparent 45%),
+                radial-gradient(circle at 90% 100%, var(--glow) 0%, transparent 45%);
+            background-attachment: fixed;
+            transition: background-color 200ms ease, color 200ms ease;
+        }
+        .glass {
+            background: var(--card);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--line);
+        }
+        [data-theme="light"] .glass { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+        @media (prefers-reduced-transparency: reduce) { .glass { background: var(--card-solid); backdrop-filter: none; -webkit-backdrop-filter: none; } }
+        .meta { font: 500 11px/1.2 "Plus Jakarta Sans", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .d-run { --c: var(--run); --cb: var(--run-bg); --cf: var(--run-fg); --ct: var(--run-t); }
+        .d-str { --c: var(--str); --cb: var(--str-bg); --cf: var(--str-fg); --ct: var(--str-t); }
+        .d-hyr { --c: var(--hyr); --cb: var(--hyr-bg); --cf: var(--hyr-fg); --ct: var(--hyr-t); }
+        .d-hyb { --c: var(--hyb); --cb: var(--hyb-bg); --cf: var(--hyb-fg); --ct: var(--hyb-t); }
+        .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--c); flex: none; }
+        /* Agenda : une heure = --h ; les séances sont posées à leur heure, leur hauteur suit leur durée. */
+        .grid-week { --h: 34px; }
+        .hours-bg { background-image: linear-gradient(var(--line-soft) 1px, transparent 1px); background-size: 100% var(--h); }
+        .ev { position: absolute; left: 4px; right: 4px; top: calc((var(--s) - 6) * var(--h) + 1px); height: calc(var(--d) * var(--h) - 2px); background: var(--cb); color: var(--cf); border-radius: 8px; padding: 0 6px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; transition: filter 150ms ease; }
+        @media (hover: hover) and (pointer: fine) { .ev:hover { filter: brightness(1.08) saturate(1.1); } }
+        /* Cases : une séance d'une heure ou moins = toujours la même petite case ; les plus longues plus hautes. */
+        :root, [data-theme="dark"] { --sticky: #0c0c0e; }
+        [data-theme="light"] { --sticky: #FFFFFF; }
+        /* Téléphone : exactement trois jours entiers à l'écran à côté de la colonne fixe (gouttières de 6 px). */
+        .week-scroll { min-width: calc(var(--gut) + (100% - var(--gut) - 18px) * 7 / 3 + 42px); }
+        @media (min-width: 1024px) { .week-scroll { min-width: 0; } }
+        .band-label { writing-mode: vertical-rl; transform: rotate(180deg); }
+        .now { position: absolute; left: 0; right: 0; height: 1px; background: var(--violet); top: calc((var(--now) - 6) * var(--h)); z-index: 2; }
+        .now::before { content: ""; position: absolute; left: -3px; top: -3px; width: 7px; height: 7px; border-radius: 999px; background: var(--violet); box-shadow: 0 0 0 3px var(--violet-ring); }
+        /* Carte « Prochaine séance » : contour violet fin, rien d'autre sur le fond. */
+        .next-card { border-color: var(--violet-line); }
+        /* Menu : réduit, on ne voit que les icônes. */
+        .sidebar[data-collapsed] { width: 68px; }
+        .sidebar[data-collapsed] .nav-label, .sidebar[data-collapsed] .nav-count, .sidebar[data-collapsed] .logo-full, .sidebar[data-collapsed] .me-text { display: none; }
+        .sidebar:not([data-collapsed]) .logo-mark { display: none; }
+        .sidebar[data-collapsed] .nav-item { justify-content: center; padding: 0; position: relative; }
+        .sidebar[data-collapsed] .nav-item.has-count::after { content: ""; position: absolute; top: 6px; right: 12px; width: 6px; height: 6px; border-radius: 999px; background: var(--violet); }
+        .sidebar[data-collapsed] .logo-row { flex-direction: column; gap: 14px; padding-left: 0; padding-right: 0; }
+        .sidebar[data-collapsed] .me { justify-content: center; padding: 12px 0 0; }
+        /* Cases à cocher des tâches : vide = contour --line-2 ; cochée = violet plein, coche blanche. Même taille. */
+        .chk { appearance: none; -webkit-appearance: none; flex: none; border: 1.5px solid var(--line-2); border-radius: 4px; background: transparent; display: grid; place-items: center; cursor: pointer; }
+        .chk:checked { background: var(--violet) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% no-repeat; border-color: var(--violet); }
+        .chk:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+        button, a, label { touch-action: manipulation; }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    </style>
+    <script>
+        // Thème : retenu dans le navigateur (si possible), sombre par défaut comme l'app.
+        try { const t = localStorage.getItem("coory-maquette-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+    </script>
+</head>
+<body class="antialiased text-[13px] leading-normal selection:bg-fill-strong">
+    <div class="flex lg:h-screen lg:overflow-hidden p-3 gap-3">
+
+        <!-- Menu (ordinateur) -->
+        <aside id="sidebar" class="sidebar hidden lg:flex w-60 shrink-0 glass rounded-[20px] flex-col justify-between p-4 select-none" aria-label="Menu principal">
+            <div class="space-y-6">
+                <div class="logo-row flex items-center justify-between px-2.5 pt-4">
+                    <span class="logo-full inline-flex shrink-0"><img src="../coory-brand/logo/coory-logo-fond-sombre.svg" alt="Coory" class="h-[15px] w-auto hidden dark:block"><img src="../coory-brand/logo/coory-logo-fond-clair.svg" alt="Coory" class="h-[15px] w-auto dark:hidden"></span>
+                    <span class="logo-mark inline-flex shrink-0"><img src="../coory-brand/icone/coory-icone-fond-sombre.svg" alt="Coory" class="h-[18px] w-auto hidden dark:block"><img src="../coory-brand/icone/coory-icone-fond-clair.svg" alt="Coory" class="h-[18px] w-auto dark:hidden"></span>
+                    <button id="collapse" aria-label="Réduire le menu" aria-expanded="true" class="w-7 h-7 grid place-items-center rounded-md text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-sidebar-simple text-[16px]"></i></button>
+                </div>
+                <nav class="space-y-0.5 text-[13px]">
+                    <a href="#" aria-current="page" title="Tableau de bord" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg bg-brand-soft text-fg font-medium"><i class="ph ph-house text-[16px] text-brand-text" aria-hidden="true"></i><span class="nav-label">Tableau de bord</span></a>
+                    <a href="#" title="Sportifs" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-users text-[16px] " aria-hidden="true"></i><span class="nav-label">Sportifs</span></a>
+                    <a href="#" title="Programmes" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-clipboard-text text-[16px] " aria-hidden="true"></i><span class="nav-label">Programmes</span></a>
+                    <a href="#" title="Agenda" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-calendar-blank text-[16px] " aria-hidden="true"></i><span class="nav-label">Agenda</span></a>
+                    <a href="#" title="Facturation" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-receipt text-[16px] " aria-hidden="true"></i><span class="nav-label">Facturation</span></a>
+                    <a href="#" title="Comptabilité" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-calculator text-[16px] " aria-hidden="true"></i><span class="nav-label">Comptabilité</span></a>
+                    <a href="#" title="Bibliothèque" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-books text-[16px] " aria-hidden="true"></i><span class="nav-label">Bibliothèque</span></a>
+                    <div class="!my-3 border-t border-line-soft"></div>
+                    <a href="#" title="Assistant IA" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph-fill ph-sparkle text-[16px] text-brand" aria-hidden="true"></i><span class="nav-label">Assistant IA</span></a>
+                    <a href="#" title="Messages" class="nav-item has-count flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-chat-circle text-[16px] " aria-hidden="true"></i><span class="nav-label">Messages</span><span class="sr-only">, 3 non lus</span><span aria-hidden="true" class="nav-count ml-auto h-5 px-1.5 grid place-items-center rounded-[10px] bg-brand-soft-2 text-brand-text text-[11px] tabular-nums">3</span></a>
+                    <a href="#" title="Tâches" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-check-square text-[16px] " aria-hidden="true"></i><span class="nav-label">Tâches</span></a>
+                    <a href="#" title="Documents" class="nav-item flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-folder text-[16px] " aria-hidden="true"></i><span class="nav-label">Documents</span></a>
+                    <a href="#" title="Notifications" class="nav-item has-count flex items-center gap-2.5 h-8 px-2.5 rounded-lg text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-bell text-[16px] " aria-hidden="true"></i><span class="nav-label">Notifications</span><span class="sr-only">, 6 à voir</span><span aria-hidden="true" class="nav-count ml-auto h-5 px-1.5 grid place-items-center rounded-[10px] bg-brand-soft-2 text-brand-text text-[11px] tabular-nums">6</span></a>
+                </nav>
+            </div>
+            <div class="me pt-3 border-t border-line-soft flex items-center gap-2.5 px-1">
+                <img src="../../../supabase/seed-photos/coach-a.jpg" alt="" class="w-6 h-6 rounded-full object-cover grayscale">
+                <div class="me-text leading-tight">
+                    <div class="text-[12px] font-medium text-fg">Gianluca Lo Bianco</div>
+                    <div class="text-[11px] text-muted">Coach</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 min-w-0 lg:overflow-y-auto lg:p-3 space-y-4 pb-24 lg:pb-3">
+
+            <!-- Téléphone : barre du haut -->
+            <header class="lg:hidden glass rounded-[20px] h-16 px-4 flex items-center justify-between sticky top-3 z-20">
+                <span class="inline-flex shrink-0"><img src="../coory-brand/icone/coory-icone-fond-sombre.svg" alt="Coory" class="h-5 w-auto hidden dark:block"><img src="../coory-brand/icone/coory-icone-fond-clair.svg" alt="Coory" class="h-5 w-auto dark:hidden"></span>
+                <h1 class="text-[15px] font-semibold text-fg">Tableau de bord</h1>
+                <div class="flex items-center gap-1">
+                    <button aria-label="Assistant IA" class="w-11 h-11 grid place-items-center rounded-xl bg-ai-bg border border-ai-border text-ai-text hover:brightness-110 transition"><i class="ph-fill ph-sparkle text-[18px]"></i></button>
+                    <button aria-label="Notifications, 6 à voir" class="relative w-11 h-11 grid place-items-center rounded-xl text-fg-2 hover:bg-fill"><i class="ph ph-bell text-[18px]"></i><span aria-hidden="true" class="absolute top-2 right-2 min-w-4 h-4 px-1 rounded-full bg-brand text-white text-[9px] font-semibold leading-4 text-center shadow-[0_0_0_2px_var(--card-solid)]">6</span></button>
+                    <button aria-label="Menu" class="w-11 h-11 grid place-items-center rounded-xl text-fg-2 hover:bg-fill"><i class="ph ph-list text-[18px]"></i></button>
+                </div>
+            </header>
+
+            <!-- Ordinateur : en-tête -->
+            <header class="hidden lg:flex glass rounded-[20px] h-16 px-5 items-center justify-between">
+                <h1 class="text-[15px] font-semibold text-fg tracking-tight">Tableau de bord</h1>
+                <div class="flex items-center gap-2">
+                    <label class="relative flex items-center">
+                        <i class="ph ph-magnifying-glass absolute left-2.5 text-[14px] text-faint"></i>
+                        <input type="text" placeholder="Rechercher dans Coory…" aria-label="Rechercher dans Coory" class="h-8 w-56 rounded-lg bg-well border border-line pl-8 pr-10 text-[12px] text-fg placeholder:text-faint focus:outline-none focus:border-muted">
+                        <kbd class="absolute right-2 text-[11px] font-sans text-faint border border-line rounded px-1 py-px">⌘K</kbd>
+                    </label>
+                    <button class="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-ai-bg border border-ai-border text-ai-text hover:brightness-110 transition text-[12px] font-medium"><i class="ph-fill ph-sparkle text-[14px]"></i>Assistant IA</button>
+                    <button aria-label="Notifications, 6 à voir" class="relative w-8 h-8 grid place-items-center rounded-lg border border-line text-fg-2 hover:bg-fill transition-colors"><i class="ph ph-bell text-[15px]"></i><span aria-hidden="true" class="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full bg-brand text-white text-[9px] font-semibold leading-4 text-center shadow-[0_0_0_2px_var(--card-solid)]">6</span></button>
+                    <button aria-label="Changer de thème" data-theme-toggle class="w-8 h-8 grid place-items-center rounded-lg border border-line text-fg-2 hover:bg-fill transition-colors"><i class="ph ph-sun-dim text-[15px] hidden dark:inline"></i><i class="ph ph-moon text-[15px] dark:hidden"></i></button>
+                    <button class="h-8 px-3.5 flex items-center gap-1.5 rounded-lg bg-cta text-on-cta text-[12px] font-medium hover:opacity-90 active:scale-[0.97] transition"><i class="ph ph-plus text-[13px]"></i>Créer</button>
+                </div>
+            </header>
+
+            <!-- Trois cartes du haut -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Carte « Prochaine séance » : même fond que les autres ; elle se distingue par son contour violet,
+                     l'heure écrite en violet et la photo du sportif cerclée de violet (pas d'aplat, pas de dégradé). -->
+                <section class="glass next-card rounded-[20px] p-5 flex flex-col justify-between gap-5" aria-label="Prochaine séance">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="meta">Prochaine séance</span>
+                            <span class="flex items-center gap-2">
+                                <span class="flex items-center gap-1.5 h-5 px-2 rounded-full bg-ok-bg text-ok text-[11px] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-ok"></span>demain</span>
+                                <span class="meta tracking-normal">1 / 6</span>
+                            </span>
+                        </div>
+                        <div class="text-[26px] leading-none font-semibold text-brand-text tracking-tight tabular-nums">07:00</div>
+                        <div class="flex items-center gap-2.5 mt-2.5">
+                            <img src="../../../supabase/seed-photos/nadia.jpg" alt="" class="w-[34px] h-[34px] rounded-full object-cover outline outline-[1.5px] outline-offset-2 outline-brand">
+                            <div class="min-w-0">
+                                <div class="text-[13px] font-medium text-fg">Nadia El Amrani</div>
+                                <div class="text-[12px] text-muted mt-0.5">Coaching force · 60 min · Salle de sport</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-1.5">
+                            <span class="d-str h-6 px-2 flex items-center gap-1.5 rounded-md border border-line text-[11px] text-fg-2"><span class="dot"></span>Musculation</span>
+                            <span class="h-6 px-2 flex items-center rounded-md border border-line text-[11px] text-fg-2">Individuelle</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button aria-label="Ouvrir la séance" class="w-7 h-7 grid place-items-center rounded-md text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-arrow-up-right text-[14px]"></i></button>
+                            <button aria-label="Écrire à Nadia El Amrani" class="w-7 h-7 grid place-items-center rounded-md text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-chat-circle text-[14px]"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="glass rounded-[20px] p-5" aria-labelledby="t-tasks">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 id="t-tasks" class="text-[13px] font-medium text-fg">Tâches à faire</h2>
+                        <span class="h-5 min-w-5 px-1.5 grid place-items-center rounded-md bg-brand-soft-2 text-brand-text text-[11px] font-medium tabular-nums"><span class="sr-only">Tâches à faire : </span>2</span>
+                    </div>
+                    <ul class="space-y-3.5">
+                        <li><label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" class="chk mt-0.5 w-3.5 h-3.5">
+                            <span class="text-[13px] text-fg leading-snug"><span class="text-alert" aria-hidden="true">! </span><span class="sr-only">Urgent : </span>Préparer le bloc 2 du programme de Lucas<span class="block text-[11.5px] text-muted mt-0.5"><span class="text-alert">En retard</span> · Lucas Janssens</span></span>
+                        </label></li>
+                        <li><label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" class="chk mt-0.5 w-3.5 h-3.5">
+                            <span class="text-[13px] text-fg leading-snug">Relancer Sophie pour la facture d'octobre<span class="block text-[11.5px] text-muted mt-0.5">Mar 3 · Sophie Lambert</span></span>
+                        </label></li>
+                    </ul>
+                </section>
+
+                <section class="glass rounded-[20px] p-5 flex flex-col justify-between gap-5" aria-label="Encaissé cette semaine">
+                    <div>
+                        <span class="meta">Encaissés cette semaine</span>
+                        <div class="text-[26px] leading-none font-semibold text-fg tracking-tight tabular-nums mt-3">3&nbsp;457,30&nbsp;€</div>
+                        <p class="text-[12px] text-muted mt-2.5">2&nbsp;857,27&nbsp;€ HTVA · 6 paiements</p>
+                    </div>
+                    <span class="self-start h-6 px-2 flex items-center rounded-md bg-ok-bg text-ok text-[11px] font-medium tabular-nums">1&nbsp;008,80&nbsp;€ prévus (13 séances)</span>
+                </section>
+            </div>
+
+            <!-- Agenda + colonne de droite -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+
+                <section id="agenda-card" class="lg:col-span-2 glass rounded-[20px] p-5 space-y-4 min-w-0" aria-labelledby="t-agenda">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h2 id="t-agenda" class="text-[13px] font-medium text-fg">Semaine du 26 octobre au 1 novembre</h2>
+                            <p class="text-[12px] text-muted mt-0.5">31 h de coaching cette semaine · 30 séances</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <!-- MAQUETTE seulement : choisir le style d'agenda à comparer. -->
+                            <div id="styles" role="group" aria-label="Style d'agenda (maquette)" class="flex items-center gap-1.5 text-[11px]">
+                                <span class="text-faint">Maquette</span>
+                                <div class="flex h-7 p-0.5 rounded-lg border border-dashed border-line">
+                                    <button data-style="cases" class="px-2 rounded-md">Cases</button>
+                                    <button data-style="grille" class="px-2 rounded-md">Grille</button>
+                                </div>
+                            </div>
+                            <a href="#" class="hidden lg:inline text-[12px] text-brand-text hover:opacity-80 transition-opacity">Agenda →</a>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <button aria-label="Semaine précédente" class="w-8 h-8 grid place-items-center rounded-lg border border-line text-fg-2 hover:bg-fill transition-colors"><i class="ph ph-caret-left text-[13px]"></i></button>
+                            <button aria-label="Semaine suivante" class="w-8 h-8 grid place-items-center rounded-lg border border-line text-fg-2 hover:bg-fill transition-colors"><i class="ph ph-caret-right text-[13px]"></i></button>
+                            <span class="ml-1 text-[12px] font-medium text-fg-2 tabular-nums">Oct. – nov. 2026</span>
+                        </div>
+                        <div id="views" role="group" aria-label="Vue" class="flex h-8 p-0.5 rounded-lg bg-well border border-line-soft text-[12px]">
+                            <button data-view="jour" class="px-2.5 rounded-md">Aujourd'hui</button>
+                            <button data-view="semaine" class="px-2.5 rounded-md">Semaine</button>
+                            <button data-view="mois" class="px-2.5 rounded-md">Mois</button>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <div id="filters" role="group" aria-label="Séances affichées" class="flex gap-1 text-[12px]">
+                            <button data-filter="toutes" class="h-7 px-2.5 rounded-full border border-line">Toutes</button>
+                            <button data-filter="individuelles" class="h-7 px-2.5 rounded-full border border-line">Individuelles</button>
+                            <button data-filter="collectives" class="h-7 px-2.5 rounded-full border border-line">Collectives</button>
+                        </div>
+                        <div class="ml-auto flex flex-wrap gap-3 text-[11px] text-muted">
+                            <span class="d-run flex items-center gap-1.5"><span class="dot"></span>Running</span>
+                            <span class="d-str flex items-center gap-1.5"><span class="dot"></span>Musculation</span>
+                            <span class="d-hyr flex items-center gap-1.5"><span class="dot"></span>Hyrox</span>
+                            <span class="d-hyb flex items-center gap-1.5"><span class="dot"></span>Hybride</span>
+                        </div>
+                    </div>
+
+                    <div id="board" class="relative overflow-x-auto pb-1"></div>
+
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted pt-1">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-fill-strong"></span>Individuelle</span>
+                        <span class="flex items-center gap-1.5"><i class="ph ph-users-three text-[12px]"></i>Collective</span>
+                        <span class="lg:hidden">Glisse pour changer de jour</span>
+                        <span class="hidden lg:inline">7 jours · 16 heures visibles</span>
+                        <span class="ml-auto tabular-nums">06:00 – 22:00</span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-8 gap-y-2 pt-3 border-t border-line-soft">
+                        <div><span class="text-[13px] font-medium text-fg tabular-nums">1</span> <span class="text-[12px] text-muted">coaching aujourd'hui · 0 terminé, 1 à venir</span></div>
+                        <div><span class="text-[13px] font-medium text-fg tabular-nums">31 h</span> <span class="text-[12px] text-muted">de coaching cette semaine · 30 séances</span></div>
+                    </div>
+                </section>
+
+                <div id="side-col" class="space-y-4">
+                    <section class="glass rounded-[20px] p-5" aria-labelledby="t-upcoming">
+                        <div class="flex items-center justify-between mb-3.5">
+                            <h2 id="t-upcoming" class="text-[13px] font-medium text-fg">Séances à venir</h2>
+                            <a href="#" class="text-[12px] text-brand-text hover:opacity-80 transition-opacity">Voir tout</a>
+                        </div>
+                        <ul class="space-y-2.5">
+                            <li class="d-str px-3 py-2.5 rounded-2xl bg-brand-soft border border-brand-line transition-colors">
+                                <div class="flex items-baseline justify-between gap-2 leading-snug"><span class="flex items-center gap-2"><span class="text-[13px] font-semibold text-fg tabular-nums">Lundi 07:00</span><span class="h-5 -my-1 px-2 grid place-items-center rounded-[10px] bg-brand text-white text-[11px] font-medium">Prochaine</span></span><span class="text-[10px] text-[var(--ct)]">Musculation</span></div>
+                                <p class="text-[12px] leading-snug text-muted mt-px truncate">Nadia El Amrani · Coaching force</p>
+                            </li>
+                            <li class="d-str px-3 py-2.5 rounded-2xl bg-well border border-line-soft hover:border-line transition-colors">
+                                <div class="flex items-baseline justify-between gap-2 leading-snug"><span class="text-[13px] font-semibold text-fg tabular-nums">Lundi 08:15</span><span class="text-[10px] text-[var(--ct)]">Musculation</span></div>
+                                <p class="text-[12px] leading-snug text-muted mt-px truncate">Yanis Khelifi · Coaching force</p>
+                            </li>
+                            <li class="d-run px-3 py-2.5 rounded-2xl bg-well border border-line-soft hover:border-line transition-colors">
+                                <div class="flex items-baseline justify-between gap-2 leading-snug"><span class="text-[13px] font-semibold text-fg tabular-nums">Lundi 12:15</span><span class="text-[10px] text-[var(--ct)]">Running</span></div>
+                                <p class="text-[12px] leading-snug text-muted mt-px truncate">Emma Laurent · Renfo coureur</p>
+                            </li>
+                            <li class="d-hyb px-3 py-2.5 rounded-2xl bg-well border border-line-soft hover:border-line transition-colors">
+                                <div class="flex items-baseline justify-between gap-2 leading-snug"><span class="text-[13px] font-semibold text-fg tabular-nums">Lundi 17:30</span><span class="text-[10px] text-[var(--ct)]">Hybride</span></div>
+                                <p class="text-[12px] leading-snug text-muted mt-px truncate">Lucas Janssens · Coaching hybride</p>
+                            </li>
+                            <li class="d-hyr px-3 py-2.5 rounded-2xl bg-well border border-line-soft hover:border-line transition-colors">
+                                <div class="flex items-baseline justify-between gap-2 leading-snug"><span class="text-[13px] font-semibold text-fg tabular-nums">Lundi 19:00</span><span class="text-[10px] text-[var(--ct)]">Hyrox</span></div>
+                                <p class="text-[12px] leading-snug text-muted mt-px truncate">Small group Hyrox · Collective · 2 inscrits</p>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="glass rounded-[20px] p-5" aria-labelledby="t-programs">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 id="t-programs" class="text-[13px] font-medium text-fg">Programmes en cours</h2>
+                            <a href="#" class="text-[12px] text-brand-text hover:opacity-80 transition-opacity">Voir tous les programmes</a>
+                        </div>
+                        <ul class="divide-y divide-line-soft">
+                            <li class="flex items-center gap-3 py-2.5"><img src="../../../supabase/seed-photos/ines.jpg" alt="" class="w-6 h-6 rounded-full object-cover grayscale outline outline-[1.5px] outline-brand"><div class="min-w-0 flex-1"><div class="text-[13px] font-medium text-fg">Inès Benali</div><div class="text-[12px] text-muted truncate">Prépa Hyrox Bruxelles · bloc 1</div></div><div class="flex flex-col items-end gap-1.5"><span class="text-[11px] text-muted tabular-nums">Sem. 1/12</span><span class="w-12 h-[3px] rounded-full bg-fill-strong overflow-hidden"><span class="block h-full w-[8.33%] bg-brand"></span></span></div></li>
+                            <li class="flex items-center gap-3 py-2.5"><span class="w-6 h-6 rounded-full bg-fill-strong grid place-items-center text-[9px] font-semibold text-fg-2">AM</span><div class="min-w-0 flex-1"><div class="text-[13px] font-medium text-fg">Antoine Maes</div><div class="text-[12px] text-muted truncate">Programme renforcement · bloc 1</div></div><div class="flex flex-col items-end gap-1.5"><span class="text-[11px] text-muted tabular-nums">Sem. 1/12</span><span class="w-12 h-[3px] rounded-full bg-fill-strong overflow-hidden"><span class="block h-full w-[8.33%] bg-brand"></span></span></div></li>
+                            <li class="flex items-center gap-3 py-2.5"><span class="w-6 h-6 rounded-full bg-fill-strong grid place-items-center text-[9px] font-semibold text-fg-2">CR</span><div class="min-w-0 flex-1"><div class="text-[13px] font-medium text-fg">Camille Renard</div><div class="text-[12px] text-muted truncate">Programme running · bloc 1</div></div><div class="flex flex-col items-end gap-1.5"><span class="text-[11px] text-muted tabular-nums">Sem. 1/12</span><span class="w-12 h-[3px] rounded-full bg-fill-strong overflow-hidden"><span class="block h-full w-[8.33%] bg-brand"></span></span></div></li>
+                        </ul>
+                    </section>
+
+                    <section class="glass rounded-[20px] p-5" aria-labelledby="t-money">
+                        <div class="flex items-center justify-between mb-2">
+                            <h2 id="t-money" class="text-[13px] font-medium text-fg">Activité financière</h2>
+                            <a href="#" class="text-[12px] text-brand-text hover:opacity-80 transition-opacity">Voir tout</a>
+                        </div>
+                        <ul class="divide-y divide-line-soft">
+                            <li class="flex items-center justify-between py-2.5"><div><div class="text-[13px] text-fg-2">0 facture envoyée</div><div class="text-[12px] text-muted">Ce mois-ci</div></div><span class="text-[13px] font-medium text-fg tabular-nums">0,00&nbsp;€</span></li>
+                            <li class="flex items-center justify-between py-2.5"><div><div class="text-[13px] text-fg-2">0 paiement reçu</div><div class="text-[12px] text-muted">Ce mois-ci</div></div><span class="text-[13px] font-medium text-fg tabular-nums">0,00&nbsp;€</span></li>
+                            <li class="flex items-center justify-between py-2.5"><div><div class="text-[13px] text-fg-2">1 paiement en attente</div><div class="text-[12px] text-alert">En retard</div></div><span class="text-[13px] font-medium text-alert tabular-nums">150,00&nbsp;€</span></li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Téléphone : bouton de thème de la MAQUETTE (dans l'app, le thème se choisit dans les Paramètres). -->
+    <button aria-label="Changer de thème" data-theme-toggle class="lg:hidden fixed left-4 bottom-5 z-30 w-12 h-12 grid place-items-center rounded-2xl bg-[var(--card-solid)] border border-line text-fg-2 shadow-lg"><i class="ph ph-sun-dim text-[18px] hidden dark:inline"></i><i class="ph ph-moon text-[18px] dark:hidden"></i></button>
+    <!-- Téléphone : « Créer » à portée de pouce -->
+    <button class="lg:hidden fixed right-4 bottom-5 z-30 h-12 px-5 flex items-center gap-2 rounded-2xl bg-cta text-on-cta text-[14px] font-medium shadow-lg active:scale-[0.97] transition"><i class="ph ph-plus"></i>Créer</button>
+
+<script>
+    // Semaine du 26 octobre au 1 novembre (base de démonstration locale, coach A) :
+    // [début, durée en minutes, discipline, titre, collective, sous-titre]
+    const days = [["Lun", 26], ["Mar", 27], ["Mer", 28], ["Jeu", 29], ["Ven", 30], ["Sam", 31], ["Dim", 1]];
+    const S = {
+        Lun: [["07:00", 60, "str", "Nadia El Amrani"], ["08:15", 60, "str", "Yanis Khelifi"], ["12:15", 60, "run", "Emma Laurent"], ["17:30", 60, "hyb", "Lucas Janssens"], ["19:00", 60, "hyr", "Small group Hyrox", true], ["20:15", 60, "str", "Manon"]],
+        Mar: [["07:00", 60, "hyr", "Inès Benali"], ["08:15", 60, "str", "Chloé Martin"], ["12:15", 60, "run", "Thomas Peeters"], ["13:30", 60, "str", "Antoine Maes"], ["14:45", 60, "hyr", "Mehdi Ouali"], ["16:00", 60, "hyb", "Maxime Leroy"], ["17:15", 60, "str", "Sophie Lambert"], ["18:30", 60, "str", "Nadia El Amrani"]],
+        Mer: [["12:15", 60, "hyr", "Léa Vandenberghe"], ["17:30", 60, "str", "Manon"], ["19:00", 90, "run", "Piste du mercredi", true]],
+        Jeu: [["07:00", 60, "str", "Nadia El Amrani"], ["08:15", 60, "str", "Chloé Martin"], ["12:15", 60, "run", "Thomas Peeters"], ["17:00", 60, "hyb", "Maxime Leroy"], ["18:00", 60, "str", "Sophie Lambert"], ["19:00", 60, "hyr", "Small group Hyrox", true]],
+        Ven: [["07:00", 60, "str", "Mobilité & gainage", true], ["08:15", 60, "str", "Yanis Khelifi"], ["12:15", 60, "run", "Emma Laurent"], ["16:15", 60, "hyb", "Lucas Janssens"]],
+        Sam: [["08:30", 90, "run", "Run club du samedi", true, "Collective · 3 inscrits"], ["10:00", 75, "hyr", "Circuit Hyrox du samedi", true]],
+        Dim: [["09:00", 45, "run", "Thomas Peeters"]],
+    };
+    const toH = (t) => { const [h, m] = t.split(":").map(Number); return h + m / 60; };
+    const end = (t, m) => { const x = toH(t) * 60 + m; return `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`; };
+    const total = (m) => `${Math.floor(m / 60)}h${m % 60 ? String(m % 60).padStart(2, "0") : ""}`;
+    // Agenda : un sportif s'écrit « Prénom I. » (Nadia E.), une séance collective garde son titre.
+    const short = (title, group) => { if (group) return title; const [first, ...rest] = title.split(" "); return rest.length ? `${first} ${rest[0][0]}.` : first; };
+    const usersIcon = '<i class="ph ph-users-three text-[11px] mr-0.5 align-[-1px]" aria-label="Collective"></i>';
+    const state = { view: "semaine", filter: "toutes", style: "cases" };
+    const keep = (s) => state.filter === "toutes" || (state.filter === "collectives" ? s[4] : !s[4]);
+    const board = document.getElementById("board");
+    const TODAY = "Dim";
+
+    // Une séance : posée à son heure ; une heure = toujours la même hauteur, les plus longues plus hautes.
+    const block = ([t, m, disc, title, group, sub]) => `<div class="ev d-${disc}" style="--s:${toH(t)};--d:${Math.max(m, 60) / 60}" title="${t} – ${end(t, m)} · ${title}">
+            <span class="text-[11px] font-medium leading-[1.2] truncate">${group ? usersIcon : ""}${short(title, group)}</span>
+            <span class="text-[10.5px] leading-[1.2] opacity-75 tabular-nums truncate">${t}–${end(t, m)}</span>
+            ${sub && m > 60 ? `<span class="text-[10.5px] leading-[1.2] opacity-75 truncate">${sub}</span>` : ""}
+            <span class="sr-only">${title}, de ${t} à ${end(t, m)}${sub ? ", " + sub : ""}</span>
+        </div>`;
+    function timeGrid(list) {
+        const cols = list.length;
+        const head = list.map(([d, n]) => {
+            const today = d === TODAY;
+            return `<div class="pb-2 text-center">
+                <div class="text-[11px] ${today ? "text-brand-text" : "text-muted"}">${d}</div>
+                <div class="mx-auto mt-0.5 w-6 h-6 grid place-items-center rounded-full text-[12px] font-medium tabular-nums ${today ? "bg-brand text-white" : "text-fg"}">${n}</div>
+            </div>`;
+        }).join("");
+        const hours = Array.from({ length: 9 }, (_, i) => 6 + i * 2).map((h) => `<span class="absolute right-2 -translate-y-1/2 text-[11px] text-faint tabular-nums" style="top: calc(${h - 6} * var(--h))">${String(h).padStart(2, "0")}</span>`).join("");
+        const now = new Date();
+        const nowH = now.getHours() + now.getMinutes() / 60;
+        const columns = list.map(([d]) => `<div class="relative border-l border-line-soft ${d === TODAY ? "bg-today-col shadow-[inset_0_0_0_1px_var(--violet-line)]" : ""}">
+            ${S[d].filter(keep).map(block).join("")}
+            ${d === TODAY && nowH >= 6 && nowH <= 22 ? `<div class="now" style="--now:${nowH}"></div>` : ""}
+        </div>`).join("");
+        return `<div class="grid-week ${cols > 1 ? "min-w-[620px]" : ""}">
+            <div class="grid" style="grid-template-columns: 34px repeat(${cols}, minmax(0, 1fr))"><div></div>${head}</div>
+            <div class="grid hours-bg border-t border-line-soft" style="grid-template-columns: 34px repeat(${cols}, minmax(0, 1fr)); height: calc(16 * var(--h))">
+                <div class="relative">${hours}</div>${columns}
+            </div>
+            <div class="grid pt-2 border-t border-line-soft" style="grid-template-columns: 34px repeat(${cols}, minmax(0, 1fr))">
+                <div class="text-[11px] text-faint">Total</div>${list.map(([d]) => `<div class="text-center text-[11px] ${d === TODAY ? "text-brand-text" : "text-muted"} tabular-nums">${dayTotal(d)}</div>`).join("")}
+            </div>
+        </div>`;
+    }
+    // Mois : novembre 2026. Les 29 séances régulières se répètent chaque semaine depuis septembre (sans fin,
+    // sans exception) ; celle du dimanche 1er novembre est ponctuelle.
+    function monthGrid() {
+        const wd = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+        let html = wd.map((w) => `<div class="text-[11px] text-muted text-center pb-1.5">${w}</div>`).join("");
+        const first = new Date(2026, 9, 26);
+        for (let i = 0; i < 42; i++) {
+            const date = new Date(first); date.setDate(first.getDate() + i);
+            const day = wd[(date.getDay() + 6) % 7];
+            let list = S[day].filter(keep);
+            if (day === "Dim") list = date.getMonth() === 10 && date.getDate() === 1 ? list : [];
+            const inMonth = date.getMonth() === 10;
+            const today = inMonth && date.getDate() === 1;
+            html += `<div class="min-h-[58px] rounded-lg ${today ? "bg-today-col border border-transparent shadow-[inset_0_0_0_1px_var(--violet-line)]" : "border border-line-soft"} p-1.5 flex flex-col gap-1 ${inMonth ? "" : "opacity-40"}">
+                <span class="w-5 h-5 grid place-items-center rounded-full text-[11px] font-medium tabular-nums ${today ? "bg-brand text-white" : "text-fg"}">${date.getDate()}</span>
+                ${list.length ? `<span class="text-[11px] text-muted tabular-nums">${total(list.reduce((a, s) => a + s[1], 0))}</span><span class="flex flex-wrap gap-[3px]">${list.map((s) => `<span class="d-${s[2]} dot" style="width:5px;height:5px"></span>`).join("")}</span>` : ""}
+            </div>`;
+        }
+        return `<div class="grid grid-cols-7 gap-1.5 min-w-[560px]" aria-label="Novembre 2026">${html}</div>`;
+    }
+    const dayTotal = (d) => total(S[d].filter(keep).reduce((a, s) => a + s[1], 0));
+    // Cases : chaque jour est une case (colonne arrondie) ; les séances y sont posées à leur heure exacte,
+    // une heure = toujours la même hauteur (une séance d'une heure ou moins = une case d'une heure). La marge
+    // donne les heures et, à la verticale, les moments de la journée ; un trait plus marqué les sépare.
+    const BANDS = [["Matin", 6, 12], ["Midi", 12, 14], ["Après-midi", 14, 18], ["Soir", 18, 22]];
+    const HOUR = 34;
+    const slot = ([t, m, disc, title, group, sub]) => `<div class="ev d-${disc}" style="--s:${toH(t)};--d:${Math.max(m, 60) / 60}" title="${t} – ${end(t, m)} · ${title}">
+            <span class="text-[11px] font-semibold leading-[1.2] truncate">${group ? usersIcon : ""}${short(title, group)}</span>
+            <span class="text-[10.5px] leading-[1.2] opacity-90 tabular-nums truncate">${m > 60 ? `${t} · ${total(m)}` : t}</span>
+            <span class="sr-only">${title}, de ${t} à ${end(t, m)}${sub ? ", " + sub : ""}</span>
+        </div>`;
+    function cases(list) {
+        const cols = list.length;
+        const tpl = `grid-template-columns: var(--gut) repeat(${cols}, minmax(0, 1fr))`;
+        const gutter = "sticky left-0 z-10 bg-[var(--card-solid)] lg:static lg:bg-transparent";
+        const now = new Date();
+        const nowH = now.getHours() + now.getMinutes() / 60;
+        const hours = Array.from({ length: 17 }, (_, i) => 6 + i).map((h) => `<span class="absolute right-1.5 -translate-y-1/2 text-[10.5px] text-faint tabular-nums" style="top:${(h - 6) * HOUR}px">${String(h).padStart(2, "0")}</span>`).join("");
+        const bands = BANDS.map(([label, from, to], i) => `<div class="absolute left-0 flex items-center justify-center ${i ? "border-t border-line" : ""}" style="top:${(from - 6) * HOUR}px;height:${(to - from) * HOUR}px;width:16px">
+                <span class="band-label text-[10.5px] font-medium text-fg-2 whitespace-nowrap">${label}</span></div>`).join("");
+        const separators = BANDS.slice(1).map(([, from]) => `<div class="absolute inset-x-0 h-px bg-line" style="top:${(from - 6) * HOUR}px"></div>`).join("");
+        const columns = list.map(([d, n]) => {
+            const today = d === TODAY;
+            return `<div class="${today ? "bg-today-col border-transparent shadow-[inset_0_0_0_1px_var(--violet-line)]" : "bg-well border-line-soft"} border rounded-2xl overflow-hidden">
+                <div class="h-[58px] pt-2.5 text-center border-b border-line-soft">
+                    <div class="text-[11px] ${today ? "text-brand-text" : "text-muted"}">${d}</div>
+                    <div class="mx-auto mt-0.5 w-6 h-6 grid place-items-center rounded-full text-[12px] font-medium tabular-nums ${today ? "bg-brand text-white" : "text-fg"}">${n}</div>
+                </div>
+                <div class="relative hours-bg" style="height:${16 * HOUR}px">
+                    ${separators}${S[d].filter(keep).map(slot).join("")}
+                    ${today && nowH >= 6 && nowH <= 22 ? `<div class="now" style="--now:${nowH}"></div>` : ""}
+                </div>
+            </div>`;
+        }).join("");
+        const totals = list.map(([d]) => `<div class="text-center text-[12px] font-medium ${d === TODAY ? "text-brand-text" : "text-fg"} tabular-nums">${dayTotal(d)}</div>`).join("");
+        return `<div class="[--gut:52px] lg:[--gut:58px] ${cols > 1 ? "week-scroll" : ""}" style="--h:${HOUR}px">
+            <div class="grid gap-x-1.5" style="${tpl}">
+                <div class="sticky left-0 z-10 bg-[var(--card-solid)] lg:bg-transparent" style="height:${58 + 16 * HOUR}px"><div class="absolute inset-x-0" style="top:58px;height:${16 * HOUR}px">${bands}${hours}</div></div>
+                ${columns}
+            </div>
+            <div class="grid gap-x-1.5 pt-3" style="${tpl}"><div class="${gutter} text-[11px] text-faint">Total</div>${totals}</div>
+        </div>`;
+    }
+    function render() {
+        const list = state.view === "jour" ? days.filter(([d]) => d === TODAY) : days;
+        board.innerHTML = state.view === "mois" ? monthGrid() : state.style === "cases" ? cases(list) : timeGrid(list);
+        // Téléphone : la semaine s'ouvre sur les derniers jours (vue « 3 jours » de l'app).
+        if (state.view === "semaine") requestAnimationFrame(() => { board.scrollLeft = board.scrollWidth; });
+    }
+    const on = ["bg-fill-strong", "text-fg", "font-medium"];
+    const onBrand = ["bg-brand-soft", "text-brand-text", "font-medium"];
+    const press = (group, attr, value, active_ = on) => group.querySelectorAll("button").forEach((b) => {
+        const active = b.dataset[attr] === value;
+        b.setAttribute("aria-pressed", String(active));
+        active_.forEach((c) => b.classList.toggle(c, active));
+        b.classList.toggle("text-muted", !active);
+        b.classList.toggle("border-transparent", active);
+    });
+    const views = document.getElementById("views");
+    const filters = document.getElementById("filters");
+    views.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state.view = b.dataset.view; press(views, "view", state.view, onBrand); render(); });
+    filters.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.filter; press(filters, "filter", state.filter); render(); });
+    const styles = document.getElementById("styles");
+    styles.addEventListener("click", (e) => { const b = e.target.closest("button[data-style]"); if (!b) return; state.style = b.dataset.style; press(styles, "style", state.style); render(); });
+    press(views, "view", state.view, onBrand);
+    press(filters, "filter", state.filter);
+    press(styles, "style", state.style);
+    render();
+    document.fonts?.ready.then(() => { if (state.view === "semaine") board.scrollLeft = board.scrollWidth; });
+
+    // Menu : réduire / déplier (seulement les icônes quand il est réduit).
+    const sidebar = document.getElementById("sidebar");
+    const collapse = document.getElementById("collapse");
+    collapse.addEventListener("click", () => {
+        const closed = sidebar.toggleAttribute("data-collapsed");
+        collapse.setAttribute("aria-expanded", String(!closed));
+        collapse.setAttribute("aria-label", closed ? "Déplier le menu" : "Réduire le menu");
+    });
+
+    // Thème sombre / clair.
+    document.querySelectorAll("[data-theme-toggle]").forEach((btn) => btn.addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        document.querySelector('meta[name="theme-color"]').content = next === "dark" ? "#08080a" : "#F3F2F7";
+        try { localStorage.setItem("coory-maquette-theme", next); } catch {}
+    }));
+</script>
+</body>
+</html>

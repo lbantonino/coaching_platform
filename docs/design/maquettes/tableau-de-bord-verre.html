@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#060608" />
+<title>Coory, tableau de bord (maquette verre)</title>
+<!--
+  MAQUETTE (1er novembre 2026), hors de l'application : le tableau de bord du coach selon le brief
+  « Dark Glassmorphism Raycast Edition » donné par Antonino (Gemini). Contenu repris tel quel du tableau
+  de bord du 1er novembre (coach de démonstration A). Logo : la boucle dans le rouge d'origine #FF3347
+  (D-16, D-19), lettres dans la couleur du texte. Aucune donnée réelle : sportifs et photos de démonstration.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>
+  :root {
+    --bg: #060608;
+    --glass: rgba(22, 22, 26, 0.6);
+    --glass-solid: #16161a;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-hover: rgba(255, 255, 255, 0.14);
+    --fill: rgba(255, 255, 255, 0.05);
+    --fill-2: rgba(255, 255, 255, 0.09);
+    --text: #f1f1f5;
+    --muted: #94a3b8;
+    --ok: #34d399;
+    --warn: #fbbf24;
+    --alert: #fb7185;
+    --logo: #ff3347;
+    --r-card: 24px;
+    --r-control: 14px;
+    --ease: cubic-bezier(0.23, 1, 0.32, 1);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+  }
+  body {
+    min-height: 100dvh;
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(60rem 40rem at 12% -8%, rgba(255, 255, 255, 0.03), transparent 70%),
+      radial-gradient(50rem 36rem at 92% 108%, rgba(255, 255, 255, 0.03), transparent 70%);
+    background-attachment: fixed;
+    color: var(--text);
+    font: 500 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  button, a { color: inherit; font: inherit; text-decoration: none; background: none; border: 0; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 10px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .muted { color: var(--muted); }
+  i.ph { font-size: 18px; line-height: 1; }
+
+  /* Verre givré (brief §1) ; repli opaque si la transparence est réduite. */
+  .glass {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    transition: border-color 200ms var(--ease);
+  }
+  @media (hover: hover) and (pointer: fine) { .glass:hover { border-color: var(--line-hover); } }
+  @media (prefers-reduced-transparency: reduce) { .glass, .bar { background: var(--glass-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+  /* Logo « C∞ry » : boucle rouge d'origine, lettres couleur du texte. */
+  .logo { display: inline-flex; align-items: baseline; font: 700 26px/1 "Space Grotesk", sans-serif; letter-spacing: -0.03em; color: var(--text); white-space: nowrap; }
+  .logo svg { height: 0.532em; width: 1.14em; margin: 0 -0.018em 0 0.042em; transform: translateY(0.018em); }
+
+  /* Boutons (brief §4) : principal blanc, texte noir ; secondaires en verre. */
+  .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: var(--r-control); background: var(--text); color: var(--bg); font-weight: 700; transition: transform 140ms var(--ease), background-color 140ms; }
+  .btn-primary:active { transform: scale(0.97); }
+  .icon-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: var(--r-control); background: var(--fill); border: 1px solid var(--line); transition: transform 140ms var(--ease), border-color 200ms; }
+  .icon-btn:active { transform: scale(0.95); }
+  .count { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--text); color: var(--bg); font-size: 11.5px; font-weight: 800; display: grid; place-items: center; }
+  .link { color: var(--muted); font-size: 13.5px; font-weight: 600; transition: color 150ms; }
+  @media (hover: hover) and (pointer: fine) { .link:hover { color: var(--text); } }
+  .tag { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 11px; border-radius: 999px; background: var(--fill); border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; color: var(--text); white-space: nowrap; }
+  .tag i.ph { font-size: 14px; color: var(--muted); }
+
+  /* Structure : téléphone d'abord. */
+  .sidebar, .pagehead { display: none; }
+  .mobilebar { position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px; border-bottom: 1px solid var(--line); }
+  .bar { background: rgba(6, 6, 8, 0.62); -webkit-backdrop-filter: blur(24px) saturate(140%); backdrop-filter: blur(24px) saturate(140%); }
+  .mobilebar .logo { font-size: 22px; }
+  .mobilebar h1 { font-size: 16px; font-weight: 700; text-align: center; letter-spacing: -0.01em; }
+  .mobilebar .tools { display: flex; gap: 8px; }
+  .mobilebar .icon-btn { width: 40px; height: 40px; }
+  main { padding: 16px 16px calc(120px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px; }
+  .fab { position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 30; height: 54px; padding: 0 22px; border-radius: 18px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55); }
+
+  /* Prochaine séance : l'élément fort. */
+  .next { padding: 20px; display: grid; gap: 16px; }
+  .next-head { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; font-weight: 600; }
+  .next-head .when { color: var(--warn); }
+  .next-main { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; align-items: center; }
+  .next-time { font-size: 58px; font-weight: 800; letter-spacing: -0.05em; line-height: 0.9; }
+  .next-who { font-size: 19px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; }
+  .next-what { font-size: 13.5px; color: var(--muted); margin-top: 3px; }
+  .next-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .next-foot .tags { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .next-foot .acts { display: flex; gap: 8px; flex: none; }
+  @media (max-width: 419px) { .next .tag i.ph { display: none; } }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { padding: 18px; }
+  .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin-bottom: 14px; }
+  .card-head .link { white-space: nowrap; }
+  .card-head h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.015em; }
+  .big { font-size: 30px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+
+  .tasks { list-style: none; display: grid; gap: 12px; }
+  .tasks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
+  .check { width: 20px; height: 20px; border-radius: 7px; border: 1.5px solid rgba(255, 255, 255, 0.28); margin-top: 1px; }
+  .task-title { font-size: 14px; font-weight: 600; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .task-meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .urgent { color: var(--alert); font-weight: 800; }
+  .late { color: var(--alert); }
+
+  .cash .amount { color: var(--ok); font-size: 23px; white-space: nowrap; }
+  .cash dl { display: grid; gap: 4px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+
+  /* Agenda (brief §4) : la charge de la semaine d'un coup d'œil. */
+  .agenda { padding: 16px 0 14px; }
+  .agenda-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 16px; }
+  .agenda-nav { display: flex; align-items: center; gap: 8px; }
+  .agenda-nav { gap: 6px; }
+  .agenda-nav .icon-btn { width: 40px; height: 40px; }
+  .agenda-month { font-size: 15px; font-weight: 700; letter-spacing: -0.015em; margin-left: 4px; white-space: nowrap; }
+  .select { white-space: nowrap; }
+  .select .ph-columns { display: none; }
+  .seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: var(--r-control); background: var(--fill); border: 1px solid var(--line); }
+  .seg button { height: 36px; padding: 0 14px; border-radius: 10px; font-size: 13.5px; font-weight: 600; color: var(--muted); transition: background-color 150ms, color 150ms; }
+  .seg button[aria-pressed="true"] { background: var(--fill-2); color: var(--text); }
+  .select { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: var(--r-control); background: var(--fill); border: 1px solid var(--line); font-size: 13.5px; font-weight: 600; }
+  .select .muted { font-weight: 500; }
+  .chips { display: flex; gap: 8px; padding: 12px 16px 14px; overflow-x: auto; scrollbar-width: none; }
+  .chip { height: 40px; padding: 0 15px; border-radius: 999px; border: 1px solid var(--line); font-size: 13.5px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: transparent; }
+  .week { --h: 44px; display: grid; grid-template-columns: 44px repeat(var(--days), minmax(0, 1fr)); border-top: 1px solid var(--line); }
+  .week-head { display: contents; }
+  .day-name { padding: 10px 0 8px; text-align: center; font-size: 12px; color: var(--muted); font-weight: 600; border-left: 1px solid var(--line); }
+  .day-name b { display: grid; place-items: center; width: 32px; height: 32px; margin: 4px auto 0; border-radius: 999px; font-size: 16px; color: var(--text); font-weight: 700; }
+  .day-name.today b { background: var(--text); color: var(--bg); }
+  .hours { position: relative; height: calc(16 * var(--h)); }
+  .hours span { position: absolute; right: 8px; transform: translateY(-50%); font-size: 11px; color: var(--muted); }
+  .col { position: relative; height: calc(16 * var(--h)); border-left: 1px solid var(--line); background-image: linear-gradient(var(--line) 1px, transparent 1px); background-size: 100% var(--h); }
+  .col.today { background-color: rgba(255, 255, 255, 0.025); }
+  .ev { position: absolute; left: 3px; right: 3px; top: calc((var(--s) - 6) * var(--h) + 1px); height: calc(var(--d) * var(--h) - 3px); padding: 4px 6px; border-radius: 10px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; }
+  .ev.group { background: rgba(255, 255, 255, 0.13); border-color: rgba(255, 255, 255, 0.16); }
+  .ev .t { display: block; font-size: 10.5px; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ev .n { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; line-height: 1.25; }
+  .ev .n span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ev .n i.ph { font-size: 12px; flex: none; color: var(--muted); }
+  .ev .sub { display: block; font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now { position: absolute; left: -4px; right: 0; height: 2px; background: var(--warn); top: calc((var(--now) - 6) * var(--h)); z-index: 2; }
+  .now::before { content: ""; position: absolute; left: -1px; top: -4px; width: 10px; height: 10px; border-radius: 999px; background: var(--warn); }
+  .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px 0; font-size: 12.5px; color: var(--muted); }
+  .legend .sw { display: inline-flex; align-items: center; gap: 7px; }
+  .legend .box { width: 14px; height: 14px; border-radius: 5px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); }
+  .legend .box.group { background: rgba(255, 255, 255, 0.13); }
+  .legend .end { margin-left: auto; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 16px 0; }
+  .stat { padding: 14px; border-radius: 18px; background: var(--fill); border: 1px solid var(--line); }
+  .stat .v { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+  .stat .l { font-size: 12.5px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+
+  .day-label { font-size: 13px; font-weight: 700; color: var(--muted); margin: 2px 0 6px; }
+  .rows { list-style: none; }
+  .rows li { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
+  .rows li:first-child { border-top: 0; }
+  .rows .time { font-size: 15px; font-weight: 700; }
+  .rows .who { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
+  .rows .what { font-size: 12.5px; color: var(--muted); }
+
+  .prog { list-style: none; display: grid; gap: 14px; }
+  .prog li { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
+  .avatar { width: 40px; height: 40px; border-radius: 999px; object-fit: cover; display: grid; place-items: center; background: var(--fill-2); font-size: 13px; font-weight: 700; color: var(--text); }
+  .prog .who { font-size: 14.5px; font-weight: 700; line-height: 1.3; }
+  .prog .what { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prog .wk { display: grid; gap: 6px; justify-items: end; font-size: 12px; color: var(--muted); font-weight: 600; }
+  .bar-mini { width: 64px; height: 4px; border-radius: 999px; background: var(--fill-2); overflow: hidden; }
+  .bar-mini span { display: block; height: 100%; width: calc(100% / 12); background: var(--text); border-radius: inherit; }
+
+  .money { list-style: none; display: grid; gap: 12px; }
+  .money li { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; }
+  .pastille { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: var(--fill); border: 1px solid var(--line); }
+  .pastille.alert i.ph { color: var(--alert); }
+  .money .who { font-size: 14.5px; font-weight: 700; }
+  .money .what { font-size: 12.5px; color: var(--muted); }
+  .money .sum { font-size: 15px; font-weight: 700; }
+
+  /* Agenda sur téléphone : 3 jours (Ven, Sam, Dim), comme la vue « 3 jours » de l'app. */
+  .week { --days: 3; }
+  .week [data-day="lun"], .week [data-day="mar"], .week [data-day="mer"], .week [data-day="jeu"] { display: none; }
+  .only-desktop, .desk-flex { display: none; }
+  .top, .grid, .side { display: grid; gap: 14px; }
+
+  /* Ordinateur. */
+  @media (min-width: 1024px) {
+    .mobilebar, .fab, .only-mobile { display: none !important; }
+    .only-desktop { display: revert; }
+    .desk-flex { display: flex; }
+    .app { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100dvh; }
+    .sidebar { display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; height: 100dvh; padding: 22px 14px 14px; border-right: 1px solid var(--line); }
+    .side-top { display: flex; justify-content: space-between; align-items: center; padding: 0 10px 18px; }
+    .nav { list-style: none; display: grid; gap: 2px; }
+    .nav a { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--r-control); color: var(--muted); font-weight: 600; transition: background-color 150ms, color 150ms; }
+    .nav a i.ph { font-size: 19px; }
+    .nav a[aria-current="page"] { background: var(--fill-2); color: var(--text); }
+    @media (hover: hover) and (pointer: fine) { .nav a:hover { color: var(--text); background: var(--fill); } }
+    .nav .n { margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--fill-2); color: var(--text); font-size: 12px; font-weight: 800; display: grid; place-items: center; }
+    .sep { height: 1px; background: var(--line); margin: 10px 10px; }
+    .me { margin-top: auto; display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 10px; border-radius: 18px; }
+    .me .avatar { position: relative; }
+    .me .who { font-size: 13.5px; font-weight: 700; line-height: 1.25; white-space: nowrap; }
+    .me .what { font-size: 12.5px; color: var(--muted); }
+    .online { position: relative; }
+    .online::after { content: ""; position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px; border-radius: 999px; background: var(--ok); border: 2px solid var(--bg); }
+
+    main { padding: 0 32px 48px; gap: 16px; }
+    .pagehead { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0 6px; }
+    .pagehead h1 { display: flex; align-items: center; gap: 12px; font-size: 28px; font-weight: 800; letter-spacing: -0.035em; }
+    .pagehead h1 i.ph { font-size: 22px; color: var(--muted); }
+    .tools { display: flex; align-items: center; gap: 10px; }
+    .search { display: flex; align-items: center; gap: 10px; width: 300px; height: 44px; padding: 0 8px 0 14px; border-radius: var(--r-control); background: var(--fill); border: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+    .search kbd { margin-left: auto; font: 600 11.5px/1 "Plus Jakarta Sans", sans-serif; padding: 5px 7px; border-radius: 8px; border: 1px solid var(--line); color: var(--muted); }
+
+    .top { display: grid; grid-template-columns: 5fr 4fr 3fr; gap: 16px; }
+    .pair { display: contents; }
+    .next { padding: 22px 24px; }
+    .next-time { font-size: 64px; }
+    .cash .amount { font-size: 34px; }
+    .grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 16px; align-items: start; }
+    .side { display: grid; gap: 16px; }
+    .agenda { padding: 18px 0 16px; }
+    .agenda-top { padding: 0 20px; }
+    .agenda-nav { gap: 8px; }
+    .agenda-month { font-size: 17px; }
+    .chips { padding: 14px 20px 16px; }
+    .week { --days: 7; --h: 40px; grid-template-columns: 52px repeat(7, minmax(0, 1fr)); }
+    .week [data-day] { display: block !important; }
+    .legend { padding: 14px 20px 0; }
+    .stats { padding: 14px 20px 0; }
+    .card { padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Ordinateur : menu latéral en verre. -->
+  <aside class="sidebar glass bar" aria-label="Menu principal" style="border-radius:0;border-width:0 1px 0 0">
+    <div class="side-top">
+      <span class="logo" role="img" aria-label="Coory">C<svg viewBox="-4 -4 1140 532" fill="none" aria-hidden="true"><path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" stroke="#FF3347" stroke-width="124" stroke-linejoin="round"/></svg>ry</span>
+      <button class="icon-btn" aria-label="Replier le menu" style="width:36px;height:36px;background:none;border-color:transparent"><i class="ph ph-sidebar-simple"></i></button>
+    </div>
+    <ul class="nav">
+      <li><a href="#" aria-current="page"><i class="ph ph-house"></i>Tableau de bord</a></li>
+      <li><a href="#"><i class="ph ph-users"></i>Sportifs</a></li>
+      <li><a href="#"><i class="ph ph-file-text"></i>Programmes</a></li>
+      <li><a href="#"><i class="ph ph-calendar-blank"></i>Agenda</a></li>
+      <li><a href="#"><i class="ph ph-receipt"></i>Facturation</a></li>
+      <li><a href="#"><i class="ph ph-calculator"></i>Comptabilité</a></li>
+      <li><a href="#"><i class="ph ph-book-open"></i>Bibliothèque</a></li>
+    </ul>
+    <div class="sep"></div>
+    <ul class="nav">
+      <li><a href="#"><i class="ph ph-sparkle"></i>Assistant IA</a></li>
+      <li><a href="#"><i class="ph ph-chat-circle"></i>Messages<span class="sr">, 3 non lus</span><span class="n" aria-hidden="true">3</span></a></li>
+      <li><a href="#"><i class="ph ph-check-square"></i>Tâches</a></li>
+      <li><a href="#"><i class="ph ph-folder"></i>Documents</a></li>
+      <li><a href="#"><i class="ph ph-bell"></i>Notifications<span class="sr">, 6 à voir</span><span class="n" aria-hidden="true">6</span></a></li>
+    </ul>
+    <button class="me glass">
+      <span class="online"><img class="avatar" src="../../../supabase/seed-photos/coach-a.jpg" alt="" /></span>
+      <span style="text-align:left"><span class="who" style="display:block">Gianluca Lo Bianco</span><span class="what">Coach</span></span>
+      <i class="ph ph-caret-down muted"></i>
+    </button>
+  </aside>
+
+  <div class="page">
+    <!-- Téléphone : barre du haut en verre. -->
+    <header class="mobilebar bar">
+      <span class="logo" role="img" aria-label="Coory">C<svg viewBox="-4 -4 1140 532" fill="none" aria-hidden="true"><path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" stroke="#FF3347" stroke-width="124" stroke-linejoin="round"/></svg>ry</span>
+      <h1>Tableau de bord</h1>
+      <div class="tools">
+        <button class="icon-btn" aria-label="Assistant IA"><i class="ph ph-sparkle"></i></button>
+        <button class="icon-btn" aria-label="Notifications, 6 à voir"><i class="ph ph-bell"></i><span class="count" aria-hidden="true">6</span></button>
+        <button class="icon-btn" aria-label="Menu"><i class="ph ph-list"></i></button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Ordinateur : en-tête de page. -->
+      <header class="pagehead">
+        <h1><i class="ph ph-house"></i>Tableau de bord</h1>
+        <div class="tools">
+          <button class="search"><i class="ph ph-magnifying-glass"></i>Rechercher dans Coory…<kbd>⌘K</kbd></button>
+          <button class="icon-btn" aria-label="Assistant IA"><i class="ph ph-sparkle"></i></button>
+          <button class="icon-btn" aria-label="Notifications, 6 à voir"><i class="ph ph-bell"></i><span class="count" aria-hidden="true">6</span></button>
+          <button class="btn-primary"><i class="ph ph-plus"></i>Créer</button>
+        </div>
+      </header>
+
+      <div class="top">
+        <!-- Prochaine séance : l'élément fort de l'écran. -->
+        <section class="next glass" aria-label="Prochaine séance">
+          <div class="next-head">
+            <span><span class="muted">Prochaine séance · </span><span class="when">demain</span></span>
+            <span class="muted">1 / 6</span>
+          </div>
+          <div class="next-main">
+            <span class="next-time">07:00</span>
+            <div>
+              <div class="next-who">Nadia El Amrani</div>
+              <div class="next-what">Coaching force · 60 min · Salle de sport</div>
+            </div>
+          </div>
+          <div class="next-foot">
+            <div class="tags">
+              <span class="tag"><i class="ph ph-barbell"></i>Musculation</span>
+              <span class="tag"><i class="ph ph-user"></i>Individuelle</span>
+            </div>
+            <div class="acts">
+              <button class="icon-btn" aria-label="Ouvrir la séance"><i class="ph ph-arrow-up-right"></i></button>
+              <button class="icon-btn" aria-label="Écrire à Nadia El Amrani"><i class="ph ph-chat-circle-text"></i></button>
+            </div>
+          </div>
+        </section>
+
+        <div class="pair">
+          <section class="card glass" aria-label="Tâches">
+            <div class="card-head">
+              <h2><span class="only-mobile">Tâches</span><span class="only-desktop"><span class="big">2</span> <span style="font-size:15px;font-weight:600">tâches à faire</span></span></h2>
+              <span class="big only-mobile">2</span>
+            </div>
+            <ul class="tasks">
+              <li><span class="check" aria-hidden="true"></span><div><div class="task-title"><span class="urgent" aria-hidden="true">! </span><span class="sr">Urgent : </span>Préparer le bloc 2 du programme de Lucas</div><div class="task-meta only-desktop"><span class="late">En retard</span> · Lucas Janssens</div></div></li>
+              <li><span class="check" aria-hidden="true"></span><div><div class="task-title">Relancer Sophie pour la facture d'octobre</div><div class="task-meta only-desktop">Mar 3 · Sophie Lambert</div></div></li>
+            </ul>
+          </section>
+
+          <section class="card glass cash" aria-label="Encaissé">
+            <div class="card-head only-mobile"><h2>Encaissé</h2></div>
+            <div class="big amount">3&nbsp;457,30&nbsp;€</div>
+            <div class="only-desktop" style="font-weight:600;margin-top:8px">encaissés cette semaine</div>
+            <dl class="only-mobile"><dt class="sr">Période</dt><dd>cette semaine</dd><dt class="sr">Paiements</dt><dd>6 paiements</dd><dt class="sr">Prévus</dt><dd>1&nbsp;008,80&nbsp;€ prévus</dd></dl>
+            <p class="only-desktop muted" style="font-size:13px;margin-top:10px;line-height:1.5">2&nbsp;857,27&nbsp;€ HTVA · 6 paiements · 1&nbsp;008,80&nbsp;€ prévus (13 séances)</p>
+          </section>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- Agenda de la semaine. -->
+        <section class="agenda glass" aria-label="Agenda">
+          <h2 class="sr">Semaine du 26 octobre au 1 novembre</h2>
+          <div class="agenda-top">
+            <div class="agenda-nav">
+              <button class="icon-btn" aria-label="Semaine précédente"><i class="ph ph-caret-left"></i></button>
+              <button class="icon-btn" aria-label="Semaine suivante"><i class="ph ph-caret-right"></i></button>
+              <span class="agenda-month"><span class="only-mobile">Oct. – nov.</span><span class="only-desktop">Oct. – nov. 2026</span></span>
+            </div>
+            <button class="select only-mobile"><i class="ph ph-columns"></i><span class="muted">Vue</span>3 jours<i class="ph ph-caret-down muted"></i></button>
+            <div class="desk-flex" style="align-items:center;gap:14px">
+              <div class="seg" role="group" aria-label="Vue"><button aria-pressed="false">Aujourd'hui</button><button aria-pressed="true">Semaine</button><button aria-pressed="false">Mois</button></div>
+              <a class="link" href="#">Agenda →</a>
+            </div>
+          </div>
+          <div class="chips" role="group" aria-label="Séances affichées">
+            <button class="chip" aria-pressed="true">Toutes</button>
+            <button class="chip" aria-pressed="false">Individuelles</button>
+            <button class="chip" aria-pressed="false">Collectives</button>
+          </div>
+          <div class="week" id="week"></div>
+          <div class="legend">
+            <span class="sw"><span class="box"></span>Individuelle</span>
+            <span class="sw"><span class="box group"></span><i class="ph ph-users-three" style="font-size:14px"></i>Collective</span>
+            <span class="only-mobile">Glisse pour changer de jour</span>
+            <span class="only-desktop">7 jours · 16 heures visibles</span>
+            <span class="end">06:00 – 22:00</span>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="v">1</div><div class="l">coaching aujourd'hui<br />0 terminé, 1 à venir</div></div>
+            <div class="stat"><div class="v">31 h</div><div class="l">de coaching cette semaine<br />30 séances</div></div>
+          </div>
+        </section>
+
+        <div class="side">
+          <section class="card glass" aria-labelledby="t-upcoming">
+            <div class="card-head"><h2 id="t-upcoming">Séances à venir</h2><a class="link" href="#">Voir tout</a></div>
+            <p class="day-label">Demain</p>
+            <ul class="rows">
+              <li><span class="time">07:00</span><div><div class="who">Nadia El Amrani</div><div class="what">Coaching force</div></div><span class="tag"><i class="ph ph-barbell"></i>Musculation</span></li>
+              <li><span class="time">08:15</span><div><div class="who">Yanis Khelifi</div><div class="what">Coaching force</div></div><span class="tag"><i class="ph ph-barbell"></i>Musculation</span></li>
+              <li><span class="time">12:15</span><div><div class="who">Emma Laurent</div><div class="what">Renfo coureur</div></div><span class="tag"><i class="ph ph-person-simple-run"></i>Running</span></li>
+              <li><span class="time">17:30</span><div><div class="who">Lucas Janssens</div><div class="what">Coaching hybride</div></div><span class="tag"><i class="ph ph-arrows-merge"></i>Hybride</span></li>
+              <li><span class="time">19:00</span><div><div class="who">Small group Hyrox</div><div class="what">Collective · 2 inscrits</div></div><span class="tag"><i class="ph ph-lightning"></i>Hyrox</span></li>
+            </ul>
+          </section>
+
+          <section class="card glass" aria-labelledby="t-programs">
+            <div class="card-head"><h2 id="t-programs">Programmes en cours</h2><a class="link" href="#">Voir tous les programmes</a></div>
+            <ul class="prog">
+              <li><img class="avatar" src="../../../supabase/seed-photos/ines.jpg" alt="" /><div style="min-width:0"><div class="who">Inès Benali</div><div class="what">Prépa Hyrox Bruxelles · bloc 1</div></div><div class="wk">Sem. 1/12<span class="bar-mini"><span></span></span></div></li>
+              <li><span class="avatar">AM</span><div style="min-width:0"><div class="who">Antoine Maes</div><div class="what">Programme renforcement · bloc 1</div></div><div class="wk">Sem. 1/12<span class="bar-mini"><span></span></span></div></li>
+              <li><span class="avatar">CR</span><div style="min-width:0"><div class="who">Camille Renard</div><div class="what">Programme running · bloc 1</div></div><div class="wk">Sem. 1/12<span class="bar-mini"><span></span></span></div></li>
+            </ul>
+          </section>
+
+          <section class="card glass" aria-labelledby="t-money">
+            <div class="card-head"><h2 id="t-money">Activité financière</h2><a class="link" href="#">Voir tout</a></div>
+            <ul class="money">
+              <li><span class="pastille"><i class="ph ph-paper-plane-tilt"></i></span><div><div class="who">0 facture envoyée</div><div class="what">Ce mois-ci</div></div><span class="sum">0,00&nbsp;€</span></li>
+              <li><span class="pastille"><i class="ph ph-check"></i></span><div><div class="who">0 paiement reçu</div><div class="what">Ce mois-ci</div></div><span class="sum">0,00&nbsp;€</span></li>
+              <li><span class="pastille alert"><i class="ph ph-clock"></i></span><div><div class="who">1 paiement en attente</div><div class="what late">En retard</div></div><span class="sum late">150,00&nbsp;€</span></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Téléphone : « Créer » à portée de pouce. -->
+  <button class="btn-primary fab"><i class="ph ph-plus"></i>Créer</button>
+</div>
+
+<script>
+  // Séances de la semaine du 26 octobre au 1 novembre (tableau de bord du 1er novembre, coach de démo A).
+  // [jour, début, fin, titre, collective, sous-titre]
+  const days = [["lun", "Lun", 26], ["mar", "Mar", 27], ["mer", "Mer", 28], ["jeu", "Jeu", 29], ["ven", "Ven", 30], ["sam", "Sam", 31], ["dim", "Dim", 1]];
+  const sessions = [
+    ["lun", "07:00", "08:00", "Nadia El Amrani"], ["lun", "08:15", "09:15", "Yanis Khelifi"], ["lun", "12:15", "13:15", "Emma Laurent"],
+    ["lun", "17:30", "18:30", "Lucas Janssens"], ["lun", "19:00", "20:00", "Small group Hyrox", true], ["lun", "20:15", "21:15", "Manon"],
+    ["mar", "07:00", "08:00", "Inès Benali"], ["mar", "08:15", "09:15", "Chloé Martin"], ["mar", "12:15", "13:15", "Thomas Peeters"],
+    ["mar", "13:30", "14:30", "Antoine Maes"], ["mar", "14:45", "15:45", "Mehdi Ouali"], ["mar", "16:00", "17:00", "Maxime Leroy"],
+    ["mar", "17:15", "18:15", "Sophie Lambert"], ["mar", "18:30", "19:30", "Nadia El Amrani"],
+    ["mer", "12:15", "13:15", "Léa Vandenberghe"], ["mer", "17:30", "18:30", "Manon"], ["mer", "19:00", "20:30", "Piste du mercredi", true],
+    ["jeu", "07:00", "08:00", "Nadia El Amrani"], ["jeu", "08:15", "09:15", "Chloé Martin"], ["jeu", "12:15", "13:15", "Thomas Peeters"],
+    ["jeu", "17:00", "18:00", "Maxime Leroy"], ["jeu", "18:00", "19:00", "Sophie Lambert"], ["jeu", "19:00", "20:00", "Small group Hyrox", true],
+    ["ven", "07:00", "08:00", "Mobilité & gainage", true], ["ven", "08:15", "09:15", "Yanis Khelifi"], ["ven", "12:15", "13:15", "Emma Laurent"],
+    ["ven", "16:15", "17:15", "Lucas Janssens"],
+    ["sam", "08:30", "10:00", "Run club du samedi", true, "Collective · 3 inscrits"], ["sam", "10:00", "11:15", "Circuit Hyrox du samedi", true],
+    ["dim", "09:00", "09:45", "Thomas Peeters"],
+  ];
+  const h = (t) => { const [a, b] = t.split(":").map(Number); return a + b / 60; };
+  const week = document.getElementById("week");
+  let html = `<div class="week-head"><div></div>${days.map(([k, n, d]) => `<div class="day-name ${k === "dim" ? "today" : ""}" data-day="${k}">${n}<b>${d}</b></div>`).join("")}</div>`;
+  html += `<div class="hours">${Array.from({ length: 16 }, (_, i) => i ? `<span style="top:calc(${i} * var(--h))">${String(6 + i).padStart(2, "0")}:00</span>` : "").join("")}</div>`;
+  for (const [k] of days) {
+    const evs = sessions.filter((s) => s[0] === k).map(([, a, b, title, group, sub]) =>
+      `<div class="ev ${group ? "group" : ""}" style="--s:${h(a)};--d:${h(b) - h(a)}"><span class="n">${group ? '<i class="ph ph-users-three"></i>' : ""}<span>${title}</span></span><span class="t">${a} – ${b}</span>${sub ? `<span class="sub">${sub}</span>` : ""}</div>`).join("");
+    html += `<div class="col ${k === "dim" ? "today" : ""}" data-day="${k}">${evs}${k === "dim" ? '<div class="now" id="now"></div>' : ""}</div>`;
+  }
+  week.innerHTML = html;
+  // Ligne « maintenant » (ambre = en cours), seulement entre 6 h et 22 h.
+  const now = new Date();
+  const t = now.getHours() + now.getMinutes() / 60;
+  const line = document.getElementById("now");
+  if (t >= 6 && t <= 22) line.style.setProperty("--now", t); else line.remove();
+</script>
+</body>
+</html>

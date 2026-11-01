@@ -21,17 +21,17 @@ export function MobileTopBar() {
   const { space } = useShell();
   const pathname = usePathname();
   return (
-    // Matière translucide (audit apple-design du 28/10) : le contenu défile sous la barre, flouté.
-    <header className="material sticky top-0 z-30 flex items-center gap-2 border-b px-3.5 py-2 lg:hidden">
+    // Barre du haut en carte flottante (maquette v6, D-77) : coins arrondis, à 12 px des bords.
+    <header className="sticky top-3 z-30 mx-3 mt-3 flex h-16 items-center gap-2 rounded-[20px] border border-line bg-panel pr-2 pl-4 lg:hidden">
       <Link href={homeHref[space]} aria-label="Accueil" className="flex w-fit rounded-sm">
-        <CooryLogo size={19} />
+        <CooryLogo variant="symbol" size={20} />
       </Link>
-      <span className="min-w-0 flex-1 truncate text-center font-display text-[16px] font-semibold">
+      <span className="min-w-0 flex-1 truncate text-center text-[15px] font-semibold">
         {pageTitle(space, pathname)}
       </span>
-      <div className="flex shrink-0 justify-end gap-1.5">
+      <div className="flex shrink-0 justify-end gap-1">
         {space === "coach" ? <AssistantButton /> : null}
-        <NotificationBell />
+        <NotificationBell phone />
         {space === "athlete" ? null : <MobileMenu />}
       </div>
     </header>
@@ -61,7 +61,7 @@ function MobileMenu() {
           dialog.current?.showModal();
           setOpen(true);
         }}
-        className={iconButtonClass()}
+        className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-text-2 transition-colors duration-150 hover:bg-selected-hover"
       >
         <Menu aria-hidden size={18} strokeWidth={1.8} />
       </button>
@@ -73,7 +73,7 @@ function MobileMenu() {
       >
         <div className="flex h-full flex-col">
           <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-line px-3.5 py-2">
-            <CooryLogo size={19} />
+            <CooryLogo size={14} />
             <span className="font-display text-[16px] font-semibold">Menu</span>
             <button
               type="button"
@@ -85,14 +85,16 @@ function MobileMenu() {
             </button>
           </div>
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-3.5 pt-4 pb-8">
-            {/* Coach (D-62) : la recherche globale, en tête du menu sur téléphone. */}
+            {/* Coach (D-62) : la recherche globale, en tête du menu sur téléphone. Même cadre que les
+                lignes du menu (44 px, même rayon, loupe alignée sur leurs icônes) ; shrink-0 : le menu
+                défile, la recherche ne se tasse pas. */}
             {space === "coach" ? (
               <form
                 role="search"
                 action="/coach/recherche"
-                className="flex h-12 items-center gap-2.5 rounded-control border border-line-2 bg-surface px-3 focus-within:border-accent"
+                className="flex h-11 shrink-0 items-center gap-3 rounded-control border border-line bg-surface px-3 focus-within:border-violet-line"
               >
-                <Search aria-hidden size={18} strokeWidth={1.8} className="shrink-0 text-muted" />
+                <Search aria-hidden size={19} strokeWidth={1.8} className="shrink-0 text-muted" />
                 <label htmlFor="menu-search" className="sr-only">
                   Rechercher dans Coory
                 </label>

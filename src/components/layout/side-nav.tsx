@@ -9,7 +9,8 @@ import { navItemClass } from "@/components/ui/nav-item";
 import { navFor, type NavEntry } from "./navigation";
 import { useShell } from "./shell-context";
 
-// Listes du menu : lignes de 44 px, icône 19, élément actif sur fond relevé. `large` : version du menu hamburger (texte 16 px, titres PRINCIPAL / PLUS).
+// Listes du menu (D-77) : lignes de 32 px, icône 16, page active en violet léger. `large` : version du
+// menu hamburger (44 px, texte 16 px, titres PRINCIPAL / PLUS).
 
 function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
   const pathname = usePathname();
@@ -37,16 +38,16 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
               aria-current={active ? "page" : undefined}
               // Menu replié : le nom de la page apparaît au survol de son icône.
               title={large ? undefined : label}
-              className={`${navItemClass(active)} relative ${large ? "text-[16px]" : ""}`}
+              className={`${navItemClass(active, large)} relative`}
             >
-              <Icon aria-hidden size={19} strokeWidth={1.7} className="shrink-0" />
+              <Icon aria-hidden size={large ? 19 : 16} strokeWidth={1.8} className="shrink-0" />
               <span data-nav-label="" className="flex-1 truncate">
                 {label}
                 {countFor(href) > 0 ? (
                   <span className="sr-only">{countLabel(href, countFor(href))}</span>
                 ) : null}
               </span>
-              <CountBadge count={countFor(href)} className="nav-count" />
+              <CountBadge count={countFor(href)} tone="soft" className="nav-count" />
             </Link>
           </li>
         );
@@ -56,7 +57,7 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
 }
 
 const sectionLabel =
-  "px-1 pb-1.5 font-mono text-[11px] font-medium tracking-[0.08em] text-muted uppercase";
+  "px-1 pb-1.5 text-[11px] font-medium tracking-[0.08em] text-muted uppercase";
 
 export function SideNav({ large = false }: { large?: boolean }) {
   const { space, orgBase } = useShell();
@@ -81,7 +82,7 @@ export function SideNav({ large = false }: { large?: boolean }) {
     <nav aria-label="Navigation principale" className="flex flex-col gap-3">
       <NavList entries={main} large={false} />
       {secondary ? (
-        <div className="border-t border-line pt-3">
+        <div className="border-t border-line-soft pt-3">
           <NavList entries={secondary} large={false} />
         </div>
       ) : null}

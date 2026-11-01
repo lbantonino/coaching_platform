@@ -50,20 +50,34 @@ export function Segmented<T extends string>({
 export function SegmentedNav({
   label,
   items,
+  size = "md",
 }: {
   label: string;
   items: { href: string; label: string; active: boolean }[];
+  // « sm » (barre de l'agenda, D-77) : 32 px, texte 12 px.
+  size?: "md" | "sm";
 }) {
   return (
-    <nav aria-label={label} className={`${segmentedGroupClass} w-auto`}>
+    <nav
+      aria-label={label}
+      className={
+        size === "sm"
+          ? "inline-flex h-8 gap-0.5 rounded-lg border border-line-soft bg-surface-2 p-0.5"
+          : `${segmentedGroupClass} w-auto`
+      }
+    >
       {items.map((item) => (
         <Link
           key={item.label}
           href={item.href}
           scroll={false}
           aria-current={item.active ? "page" : undefined}
-          className={`flex h-9 items-center justify-center rounded-[9px] px-3 text-[14px] font-medium whitespace-nowrap transition-colors duration-150 ${
-            item.active ? "bg-selected text-text" : "text-muted hover:text-text"
+          className={`flex items-center justify-center whitespace-nowrap transition-colors duration-150 ${
+            size === "sm" ? "rounded-md px-2.5 text-[12px]" : "h-9 rounded-[9px] px-3 text-[14px]"
+          } ${
+            item.active
+              ? "bg-selected font-medium text-violet-text"
+              : "font-medium text-muted hover:text-text"
           }`}
         >
           {item.label}

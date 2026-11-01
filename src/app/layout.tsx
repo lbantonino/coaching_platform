@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter_Tight, Space_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 
 import { PressFeedback } from "@/components/ui/press-feedback";
 import { ToastProvider } from "@/components/ui/toast";
@@ -9,23 +9,15 @@ import { themeInitScript } from "@/lib/theme";
 
 import "./globals.css";
 
-// Polices (29/10/2026, choix d'Antonino) : Inter Tight pour les titres ET le texte de l'interface, Geist Mono
-// pour les heures et les données, Space Grotesk seulement pour le logo « C∞ry » (la marque ne change pas).
-// next/font télécharge les polices au build et les sert depuis notre domaine : aucun appel à Google
+// Police (D-77, 01/11/2026, maquette v6 validée par Antonino) : Plus Jakarta Sans pour TOUT, titres,
+// texte, heures et chiffres (chiffres alignés). Plus de police « machine à écrire » (demande d'Antonino)
+// ni de police à part pour le logo : le logo est désormais un dessin (public/brand).
+// next/font télécharge la police au build et la sert depuis notre domaine : aucun appel à Google
 // dans le navigateur des visiteurs (plus rapide, et pas d'adresse IP transmise à un tiers).
-const interTight = Inter_Tight({
-  variable: "--font-inter-tight",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -33,9 +25,13 @@ export const metadata: Metadata = {
   description: BRAND.tagline,
 };
 
+// Couleur de la barre du navigateur (téléphone) : celle du fond de chaque thème.
 export const viewport: Viewport = {
-  themeColor: "#141518", // fond graphite, le défaut depuis le 29/10/2026
-  colorScheme: "light",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#08080a" },
+    { media: "(prefers-color-scheme: light)", color: "#f3f2f7" },
+  ],
+  colorScheme: "dark light",
 };
 
 // suppressHydrationWarning sur <html> : themeInitScript y pose data-theme ("dark" ou "light") avant React,
@@ -45,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr"
       suppressHydrationWarning
-      className={`${interTight.variable} ${geistMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${jakarta.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />

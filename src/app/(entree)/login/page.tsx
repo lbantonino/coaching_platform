@@ -25,7 +25,7 @@ export default function LoginPage() {
         aria-label="Coory, plateforme de coaching"
         className="relative overflow-hidden rounded-[20px] border border-line bg-panel p-5 lg:hidden"
       >
-        <CooryWatermark className="absolute -right-[230px] -bottom-[60px] w-[600px] text-text opacity-[0.06]" />
+        <CooryWatermark className="absolute -right-[160px] -bottom-[60px] w-[420px] opacity-[0.05]" />
         <div className="relative flex flex-col gap-4">
           <DefaultEyebrow />
           <BrandPitch size="card" />

@@ -108,7 +108,7 @@ export function CheckList({
               className={`inline-flex size-[22px] items-center justify-center rounded-full border-[1.5px] transition-colors duration-150 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-[var(--kpi,var(--accent))] ${
                 item.checked
                   ? "border-[var(--kpi,var(--accent))] bg-[var(--kpi,var(--accent))] text-surface"
-                  : "border-[color-mix(in_srgb,var(--kpi,var(--accent))_75%,var(--line-2))] group-hover:border-[var(--kpi,var(--accent))]"
+                  : "border-line-2 group-hover:border-[var(--kpi,var(--accent))]"
               }`}
             >
               {item.checked ? <Check size={13} strokeWidth={3} /> : null}
@@ -129,7 +129,7 @@ export function CheckList({
                   <>
                     <span
                       aria-hidden
-                      className={`font-semibold ${item.checked ? "" : "text-warn"}`}
+                      className={`font-semibold ${item.checked ? "" : "text-alert"}`}
                     >
                       !{" "}
                     </span>

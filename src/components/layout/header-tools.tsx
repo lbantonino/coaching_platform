@@ -5,14 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import { iconButtonClass } from "@/components/ui/button";
 import { CountBadge } from "@/components/ui/count-badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 import { notificationsHref } from "./navigation";
 import { useShell } from "./shell-context";
 
-// Outils à droite de l'en-tête de page sur ordinateur (prompt Claude Design §5.2) : recherche
-// « Rechercher dans Coory… ⌘K » de 260 px, Assistant IA (coach), cloche des notifications.
+// Outils à droite de l'en-tête de page sur ordinateur (maquette v6, D-77) : recherche « Rechercher dans
+// Coory… ⌘K », Assistant IA en violet (coach), cloche à pastille violette, soleil / lune.
 // Coach : la recherche ouvre la page Recherche globale (D-62) avec la saisie.
 // Sportif et admin : la recherche ouvre la page Recherche de l'espace. ⌘K / Ctrl K y mène aussi.
 export function HeaderTools() {
@@ -24,24 +24,39 @@ export function HeaderTools() {
       ) : (
         <SearchLink href={space === "athlete" ? "/app/recherche" : "/admin/recherche"} />
       )}
-      {space === "coach" ? <AssistantButton /> : null}
+      {space === "coach" ? <AssistantButton withLabel /> : null}
       <NotificationBell />
+      <ThemeToggle className={headerIcon} />
     </div>
   );
 }
 
-// Assistant IA (coach) : dans l'en-tête des pages sur ordinateur, et dans la barre du haut sur
-// téléphone (demande d'Antonino du 29/10/2026 : « super important »).
-export function AssistantButton() {
+// Boutons icônes de l'en-tête (ordinateur) : 32 px, filet fin. Sur téléphone (barre du haut) : 44 px.
+export const headerIcon =
+  "relative inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-line text-text-2 transition-colors duration-150 hover:bg-selected-hover";
+const phoneIcon =
+  "relative inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-text-2 transition-colors duration-150 hover:bg-selected-hover";
+
+// Assistant IA (coach) : dans l'en-tête des pages sur ordinateur (avec son nom), et dans la barre du haut
+// sur téléphone (demande d'Antonino du 29/10/2026 : « super important »). En violet (D-77) pour qu'on
+// comprenne qu'il s'ouvre : translucide en sombre, plein en clair.
+export function AssistantButton({ withLabel = false }: { withLabel?: boolean }) {
   return (
-    <Link href="/coach/assistant" aria-label="Assistant IA" className={iconButtonClass()}>
-      <Sparkles aria-hidden size={18} strokeWidth={1.8} />
+    <Link
+      href="/coach/assistant"
+      aria-label={withLabel ? undefined : "Assistant IA"}
+      className={`inline-flex shrink-0 items-center justify-center border border-ai-border bg-ai-bg text-ai-text transition-[filter] duration-150 hover:brightness-110 ${
+        withLabel ? "h-8 gap-1.5 rounded-lg px-3 text-[12px] font-medium" : "size-11 rounded-xl"
+      }`}
+    >
+      <Sparkles aria-hidden size={withLabel ? 14 : 18} strokeWidth={1.8} className="fill-current" />
+      {withLabel ? "Assistant IA" : null}
     </Link>
   );
 }
 
-// Cloche des notifications, avec la pastille rouge de tout ce qui attend (D-37).
-export function NotificationBell() {
+// Cloche des notifications, avec la pastille violette de tout ce qui attend (D-37, D-77).
+export function NotificationBell({ phone = false }: { phone?: boolean }) {
   const { space, notificationCount = 0 } = useShell();
   return (
     <Link
@@ -49,22 +64,25 @@ export function NotificationBell() {
       aria-label={
         notificationCount > 0 ? `Notifications, ${notificationCount} à voir` : "Notifications"
       }
-      className={iconButtonClass()}
+      className={phone ? phoneIcon : headerIcon}
     >
-      <Bell aria-hidden size={18} strokeWidth={1.8} />
-      <CountBadge count={notificationCount} className="absolute -top-1.5 -right-1.5" />
+      <Bell aria-hidden size={phone ? 18 : 15} strokeWidth={1.8} />
+      <CountBadge
+        count={notificationCount}
+        className={`absolute ${phone ? "top-2 right-2" : "-top-1.5 -right-1.5"}`}
+      />
     </Link>
   );
 }
 
 const searchBox =
-  "flex h-11 w-[260px] items-center gap-2.5 rounded-control border border-line bg-surface px-3 text-[14px] text-muted";
+  "flex h-8 w-56 items-center gap-2 rounded-lg border border-line bg-surface-2 px-2.5 text-[12px] text-faint";
 
 function Kbd() {
   return (
     <kbd
       aria-hidden
-      className="pointer-events-none rounded-kbd border border-line-2 px-[5px] py-px font-mono text-[11px] text-muted"
+      className="pointer-events-none rounded border border-line px-1 py-px text-[11px] text-faint"
     >
       ⌘K
     </kbd>
@@ -99,12 +117,12 @@ function CoachSearch() {
     <form
       role="search"
       action="/coach/recherche"
-      className={`${searchBox} focus-within:border-accent`}
+      className={`${searchBox} focus-within:border-muted`}
     >
       <label htmlFor="coach-search" className="sr-only">
         Rechercher dans Coory
       </label>
-      <Search aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+      <Search aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
       <input
         ref={input}
         id="coach-search"
@@ -112,7 +130,7 @@ function CoachSearch() {
         type="search"
         autoComplete="off"
         placeholder="Rechercher dans Coory…"
-        className="h-full min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-muted"
+        className="h-full min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-faint"
       />
       <Kbd />
     </form>
@@ -124,7 +142,7 @@ function SearchLink({ href }: { href: string }) {
   useCommandK(() => router.push(href));
   return (
     <Link href={href} className={`${searchBox} transition-colors duration-150 hover:bg-surface-2`}>
-      <Search aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+      <Search aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
       <span className="flex-1 whitespace-nowrap">Rechercher dans Coory…</span>
       <Kbd />
     </Link>

@@ -2,7 +2,7 @@ import { photoUrl } from "@/features/photos/validate";
 
 // Avatar (prompt Claude Design §4) : rond, photo de profil si elle existe (D-28), sinon initiales
 // en 600 sur fond chip (≈ 33 % de la taille). Pastille ♀ / ♂ en bas à droite si le sexe est connu.
-// Tailles : xs 28 (piles compactes) · sm 36 et md 40 (listes) · lg 52 (cartes) · xl 64 (fiche).
+// Tailles : 2xs 24 (lignes compactes, D-77) · xs 28 (piles compactes) · sm 36 et md 40 (listes) · lg 52 (cartes) · xl 64 (fiche).
 export function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const letters =
@@ -11,6 +11,7 @@ export function initials(name: string): string {
 }
 
 const boxes = {
+  "2xs": "size-6 text-[9px]",
   xs: "size-7 text-[10px]",
   sm: "size-9 text-[12px]",
   md: "size-10 text-[13px]",
