@@ -5,9 +5,6 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // hebdomadaire demande « seulement cette date » ou « toute la série ». Semaines de 2027, une par test
 // et une heure par profil (les tests tournent en parallèle sur la même base) : rien ne dépend du jour
 // où il tourne. Chaque séance créée est supprimée à la fin.
-const FIRST_HOUR = 0; // grille complète, 00:00 - 24:00 (elle défile dans sa carte)
-const SPAN = 24;
-
 const unique = (testInfo: { project: { name: string } }) =>
   `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -21,6 +18,15 @@ async function loginAsCoachA(page: Page) {
 
 const column = (page: Page, date: string) => page.locator(`[data-drop-date="${date}"]`);
 
+// Position verticale de `hour` dans la colonne du jour : la plage visible (06:00 - 22:00 par défaut,
+// D-77) est lue dans la grille elle-même, pas supposée.
+async function hourOffset(page: Page, date: string, hour: number, height: number) {
+  const day = column(page, date);
+  const first = Number(await day.getAttribute("data-first-hour"));
+  const span = Number(await day.getAttribute("data-span"));
+  return ((hour - first) / span) * height;
+}
+
 // Clic sur le créneau `hour` du jour `dayLabel` (« Mercredi 3 février »), puis création d'une séance
 // collective dans la fenêtre. Renvoie le bloc de la séance dans la grille.
 async function createFromSlot(
@@ -30,7 +36,7 @@ async function createFromSlot(
   const slot = page.getByRole("button", { name: `Ajouter une séance le ${options.dayLabel}` });
   const box = await slot.boundingBox();
   await slot.click({
-    position: { x: 20, y: ((options.hour - FIRST_HOUR) / SPAN) * box!.height + 3 },
+    position: { x: 20, y: (await hourOffset(page, options.date, options.hour, box!.height)) + 3 },
   });
   const dialog = page.getByRole("dialog", { name: "Nouvelle séance" });
   await expect(dialog).toBeVisible();
@@ -56,7 +62,7 @@ async function mouseDrag(page: Page, block: Locator, date: string, hour: number)
   const from = (await block.boundingBox())!;
   const to = (await column(page, date).boundingBox())!;
   const start = { x: from.x + 15, y: from.y + 4 };
-  const end = { x: to.x + 30, y: to.y + ((hour - FIRST_HOUR) / SPAN) * to.height + 4 };
+  const end = { x: to.x + 30, y: to.y + (await hourOffset(page, date, hour, to.height)) + 4 };
   await page.mouse.move(start.x, start.y);
   await page.mouse.down();
   for (let step = 1; step <= 15; step += 1) {
@@ -73,7 +79,7 @@ async function touchDrag(page: Page, block: Locator, date: string, hour: number)
   const from = (await block.boundingBox())!;
   const to = (await column(page, date).boundingBox())!;
   const start = { x: from.x + 15, y: from.y + 4 };
-  const end = { x: to.x + 30, y: to.y + ((hour - FIRST_HOUR) / SPAN) * to.height + 4 };
+  const end = { x: to.x + 30, y: to.y + (await hourOffset(page, date, hour, to.height)) + 4 };
   const cdp = await page.context().newCDPSession(page);
   const touch = (type: "touchStart" | "touchMove" | "touchEnd", point?: { x: number; y: number }) =>
     cdp.send("Input.dispatchTouchEvent", { type, touchPoints: point ? [point] : [] });
@@ -202,4 +208,92 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
     "Chaque vendredi à 11:00",
   );
   await deleteSession(page, title);
+});
+
+test("l'agenda du tableau de bord défile d'un bloc, de minuit à minuit, et une séance se crée avant 06:00", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "ordinateur", "molette de la souris, sur un seul profil");
+  await loginAsCoachA(page);
+  await page.goto("/coach?date=2027-03-03");
+  const grid = page.locator("[data-grid-scroll]");
+  // Heure en haut de la zone visible : 06:00 à l'ouverture (réglage « Heures de l'agenda » par défaut).
+  const topHour = () =>
+    grid.evaluate((element) => {
+      const day = element.querySelector<HTMLElement>("[data-drop-date]")!;
+      return Math.round(element.scrollTop / (day.offsetHeight / 24));
+    });
+  await expect.poll(topHour).toBe(6);
+
+  // La molette sur le mercredi fait défiler toute la semaine, jusqu'à minuit.
+  await column(page, "2027-03-03").hover({ position: { x: 30, y: 300 } });
+  await page.mouse.wheel(0, -600);
+  await expect.poll(topHour).toBe(0);
+
+  // Un créneau à 02:00 s'ouvre à cette heure.
+  const slot = page.getByRole("button", { name: "Ajouter une séance le Mercredi 3 mars" });
+  const box = (await slot.boundingBox())!;
+  await slot.click({
+    position: { x: 30, y: (await hourOffset(page, "2027-03-03", 2, box.height)) + 3 },
+  });
+  const dialog = page.getByRole("dialog", { name: "Nouvelle séance" });
+  await expect(dialog.getByLabel("Heure", { exact: true })).toHaveValue("02:00");
+});
+
+// Glissé horizontal du doigt (Chromium : événements tactiles du protocole DevTools), au milieu de
+// l'agenda.
+async function swipe(page: Page, direction: "suivant" | "précédent") {
+  // L'agenda affiché (pas la copie cachée du chargement progressif), amené dans l'écran.
+  const board = page
+    .locator("[data-grid-scroll], ol.grid-cols-7")
+    .filter({ visible: true })
+    .first();
+  await expect(board).toBeVisible();
+  await board.scrollIntoViewIfNeeded();
+  const box = (await board.boundingBox())!;
+  const y = Math.round(box.y + Math.min(box.height / 2, 200));
+  const [from, to] =
+    direction === "suivant"
+      ? [box.x + box.width - 20, box.x + 30]
+      : [box.x + 30, box.x + box.width - 20];
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: from, y }] });
+  for (let step = 1; step <= 10; step += 1) {
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: from + ((to - from) * step) / 10, y }],
+    });
+  }
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+}
+
+test("téléphone : on change de jour, de mois et de semaine en glissant le doigt", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "telephone", "geste tactile, sur téléphone");
+  await loginAsCoachA(page);
+  await page.goto("/coach?vue=jour&date=2027-03-03");
+  await swipe(page, "suivant");
+  await expect(page).toHaveURL(/vue=jour&date=2027-03-04/);
+  await swipe(page, "précédent");
+  await expect(page).toHaveURL(/vue=jour&date=2027-03-03/);
+
+  await page.goto("/coach?vue=mois&date=2027-03-01");
+  await swipe(page, "suivant");
+  await expect(page).toHaveURL(/vue=mois&date=2027-04-01/);
+
+  // 3 jours : depuis lundi (bord gauche de la grille), la semaine précédente s'ouvre sur dimanche.
+  await page.goto("/coach?vue=semaine&date=2027-03-08");
+  const grid = page.locator("[data-grid-scroll]");
+  await expect.poll(() => grid.evaluate((element) => element.scrollLeft)).toBe(0);
+  await swipe(page, "précédent");
+  await expect(page).toHaveURL(/vue=semaine&date=2027-03-07/);
+  await expect
+    .poll(() =>
+      grid.evaluate((element) => element.scrollWidth - element.clientWidth - element.scrollLeft),
+    )
+    .toBeLessThan(2);
+  // Depuis dimanche (bord droit), la semaine suivante.
+  await swipe(page, "suivant");
+  await expect(page).toHaveURL(/vue=semaine&date=2027-03-08/);
 });

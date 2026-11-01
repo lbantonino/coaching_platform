@@ -31,7 +31,11 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
   const go = (href: string) => () => router.push(href);
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={buttonClass()}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={buttonClass({ className: "lg:h-8 lg:rounded-lg lg:px-3.5 lg:text-[12px] lg:font-medium" })}
+      >
         <Plus aria-hidden size={16} strokeWidth={2} />
         Créer
       </button>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#060608">
+    <title>Coory, tableau de bord (maquette v4, design Gemini)</title>
+    <!--
+      MAQUETTE v4 (1er novembre 2026), hors de l'application. DESIGN repris tel quel du code HTML de Gemini
+      donné par Antonino (mêmes classes Tailwind : tailles de cartes, polices, tailles, graisses, couleurs,
+      arrondis, espacements). CONTENU : celui de Coory (tableau de bord du 1er novembre, coach de démonstration
+      A), rien de Gemini. Gardés en plus : le logo « C∞ry » d'Antonino (boucle rouge), le bouton « Créer » en
+      rouge, les vues Aujourd'hui / Semaine / Mois et les filtres Toutes / Individuelles / Collectives.
+      Ajouts pour le téléphone (Gemini n'en avait pas) : barre du haut, menu caché, « Créer » flottant.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #060608;
+            color: #f1f1f5;
+            background-image:
+                radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(120, 119, 198, 0.04) 0%, transparent 40%);
+            background-attachment: fixed;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-card {
+            background: rgba(22, 22, 26, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45);
+        }
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+            background: rgba(28, 28, 34, 0.7);
+        }
+        .sidebar-glass {
+            background: rgba(14, 14, 18, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        @media (prefers-reduced-transparency: reduce) {
+            .glass-card, .sidebar-glass { background: #141417; backdrop-filter: none; -webkit-backdrop-filter: none; }
+        }
+        /* Style de la scrollbar pour l'agenda */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        /* Logo « C∞ry » d'Antonino : boucle rouge, lettres blanches. */
+        .coory-logo { display: inline-flex; align-items: baseline; font: 700 20px/1 "Space Grotesk", sans-serif; letter-spacing: -0.03em; color: #fff; white-space: nowrap; }
+        .coory-logo svg { height: 0.532em; width: 1.14em; margin: 0 -0.018em 0 0.042em; transform: translateY(0.018em); }
+        button, a, label { touch-action: manipulation; }
+    </style>
+</head>
+<body class="h-full antialiased selection:bg-zinc-700 selection:text-white">
+    <div class="flex lg:h-screen lg:overflow-hidden p-3 gap-3">
+
+        <!-- Sidebar (ordinateur) -->
+        <aside class="hidden lg:flex w-64 shrink-0 sidebar-glass rounded-3xl flex-col justify-between p-5 select-none z-10" aria-label="Menu principal">
+            <div class="space-y-6">
+                <div class="flex items-center gap-3 px-2 py-1">
+                    <span class="coory-logo" role="img" aria-label="Coory">C<svg viewBox="-4 -4 1140 532" fill="none" aria-hidden="true"><path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" stroke="#FF3347" stroke-width="124" stroke-linejoin="round"/></svg>ry</span>
+                </div>
+
+                <nav class="space-y-1 text-xs font-medium">
+                    <a href="#" aria-current="page" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-white/10 text-white shadow-inner">Tableau de bord</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Sportifs</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Programmes</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Agenda</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Facturation</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Comptabilité</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Bibliothèque</a>
+                    <div class="my-3 border-t border-white/10"></div>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Assistant IA</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Messages <span class="sr-only">, 3 non lus</span><span aria-hidden="true" class="ml-auto bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-[10px] font-mono">3</span></a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Tâches</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Documents</a>
+                    <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/5 transition-all">Notifications <span class="sr-only">, 6 à voir</span><span aria-hidden="true" class="ml-auto bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full text-[10px] font-mono">6</span></a>
+                </nav>
+            </div>
+
+            <div class="pt-4 border-t border-white/10 flex items-center gap-3">
+                <img src="../../../supabase/seed-photos/coach-a.jpg" alt="" class="w-7 h-7 rounded-full object-cover">
+                <div>
+                    <div class="text-xs font-medium text-zinc-200">Gianluca Lo Bianco</div>
+                    <div class="text-[10px] text-zinc-400">Coach</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-w-0 lg:overflow-y-auto lg:p-4 space-y-4 pb-24 lg:pb-4">
+
+            <!-- Téléphone : barre du haut (même carte de verre que l'en-tête). -->
+            <header class="lg:hidden glass-card p-3 pl-4 rounded-3xl flex justify-between items-center sticky top-3 z-20">
+                <span class="coory-logo" role="img" aria-label="Coory">C<svg viewBox="-4 -4 1140 532" fill="none" aria-hidden="true"><path d="M390.6 108.8C440.4 150.6 510 166 566 166C622 166 691.6 150.6 741.4 108.8A200 200 0 1 1 741.4 415.2C691.6 373.4 622 358 566 358C510 358 440.4 373.4 390.6 415.2A200 200 0 1 1 390.6 108.8Z" stroke="#FF3347" stroke-width="124" stroke-linejoin="round"/></svg>ry</span>
+                <h1 class="text-base font-semibold text-white tracking-tight">Tableau de bord</h1>
+                <div class="flex items-center gap-2">
+                    <button aria-label="Assistant IA" class="p-2.5 rounded-xl bg-gradient-to-r from-violet-600/30 to-indigo-600/30 border border-violet-500/30 text-violet-300">
+                        <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </button>
+                    <button aria-label="Notifications, 6 à voir" class="relative p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span aria-hidden="true" class="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-mono leading-4 text-center">6</span>
+                    </button>
+                    <button aria-label="Menu" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Header avec Assistant IA et Notifications (ordinateur) -->
+            <header class="hidden lg:flex glass-card p-5 rounded-3xl justify-between items-center">
+                <div>
+                    <h1 class="text-base font-semibold text-white tracking-tight">Tableau de bord</h1>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <input type="text" placeholder="Rechercher dans Coory…" aria-label="Rechercher dans Coory" class="bg-black/30 border border-white/10 rounded-xl pl-4 pr-10 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 w-56 shadow-inner">
+                        <kbd class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-500 border border-white/10 rounded-md px-1.5 py-0.5">⌘K</kbd>
+                    </div>
+
+                    <!-- Bouton Assistant IA -->
+                    <button class="flex items-center gap-2 bg-gradient-to-r from-violet-600/30 to-indigo-600/30 border border-violet-500/30 text-violet-300 px-3 py-2 rounded-xl text-xs font-medium hover:bg-violet-500/20 transition-all shadow-md" title="Assistant IA Coory">
+                        <svg class="w-4 h-4 text-violet-400 motion-safe:animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <span>Assistant IA</span>
+                    </button>
+
+                    <!-- Cloche de Notifications -->
+                    <button class="relative p-2.5 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 transition-all" title="Notifications" aria-label="Notifications, 6 à voir">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span aria-hidden="true" class="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-mono leading-4 text-center">6</span>
+                    </button>
+
+                    <!-- « Créer » : le rouge de marque d'Antonino (Gemini : blanc). -->
+                    <button class="bg-[#e11d35] text-white hover:bg-[#c8182e] px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition-all">+ Créer</button>
+                </div>
+            </header>
+
+            <!-- Grille Supérieure : Prochaine séance, Tâches et Encaissé -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                <!-- Prochaine séance -->
+                <section class="glass-card p-5 rounded-3xl flex flex-col justify-between" aria-label="Prochaine séance">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-mono uppercase tracking-widest text-zinc-400">Prochaine séance</span>
+                            <span class="flex items-center gap-2">
+                                <span class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 motion-safe:animate-pulse"></span> demain
+                                </span>
+                                <span class="text-[10px] font-mono text-zinc-400">1 / 6</span>
+                            </span>
+                        </div>
+                        <div class="text-3xl font-extrabold text-white">07:00</div>
+                        <div class="text-sm font-semibold text-zinc-200 mt-1">Nadia El Amrani</div>
+                        <div class="text-xs text-zinc-400 mt-0.5">Coaching force · 60 min · Salle de sport</div>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 mt-4">
+                        <div class="flex gap-2">
+                            <span class="bg-white/5 border border-white/10 text-zinc-300 text-[11px] px-2.5 py-1 rounded-lg">Musculation</span>
+                            <span class="bg-white/5 border border-white/10 text-zinc-300 text-[11px] px-2.5 py-1 rounded-lg">Individuelle</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button aria-label="Ouvrir la séance" class="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 transition-all">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17L17 7M8 7h9v9"/></svg>
+                            </button>
+                            <button aria-label="Écrire à Nadia El Amrani" class="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 transition-all">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h5m-9 6l2.2-3.3A8 8 0 1112 20a8 8 0 01-4.2-1.2L4 20z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tâches à faire -->
+                <section class="glass-card p-5 rounded-3xl flex flex-col justify-between" aria-labelledby="t-tasks">
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 id="t-tasks" class="text-xs font-bold text-white uppercase tracking-wider">Tâches à faire</h2>
+                            <span class="bg-amber-500/10 text-amber-400 text-[10px] font-mono px-2 py-0.5 rounded-md border border-amber-500/20"><span class="sr-only">Tâches à faire : </span>2</span>
+                        </div>
+                        <div class="space-y-2.5 text-xs">
+                            <label class="flex items-start gap-2.5 cursor-pointer text-zinc-200">
+                                <input type="checkbox" class="mt-0.5 rounded bg-zinc-900 border-zinc-700 text-zinc-400 focus:ring-0">
+                                <span><span class="text-rose-400" aria-hidden="true">! </span><span class="sr-only">Urgent : </span>Préparer le bloc 2 du programme de Lucas <span class="block text-[10px] text-zinc-400"><span class="text-rose-400">En retard</span> · Lucas Janssens</span></span>
+                            </label>
+                            <label class="flex items-start gap-2.5 cursor-pointer text-zinc-200">
+                                <input type="checkbox" class="mt-0.5 rounded bg-zinc-900 border-zinc-700 text-zinc-400 focus:ring-0">
+                                <span>Relancer Sophie pour la facture d'octobre <span class="text-zinc-400 block text-[10px]">Mar 3 · Sophie Lambert</span></span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Encaissé -->
+                <section class="glass-card p-5 rounded-3xl flex flex-col justify-between" aria-label="Encaissé cette semaine">
+                    <div>
+                        <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">Encaissés cette semaine</span>
+                        <div class="text-3xl font-extrabold text-white mt-2">3&nbsp;457,30&nbsp;€</div>
+                        <p class="text-[11px] text-zinc-400 mt-1">2&nbsp;857,27&nbsp;€ HTVA · 6 paiements</p>
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] px-2.5 py-1 rounded-lg font-medium">1&nbsp;008,80&nbsp;€ prévus (13 séances)</span>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Grille Principale : Agenda + Séances à venir, Programmes en cours, Activité financière -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+
+                <!-- Agenda de la semaine -->
+                <section class="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4 min-w-0" aria-labelledby="t-agenda">
+                    <div class="flex justify-between items-center gap-3">
+                        <div>
+                            <h2 id="t-agenda" class="text-xs font-bold text-white uppercase tracking-wider">Semaine du 26 octobre au 1 novembre</h2>
+                            <p class="text-[11px] text-zinc-400">31 h de coaching cette semaine · 30 séances</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-xs font-mono bg-white/5 px-3 py-1 rounded-xl border border-white/10 text-zinc-300"><span class="hidden lg:inline">Oct. – nov. 2026</span><span class="lg:hidden">Oct. – nov.</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Vues et filtres (gardés de Coory, au style de Gemini) -->
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <button aria-label="Semaine précédente" class="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                            <button aria-label="Semaine suivante" class="p-2 rounded-xl bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+                            <div id="views" role="group" aria-label="Vue" class="flex bg-black/30 border border-white/5 rounded-xl p-1 text-xs font-medium">
+                                <button data-view="jour" aria-pressed="false" class="px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition-all">Aujourd'hui</button>
+                                <button data-view="semaine" aria-pressed="true" class="px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition-all">Semaine</button>
+                                <button data-view="mois" aria-pressed="false" class="px-3 py-1 rounded-lg text-zinc-400 hover:text-white transition-all">Mois</button>
+                            </div>
+                        </div>
+                        <a href="#" class="hidden lg:inline text-[10px] text-zinc-400 hover:text-white">Agenda →</a>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div id="filters" role="group" aria-label="Séances affichées" class="flex gap-2 text-xs font-medium">
+                            <button data-filter="toutes" aria-pressed="true" class="px-3 py-1 rounded-full border border-white/10 text-zinc-400 hover:text-white transition-all">Toutes</button>
+                            <button data-filter="individuelles" aria-pressed="false" class="px-3 py-1 rounded-full border border-white/10 text-zinc-400 hover:text-white transition-all">Individuelles</button>
+                            <button data-filter="collectives" aria-pressed="false" class="px-3 py-1 rounded-full border border-white/10 text-zinc-400 hover:text-white transition-all">Collectives</button>
+                        </div>
+                        <div class="ml-auto flex flex-wrap gap-3 text-[10px] text-zinc-400">
+                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-indigo-500/40 border border-indigo-400"></span>Running</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-amber-500/40 border border-amber-400"></span>Musculation</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-violet-500/40 border border-violet-400"></span>Hyrox</span>
+                            <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-emerald-500/40 border border-emerald-400"></span>Hybride</span>
+                        </div>
+                    </div>
+
+                    <!-- Grille de la semaine, du lundi au dimanche -->
+                    <div id="board" class="relative overflow-x-auto pb-2"></div>
+
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-zinc-500">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-white/5 border border-white/10"></span>Individuelle</span>
+                        <span class="flex items-center gap-1.5"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.4-1.8M17 20H7m10 0v-2c0-.7-.1-1.3-.4-1.8M7 20H2v-2a3 3 0 015.4-1.8M7 20v-2c0-.7.1-1.3.4-1.8m0 0a5 5 0 019.2 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Collective</span>
+                        <span class="lg:hidden">Glisse pour changer de jour</span>
+                        <span class="hidden lg:inline">7 jours · 16 heures visibles</span>
+                        <span class="ml-auto font-mono">06:00 – 22:00</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-black/30 border border-white/5 rounded-2xl p-2.5">
+                            <div class="font-bold text-white text-sm">1</div>
+                            <div class="text-[10px] text-zinc-400">coaching aujourd'hui · 0 terminé, 1 à venir</div>
+                        </div>
+                        <div class="bg-black/30 border border-white/5 rounded-2xl p-2.5">
+                            <div class="font-bold text-white text-sm">31 h</div>
+                            <div class="text-[10px] text-zinc-400">de coaching cette semaine · 30 séances</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Colonne de droite -->
+                <div class="space-y-4">
+
+                    <!-- Séances à venir -->
+                    <section class="glass-card p-5 rounded-3xl space-y-3" aria-labelledby="t-upcoming">
+                        <div class="flex justify-between items-center">
+                            <h2 id="t-upcoming" class="text-xs font-bold text-white uppercase tracking-wider">Séances à venir</h2>
+                            <a href="#" class="text-[10px] text-zinc-400 hover:text-white">Voir tout</a>
+                        </div>
+                        <div class="space-y-2.5 text-xs text-zinc-300">
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                                <div class="flex justify-between font-bold text-white"><span>Demain 07:00</span> <span class="text-amber-400 font-normal text-[10px]">Musculation</span></div>
+                                <p class="text-zinc-400 text-[11px]">Nadia El Amrani · Coaching force</p>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                                <div class="flex justify-between font-bold text-white"><span>Demain 08:15</span> <span class="text-amber-400 font-normal text-[10px]">Musculation</span></div>
+                                <p class="text-zinc-400 text-[11px]">Yanis Khelifi · Coaching force</p>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                                <div class="flex justify-between font-bold text-white"><span>Demain 12:15</span> <span class="text-indigo-400 font-normal text-[10px]">Running</span></div>
+                                <p class="text-zinc-400 text-[11px]">Emma Laurent · Renfo coureur</p>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                                <div class="flex justify-between font-bold text-white"><span>Demain 17:30</span> <span class="text-emerald-400 font-normal text-[10px]">Hybride</span></div>
+                                <p class="text-zinc-400 text-[11px]">Lucas Janssens · Coaching hybride</p>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+                                <div class="flex justify-between font-bold text-white"><span>Demain 19:00</span> <span class="text-violet-400 font-normal text-[10px]">Hyrox</span></div>
+                                <p class="text-zinc-400 text-[11px]">Small group Hyrox · Collective · 2 inscrits</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Programmes en cours -->
+                    <section class="glass-card p-5 rounded-3xl space-y-3" aria-labelledby="t-programs">
+                        <div class="flex justify-between items-center">
+                            <h2 id="t-programs" class="text-xs font-bold text-white uppercase tracking-wider">Programmes en cours</h2>
+                            <a href="#" class="text-[10px] text-zinc-400 hover:text-white">Voir tous les programmes</a>
+                        </div>
+                        <div class="space-y-2.5 text-xs text-zinc-300">
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 flex items-center gap-3">
+                                <img src="../../../supabase/seed-photos/ines.jpg" alt="" class="w-7 h-7 rounded-full object-cover">
+                                <div class="min-w-0 flex-1"><div class="font-bold text-white">Inès Benali</div><p class="text-zinc-400 text-[11px] truncate">Prépa Hyrox Bruxelles · bloc 1</p></div>
+                                <div class="text-right space-y-1"><div class="text-[10px] font-mono text-zinc-400">Sem. 1/12</div><div class="w-14 h-1 rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[8.33%] bg-zinc-300 rounded-full"></div></div></div>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 flex items-center gap-3">
+                                <div class="w-7 h-7 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center font-bold text-[10px]">AM</div>
+                                <div class="min-w-0 flex-1"><div class="font-bold text-white">Antoine Maes</div><p class="text-zinc-400 text-[11px] truncate">Programme renforcement · bloc 1</p></div>
+                                <div class="text-right space-y-1"><div class="text-[10px] font-mono text-zinc-400">Sem. 1/12</div><div class="w-14 h-1 rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[8.33%] bg-zinc-300 rounded-full"></div></div></div>
+                            </div>
+                            <div class="p-2.5 rounded-2xl bg-black/30 border border-white/5 flex items-center gap-3">
+                                <div class="w-7 h-7 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center font-bold text-[10px]">CR</div>
+                                <div class="min-w-0 flex-1"><div class="font-bold text-white">Camille Renard</div><p class="text-zinc-400 text-[11px] truncate">Programme running · bloc 1</p></div>
+                                <div class="text-right space-y-1"><div class="text-[10px] font-mono text-zinc-400">Sem. 1/12</div><div class="w-14 h-1 rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[8.33%] bg-zinc-300 rounded-full"></div></div></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Activité financière -->
+                    <section class="glass-card p-5 rounded-3xl space-y-3" aria-labelledby="t-money">
+                        <div class="flex justify-between items-center">
+                            <h2 id="t-money" class="text-xs font-bold text-white uppercase tracking-wider">Activité financière</h2>
+                            <a href="#" class="text-[10px] text-zinc-400 hover:text-white">Voir tout</a>
+                        </div>
+                        <div class="space-y-2 text-xs text-zinc-300">
+                            <div class="flex justify-between items-center py-1 border-b border-white/5">
+                                <div><span class="text-zinc-400">0 facture envoyée</span><span class="text-[10px] text-zinc-500 block">Ce mois-ci</span></div>
+                                <span class="font-bold text-white">0,00&nbsp;€</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-b border-white/5">
+                                <div><span class="text-zinc-400">0 paiement reçu</span><span class="text-[10px] text-zinc-500 block">Ce mois-ci</span></div>
+                                <span class="font-bold text-emerald-400">0,00&nbsp;€</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1">
+                                <div><span class="text-rose-400 font-medium">1 paiement en attente</span><span class="text-[10px] text-zinc-500 block">En retard</span></div>
+                                <span class="font-mono font-bold text-rose-400">150,00&nbsp;€</span>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Téléphone : « Créer » à portée de pouce (rouge de marque). -->
+    <button class="lg:hidden fixed right-4 bottom-5 z-30 bg-[#e11d35] text-white hover:bg-[#c8182e] px-5 py-3.5 rounded-2xl text-sm font-semibold shadow-lg">+ Créer</button>
+
+<script>
+    // Semaine du 26 octobre au 1 novembre (base de démonstration locale, coach A) :
+    // [début, durée en minutes, discipline, titre, collective, sous-titre]
+    const days = [["Lun", 26], ["Mar", 27], ["Mer", 28], ["Jeu", 29], ["Ven", 30], ["Sam", 31], ["Dim", 1]];
+    const S = {
+        Lun: [["07:00", 60, "str", "Nadia El Amrani"], ["08:15", 60, "str", "Yanis Khelifi"], ["12:15", 60, "run", "Emma Laurent"], ["17:30", 60, "hyb", "Lucas Janssens"], ["19:00", 60, "hyr", "Small group Hyrox", true], ["20:15", 60, "str", "Manon"]],
+        Mar: [["07:00", 60, "hyr", "Inès Benali"], ["08:15", 60, "str", "Chloé Martin"], ["12:15", 60, "run", "Thomas Peeters"], ["13:30", 60, "str", "Antoine Maes"], ["14:45", 60, "hyr", "Mehdi Ouali"], ["16:00", 60, "hyb", "Maxime Leroy"], ["17:15", 60, "str", "Sophie Lambert"], ["18:30", 60, "str", "Nadia El Amrani"]],
+        Mer: [["12:15", 60, "hyr", "Léa Vandenberghe"], ["17:30", 60, "str", "Manon"], ["19:00", 90, "run", "Piste du mercredi", true]],
+        Jeu: [["07:00", 60, "str", "Nadia El Amrani"], ["08:15", 60, "str", "Chloé Martin"], ["12:15", 60, "run", "Thomas Peeters"], ["17:00", 60, "hyb", "Maxime Leroy"], ["18:00", 60, "str", "Sophie Lambert"], ["19:00", 60, "hyr", "Small group Hyrox", true]],
+        Ven: [["07:00", 60, "str", "Mobilité & gainage", true], ["08:15", 60, "str", "Yanis Khelifi"], ["12:15", 60, "run", "Emma Laurent"], ["16:15", 60, "hyb", "Lucas Janssens"]],
+        Sam: [["08:30", 90, "run", "Run club du samedi", true, "Collective · 3 inscrits"], ["10:00", 75, "hyr", "Circuit Hyrox du samedi", true]],
+        Dim: [["09:00", 45, "run", "Thomas Peeters"]],
+    };
+    // Couleurs de Gemini (indigo, ambre, émeraude) + violet pour l'Hyrox. Classes écrites en entier pour Tailwind.
+    const pill = {
+        run: "bg-indigo-500/15 border border-indigo-500/30 text-indigo-300",
+        str: "bg-amber-500/15 border border-amber-500/30 text-amber-300",
+        hyb: "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300",
+        hyr: "bg-violet-500/15 border border-violet-500/30 text-violet-300",
+    };
+    const dot = { run: "bg-indigo-400", str: "bg-amber-400", hyb: "bg-emerald-400", hyr: "bg-violet-400" };
+    const usersIcon = '<svg class="inline w-3 h-3 -mt-0.5 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-label="Collective"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.4-1.8M17 20H7m10 0v-2c0-.7-.1-1.3-.4-1.8M7 20H2v-2a3 3 0 015.4-1.8M7 20v-2c0-.7.1-1.3.4-1.8m0 0a5 5 0 019.2 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+    const end = (t, m) => { const [h, mi] = t.split(":").map(Number); const x = h * 60 + mi + m; return `${String(Math.floor(x / 60)).padStart(2, "0")}:${String(x % 60).padStart(2, "0")}`; };
+    const total = (m) => `${Math.floor(m / 60)}h${m % 60 ? String(m % 60).padStart(2, "0") : ""}`;
+    const state = { view: "semaine", filter: "toutes" };
+    const keep = (s) => state.filter === "toutes" || (state.filter === "collectives" ? s[4] : !s[4]);
+    const board = document.getElementById("board");
+
+    const dayHtml = ([d, n]) => {
+        const list = S[d].filter(keep);
+        const mins = list.reduce((a, s) => a + s[1], 0);
+        const today = d === "Dim";
+        return `<div class="${today ? "bg-white/[0.04] border-white/15" : "bg-black/30 border-white/5"} border rounded-2xl p-2.5 space-y-2">
+            <div class="${today ? "text-white" : "text-zinc-400"} font-mono text-[10px] uppercase">${d} ${n}${today ? '<span class="sr-only"> (aujourd\'hui)</span>' : ""}</div>
+            <div class="font-bold text-white text-sm">${total(mins)} total</div>
+            <div class="space-y-1.5 pt-1 text-[10px]">
+                ${list.map(([t, m, disc, title, group, sub]) => `<div class="${pill[disc]} p-1.5 rounded-xl font-medium" title="${t} – ${end(t, m)} · ${title}">${group ? usersIcon : ""}${t} ${title}${sub ? `<span class="block text-zinc-400 font-normal">${sub}</span>` : ""}<span class="sr-only"> jusqu'à ${end(t, m)}</span></div>`).join("")}
+            </div>
+        </div>`;
+    };
+    const weekday = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+    // Mois : novembre 2026. Les 29 séances régulières se répètent chaque semaine depuis septembre (sans fin,
+    // sans exception) ; celle du dimanche 1er novembre est ponctuelle.
+    const monthHtml = () => {
+        let html = weekday.map((w) => `<div class="text-zinc-400 font-mono text-[10px] uppercase pb-1">${w}</div>`).join("");
+        const first = new Date(2026, 9, 26);
+        for (let i = 0; i < 42; i++) {
+            const date = new Date(first); date.setDate(first.getDate() + i);
+            const wd = weekday[(date.getDay() + 6) % 7];
+            let list = S[wd].filter(keep);
+            if (wd === "Dim") list = date.getMonth() === 10 && date.getDate() === 1 ? list : [];
+            const inMonth = date.getMonth() === 10;
+            const isToday = inMonth && date.getDate() === 1;
+            html += `<div class="${isToday ? "bg-white/[0.04] border-white/15" : "bg-black/30 border-white/5"} border rounded-2xl p-2 min-h-16 text-left space-y-1 ${inMonth ? "" : "opacity-40"}">
+                <div class="font-bold text-white text-[11px]">${date.getDate()}</div>
+                ${list.length ? `<div class="text-zinc-400 font-mono text-[10px]">${total(list.reduce((a, s) => a + s[1], 0))}</div><div class="flex flex-wrap gap-0.5">${list.map((s) => `<span class="w-1.5 h-1.5 rounded-full ${dot[s[2]]}"></span>`).join("")}</div>` : ""}
+            </div>`;
+        }
+        return `<div class="grid grid-cols-7 gap-2 min-w-[700px] text-center text-xs" aria-label="Novembre 2026">${html}</div>`;
+    };
+    function render() {
+        if (state.view === "mois") { board.innerHTML = monthHtml(); return; }
+        const list = state.view === "jour" ? days.filter(([d]) => d === "Dim") : days;
+        board.innerHTML = `<div class="grid ${state.view === "jour" ? "grid-cols-1" : "grid-cols-7 min-w-[700px]"} gap-2 text-center text-xs">${list.map(dayHtml).join("")}</div>`;
+        // Téléphone : la semaine s'ouvre sur les derniers jours (vue « 3 jours » de l'app).
+        if (state.view === "semaine") requestAnimationFrame(() => { board.scrollLeft = board.scrollWidth; });
+    }
+    const active = ["bg-white/10", "text-white", "shadow-inner"];
+    const press = (group, attr, value) => group.querySelectorAll("button").forEach((b) => {
+        const on = b.dataset[attr] === value;
+        b.setAttribute("aria-pressed", String(on));
+        active.forEach((c) => b.classList.toggle(c, on));
+        b.classList.toggle("text-zinc-400", !on);
+    });
+    const views = document.getElementById("views");
+    const filters = document.getElementById("filters");
+    views.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state.view = b.dataset.view; press(views, "view", state.view); render(); });
+    filters.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state.filter = b.dataset.filter; press(filters, "filter", state.filter); render(); });
+    press(views, "view", state.view);
+    press(filters, "filter", state.filter);
+    render();
+    document.fonts?.ready.then(() => { if (state.view === "semaine") board.scrollLeft = board.scrollWidth; });
+</script>
+</body>
+</html>

@@ -5,12 +5,14 @@ import type { CSSProperties, ReactNode } from "react";
 // Carte / bloc (prompt Claude Design §4 « Card / Block ») : fond surface, filet de 1 px, rayon 20,
 // marge intérieure 18, écart 14. En-tête : titre 18/600 en Space Grotesk, sous-titre 13 gris, lien
 // d'action 13 gris souligné à droite. Jamais d'ombre.
+// `compact` (maquette v6, D-77) : marge intérieure 20, titre 13/500, lien 12 violet sans soulignement.
 export function Card({
   id,
   title,
   subtitle,
   action,
   headingLevel = 2,
+  compact = false,
   className = "",
   children,
 }: {
@@ -20,6 +22,7 @@ export function Card({
   subtitle?: ReactNode;
   action?: { href: string; label: string };
   headingLevel?: 2 | 3;
+  compact?: boolean;
   className?: string;
   children?: ReactNode;
 }) {
@@ -27,13 +30,22 @@ export function Card({
   return (
     <section
       aria-labelledby={id && title ? id : undefined}
-      className={`flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] ${className}`}
+      className={`flex min-w-0 flex-col rounded-card border border-line bg-surface ${
+        compact ? "gap-2 p-5" : "gap-3.5 p-[18px]"
+      } ${className}`}
     >
       {title || action ? (
-        <header className="flex items-start justify-between gap-4">
+        <header
+          className={`flex justify-between gap-4 ${compact ? "items-center" : "items-start"}`}
+        >
           <div className="flex min-w-0 flex-col gap-1">
             {title ? (
-              <Heading id={id} className="font-display text-block font-semibold">
+              <Heading
+                id={id}
+                className={
+                  compact ? "text-[13px] font-medium" : "font-display text-block font-semibold"
+                }
+              >
                 {title}
               </Heading>
             ) : null}
@@ -42,7 +54,11 @@ export function Card({
           {action ? (
             <Link
               href={action.href}
-              className="shrink-0 border-b border-accent-line pb-px text-[13px] text-accent-text transition-colors duration-150 hover:text-text"
+              className={
+                compact
+                  ? "shrink-0 text-[12px] text-violet-text transition-opacity duration-150 hover:opacity-80"
+                  : "shrink-0 border-b border-accent-line pb-px text-[13px] text-accent-text transition-colors duration-150 hover:text-text"
+              }
             >
               {action.label}
             </Link>

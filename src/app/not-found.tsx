@@ -7,7 +7,7 @@ export default function NotFound() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="px-5 py-5 sm:px-8">
-        <CooryLogo size={24} />
+        <CooryLogo size={17} />
       </header>
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 px-5 pb-24">
         <p className="text-[13px] font-semibold tracking-[0.08em] text-accent-text uppercase">

@@ -32,6 +32,85 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Vue Mois, changement de période au doigt, recherche du menu (D-77, suite)
+```
+Date : 2026-11-01
+Demandes d'Antonino : finir le tableau de bord (vue Mois dans le style v6) ; sur téléphone, changer de
+  jour, de semaine et de mois en glissant le doigt ; pas d'heures dans les jours du mois sur téléphone ;
+  recherche du menu téléphone au même cadre que la page sélectionnée.
+Fait : month-grid.tsx refait (aussi sur la page Agenda) ; swipe-nav.tsx (nouveau : la vue suit le doigt
+  avec résistance, seuil 64 px ou geste vif, jamais pendant un glisser-déposer de séance, pan-y et zoom
+  laissés au navigateur) ; week-grid.tsx : jour d'ouverture (focus) et grille qui repart à chaque nouvelle
+  période (le défilement restait sur l'ancienne position, aussi avec les flèches) ; mobile-bar.tsx :
+  recherche à 44 px (elle se tassait à 37 px dans le menu qui défile) ; cases du mois à 96 px sur
+  ordinateur (sinon la colonne de droite, calée sur la hauteur de l'agenda, était coupée).
+Tests : lint, typecheck ; nouveau test e2e téléphone des glissés (jour, mois, semaine depuis les deux
+  bords) ; vérifs au navigateur (gestes tactiles simulés, captures téléphone/ordinateur, sombre/clair) ;
+  e2e agenda, agenda interactif, séances, fiche sportif, design, tâches : 48 passés, 6 ignorés (propres à
+  un profil), 2 échecs connus et sans lien (fiche sportif : « Sam 31 » attendu, « Hier » affiché le 01/11,
+  test lié à la date) ; Vitest 278/278.
+```
+
+### Agenda du tableau de bord en grille, défilement commun 00:00 - 24:00 (D-77, suite)
+```
+Date : 2026-11-01
+Demandes d'Antonino, dans l'ordre : les cases qui défilent chacune seule montraient trop de chiffres
+  (les heures dans chaque case) -> tous les jours défilent ensemble ; puis les cases ne lui plaisent pas
+  sur téléphone -> GRILLE sur ordinateur et téléphone, avec un petit contraste entre les jours.
+Fait : week-cases.tsx remplacé par week-grid.tsx (WeekGrid) : un seul conteneur qui défile (en-tête des
+  jours collé en haut, totaux collés en bas, marge des heures collée à gauche), journée complète,
+  ouverture sur la plage du réglage avec un quart d'heure d'air ; jeton --day-alt (un jour sur deux) ;
+  grid-interactions.tsx et scroll-to-day.tsx revenus à l'identique (le défilement près des bords pendant
+  un glisser existait déjà pour la grille de l'Agenda).
+Tests : lint, typecheck ; test e2e du défilement adapté (ouverture à 06:00, la molette fait défiler
+  toute la semaine jusqu'à minuit, créneau à 02:00) ; e2e agenda, agenda interactif, séances, design,
+  tâches : 44 passés, 4 ignorés (propres à un profil) ; Vitest 278/278.
+```
+
+### Agenda en cases : chaque jour défile seul, de minuit à minuit (D-77, suite) ; favicon
+```
+Date : 2026-11-01
+Demande d'Antonino : pouvoir programmer de 00:00 à 23:59 dans l'agenda du tableau de bord, chaque case
+  (chaque jour) défilant indépendamment ; choix : les heures écrites dans chaque case (plus de colonne
+  commune), Matin / Midi / Après-midi / Soir en fins séparateurs.
+Fait : week-cases.tsx (case = 24 h, ouverte sur la plage du réglage), DayScroll (scroll-to-day.tsx),
+  défilement de la case près de ses bords pendant un glisser (grid-interactions.tsx). Favicon : la
+  première boucle avait perdu sa couleur dans le fichier du kit, elle est blanche (icon.svg,
+  public/brand/favicon.svg, favicon.ico régénéré).
+Tests : lint, typecheck ; nouveau test e2e (ouverture à 06:00, la molette ne fait défiler qu'une case,
+  créneau à 02:00) ; essai réel d'un glisser vers 05:00 (séance d'essai supprimée) ; e2e agenda,
+  agenda interactif, séances, design, tâches : 44 passés, 4 ignorés (propres à un profil) ; Vitest 278/278.
+```
+
+### Charte « Noir, blanc et violet » sur le tableau de bord (D-77, étape 1)
+```
+Date : 2026-11-01
+Demande d'Antonino : appliquer la maquette v6 validée (docs/design/maquettes/tableau-de-bord-v6-violet.html)
+  au tableau de bord de la vraie app d'abord ; agenda en cases seulement ; Séances à venir en petites cartes.
+Fait : jetons (src/styles/tokens.css réécrit, anciens noms gardés), Plus Jakarta Sans, logo du kit
+  (public/brand, icon.svg, favicon.ico, apple-icon.png, manifest.ts), menu et en-tête en cartes flottantes,
+  CountBadge, AssistantButton violet, NextSessionCard (contour violet, photo du sportif), Tâches et Encaissé,
+  WeekCases (nouveau, mêmes interactions que la grille : créneau vide, glisser-déposer), barre de l'agenda
+  et filtres en petite taille, colonne de droite (Card compact, Avatar 2xs, FinanceRow).
+Tests : lint, typecheck, Vitest 278/278 ; e2e agenda, agenda interactif, séances, tâches, design,
+  inscription, comptabilité, factures, audit UX : 75 passés, 5 ignorés (propres à un profil). Le test de
+  l'agenda interactif lit maintenant la plage horaire dans la grille (06:00 - 22:00) au lieu de supposer 24 h.
+Captures : téléphone 390 et ordinateur 1440, sombre et clair, sans débordement horizontal.
+Limites : les autres pages gardent leur mise en page (elles prennent déjà les nouvelles couleurs et la
+  police par les jetons) ; la page Agenda a encore la grille 24 h.
+Suite : étape 2 (le reste de l'app via le design system), si Antonino valide le tableau de bord.
+```
+
+### Audit du design (refonte, étape 1)
+```
+Date : 2026-11-01
+Demande d'Antonino : l'app « ressemble à toutes les autres faites par toi » ; refonte de l'identité en
+  4 étapes (audit, 2-3 directions, jetons et composants, écrans). Étape 1 faite avec toutes les
+  compétences de design : docs/design/AUDIT_DESIGN_2026-11-01.md (10 écrans, téléphone et ordinateur,
+  sombre et clair ; signes génériques mesurés dans le code ; sensation native ; finitions ; priorités).
+  Aucun code modifié. Suite : étape 2 (directions d'identité, hors de l'app), au choix d'Antonino.
+```
+
 ### Mobilité visible, consignes Hyrox de Coory, maquettes de la fiche (D-75, suite)
 ```
 Date : 2026-10-31

@@ -1,5 +1,5 @@
 // Boutons du design system Coory (prompt Claude Design §4) : aplats, sans dégradé ni ombre, uniquement
-// des jetons. primary = action principale (OR, UNE seule par écran) · inverse = action forte neutre
+// des jetons. primary = action principale (blanc / noir, UNE seule par écran) · inverse = action forte neutre
 // (clair sur sombre) · outline = action secondaire · ghost = action discrète (Annuler).
 // Tailles : sm 36 px · md 44 px (cible tactile minimale) · lg 54 px (pleine largeur sur téléphone).
 
@@ -11,7 +11,8 @@ const base =
   "inline-flex items-center justify-center gap-2 font-semibold whitespace-nowrap transition-[color,background-color,border-color,scale] duration-150 ease-coory active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-on-accent hover:bg-accent-hover disabled:hover:bg-accent",
+  // Action principale (D-77) : blanche en sombre, noire en clair, jamais violette.
+  primary: "bg-cta text-on-cta hover:bg-cta-hover disabled:hover:bg-cta",
   inverse: "bg-inv text-on-inv hover:bg-inv/85 disabled:hover:bg-inv",
   outline: "border border-line-2 text-text hover:bg-surface",
   ghost: "text-muted hover:bg-surface hover:text-text",

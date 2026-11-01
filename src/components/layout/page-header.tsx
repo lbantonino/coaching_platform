@@ -39,7 +39,8 @@ export function PageHeader({
   icon?: LucideIcon;
 }) {
   return (
-    <header className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 pt-4 pb-1 lg:flex-nowrap lg:px-8 lg:pt-[17px]">
+    // Ordinateur (maquette v6, D-77) : l'en-tête est une carte de 64 px (titre 15 px, outils à droite).
+    <header className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 pt-4 pb-1 lg:mx-8 lg:mt-3 lg:min-h-16 lg:flex-nowrap lg:rounded-[20px] lg:border lg:border-line lg:bg-surface lg:px-5 lg:py-3">
       {/* Page de détail (avec retour) : le lien de retour au-dessus, puis la ligne du titre, dont la
           phrase (pastilles d'une fiche sportif…) peut passer à la ligne. */}
       <div
@@ -62,14 +63,14 @@ export function PageHeader({
                     aria-hidden
                     size={22}
                     strokeWidth={1.8}
-                    className="shrink-0 text-muted max-lg:hidden"
+                    className="hidden"
                   />
                 );
               })()
             ) : (
               <PageIcon />
             )}
-            <h1 className="min-w-0 font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] break-words lg:text-[26px] lg:whitespace-nowrap">
+            <h1 className="min-w-0 font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] break-words lg:text-[15px] lg:tracking-tight lg:whitespace-nowrap">
               {title}
             </h1>
             {titleAside}

@@ -21,6 +21,6 @@ export function PageIcon() {
       .sort((a, b) => b.href.length - a.href.length)[0];
   const Icon: LucideIcon | undefined = found?.icon;
   return Icon ? (
-    <Icon aria-hidden size={22} strokeWidth={1.8} className="shrink-0 text-muted max-lg:hidden" />
+    <Icon aria-hidden size={22} strokeWidth={1.8} className="hidden" />
   ) : null;
 }

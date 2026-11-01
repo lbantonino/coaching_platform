@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 
 import type { SessionException, SessionKind, SessionPaymentMethod } from "./schemas";
 
-export type SessionAthlete = { id: string; name: string };
+// photoPath : photo de profil (stockage privé), pour la carte « Prochaine séance » (D-77).
+export type SessionAthlete = { id: string; name: string; photoPath?: string | null };
 
 export type CoachSession = {
   id: string;
@@ -37,11 +38,16 @@ export type CoachSession = {
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
 const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes,
   repeats_weekly, ends_on, notes, price_cents, price_vat_included, currency, payment_method,
-  individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name ),
-  enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name ) ),
+  individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ),
+  enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ) ),
   exceptions:coach_session_exceptions ( original_date, new_date, new_start_time )`;
 
-type Profile = { id: string; first_name: string; display_name: string | null } | null;
+type Profile = {
+  id: string;
+  first_name: string;
+  display_name: string | null;
+  photo_path: string | null;
+} | null;
 type Row = {
   id: string;
   kind: string;
@@ -67,6 +73,7 @@ type Row = {
 const toAthlete = (profile: NonNullable<Profile>): SessionAthlete => ({
   id: profile.id,
   name: profile.display_name ?? profile.first_name,
+  photoPath: profile.photo_path,
 });
 
 function toSession(row: Row): CoachSession {

@@ -2,7 +2,8 @@
 @import "../styles/tokens.css";
 
 /*
- * Design system Coory, version rouge (COORY_DESIGN_SYSTEM.md, à la racine du projet).
+ * Design system Coory « Noir, blanc et violet » (D-77, 01/11/2026 ; maquette docs/design/maquettes/
+ * tableau-de-bord-v6-violet.html).
  * Les couleurs vivent dans src/styles/tokens.css ; ici, on les rend utilisables comme classes Tailwind
  * (bg-surface, text-accent-text, bg-inv…), avec les rayons et l'échelle typographique.
  * « inline » : la classe lit la variable CSS au moment de l'affichage, donc le thème clair s'applique partout.
@@ -40,6 +41,21 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-logo-loop: var(--logo-loop);
+  /* Noir, blanc et violet (D-77, 01/11/2026) : violet de marque, action principale, assistant IA. */
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-soft-2: var(--violet-soft-2);
+  --color-violet-line: var(--violet-line);
+  --color-violet-text: var(--violet-text);
+  --color-violet-ring: var(--violet-ring);
+  --color-today-col: var(--today-col);
+  --color-day-alt: var(--day-alt);
+  --color-ai-bg: var(--ai-bg);
+  --color-ai-border: var(--ai-border);
+  --color-ai-text: var(--ai-text);
+  --color-cta: var(--cta);
+  --color-cta-hover: var(--cta-hover);
+  --color-on-cta: var(--on-cta);
   /* Graphite & Or (29/10/2026) : champs, avatars, filets doux, erreur. */
   --color-field: var(--field);
   --color-avatar: var(--avatar);
@@ -59,6 +75,15 @@
   --color-hyrox-soft: var(--hyrox-soft);
   --color-hybrid: var(--hybrid);
   --color-hybrid-soft: var(--hybrid-soft);
+  /* Aplat d'une séance de chaque discipline et son texte (agenda). */
+  --color-run-fill: var(--run-fill);
+  --color-on-run-fill: var(--on-run-fill);
+  --color-strength-fill: var(--strength-fill);
+  --color-on-strength-fill: var(--on-strength-fill);
+  --color-hyrox-fill: var(--hyrox-fill);
+  --color-on-hyrox-fill: var(--on-hyrox-fill);
+  --color-hybrid-fill: var(--hybrid-fill);
+  --color-on-hybrid-fill: var(--on-hybrid-fill);
   /* Teintes des icônes de chiffres clés (D-24) */
   --color-blue: var(--blue);
   --color-blue-soft: var(--blue-soft);
@@ -72,12 +97,13 @@
   --color-male: var(--male);
   --color-male-soft: var(--male-soft);
 
-  --font-display:
-    var(--font-inter-tight), system-ui, sans-serif; /* titres H1–H3, grands chiffres (Inter Tight, 29/10/2026) */
-  --font-sans: var(--font-inter-tight), system-ui, sans-serif;
-  /* Le logo « C∞ry » garde sa police (la marque). */
-  --font-logo: var(--font-space-grotesk), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Une seule police, Plus Jakarta Sans (D-77). « font-mono » garde son nom mais écrit aussi en
+     Plus Jakarta Sans, avec des chiffres alignés (voir .font-mono plus bas) : plus de police
+     « machine à écrire » (demande d'Antonino du 01/11/2026). */
+  --font-display: var(--font-jakarta), system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-logo: var(--font-jakarta), system-ui, sans-serif;
+  --font-mono: var(--font-jakarta), system-ui, sans-serif;
 
   /* Rayons (prompt §2) : 5 kbd · 7 / 10 petits contrôles · 12 contrôles (champs, boutons) · 14 boutons
      larges · 18 cartes chiffrées · 20 cartes et blocs · 20 pastilles · 22 feuilles du bas. */
@@ -142,7 +168,7 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-inter-tight), system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
   font-size: 15px; /* corps du prompt §2 */
   line-height: 1.5;
 }
@@ -198,12 +224,13 @@ body {
   }
 }
 
-/* Chiffres alignés dans les données (charges, séries, durées). */
-.tabular {
+/* Chiffres alignés dans les données (charges, séries, durées), et dans tout ce qui était en mono. */
+.tabular,
+.font-mono {
   font-variant-numeric: tabular-nums;
 }
 
-/* Focus clavier visible partout, au rouge de l'action (2 px, décalé de 2 px). Dans la couche « base » :
+/* Focus clavier visible partout, en violet (2 px, décalé de 2 px). Dans la couche « base » :
    les champs de formulaire (classe outline-none + bordure rouge au focus) gardent un seul contour. */
 @layer base {
   :focus-visible {
@@ -220,13 +247,13 @@ body {
 select:not([multiple]) {
   appearance: none;
   padding-right: 2.75rem;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9ca3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-position: right 14px center;
   background-repeat: no-repeat;
   background-size: 16px;
 }
 [data-theme="light"] select:not([multiple]) {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f6168' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364626e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 /*
@@ -282,4 +309,11 @@ select:not([multiple]) {
     justify-content: center;
     padding-inline: 0;
   }
+}
+
+/* Logo et icônes du kit de marque (D-77) : la version « fond sombre » en thème sombre, « fond clair » en
+   thème clair (src/components/ui/coory-logo.tsx). */
+[data-theme="light"] .brand-dark,
+:root:not([data-theme="light"]) .brand-light {
+  display: none;
 }

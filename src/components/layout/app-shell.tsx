@@ -23,7 +23,7 @@ export function AppShell({ value, children }: { value: ShellValue; children: Rea
       <div className="flex min-h-dvh flex-1">
         <aside
           data-app-sidebar=""
-          className="sticky top-0 hidden h-dvh w-[252px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-panel px-3.5 py-[22px] lg:flex"
+          className="sticky top-3 my-3 ml-3 hidden h-[calc(100dvh-24px)] w-[240px] shrink-0 flex-col gap-5 overflow-y-auto rounded-[20px] border border-line bg-panel px-4 pt-[30px] pb-4 lg:flex"
         >
           {/* Replié (29/10/2026, comme ChatGPT) : la boucle du logo seule et les icônes des pages. */}
           <div data-sidebar-head="" className="flex items-center justify-between gap-2 pb-1.5">
@@ -33,7 +33,7 @@ export function AppShell({ value, children }: { value: ShellValue; children: Rea
               data-logo-full=""
               className="w-fit rounded-sm px-2.5"
             >
-              <CooryLogo size={26} />
+              <CooryLogo size={15} />
             </Link>
             <HideSidebarButton />
             <ShowSidebarButton />

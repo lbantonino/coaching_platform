@@ -52,7 +52,7 @@ export function ShowSidebarButton() {
       className={`${buttonClass} group`}
     >
       <span className="inline-flex group-hover:hidden group-focus-visible:hidden">
-        <CooryLogo variant="symbol" size={14} />
+        <CooryLogo variant="symbol" size={16} />
       </span>
       <PanelLeftOpen
         aria-hidden
