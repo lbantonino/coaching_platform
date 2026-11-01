@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(16);
+select plan(17);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -25,14 +25,23 @@ insert into public.exercises (id, organization_id, name_fr, category, source) va
 select results_eq(
   $$ select visibility, count(*)::int from public.exercises where organization_id is null
      group by visibility order by visibility $$,
-  $$ values ('active'::text, 605), ('hidden', 142) $$,
-  'Le catalogue commun compte 605 exercices visibles et 142 masqués'
+  $$ values ('active'::text, 693), ('hidden', 54) $$,
+  'Le catalogue commun compte 693 exercices visibles et 54 masqués'
 );
 select results_eq(
   $$ select category, count(*)::int from public.exercises
      where organization_id is null and visibility = 'active' group by category order by category $$,
-  $$ values ('cardio'::text, 17), ('hyrox', 8), ('strength', 580) $$,
-  'Visibles : 580 en musculation, 17 en cardio, 8 en Hyrox (les 8 stations)'
+  $$ values ('cardio'::text, 17), ('hyrox', 8), ('mobility', 88), ('strength', 580) $$,
+  'Visibles : 580 en musculation, 17 en cardio, 8 en Hyrox (les 8 stations), 88 en mobilité'
+);
+-- Contenu écrit par Coory (31/10) : six consignes et les muscles principaux de ses trois exercices Hyrox.
+select results_eq(
+  $$ select key, cardinality(instructions_fr), primary_muscles from public.exercises
+     where key in ('sled-pull', 'burpee-broad-jump', 'sandbag-walking-lunge') order by key $$,
+  $$ values ('burpee-broad-jump'::text, 6, '{quadriceps,gluteus_maximus,chest,triceps_brachii}'::text[]),
+            ('sandbag-walking-lunge', 6, '{quadriceps,gluteus_maximus,hamstrings}'),
+            ('sled-pull', 6, '{latissimus_dorsi,trapezius,biceps_brachii,quadriceps}') $$,
+  'Sled pull, Burpee broad jump et Sandbag lunges ont leurs six consignes et leurs muscles principaux'
 );
 select results_eq(
   $$ select hyrox_station::int from public.exercises where hyrox_station is not null order by 1 $$,
@@ -62,7 +71,7 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';
 select is(
   (select count(*)::int from public.exercises where visibility = 'active'),
-  605, 'Le coach A lit le catalogue commun'
+  693, 'Le coach A lit le catalogue commun'
 );
 select is_empty(
   $$ select 1 from public.exercises where organization_id = 'bbbbbbbb-0000-4000-8000-000000000002' $$,

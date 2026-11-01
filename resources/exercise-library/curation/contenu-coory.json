@@ -1,0 +1,52 @@
+{
+  "_lisez_moi": "Contenu écrit par Coory pour ses propres exercices (Antonino, 31/10/2026), repris mot pour mot : ne pas reformuler, ne pas ajouter d'étape. Clé = clé du catalogue. Muscles principaux : codes de vocabulaires.json, un muscle (muscles) ou un groupe quand Antonino nomme un groupe (« Pectoraux » = chest).",
+  "items": {
+    "sled-pull": {
+      "primary_muscles": [
+        "latissimus_dorsi",
+        "trapezius",
+        "biceps_brachii",
+        "quadriceps"
+      ],
+      "instructions_fr": [
+        "Place-toi face au traîneau, debout dans la zone prévue, les pieds écartés à largeur d'épaules.",
+        "Saisis fermement la corde à deux mains, fléchis les genoux et abaisse légèrement les hanches.",
+        "Gaine le tronc et incline légèrement le buste vers l'arrière pour créer une position stable.",
+        "Tire la corde vers toi, main après main, en utilisant les bras, le dos et les jambes.",
+        "Recule légèrement les pieds si nécessaire, sans sortir de la zone autorisée, puis reprends la traction.",
+        "Continue jusqu'à ce que le traîneau franchisse entièrement la ligne prévue, en gardant le contrôle de la corde."
+      ]
+    },
+    "burpee-broad-jump": {
+      "primary_muscles": [
+        "quadriceps",
+        "gluteus_maximus",
+        "chest",
+        "triceps_brachii"
+      ],
+      "instructions_fr": [
+        "Debout, place les pieds à largeur de hanches et prépare-toi à descendre au sol.",
+        "Fléchis les jambes, pose les mains au sol et recule les pieds pour te placer en position de pompe.",
+        "Abaisse le corps jusqu'à ce que la poitrine touche clairement le sol.",
+        "Repousse le sol et ramène les pieds vers l'avant, près des mains, pour te relever.",
+        "Effectue un saut horizontal vers l'avant, avec les pieds parallèles au décollage et à la réception.",
+        "Réceptionne le saut avec les genoux légèrement fléchis, sans pas supplémentaire, puis enchaîne le burpee suivant."
+      ]
+    },
+    "sandbag-walking-lunge": {
+      "primary_muscles": [
+        "quadriceps",
+        "gluteus_maximus",
+        "hamstrings"
+      ],
+      "instructions_fr": [
+        "Place le sac de sable sur le haut du dos, derrière les épaules, et maintiens-le fermement avec les mains.",
+        "Tiens-toi debout, les pieds à largeur de hanches, le dos droit et le tronc gainé.",
+        "Effectue un grand pas vers l'avant avec une jambe, en maintenant le contrôle du sac.",
+        "Fléchis les deux genoux jusqu'à ce que le genou arrière touche le sol.",
+        "Pousse sur le pied avant pour te relever complètement, puis ramène la jambe arrière vers l'avant.",
+        "Alterne les jambes à chaque fente et avance sur la distance prévue, en conservant une posture stable."
+      ]
+    }
+  }
+}

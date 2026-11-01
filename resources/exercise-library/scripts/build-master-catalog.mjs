@@ -23,6 +23,7 @@ const repdbDecisions = await read("curation/decisions-repdb.json");
 const translations = Object.fromEntries((await read("curation/traductions-fr.json")).items.map((t) => [t.id, t]));
 const priorities = await read("curation/priorites-illustrations.json");
 const library = await read("curation/bibliotheque.json");
+const coachContent = (await read("curation/contenu-coory.json")).items;
 
 // Identifiant interne stable : UUID v5 dérivé de la clé. L'espace de noms ne doit JAMAIS changer,
 // sinon tous les identifiants changeraient entre deux générations.
@@ -204,7 +205,11 @@ for (const k of kit) {
   for (const disc of d.disciplines) if (!vocab.disciplines[disc]) fail(`${k.id} : discipline inconnue « ${disc} »`);
   for (const m of d.metrics) if (!vocab.metrics[m]) fail(`${k.id} : mesure inconnue « ${m} »`);
   const equipment = normalizeEquipment(d.equipment, k.id);
-  const reasons = ["NOM_PROPOSE", "MOUVEMENT_A_VALIDER", "CONSIGNES_ABSENTES", "MUSCLES_ABSENTS", "DIFFICULTE_ABSENTE"];
+  // Consignes et muscles écrits par Coory (curation/contenu-coory.json), sinon aucun.
+  const instructions = coachContent[d.key]?.instructions_fr ?? [];
+  const primaryMuscles = coachContent[d.key]?.primary_muscles ?? [];
+  for (const m of primaryMuscles) if (!vocab.muscles[m] && !vocab.muscle_groups[m]) fail(`${d.key} : muscle inconnu « ${m} »`);
+  const reasons = ["NOM_PROPOSE", "MOUVEMENT_A_VALIDER", ...(instructions.length ? [] : ["CONSIGNES_ABSENTES"]), ...(primaryMuscles.length ? [] : ["MUSCLES_ABSENTS"]), "DIFFICULTE_ABSENTE"];
   if (d.confidence === "a_confirmer") reasons.push(d.action === "variant" || d.equipment.includes("partner") ? "VARIANTE_A_CONFIRMER" : "DOUBLON_POSSIBLE");
   exercises.set(d.key, {
     id: stableId(d.key),
@@ -220,7 +225,7 @@ for (const k of kit) {
     family: d.family ?? null,
     variant_of: d.variant_of ?? null,
     equipment,
-    primary_muscles: [],
+    primary_muscles: primaryMuscles,
     secondary_muscles: [],
     difficulty: null,
     metrics: d.metrics,
@@ -232,7 +237,7 @@ for (const k of kit) {
     goals: [],
     tags: [],
     met: null,
-    instructions_fr: [],
+    instructions_fr: instructions,
     instructions_en: [],
     images: { main: null, start: null, end: null },
     illustration: illustration(d.key, recommendedPoses(d.metrics, d.disciplines)),
@@ -240,7 +245,7 @@ for (const k of kit) {
     merged_from: [],
     attribution_required: false,
     exportable: true,
-    review: { status: "pending", name_fr: "proposal_to_review", instructions_fr: "missing", content: "coach_validation_required", reasons, notes: [d.reason] },
+    review: { status: "pending", name_fr: "proposal_to_review", instructions_fr: instructions.length ? "written_by_coory" : "missing", content: "coach_validation_required", reasons, notes: [d.reason] },
   });
 }
 
@@ -306,6 +311,7 @@ for (const e of all) {
   const text = JSON.stringify([e.name_fr, e.aliases_fr, e.instructions_fr]);
   if (/[—–]/.test(text)) fail(`${e.key} : tiret long dans le texte français`);
 }
+for (const key of Object.keys(coachContent)) if (exercises.get(key)?.sources[0].provider !== "coory_kit") fail(`contenu Coory : « ${key} » n'est pas un exercice du kit Coory`);
 for (const s of sessionTypes) for (const key of s.exercises) if (!exercises.has(key)) fail(`${s.source_id} : exercice « ${key} » introuvable`);
 const byName = new Map();
 for (const e of all) byName.set(e.name_fr.toLowerCase(), [...(byName.get(e.name_fr.toLowerCase()) ?? []), e]);

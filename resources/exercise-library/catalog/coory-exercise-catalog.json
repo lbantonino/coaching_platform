@@ -1,6 +1,6 @@
 {
   "schema_version": "coory-exercise-catalog/1.0",
-  "generated_at": "2026-10-30T22:09:07.395Z",
+  "generated_at": "2026-10-31T20:30:19.049Z",
   "id_namespace": "c0a7e1d4-5f2b-4c3e-9a8d-7b6e5f4a3c21",
   "attribution": {
     "text": "Exercise data by RepDB (repdb.co)",
@@ -15,8 +15,8 @@
   ],
   "counts": {
     "exercises": 747,
-    "active": 605,
-    "hidden": 142
+    "active": 693,
+    "hidden": 54
   },
   "vocabularies": {
     "categories": {
@@ -717,8 +717,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "4b5219c3-5dab-5bc0-bd76-eb75823c7e4d",
@@ -810,7 +810,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "0c739248-a72a-5fea-b15f-04ebd980a064",
@@ -922,8 +922,8 @@
         ]
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "2b68c359-0575-5e35-a275-a7261b44f127",
@@ -1316,7 +1316,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "15274b0f-1e27-5651-b54b-321960224a52",
@@ -4210,7 +4210,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "ea8f937c-9e49-59c6-8371-e39e2652a675",
@@ -4311,8 +4311,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "186a402a-83ac-56cc-9843-04eea9ab041c",
@@ -4413,8 +4413,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "13b114be-6a3b-573c-b381-11604380a087",
@@ -4515,8 +4515,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "88441849-3195-5c67-a328-2fe72a76c521",
@@ -4615,8 +4615,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "e45dcf97-c94c-5ace-9acf-4e792d53c4e8",
@@ -4834,8 +4834,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "fc3151a6-3b5f-5047-8fb7-2d9cf8bdfdb1",
@@ -5270,8 +5270,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "80cca7a3-ef44-5e1d-82e4-02fdf2fb8820",
@@ -5579,8 +5579,8 @@
         ]
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "14a224b2-c7dc-53bb-8318-add4e56b8fc4",
@@ -5789,8 +5789,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "07e89094-bc69-5e13-bfff-2fd0db5bfc9f",
@@ -6016,8 +6016,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "60523407-8f4d-569e-89ba-23c372a5dd30",
@@ -6337,8 +6337,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "50cd1e0c-34a1-5817-bf3d-7271ab36052c",
@@ -7100,8 +7100,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "d0728e9a-efb4-5a54-88f8-c7c20308811b",
@@ -10110,8 +10110,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "a5661df0-820c-5789-a85c-51ba8543f3e0",
@@ -10212,8 +10212,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "517f8439-21af-568e-a026-1129d5687049",
@@ -10317,8 +10317,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "7f5be90a-44da-5792-bde0-311dd6ee6f28",
@@ -10419,8 +10419,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "5eecb359-1479-54f8-9829-8be47b258cff",
@@ -10519,8 +10519,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "65afd0b7-fa1c-5ca7-a9dd-96f86b7feeb2",
@@ -10620,8 +10620,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "42dd4db4-b14e-5e32-84ce-083866bdc056",
@@ -10738,8 +10738,8 @@
         ]
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "0bb9d629-b9a8-5f30-b966-3f3e0b559eaf",
@@ -11062,8 +11062,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "72f72ecc-e40c-59e9-81ba-df2cd4bb8037",
@@ -11164,8 +11164,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "ec1802c0-3b5b-5a6e-b9b1-46a3cf37f90e",
@@ -11373,8 +11373,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "f3da07b2-03b3-596e-8d8e-d11f0b0c419f",
@@ -13928,7 +13928,12 @@
       "family": "burpee",
       "variant_of": null,
       "equipment": [],
-      "primary_muscles": [],
+      "primary_muscles": [
+        "quadriceps",
+        "gluteus_maximus",
+        "chest",
+        "triceps_brachii"
+      ],
       "secondary_muscles": [],
       "difficulty": null,
       "metrics": [
@@ -13944,7 +13949,14 @@
       "goals": [],
       "tags": [],
       "met": null,
-      "instructions_fr": [],
+      "instructions_fr": [
+        "Debout, place les pieds à largeur de hanches et prépare-toi à descendre au sol.",
+        "Fléchis les jambes, pose les mains au sol et recule les pieds pour te placer en position de pompe.",
+        "Abaisse le corps jusqu'à ce que la poitrine touche clairement le sol.",
+        "Repousse le sol et ramène les pieds vers l'avant, près des mains, pour te relever.",
+        "Effectue un saut horizontal vers l'avant, avec les pieds parallèles au décollage et à la réception.",
+        "Réceptionne le saut avec les genoux légèrement fléchis, sans pas supplémentaire, puis enchaîne le burpee suivant."
+      ],
       "instructions_en": [],
       "images": {
         "main": null,
@@ -13985,13 +13997,11 @@
       "review": {
         "status": "pending",
         "name_fr": "proposal_to_review",
-        "instructions_fr": "missing",
+        "instructions_fr": "written_by_coory",
         "content": "coach_validation_required",
         "reasons": [
           "NOM_PROPOSE",
           "MOUVEMENT_A_VALIDER",
-          "CONSIGNES_ABSENTES",
-          "MUSCLES_ABSENTS",
           "DIFFICULTE_ABSENTE"
         ],
         "notes": [
@@ -14208,8 +14218,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "e6729f71-3483-5140-880a-f00213fae87d",
@@ -16293,8 +16303,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "cc51ebf5-66d0-5b0d-9b9e-0879fad76635",
@@ -16722,8 +16732,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "d3690b53-58a9-5951-b5d3-c41104784c5c",
@@ -16821,8 +16831,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "558b6c2a-eca2-53bd-b724-d3b33b296384",
@@ -17809,8 +17819,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "ebb83f64-c1a3-52e4-976c-4c8a3c9c22ad",
@@ -19768,8 +19778,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "39082704-47a7-577a-813b-cf550b05d7ef",
@@ -20561,8 +20571,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "ff08306a-b05e-5f1e-aac1-413f1ffeb780",
@@ -21101,8 +21111,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "9725a364-de03-576b-94d4-105540cca9d2",
@@ -24741,7 +24751,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "696976d1-540f-5a61-9a4e-84849e45a98b",
@@ -25492,8 +25502,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "74603130-8795-5065-84c9-993531aa991f",
@@ -27336,8 +27346,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "60e4034b-6d70-5dff-81ef-82ea9f354d6d",
@@ -27552,8 +27562,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "f6ac3056-aca6-53ba-9228-03a0a2fa2389",
@@ -27768,8 +27778,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "5418acff-46ef-5db9-998c-13d5190de15e",
@@ -31031,8 +31041,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "022fc8fe-7dd5-5546-91b4-fb50fc14ea28",
@@ -33017,8 +33027,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "1f18cdb9-e968-5149-aefe-893dbd745acc",
@@ -33658,7 +33668,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "eb2ea58c-406a-59fb-9b40-f3f13f722622",
@@ -33855,8 +33865,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "2783757e-8025-5b62-ba88-33b1a029c30d",
@@ -34180,8 +34190,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "37ad2ff4-0e17-55b9-8aa0-dff64d0e3c57",
@@ -35153,8 +35163,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "cb61ba9f-7288-5d27-b34b-4c5a62a5b9b5",
@@ -35463,7 +35473,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "a813a18c-d796-5f7f-8ddf-14eb4baa03b0",
@@ -36700,8 +36710,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "069cdbc5-b933-5b47-b687-15bded184826",
@@ -36806,8 +36816,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "f4021d04-6064-5c9a-b904-2d940d33eb51",
@@ -37364,8 +37374,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "aeb8914e-01c8-52f2-8b33-8bc6ecff70ca",
@@ -38221,7 +38231,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "a9b33b2a-9149-5824-ae97-045cd8161b94",
@@ -45518,8 +45528,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "4b371999-308f-545c-9ca5-60076bf833dd",
@@ -45623,7 +45633,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "aab831e4-e4b9-5105-853d-d7a2d2c6f348",
@@ -45840,8 +45850,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "568cef73-fc82-5c2d-b331-1ba69e1a2c19",
@@ -45936,8 +45946,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "f6326a8d-f75a-543c-9072-8f6a20e73d66",
@@ -46697,8 +46707,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "b00f2cf9-8f27-5824-af8d-0deba978f52a",
@@ -47001,8 +47011,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "8eb07f14-d0b3-5e88-9f86-ff829ec282b6",
@@ -47451,8 +47461,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "08e3f9a6-81e7-5c63-8df7-f18772bc1804",
@@ -47555,8 +47565,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "8af3a92d-a7bd-5dbd-b225-6cb4012bc34a",
@@ -47661,8 +47671,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "e82c1280-430d-5a7d-93a9-c13f53c234d6",
@@ -47875,8 +47885,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "b8b1e78f-6a2f-5765-aef0-f0f4cde8e6b6",
@@ -47979,8 +47989,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "68890f03-0a61-54c0-8d1f-234e3b9cf6cb",
@@ -48300,8 +48310,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "a76f3d7a-295a-5740-988d-4ed66edf53b0",
@@ -49842,8 +49852,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "555db013-3d26-55ec-947a-e46e865eed99",
@@ -50164,7 +50174,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "7bb00770-a7c7-5cb3-8d34-963825e52e62",
@@ -50261,8 +50271,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "2124573f-2fdc-5f8b-844e-01e1316e0f22",
@@ -53303,8 +53313,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "1fede8b0-bf4e-598f-8618-631995b3aa51",
@@ -53715,7 +53725,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "148753c5-a543-523f-9184-7eefb11a492a",
@@ -53819,8 +53829,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "d2c56c0d-dc2a-52d3-b343-e2ad8bd39db3",
@@ -54371,8 +54381,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "b473284b-0a5d-5cb9-8316-713eaf307a08",
@@ -54591,8 +54601,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "81070385-f259-5aa6-9af7-0373ce82aa21",
@@ -54811,8 +54821,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "01ac98c1-681b-52f3-ac44-afd993c7e006",
@@ -54917,8 +54927,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "1924da46-9657-59af-9bcd-58694b2875f1",
@@ -56360,8 +56370,8 @@
         ]
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "be52c5b5-9b9e-555b-a4ba-6c889300b331",
@@ -57222,8 +57232,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "7bb7f006-4d6f-5528-83eb-6803d1695d7f",
@@ -57665,8 +57675,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "d9df4c75-14bc-514d-bced-0ee5894c849d",
@@ -57756,7 +57766,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "fdcbfa40-1318-513d-8222-c184d27fe511",
@@ -57977,8 +57987,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "26add281-ddd5-5752-b972-e2cecbebdce4",
@@ -61429,7 +61439,11 @@
       "equipment": [
         "sandbag"
       ],
-      "primary_muscles": [],
+      "primary_muscles": [
+        "quadriceps",
+        "gluteus_maximus",
+        "hamstrings"
+      ],
       "secondary_muscles": [],
       "difficulty": null,
       "metrics": [
@@ -61445,7 +61459,14 @@
       "goals": [],
       "tags": [],
       "met": null,
-      "instructions_fr": [],
+      "instructions_fr": [
+        "Place le sac de sable sur le haut du dos, derrière les épaules, et maintiens-le fermement avec les mains.",
+        "Tiens-toi debout, les pieds à largeur de hanches, le dos droit et le tronc gainé.",
+        "Effectue un grand pas vers l'avant avec une jambe, en maintenant le contrôle du sac.",
+        "Fléchis les deux genoux jusqu'à ce que le genou arrière touche le sol.",
+        "Pousse sur le pied avant pour te relever complètement, puis ramène la jambe arrière vers l'avant.",
+        "Alterne les jambes à chaque fente et avance sur la distance prévue, en conservant une posture stable."
+      ],
       "instructions_en": [],
       "images": {
         "main": null,
@@ -61486,13 +61507,11 @@
       "review": {
         "status": "pending",
         "name_fr": "proposal_to_review",
-        "instructions_fr": "missing",
+        "instructions_fr": "written_by_coory",
         "content": "coach_validation_required",
         "reasons": [
           "NOM_PROPOSE",
           "MOUVEMENT_A_VALIDER",
-          "CONSIGNES_ABSENTES",
-          "MUSCLES_ABSENTS",
           "DIFFICULTE_ABSENTE"
         ],
         "notes": [
@@ -61602,8 +61621,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "2250f0ee-ce8d-5fca-b973-11f83296f2e7",
@@ -61808,7 +61827,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "a43bbcd1-9624-56e5-a3be-42f3b04231ae",
@@ -62006,7 +62025,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "82396314-3cf1-5411-89fe-121ab09d02df",
@@ -63004,8 +63023,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "737d52e0-4f6b-5653-990b-48e988e5ac5f",
@@ -63330,8 +63349,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "eb8e48a5-fd20-58b7-9aaf-a6e4f8c66aa2",
@@ -63434,8 +63453,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "521c5ac3-6e6f-5f7e-bbf9-f498544663b1",
@@ -63527,7 +63546,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "2bcc6b00-d013-551d-9e6e-a036bb651100",
@@ -63619,7 +63638,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "b3757b03-40e7-5048-b2a8-e052034d01b5",
@@ -68061,7 +68080,12 @@
         "sled",
         "rope"
       ],
-      "primary_muscles": [],
+      "primary_muscles": [
+        "latissimus_dorsi",
+        "trapezius",
+        "biceps_brachii",
+        "quadriceps"
+      ],
       "secondary_muscles": [],
       "difficulty": null,
       "metrics": [
@@ -68078,7 +68102,14 @@
       "goals": [],
       "tags": [],
       "met": null,
-      "instructions_fr": [],
+      "instructions_fr": [
+        "Place-toi face au traîneau, debout dans la zone prévue, les pieds écartés à largeur d'épaules.",
+        "Saisis fermement la corde à deux mains, fléchis les genoux et abaisse légèrement les hanches.",
+        "Gaine le tronc et incline légèrement le buste vers l'arrière pour créer une position stable.",
+        "Tire la corde vers toi, main après main, en utilisant les bras, le dos et les jambes.",
+        "Recule légèrement les pieds si nécessaire, sans sortir de la zone autorisée, puis reprends la traction.",
+        "Continue jusqu'à ce que le traîneau franchisse entièrement la ligne prévue, en gardant le contrôle de la corde."
+      ],
       "instructions_en": [],
       "images": {
         "main": null,
@@ -68119,13 +68150,11 @@
       "review": {
         "status": "pending",
         "name_fr": "proposal_to_review",
-        "instructions_fr": "missing",
+        "instructions_fr": "written_by_coory",
         "content": "coach_validation_required",
         "reasons": [
           "NOM_PROPOSE",
           "MOUVEMENT_A_VALIDER",
-          "CONSIGNES_ABSENTES",
-          "MUSCLES_ABSENTS",
           "DIFFICULTE_ABSENTE"
         ],
         "notes": [
@@ -70667,7 +70696,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "4c9854eb-57d4-5bf4-b900-a9b378ef3569",
@@ -70863,8 +70892,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "6cf7e17a-bee2-51f8-a76a-701d1f46c5a2",
@@ -72542,8 +72571,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "479a2880-3055-5739-b1b5-3322f2ac536e",
@@ -72752,8 +72781,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "3879e887-8cd0-573d-bcfb-800e1d496c92",
@@ -72856,8 +72885,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "bda52337-5b66-5707-9c18-105b0121ef68",
@@ -72964,8 +72993,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "9577dece-4b89-563d-a1a7-977f188927c7",
@@ -73166,7 +73195,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "d4dc2e2b-35ae-503d-8c7b-72932afd9eb7",
@@ -73265,8 +73294,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "fcc213ca-999d-5a8e-aa39-ce5af8b07d68",
@@ -73368,8 +73397,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "d3c637ce-215f-508e-bc49-89921f4fb3d3",
@@ -73472,8 +73501,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "b0a118b0-dfd1-5428-8b92-b31b7fb2712e",
@@ -73578,8 +73607,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "9c2849dd-cdf5-5f01-bc8d-d8b3a0359cdc",
@@ -75036,8 +75065,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "1cfefab6-250b-563d-a056-7207e0a5d5c4",
@@ -75897,7 +75926,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "eebfaacf-bf85-5128-bab4-7e07761677b9",
@@ -75989,7 +76018,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "8caf71df-fbf9-5932-83e7-650a42c17296",
@@ -76097,8 +76126,8 @@
         ]
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "fd594fa5-f884-5552-9e18-b81761f0a26c",
@@ -76202,8 +76231,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "09211220-300d-56bf-8de2-b9c73dabd49e",
@@ -76646,8 +76675,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "a75fa2a5-b5b1-563f-a887-782b42c581b1",
@@ -76976,8 +77005,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "42a91271-584b-5713-be0c-0f228cfe8ca3",
@@ -78975,8 +79004,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "8bd87751-1097-590c-95d6-68913bbff84e",
@@ -80147,8 +80176,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "9f9563bc-0dcc-5cab-b4e6-180718cf2f72",
@@ -81563,8 +81592,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "2fb74c32-b042-592b-82ef-d0c59e7c2eba",
@@ -81795,8 +81824,8 @@
         "notes": []
       },
       "category": "mobility",
-      "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "visibility": "active",
+      "hidden_reason": null
     },
     {
       "id": "95dc2045-a754-574b-9e5f-8f854996e72a",
@@ -81999,7 +82028,7 @@
       },
       "category": "mobility",
       "visibility": "hidden",
-      "hidden_reason": "Mobilité masquée : chaque coach ajoutera ses propres exercices, avec une image ou un lien vidéo."
+      "hidden_reason": "Création Coory sans consignes ni image, mise de côté : le coach pourra créer l'équivalent lui-même."
     },
     {
       "id": "efe63c28-2840-58bd-bdcf-ef671395a3d3",

@@ -8,7 +8,7 @@
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
-| P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris) ; P3-02 à P3-06 à faire | db:test 417/417, test 267/267, test:e2e 167 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Session du 30/10/2026 |
+| P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris ; D-76 : exercices du coach) ; Mobilité visible le 31/10 ; P3-02 à P3-06 à faire | db:test 434/434, test 278/278, test:e2e bibliothèque 8/8 (31/10) ; suite complète du 30/10 : 169 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Sessions du 30 et 31/10/2026 |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
 | P6 Sportif/feedback | À faire | Aucun | - |
@@ -31,6 +31,25 @@
 ## Dernière session
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+
+### Mobilité visible, consignes Hyrox de Coory, maquettes de la fiche (D-75, suite)
+```
+Date : 2026-10-31
+Fait : curation/bibliotheque.json : Mobilité visible (88 exercices RepDB avec images et consignes ; les
+  20 créations Coory de mobilité sans contenu restent masquées) ; curation/contenu-coory.json : les 6
+  consignes et les muscles principaux d'Antonino pour sled-pull, burpee-broad-jump et
+  sandbag-walking-lunge, mot pour mot (le script refuse une clé qui n'est pas un exercice du kit Coory
+  et un code de muscle inconnu ; « Pectoraux » = code de groupe chest) ; catalogue maître régénéré (693
+  visibles, 54 masqués, identifiants inchangés) ; 103 images RepDB de mobilité téléchargées ; migration
+  20261030100100_catalogue_exercices régénérée sur place (rien n'est déployé). Tests adaptés : 31 et 32
+  (693 visibles, 88 en mobilité, + un test des 6 consignes et des muscles), library.spec (exercice masqué =
+  sled-pull-seated). Fiche : 5 maquettes TEMPORAIRES (?maquette=1 à 5 ; la 4 = la 3 sans onglets ; la 5 = « scène du
+  mouvement » sans cartes, début et fin qui alternent, movement-stage.tsx, BackLink variant icon ; [cle]/maquettes.tsx et
+  sheet-tabs.tsx) en attente du choix d'Antonino ; la fiche par défaut est inchangée.
+Tests : pgTAP 434/434 ; Vitest 278/278 ; Playwright library + coach-exercises 8/8 ; lint et format OK ;
+  captures téléphone et ordinateur, sombre et clair (Sled pull ; Back squat avec images masquées).
+Suite : choix de la maquette, puis appliquer la retenue et supprimer les deux autres.
+```
 
 ### « Créer un exercice » pour le coach (D-76)
 ```

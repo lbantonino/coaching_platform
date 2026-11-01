@@ -1,5 +1,5 @@
 {
-  "_lisez_moi": "Périmètre visible de la bibliothèque (décision d'Antonino, 30/10/2026 soir). Musculation, Cardio et Hyrox sont visibles. Mobilité, course et créations Coory sans contenu sont masquées, jamais supprimées : on les réactive en changeant ce fichier. Images : celles de RepDB pour les exercices RepDB, sauf l'Hyrox, illustré par Coory.",
+  "_lisez_moi": "Périmètre visible de la bibliothèque (décision d'Antonino, 30/10/2026 soir). Musculation, Cardio, Hyrox et Mobilité (depuis le 31/10/2026) sont visibles. Course et créations Coory sans contenu sont masquées, jamais supprimées : on les réactive en changeant ce fichier. Images : celles de RepDB pour les exercices RepDB, sauf l'Hyrox, illustré par Coory.",
   "categories": {
     "strength": "Musculation",
     "cardio": "Cardio",
@@ -9,7 +9,8 @@
   "visible_categories": [
     "strength",
     "cardio",
-    "hyrox"
+    "hyrox",
+    "mobility"
   ],
   "repdb_category_to_category": {
     "strength": "strength",

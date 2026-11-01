@@ -79,7 +79,7 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("heading", { level: 1, name: `${name} bis` })).toBeVisible();
 
-  // Dans la bibliothèque : « Mes exercices », et la rubrique Mobilité apparaît.
+  // Dans la bibliothèque : « Mes exercices », avec la rubrique Mobilité.
   await page.goto("/coach/bibliotheque?miens");
   await expect(page.getByRole("button", { name: /^Mobilité/ })).toBeVisible();
   await expect(page.getByRole("link", { name: new RegExp(`^${name} bis`) })).toContainText(
