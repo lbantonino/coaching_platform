@@ -54,6 +54,15 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
   const main: NavEntry[] = [
     { label: "Tableau de bord", href: "/coach", icon: House, match: exact("/coach") },
   ];
+  // Agenda en 2e position, sous le Tableau de bord (demande d'Antonino du 01/11, D-78).
+  if (orgBase) {
+    main.push({
+      label: "Agenda",
+      href: `${orgBase}/agenda`,
+      icon: Calendar,
+      match: under(`${orgBase}/agenda`),
+    });
+  }
   if (orgBase) {
     main.push({
       label: "Sportifs",
@@ -63,14 +72,6 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
     });
   }
   main.push(moduleEntry("programmes", FileText));
-  if (orgBase) {
-    main.push({
-      label: "Agenda",
-      href: `${orgBase}/agenda`,
-      icon: Calendar,
-      match: under(`${orgBase}/agenda`),
-    });
-  }
   main.push(
     moduleEntry("facturation", Receipt),
     moduleEntry("comptabilite", Calculator),

@@ -5,6 +5,9 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 // hebdomadaire demande « seulement cette date » ou « toute la série ». Semaines de 2027, une par test
 // et une heure par profil (les tests tournent en parallèle sur la même base) : rien ne dépend du jour
 // où il tourne. Chaque séance créée est supprimée à la fin.
+// Depuis D-78 (01/11), plus d'agenda sur le tableau de bord : ces gestes se testent sur la page Agenda.
+const AGENDA = "/coach/o/0a000000-0000-4000-8000-0000000000a1/agenda";
+
 const unique = (testInfo: { project: { name: string } }) =>
   `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -58,7 +61,12 @@ async function createFromSlot(
 }
 
 // Glisser à la souris : le haut du bloc arrive à `hour` dans la colonne du jour `date`.
+// La séance au centre de la grille : près d'un bord, la tenir fait défiler la grille (voulu).
+const centre = (block: Locator) =>
+  block.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+
 async function mouseDrag(page: Page, block: Locator, date: string, hour: number) {
+  await centre(block);
   const from = (await block.boundingBox())!;
   const to = (await column(page, date).boundingBox())!;
   const start = { x: from.x + 15, y: from.y + 4 };
@@ -76,6 +84,7 @@ async function mouseDrag(page: Page, block: Locator, date: string, hour: number)
 
 // Appui long puis glissé au doigt (Chromium : événements tactiles du protocole DevTools).
 async function touchDrag(page: Page, block: Locator, date: string, hour: number) {
+  await centre(block);
   const from = (await block.boundingBox())!;
   const to = (await column(page, date).boundingBox())!;
   const start = { x: from.x + 15, y: from.y + 4 };
@@ -107,20 +116,20 @@ async function deleteSession(page: Page, title: string) {
   await expect(page).toHaveURL(/\/agenda$/);
 }
 
-test("un clic sur un créneau vide crée une séance à ce jour et à cette heure, sans quitter le tableau de bord", async ({
+test("un clic sur un créneau vide crée une séance à ce jour et à cette heure, sans quitter l'agenda", async ({
   page,
 }, testInfo) => {
   const title = `Créneau ${unique(testInfo)}`;
   const hour = testInfo.project.name === "telephone" ? 15 : 10;
   await loginAsCoachA(page);
-  await page.goto("/coach?date=2027-03-03");
+  await page.goto(`${AGENDA}?date=2027-03-03`);
   const block = await createFromSlot(page, {
     title,
     date: "2027-03-03",
     dayLabel: "Mercredi 3 mars",
     hour,
   });
-  await expect(page).toHaveURL(/\/coach\?date=2027-03-03$/);
+  await expect(page).toHaveURL(/\/agenda\?date=2027-03-03$/);
 
   await block.click();
   await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
@@ -138,7 +147,7 @@ test("une séance se déplace à la souris, ou au doigt après un appui long", a
   // Ordinateur : un écran assez haut pour voir toute la grille. Téléphone : son propre écran.
   if (!phone) await page.setViewportSize({ width: 1440, height: 1100 });
   await loginAsCoachA(page);
-  await page.goto("/coach?date=2027-03-10");
+  await page.goto(`${AGENDA}?date=2027-03-10`);
   const block = await createFromSlot(page, {
     title,
     date: "2027-03-10",
@@ -157,6 +166,8 @@ test("une séance se déplace à la souris, ou au doigt après un appui long", a
 
   const moved = column(page, target).getByRole("link", { name: new RegExp(title) });
   await expect(moved).toBeVisible();
+  // Téléphone : la séance peut se trouver sous le bouton rond « + » ; on l'amène au centre.
+  await moved.evaluate((element) => element.scrollIntoView({ block: "center", inline: "center" }));
   await moved.click();
   await expect(page.getByRole("region", { name: "Détails", exact: true })).toContainText(
     phone ? "Le 10 mars 2027 à 12:00" : "Le 11 mars 2027 à 14:00",
@@ -171,7 +182,7 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
   const title = `Série ${unique(testInfo)}`;
   await page.setViewportSize({ width: 1440, height: 1100 });
   await loginAsCoachA(page);
-  await page.goto("/coach?date=2027-02-03");
+  await page.goto(`${AGENDA}?date=2027-02-03`);
   const block = await createFromSlot(page, {
     title,
     date: "2027-02-03",
@@ -188,7 +199,7 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
   await expect(page.getByText("Séance déplacée.")).toBeVisible();
   await expect(inDay("2027-02-04")).toBeVisible();
   await expect(inDay("2027-02-03")).toHaveCount(0);
-  await page.goto("/coach?date=2027-02-10");
+  await page.goto(`${AGENDA}?date=2027-02-10`);
   await expect(inDay("2027-02-10")).toBeVisible();
 
   // Toute la série, depuis le mercredi 10 : chaque vendredi à 11:00 (loin du bord haut de la zone
@@ -199,7 +210,7 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
   await expect(page.getByText("Séance déplacée.")).toBeVisible();
   await expect(inDay("2027-02-12")).toBeVisible();
   await expect(inDay("2027-02-10")).toHaveCount(0);
-  await page.goto("/coach?date=2027-02-03");
+  await page.goto(`${AGENDA}?date=2027-02-03`);
   await expect(inDay("2027-02-04")).toBeVisible();
   await expect(inDay("2027-02-05")).toHaveCount(0);
 
@@ -210,17 +221,17 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
   await deleteSession(page, title);
 });
 
-test("l'agenda du tableau de bord défile d'un bloc, de minuit à minuit, et une séance se crée avant 06:00", async ({
+test("l'agenda défile d'un bloc, de minuit à minuit, et une séance se crée avant 06:00", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "ordinateur", "molette de la souris, sur un seul profil");
   await loginAsCoachA(page);
-  await page.goto("/coach?date=2027-03-03");
+  await page.goto(`${AGENDA}?date=2027-03-03`);
   const grid = page.locator("[data-grid-scroll]");
   // Heure en haut de la zone visible : 06:00 à l'ouverture (réglage « Heures de l'agenda » par défaut).
   const topHour = () =>
     grid.evaluate((element) => {
-      const day = element.querySelector<HTMLElement>("[data-drop-date]")!;
+      const day = element.querySelector<HTMLElement>("[data-gutter]")!;
       return Math.round(element.scrollTop / (day.offsetHeight / 24));
     });
   await expect.poll(topHour).toBe(6);
@@ -252,10 +263,11 @@ async function swipe(page: Page, direction: "suivant" | "précédent") {
   await board.scrollIntoViewIfNeeded();
   const box = (await board.boundingBox())!;
   const y = Math.round(box.y + Math.min(box.height / 2, 200));
+  // Dans la zone des jours (à droite de la marge des heures, 40 px).
   const [from, to] =
     direction === "suivant"
-      ? [box.x + box.width - 20, box.x + 30]
-      : [box.x + 30, box.x + box.width - 20];
+      ? [box.x + box.width - 20, box.x + 60]
+      : [box.x + 60, box.x + box.width - 20];
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: from, y }] });
   for (let step = 1; step <= 10; step += 1) {
@@ -267,33 +279,48 @@ async function swipe(page: Page, direction: "suivant" | "précédent") {
   await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 }
 
-test("téléphone : on change de jour, de mois et de semaine en glissant le doigt", async ({
+test("téléphone : les jours défilent au doigt d'une semaine à l'autre sans recharger ; le mois change de page", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "telephone", "geste tactile, sur téléphone");
   await loginAsCoachA(page);
-  await page.goto("/coach?vue=jour&date=2027-03-03");
-  await swipe(page, "suivant");
-  await expect(page).toHaveURL(/vue=jour&date=2027-03-04/);
-  await swipe(page, "précédent");
-  await expect(page).toHaveURL(/vue=jour&date=2027-03-03/);
+  // Le premier jour visible de la grille (la zone des jours défile horizontalement, 01/11).
+  const days = page.locator("[data-grid-x]");
+  const firstDay = () =>
+    days.evaluate(
+      (element) =>
+        [...element.querySelectorAll<HTMLElement>("[data-day-col]")].find(
+          (column) => column.offsetLeft + column.offsetWidth / 2 > element.scrollLeft,
+        )?.dataset.date ?? "",
+    );
 
-  await page.goto("/coach?vue=mois&date=2027-03-01");
+  // Jour : on glisse au jour suivant puis on revient, sans changer de page.
+  await page.goto(`${AGENDA}?vue=jour&date=2027-03-03`);
+  await expect.poll(firstDay).toBe("2027-03-03");
+  await swipe(page, "suivant");
+  await expect.poll(async () => (await firstDay()) > "2027-03-03").toBe(true);
+  const after = await firstDay();
+  await swipe(page, "précédent");
+  await expect.poll(async () => (await firstDay()) < after).toBe(true);
+  await expect(page).toHaveURL(/vue=jour&date=2027-03-03$/);
+
+  // 3 jours : depuis le lundi, on passe à la semaine précédente en glissant, sans recharger.
+  await page.goto(`${AGENDA}?date=2027-03-08`);
+  await expect.poll(firstDay).toBe("2027-03-08");
+  await swipe(page, "précédent");
+  await expect.poll(async () => (await firstDay()) < "2027-03-08").toBe(true);
+  await expect(page).toHaveURL(/agenda\?date=2027-03-08$/);
+  // Au bout des 9 semaines chargées (4 avant, 4 après), un glissé de plus ouvre les précédentes.
+  // (attendre la fin de l'élan du glissé précédent, qui déplacerait sinon la grille après coup)
+  await page.waitForTimeout(1200);
+  await days.evaluate((element) => element.scrollTo({ left: 0 }));
+  await page.waitForTimeout(400);
+  await expect.poll(() => days.evaluate((element) => element.scrollLeft)).toBe(0);
+  await swipe(page, "précédent");
+  await expect(page).toHaveURL(/agenda\?date=2027-02-05$/);
+
+  // Mois : le glissé ouvre le mois suivant.
+  await page.goto(`${AGENDA}?vue=mois&date=2027-03-01`);
   await swipe(page, "suivant");
   await expect(page).toHaveURL(/vue=mois&date=2027-04-01/);
-
-  // 3 jours : depuis lundi (bord gauche de la grille), la semaine précédente s'ouvre sur dimanche.
-  await page.goto("/coach?vue=semaine&date=2027-03-08");
-  const grid = page.locator("[data-grid-scroll]");
-  await expect.poll(() => grid.evaluate((element) => element.scrollLeft)).toBe(0);
-  await swipe(page, "précédent");
-  await expect(page).toHaveURL(/vue=semaine&date=2027-03-07/);
-  await expect
-    .poll(() =>
-      grid.evaluate((element) => element.scrollWidth - element.clientWidth - element.scrollLeft),
-    )
-    .toBeLessThan(2);
-  // Depuis dimanche (bord droit), la semaine suivante.
-  await swipe(page, "suivant");
-  await expect(page).toHaveURL(/vue=semaine&date=2027-03-08/);
 });

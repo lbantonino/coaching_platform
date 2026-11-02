@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { ThemeChoice } from "@/components/ui/theme-choice";
 import { logout } from "@/features/auth/actions";
 
+import { useMobileMenu } from "./mobile-menu-context";
 import { useShell } from "./shell-context";
 
 // Menu du compte, en bas du menu de gauche et du menu hamburger (D-38, maquette d'Antonino du 24/10) :
@@ -35,6 +36,7 @@ export function AccountMenu() {
   const { user, space } = useShell();
   // Coach (D-58) : les Paramètres s'ouvrent en grande fenêtre par-dessus la page en cours.
   const openSettings = useOpenSettings();
+  const { closeMenu } = useMobileMenu();
   const [open, setOpen] = useState(false);
   // Position fixe, calculée sur la carte : la barre latérale défile et couperait un menu qui déborde.
   const [place, setPlace] = useState<{ left: number; bottom: number; width: number } | null>(null);
@@ -77,7 +79,9 @@ export function AccountMenu() {
 
   if (!user) return null;
   const hover = (next: boolean) => (event: React.PointerEvent) => {
-    if (event.pointerType !== "mouse") return;
+    // Seulement avec une vraie souris (appareil qui sait survoler) : sur téléphone, le menu s'ouvre
+    // au toucher, jamais parce qu'il apparaît sous un curseur immobile.
+    if (event.pointerType !== "mouse" || !window.matchMedia("(hover: hover)").matches) return;
     clearTimeout(closing.current);
     if (next) {
       if (!open) openedByHover.current = true;
@@ -90,11 +94,11 @@ export function AccountMenu() {
     "flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[15px] font-medium whitespace-nowrap transition-colors duration-150 hover:bg-selected-hover focus-visible:bg-selected-hover";
   const item = `${itemBase} text-text`;
   const close = () => setOpen(false);
-  // Téléphone : le menu hamburger est lui-même une fenêtre ; on le referme d'abord, pour retrouver
-  // la page (et non le menu) en fermant les Paramètres.
+  // Téléphone : on referme d'abord le menu ☰, pour retrouver la page (et non le menu) en fermant les
+  // Paramètres.
   const showSettings = (section: "profil" | null) => {
     close();
-    trigger.current?.closest("dialog")?.close();
+    closeMenu();
     openSettings?.(section);
   };
   // Coach : la fenêtre des Paramètres (ci-dessus) ; à défaut, la page (onglet Profil, sommaire).

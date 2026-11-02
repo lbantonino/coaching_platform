@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-import { isPhone } from "./helpers";
+import { isPhone, setAgendaFilter } from "./helpers";
 
 // Séances encadrées du coach (P2-05b, D-27, D-35) : collective hebdomadaire avec inscrits,
 // individuelle, nouveau sportif (fiche minimale), fenêtre « Nouvelle séance » commune, page Séances,
@@ -103,7 +103,11 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
 
   // Modification depuis la journée du 13 : nouvelle heure, un inscrit en moins.
   await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=2027-01-13`);
-  await page.getByRole("link", { name: new RegExp(title) }).click();
+  // La grille contient plusieurs semaines : la séance de ce mercredi-là.
+  await page
+    .locator('[data-drop-date="2027-01-13"]')
+    .getByRole("link", { name: new RegExp(title) })
+    .click();
   await page.getByRole("link", { name: "Modifier", exact: true }).click();
   await expect(page.getByLabel(/^Prix pour toute la séance/)).toHaveValue("80");
   await page.getByLabel("Heure", { exact: true }).fill("19:30");
@@ -274,10 +278,7 @@ test("la vue Liste de l'Agenda montre les séances jour par jour, avec ses filtr
   const list = page.getByRole("region", { name: /^Séances du / });
   // « Piste du mercredi » (collective, chaque semaine, sans fin) est toujours dans les 4 semaines.
   await expect(list.getByRole("link", { name: /Piste du mercredi/ }).first()).toBeVisible();
-  await page
-    .getByRole("navigation", { name: "Filtrer l'agenda" })
-    .getByRole("link", { name: "Individuelles" })
-    .click();
+  await setAgendaFilter(page, "Collectives", false);
   await expect(page).toHaveURL(/vue=liste&type=individuelles/);
   await expect(list.getByRole("link", { name: /Piste du mercredi/ })).toHaveCount(0);
   // L'ancienne page Séances n'existe plus, ni dans le menu.

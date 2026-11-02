@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#08080a">
+    <title>Coory, tableau de bord (maquette v7b)</title>
+    <link rel="icon" href="../coory-brand/favicon.svg" type="image/svg+xml">
+    <!--
+      MAQUETTE v7 (1er novembre 2026), hors de l'application. Demandes d'Antonino après l'essai sur téléphone :
+      - Agenda en 2e position dans le menu, sous Tableau de bord.
+      - Plus d'agenda sur le tableau de bord : Prochaine séance, Tâches à faire, Encaissé cette semaine,
+        puis Séances à venir, Programmes en cours, Activité financière.
+      - Ordinateur : tout tient dans un écran (100 % de la hauteur), le bas des trois cartes du bas aligné sur le
+        bas du menu de gauche ; les listes défilent dans leur carte si besoin.
+      - Plus de bouton de thème dans la barre du haut (il reste dans les Paramètres). Le bouton en pointillés en
+        bas à gauche sert seulement à comparer sombre et clair dans la maquette.
+      v7b (même soir) : rangée du bas moins « carrée » : Séances à venir sur deux colonnes, une par jour (lundi à
+        gauche de haut en bas, mardi à droite) ; Programmes en cours au-dessus d'Activité financière dans la 3e colonne.
+      Base : maquette v6 validée (charte noir, blanc et violet, D-77). Données : démo A du 1er novembre.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style type="text/tailwindcss">
+        @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+        @theme inline {
+            --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+            --color-bg: var(--bg);
+            --color-card: var(--card);
+            --color-card-solid: var(--card-solid);
+            --color-well: var(--well);
+            --color-line: var(--line);
+            --color-line-soft: var(--line-soft);
+            --color-line-2: var(--line-2);
+            --color-fill: var(--fill);
+            --color-fill-strong: var(--fill-strong);
+            --color-fg: var(--fg);
+            --color-fg-2: var(--fg-2);
+            --color-muted: var(--muted);
+            --color-faint: var(--faint);
+            --color-cta: var(--cta);
+            --color-on-cta: var(--on-cta);
+            --color-ok: var(--ok);
+            --color-ok-bg: var(--ok-bg);
+            --color-alert: var(--alert);
+            --color-brand: var(--violet);
+            --color-brand-soft: var(--violet-soft);
+            --color-brand-soft-2: var(--violet-soft-2);
+            --color-brand-line: var(--violet-line);
+            --color-brand-text: var(--violet-text);
+            --color-ai-bg: var(--ai-bg);
+            --color-ai-border: var(--ai-border);
+            --color-ai-text: var(--ai-text);
+        }
+    </style>
+    <style>
+        :root, [data-theme="dark"] {
+            --bg: #08080a; --card: rgba(255, 255, 255, 0.025); --card-solid: #111113; --well: rgba(255, 255, 255, 0.03);
+            --line: rgba(255, 255, 255, 0.08); --line-soft: rgba(255, 255, 255, 0.05); --line-2: rgba(255, 255, 255, 0.14);
+            --fill: rgba(255, 255, 255, 0.05); --fill-strong: rgba(255, 255, 255, 0.09);
+            --fg: #f4f4f5; --fg-2: #d4d4d8; --muted: #a1a1aa; --faint: #8b8b94;
+            --cta: #f4f4f5; --on-cta: #09090b; --glow: rgba(255, 255, 255, 0.03);
+            --ok: #34d399; --ok-bg: rgba(52, 211, 153, 0.1); --alert: #fb7185;
+            --run: #7776ff; --str: #dd2d4a; --hyr: #ffc04f; --hyb: #26cbb8;
+            --run-t: #7776ff; --str-t: #ea4d66; --hyr-t: #ffc04f; --hyb-t: #26cbb8;
+            --violet: #8B5CF6; --violet-soft: rgba(139, 92, 246, .16); --violet-soft-2: rgba(139, 92, 246, .18);
+            --violet-line: rgba(139, 92, 246, .35); --violet-text: #B9A3FF;
+            --ai-bg: rgba(139, 92, 246, .22); --ai-border: rgba(139, 92, 246, .55); --ai-text: #E4DBFF;
+            --lane: rgba(255, 255, 255, 0.045);
+            color-scheme: dark;
+        }
+        [data-theme="light"] {
+            --bg: #F3F2F7; --card: #FFFFFF; --card-solid: #FFFFFF; --well: #F8F7FB;
+            --line: rgba(22, 18, 40, .08); --line-soft: rgba(22, 18, 40, .06); --line-2: rgba(22, 18, 40, .14);
+            --fill: rgba(22, 18, 40, .04); --fill-strong: #EEEDF3;
+            --fg: #17151D; --fg-2: #3B3946; --muted: #64626E; --faint: #6E6C79;
+            --cta: #17151d; --on-cta: #ffffff; --glow: rgba(0, 0, 0, 0.025);
+            --ok: #047857; --ok-bg: rgba(16, 185, 129, 0.12); --alert: #be123c;
+            --run-t: #4b4ad6; --str-t: #b81d38; --hyr-t: #9a5b00; --hyb-t: #0b7468;
+            --violet-soft: rgba(139, 92, 246, .10); --violet-soft-2: rgba(139, 92, 246, .12); --violet-text: #6A3EE0;
+            --ai-bg: #7C4DEB; --ai-text: #FFFFFF;
+            --lane: #F1F0F5;
+            color-scheme: light;
+        }
+        html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif; background-color: var(--bg); color: var(--fg-2);
+            background-image: radial-gradient(circle at 10% 0%, var(--glow) 0%, transparent 45%), radial-gradient(circle at 90% 100%, var(--glow) 0%, transparent 45%);
+            background-attachment: fixed;
+        }
+        .glass { background: var(--card); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid var(--line); }
+        [data-theme="light"] .glass { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+        .meta { font: 500 11px/1.2 "Plus Jakarta Sans", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+        .d-run { --c: var(--run); --ct: var(--run-t); } .d-str { --c: var(--str); --ct: var(--str-t); }
+        .d-hyr { --c: var(--hyr); --ct: var(--hyr-t); } .d-hyb { --c: var(--hyb); --ct: var(--hyb-t); }
+        .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--c); flex: none; }
+        .sidebar[data-collapsed] { width: 68px; }
+        .sidebar[data-collapsed] .nav-label, .sidebar[data-collapsed] .nav-count, .sidebar[data-collapsed] .logo-full, .sidebar[data-collapsed] .me-text { display: none; }
+        .sidebar:not([data-collapsed]) .logo-mark { display: none; }
+        .sidebar[data-collapsed] .nav-item { justify-content: center; padding: 0; position: relative; }
+        .sidebar[data-collapsed] .nav-item.has-count::after { content: ""; position: absolute; top: 6px; right: 12px; width: 6px; height: 6px; border-radius: 999px; background: var(--violet); }
+        .sidebar[data-collapsed] .logo-row { flex-direction: column; gap: 14px; padding-left: 0; padding-right: 0; }
+        .sidebar[data-collapsed] .me { justify-content: center; padding: 12px 0 0; }
+        .chk { appearance: none; -webkit-appearance: none; flex: none; border: 1.5px solid var(--line-2); border-radius: 4px; background: transparent; cursor: pointer; }
+        .chk:checked { background: var(--violet) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% no-repeat; border-color: var(--violet); }
+        .drawer { transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1); }
+        .scroll-soft { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; overscroll-behavior: contain; }
+        button, a, label { touch-action: manipulation; }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    </style>
+    <script>
+        try { const t = localStorage.getItem("coory-maquette-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+    </script>
+</head>
+<body class="antialiased text-[13px] leading-normal">
+    <div class="flex lg:h-dvh lg:overflow-hidden p-3 gap-3">
+
+        <!-- Menu (ordinateur) : Agenda en 2e position. -->
+        <aside id="sidebar" class="sidebar hidden lg:flex w-60 shrink-0 glass rounded-[20px] flex-col justify-between p-4 select-none" aria-label="Menu principal">
+            <div class="space-y-6">
+                <div class="logo-row flex items-center justify-between px-2.5 pt-4">
+                    <span class="logo-full inline-flex shrink-0"><img src="../coory-brand/logo/coory-logo-fond-sombre.svg" alt="Coory" class="h-[15px] w-auto hidden dark:block"><img src="../coory-brand/logo/coory-logo-fond-clair.svg" alt="Coory" class="h-[15px] w-auto dark:hidden"></span>
+                    <span class="logo-mark inline-flex shrink-0"><img src="../coory-brand/icone/coory-icone-fond-sombre.svg" alt="Coory" class="h-[18px] w-auto hidden dark:block"><img src="../coory-brand/icone/coory-icone-fond-clair.svg" alt="Coory" class="h-[18px] w-auto dark:hidden"></span>
+                    <button id="collapse" aria-label="Réduire le menu" aria-expanded="true" class="w-7 h-7 grid place-items-center rounded-md text-muted hover:text-fg hover:bg-fill transition-colors"><i class="ph ph-sidebar-simple text-[16px]"></i></button>
+                </div>
+                <nav id="nav" class="space-y-0.5 text-[13px]"></nav>
+            </div>
+            <div class="me pt-3 border-t border-line-soft flex items-center gap-2.5 px-1">
+                <img src="../../../supabase/seed-photos/coach-a.jpg" alt="" class="w-6 h-6 rounded-full object-cover">
+                <div class="me-text leading-tight">
+                    <div class="text-[12px] font-medium text-fg">Gianluca Lo Bianco</div>
+                    <div class="text-[11px] text-muted">Coach</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 min-w-0 flex flex-col gap-4 pb-24 lg:pb-0 lg:min-h-0">
+
+            <!-- Téléphone : barre du haut -->
+            <header class="lg:hidden glass rounded-[20px] h-16 pl-4 pr-2 flex items-center justify-between sticky top-3 z-20">
+                <span class="inline-flex shrink-0"><img src="../coory-brand/icone/coory-icone-fond-sombre.svg" alt="Coory" class="h-5 w-auto hidden dark:block"><img src="../coory-brand/icone/coory-icone-fond-clair.svg" alt="Coory" class="h-5 w-auto dark:hidden"></span>
+                <h1 class="text-[15px] font-semibold text-fg">Tableau de bord</h1>
+                <div class="flex items-center gap-1">
+                    <button aria-label="Assistant IA" class="w-11 h-11 grid place-items-center rounded-xl bg-ai-bg border border-ai-border text-ai-text"><i class="ph-fill ph-sparkle text-[18px]"></i></button>
+                    <button aria-label="Notifications, 6 à voir" class="relative w-11 h-11 grid place-items-center rounded-xl text-fg-2 hover:bg-fill"><i class="ph ph-bell text-[18px]"></i><span aria-hidden="true" class="absolute top-2 right-2 min-w-4 h-4 px-1 rounded-full bg-brand text-white text-[9px] font-semibold leading-4 text-center shadow-[0_0_0_2px_var(--card-solid)]">6</span></button>
+                    <button id="open-menu" aria-label="Ouvrir le menu" class="w-11 h-11 grid place-items-center rounded-xl text-fg-2 hover:bg-fill"><i class="ph ph-list text-[18px]"></i></button>
+                </div>
+            </header>
+
+            <!-- Ordinateur : en-tête, sans bouton de thème. -->
+            <header class="hidden lg:flex shrink-0 glass rounded-[20px] h-16 px-5 items-center justify-between">
+                <h1 class="text-[15px] font-semibold text-fg tracking-tight">Tableau de bord</h1>
+                <div class="flex items-center gap-2">
+                    <label class="relative flex items-center">
+                        <i class="ph ph-magnifying-glass absolute left-2.5 text-[14px] text-faint"></i>
+                        <input type="text" placeholder="Rechercher dans Coory…" aria-label="Rechercher dans Coory" class="h-8 w-56 rounded-lg bg-well border border-line pl-8 pr-10 text-[12px] text-fg placeholder:text-faint focus:outline-none focus:border-muted">
+                        <kbd class="absolute right-2 text-[11px] font-sans text-faint border border-line rounded px-1 py-px">⌘K</kbd>
+                    </label>
+                    <button class="h-8 px-3 flex items-center gap-1.5 rounded-lg bg-ai-bg border border-ai-border text-ai-text hover:brightness-110 transition text-[12px] font-medium"><i class="ph-fill ph-sparkle text-[14px]"></i>Assistant IA</button>
+                    <button aria-label="Notifications, 6 à voir" class="relative w-8 h-8 grid place-items-center rounded-lg border border-line text-fg-2 hover:bg-fill transition-colors"><i class="ph ph-bell text-[15px]"></i><span aria-hidden="true" class="absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 rounded-full bg-brand text-white text-[9px] font-semibold leading-4 text-center shadow-[0_0_0_2px_var(--card-solid)]">6</span></button>
+                    <button class="h-8 px-3.5 flex items-center gap-1.5 rounded-lg bg-cta text-on-cta text-[12px] font-medium hover:opacity-90 active:scale-[0.97] transition"><i class="ph ph-plus text-[13px]"></i>Créer</button>
+                </div>
+            </header>
+
+            <!-- Rangée du haut : Prochaine séance, Tâches, Encaissé (inchangées depuis la v6). -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0">
+                <section class="glass rounded-[20px] p-5 flex flex-col justify-between gap-5" style="border-color: var(--violet-line)" aria-label="Prochaine séance">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="meta">Prochaine séance</span>
+                            <span class="flex items-center gap-2">
+                                <span class="flex items-center gap-1.5 h-5 px-2 rounded-full bg-ok-bg text-ok text-[11px] font-medium"><span class="w-1.5 h-1.5 rounded-full bg-ok"></span>demain</span>
+                                <span class="text-[11px] text-muted tabular-nums">1 / 6</span>
+                            </span>
+                        </div>
+                        <div class="text-[26px] leading-none font-semibold text-brand-text tracking-tight tabular-nums">07:00</div>
+                        <div class="flex items-center gap-2.5 mt-2.5">
+                            <img src="../../../supabase/seed-photos/nadia.jpg" alt="" class="w-7 h-7 rounded-full object-cover outline outline-[1.5px] outline-offset-2 outline-brand">
+                            <div class="min-w-0">
+                                <div class="text-[13px] font-medium text-fg">Nadia El Amrani</div>
+                                <div class="text-[12px] text-muted mt-0.5">Coaching force · 60 min · Salle de sport</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-1.5">
+                            <span class="d-str h-6 px-2 flex items-center gap-1.5 rounded-md border border-line text-[11px] text-fg-2"><span class="dot"></span>Musculation</span>
+                            <span class="h-6 px-2 flex items-center rounded-md border border-line text-[11px] text-fg-2">Individuelle</span>
+                        </div>
+                        <div class="flex gap-1">
+                            <button aria-label="Ouvrir la séance" class="w-7 h-7 grid place-items-center rounded-md text-muted hover:text-fg hover:bg-fill"><i class="ph ph-arrow-up-right text-[14px]"></i></button>
+                            <button aria-label="Écrire à Nadia El Amrani" class="w-7 h-7 grid place-items-center rounded-md text-muted hover:text-fg hover:bg-fill"><i class="ph ph-chat-circle text-[14px]"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="glass rounded-[20px] p-5" aria-labelledby="t-tasks">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 id="t-tasks" class="text-[13px] font-medium text-fg">Tâches à faire</h2>
+                        <span class="h-5 min-w-5 px-1.5 grid place-items-center rounded-md bg-brand-soft-2 text-brand-text text-[11px] font-medium tabular-nums"><span class="sr-only">Tâches à faire : </span>2</span>
+                    </div>
+                    <ul class="space-y-3.5">
+                        <li><label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" class="chk mt-0.5 w-3.5 h-3.5">
+                            <span class="text-[13px] text-fg leading-snug"><span class="text-alert" aria-hidden="true">! </span>Préparer le bloc 2 du programme de Lucas<span class="block text-[11.5px] text-muted mt-0.5"><span class="text-alert">En retard</span> · Lucas Janssens</span></span>
+                        </label></li>
+                        <li><label class="flex items-start gap-2.5 cursor-pointer">
+                            <input type="checkbox" class="chk mt-0.5 w-3.5 h-3.5">
+                            <span class="text-[13px] text-fg leading-snug">Relancer Sophie pour la facture d'octobre<span class="block text-[11.5px] text-muted mt-0.5">Mer 4 · Sophie Lambert</span></span>
+                        </label></li>
+                    </ul>
+                </section>
+
+                <section class="glass rounded-[20px] p-5 flex flex-col justify-between gap-5" aria-label="Encaissé cette semaine">
+                    <div>
+                        <span class="meta">Encaissés cette semaine</span>
+                        <div class="text-[26px] leading-none font-semibold text-fg tracking-tight tabular-nums mt-3">3&nbsp;457,30&nbsp;€</div>
+                        <p class="text-[12px] text-muted mt-2.5">2&nbsp;857,27&nbsp;€ HTVA · 6 paiements</p>
+                    </div>
+                    <span class="self-start h-6 px-2 flex items-center rounded-md bg-ok-bg text-ok text-[11px] font-medium tabular-nums">1&nbsp;008,80&nbsp;€ prévus (13 séances)</span>
+                </section>
+            </div>
+
+            <!-- Rangée du bas (v7b, demande d'Antonino) : « Séances à venir », la plus importante, prend deux
+                 colonnes ; à droite, « Programmes en cours » (large comme « Tâches à faire ») au-dessus
+                 d'« Activité financière », qui descend jusqu'en bas. Elle prend toute la hauteur restante ;
+                 son bas est aligné sur celui du menu. Les listes défilent dans leur carte si besoin. -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:flex-1 lg:min-h-0">
+                <section class="md:col-span-2 glass rounded-[20px] p-5 flex flex-col lg:min-h-0" aria-labelledby="t-upcoming">
+                    <div class="flex items-center justify-between mb-1 shrink-0">
+                        <h2 id="t-upcoming" class="text-[13px] font-medium text-fg">Séances à venir</h2>
+                        <a href="#" class="text-[12px] text-brand-text hover:opacity-80">Voir tout</a>
+                    </div>
+                    <div id="upcoming" class="lg:flex-1 lg:min-h-0 lg:overflow-y-auto scroll-soft lg:-mr-2 lg:pr-2"></div>
+                </section>
+
+                <div class="flex flex-col gap-4 lg:min-h-0">
+                    <section class="glass rounded-[20px] p-5 shrink-0" aria-labelledby="t-programs">
+                        <div class="flex items-center justify-between mb-1">
+                            <h2 id="t-programs" class="text-[13px] font-medium text-fg">Programmes en cours</h2>
+                            <a href="#" class="text-[12px] text-brand-text hover:opacity-80">Voir tout</a>
+                        </div>
+                        <ul class="divide-y divide-line-soft">
+                            <li class="flex items-center gap-3 py-2"><img src="../../../supabase/seed-photos/ines.jpg" alt="" class="w-6 h-6 rounded-full object-cover outline outline-[1.5px] outline-offset-1 outline-brand"><div class="min-w-0 flex-1"><div class="text-[13px] font-medium text-fg">Inès Benali</div><div class="text-[12px] text-muted truncate">Prépa Hyrox Bruxelles · bloc 1</div></div><div class="flex flex-col items-end gap-1.5"><span class="text-[11px] text-muted tabular-nums">Sem. 1/12</span><span class="w-12 h-[3px] rounded-full bg-fill-strong overflow-hidden"><span class="block h-full w-[8.33%] bg-brand"></span></span></div></li>
+                            <li class="flex items-center gap-3 py-2"><span class="w-6 h-6 rounded-full bg-fill-strong grid place-items-center text-[9px] font-semibold text-fg-2">AM</span><div class="min-w-0 flex-1"><div class="text-[13px] font-medium text-fg">Antoine Maes</div><div class="text-[12px] text-muted truncate">Programme renforcement · bloc 1</div></div><div class="flex flex-col items-end gap-1.5"><span class="text-[11px] text-muted tabular-nums">Sem. 1/12</span><span class="w-12 h-[3px] rounded-full bg-fill-strong overflow-hidden"><span class="block h-full w-[8.33%] bg-brand"></span></span></div></li>
+                            <li class="flex items-center gap-3 py-2"><span class="w-6 h-6 rounded-full bg-fill-strong grid place-items-center text-[9px] font-semibold text-fg-2">CR</span><div class="min-w-0 flex-1"><div class="text-[13px] font-medium text-fg">Camille Renard</div><div class="text-[12px] text-muted truncate">Programme running · bloc 1</div></div><div class="flex flex-col items-end gap-1.5"><span class="text-[11px] text-muted tabular-nums">Sem. 1/12</span><span class="w-12 h-[3px] rounded-full bg-fill-strong overflow-hidden"><span class="block h-full w-[8.33%] bg-brand"></span></span></div></li>
+                        </ul>
+                    </section>
+
+                    <section class="glass rounded-[20px] p-5 flex flex-col lg:flex-1 lg:min-h-0" aria-labelledby="t-money">
+                        <div class="flex items-center justify-between mb-1 shrink-0">
+                            <h2 id="t-money" class="text-[13px] font-medium text-fg">Activité financière</h2>
+                            <a href="#" class="text-[12px] text-brand-text hover:opacity-80">Voir tout</a>
+                        </div>
+                        <ul class="divide-y divide-line-soft lg:min-h-0 lg:overflow-y-auto scroll-soft">
+                            <li class="flex items-center justify-between py-2"><div><div class="text-[13px] text-fg-2">0 facture envoyée</div><div class="text-[12px] text-muted">Ce mois-ci</div></div><span class="text-[13px] font-medium text-fg tabular-nums">0,00&nbsp;€</span></li>
+                            <li class="flex items-center justify-between py-2"><div><div class="text-[13px] text-fg-2">0 paiement reçu</div><div class="text-[12px] text-muted">Ce mois-ci</div></div><span class="text-[13px] font-medium text-fg tabular-nums">0,00&nbsp;€</span></li>
+                            <li class="flex items-center justify-between py-2"><div><div class="text-[13px] text-fg-2">1 paiement en attente</div><div class="text-[12px] text-alert">En retard</div></div><span class="text-[13px] font-medium text-alert tabular-nums">150,00&nbsp;€</span></li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Téléphone : menu ☰ (Agenda en 2e, recherche au cadre des lignes du menu). Il glisse depuis la DROITE,
+         côté bouton ☰, s'arrête aux 5/6 de l'écran (la page reste visible derrière, grisée), coins droits. -->
+    <div id="menu-scrim" hidden class="lg:hidden fixed inset-0 z-40 bg-black/45"></div>
+    <div id="menu" class="drawer lg:hidden fixed right-0 top-0 z-50 h-dvh w-[83.333%] max-w-[420px] translate-x-full bg-card-solid border-l border-line flex flex-col overflow-y-auto px-3.5 pt-[max(20px,env(safe-area-inset-top))] pb-[max(20px,env(safe-area-inset-bottom))]" role="dialog" aria-label="Menu" aria-hidden="true">
+        <div class="h-12 pl-1 flex items-center justify-between">
+            <span class="inline-flex"><img src="../coory-brand/logo/coory-logo-fond-sombre.svg" alt="Coory" class="h-[14px] w-auto hidden dark:block"><img src="../coory-brand/logo/coory-logo-fond-clair.svg" alt="Coory" class="h-[14px] w-auto dark:hidden"></span>
+            <button id="close-menu" aria-label="Fermer le menu" class="w-11 h-11 grid place-items-center rounded-xl text-fg-2 hover:bg-fill"><i class="ph ph-x text-[18px]"></i></button>
+        </div>
+        <label class="mt-3 h-11 shrink-0 flex items-center gap-3 px-3 rounded-xl border border-line">
+            <i class="ph ph-magnifying-glass text-[19px] text-muted"></i>
+            <input type="search" placeholder="Rechercher dans Coory…" class="flex-1 min-w-0 bg-transparent text-[16px] text-fg placeholder:text-muted outline-none">
+        </label>
+        <nav id="nav-phone" class="mt-4 flex flex-col gap-4"></nav>
+        <div class="mt-auto pt-4"><div class="flex items-center gap-3 p-3 rounded-xl border border-line"><img src="../../../supabase/seed-photos/coach-a.jpg" alt="" class="w-9 h-9 rounded-full object-cover"><div class="min-w-0 flex-1 leading-tight"><div class="text-[14px] font-medium text-fg">Gianluca Lo Bianco</div><div class="text-[12px] text-muted">Coach</div></div><i class="ph ph-caret-down text-[14px] text-muted"></i></div></div>
+    </div>
+
+    <!-- Téléphone : « Créer » à portée de pouce. -->
+    <button class="lg:hidden fixed right-4 bottom-5 z-30 h-12 px-5 flex items-center gap-2 rounded-2xl bg-cta text-on-cta text-[14px] font-medium shadow-lg active:scale-[0.97] transition"><i class="ph ph-plus"></i>Créer</button>
+
+    <!-- MAQUETTE seulement (pointillés) : comparer sombre et clair, et les façons de séparer les jours dans
+         « Séances à venir ». Dans l'app, le thème se choisit dans les Paramètres. -->
+    <div class="fixed left-3 bottom-5 lg:left-1/2 lg:-translate-x-1/2 lg:top-[22px] lg:bottom-auto z-30 h-11 lg:h-10 pl-1 pr-1.5 flex items-center gap-1.5 rounded-xl border border-dashed border-line-2 bg-card-solid text-[12px] text-muted shadow-lg">
+        <button data-theme-toggle aria-label="Changer de thème (maquette)" class="w-9 h-9 lg:w-8 lg:h-8 grid place-items-center rounded-lg hover:bg-fill"><i class="ph ph-sun-dim text-[15px] hidden dark:inline"></i><i class="ph ph-moon text-[15px] dark:hidden"></i></button>
+        <label for="variants" class="pl-0.5">Séparer les jours</label>
+        <select id="variants" class="h-8 lg:h-7 pl-2 pr-7 rounded-md border border-line bg-card-solid text-[12px] text-fg appearance-none" style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%238b8b94' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 6px center; background-size: 14px">
+            <option value="panneaux">Panneaux</option>
+            <option value="date">Grande date</option>
+            <option value="filet">Filet</option>
+            <option value="frise">Frise</option>
+            <option value="bandeau">Bandeau</option>
+            <option value="rail">Rail</option>
+        </select>
+    </div>
+
+<script>
+    // Menu : Agenda en 2e position.
+    const MAIN = [["house", "Tableau de bord", true], ["calendar-blank", "Agenda"], ["users", "Sportifs"], ["clipboard-text", "Programmes"], ["receipt", "Facturation"], ["calculator", "Comptabilité"], ["books", "Bibliothèque"]];
+    const MORE = [["sparkle", "Assistant IA", false, 0, true], ["chat-circle", "Messages", false, 3], ["check-square", "Tâches"], ["folder", "Documents"], ["bell", "Notifications", false, 6]];
+    const item = ([icon, label, active, count, ai], large) => `<a href="#" title="${label}" ${active ? 'aria-current="page"' : ""} class="nav-item ${count ? "has-count" : ""} flex items-center ${large ? "min-h-11 gap-3 px-3 rounded-xl text-[16px]" : "h-8 gap-2.5 px-2.5 rounded-lg"} ${active ? "bg-brand-soft text-fg font-medium" : "text-muted hover:text-fg hover:bg-fill"} transition-colors">
+            <i class="${ai ? "ph-fill" : "ph"} ph-${icon} ${large ? "text-[19px]" : "text-[16px]"} ${active ? "text-brand-text" : ai ? "text-brand" : ""}" aria-hidden="true"></i>
+            <span class="nav-label">${label}</span>
+            ${count ? `<span aria-hidden="true" class="nav-count ml-auto h-5 px-1.5 grid place-items-center rounded-[10px] bg-brand-soft-2 text-brand-text text-[11px] tabular-nums">${count}</span>` : ""}
+        </a>`;
+    document.getElementById("nav").innerHTML = MAIN.map((i) => item(i)).join("") + '<div class="!my-3 border-t border-line-soft"></div>' + MORE.map((i) => item(i)).join("");
+    const section = (title, list) => `<div><p class="px-1 pb-1.5 text-[11px] font-medium tracking-[0.08em] text-muted uppercase">${title}</p><div class="flex flex-col gap-0.5">${list.map((i) => item(i, true)).join("")}</div></div>`;
+    document.getElementById("nav-phone").innerHTML = section("Principal", MAIN) + section("Plus", MORE);
+
+    // Séances à venir : une colonne par jour (lundi à gauche, de haut en bas ; mardi à droite), en petites
+    // cartes ; l'heure, la discipline écrite dans sa couleur ; la plus proche, teintée de violet, « Prochaine ».
+    const UP = [
+        ["Lundi 2 novembre", "lun.", "2", "Demain", [
+            ["07:00", "str", "Nadia El Amrani · Coaching force"],
+            ["08:15", "str", "Yanis Khelifi · Coaching force"],
+            ["12:15", "run", "Emma Laurent · Coaching running"],
+            ["17:30", "hyb", "Lucas Janssens · Coaching hybride"],
+            ["19:00", "hyr", "Small group Hyrox · Collective · 2 inscrits"],
+            ["20:15", "str", "Manon · Coaching force"],
+        ]],
+        ["Mardi 3 novembre", "mar.", "3", "Dans 2 jours", [
+            ["07:00", "hyr", "Inès Benali · Coaching Hyrox"],
+            ["08:15", "str", "Chloé Martin · Coaching force"],
+            ["12:15", "run", "Thomas Peeters · Coaching running"],
+            ["13:30", "str", "Antoine Maes · Coaching force"],
+        ]],
+    ];
+    const LABEL = { str: "Musculation", run: "Running", hyb: "Hybride", hyr: "Hyrox" };
+    // Six façons de séparer les jours (à comparer) ; en plus des trois ci-dessous : Frise (une ligne de temps
+    // par jour), Bandeau (un en-tête plein par jour), Rail (une bande verticale à gauche de chaque jour).
+    // - Filet : un filet vertical entre les colonnes, une pastille calendrier en tête de chaque jour ;
+    // - Panneaux : chaque jour dans son panneau grisé, ses cartes posées dessus, un espace entre les jours ;
+    // - Grande date : le numéro du jour écrit en grand (violet pour le premier), un large espace entre les colonnes.
+    let variant = "panneaux";
+    try { variant = localStorage.getItem("coory-maquette-jours") || variant; } catch {}
+    const card = ([time, d, sub], next, onLane) => `<li class="d-${d} px-3 py-2.5 rounded-2xl border ${next ? "bg-brand-soft border-brand-line" : onLane ? "bg-card-solid border-line-soft hover:border-line" : "bg-well border-line-soft hover:border-line"} transition-colors">
+            <div class="flex items-baseline justify-between gap-2 leading-snug">
+                <span class="flex items-center gap-2"><span class="text-[13px] font-semibold text-fg tabular-nums">${time}</span>${next ? '<span class="h-5 -my-1 px-2 grid place-items-center rounded-[10px] bg-brand text-white text-[11px] font-medium">Prochaine</span>' : ""}</span>
+                <span class="text-[10px] text-[var(--ct)]">${LABEL[d]}</span>
+            </div>
+            <p class="text-[12px] leading-snug text-muted mt-px truncate">${sub}</p>
+        </li>`;
+    const tile = (wd, num, i) => `<span class="w-10 h-10 shrink-0 rounded-xl flex flex-col items-center justify-center leading-none ${i ? "bg-fill-strong text-fg" : "bg-brand-soft text-brand-text"}"><span class="text-[10px] ${i ? "text-muted" : ""}">${wd}</span><span class="text-[15px] font-semibold tabular-nums mt-0.5">${num}</span></span>`;
+    function renderUpcoming() {
+        const list = (items, di, onLane) => `<ul class="flex flex-col gap-2.5 ${onLane ? "lg:min-h-0 lg:overflow-y-auto scroll-soft lg:-mr-1.5 lg:pr-1.5" : ""}">${items.map((it, j) => card(it, di === 0 && j === 0, onLane)).join("")}</ul>`;
+        let html;
+        if (variant === "panneaux") {
+            html = `<div class="grid gap-3 pt-3 sm:grid-cols-2 lg:h-full">${UP.map(([day, wd, num, when, items], i) => `<div class="min-w-0 flex flex-col lg:min-h-0 rounded-[18px] p-3" style="background: var(--lane)">
+                    <div class="shrink-0 flex items-center gap-3 px-0.5 pb-3">${tile(wd, num, i)}<div class="min-w-0"><p class="text-[13px] font-medium text-fg">${day}</p><p class="text-[11.5px] text-muted">${when} · ${items.length} séances</p></div></div>
+                    ${list(items, i, true)}
+                </div>`).join("")}</div>`;
+        } else if (variant === "date") {
+            html = `<div class="grid gap-y-6 pt-3 sm:grid-cols-2 sm:gap-x-10">${UP.map(([day, wd, num, when, items], i) => `<div class="min-w-0">
+                    <div class="flex items-end gap-3 pb-3.5">
+                        <span class="text-[38px] leading-[0.85] font-semibold tracking-tight tabular-nums ${i ? "text-fg" : "text-brand-text"}">${num}</span>
+                        <div class="pb-px"><p class="text-[13px] font-medium text-fg leading-tight">${day.split(" ")[0]}</p><p class="text-[11.5px] text-muted leading-tight mt-0.5">${when} · ${items.length} séances</p></div>
+                    </div>
+                    ${list(items, i, false)}
+                </div>`).join("")}</div>`;
+        } else if (variant === "frise") {
+            // Une ligne de temps par jour : un point de la couleur de la discipline par séance ; la ligne du
+            // premier jour est violette, celle du suivant grise.
+            html = `<div class="grid gap-y-6 pt-3 sm:grid-cols-2 sm:gap-x-8">${UP.map(([day, wd, num, when, items], i) => `<div class="min-w-0">
+                    <div class="flex items-center gap-3 pb-3">${tile(wd, num, i)}<div class="min-w-0"><p class="text-[13px] font-medium text-fg">${day}</p><p class="text-[11.5px] text-muted">${when} · ${items.length} séances</p></div></div>
+                    <ol class="relative ml-5 border-l-2 ${i ? "border-line-2" : "border-brand"} pl-5 flex flex-col gap-1">${items.map(([time, d, sub], j) => {
+                        const next = i === 0 && j === 0;
+                        return `<li class="d-${d} relative">
+                            <span class="absolute -left-[27px] top-[17px] w-3 h-3 rounded-full border-2 border-[var(--card-solid)]" style="background: var(--c)"></span>
+                            <div class="px-3 py-2 rounded-xl ${next ? "bg-brand-soft" : "hover:bg-fill"} transition-colors">
+                                <div class="flex items-baseline justify-between gap-2 leading-snug"><span class="flex items-center gap-2"><span class="text-[13px] font-semibold text-fg tabular-nums">${time}</span>${next ? '<span class="h-5 -my-1 px-2 grid place-items-center rounded-[10px] bg-brand text-white text-[11px] font-medium">Prochaine</span>' : ""}</span><span class="text-[10px] text-[var(--ct)]">${LABEL[d]}</span></div>
+                                <p class="text-[12px] leading-snug text-muted mt-px truncate">${sub}</p>
+                            </div>
+                        </li>`;
+                    }).join("")}</ol>
+                </div>`).join("")}</div>`;
+        } else if (variant === "bandeau") {
+            // Un bandeau plein en tête de chaque jour (violet clair pour le premier, gris pour le suivant).
+            html = `<div class="grid gap-y-5 pt-3 sm:grid-cols-2 sm:gap-x-4">${UP.map(([day, wd, num, when, items], i) => `<div class="min-w-0">
+                    <div class="mb-3 h-11 px-3.5 flex items-center justify-between gap-3 rounded-xl ${i ? "bg-fill-strong" : "bg-brand-soft"}">
+                        <span class="text-[13px] font-semibold ${i ? "text-fg" : "text-brand-text"}">${day}</span>
+                        <span class="text-[11.5px] ${i ? "text-muted" : "text-brand-text"}">${when} · ${items.length} séances</span>
+                    </div>
+                    ${list(items, i, false)}
+                </div>`).join("")}</div>`;
+        } else if (variant === "rail") {
+            // Une bande verticale à gauche de chaque jour, comme le talon d'un billet, avec la date en haut.
+            html = `<div class="grid gap-y-5 pt-3 sm:grid-cols-2 sm:gap-x-4">${UP.map(([day, wd, num, when, items], i) => `<div class="min-w-0 flex gap-2.5">
+                    <div class="w-12 shrink-0 rounded-2xl flex flex-col items-center pt-3 pb-3 gap-3 ${i ? "bg-fill-strong text-fg" : "bg-brand-soft text-brand-text"}">
+                        <span class="flex flex-col items-center leading-none"><span class="text-[10.5px] ${i ? "text-muted" : ""}">${wd}</span><span class="text-[19px] font-semibold tabular-nums mt-1">${num}</span></span>
+                        <span class="text-[10.5px] whitespace-nowrap ${i ? "text-muted" : ""}" style="writing-mode: vertical-rl; transform: rotate(180deg)">${when} · ${items.length} séances</span>
+                    </div>
+                    <div class="min-w-0 flex-1">${list(items, i, false)}</div>
+                </div>`).join("")}</div>`;
+        } else {
+            html = `<div class="grid gap-y-5 sm:grid-cols-2 sm:divide-x sm:divide-line">${UP.map(([day, wd, num, when, items], i) => `<div class="min-w-0 pt-3 ${i ? "border-t border-line-soft sm:border-t-0 sm:pl-4" : "sm:pr-4"}">
+                    <div class="flex items-center gap-3 pb-3">${tile(wd, num, i)}<div class="min-w-0"><p class="text-[13px] font-medium text-fg">${day}</p><p class="text-[11.5px] text-muted">${when} · ${items.length} séances</p></div></div>
+                    ${list(items, i, false)}
+                </div>`).join("")}</div>`;
+        }
+        document.getElementById("upcoming").innerHTML = html;
+        document.getElementById("variants").value = variant;
+    }
+    document.getElementById("variants").addEventListener("change", (e) => {
+        variant = e.target.value;
+        try { localStorage.setItem("coory-maquette-jours", variant); } catch {}
+        renderUpcoming();
+    });
+    renderUpcoming();
+
+    // Menu : réduire / déplier.
+    const sidebar = document.getElementById("sidebar");
+    const collapse = document.getElementById("collapse");
+    collapse.addEventListener("click", () => {
+        const closed = sidebar.toggleAttribute("data-collapsed");
+        collapse.setAttribute("aria-expanded", String(!closed));
+    });
+    // Téléphone : ouvrir / fermer le menu.
+    const menu = document.getElementById("menu");
+    const menuScrim = document.getElementById("menu-scrim");
+    const openMenu = (open) => { menu.classList.toggle("translate-x-full", !open); menu.setAttribute("aria-hidden", String(!open)); menuScrim.hidden = !open; };
+    document.getElementById("open-menu").addEventListener("click", () => openMenu(true));
+    document.getElementById("close-menu").addEventListener("click", () => openMenu(false));
+    menuScrim.addEventListener("click", () => openMenu(false));
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") openMenu(false); });
+    // Thème (maquette).
+    document.querySelectorAll("[data-theme-toggle]").forEach((btn) => btn.addEventListener("click", () => {
+        const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        document.querySelector('meta[name="theme-color"]').content = next === "dark" ? "#08080a" : "#F3F2F7";
+        try { localStorage.setItem("coory-maquette-theme", next); } catch {}
+    }));
+</script>
+</body>
+</html>

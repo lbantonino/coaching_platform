@@ -32,6 +32,122 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Menu ☰ sous la page (façon ChatGPT), outils en haut, graphique de l'encaissé (D-78, suite)
+```
+Date : 2026-11-01 (soir)
+Demandes d'Antonino : la page ne s'ouvrait pas sur son téléphone ; menu du téléphone comme ChatGPT
+  (il arrive par la gauche, la page glisse à droite avec les coins arrondis d'un iPhone) ; en haut,
+  ☰ seul à gauche et une petite carte à droite avec l'assistant IA, la cloche et « + » (plus de nom
+  de page, plus de grande barre) ; nom du jour de l'Agenda moins collé en haut et plus proche de sa
+  date (téléphone et ordinateur) ; retirer le « 1 » sur téléphone ; icône de la vue à côté de
+  « Semaine » sur ordinateur ; un petit graphique dans la carte « Encaissés cette semaine ».
+Téléphone : l'adresse tapée (192.168.2.154) n'était pas celle du Mac (192.168.0.27 ce soir-là, via
+  ipconfig getifaddr en0) ; le serveur répond bien sur le réseau, allowedDevOrigins était déjà prêt.
+Fait : mobile-menu-context.tsx (état du menu : ouvert, en train de se refermer ; Échap ; défilement
+  bloqué) et mobile-menu.tsx (bouton ☰, la page data-app-main qui glisse de --menu-w et se découpe en
+  clip-path à la taille de l'écran avec des coins de 40 px, le menu dessous qui glisse de 18 %, le bord
+  de page grisé qui referme au toucher ou suit le doigt vers la gauche) ; app-shell.tsx (overflow-x
+  clip : la page décalée n'élargit plus l'écran, sinon le navigateur dézoomait) ; mobile-bar.tsx
+  (deux cartes en haut, « + » de chaque page par portail : Créer sur le tableau de bord, Nouvelle
+  séance sur l'Agenda) ; account-menu.tsx (referme le menu avant les Paramètres) ; --bar-space
+  remplacé par --top-bar, --menu-w, --menu-radius ; messages, actions groupées et bas des pages
+  revenus à leur place d'avant. week-grid.tsx : la rangée de l'en-tête prend toute sa hauteur (le
+  centrage ne marchait pas : le nom du jour restait collé en haut), 64 px, nom en hauteur de ligne 1,
+  rond de 26 px. agenda-controls.tsx : « 1 » retiré (aujourd'hui reste dans « Novembre ▾ »), icône
+  de la vue sur ordinateur ; scroll-to-day.tsx : retour à aujourd'hui retiré. week-income-bars.tsx :
+  7 barres du lundi au dimanche (aujourd'hui en violet plein, jours passés en violet doux, montant au
+  survol), affichées si la carte fait au moins 280 px. page-header.tsx : sans retour ni action
+  visible, l'en-tête ne prend plus de place sur téléphone.
+Tests : lint, typecheck ; captures téléphone et ordinateur, sombre et clair ; mesures (page défilée :
+  coins aux coins de l'écran, barre visible ; Agenda : écran à 390 px menu ouvert) ; design.spec
+  adapté (la page glisse, Échap et toucher du bord referment) ; suite complète : 171 passés, 15
+  ignorés, 2 échecs connus (athlete-overview.spec.ts:68, liés à la date) ; db:reset fait.
+```
+
+### Défilement natif des jours sur plusieurs semaines ; barre de l'app en bas (D-78, suite)
+```
+Date : 2026-11-01
+Demandes d'Antonino : le glissé des jours était saccadé (« les jours doivent se charger ») ; pouvoir
+  s'arrêter sur n'importe quel jour en passant d'une semaine à l'autre ; barre de l'app en bas comme une
+  application mobile, « + » au-dessus (tableau de bord et Agenda) ; revue de la taille du texte.
+Fait : week-grid.tsx réécrit : deux zones imbriquées ([data-grid-scroll] vertical, [data-grid-x]
+  horizontal aimanté) ; le téléphone donne chaque geste à une seule zone, défilement natif avec élan ;
+  en-tête des jours et totaux synchronisés (scroll-to-day.tsx). La page charge 9 semaines (4 avant,
+  4 après) pour Jour, 3 jours et Semaine ; sur ordinateur seuls les jours choisis s'affichent. Au bout,
+  un glissé ouvre les semaines suivantes. Le mois de la barre suit les jours ; « 1 » ramène à
+  aujourd'hui sans recharger. Barre de l'app en bas pour le coach et l'admin (mobile-bar.tsx,
+  --bar-space dans globals.css) ; « + » (Créer, Nouvelle séance), messages, actions groupées des
+  sportifs et bas des pages au-dessus d'elle. pageSwipe (script) retiré.
+Corrigé au passage : la grille s'ouvrait à 00:00 sur ordinateur (hauteur lue sur un jour caché).
+Tests : lint, typecheck ; gestes simulés (vertical de travers : jours immobiles ; 3 glissés : du
+  31 oct. au 9 nov. sans rechargement) ; e2e agenda/séances/design/tâches adaptés (jours visibles
+  seulement, séance centrée avant un glisser) ; suite complète : 170 passés, 15 ignorés, 2 échecs connus
+  (fiche sportif, liés à la date) + 1 révélé : le menu du compte s'ouvrait au survol d'un curseur
+  immobile quand le menu du téléphone glissait dessous ; le survol est réservé aux appareils à souris
+  (hover: hover) ; bibliothèque, design, paramètres, connexion : 29/29.
+```
+
+### Agenda sur téléphone : défilement sans diagonale, heures plus hautes (D-78, suite)
+```
+Date : 2026-11-01
+Demande d'Antonino après essai sur iPhone : en 3 jours, descendre fait aussi glisser les jours sur le
+  côté ; des heures plus hautes comme Google Agenda ; retirer Matin / Midi / Après-midi / Soir.
+Cause : la grille était UNE zone qui défilait dans les deux sens ; un geste oblique la déplaçait en
+  diagonale.
+Fait : scroll-to-day.tsx (pageSwipe : touch-action pan-y, le navigateur ne fait défiler que
+  verticalement ; un geste franchement horizontal fait glisser les jours, qui se posent sur une
+  colonne ; jamais pendant un glisser-déposer) ; week-grid.tsx (hauteur d'une heure en variable CSS :
+  64 px téléphone, 48 px ordinateur ; plus de moments de la journée ni de leurs filets ; marge des
+  heures 40 / 48 px ; plus d'aimantation CSS) ; grid-interactions.tsx (le défilement automatique vers
+  la gauche pendant un glisser ne part que sur la marge des heures : il faisait atterrir une séance
+  de la première colonne le mauvais jour, défaut masqué jusque-là par l'aimantation).
+Tests : lint, typecheck ; gestes simulés (vertical avec 40 px de travers : les jours ne bougent pas ;
+  glissé horizontal : posé sur une colonne) ; e2e agenda, agenda interactif, séances : 31/31.
+```
+
+### Page Agenda façon Google Agenda (D-78, étape 2) ; menu du compte sur téléphone
+```
+Date : 2026-11-01
+Demande d'Antonino : la page Agenda comme la maquette agenda-v1 validée ; et sur téléphone, le menu
+  ne permettait pas d'atteindre les Paramètres (thème).
+Cause du menu : le panneau ouvert gardait un « translate » (translate-x-0), qui fait de lui le repère
+  des éléments « fixed » : le menu du compte se calculait par rapport à l'écran mais s'affichait
+  décalé hors du panneau. Ouvert, plus de déplacement (translate-none) ; la liste défile
+  (min-h-0, overscroll-contain).
+Fait : agenda/page.tsx réécrit ; agenda-controls.tsx (nouveau : menu des vues + raccourcis, cases,
+  petit calendrier, barre et feuille du téléphone) ; month-grid.tsx et session-day-list.tsx refaits ;
+  week-grid.tsx (fill, hour, vue Jour détaillée, plus de légende) ; new-session-sheet.tsx (variantes
+  header et fab) ; header-tools.tsx (recherche en loupe sous 1536 px) ; sidebar-toggle.tsx et
+  sidebar.ts (menu replié en arrivant sur l'Agenda, rendu à son état en repartant ; bouton du
+  panneau) ; globals.css (panneau masquable, fond plein sur téléphone) ; periodLabel déplacé dans
+  calendar.ts ; supprimés : agenda-toolbar, view-menu, week-time-grid, stat-tiles.
+Tests : lint, typecheck, Vitest 278/278 ; e2e agenda, agenda interactif, séances : 31/31 (les deux
+  tests mis de côté à l'étape 1 réactivés sur la page Agenda) ; aides chooseAgendaView et
+  setAgendaFilter ; suite complète : 171 passés, 15 ignorés, 2 échecs connus (fiche sportif, liés
+  à la date) ; captures ordinateur et téléphone, sombre et clair.
+```
+
+### Tableau de bord sans agenda, Agenda en 2e, menu téléphone à droite (D-78, étape 1)
+```
+Date : 2026-11-01
+Demande d'Antonino après essai sur iPhone : app « pas assez ergonomique ». Maquettes validées d'abord
+  (docs/design/maquettes/tableau-de-bord-v7.html et agenda-v1.html), puis code, étape par étape.
+Fait : navigation.ts (Agenda en 2e) ; header-tools.tsx (plus de bouton de thème) ; mobile-bar.tsx (menu
+  en <dialog> qui glisse depuis la droite, 5/6 de l'écran, coins droits, fond grisé, toucher le gris
+  ferme) ; page-header.tsx (PageBody `fill`) ; coach/page.tsx réécrit sans agenda (h-dvh + flex-none
+  sur ordinateur, rangée du bas en grid-rows minmax(0,1fr)) ; upcoming-days.tsx (nouveau, frise).
+  WeekGrid, MonthGrid et SwipeNav gardés pour l'étape 2 (page Agenda).
+Tests : lint, typecheck, Vitest 278/278 ; e2e : le test du tableau de bord réécrit (séances à venir,
+  programmes, Agenda 2e du menu), celui des vues du tableau de bord retiré (couvert par la page Agenda),
+  les 3 tests du clic sur un créneau et du glisser-déposer redirigés vers la page Agenda, les 2 tests
+  de la grille 00-24 et des glissés en attente (test.fixme) jusqu'à l'étape 2. Suite complète :
+  167 passés, 17 ignorés, 4 échecs : les 2 connus de la fiche sportif (liés à la date), et 2 dus à la
+  lenteur de la suite complète (factures, glisser au doigt) ; relancés seuls après db:reset : tous
+  passent (une séance d'essai restée en base bloquait le créneau du glisser).
+Vérifs au navigateur : ordinateur 700, 780 et 900 px de haut sans défilement, bas des cartes aligné
+  sur le menu ; téléphone 390, menu à droite (65 px de page visible), sombre et clair.
+```
+
 ### Vue Mois, changement de période au doigt, recherche du menu (D-77, suite)
 ```
 Date : 2026-11-01

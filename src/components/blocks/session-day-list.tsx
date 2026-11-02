@@ -1,85 +1,182 @@
-import { ListRow } from "@/components/blocks/list-row";
-import { Badge } from "@/components/ui/badge";
-import { disciplineLabels, disciplineTones } from "@/domain/training/discipline";
-import { dayLabel } from "@/features/agenda/calendar";
+import { Users } from "lucide-react";
+import Link from "next/link";
+
+import type { Discipline } from "@/domain/training/discipline";
 import type { WeekBlock } from "@/features/agenda/week";
-import { formatDuration } from "@/features/sessions/schemas";
-import { dayShortLabel, daysBetween } from "@/lib/format";
 
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+// Vue Liste de la page Agenda, à la façon du « Planning » de Google Agenda (D-78, maquette agenda-v1) :
+// les jours qui ont des séances, dans l'ordre. Ordinateur : une ligne par jour (le numéro en grand, le
+// mois et le jour en petit), puis chaque séance avec le point de sa discipline (cerclé pour une
+// collective), « 07:00 – 08:00 », le titre et le détail. Téléphone : la semaine en intertitre
+// (« 2 – 8 novembre »), le jour à gauche, chaque séance en carte de la couleur de sa discipline.
+// Aujourd'hui : numéro dans un rond violet, et une ligne violette à l'heure actuelle.
+const dots: Record<Discipline | "none", string> = {
+  running: "bg-run-fill",
+  strength: "bg-strength-fill",
+  hyrox: "bg-hyrox-fill",
+  hybrid: "bg-hybrid-fill",
+  none: "bg-muted",
+};
+const rings: Record<Discipline | "none", string> = {
+  running: "border-run-fill",
+  strength: "border-strength-fill",
+  hyrox: "border-hyrox-fill",
+  hybrid: "border-hybrid-fill",
+  none: "border-muted",
+};
+const cards: Record<Discipline | "none", string> = {
+  running: "bg-run-fill text-on-run-fill",
+  strength: "bg-strength-fill text-on-strength-fill",
+  hyrox: "bg-hyrox-fill text-on-hyrox-fill",
+  hybrid: "bg-hybrid-fill text-on-hybrid-fill",
+  none: "bg-chip text-text",
+};
 
-// Séances groupées par jour (demande d'Antonino du 26/10) : « Aujourd'hui » marqué d'une barre or,
-// « Demain » d'une barre ambre, les jours suivants en gris ; chaque séance garde la barre de son
-// jour, pour voir d'un coup d'œil où s'arrête la journée. Sert aux « Séances à venir » du tableau
-// de bord et à la vue Liste de l'Agenda (29/10/2026, qui remplace la page Séances) ; `detailed` :
-// le jour en entier (« Aujourd'hui · jeudi 29 octobre ») et la durée sous l'heure.
+const utc = (day: string) => new Date(`${day}T00:00:00Z`);
+const monthShort = new Intl.DateTimeFormat("fr-BE", { month: "short", timeZone: "UTC" });
+const weekdayShort = new Intl.DateTimeFormat("fr-BE", { weekday: "short", timeZone: "UTC" });
+const dayMonth = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "long",
+  timeZone: "UTC",
+});
+const dayMonthShort = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+const addDays = (day: string, n: number) => {
+  const date = utc(day);
+  date.setUTCDate(date.getUTCDate() + n);
+  return date.toISOString().slice(0, 10);
+};
+const mondayOf = (day: string) => addDays(day, -((utc(day).getUTCDay() + 6) % 7));
+const time = (minutes: number) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+// « 2 – 8 novembre », ou « 26 oct. – 1 nov. » à cheval sur deux mois.
+const weekRange = (monday: string) => {
+  const sunday = addDays(monday, 6);
+  return monday.slice(0, 7) === sunday.slice(0, 7)
+    ? `${utc(monday).getUTCDate()} – ${dayMonth.format(utc(sunday))}`
+    : `${dayMonthShort.format(utc(monday))} – ${dayMonthShort.format(utc(sunday))}`;
+};
+
+function NowLine() {
+  return (
+    <span aria-hidden className="relative my-1 block h-px bg-violet">
+      <span className="absolute -top-[3px] -left-[3px] size-[7px] rounded-full bg-violet" />
+    </span>
+  );
+}
+
 export function SessionDayList({
   blocks,
   today,
+  nowMinutes,
   sessionHref,
-  detailed = false,
 }: {
   blocks: WeekBlock[];
   today: string;
+  nowMinutes: number;
   sessionHref: (sessionId: string) => string;
-  detailed?: boolean;
 }) {
   const days = [...new Set(blocks.map((block) => block.date))];
+  let lastWeek = "";
   return (
-    <div className={`flex flex-col pt-1 ${detailed ? "gap-5" : "gap-3"}`}>
+    <div className="flex flex-col pb-24 lg:pb-2">
       {days.map((day) => {
-        const gap = daysBetween(today, day);
-        const bar = gap === 0 ? "bg-accent" : gap === 1 ? "bg-amber" : "bg-line-2";
-        const text = gap === 0 ? "text-accent-text" : gap === 1 ? "text-amber" : "text-muted";
-        const near = dayShortLabel(day, today);
-        const title = !detailed
-          ? near
-          : gap === 0 || gap === 1
-            ? `${near} · ${dayLabel(day)}`
-            : capitalize(dayLabel(day));
+        const list = blocks.filter((block) => block.date === day);
+        const isToday = day === today;
+        // Ligne « maintenant » : avant la première séance pas encore commencée (ou après la dernière).
+        const nowIndex = isToday ? list.findIndex((block) => block.start > nowMinutes) : -2;
+        const monday = mondayOf(day);
+        const newWeek = monday !== lastWeek;
+        lastWeek = monday;
         return (
-          <section key={day} aria-label={title} className="flex gap-3">
-            <span aria-hidden className={`w-1 shrink-0 rounded-pill ${bar}`} />
-            <div className="flex min-w-0 flex-1 flex-col">
-              <h3 className={`text-[12px] font-semibold tracking-[0.04em] uppercase ${text}`}>
-                {title}
-              </h3>
-              {blocks
-                .filter((block) => block.date === day)
-                .map((block) => (
-                  <ListRow
-                    key={block.key}
-                    href={sessionHref(block.sessionId)}
-                    leading={
-                      detailed ? (
-                        <span className="flex w-14 shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
-                          <span className="text-[14px] font-medium">{block.label.slice(0, 5)}</span>
-                          <span className="text-muted">
-                            {formatDuration(block.end - block.start)}
-                          </span>
+          <div key={day}>
+            {newWeek ? (
+              <p className="pt-4 pb-1 pl-[72px] text-[11px] font-medium text-muted lg:hidden">
+                {weekRange(monday)}
+              </p>
+            ) : null}
+            <div className="grid grid-cols-[48px_minmax(0,1fr)] gap-3 px-3 py-2 lg:grid-cols-[132px_minmax(0,1fr)] lg:gap-2 lg:border-b lg:border-line-soft lg:px-4 lg:py-3">
+              {/* Le jour : « dim. 1 » (téléphone), « 1 nov. dim. » (ordinateur). */}
+              <div className="flex flex-col items-center pt-0.5 lg:flex-row lg:items-start lg:gap-2.5 lg:pt-1">
+                <span
+                  className={`text-[10.5px] lg:hidden ${isToday ? "font-medium text-violet-text" : "text-muted"}`}
+                >
+                  {weekdayShort.format(utc(day))}
+                </span>
+                <span
+                  className={`grid size-9 place-items-center rounded-full text-[18px] font-semibold tabular lg:-mt-1.5 lg:text-[17px] ${
+                    isToday ? "bg-accent text-on-accent" : "text-text"
+                  }`}
+                >
+                  {utc(day).getUTCDate()}
+                </span>
+                <span
+                  className={`hidden text-[11.5px] leading-tight lg:block ${isToday ? "text-violet-text" : "text-muted"}`}
+                >
+                  {monthShort.format(utc(day))}
+                  <br />
+                  {weekdayShort.format(utc(day))}
+                </span>
+              </div>
+              <ul className="flex flex-col gap-2 lg:gap-0">
+                {list.map((block, index) => {
+                  const discipline = block.discipline ?? "none";
+                  const range = `${time(block.start)} – ${time(block.end)}`;
+                  const detail = block.individual
+                    ? block.subtitle
+                    : `Collective · ${block.subtitle}`;
+                  return (
+                    <li key={block.key}>
+                      {index === nowIndex ? <NowLine /> : null}
+                      {/* Ordinateur : une ligne. */}
+                      <Link
+                        href={sessionHref(block.sessionId)}
+                        className="hidden grid-cols-[14px_120px_minmax(0,1fr)] items-center gap-2 rounded-lg px-2 py-1.5 transition-colors duration-150 hover:bg-selected-hover lg:grid"
+                      >
+                        <span
+                          aria-hidden
+                          className={`size-2 rounded-full ${
+                            block.individual
+                              ? dots[discipline]
+                              : `border-[1.5px] ${rings[discipline]}`
+                          }`}
+                        />
+                        <span className="text-[12.5px] text-muted tabular">{range}</span>
+                        <span className="truncate">
+                          <span className="text-[13px] font-medium">{block.title}</span>
+                          <span className="text-[12.5px] text-muted"> · {detail}</span>
                         </span>
-                      ) : (
-                        <span className="w-12 shrink-0 font-mono text-[14px] font-medium tabular">
-                          {block.label.slice(0, 5)}
+                      </Link>
+                      {/* Téléphone : une carte de la couleur de la discipline. */}
+                      <Link
+                        href={sessionHref(block.sessionId)}
+                        className={`block rounded-xl px-3 py-2 lg:hidden ${cards[discipline]}`}
+                      >
+                        <span className="flex min-w-0 items-center gap-1 text-[13.5px] font-semibold">
+                          {block.individual ? null : (
+                            <Users aria-hidden size={13} strokeWidth={2.2} className="shrink-0" />
+                          )}
+                          <span className="truncate">{block.title}</span>
                         </span>
-                      )
-                    }
-                    title={block.title}
-                    sub={block.individual ? block.subtitle : `Collective · ${block.subtitle}`}
-                    trailing={
-                      <>
-                        {detailed && block.moved ? <Badge tone="moved">Déplacée</Badge> : null}
-                        {block.discipline ? (
-                          <Badge tone={disciplineTones[block.discipline]} dot={false}>
-                            {disciplineLabels[block.discipline]}
-                          </Badge>
-                        ) : null}
-                      </>
-                    }
-                  />
-                ))}
+                        <span className="block truncate text-[12px] opacity-90 tabular">
+                          {range} · {detail}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+                {isToday && nowIndex === -1 ? (
+                  <li aria-hidden>
+                    <NowLine />
+                  </li>
+                ) : null}
+              </ul>
             </div>
-          </section>
+          </div>
         );
       })}
     </div>

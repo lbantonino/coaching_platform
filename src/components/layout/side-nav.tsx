@@ -56,8 +56,7 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
   );
 }
 
-const sectionLabel =
-  "px-1 pb-1.5 text-[11px] font-medium tracking-[0.08em] text-muted uppercase";
+const sectionLabel = "px-1 pb-1.5 text-[11px] font-medium tracking-[0.08em] text-muted uppercase";
 
 export function SideNav({ large = false }: { large?: boolean }) {
   const { space, orgBase } = useShell();
