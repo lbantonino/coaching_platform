@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 // Couleur de la barre du navigateur (téléphone) : celle du fond de chaque thème.
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#08080a" },
+    { media: "(prefers-color-scheme: dark)", color: "#131316" },
     { media: "(prefers-color-scheme: light)", color: "#f3f2f7" },
   ],
   colorScheme: "dark light",

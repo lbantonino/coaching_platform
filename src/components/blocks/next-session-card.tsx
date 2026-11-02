@@ -9,9 +9,19 @@ import type { WeekBlock } from "@/features/agenda/week";
 // à partir des vraies séances. Même fond que les autres cartes ; elle se distingue par son contour
 // violet, l'heure écrite en violet et la photo du sportif cerclée de violet (demandes d'Antonino du
 // 01/11 : ni dégradé, ni aplat violet). Toute la carte ouvre la séance ; deux petites icônes « Ouvrir
-// la séance » et « Message ».
+// la séance » et « Message ». Téléphone (02/11, comme un widget de l'iPhone) : un carré à côté des
+// Tâches : « Prochaine séance », l'heure, puis la séance en petit bloc (sans « dans 2 h 28 », 02/11) ; les
+// pastilles et les deux icônes sont pour les écrans plus larges (toute la carte ouvre la séance).
 const iconLink =
-  "inline-flex size-7 items-center justify-center rounded-md text-muted transition-colors duration-150 hover:bg-selected-hover hover:text-text";
+  "inline-flex size-11 items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-selected-hover hover:text-text lg:size-7 lg:rounded-md";
+
+// Filet gauche du bloc de la séance, dans le widget carré du téléphone.
+const disciplineBars = {
+  running: "max-md:border-run-fill",
+  strength: "max-md:border-strength-fill",
+  hyrox: "max-md:border-hyrox-fill",
+  hybrid: "max-md:border-hybrid-fill",
+} as const;
 
 const disciplineDots = {
   running: "bg-run-fill",
@@ -40,6 +50,7 @@ export function NextSessionCard({
   messageHref,
   location,
   person,
+  className = "",
 }: {
   block: WeekBlock | null;
   // Rang de la séance dans sa journée (« 1 / 6 »).
@@ -53,6 +64,8 @@ export function NextSessionCard({
   location: string | null;
   // Séance individuelle : le sportif (sa photo, cerclée de violet).
   person: { name: string; photoPath: string | null } | null;
+  // Place dans la page (ex. ordre des cartes sur téléphone).
+  className?: string;
 }) {
   const when = block ? untilLabel(block, today, nowMinutes, dayLabel) : "";
   return (
@@ -60,13 +73,13 @@ export function NextSessionCard({
       aria-labelledby="next-session-title"
       // Toute la carte ouvre la séance (29/10/2026) : le lien du titre la couvre entièrement ;
       // les deux petites icônes passent au-dessus et gardent leur propre action.
-      className="relative flex h-full min-w-0 flex-col justify-between gap-5 rounded-[20px] border border-violet-line bg-surface p-5 transition-colors duration-150 hover:border-violet"
+      className={`relative flex h-full min-w-0 flex-col justify-between gap-5 rounded-[20px] border border-violet-line bg-surface p-5 transition-colors duration-150 hover:border-violet max-md:aspect-square max-md:justify-start max-md:gap-0 max-md:overflow-hidden max-md:p-4 ${className}`}
     >
       <div>
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3 flex items-center justify-between gap-3 max-md:mb-2">
           <h2
             id="next-session-title"
-            className="text-[11px] font-medium tracking-[0.08em] whitespace-nowrap text-muted uppercase"
+            className="text-[12px] font-medium tracking-[0.08em] whitespace-nowrap text-muted uppercase lg:text-[11px]"
           >
             {block && sessionHref ? (
               <Link
@@ -80,16 +93,16 @@ export function NextSessionCard({
             )}
           </h2>
           {block ? (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 max-md:hidden">
               <span
                 aria-hidden
-                className="flex h-5 items-center gap-1.5 rounded-full bg-ok-soft px-2 text-[11px] font-medium text-ok"
+                className="flex h-5 items-center gap-1.5 rounded-full bg-ok-soft px-2 text-[12px] font-medium text-ok lg:text-[11px]"
               >
                 <span className="size-1.5 rounded-full bg-ok" />
                 {when}
               </span>
               {rank ? (
-                <span className="text-[11px] font-medium tracking-[0.08em] whitespace-nowrap text-muted tabular">
+                <span className="text-[12px] font-medium tracking-[0.08em] whitespace-nowrap text-muted tabular lg:text-[11px]">
                   {rank.index} / {rank.total}
                 </span>
               ) : null}
@@ -101,15 +114,23 @@ export function NextSessionCard({
             <div className="text-[26px] leading-none font-semibold tracking-tight whitespace-nowrap text-violet-text tabular">
               {block.label.slice(0, 5)}
             </div>
-            <div className="mt-2.5 flex min-w-0 items-center gap-2.5">
+            {/* Téléphone : la séance en petit bloc, un filet de la couleur de la discipline à gauche
+                (comme un évènement du widget Calendrier de l'iPhone) ; sans photo. */}
+            <div
+              className={`mt-2.5 flex min-w-0 items-center gap-2.5 max-md:mt-3 max-md:rounded-lg max-md:border-l-[3px] max-md:bg-surface-2 max-md:py-1.5 max-md:pr-2 max-md:pl-2.5 ${
+                block.discipline ? disciplineBars[block.discipline] : "max-md:border-line-2"
+              }`}
+            >
               {person ? (
-                <span className="inline-flex shrink-0 rounded-full outline outline-[1.5px] outline-offset-2 outline-violet">
+                <span className="inline-flex shrink-0 rounded-full max-md:hidden outline outline-[1.5px] outline-offset-2 outline-violet">
                   <Avatar name={person.name} photoPath={person.photoPath} size="xs" />
                 </span>
               ) : null}
               <div className="min-w-0">
-                <div className="truncate text-[13px] font-medium text-text">{block.title}</div>
-                <div className="mt-0.5 truncate text-[12px] text-muted">
+                <div className="truncate text-[15px] font-medium text-text md:text-[16px] lg:text-[13px]">
+                  {block.title}
+                </div>
+                <div className="mt-0.5 truncate text-[13px] text-muted md:text-[14px] lg:text-[12px]">
                   {[
                     block.individual ? block.subtitle : `Collective · ${block.subtitle}`,
                     `${block.end - block.start} min`,
@@ -129,10 +150,10 @@ export function NextSessionCard({
         )}
       </div>
       {block ? (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between max-md:hidden">
           <div className="flex gap-1.5">
             {block.discipline ? (
-              <span className="flex h-6 items-center gap-1.5 rounded-md border border-line px-2 text-[11px] text-text-2">
+              <span className="flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[13px] text-text-2 lg:h-6 lg:rounded-md lg:px-2 lg:text-[11px]">
                 <span
                   aria-hidden
                   className={`size-1.5 rounded-full ${disciplineDots[block.discipline]}`}
@@ -140,7 +161,7 @@ export function NextSessionCard({
                 {disciplineLabels[block.discipline]}
               </span>
             ) : null}
-            <span className="flex h-6 items-center rounded-md border border-line px-2 text-[11px] text-text-2">
+            <span className="flex h-8 items-center rounded-lg border border-line px-2.5 text-[13px] text-text-2 lg:h-6 lg:rounded-md lg:px-2 lg:text-[11px]">
               {block.individual ? "Individuelle" : "Collective"}
             </span>
           </div>
@@ -152,7 +173,12 @@ export function NextSessionCard({
                 title="Ouvrir la séance"
                 className={iconLink}
               >
-                <ArrowUpRight aria-hidden size={14} strokeWidth={1.9} />
+                <ArrowUpRight
+                  aria-hidden
+                  size={14}
+                  strokeWidth={1.9}
+                  className="size-[18px] lg:size-3.5"
+                />
               </Link>
             ) : null}
             {messageHref ? (
@@ -162,7 +188,12 @@ export function NextSessionCard({
                 title={`Écrire à ${block.title}`}
                 className={iconLink}
               >
-                <MessageCircle aria-hidden size={14} strokeWidth={1.8} />
+                <MessageCircle
+                  aria-hidden
+                  size={14}
+                  strokeWidth={1.8}
+                  className="size-[18px] lg:size-3.5"
+                />
               </Link>
             ) : null}
           </span>

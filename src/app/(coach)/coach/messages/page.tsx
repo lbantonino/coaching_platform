@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { FilterChips } from "@/components/ui/filter-chips";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireCoach } from "@/features/auth/guards";
 import { getThread, listConversations } from "@/features/messages/queries";
@@ -23,13 +24,19 @@ export const metadata: Metadata = {
 // Page Messages (prompt Claude Design §7 `/coach/messages`, D-35), côté coach : les conversations (une
 // par sportif) et le fil choisi, avec réponse. Ordinateur : liste 4 colonnes + fil 8 colonnes.
 // Téléphone : la liste, puis le fil en plein écran avec « ← Conversations ». ?sportif= ouvre un fil
-// (bouton « Répondre » du tableau de bord) et marque ses messages reçus comme lus.
+// (bouton « Répondre » du tableau de bord) et marque ses messages reçus comme lus. Filtre « Non lues »
+// (02/11, ?filtre=non-lus) : seulement les conversations qui attendent une lecture (le fil ouvert reste
+// dans la liste une fois lu) ; aucun fil ne s'ouvre tout seul. Le lien « Voir tous les messages non
+// lus » de la cloche y mène.
 export default function MessagesPage({ searchParams }: PageProps<"/coach/messages">) {
   return (
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading />}>
         {searchParams.then((query) => (
-          <Messages athleteParam={typeof query.sportif === "string" ? query.sportif : null} />
+          <Messages
+            athleteParam={typeof query.sportif === "string" ? query.sportif : null}
+            unreadOnly={query.filtre === "non-lus"}
+          />
         ))}
       </Suspense>
     </main>
@@ -49,7 +56,13 @@ function stamp(isoTimestamp: string, today: string): string {
   return day === today ? time : `${dayShortLabel(day, today)} · ${time}`;
 }
 
-async function Messages({ athleteParam }: { athleteParam: string | null }) {
+async function Messages({
+  athleteParam,
+  unreadOnly,
+}: {
+  athleteParam: string | null;
+  unreadOnly: boolean;
+}) {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
   const { memberships } = await requireCoach();
   const organizationId = memberships[0].organizationId;
@@ -58,7 +71,14 @@ async function Messages({ athleteParam }: { athleteParam: string | null }) {
 
   // Fil ouvert : celui demandé (s'il est bien de cette organisation), sinon sur ordinateur le plus récent.
   const requested = athleteParam && z.uuid().safeParse(athleteParam).success ? athleteParam : null;
-  const selectedId = requested ?? conversations[0]?.athlete.id ?? null;
+  const selectedId = requested ?? (unreadOnly ? null : (conversations[0]?.athlete.id ?? null));
+  const unreadCount = conversations.filter((conversation) => conversation.unread > 0).length;
+  const shown = unreadOnly
+    ? conversations.filter(
+        (conversation) => conversation.unread > 0 || conversation.athlete.id === requested,
+      )
+    : conversations;
+  const keep = unreadOnly ? "&filtre=non-lus" : "";
   const athlete = selectedId ? await getAthlete(organizationId, selectedId) : null;
   const thread = athlete ? await getThread(organizationId, athlete.id) : [];
   const unreadInThread = conversations.find((c) => c.athlete.id === athlete?.id)?.unread ?? 0;
@@ -76,18 +96,32 @@ async function Messages({ athleteParam }: { athleteParam: string | null }) {
           <h2 id="conversations-title" className="font-display text-block font-semibold">
             Conversations
           </h2>
-          {conversations.length === 0 ? (
+          {conversations.length > 0 ? (
+            <FilterChips
+              label="Filtrer les conversations"
+              size="sm"
+              options={[
+                { href: "/coach/messages", label: "Toutes", active: !unreadOnly },
+                {
+                  href: "/coach/messages?filtre=non-lus",
+                  label: `Non lues${unreadCount > 0 ? ` (${unreadCount})` : ""}`,
+                  active: unreadOnly,
+                },
+              ]}
+            />
+          ) : null}
+          {shown.length === 0 ? (
             <p className="border-t border-line pt-3.5 text-[14px] text-muted">
-              Aucune conversation pour l&apos;instant.
+              {unreadOnly ? "Aucun message non lu." : "Aucune conversation pour l'instant."}
             </p>
           ) : (
             <ul className="flex flex-col">
-              {conversations.map((conversation) => {
+              {shown.map((conversation) => {
                 const active = conversation.athlete.id === athlete?.id;
                 return (
                   <li key={conversation.athlete.id}>
                     <Link
-                      href={`/coach/messages?sportif=${conversation.athlete.id}`}
+                      href={`/coach/messages?sportif=${conversation.athlete.id}${keep}`}
                       scroll={false}
                       aria-current={active ? "page" : undefined}
                       className={`-mx-2 flex min-h-16 items-center gap-3 rounded-[12px] border-t border-line px-2 py-2.5 transition-colors duration-150 hover:bg-surface-2 ${
@@ -137,7 +171,7 @@ async function Messages({ athleteParam }: { athleteParam: string | null }) {
           {athlete ? (
             <>
               <Link
-                href="/coach/messages"
+                href={unreadOnly ? "/coach/messages?filtre=non-lus" : "/coach/messages"}
                 className="inline-flex min-h-11 w-fit items-center gap-1.5 text-[14px] text-muted hover:text-text lg:hidden"
               >
                 <ArrowLeft aria-hidden size={16} strokeWidth={1.8} />
@@ -211,6 +245,10 @@ async function Messages({ athleteParam }: { athleteParam: string | null }) {
           ) : requested ? (
             <EmptyState icon={MessageSquare} title="Conversation introuvable">
               Ce sportif n&apos;existe pas ou n&apos;appartient pas à ton organisation.
+            </EmptyState>
+          ) : unreadOnly && shown.length > 0 ? (
+            <EmptyState icon={MessageSquare} title="Choisis une conversation">
+              Les conversations qui ont des messages non lus sont dans la liste.
             </EmptyState>
           ) : (
             <EmptyState icon={MessageSquare} title="Aucune conversation">

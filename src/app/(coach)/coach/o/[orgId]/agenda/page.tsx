@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
@@ -11,6 +11,8 @@ import {
   type AgendaKind,
   type AgendaViewItem,
 } from "@/components/blocks/agenda-controls";
+import { CoachingHours, type HoursSplit } from "@/components/blocks/coaching-hours";
+import { DayWeekStrip } from "@/components/blocks/day-week-strip";
 import { MonthGrid } from "@/components/blocks/month-grid";
 import { NewSessionButton } from "@/components/blocks/new-session-sheet";
 import { SessionDayList } from "@/components/blocks/session-day-list";
@@ -246,7 +248,8 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     month,
     today,
     selected: shownView === "jour" ? date : null,
-    weekStart: shownView === "semaine" ? monday : null,
+    // La semaine affichée (Jour, Semaine), sinon celle d'aujourd'hui : toujours surlignée (02/11).
+    weekStart: grid ? monday : mondayOf(today),
     dayHref: dayHrefTemplate,
   };
   // Téléphone : les puces des mois suivants (à partir du mois en cours), l'année glissée entre deux.
@@ -278,6 +281,8 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         now={now}
         sessionHref={sessionHref}
         perView={perView}
+        dayHref={href({ vue: "jour", date: "__DATE__" })}
+        viewHref={href({ date: "__DATE__" })}
         desktopDays={Array.from({ length: 7 }, (_, i) => addDays(monday, i))}
         focus={focus}
         creatable
@@ -293,21 +298,30 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     title = `Séances du ${dayAndMonth.format(utc(date))} au ${dayAndMonth.format(utc(addDays(date, LIST_DAYS - 1)))}`;
     periodText = periodLabel(date, addDays(date, LIST_DAYS - 1));
     content = (
-      <div className="h-full overflow-y-auto overscroll-contain">
-        {blocks.length === 0 ? (
-          <div className="p-5">
-            <CardEmpty icon={CalendarDays}>
-              Aucune séance sur ces 4 semaines. Ajoute-en une avec « Nouvelle séance ».
-            </CardEmpty>
-          </div>
-        ) : (
-          <SessionDayList
-            blocks={blocks}
-            today={today}
-            nowMinutes={toMinutes(now)}
-            sessionHref={sessionHref}
-          />
-        )}
+      <div className="flex h-full min-h-0 flex-col">
+        {/* La semaine au-dessus de la liste (02/11) : un jour la fait commencer à cette date. */}
+        <DayWeekStrip
+          initial={date}
+          today={today}
+          dayHref={href({ vue: "liste", date: "__DATE__" })}
+          viewHref={href({ vue: "liste", date: "__DATE__" })}
+        />
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {blocks.length === 0 ? (
+            <div className="p-5">
+              <CardEmpty icon={CalendarDays}>
+                Aucune séance sur ces 4 semaines. Ajoute-en une avec « Nouvelle séance ».
+              </CardEmpty>
+            </div>
+          ) : (
+            <SessionDayList
+              blocks={blocks}
+              today={today}
+              nowMinutes={toMinutes(now)}
+              sessionHref={sessionHref}
+            />
+          )}
+        </div>
       </div>
     );
   } else if (shownView === "mois") {
@@ -347,6 +361,8 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         today={today}
         now={now}
         single
+        dayHref={href({ vue: "jour", date: "__DATE__" })}
+        viewHref={href({ vue: "jour", date: "__DATE__" })}
         sessionHref={sessionHref}
         perView={1}
         desktopDays={[date]}
@@ -356,6 +372,62 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
       />
     );
   }
+
+  // Heures de coaching (02/11, plus sous la grille) : la période affichée, filtres compris, avec le même
+  // calcul que la grille (durée des séances de chaque jour), séparées en individuelles et collectives.
+  // Ordinateur : dans le panneau (CoachingHours). Téléphone : dans le menu déroulant du mois, la semaine
+  // affichée (elle suit ensuite le défilement des jours).
+  const periodDays =
+    shownView === "semaine"
+      ? Array.from({ length: 7 }, (_, i) => addDays(monday, i))
+      : shownView === "jour"
+        ? [date]
+        : shownView === "mois"
+          ? monthGrid(month)
+              .flat()
+              .filter((day) => day.inMonth)
+              .map((day) => day.iso)
+          : Array.from({ length: LIST_DAYS }, (_, i) => addDays(date, i));
+  const splitOf = (days: string[]): HoursSplit =>
+    layoutDays(shownSessions, days)
+      .days.flatMap((day) => day.blocks)
+      .reduce(
+        (split, block) => {
+          if (block.individual) split.individual += block.end - block.start;
+          else split.group += block.end - block.start;
+          return split;
+        },
+        { individual: 0, group: 0 },
+      );
+  const periodSplit = splitOf(periodDays);
+  const periodName =
+    shownView === "semaine"
+      ? monday === mondayOf(today)
+        ? "Cette semaine"
+        : weekTitle(monday)
+      : shownView === "jour"
+        ? date === today
+          ? "Aujourd'hui"
+          : capitalize(longDay.format(utc(date)))
+        : shownView === "mois"
+          ? month === today.slice(0, 7)
+            ? "Ce mois-ci"
+            : capitalize(monthLabel(month))
+          : `Du ${dayAndMonth.format(utc(date))} au ${dayAndMonth.format(utc(addDays(date, LIST_DAYS - 1)))}`;
+  // La semaine du jour du milieu de l'écran (3 jours d'hier à demain : celle d'aujourd'hui).
+  const phoneWeek = mondayOf(addDays(focus, Math.floor(perView / 2)));
+  const phoneHours = grid
+    ? {
+        weekStart: phoneWeek,
+        minutes: layoutDays(
+          shownSessions,
+          Array.from({ length: 7 }, (_, i) => addDays(phoneWeek, i)),
+        ).totalMinutes,
+      }
+    : {
+        label: periodName,
+        minutes: periodSplit.individual + periodSplit.group,
+      };
 
   const arrow =
     "grid size-8 place-items-center rounded-lg text-text-2 transition-colors duration-150 hover:bg-selected-hover";
@@ -368,6 +440,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
         <h1 className="sr-only lg:hidden">Agenda</h1>
         <AgendaPhoneBar
           monthLabel={capitalize(monthName.format(utc(`${month}-01`)))}
+          hours={phoneHours}
           views={phoneViews}
           kind={kind}
           kindHrefs={kindHrefs}
@@ -381,9 +454,14 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
           aria-label="Agenda : navigation et filtres"
           className="hidden w-64 shrink-0 flex-col gap-6 overflow-y-auto rounded-[20px] border border-line bg-surface p-4 lg:flex"
         >
-          <h1 className="px-1.5 pt-[14px] text-[15px] font-semibold tracking-tight">Agenda</h1>
+          <h1 className="flex items-center gap-2.5 px-1.5 pt-[14px] text-[15px] font-semibold tracking-tight">
+            <Calendar aria-hidden size={18} strokeWidth={1.8} className="text-violet-text" />
+            Agenda
+          </h1>
           <AgendaMiniMonth {...miniProps} />
           <AgendaFilters kind={kind} hrefs={kindHrefs} />
+          {/* Les heures de coaching de la période affichée (02/11), sous les filtres. */}
+          <CoachingHours label={periodName} split={periodSplit} />
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:gap-3">
@@ -391,6 +469,15 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
           <header className="relative z-20 hidden h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 rounded-[20px] border border-line bg-surface px-3 lg:grid">
             <div className="flex min-w-0 items-center gap-2">
               <AgendaPanelToggle />
+              {/* Panneau masqué (☰) : le nom de la page passe dans la barre (02/11), pour toujours
+                  savoir où l'on est. */}
+              <p
+                aria-hidden
+                className="hidden shrink-0 items-center gap-2 pr-1.5 text-[15px] font-semibold tracking-tight [html[data-agenda-panel]_&]:flex"
+              >
+                <Calendar aria-hidden size={18} strokeWidth={1.8} className="text-violet-text" />
+                Agenda
+              </p>
               <Link
                 href={todayHref}
                 scroll={false}

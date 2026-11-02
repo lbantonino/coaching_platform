@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 
 import { isNotificationKey } from "@/domain/notifications/keys";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { getCoachProfile } from "@/features/coach/profile";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+
+import { buildPreview, type NotificationPreview } from "./preview";
+import { getNotifications } from "./queries";
 
 // État des notifications du coach connecté (4e, D-61) : lue, non lue, masquée, rétablie. Les clés
 // viennent du navigateur : elles sont revérifiées (forme connue, nombre borné) ; la RLS limite aux
@@ -107,4 +112,16 @@ export async function restoreNotification(
   if (removed.error || kept.error) return { ok: false };
   revalidateNotifications();
   return { ok: true };
+}
+
+// Aperçu sous la cloche (ordinateur, 02/11) : lu à l'ouverture du popover. Lire n'est pas marquer comme
+// lu : seule l'ouverture d'un élément le marque (même règle que la page Notifications).
+export async function loadNotificationPreview(
+  organizationId: string,
+): Promise<NotificationPreview> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
+  const today = todayIsoInBrussels();
+  const [all, profile] = await Promise.all([getNotifications(orgId, today), getCoachProfile(user)]);
+  return buildPreview(all, profile.preferences.notify, orgId, today);
 }

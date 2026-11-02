@@ -45,7 +45,7 @@ async function loginAsCoachA(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-test("sur téléphone, le menu hamburger est sous la page : elle glisse à droite, et le menu contient le compte", async ({
+test("sur téléphone, le menu hamburger couvre tout l'écran, contient le compte, et ✕ le referme", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "telephone", "Menu propre au téléphone");
@@ -53,15 +53,14 @@ test("sur téléphone, le menu hamburger est sous la page : elle glisse à droit
   await expect(
     page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }),
   ).toHaveCount(0);
-  const main = page.locator("[data-app-main]");
   await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   const menu = page.getByRole("dialog", { name: "Menu" });
   await expect(menu.getByRole("link", { name: "Agenda", exact: true })).toBeVisible();
-  // La page est partie vers la droite, l'écran garde sa largeur (pas de dézoom).
-  await expect.poll(async () => (await main.boundingBox())?.x ?? 0).toBeGreaterThan(250);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
-    page.viewportSize()?.width,
-  );
+  // Tout l'écran (02/11), sans élargir la page.
+  const size = page.viewportSize();
+  await expect.poll(async () => (await menu.boundingBox())?.x ?? -1).toBe(0);
+  expect((await menu.boundingBox())?.width).toBe(size?.width);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(size?.width);
   await menu.getByRole("button", { name: /^Menu du compte/ }).click();
   await expect(
     menu.getByRole("group", { name: "Menu du compte" }).getByRole("button", {
@@ -71,11 +70,10 @@ test("sur téléphone, le menu hamburger est sous la page : elle glisse à droit
   // Échap ferme le menu du compte, puis le menu.
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
-  await expect.poll(async () => (await main.boundingBox())?.x ?? -1).toBe(0);
-  // Toucher le bord de page visible referme aussi le menu.
+  // ✕, à la place du ☰, le referme aussi.
   await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await expect(menu).toBeVisible();
-  await page.locator("[data-menu-scrim]").click({ position: { x: 20, y: 300 } });
+  await menu.getByRole("button", { name: "Fermer le menu" }).click();
   await expect(menu).toBeHidden();
 });
 

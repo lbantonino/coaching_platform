@@ -6,7 +6,8 @@
  * (bg-surface, text-muted, bg-accent…) déclarées dans globals.css, qui lisent ces variables.
  *
  * Règles :
- * - Neutres : noir mat en sombre, neutres légèrement violacés en clair (fiche §1).
+ * - Neutres : gris anthracite en sombre (éclairci le 02/11), neutres légèrement violacés en clair
+ *   (fiche §1).
  * - Le VIOLET est la couleur de la marque, et il reste RARE : sélection du menu, liens, aujourd'hui,
  *   « maintenant », assistant IA, compteurs, progression. --violet (#8B5CF6) pour les points, barres,
  *   anneaux et le logo ; --accent (#7C4DEB) pour un aplat qui porte du texte blanc (5,1:1 ; le
@@ -22,23 +23,25 @@
  */
 :root,
 [data-theme="dark"] {
-  --page: #08080a;
-  --bg: #08080a;
-  --panel: #0e0e10; /* menu, barre du haut */
-  --surface: #0e0e10; /* cartes, panneaux, agenda */
-  --surface-2: #151518; /* survol, colonnes de l'agenda */
-  --field: #111114;
-  --chip: #1c1c1f;
-  --avatar: #232327;
-  --bar: #26262b;
+  /* Gris anthracite (02/11, demande d'Antonino : « le sombre est trop noir ») : chaque niveau
+     remonté d'environ 10 sur 255, mêmes écarts entre eux. */
+  --page: #131316;
+  --bg: #131316;
+  --panel: #1a1a1d; /* menu, barre du haut */
+  --surface: #1a1a1d; /* cartes, panneaux, agenda */
+  --surface-2: #212125; /* survol, colonnes de l'agenda */
+  --field: #1d1d21;
+  --chip: #27272b;
+  --avatar: #2d2d32;
+  --bar: #313137;
   --checkbox: #52525b;
   --line: rgba(255, 255, 255, 0.08);
   --line-soft: rgba(255, 255, 255, 0.05);
   --line-2: rgba(255, 255, 255, 0.14);
   --text: #f4f4f5;
   --text-2: #d4d4d8;
-  --muted: #a1a1aa; /* 7,5:1 sur une carte */
-  --faint: #8b8b94; /* 5,7:1 sur une carte */
+  --muted: #a1a1aa; /* 6,7:1 sur une carte */
+  --faint: #8b8b94; /* 5,1:1 sur une carte */
 
   /* Violet Coory (accents). */
   --violet: #8b5cf6;
@@ -47,7 +50,7 @@
   --violet-line: rgba(139, 92, 246, 0.35);
   --violet-text: #b9a3ff; /* 8,9:1 sur une carte */
   --violet-ring: rgba(139, 92, 246, 0.3);
-  --today-col: #1a1626;
+  --today-col: #221d30;
   --day-alt: rgba(255, 255, 255, 0.03); /* agenda en grille : un jour sur deux, légèrement gris */
   --ai-bg: rgba(139, 92, 246, 0.22);
   --ai-border: rgba(139, 92, 246, 0.55);
@@ -60,14 +63,20 @@
   --accent-soft: rgba(139, 92, 246, 0.16);
   --accent-line: rgba(139, 92, 246, 0.35);
   --on-accent: #ffffff;
-  --gold-surface: #0e0e10; /* ancienne carte or : une carte comme les autres */
+  --gold-surface: #1a1a1d; /* ancienne carte or : une carte comme les autres */
   --logo-loop: #8b5cf6;
   /* Action principale : blanc en sombre. */
   --cta: #f4f4f5;
   --cta-hover: #ffffff;
   --on-cta: #09090b;
 
-  --inv: #232327;
+  --inv: #2d2d32;
+  /* Fenêtre posée au-dessus de la page (aperçu des notifications, 02/11) : en sombre, un gris plus
+     clair que les cartes, un filet plus marqué et la page assombrie derrière, sinon elle se fond
+     dans les cartes (une ombre noire ne se voit pas sur du sombre). */
+  --popover: #26262a;
+  --popover-line: rgba(255, 255, 255, 0.13);
+  --popover-scrim: rgba(0, 0, 0, 0.45);
   --on-inv: #f4f4f5;
   /* Sélection (menu, segments) : violet léger, sans contour (remplace le jaune de D-71). */
   --selected: rgba(139, 92, 246, 0.16);
@@ -175,6 +184,10 @@
   --on-cta: #ffffff;
 
   --inv: #17151d;
+  /* Fenêtre posée au-dessus de la page : blanche, son ombre suffit en clair. */
+  --popover: #ffffff;
+  --popover-line: rgba(22, 18, 40, 0.1);
+  --popover-scrim: transparent;
   --on-inv: #ffffff;
   --selected: rgba(139, 92, 246, 0.1);
   --selected-hover: rgba(22, 18, 40, 0.04);

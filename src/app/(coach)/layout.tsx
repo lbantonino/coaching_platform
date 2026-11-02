@@ -11,6 +11,7 @@ import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { loadSettings } from "@/features/coach/settings-actions";
 import { DEFAULT_PREFERENCES, getCoachProfile } from "@/features/coach/profile";
 import { enabledTotal } from "@/features/notifications/filter";
+import { loadNotificationPreview, setNotificationsRead } from "@/features/notifications/actions";
 import { countNotifications } from "@/features/notifications/queries";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createSession, listSessionAthletes } from "@/features/sessions/actions";
@@ -55,6 +56,12 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
             notificationCount: counts
               ? enabledTotal(counts, (profile?.preferences ?? DEFAULT_PREFERENCES).notify)
               : 0,
+            notifications: first
+              ? {
+                  load: loadNotificationPreview.bind(null, first.organizationId),
+                  setRead: setNotificationsRead.bind(null, first.organizationId),
+                }
+              : undefined,
             user: profile
               ? {
                   name: profile.displayName,

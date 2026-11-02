@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { redirect } from "next/navigation";
+import type { NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -8,6 +9,9 @@ import { createClient } from "@/lib/supabase/server";
 // Liste fermée de destinations : jamais de redirection vers une adresse fournie librement (open redirect).
 const ALLOWED_NEXT = new Set(["/nouveau-mot-de-passe", "/bienvenue", "/espace"]);
 
+// redirect() renvoie une adresse RELATIVE et joint les cookies de session posés par l'échange.
+// Ne pas la reconstruire depuis request.url : en dev, elle porte l'adresse d'écoute du serveur
+// (http://0.0.0.0:3000), injoignable depuis un téléphone.
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
@@ -17,10 +21,10 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+      redirect(next);
     }
   }
 
   // Lien expiré, déjà utilisé, ouvert dans un autre navigateur ou falsifié.
-  return NextResponse.redirect(new URL("/lien-invalide", request.url));
+  redirect("/lien-invalide");
 }

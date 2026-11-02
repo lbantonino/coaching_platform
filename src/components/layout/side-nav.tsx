@@ -48,6 +48,8 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
                 ) : null}
               </span>
               <CountBadge count={countFor(href)} tone="soft" className="nav-count" />
+              {/* Menu replié : la pastille pleine de la cloche, par-dessus le coin de l'icône (02/11). */}
+              <CountBadge count={countFor(href)} className="nav-count-dot" />
             </Link>
           </li>
         );

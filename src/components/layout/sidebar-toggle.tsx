@@ -55,7 +55,8 @@ export function ShowSidebarButton() {
       className={`${buttonClass} group`}
     >
       <span className="inline-flex group-hover:hidden group-focus-visible:hidden">
-        <CooryLogo variant="symbol" size={16} />
+        {/* Plus grand qu'avant (02/11) : le symbole reste dans le bouton de 34 px, menu à 68 px. */}
+        <CooryLogo variant="symbol" size={30} />
       </span>
       <PanelLeftOpen
         aria-hidden
@@ -70,16 +71,32 @@ export function ShowSidebarButton() {
 // Page Agenda (D-78, comme Google Agenda) : en arrivant, le menu se replie en icônes pour laisser la
 // place au panneau de l'agenda, SANS changer le choix retenu ; en repartant, il reprend ce choix (sauf
 // si on l'a déplié ou replié à la main entre-temps). Au premier chargement, sidebarInitScript l'a déjà
-// replié avant l'affichage. Marque aussi la page (data-agenda : fond plein sur téléphone).
+// replié avant l'affichage. Marque aussi la page (data-agenda : fond plein sur téléphone). Téléphone
+// (02/11) : la barre du navigateur, tout en haut, prend la couleur de ce fond (meta theme-color), pour
+// que le blanc de l'Agenda remplisse tout l'écran sans bande grise au-dessus ; elle suit le thème et
+// reprend sa couleur en quittant l'Agenda.
 export function AgendaSidebarCollapse() {
   useLayoutEffect(() => {
     const html = document.documentElement;
     html.dataset.agenda = "";
+    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')];
+    const colors = metas.map((meta) => meta.content);
+    const paint = () => {
+      const color = getComputedStyle(document.body).backgroundColor;
+      for (const meta of metas) meta.content = color;
+    };
+    paint();
+    const themeWatch = new MutationObserver(paint);
+    themeWatch.observe(html, { attributes: true, attributeFilter: ["data-theme"] });
     if (html.dataset.sidebar !== "hidden") {
       html.dataset.sidebar = "hidden";
       html.dataset.sidebarAuto = "";
     }
     return () => {
+      themeWatch.disconnect();
+      metas.forEach((meta, index) => {
+        meta.content = colors[index];
+      });
       delete html.dataset.agenda;
       delete html.dataset.agendaPanel;
       if (!("sidebarAuto" in html.dataset)) return;

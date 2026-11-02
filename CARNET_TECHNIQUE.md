@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **01/11/2026** (charte « Noir, blanc et violet », tableau de bord refait d'après la maquette validée, Agenda façon Google Agenda, menu du téléphone sous la page).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **02/11/2026** (charte « Noir, blanc et violet », tableau de bord refait d'après la maquette validée, Agenda façon Google Agenda, revue UX du 02/11 : aperçu des notifications, menu plein écran ; correctif des redirections sur le vrai iPhone).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -442,6 +442,9 @@ Le premier verrouillage d'axe (un script qui déplaçait les jours sous le doigt
 ### Un menu « sous la page », et le piège du dézoom (01/11, soir)
 Antonino voulait le menu de ChatGPT : on touche ☰, la page glisse vers la droite et le menu apparaît dessous, à gauche, la page gardant un bord visible aux coins arrondis comme l'écran d'un iPhone. Une simple fenêtre par-dessus ne le permet pas : il fallait que **la page elle-même** bouge. Elle glisse avec `translate`, et ses coins s'arrondissent avec `clip-path`, découpée à la taille de l'écran (une page qui défile est bien plus haute que l'écran ; arrondir la page entière aurait mis les coins tout en haut et tout en bas du document). Deux leçons. D'abord, un élément déplacé hors de l'écran **élargit la page** aux yeux du navigateur : sur téléphone, il dézoome pour tout montrer ; `overflow-x: clip` sur le conteneur coupe ce débordement sans créer de zone de défilement (la barre du haut reste collante). Ensuite, le « + » de chaque page est rendu dans la barre du haut par un **portail React** : le bouton s'affiche ailleurs dans la page, mais garde le contexte de sa page (la fenêtre « Nouvelle séance » qu'il ouvre).
 
+### Un popover natif et un ordre de cartes sans code en double (02/11)
+L'aperçu des notifications sous la cloche utilise le **popover natif du navigateur** (l'attribut `popover` et un bouton `popovertarget`) plutôt qu'une bibliothèque : le navigateur gère seul le clic à l'extérieur, la touche Échap, le retour du focus sur la cloche et l'affichage au-dessus de tout. Son contenu ne crée aucune nouvelle règle : une fonction pure (`buildPreview`) reprend les sections déjà calculées pour la page Notifications, et une action serveur ne les lit qu'à l'ouverture, en revérifiant l'accès à l'organisation. Autre petit outil utile : pour changer l'ordre des cartes du tableau de bord **sur téléphone seulement**, les deux rangées de l'ordinateur deviennent `display: contents` (elles « s'effacent ») et chaque carte reçoit un `order` ; le même code sert les deux écrans, sans dupliquer de composant.
+
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
 
 Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraiment.
@@ -462,6 +465,7 @@ Ces incidents sont de bons sujets d'entretien : ils montrent qu'on teste vraimen
 - **Deux tests qui se marchaient dessus** : en parallèle, deux tests créaient une séance au même créneau ; la séance de l'un recouvrait le créneau de l'autre. Leçon : chaque test garde sa semaine et son heure, comme s'il était seul.
 - **Un droit trop large refusé à juste titre** : « créer ou mettre à jour » (upsert) une date déplacée échouait, car il réécrit aussi des colonnes que le navigateur n'a pas le droit de modifier. La base avait raison : on lit d'abord, puis on met à jour ou on crée.
 - **« SECTIONS.find is not a function »** : une liste exportée d'un fichier `"use client"` et lue par une page serveur n'est pas la liste, mais une référence vers le code du navigateur. Leçon : un fichier client n'exporte que des composants ; les données partagées vont dans un module neutre.
+- **« Ce site est inaccessible », seulement sur le vrai iPhone** : l'app s'ouvrait sur le téléphone, puis plus rien une fois connecté. La page `/espace` renvoyait le navigateur vers `http://0.0.0.0:3000/coach` : l'adresse avait été reconstruite à partir de `request.url`, qui contient l'adresse d'écoute du serveur, pas celle tapée par le téléphone. Sur le Mac, `0.0.0.0` désigne la machine elle-même, donc tout marchait en local et dans les tests. La correction est d'utiliser des redirections **relatives** (`redirect("/coach")`), que le navigateur complète avec sa propre adresse. Leçon : tester sur un vrai appareil révèle des bugs que l'ordinateur de développement masque, et le journal du serveur (`.next/dev/logs`) a donné l'indice décisif.
 - **Une correction qui a tout cassé** : en fermant l'inscription, un deuxième réglage a coupé toute connexion. Les tests l'ont attrapé immédiatement. Leçon : c'est exactement pour ça qu'on a des tests automatiques.
 
 ---

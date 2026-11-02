@@ -61,7 +61,14 @@ export function PageHeader({
             {icon ? (
               (() => {
                 const Icon = icon;
-                return <Icon aria-hidden size={22} strokeWidth={1.8} className="hidden" />;
+                return (
+                  <Icon
+                    aria-hidden
+                    size={18}
+                    strokeWidth={1.8}
+                    className="hidden shrink-0 text-violet-text lg:block"
+                  />
+                );
               })()
             ) : (
               <PageIcon />
@@ -107,7 +114,7 @@ export function PageBody({
         // Téléphone (26/10) : plus d'air entre les sections d'une page en grille (tableau de bord…).
         grid
           ? "grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-4"
-          : `flex flex-col ${fill ? "gap-6 lg:gap-4" : "gap-4"}`
+          : `flex flex-col ${fill ? "gap-4 md:gap-6 lg:gap-4" : "gap-4"}`
       }`}
     >
       {children}

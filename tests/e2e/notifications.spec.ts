@@ -19,7 +19,8 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
   page,
 }) => {
   await loginAsCoachA(page);
-  const bell = page.getByRole("link", { name: /^Notifications, \d+ à voir$/ });
+  // La cloche déplie l'aperçu (02/11) ; « Tout voir » ouvre la page.
+  const bell = page.getByRole("button", { name: /^Notifications, \d+ à voir$/ });
   await expect(bell).toBeVisible();
   // Le menu de gauche (ordinateur) affiche le même nombre que la cloche.
   if ((page.viewportSize()?.width ?? 1280) >= 1024) {
@@ -31,6 +32,10 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
     ).toBeVisible();
   }
   await bell.click();
+  await page
+    .getByRole("dialog", { name: /^Notifications/ })
+    .getByRole("link", { name: "Tout voir" })
+    .click();
   await expect(page).toHaveURL(/\/coach\/notifications$/);
   await expect(page.getByRole("heading", { name: "Notifications", level: 1 })).toBeVisible();
 
@@ -86,4 +91,71 @@ test("une compétition d'un sportif dans les 7 jours devient un rappel dans les 
   await expect(row).toContainText("J-3");
   await row.click();
   await expect(page).toHaveURL(/onglet=objectifs/);
+});
+
+test("la cloche déplie l'aperçu des notifications, rangé en sections, avec « Voir tout »", async ({
+  page,
+}) => {
+  await loginAsCoachA(page);
+  const bell = page.getByRole("button", { name: /^Notifications, \d+ à voir$/ });
+  await bell.click();
+  await expect(bell).toHaveAttribute("aria-expanded", "true");
+  const popover = page.getByRole("dialog", { name: /^Notifications/ });
+  // Les vraies données, en sections (les autres tests lisent des messages et cochent des tâches en
+  // parallèle : on vérifie les sections qui ne bougent pas). Chaque section a son « Voir tout ».
+  const invoices = popover.getByRole("region", { name: "Factures en retard" });
+  await expect(invoices).toContainText("Sophie Lambert");
+  await expect(
+    invoices.getByRole("link", { name: /^Voir toutes les factures en retard/ }),
+  ).toHaveAttribute("href", "/coach/facturation?statut=en-retard");
+  // Fiches à compléter : 3 au plus (les plus récentes, les autres tests en créent), puis « Voir tout ».
+  const profiles = popover
+    .getByRole("region", { name: "Fiches à compléter" })
+    .getByText(/^À compléter :/);
+  await expect(profiles.first()).toBeVisible();
+  expect(await profiles.count()).toBeLessThanOrEqual(3);
+  // Échap le ferme, la page n'a pas changé.
+  await page.keyboard.press("Escape");
+  await expect(popover).toBeHidden();
+  await expect(page).toHaveURL(/\/coach$/);
+  // « Voir toutes les fiches à compléter » : la liste des sportifs filtrée.
+  await bell.click();
+  await popover
+    .getByRole("region", { name: "Fiches à compléter" })
+    .getByRole("link", { name: /^Voir toutes les fiches à compléter/ })
+    .click();
+  await expect(page).toHaveURL(/\/sportifs\?fiche=a-completer$/);
+  await expect(popover).toBeHidden();
+  // « Voir toutes les factures en retard » : la Facturation, filtre « En retard ».
+  await bell.click();
+  await popover
+    .getByRole("region", { name: "Factures en retard" })
+    .getByRole("link", { name: /^Voir toutes les factures en retard/ })
+    .click();
+  await expect(page).toHaveURL(/\/coach\/facturation\?statut=en-retard/);
+  const filters = page.getByRole("navigation", { name: "Filtrer les factures" });
+  await expect(filters.getByRole("link", { name: /^En retard/ })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await expect(page.getByRole("list", { name: "Liste des factures" })).toContainText(
+    "Sophie Lambert",
+  );
+});
+
+test("Messages : le filtre « Non lues » ne garde que les conversations à lire", async ({
+  page,
+}) => {
+  await loginAsCoachA(page);
+  await page.goto("/coach/messages?filtre=non-lus");
+  const filters = page.getByRole("navigation", { name: "Filtrer les conversations" });
+  await expect(filters.getByRole("link", { name: /^Non lues/ })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  // Chaque conversation affichée a des messages non lus.
+  const rows = page.getByRole("region", { name: "Conversations" }).getByRole("listitem");
+  for (const row of await rows.all()) await expect(row).toContainText(/non lu/);
+  await filters.getByRole("link", { name: "Toutes" }).click();
+  await expect(page).toHaveURL(/\/coach\/messages$/);
 });

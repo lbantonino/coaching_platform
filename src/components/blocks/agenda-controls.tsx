@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Clock3,
   Columns3,
   LayoutGrid,
   Rows3,
@@ -18,7 +19,8 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Discipline } from "@/domain/training/discipline";
 
-import { VISIBLE_EVENT } from "./scroll-to-day";
+import { hoursLabel as hoursText } from "./coaching-hours";
+import { VISIBLE_EVENT, type VisibleDays } from "./scroll-to-day";
 
 // Commandes de la page Agenda, à la façon de Google Agenda (D-78, maquette agenda-v1 validée par
 // Antonino le 01/11) : menu des vues (ordinateur, au centre de la barre du haut, raccourcis J S M L,
@@ -229,7 +231,8 @@ export function AgendaFilters({
   );
 }
 
-// Petit calendrier du mois. Aujourd'hui dans un rond violet ; le jour affiché cerclé ; la semaine
+// Petit calendrier du mois. Aujourd'hui en gras violet et un peu plus grand, sans rond (02/11) ; la
+// semaine affichée surlignée en gris (02/11, toujours) ; le jour affiché cerclé hors de cette semaine ; la semaine
 // affichée surlignée ; un jour ouvre cette date (dans la vue en cours). `dayHref` : adresse modèle où
 // « __DATE__ » est remplacé par la date. `dots` (téléphone) : les disciplines du jour en petits points.
 const monthTitle = new Intl.DateTimeFormat("fr-BE", {
@@ -238,6 +241,24 @@ const monthTitle = new Intl.DateTimeFormat("fr-BE", {
   timeZone: "UTC",
 });
 const monthOnly = new Intl.DateTimeFormat("fr-BE", { month: "long", timeZone: "UTC" });
+const dayMonth = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+// « Cette semaine », ou « semaine du 9 au 15 nov. » (« du 26 oct. au 1 nov. » à cheval sur deux mois).
+function weekName(monday: string, today: string): string {
+  const todayDate = utc(today);
+  todayDate.setUTCDate(todayDate.getUTCDate() - ((todayDate.getUTCDay() + 6) % 7));
+  if (iso(todayDate) === monday) return "Cette semaine";
+  const sunday = utc(monday);
+  sunday.setUTCDate(sunday.getUTCDate() + 6);
+  const from =
+    monday.slice(0, 7) === iso(sunday).slice(0, 7)
+      ? String(utc(monday).getUTCDate())
+      : dayMonth.format(utc(monday));
+  return `Semaine du ${from} au ${dayMonth.format(sunday)}`;
+}
 const utc = (day: string) => new Date(`${day}T00:00:00Z`);
 const iso = (date: Date) => date.toISOString().slice(0, 10);
 const dotClass: Record<Discipline, string> = {
@@ -337,19 +358,23 @@ export function AgendaMiniMonth({
               aria-current={day === selected ? "date" : undefined}
               className={`flex flex-col items-center ${dots ? "h-11" : "h-8"} ${
                 inWeek
-                  ? `bg-violet-soft ${weekday === 0 ? "rounded-l-full" : ""} ${weekday === 6 ? "rounded-r-full" : ""}`
+                  ? `bg-chip ${weekday === 0 ? "rounded-l-full" : ""} ${weekday === 6 ? "rounded-r-full" : ""}`
                   : ""
               }`}
             >
               <span
-                className={`grid size-7 place-items-center rounded-full text-[11.5px] tabular transition-colors duration-150 ${
+                className={`grid size-7 place-items-center rounded-full tabular transition-colors duration-150 ${
                   isToday
-                    ? "bg-accent font-semibold text-on-accent"
-                    : day === selected && !inWeek
-                      ? "text-text ring-[1.5px] ring-violet-line"
-                      : inMonth
-                        ? "text-text-2 hover:bg-selected-hover"
-                        : "text-faint"
+                    ? "text-[15px] font-bold text-violet-text"
+                    : `text-[11.5px] ${
+                        day === selected && !inWeek
+                          ? "text-text ring-[1.5px] ring-violet-line"
+                          : day === selected
+                            ? "font-semibold text-text"
+                            : inMonth
+                            ? "text-text-2 hover:bg-selected-hover"
+                            : "text-faint"
+                      }`
                 }`}
               >
                 {date.getUTCDate()}
@@ -370,10 +395,13 @@ export function AgendaMiniMonth({
 }
 
 // Téléphone : barre de l'agenda sous la barre Coory. « Novembre ▾ » déplie le petit calendrier (avec
-// des points, aujourd'hui dans un rond violet) et les mois suivants ; « 3 jours ▾ » ouvre la feuille
-// « Vue et filtres ».
+// des points, aujourd'hui en gras violet) et les mois suivants ; « 3 jours ▾ » ouvre la feuille
+// « Vue et filtres ». Dans le menu du mois, au-dessus du petit calendrier (02/11), les heures de
+// coaching de la semaine affichée : masquées au premier regard, elles suivent les jours qu'on fait
+// défiler (elles ne sont plus sous la grille).
 export function AgendaPhoneBar({
   monthLabel,
+  hours,
   views,
   kind,
   kindHrefs,
@@ -381,6 +409,9 @@ export function AgendaPhoneBar({
   months,
 }: {
   monthLabel: string;
+  // Heures de coaching à l'ouverture (filtres compris) : la semaine du premier jour visible (Jour,
+  // 3 jours, Semaine), sinon la période affichée avec son nom (Mois, Liste).
+  hours: { weekStart: string; minutes: number } | { label: string; minutes: number };
   views: AgendaViewItem[];
   kind: AgendaKind;
   kindHrefs: Record<AgendaKind, string>;
@@ -401,20 +432,35 @@ export function AgendaPhoneBar({
   useEffect(() => {
     sheet.current?.close();
   }, [location]);
+  // Mois déplié : la bande de la semaine de la vue Jour se cache (02/11), elle revient en le repliant.
+  useEffect(() => {
+    const html = document.documentElement;
+    html.toggleAttribute("data-agenda-month", unfolded);
+    return () => html.removeAttribute("data-agenda-month");
+  }, [unfolded]);
   const current = views.find((view) => view.active) ?? views[0];
   const CurrentIcon = icons[current.key];
   // Le mois suit les jours qu'on fait défiler (comme Google Agenda).
   const [visibleMonth, setVisibleMonth] = useState<string | null>(null);
-  const [labelFor, setLabelFor] = useState(monthLabel);
-  if (labelFor !== monthLabel) {
-    setLabelFor(monthLabel);
+  const [visibleWeek, setVisibleWeek] = useState<{ weekStart: string; minutes: number } | null>(
+    null,
+  );
+  const opening = `${monthLabel}:${"weekStart" in hours ? hours.weekStart : hours.label}:${hours.minutes}`;
+  const [labelFor, setLabelFor] = useState(opening);
+  if (labelFor !== opening) {
+    setLabelFor(opening);
     setVisibleMonth(null);
+    setVisibleWeek(null);
   }
+  const shownHours = visibleWeek ?? hours;
+  const hoursLabel =
+    "weekStart" in shownHours ? weekName(shownHours.weekStart, mini.today) : shownHours.label;
   useEffect(() => {
     const onVisible = (event: Event) => {
-      const date = (event as CustomEvent<string>).detail;
+      const { date, weekStart, weekMinutes } = (event as CustomEvent<VisibleDays>).detail;
       const name = monthOnly.format(utc(date));
       setVisibleMonth(name.charAt(0).toUpperCase() + name.slice(1));
+      setVisibleWeek({ weekStart, minutes: weekMinutes });
     };
     window.addEventListener(VISIBLE_EVENT, onVisible);
     return () => window.removeEventListener(VISIBLE_EVENT, onVisible);
@@ -449,7 +495,18 @@ export function AgendaPhoneBar({
       </div>
       {unfolded ? (
         <div className="px-3 pb-2">
-          <AgendaMiniMonth {...mini} />
+          {/* Heures totales de coaching de la semaine affichée, au-dessus du mois (02/11). */}
+          <p className="mb-3 flex h-11 items-center gap-2.5 rounded-xl bg-surface-2 px-3 text-[13px] text-text-2">
+            <Clock3 aria-hidden size={16} strokeWidth={1.8} className="shrink-0 text-violet-text" />
+            <span className="min-w-0 flex-1 truncate">
+              Heures totales · {hoursLabel.charAt(0).toLowerCase() + hoursLabel.slice(1)}
+            </span>
+            <span className="shrink-0 text-[15px] font-semibold text-text tabular">
+              {hoursText(shownHours.minutes)}
+            </span>
+          </p>
+          {/* La semaine affichée, en gris : elle suit les jours qu'on fait défiler. */}
+          <AgendaMiniMonth {...mini} weekStart={visibleWeek?.weekStart ?? mini.weekStart} />
           <div className="-mx-3 mt-2 flex items-center gap-2 overflow-x-auto px-3 [scrollbar-width:none]">
             {months.map((month) => (
               <span key={month.href} className="contents">
