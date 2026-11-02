@@ -22,11 +22,12 @@ type Sex = "female" | "male" | "unspecified" | null;
 
 function Photo({ name, photoPath, sex }: { name: string; photoPath: string | null; sex: Sex }) {
   return (
-    <span className="relative inline-flex shrink-0">
+    // Cerclée de violet (02/11), comme la photo de la carte « Prochaine séance ».
+    <span className="relative inline-flex shrink-0 rounded-full outline outline-[1.5px] outline-offset-2 outline-violet">
       <Avatar name={name} photoPath={photoPath} sex={sex} size="sm" />
       <span
         aria-hidden
-        className="absolute right-0 bottom-0 size-2.5 rounded-full bg-ok ring-2 ring-bg"
+        className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-ok ring-2 ring-panel"
       />
     </span>
   );
@@ -188,8 +189,10 @@ export function AccountMenu() {
           if (openedByHover.current) openedByHover.current = false;
           else setOpen((value) => !value);
         }}
-        className={`flex w-full items-center gap-3 rounded-wide border bg-surface px-2.5 py-2 text-left text-text transition-colors duration-150 hover:bg-surface-2 ${
-          open ? "border-accent" : "border-line"
+        // Sans bordure (02/11) : la photo cerclée, le nom, le rôle et la flèche ; fond au survol et
+        // tant que le menu est ouvert.
+        className={`flex w-full items-center gap-3 rounded-wide px-2.5 py-2 text-left text-text transition-colors duration-150 hover:bg-surface-2 ${
+          open ? "bg-surface-2" : ""
         }`}
       >
         {photo}

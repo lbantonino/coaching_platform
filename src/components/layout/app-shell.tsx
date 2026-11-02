@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { CooryLogo } from "@/components/ui/coory-logo";
 
 import { AthleteTabBar, MobileTopBar } from "./mobile-bar";
-import { MenuPage, MenuScrim, MobileMenuPanel } from "./mobile-menu";
+import { MenuPage, MobileMenuPanel } from "./mobile-menu";
 import { MobileMenuProvider } from "./mobile-menu-context";
 import { homeHref } from "./navigation";
 import { AccountMenu } from "./account-menu";
@@ -15,19 +15,15 @@ import { SideNav } from "./side-nav";
 
 // Coquille des espaces coach, sportif et admin (prompt Claude Design §5.2 et §5.3).
 // Ordinateur (≥ 1024 px) : barre latérale collante de 252 px (logo, menu, carte de la personne et
-// roue dentée : Paramètres, Thème, Compte, Se déconnecter, D-38). Téléphone : ☰ et les outils en haut,
-// et le menu SOUS la page, qui glisse pour le montrer (coach, admin, à la façon de ChatGPT) ; barre du
-// bas à 5 onglets (sportif).
+// roue dentée : Paramètres, Thème, Compte, Se déconnecter, D-38). Téléphone : ☰, le nom de la page et
+// les outils en haut, menu en plein écran (coach, admin) ; barre du bas à 5 onglets (sportif).
 export function AppShell({ value, children }: { value: ShellValue; children: ReactNode }) {
   return (
     <ShellProvider value={value}>
       <MobileMenuProvider>
         {/* Retient la page précédente pour les liens « retour » (29/10/2026). */}
         <NavigationMemory />
-        {/* Téléphone : la page décalée par le menu ne doit pas élargir l'écran (le navigateur
-            dézoomerait) ; « clip » coupe sans créer de zone de défilement (la barre du haut reste
-            collante). */}
-        <div className="flex min-h-dvh flex-1 max-lg:overflow-x-clip">
+        <div className="flex min-h-dvh flex-1">
           <MobileMenuPanel />
           <aside
             data-app-sidebar=""
@@ -57,7 +53,6 @@ export function AppShell({ value, children }: { value: ShellValue; children: Rea
             {children}
             {value.space === "athlete" ? <AthleteTabBar /> : null}
           </MenuPage>
-          <MenuScrim />
         </div>
       </MobileMenuProvider>
     </ShellProvider>

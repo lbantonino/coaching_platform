@@ -73,6 +73,11 @@ test("le tableau de bord montre les séances à venir, jour par jour, et les pro
   // Séances à venir : les deux prochains jours qui ont des séances, chacun avec sa date en titre et
   // ses séances (la démo en a tous les jours de la semaine), la plus proche marquée « Prochaine ».
   const upcoming = page.getByRole("region", { name: "Séances à venir" });
+  // Téléphone (02/11) : le premier jour seul, « Voir plus » montre le suivant.
+  if (isPhone(page)) {
+    await expect(upcoming.getByRole("heading", { level: 3 })).toHaveCount(1);
+    await upcoming.getByRole("button", { name: /^Voir plus/ }).click();
+  }
   await expect(upcoming.getByRole("heading", { level: 3 })).toHaveCount(2);
   await expect(upcoming.getByRole("heading", { level: 3 }).first()).toHaveText(
     /^(Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) \d{1,2} \p{L}+$/u,
@@ -195,7 +200,9 @@ test("les messages non lus : pastille sur la cloche ; ouvrir le fil les marque l
     .getByRole("link", { name: new RegExp(sender) })
     .first();
   if (/non lu/.test(await conversation.innerText())) {
-    await expect(page.getByRole("link", { name: /^Notifications, \d+ à voir$/ })).toBeVisible();
+    await expect(
+      page.locator('[aria-label^="Notifications,"]').filter({ visible: true }).first(),
+    ).toBeVisible();
   }
   await conversation.click();
   await expect(page).toHaveURL(/\/coach\/messages\?sportif=/);

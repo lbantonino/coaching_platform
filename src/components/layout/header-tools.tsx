@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
 import { CountBadge } from "@/components/ui/count-badge";
 
 import { notificationsHref } from "./navigation";
+import { NotificationsPopover } from "./notifications-popover";
 import { useShell } from "./shell-context";
 
 // Outils à droite de l'en-tête de page sur ordinateur (maquette v6, D-77) : recherche « Rechercher dans
@@ -68,9 +69,12 @@ export function AssistantButton({ withLabel = false }: { withLabel?: boolean }) 
   );
 }
 
-// Cloche des notifications, avec la pastille violette de tout ce qui attend (D-37, D-77).
+// Cloche des notifications, avec la pastille violette de tout ce qui attend (D-37, D-77). Coach
+// (02/11) : elle déplie l'aperçu des notifications, sur ordinateur et sur téléphone
+// (notifications-popover.tsx) ; ailleurs (sportif, admin), elle ouvre la page Notifications.
 export function NotificationBell({ phone = false }: { phone?: boolean }) {
-  const { space, notificationCount = 0 } = useShell();
+  const { space, notificationCount = 0, notifications } = useShell();
+  if (notifications) return <NotificationsPopover notifications={notifications} phone={phone} />;
   return (
     <Link
       href={notificationsHref[space]}

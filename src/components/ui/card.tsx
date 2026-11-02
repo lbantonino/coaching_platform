@@ -43,7 +43,9 @@ export function Card({
               <Heading
                 id={id}
                 className={
-                  compact ? "text-[13px] font-medium" : "font-display text-block font-semibold"
+                  compact
+                    ? "text-[17px] font-semibold tracking-tight lg:text-[13px] lg:font-medium lg:tracking-normal"
+                    : "font-display text-block font-semibold"
                 }
               >
                 {title}
@@ -56,7 +58,7 @@ export function Card({
               href={action.href}
               className={
                 compact
-                  ? "shrink-0 text-[12px] text-violet-text transition-opacity duration-150 hover:opacity-80"
+                  ? "shrink-0 text-[14px] text-violet-text transition-opacity duration-150 hover:opacity-80 lg:text-[12px]"
                   : "shrink-0 border-b border-accent-line pb-px text-[13px] text-accent-text transition-colors duration-150 hover:text-text"
               }
             >

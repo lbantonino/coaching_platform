@@ -32,6 +32,120 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Correctif : « Ce site est inaccessible » sur le vrai iPhone après connexion
+```
+Date : 2026-11-02
+Constat d'Antonino : l'app marchait une minute sur Chrome iPhone (http://192.168.0.10:3000), puis
+  ERR_FAILED sur /espace dès qu'il était connecté.
+Cause : /espace et /auth/confirm construisaient une redirection ABSOLUE avec new URL(path, request.url).
+  Dans un Route Handler, request.url porte l'adresse d'écoute du serveur (http://0.0.0.0:3000), pas
+  celle tapée par le téléphone : Location: http://0.0.0.0:3000/coach, injoignable depuis l'iPhone. Sur
+  le Mac, 0.0.0.0 désigne la machine elle-même, d'où un bug invisible en local et dans les tests.
+Fait : src/app/espace/route.ts et src/app/auth/confirm/route.ts redirigent avec redirect() de Next
+  (adresse relative, cookies de session joints). Le proxy était déjà correct (Location relative).
+Tests : nouveau test Playwright « les aiguillages serveur redirigent vers une adresse relative »
+  (échec vérifié avant correctif : http://localhost:3100/login) ; auth, password-reset, signup,
+  invitation 37/37 + 1 ignoré volontaire ; lint et prettier OK ; vérifié au curl via l'IP du Mac.
+```
+
+### Bande de la semaine sur toutes les vues ; tableau de bord en widgets (D-82 suite, D-83)
+```
+Date : 2026-11-02
+Fait : day-week-strip.tsx généralisé (span 1/3/7, bande grise des jours affichés, semaine du jour du
+  milieu, desktopWeek, dayHref/viewHref, titre en vue Jour seulement) ; week-grid (bande en vue
+  Semaine : une pour le téléphone, une pour l'ordinateur) ; agenda/page.tsx (bande au-dessus de la
+  Liste ; semaine du petit calendrier toujours fournie) ; agenda-controls (semaine en gris, suit le
+  défilement). Tableau de bord : enveloppe en grille de 2 colonnes sur téléphone (md:contents),
+  NextSessionCard en carré (sans pastilles ni icônes sur téléphone), Tâches en carré (titres sur 2
+  lignes, espacés), more-days.tsx (« Voir plus »), titre « Tâches ».
+Tests : gestes simulés (3 jours : toucher jeudi → grille du 5 sans recharger ; Liste ordinateur :
+  clic jeudi → date=2026-11-05) ; captures 440 et 390 px ; e2e Agenda, glissés, tâches, design,
+  audit UX 34/34 (agenda.spec adapté : un jour puis « Voir plus » sur téléphone) ; db:reset fait.
+```
+
+### Vue Jour : la semaine au-dessus de la grille (D-82)
+```
+Date : 2026-11-02
+Demande d'Antonino (captures du Calendrier de l'iPhone de son frère), puis retouches : rond violet
+  pour aujourd'hui, rond gris pour le jour choisi ; glisser la bande change de semaine ; flèches sur
+  ordinateur ; la bande se cache quand le mois est déplié ; en-tête de la vue Jour trop collé en haut
+  sur ordinateur (remplacé par la bande).
+Fait : day-week-strip.tsx (bande ; liens vers chaque jour, glissement de la grille sur téléphone via
+  « agenda:goto », glissé horizontal = semaine ±1, apparition de la nouvelle semaine du côté du geste) ;
+  scroll-to-day.tsx (GOTO_EVENT) ; week-grid.tsx (bande à la place de l'en-tête en vue Jour, prop
+  dayHref) ; agenda/page.tsx (dayHref) ; agenda-controls.tsx (html[data-agenda-month] quand le mois
+  est déplié).
+Tests : gestes simulés (toucher vendredi : grille sur le 6 sans recharger ; glissé de la bande : lundi
+  9 puis retour au 2 ; mois ouvert : bande cachée, refermé : visible) ; ordinateur : clic sur un jour
+  et flèches ‹ › ; e2e Agenda et glissés passés ; db:reset fait.
+```
+
+### Texte plus grand sur téléphone ; aperçu des notifications aligné et détaché (D-81)
+```
+Date : 2026-11-02
+Retours d'Antonino sur son iPhone Pro Max : l'aperçu des notifications trop à gauche et pas assez
+  contrasté en sombre ; le texte trop petit (tableau de bord : sous-titre de la prochaine séance,
+  pastilles, petites icônes, tâches…).
+Fait : notifications-popover.tsx (téléphone : largeur des cartes, 16 px de chaque côté ; couleurs
+  --popover, --popover-line, --popover-scrim ajoutées à tokens.css et globals.css ; ::backdrop) ;
+  échelle mobile (lg: garde l'ordinateur) dans next-session-card, upcoming-days, card (titre compact),
+  check-list (tâches de la carte), coach/page.tsx, week-grid (séances, heures, jours), mobile-bar.
+Tests : mesures sur 440 × 956 (aperçu 16 → 424 px comme les cartes ; aucun débordement) ; captures
+  sombres ; e2e Agenda, glissés, notifications, tâches 31/31 ; db:reset fait.
+```
+
+### Thème sombre en gris anthracite ; carte du compte sans bordure (D-80)
+```
+Date : 2026-11-02
+Demande d'Antonino : le thème sombre est trop noir ; la carte du coach (bas du menu de gauche, menu du
+  téléphone) sans bordure, flèche gardée, photo cerclée de violet.
+Fait : tokens.css (bg/page #131316, panel/surface #1a1a1d, surface-2 #212125, field #1d1d21, chip
+  #27272b, avatar #2d2d32, bar #313137, today-col #221d30, inv #2d2d32) ; layout.tsx et manifest.ts
+  (couleur du navigateur et de l'app installée) ; account-menu.tsx (plus de bordure, fond au survol et
+  menu ouvert, photo cerclée de violet, point vert cerclé de la couleur du menu).
+Tests : contrastes calculés (tous les textes ≥ 4,5:1 sur carte et survol ; gris le plus clair sur une
+  pastille 4,4:1, usage rare) ; captures sombres ordinateur et téléphone ; e2e design, paramètres,
+  connexion 25/25 ; serveur de dev relancé (CSS) ; db:reset fait.
+```
+
+### Revue UX ciblée ordinateur et téléphone (D-79)
+```
+Date : 2026-11-02
+Demande d'Antonino : brief « Revue UX/UI » en 11 points (sans refonte) puis 6 précisions pendant le
+  travail (bloc d'heures plus soigné, heures dans le menu du mois sur téléphone, nom de la page qui
+  s'efface au défilement, plus de rond dans le petit calendrier, fond de l'Agenda jusqu'en haut,
+  aperçu des notifications aussi sur téléphone avec une pointe vers la cloche).
+Fait : notifications-popover.tsx + features/notifications/preview.ts (buildPreview, règle pure sur
+  getNotifications) + action loadNotificationPreview (requireOrgAccess) ; shell-context (notifications :
+  load, setRead) ; header-tools (la cloche du coach déplie l'aperçu). side-nav + globals (nav-count-dot :
+  pastille pleine du menu replié) ; sidebar-toggle (symbole 30 px ; couleur du navigateur sur
+  l'Agenda). week-grid (date sans rond, plus de rangée Total, data-minutes), month-grid,
+  session-day-list, agenda-controls (petit calendrier sans rond ; heures totales dans le menu du mois),
+  scroll-to-day (semaine du jour du milieu), coaching-hours.tsx (bloc du panneau ; heures « 30H15 »,
+  une carte essayée puis retirée à la demande d'Antonino), agenda/page.tsx
+  (calcul individuelles / collectives de la période, titre dans la barre quand le panneau est masqué).
+  coach/page.tsx + next-session-card (ordre des cartes sur téléphone par « contents » + order).
+  mobile-menu(-context) : plein écran, ✕ à la place du ☰ ; mobile-bar : nom et icône de la page qui
+  s'effacent au défilement ; page-icon / page-header : icône violette devant le titre (ordinateur).
+Constat : le calendrier du téléphone était déjà sur toute la largeur (aucune carte) ; seule la rangée
+  Total a été retirée. Le serveur de dev servait un CSS périmé (pastilles en double) : relancé.
+Tests : lint, typecheck ; captures téléphone 390 et ordinateur 1440, sombre et clair ; mesures (menu
+  390 px de large, aucun débordement, nom de la page opacité 1 → 0 → 1, total d'une semaine à
+  l'autre, Échap ferme l'aperçu) ; e2e adaptés (cloche = bouton, menu plein écran) et ajouté (aperçu
+  des notifications) ; suite complète : 175 passés, 15 ignorés, 0 échec (les 2 tests de la fiche
+  sportif liés à la date passent aussi) ; db:reset fait.
+Suite (retours d'Antonino) : la pointe carrée remplacée par une languette SVG aux courbes douces qui
+  se fond dans le bord de la carte, dépliement depuis la cloche (clip-path animé, 280 ms, réduit si le
+  système le demande), cloche teintée tant que l'aperçu est ouvert ; chaque « Voir tout » mène à sa
+  page filtrée : filtres ajoutés « Non lues » (Messages, ?filtre=non-lus, aucun fil ouvert d'office,
+  le fil ouvert reste dans la liste) et « En retard » (Facturation, ?statut=en-retard) ; une facture
+  de simple suivi (sans page) mène à la Facturation filtrée. e2e : notifications, agenda, factures
+  29/29 (2 tests ajoutés : filtre des factures depuis la cloche, filtre Non lues) ; db:reset fait.
+Ordinateur : la languette tombait dans le coin arrondi de la carte (cloche au bord droit de
+  l'aperçu) ; l'aperçu dépasse désormais la cloche vers la droite pour que la languette reste à
+  41 px au moins du bord (comme sur téléphone). e2e notifications passés ; db:reset fait.
+```
+
 ### Menu ☰ sous la page (façon ChatGPT), outils en haut, graphique de l'encaissé (D-78, suite)
 ```
 Date : 2026-11-01 (soir)

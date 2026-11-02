@@ -9,8 +9,8 @@ import { shortName } from "./week-grid";
 // Vue Mois de la page Agenda, à la façon de Google Agenda (D-78, maquette agenda-v1) : de grandes cases
 // qui remplissent la carte, séparées d'un filet. Ordinateur : jusqu'à trois séances écrites par jour
 // (« ● 07:00 Nadia E. », point cerclé pour une collective), puis « +3 autres ». Téléphone : de petites
-// étiquettes de la couleur de la discipline. Aujourd'hui : case teintée de violet, numéro dans un rond
-// violet ; les jours des mois voisins sont grisés. Une case ouvre sa journée ; son nom, lu par un
+// étiquettes de la couleur de la discipline. Aujourd'hui : case teintée de violet, numéro en gras
+// violet, sans rond (02/11) ; les jours des mois voisins sont grisés. Une case ouvre sa journée ; son nom, lu par un
 // lecteur d'écran, dit aussi quelles séances elle contient.
 const dots: Record<Discipline | "none", string> = {
   running: "bg-run-fill",
@@ -80,8 +80,8 @@ export function MonthGrid({
                 } ${day.inMonth ? "" : "opacity-45"}`}
               >
                 <span
-                  className={`grid size-5 shrink-0 place-items-center self-center rounded-full text-[11px] font-medium tabular lg:size-6 lg:self-start lg:text-[12px] ${
-                    isToday ? "bg-accent text-on-accent" : "text-text"
+                  className={`grid size-5 shrink-0 place-items-center self-center text-[11px] tabular lg:size-6 lg:self-start lg:text-[12px] ${
+                    isToday ? "font-bold text-violet-text" : "font-medium text-text"
                   }`}
                 >
                   {day.day}

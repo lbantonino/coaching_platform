@@ -6,6 +6,7 @@ import { ListRow } from "@/components/blocks/list-row";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card, CardEmpty, CardTitle } from "@/components/ui/card";
+import { FilterChips } from "@/components/ui/filter-chips";
 import { invoiceStatus, invoiceStatusLabels, monthActivity } from "@/domain/billing/invoices";
 import { describeTotal, formatMoney, type ByCurrency } from "@/domain/billing/money";
 import { paymentMethodLabel } from "@/domain/billing/payments";
@@ -29,12 +30,15 @@ export const metadata: Metadata = {
 // Page Facturation (D-35, puis D-65 : factures émises). En haut, les paiements par VIREMENT encore
 // sans facture (règle de Gianluca : les espèces ne se facturent pas), chacun avec « Créer la
 // facture » ; dessous, les factures : brouillons et factures émises (numéro, PDF), et les factures de
-// simple suivi d'avant D-65. Aucun paiement ne passe par Coory.
-export default function BillingPage() {
+// simple suivi d'avant D-65. Aucun paiement ne passe par Coory. Filtre « En retard » (02/11,
+// ?statut=en-retard) : le lien « Voir toutes les factures en retard » de la cloche y mène.
+export default function BillingPage({ searchParams }: PageProps<"/coach/facturation">) {
   return (
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading />}>
-        <Billing />
+        {searchParams.then((query) => (
+          <Billing overdueOnly={query.statut === "en-retard"} />
+        ))}
       </Suspense>
     </main>
   );
@@ -47,7 +51,7 @@ const shortDate = new Intl.DateTimeFormat("fr-BE", {
 });
 const short = (day: string) => shortDate.format(new Date(`${day}T00:00:00Z`));
 
-async function Billing() {
+async function Billing({ overdueOnly }: { overdueOnly: boolean }) {
   // Garde-fou serveur : connecté ET membre actif d'une organisation, sinon redirection.
   const { user, memberships } = await requireCoach();
   const organizationId = memberships[0].organizationId;
@@ -69,6 +73,8 @@ async function Billing() {
     today,
     await getConverter(memberships[0]),
   );
+  const overdue = invoices.filter((invoice) => invoiceStatus(invoice, today) === "overdue");
+  const shownInvoices = overdueOnly ? overdue : invoices;
   const tally = (cents: number, byCurrency: ByCurrency) =>
     describeTotal(cents, byCurrency, currency).value;
 
@@ -148,7 +154,8 @@ async function Billing() {
 
         <Card
           id="invoices-title"
-          className="lg:col-span-6"
+          // Filtre « En retard » (lien de la cloche) : sur téléphone, les factures passent en premier.
+          className={`lg:col-span-6 ${overdueOnly ? "max-lg:order-first" : ""}`}
           title={
             <CardTitle icon={FileText} color="var(--ok)">
               Factures
@@ -156,11 +163,27 @@ async function Billing() {
           }
           subtitle={`${tally(activity.sent.cents, activity.sent.byCurrency)} émis ce mois-ci · ${tally(activity.pending.cents, activity.pending.byCurrency)} en attente`}
         >
-          {invoices.length === 0 ? (
-            <CardEmpty icon={FileText}>Aucune facture pour l&apos;instant.</CardEmpty>
+          {invoices.length > 0 ? (
+            <FilterChips
+              label="Filtrer les factures"
+              size="sm"
+              options={[
+                { href: "/coach/facturation", label: "Toutes", active: !overdueOnly },
+                {
+                  href: "/coach/facturation?statut=en-retard",
+                  label: `En retard${overdue.length > 0 ? ` (${overdue.length})` : ""}`,
+                  active: overdueOnly,
+                },
+              ]}
+            />
+          ) : null}
+          {shownInvoices.length === 0 ? (
+            <CardEmpty icon={FileText}>
+              {overdueOnly ? "Aucune facture en retard." : "Aucune facture pour l'instant."}
+            </CardEmpty>
           ) : (
             <ul aria-label="Liste des factures" className="flex flex-col">
-              {invoices.map((invoice) => {
+              {shownInvoices.map((invoice) => {
                 const status = invoiceStatus(invoice, today);
                 const draft = invoice.status === "draft";
                 // Brouillons et factures numérotées s'ouvrent ; le simple suivi d'avant D-65, non.

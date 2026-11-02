@@ -2,6 +2,8 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 
+import type { NotificationPreview } from "@/features/notifications/preview";
+
 import type { Space } from "./navigation";
 
 // Ce que la coquille sait de l'espace ouvert : quel espace, l'organisation du coach (pour les
@@ -24,6 +26,12 @@ export type ShellValue = {
   unreadMessages?: number;
   // Tout ce qui attend dans Notifications (coach, D-37) : pastille rouge de la cloche.
   notificationCount?: number;
+  // Coach (02/11) : l'aperçu sous la cloche (ordinateur) et « ouvrir, c'est lire ». Actions serveur
+  // liées à l'organisation ; elles revérifient l'accès.
+  notifications?: {
+    load: () => Promise<NotificationPreview>;
+    setRead: (keys: string[], read: boolean) => Promise<{ ok: boolean }>;
+  };
 };
 
 const ShellContext = createContext<ShellValue>({ space: "coach", orgBase: null, user: null });

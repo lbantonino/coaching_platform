@@ -14,6 +14,9 @@
   --color-panel: var(--panel);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-popover: var(--popover);
+  --color-popover-line: var(--popover-line);
+  --color-popover-scrim: var(--popover-scrim);
   --color-chip: var(--chip);
   --color-bar: var(--bar);
   --color-line: var(--line);
@@ -262,27 +265,19 @@ select:not([multiple]) {
  * survol, comme ChatGPT), les icônes des pages (leur nom reste lu par les lecteurs d'écran et s'affiche au survol), la photo du
  * compte. Téléphone : sans effet (menu hamburger).
  */
-[data-sidebar-open] {
+[data-sidebar-open],
+.nav-count-dot {
   display: none;
 }
-/* Téléphone (D-78, 01/11, à la façon de ChatGPT) : en haut, deux petites cartes flottantes, ☰ à gauche,
- * assistant IA · cloche · « + » à droite. --top-bar : la hauteur de cette rangée (52 px + 8 px au-dessus
- * et en dessous). Menu ☰ : la page glisse de --menu-w vers la droite et prend les coins arrondis d'un
- * écran d'iPhone (--menu-radius). */
+/* Téléphone (D-78) : en haut, deux petites cartes flottantes, ☰ à gauche (avec le nom de la page à
+ * côté), assistant IA · cloche · « + » à droite. --top-bar : la hauteur de cette rangée (52 px + 8 px
+ * au-dessus et en dessous). --under-bar : la couleur du fondu derrière les cartes, celle de la page. */
 :root {
   --top-bar: 68px;
-  --menu-w: min(84vw, 360px);
-  --menu-radius: 40px;
+  --under-bar: var(--bg);
 }
-/* La page est opaque : sous elle, le menu attend qu'elle glisse. --under-bar : la couleur du fondu
- * derrière les cartes du haut, celle de la page. */
 @media (max-width: 1023.98px) {
-  [data-app-main] {
-    background: var(--bg);
-    --under-bar: var(--bg);
-  }
-  html[data-agenda] [data-app-main] {
-    background: var(--surface);
+  html[data-agenda] {
     --under-bar: var(--surface);
   }
 }
@@ -329,10 +324,16 @@ select:not([multiple]) {
     clip-path: inset(50%);
     white-space: nowrap;
   }
+  /* Pastilles du menu replié (02/11) : la version pleine, celle de la cloche, posée sur le coin haut
+     droit de l'icône (16 px, centrée dans le lien de 48 px) ; la version légère est masquée. */
   [data-sidebar="hidden"] .nav-count {
+    display: none;
+  }
+  [data-sidebar="hidden"] .nav-count-dot {
+    display: inline-flex;
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: 4px;
+    left: calc(50% + 2px);
   }
   [data-sidebar="hidden"] [data-account-text],
   [data-sidebar="hidden"] [data-account-chevron] {

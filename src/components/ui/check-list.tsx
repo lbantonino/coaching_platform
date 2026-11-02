@@ -87,7 +87,8 @@ export function CheckList({
   };
 
   return (
-    <ul className="flex min-w-0 flex-1 flex-col">
+    // Carte du tableau de bord sur téléphone : de l'air entre les tâches (02/11), rien d'autre.
+    <ul className={`flex min-w-0 flex-1 flex-col ${page ? "" : "max-md:gap-3"}`}>
       {shown.map((item) => (
         <li
           key={item.id}
@@ -122,7 +123,7 @@ export function CheckList({
                 className={`min-w-0 flex-1 leading-snug ${
                   page
                     ? "line-clamp-2 text-[15px] font-semibold lg:truncate"
-                    : "truncate text-[13px] font-medium lg:text-[14px]"
+                    : "text-[15px] font-medium max-md:line-clamp-2 md:truncate md:text-[16px] lg:text-[14px]"
                 } ${item.checked ? "text-muted line-through" : ""}`}
               >
                 {item.urgent && !page ? (

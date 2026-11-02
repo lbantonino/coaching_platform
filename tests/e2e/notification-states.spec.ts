@@ -15,8 +15,9 @@ async function login(page: Page, email: string) {
 }
 
 const bellCount = async (page: Page) => {
+  // La cloche : un lien sur téléphone, un bouton (aperçu) sur ordinateur.
   const label = await page
-    .getByRole("link", { name: /^Notifications(, \d+ à voir)?$/ })
+    .locator('[aria-label^="Notifications"]')
     .first()
     .getAttribute("aria-label");
   return Number(label?.match(/\d+/)?.[0] ?? 0);

@@ -9,7 +9,7 @@ import type { WeekBlock } from "@/features/agenda/week";
 // mois et le jour en petit), puis chaque séance avec le point de sa discipline (cerclé pour une
 // collective), « 07:00 – 08:00 », le titre et le détail. Téléphone : la semaine en intertitre
 // (« 2 – 8 novembre »), le jour à gauche, chaque séance en carte de la couleur de sa discipline.
-// Aujourd'hui : numéro dans un rond violet, et une ligne violette à l'heure actuelle.
+// Aujourd'hui : numéro en gras violet, sans rond (02/11), et une ligne violette à l'heure actuelle.
 const dots: Record<Discipline | "none", string> = {
   running: "bg-run-fill",
   strength: "bg-strength-fill",
@@ -108,8 +108,8 @@ export function SessionDayList({
                   {weekdayShort.format(utc(day))}
                 </span>
                 <span
-                  className={`grid size-9 place-items-center rounded-full text-[18px] font-semibold tabular lg:-mt-1.5 lg:text-[17px] ${
-                    isToday ? "bg-accent text-on-accent" : "text-text"
+                  className={`grid size-9 place-items-center text-[18px] tabular lg:-mt-1.5 lg:text-[17px] ${
+                    isToday ? "font-bold text-violet-text" : "font-semibold text-text"
                   }`}
                 >
                   {utc(day).getUTCDate()}

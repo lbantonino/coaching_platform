@@ -22,6 +22,21 @@ test("un visiteur non connecté est renvoyé vers la connexion", async ({ page }
   ).toBeVisible();
 });
 
+// Un téléphone sur le Wi-Fi ouvre l'app via l'IP du Mac (http://192.168.x.x:3000). Une redirection
+// absolue construite depuis request.url envoyait vers l'adresse d'écoute du serveur
+// (http://0.0.0.0:3000/...), injoignable depuis le téléphone (ERR_FAILED). Elles restent relatives.
+test("les aiguillages serveur redirigent vers une adresse relative", async ({ request }) => {
+  const espace = await request.get("/espace", { maxRedirects: 0 });
+  expect(espace.status()).toBe(307);
+  expect(espace.headers()["location"]).toBe("/login");
+
+  const invalidLink = await request.get("/auth/confirm?code=faux&next=/espace", {
+    maxRedirects: 0,
+  });
+  expect(invalidLink.status()).toBe(307);
+  expect(invalidLink.headers()["location"]).toBe("/lien-invalide");
+});
+
 test("le coach A se connecte, voit uniquement son organisation, puis se déconnecte", async ({
   page,
 }) => {
