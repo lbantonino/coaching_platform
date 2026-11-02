@@ -88,15 +88,23 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
   const router = useRouter();
   const toast = useToast();
   const dragRef = useRef<Drag | null>(null);
-  const pointer = useRef<{ x: number; y: number; scroller: HTMLElement | null } | null>(null);
+  // `scroller` : la zone qui défile verticalement (les heures) ; `days` : horizontalement (les jours).
+  const pointer = useRef<{
+    x: number;
+    y: number;
+    scroller: HTMLElement | null;
+    days: HTMLElement | null;
+  } | null>(null);
 
   const setDragBoth = (next: Drag | null) => {
     dragRef.current = next;
     setDrag(next);
   };
 
-  // Défilement près des bords pendant le glissé : la grille horizontalement (téléphone), la page
-  // verticalement (agenda plus haut que l'écran). Boucle d'animation tant qu'une séance est tenue.
+  // Défilement près des bords pendant le glissé (D-78) : les jours (zone horizontale, téléphone) quand
+  // le doigt passe sur la marge des heures ou au bord droit ; les heures (zone verticale) près du haut
+  // ou du bas. Pendant le glissé, l'aimantation des jours est suspendue (elle annulerait ces petits
+  // pas). Boucle d'animation tant qu'une séance est tenue.
   const dragging = drag !== null;
   useEffect(() => {
     if (!dragging) return;
@@ -105,18 +113,24 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
       const current = dragRef.current;
       const last = pointer.current;
       if (current && last) {
-        const scroller = last.scroller;
-        const box = scroller?.getBoundingClientRect();
-        // Côté gauche : la colonne des heures (48 px) reste collée, on vise juste après elle.
-        const dx = !box ? 0 : last.x < box.left + 72 ? -8 : last.x > box.right - 32 ? 8 : 0;
-        // Verticalement : la grille si elle défile dans sa carte (en-tête des jours en haut), sinon
-        // la page.
-        const inner = Boolean(scroller && box && scroller.scrollHeight > scroller.clientHeight);
-        const dy =
-          inner && box
-            ? last.y < box.top + 72
+        const days = last.days;
+        const hours = last.scroller;
+        const xBox = days?.getBoundingClientRect();
+        const yBox = hours?.getBoundingClientRect();
+        const dx =
+          !days || !xBox || days.scrollWidth <= days.clientWidth
+            ? 0
+            : last.x < xBox.left + 4
               ? -8
-              : last.y > box.bottom - 32
+              : last.x > xBox.right - 24
+                ? 8
+                : 0;
+        const inner = Boolean(hours && yBox && hours.scrollHeight > hours.clientHeight);
+        const dy =
+          inner && yBox
+            ? last.y < yBox.top + 24
+              ? -8
+              : last.y > yBox.bottom - 24
                 ? 8
                 : 0
             : last.y < 72
@@ -124,8 +138,11 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
               : last.y > window.innerHeight - 48
                 ? 8
                 : 0;
-        if (scroller && dx) scroller.scrollLeft += dx;
-        if (scroller && dy && inner) scroller.scrollTop += dy;
+        if (days && dx) {
+          days.style.scrollSnapType = "none";
+          days.scrollLeft += dx;
+        }
+        if (hours && dy && inner) hours.scrollTop += dy;
         else if (dy) window.scrollBy(0, dy);
         if (dx || dy) {
           const duration = current.block.end - current.block.start;
@@ -135,7 +152,11 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
       id = requestAnimationFrame(loop);
     };
     id = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(id);
+    return () => {
+      cancelAnimationFrame(id);
+      const days = pointer.current?.days;
+      if (days) days.style.scrollSnapType = "";
+    };
   }, [dragging]);
 
   const perform = (block: DragBlock, target: Target, scope: "single" | "series") => {
@@ -162,7 +183,12 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
     ? {
         begin: (block, element, clientY) => {
           const grab = clientY - element.getBoundingClientRect().top;
-          pointer.current = { x: 0, y: clientY, scroller: element.closest("[data-grid-scroll]") };
+          pointer.current = {
+            x: 0,
+            y: clientY,
+            scroller: element.closest("[data-grid-scroll]"),
+            days: element.closest("[data-grid-x]"),
+          };
           setDragBoth({ block, grab, target: null });
           navigator.vibrate?.(10);
         },

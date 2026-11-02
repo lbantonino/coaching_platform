@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
+import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
 import { Spinner } from "@/components/ui/spinner";
 import { buttonClass } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/overlay";
@@ -140,14 +141,42 @@ export function NewSessionSheet({
 }
 
 // Bouton rouge « Nouvelle séance » (Agenda, Séances) : ouvre la fenêtre, à `date` si elle est donnée.
-export function NewSessionButton({ date }: { date?: string }) {
+// `variant` : « header » (barre du haut de l'Agenda, 32 px, D-78) ; « bar » (téléphone : le « + » de la
+// carte en haut à droite, son nom reste lu « Nouvelle séance »).
+export function NewSessionButton({
+  date,
+  variant = "default",
+}: {
+  date?: string;
+  variant?: "default" | "header" | "bar";
+}) {
   const open = useOpenNewSession();
+  if (variant === "bar") {
+    return (
+      <MobileBarAction>
+        <button
+          type="button"
+          aria-label="Nouvelle séance"
+          disabled={!open}
+          onClick={() => open?.(date ? { date } : undefined)}
+          className={barActionClass}
+        >
+          <Plus aria-hidden size={20} strokeWidth={2.2} />
+        </button>
+      </MobileBarAction>
+    );
+  }
   return (
     <button
       type="button"
       disabled={!open}
       onClick={() => open?.(date ? { date } : undefined)}
-      className={buttonClass()}
+      className={buttonClass({
+        className:
+          variant === "header"
+            ? "lg:h-8 lg:rounded-lg lg:px-3.5 lg:text-[12px] lg:font-medium"
+            : "",
+      })}
     >
       <Plus aria-hidden size={16} strokeWidth={2} />
       Nouvelle séance

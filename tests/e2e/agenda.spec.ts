@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { chooseAgendaView, goToCoachSection, isPhone } from "./helpers";
+import { goToCoachSection, isPhone, setAgendaFilter } from "./helpers";
 
 // Agenda du coach (P2-05, refonte 4a) et tableau de bord, sur les données du seed (supabase/seed.sql).
 // Les mois sont fixés dans l'adresse pour que le test ne dépende pas de la date du jour.
@@ -15,7 +15,7 @@ async function loginAsCoachA(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, Liste, filtres, et aucune compétition", async ({
+test("l'agenda du coach, façon Google Agenda : vues, filtres en cases, et aucune compétition", async ({
   page,
 }) => {
   await loginAsCoachA(page);
@@ -24,24 +24,23 @@ test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, Liste, filtres, et au
   await goToCoachSection(page, "Agenda");
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: /^Semaine du/ })).toBeVisible();
-  // Vues : onglets sur ordinateur ; bouton « Vue » sur téléphone, avec aussi « 3 jours ».
+  // Ordinateur : le menu Coory se replie en arrivant (D-78).
+  if (!isPhone(page)) await expect(page.locator("html")).toHaveAttribute("data-sidebar", "hidden");
+  // Vues : menu « Semaine ▾ » sur ordinateur ; feuille « Vue et filtres » sur téléphone (avec 3 jours).
+  await page.getByRole("button", { name: /^Vue : / }).click();
   if (isPhone(page)) {
-    await page.getByRole("button", { name: /^Vue : / }).click();
-    const menu = page.getByRole("dialog", { name: "Vue de l'agenda" });
-    await expect(menu.getByRole("button")).toContainText([
-      "Aujourd'hui",
-      "3 jours",
-      "Semaine",
-      "Mois",
-      "Liste",
-    ]);
-    await menu.getByRole("button", { name: "Fermer" }).click();
+    const sheet = page.getByRole("dialog", { name: "Vue et filtres" });
+    await expect(
+      sheet.getByRole("navigation", { name: "Vue de l'agenda" }).getByRole("link"),
+    ).toHaveText(["Liste", "Jour", "3 jours", "Semaine", "Mois"]);
+    await expect(sheet.getByRole("checkbox", { name: "Individuelles" })).toBeChecked();
+    await expect(sheet.getByRole("checkbox", { name: "Collectives" })).toBeChecked();
   } else {
-    const views = page.getByRole("navigation", { name: "Vue de l'agenda" });
-    await expect(views.getByRole("link")).toHaveText(["Aujourd'hui", "Semaine", "Mois", "Liste"]);
+    await expect(
+      page.getByRole("menu", { name: "Vue de l'agenda" }).getByRole("menuitemradio"),
+    ).toContainText(["Jour", "Semaine", "Mois", "Liste"]);
   }
-  const filters = page.getByRole("navigation", { name: "Filtrer l'agenda" });
-  await expect(filters.getByRole("link")).toHaveText(["Toutes", "Individuelles", "Collectives"]);
+  await page.keyboard.press("Escape");
 
   // Mars 2027 : le Hyrox d'Inès (20 mars) n'est plus dans le planning du coach (26/10).
   await page.goto(`/coach/o/${ORG_A}/agenda?vue=mois&date=2027-03-01`);
@@ -49,76 +48,56 @@ test("l'agenda du coach : vues Aujourd'hui, Semaine, Mois, Liste, filtres, et au
   await expect(march).toBeVisible();
   await expect(march.getByText(/Hyrox Bruxelles/)).toHaveCount(0);
 
-  // Semaine fixée (janvier 2027) : la piste du mercredi est collective, l'individuelle disparaît
-  // avec le filtre « Collectives ».
+  // Semaine fixée (janvier 2027) : la piste du mercredi est collective ; elle disparaît quand on
+  // décoche « Collectives », revient quand on la recoche.
   await page.goto(`/coach/o/${ORG_A}/agenda?date=2027-01-06`);
   const week = page.getByRole("region", { name: /^Semaine du/ });
-  await expect(week.getByRole("link", { name: /Piste du mercredi/ }).first()).toBeVisible();
-  await filters.getByRole("link", { name: "Individuelles" }).click();
+  // La grille contient plusieurs semaines (sur ordinateur, seule celle choisie est affichée).
+  const piste = week.getByRole("link", { name: /Piste du mercredi/ }).filter({ visible: true });
+  await expect(piste.first()).toBeVisible();
+  await setAgendaFilter(page, "Collectives", false);
   await expect(page).toHaveURL(/type=individuelles/);
   await expect(week.getByRole("link", { name: /Piste du mercredi/ })).toHaveCount(0);
-  await filters.getByRole("link", { name: "Collectives" }).click();
-  await expect(page).toHaveURL(/type=collectives/);
-  await expect(week.getByRole("link", { name: /Piste du mercredi/ }).first()).toBeVisible();
+  await setAgendaFilter(page, "Collectives", true);
+  await expect(page).not.toHaveURL(/type=/);
+  await expect(piste.first()).toBeVisible();
 });
 
-test("le tableau de bord montre la semaine du coach avec ses vraies séances", async ({ page }) => {
+test("le tableau de bord montre les séances à venir, jour par jour, et les programmes en cours", async ({
+  page,
+}) => {
   await loginAsCoachA(page);
   await expect(page.getByRole("heading", { name: "Tableau de bord", level: 1 })).toBeVisible();
-  // Semaine fixée dans l'adresse : le mercredi 6 janvier 2027 a la piste collective (19:00).
-  await page.goto("/coach?date=2027-01-06");
-  const week = page.getByRole("region", { name: "Semaine du 4 au 10 janvier" });
-  await expect(
-    week.getByRole("link", { name: /Piste du mercredi/ }).filter({ visible: true }),
-  ).toHaveCount(1);
+  // Plus d'agenda sur le tableau de bord (D-78) : il est sur la page Agenda.
+  await expect(page.locator("[data-drop-date]")).toHaveCount(0);
+  // Séances à venir : les deux prochains jours qui ont des séances, chacun avec sa date en titre et
+  // ses séances (la démo en a tous les jours de la semaine), la plus proche marquée « Prochaine ».
+  const upcoming = page.getByRole("region", { name: "Séances à venir" });
+  await expect(upcoming.getByRole("heading", { level: 3 })).toHaveCount(2);
+  await expect(upcoming.getByRole("heading", { level: 3 }).first()).toHaveText(
+    /^(Lundi|Mardi|Mercredi|Jeudi|Vendredi|Samedi|Dimanche) \d{1,2} \p{L}+$/u,
+  );
+  await expect(upcoming.getByText("Prochaine", { exact: true })).toHaveCount(1);
+  await expect(upcoming.getByRole("link", { name: "Voir tout" })).toHaveAttribute(
+    "href",
+    /\/agenda\?vue=liste$/,
+  );
   // Programmes en cours (D-46) : le programme publié d'Inès, avec sa semaine en cours.
   const programs = page.getByRole("region", { name: "Programmes en cours" });
   await expect(programs.getByRole("link", { name: /Inès Benali/ })).toContainText(
     "Prépa Hyrox Bruxelles",
   );
   await expect(programs).toContainText(/Sem\. \d+\/12/);
-  await expect(page.getByRole("region", { name: "Séances à venir" })).toBeVisible();
-  // Filtre de l'agenda (26/10) : Toutes, Individuelles, Collectives ; la piste est collective.
-  const filters = page.getByRole("navigation", { name: "Filtrer l'agenda" });
-  await expect(filters.getByRole("link")).toHaveText(["Toutes", "Individuelles", "Collectives"]);
-  await filters.getByRole("link", { name: "Individuelles" }).click();
-  await expect(page).toHaveURL(/type=individuelles/);
-  await expect(
-    week.getByRole("link", { name: /Piste du mercredi/ }).filter({ visible: true }),
-  ).toHaveCount(0);
-  await filters.getByRole("link", { name: "Toutes" }).click();
-  // « Agenda → » sur ordinateur ; sur téléphone, la barre reste courte : l'Agenda est dans le menu.
-  if (isPhone(page)) await goToCoachSection(page, "Agenda");
-  else await week.getByRole("link", { name: "Agenda →" }).click();
+  await expect(page.getByRole("region", { name: "Activité financière" })).toBeVisible();
+  // L'Agenda est la 2e entrée du menu, juste sous le Tableau de bord (D-78).
+  if (isPhone(page)) await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+  const nav = page
+    .getByRole("navigation", { name: "Navigation principale" })
+    .filter({ visible: true });
+  const entries = (await nav.getByRole("link").allInnerTexts()).map((t) => t.trim().split("\n")[0]);
+  expect(entries.slice(0, 2)).toEqual(["Tableau de bord", "Agenda"]);
+  await nav.getByRole("link", { name: "Agenda", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
-});
-
-test("l'agenda du tableau de bord passe du jour à la semaine et au mois sans quitter la page", async ({
-  page,
-}) => {
-  await loginAsCoachA(page);
-  await chooseAgendaView(page, "Mois");
-  await expect(page).toHaveURL(/\/coach\?vue=mois/);
-  // Un jour du mois ouvre sa journée, toujours sur le tableau de bord.
-  await page.getByRole("link", { name: /^15 :/ }).click();
-  await expect(page).toHaveURL(/\/coach\?vue=jour&date=\d{4}-\d{2}-15/);
-  if (isPhone(page)) {
-    await expect(page.getByRole("button", { name: /^Vue : Aujourd'hui/ })).toBeVisible();
-    // Semaine entière sur téléphone : les 7 jours dans l'écran (?jours=7).
-    await chooseAgendaView(page, "Semaine");
-    await expect(page).toHaveURL(/jours=7/);
-    await expect(page.getByText("7 jours", { exact: true })).toBeVisible();
-  } else {
-    await expect(
-      page
-        .getByRole("navigation", { name: "Vue de l'agenda" })
-        .getByRole("link", { name: "Aujourd'hui" }),
-    ).toHaveAttribute("aria-current", "page");
-    await chooseAgendaView(page, "Semaine");
-  }
-  await expect(page.getByRole("heading", { name: /^Semaine du/, level: 2 })).toBeVisible();
-  await chooseAgendaView(page, "Mois");
-  await expect(page.getByRole("link", { name: /^15 :/ })).toBeVisible();
 });
 
 test("le menu « Créer » mène aux vraies créations, et à la page vide du module pour le reste", async ({

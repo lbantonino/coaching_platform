@@ -6,27 +6,40 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import { CountBadge } from "@/components/ui/count-badge";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 import { notificationsHref } from "./navigation";
 import { useShell } from "./shell-context";
 
 // Outils à droite de l'en-tête de page sur ordinateur (maquette v6, D-77) : recherche « Rechercher dans
-// Coory… ⌘K », Assistant IA en violet (coach), cloche à pastille violette, soleil / lune.
+// Coory… ⌘K », Assistant IA en violet (coach), cloche à pastille violette. Plus de bouton de thème
+// (D-78) : le thème se choisit dans les Paramètres.
 // Coach : la recherche ouvre la page Recherche globale (D-62) avec la saisie.
 // Sportif et admin : la recherche ouvre la page Recherche de l'espace. ⌘K / Ctrl K y mène aussi.
-export function HeaderTools() {
+// `compact` (barre de l'Agenda, D-78) : sous 1536 px, la recherche devient une loupe (⌘K marche
+// toujours) pour laisser la place au choix de la vue et à « Nouvelle séance ».
+export function HeaderTools({ compact = false }: { compact?: boolean }) {
   const { space, orgBase } = useShell();
   return (
     <div className="hidden items-center gap-2 lg:flex">
+      {compact && space === "coach" ? (
+        <Link
+          href="/coach/recherche"
+          aria-label="Rechercher dans Coory"
+          title="Rechercher (⌘K)"
+          className={`${headerIcon} 2xl:hidden`}
+        >
+          <Search aria-hidden size={15} strokeWidth={1.8} />
+        </Link>
+      ) : null}
       {space === "coach" && orgBase ? (
-        <CoachSearch />
+        <span className={compact ? "hidden 2xl:contents" : "contents"}>
+          <CoachSearch />
+        </span>
       ) : (
         <SearchLink href={space === "athlete" ? "/app/recherche" : "/admin/recherche"} />
       )}
       {space === "coach" ? <AssistantButton withLabel /> : null}
       <NotificationBell />
-      <ThemeToggle className={headerIcon} />
     </div>
   );
 }

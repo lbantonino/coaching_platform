@@ -7,9 +7,9 @@ import { useEffect, useRef, useTransition, type ReactNode } from "react";
 // glisser vers la gauche ouvre la période suivante (jour, semaine ou mois), vers la droite la
 // précédente, comme les flèches. La vue suit le doigt avec de la résistance, puis glisse dans le sens du
 // geste ; s'il est trop court ou trop lent, elle revient en place.
-// `edges` (vue 3 jours, qui défile déjà d'un jour à l'autre) : seulement depuis le bord de la grille,
-// dimanche pour la semaine suivante, lundi pour la précédente ; c'est alors le défilement de la grille
-// qui rebondit, la vue ne bouge pas.
+// `edges` (Jour, 3 jours, Semaine : la grille défile déjà d'un jour à l'autre sur plusieurs semaines) :
+// seulement depuis le bord de la grille, pour ouvrir les semaines suivantes ou précédentes ; c'est
+// alors le défilement de la grille qui rebondit, la vue ne bouge pas.
 // Les gestes verticaux restent au défilement normal (touch-action pan-y, le zoom reste permis), et une
 // séance attrapée par appui long (glisser-déposer, qui bloque le défilement) n'est jamais prise pour un
 // changement de période. Souris : rien ne change, les flèches restent.
@@ -32,11 +32,14 @@ export function SwipeNav({
   prevHref,
   nextHref,
   edges = false,
+  className = "",
   children,
 }: {
   prevHref: string;
   nextHref: string;
   edges?: boolean;
+  // Mise en page du conteneur (page Agenda : il remplit la hauteur du calendrier).
+  className?: string;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -69,7 +72,7 @@ export function SwipeNav({
         return;
       }
       const touch = event.touches[0];
-      const scroller = edges ? element.querySelector<HTMLElement>("[data-grid-scroll]") : null;
+      const scroller = edges ? element.querySelector<HTMLElement>("[data-grid-x]") : null;
       const max = scroller ? scroller.scrollWidth - scroller.clientWidth : 0;
       gesture = {
         x: touch.clientX,
@@ -160,7 +163,7 @@ export function SwipeNav({
   }, [pending]);
 
   return (
-    <div ref={ref} className={edges ? "" : "touch-pan-y touch-pinch-zoom"}>
+    <div ref={ref} className={`${edges ? "" : "touch-pan-y touch-pinch-zoom"} ${className}`}>
       {children}
     </div>
   );

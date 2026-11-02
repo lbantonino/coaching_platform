@@ -79,3 +79,35 @@ export function dayLabel(iso: string): string {
 export function shortMonth(iso: string): string {
   return shortMonthFormatter.format(new Date(`${iso}T00:00:00Z`));
 }
+
+// Période d'une barre d'agenda (D-78 : déplacé depuis l'ancienne barre de l'agenda).
+const capitalizeLabel = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+const utcDay = (day: string) => new Date(`${day}T00:00:00Z`);
+const monthYear = new Intl.DateTimeFormat("fr-BE", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const monthShort = new Intl.DateTimeFormat("fr-BE", { month: "short", timeZone: "UTC" });
+const monthOnly = new Intl.DateTimeFormat("fr-BE", { month: "long", timeZone: "UTC" });
+const thisYear = () =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date()).slice(0, 4);
+
+// « Octobre 2026 » ; une semaine à cheval : « Oct. – nov. 2026 » (ou « Déc. 2026 – janv. 2027 »).
+// `short` (téléphone) : sans l'année quand c'est celle d'aujourd'hui (« Octobre », « Oct. – nov. »).
+export function periodLabel(from: string, to: string, short = false): string {
+  if (short && from.slice(0, 4) === to.slice(0, 4) && from.slice(0, 4) === thisYear()) {
+    return from.slice(0, 7) === to.slice(0, 7)
+      ? capitalizeLabel(monthOnly.format(utcDay(from)))
+      : capitalizeLabel(`${monthShort.format(utcDay(from))} – ${monthShort.format(utcDay(to))}`);
+  }
+  if (from.slice(0, 7) === to.slice(0, 7)) return capitalizeLabel(monthYear.format(utcDay(from)));
+  const sameYear = from.slice(0, 4) === to.slice(0, 4);
+  const start = monthShort.format(utcDay(from));
+  const end = monthShort.format(utcDay(to));
+  return capitalizeLabel(
+    sameYear
+      ? `${start} – ${end} ${to.slice(0, 4)}`
+      : `${start} ${from.slice(0, 4)} – ${end} ${to.slice(0, 4)}`,
+  );
+}

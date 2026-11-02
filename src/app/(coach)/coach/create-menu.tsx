@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useOpenNewPayment } from "@/components/blocks/new-payment-sheet";
 import { useOpenNewSession } from "@/components/blocks/new-session-sheet";
 import { useOpenTaskSheet } from "@/components/blocks/task-sheet";
+import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
 import { buttonClass } from "@/components/ui/button";
 import { ActionMenu } from "@/components/ui/overlay";
 
@@ -34,11 +35,24 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={buttonClass({ className: "lg:h-8 lg:rounded-lg lg:px-3.5 lg:text-[12px] lg:font-medium" })}
+        className={buttonClass({
+          className: "max-lg:hidden lg:h-8 lg:rounded-lg lg:px-3.5 lg:text-[12px] lg:font-medium",
+        })}
       >
         <Plus aria-hidden size={16} strokeWidth={2} />
         Créer
       </button>
+      {/* Téléphone (D-78) : le « + » de la carte en haut à droite (avec l'assistant IA et la cloche). */}
+      <MobileBarAction>
+        <button
+          type="button"
+          aria-label="Créer"
+          onClick={() => setOpen(true)}
+          className={barActionClass}
+        >
+          <Plus aria-hidden size={20} strokeWidth={2.2} />
+        </button>
+      </MobileBarAction>
       <ActionMenu
         open={open}
         onClose={() => setOpen(false)}

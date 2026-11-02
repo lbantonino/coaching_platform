@@ -93,24 +93,40 @@ export async function chooseAthleteFilter(
     .click();
 }
 
-// Vue de l'agenda (tableau de bord, page Agenda) : onglets sur ordinateur ; sur téléphone, bouton
-// « Vue » qui ouvre le choix Aujourd'hui, 3 jours, Semaine, Mois (demande d'Antonino du 26/10).
+// Page Agenda façon Google Agenda (D-78). Ordinateur : « Semaine ▾ » au centre de la barre ouvre le
+// menu des vues. Téléphone : « 3 jours ▾ » ouvre la feuille « Vue et filtres ».
 export async function chooseAgendaView(
   page: Page,
-  label: "Aujourd'hui" | "3 jours" | "Semaine" | "Mois",
+  label: "Jour" | "3 jours" | "Semaine" | "Mois" | "Liste",
 ) {
+  await page.getByRole("button", { name: /^Vue : / }).click();
   if (isPhone(page)) {
-    await page.getByRole("button", { name: /^Vue : / }).click();
     await page
-      .getByRole("dialog", { name: "Vue de l'agenda" })
-      .getByRole("button", { name: label, exact: true })
+      .getByRole("dialog", { name: "Vue et filtres" })
+      .getByRole("link", { name: label, exact: true })
       .click();
     return;
   }
   await page
-    .getByRole("navigation", { name: "Vue de l'agenda" })
-    .getByRole("link", { name: label, exact: true })
+    .getByRole("menu", { name: "Vue de l'agenda" })
+    .getByRole("menuitemradio", { name: new RegExp(`^${label}`) })
     .click();
+}
+
+// Cases « Individuelles » / « Collectives » de l'Agenda : dans le panneau (ordinateur), dans la
+// feuille « Vue et filtres » (téléphone, qui se referme ensuite).
+export async function setAgendaFilter(
+  page: Page,
+  label: "Individuelles" | "Collectives",
+  checked: boolean,
+) {
+  const scope = isPhone(page)
+    ? (await page.getByRole("button", { name: /^Vue : / }).click(),
+      page.getByRole("dialog", { name: "Vue et filtres" }))
+    : page.getByRole("complementary", { name: "Agenda : navigation et filtres" });
+  const box = scope.getByRole("checkbox", { name: label });
+  if (checked) await box.check();
+  else await box.uncheck();
 }
 
 export { isPhone };

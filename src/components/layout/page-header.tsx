@@ -15,7 +15,8 @@ import { PageIcon } from "./page-icon";
 // exception : une page de détail (pastilles d'une fiche sportif).
 // Téléphone : la barre du haut écrit déjà le nom de la page, le titre reste pour les lecteurs
 // d'écran ; une page de détail (avec retour) garde le sien (nom du sportif, de la facture…). Les
-// actions passent dessous, en pleine largeur.
+// actions passent dessous, en pleine largeur. Sans retour ni action visible, l'en-tête ne prend aucune
+// place : le contenu commence juste sous les cartes ☰ et outils.
 export function PageHeader({
   title,
   titleAside,
@@ -40,7 +41,9 @@ export function PageHeader({
 }) {
   return (
     // Ordinateur (maquette v6, D-77) : l'en-tête est une carte de 64 px (titre 15 px, outils à droite).
-    <header className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 pt-4 pb-1 lg:mx-8 lg:mt-3 lg:min-h-16 lg:flex-nowrap lg:rounded-[20px] lg:border lg:border-line lg:bg-surface lg:px-5 lg:py-3">
+    <header
+      className={`flex flex-wrap items-center gap-x-4 ${back ? "gap-y-3" : ""} px-4 pt-0 pb-1 lg:mx-8 lg:mt-3 lg:min-h-16 lg:flex-nowrap lg:rounded-[20px] lg:border lg:border-line lg:bg-surface lg:px-5 lg:py-3`}
+    >
       {/* Page de détail (avec retour) : le lien de retour au-dessus, puis la ligne du titre, dont la
           phrase (pastilles d'une fiche sportif…) peut passer à la ligne. */}
       <div
@@ -58,14 +61,7 @@ export function PageHeader({
             {icon ? (
               (() => {
                 const Icon = icon;
-                return (
-                  <Icon
-                    aria-hidden
-                    size={22}
-                    strokeWidth={1.8}
-                    className="hidden"
-                  />
-                );
+                return <Icon aria-hidden size={22} strokeWidth={1.8} className="hidden" />;
               })()
             ) : (
               <PageIcon />
@@ -94,12 +90,24 @@ export function PageHeader({
 
 // Corps de page : une colonne sur téléphone (marges 16, de la place en bas pour la barre du sportif
 // et les messages), marges 32 sur ordinateur. `grid` : grille de 12 colonnes (prompt §5.2).
-export function PageBody({ grid = false, children }: { grid?: boolean; children: ReactNode }) {
+// `fill` (tableau de bord, D-78) : sur ordinateur, le corps prend toute la hauteur restante de l'écran
+// (la page ne défile pas) ; son bas s'aligne sur celui du menu (12 px du bord).
+export function PageBody({
+  grid = false,
+  fill = false,
+  children,
+}: {
+  grid?: boolean;
+  fill?: boolean;
+  children: ReactNode;
+}) {
   return (
     <div
-      className={`px-4 pt-3 pb-[120px] lg:px-8 lg:pt-4 lg:pb-14 ${
+      className={`px-4 pt-3 pb-[120px] lg:px-8 lg:pt-4 ${fill ? "lg:min-h-0 lg:flex-1 lg:pb-3" : "lg:pb-14"} ${
         // Téléphone (26/10) : plus d'air entre les sections d'une page en grille (tableau de bord…).
-        grid ? "grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-4" : "flex flex-col gap-4"
+        grid
+          ? "grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-4"
+          : `flex flex-col ${fill ? "gap-6 lg:gap-4" : "gap-4"}`
       }`}
     >
       {children}
