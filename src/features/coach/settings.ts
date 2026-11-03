@@ -1,18 +1,7 @@
 import { z } from "zod";
 
-import {
-  LEGAL_FORMS,
-  VAT_STATUSES,
-  normalizeBic,
-  normalizeCompanyNumber,
-  normalizeIban,
-  normalizeVatNumber,
-  type LegalForm,
-  type VatStatus,
-} from "@/domain/billing/legal";
 import { parseVatRate } from "@/domain/billing/money";
 import { parseAmount } from "@/domain/billing/payments";
-import { isCountryCode } from "@/domain/geo/countries";
 import { emailField, newPasswordField } from "@/features/auth/schemas";
 
 // Page Paramètres (D-57) : règles PURES des formulaires, testées par Vitest. Les actions serveur les
@@ -115,7 +104,7 @@ export const NOTIFICATION_KINDS = [
   "competitions",
   "messages",
   "tasks",
-  "invoices",
+  "unpaid",
   "profiles",
 ] as const;
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
@@ -128,7 +117,10 @@ export const notificationKindLabels: Record<NotificationKind, { label: string; h
     label: "Tâches du jour et en retard",
     hint: "Tes tâches à faire aujourd'hui ou déjà dépassées.",
   },
-  invoices: { label: "Factures en retard", hint: "Les factures dont l'échéance est passée." },
+  unpaid: {
+    label: "Séances à encaisser",
+    hint: "Les séances avec un prix, toujours pas payées une semaine après.",
+  },
   competitions: {
     label: "Compétitions dans les 7 jours",
     hint: "Les compétitions proches de tes sportifs.",
@@ -139,173 +131,20 @@ export const notificationKindLabels: Record<NotificationKind, { label: string; h
   },
 };
 
-// --- Structures légales -------------------------------------------------------------------------
-export type LegalEntityInput = {
-  name: string;
-  legalForm: string;
-  enterpriseNumber: string;
-  vatStatus: string;
-  // Assujetti (D-69) : son numéro de TVA (en Belgique, déduit du numéro d'entreprise s'il est vide)
-  // et son taux habituel.
-  vatNumber: string;
-  defaultVatRate: string;
-  addressLine: string;
-  postalCode: string;
-  city: string;
-  country: string;
-  iban: string;
-  bic: string;
-  paymentDetails: string;
-  billingEmail: string;
-  invoicePrefix: string;
-  legalMentions: string;
-  isDefault: boolean;
-};
+// --- TVA (D-90) --------------------------------------------------------------------------------
+// Un seul réglage, le taux du coach : 0 s'il ne facture pas la TVA. Coory ne fait pas de factures ;
+// ce taux sert au prix des séances (HTVA ou TVAC) et au résultat HTVA de la Comptabilité.
+export type VatSettingInput = { vatEnabled: boolean; vatRate: string };
 
-export type LegalEntityValues = {
-  name: string;
-  legal_form: LegalForm;
-  enterprise_number: string | null;
-  vat_status: VatStatus;
-  vat_number: string | null;
-  default_vat_rate: number | null;
-  address_line: string | null;
-  postal_code: string | null;
-  city: string | null;
-  country: string;
-  iban: string | null;
-  bic: string | null;
-  payment_details: string | null;
-  billing_email: string | null;
-  invoice_prefix: string;
-  legal_mentions: string | null;
-  is_default: boolean;
-};
-
-export function parseLegalEntity(
-  input: LegalEntityInput,
-): { ok: true; values: LegalEntityValues } | { ok: false; error: string } {
-  const name = input.name.trim();
-  if (name.length < 1 || name.length > 120) {
-    return { ok: false, error: "Indique la raison sociale (120 caractères maximum)." };
+export function parseVatSetting(
+  input: VatSettingInput,
+): { ok: true; vatRate: number } | { ok: false; error: string } {
+  if (!input.vatEnabled) return { ok: true, vatRate: 0 };
+  const rate = parseVatRate(input.vatRate);
+  if (rate === null || rate === 0) {
+    return { ok: false, error: "Indique ton taux de TVA (un nombre entre 0 et 100)." };
   }
-  const legalForm = LEGAL_FORMS.find((form) => form === input.legalForm);
-  if (!legalForm) return { ok: false, error: "Choisis la forme juridique." };
-  const vatStatus = VAT_STATUSES.find((status) => status === input.vatStatus);
-  if (!vatStatus) return { ok: false, error: "Choisis le régime de TVA." };
-
-  const country = (input.country.trim() || "BE").toUpperCase();
-  if (!isCountryCode(country)) return { ok: false, error: "Choisis le pays de la structure." };
-
-  // Numéros (D-69) : formats belges vérifiés pour une structure belge, libres ailleurs.
-  const be = country === "BE";
-  let enterpriseNumber: string | null = null;
-  if (input.enterpriseNumber.trim() !== "") {
-    enterpriseNumber = normalizeCompanyNumber(input.enterpriseNumber, country);
-    if (!enterpriseNumber) {
-      return {
-        ok: false,
-        error: be
-          ? "Numéro d'entreprise invalide : 10 chiffres, ex. 0123.456.749."
-          : "Numéro d'entreprise invalide : lettres, chiffres, points ou tirets (30 maximum).",
-      };
-    }
-  }
-  let vatNumber: string | null = null;
-  let defaultVatRate: number | null = null;
-  if (vatStatus === "subject") {
-    const typed = input.vatNumber.trim();
-    // Belgique : sans numéro de TVA saisi, celui du numéro d'entreprise (BE + les 10 chiffres).
-    vatNumber = typed
-      ? normalizeVatNumber(typed, country)
-      : be && enterpriseNumber
-        ? normalizeVatNumber(enterpriseNumber, country)
-        : null;
-    if (!vatNumber) {
-      return {
-        ok: false,
-        error: typed
-          ? be
-            ? "Numéro de TVA invalide : BE suivi de 10 chiffres, ex. BE0123.456.749."
-            : "Numéro de TVA invalide : lettres, chiffres, points ou tirets (30 maximum)."
-          : "Un assujetti à la TVA a besoin de son numéro de TVA.",
-      };
-    }
-    // Belgique : le numéro d'entreprise est celui du numéro de TVA, s'il n'a pas été donné.
-    if (be && !enterpriseNumber) enterpriseNumber = vatNumber.slice(2);
-    defaultVatRate = parseVatRate(input.defaultVatRate);
-    if (defaultVatRate === null) {
-      return {
-        ok: false,
-        error: "Taux de TVA habituel : un nombre entre 0 et 100 (ex. 21 ou 8,1).",
-      };
-    }
-  }
-
-  let iban: string | null = null;
-  if (input.iban.trim() !== "") {
-    iban = normalizeIban(input.iban);
-    if (!iban)
-      return {
-        ok: false,
-        error: "IBAN invalide : vérifie les chiffres (ex. BE68 5390 0754 7034).",
-      };
-  }
-  let bic: string | null = null;
-  if (input.bic.trim() !== "") {
-    bic = normalizeBic(input.bic);
-    if (!bic) return { ok: false, error: "BIC invalide : 8 ou 11 caractères (ex. GEBABEBB)." };
-  }
-  let billingEmail: string | null = null;
-  if (input.billingEmail.trim() !== "") {
-    const email = emailField.safeParse(input.billingEmail.trim());
-    if (!email.success) return { ok: false, error: "Adresse e-mail de facturation invalide." };
-    billingEmail = email.data;
-  }
-  const prefix = (input.invoicePrefix.trim() || "FAC").toUpperCase();
-  if (!/^[A-Z0-9-]{1,12}$/.test(prefix)) {
-    return { ok: false, error: "Préfixe des factures : lettres, chiffres ou tirets (12 maximum)." };
-  }
-  const postalCode = blankToNull(input.postalCode)?.toUpperCase() ?? null;
-  if (postalCode !== null && !/^[A-Z0-9 -]{2,10}$/.test(postalCode)) {
-    return { ok: false, error: "Code postal invalide." };
-  }
-  const addressLine = blankToNull(input.addressLine);
-  if (addressLine !== null && addressLine.length > 160)
-    return { ok: false, error: "Adresse trop longue." };
-  const city = blankToNull(input.city);
-  if (city !== null && city.length > 80) return { ok: false, error: "Nom de ville trop long." };
-  const paymentDetails = blankToNull(input.paymentDetails);
-  if (paymentDetails !== null && paymentDetails.length > 300) {
-    return { ok: false, error: "Coordonnées de paiement limitées à 300 caractères." };
-  }
-  const mentions = blankToNull(input.legalMentions);
-  if (mentions !== null && mentions.length > 1000) {
-    return { ok: false, error: "Mentions légales limitées à 1000 caractères." };
-  }
-
-  return {
-    ok: true,
-    values: {
-      name,
-      legal_form: legalForm,
-      enterprise_number: enterpriseNumber,
-      vat_status: vatStatus,
-      vat_number: vatNumber,
-      default_vat_rate: defaultVatRate,
-      address_line: addressLine,
-      postal_code: postalCode,
-      city,
-      country,
-      iban,
-      bic,
-      payment_details: paymentDetails,
-      billing_email: billingEmail,
-      invoice_prefix: prefix,
-      legal_mentions: mentions,
-      is_default: input.isDefault,
-    },
-  };
+  return { ok: true, vatRate: rate };
 }
 
 // --- Sécurité -----------------------------------------------------------------------------------

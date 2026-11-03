@@ -1,13 +1,13 @@
-// Ligne de menu (D-77, maquette v6) : sur ordinateur, 32 px, icône 16, 13 px ; dans le menu hamburger du
-// téléphone (`large`), 44 px et 16 px pour le doigt. Page active : fond violet léger sans contour, icône
-// violette ; survol : fond neutre très léger.
+// Ligne de menu : sur ordinateur, 34 px, icône 16, 13,5 px (maquette « Sportifs » du 03/11/2026) ; dans
+// le menu hamburger du téléphone (`large`), 44 px et 16 px pour le doigt. Page active : fond violet léger
+// sans contour (icône violette dans le menu du téléphone) ; survol : fond neutre très léger.
 export function navItemClass(active: boolean, large = false) {
   const size = large
     ? "min-h-11 gap-3 rounded-control px-3 text-[16px]"
-    : "h-8 gap-2.5 rounded-lg px-2.5 text-[13px]";
-  return `flex items-center ${size} border border-transparent transition-colors duration-150 ${
+    : "h-[34px] gap-2.5 rounded-[9px] px-3 text-[13.5px]";
+  return `flex items-center ${size} transition-colors duration-150 ${
     active
-      ? "bg-selected font-medium text-text [&>svg]:text-violet-text"
+      ? `bg-selected text-text ${large ? "font-medium [&>svg]:text-violet-text" : ""}`
       : "text-muted hover:bg-selected-hover hover:text-text"
   }`;
 }

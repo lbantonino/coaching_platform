@@ -10,7 +10,6 @@ import {
   parseCategoryName,
 } from "@/domain/documents/documents";
 import { requireOrgAccess } from "@/features/auth/guards";
-import { isVatSubject } from "@/features/coach/legal-queries";
 import type { CategoryResult } from "@/features/documents/actions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -52,7 +51,8 @@ export async function createExpense(
     values,
     saved: false,
   });
-  const parsed = parseExpenseForm(values, await isVatSubject(orgId));
+  // Coach soumis à la TVA (D-73, taux de l'organisation depuis D-90) : TVA récupérable sur la dépense.
+  const parsed = parseExpenseForm(values, membership.vatRate > 0);
   if (!parsed.ok) return fail(parsed.error);
   const expense = parsed.expense;
   const supabase = await createClient();

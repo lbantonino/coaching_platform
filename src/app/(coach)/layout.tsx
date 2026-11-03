@@ -7,7 +7,6 @@ import { TaskSheetProvider } from "@/components/blocks/task-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { createPayment } from "@/features/billing/payment-actions";
-import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { loadSettings } from "@/features/coach/settings-actions";
 import { DEFAULT_PREFERENCES, getCoachProfile } from "@/features/coach/profile";
 import { enabledTotal } from "@/features/notifications/filter";
@@ -35,16 +34,19 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
   const memberships = user ? await getCoachMemberships(user.id) : [];
   // Une organisation suffit au lancement ; le choix entre plusieurs organisations viendra plus tard.
   const first = memberships[0];
-  const [profile, counts, vatRate] = await Promise.all([
+  const [profile, counts] = await Promise.all([
     user ? getCoachProfile(user) : null,
     first ? countNotifications(first.organizationId, todayIsoInBrussels()) : null,
-    first ? getDefaultVatRate(first.organizationId) : 0,
   ]);
   // La fenêtre des Paramètres (D-58) enveloppe toute la coquille : le menu du compte l'ouvre.
-  // Devise, pays et taux de TVA habituel de l'organisation (D-69) pour tous les écrans d'argent.
+  // Devise, pays (D-69) et taux de TVA (D-90) de l'organisation pour tous les écrans d'argent.
   return (
     <MoneyProvider
-      value={{ currency: first?.currency ?? "EUR", country: first?.country ?? "BE", vatRate }}
+      value={{
+        currency: first?.currency ?? "EUR",
+        country: first?.country ?? "BE",
+        vatRate: first?.vatRate ?? 0,
+      }}
     >
       <SettingsDialogProvider load={loadSettings}>
         <AppShell

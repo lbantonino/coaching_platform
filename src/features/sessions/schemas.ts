@@ -57,7 +57,7 @@ export type SessionValues = {
 export const SESSION_PAYMENT_METHODS = ["transfer", "cash"] as const;
 export type SessionPaymentMethod = (typeof SESSION_PAYMENT_METHODS)[number];
 
-// TVA d'une séance : le taux habituel de la structure par défaut (D-69, 0 sans structure assujettie).
+// TVA d'une séance : le taux de l'organisation (D-90, 0 si le coach n'en facture pas).
 // Règle de Gianluca (26/10) : par virement, la séance est facturée et le prix est hors TVA
 // (65 € HTVA -> 78,65 € payés à 21 %) ; en espèces, le prix est « direct », TVA comprise.
 export const defaultVatIncluded = (method: SessionPaymentMethod) => method === "cash";
@@ -228,6 +228,21 @@ export function occurrencesBetween(session: ScheduleLike, from: string, to: stri
   const dates: string[] = [];
   for (let day = start + weeksToSkip * 7; day <= last; day += 7) dates.push(isoFromDay(day));
   return dates;
+}
+
+// Rang d'une date dans sa série hebdomadaire (« Séance 9 sur 19 », page d'une séance) : `originalDate`
+// est la date d'origine (une date déplacée garde son rang). `total` vaut null pour une série sans fin.
+// null : pas une série, ou pas une de ses dates.
+export function seriesPosition(
+  session: ScheduleLike,
+  originalDate: string,
+): { index: number; total: number | null } | null {
+  if (!session.repeatsWeekly || !occursOn(session, originalDate)) return null;
+  const index = occurrencesBetween(session, session.startsOn, originalDate).length;
+  const total = session.endsOn
+    ? occurrencesBetween(session, session.startsOn, session.endsOn).length
+    : null;
+  return { index, total };
 }
 
 // Vraie date de la série ?

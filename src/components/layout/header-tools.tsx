@@ -21,7 +21,7 @@ import { useShell } from "./shell-context";
 export function HeaderTools({ compact = false }: { compact?: boolean }) {
   const { space, orgBase } = useShell();
   return (
-    <div className="hidden items-center gap-2 lg:flex">
+    <div className="hidden items-center gap-2.5 lg:flex">
       {compact && space === "coach" ? (
         <Link
           href="/coach/recherche"
@@ -45,11 +45,12 @@ export function HeaderTools({ compact = false }: { compact?: boolean }) {
   );
 }
 
-// Boutons icônes de l'en-tête (ordinateur) : 32 px, filet fin. Sur téléphone (barre du haut) : 44 px.
+// Boutons icônes de l'en-tête (ordinateur) : 32 px, filet fin. Sur téléphone (barre du haut) : 40 px.
+// Boutons de la barre du téléphone : 40 px dans la pilule (maquette « Sportifs », 03/11/2026).
 export const headerIcon =
-  "relative inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-line text-text-2 transition-colors duration-150 hover:bg-selected-hover";
+  "relative inline-flex size-8 shrink-0 items-center justify-center rounded-[9px] border border-line text-text-2 transition-colors duration-150 hover:bg-selected-hover";
 const phoneIcon =
-  "relative inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-text-2 transition-colors duration-150 hover:bg-selected-hover";
+  "relative inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-text-2 transition-colors duration-150 hover:bg-selected-hover";
 
 // Assistant IA (coach) : dans l'en-tête des pages sur ordinateur (avec son nom), et dans la barre du haut
 // sur téléphone (demande d'Antonino du 29/10/2026 : « super important »). En violet (D-77) pour qu'on
@@ -59,11 +60,13 @@ export function AssistantButton({ withLabel = false }: { withLabel?: boolean }) 
     <Link
       href="/coach/assistant"
       aria-label={withLabel ? undefined : "Assistant IA"}
-      className={`inline-flex shrink-0 items-center justify-center border border-ai-border bg-ai-bg text-ai-text transition-[filter] duration-150 hover:brightness-110 ${
-        withLabel ? "h-8 gap-1.5 rounded-lg px-3 text-[12px] font-medium" : "size-11 rounded-xl"
+      className={`inline-flex shrink-0 items-center justify-center bg-ai-bg text-ai-text inset-ring inset-ring-ai-border transition-[filter] duration-150 hover:brightness-110 ${
+        withLabel
+          ? "h-8 gap-1.5 rounded-[9px] px-3 text-[12.5px] font-medium"
+          : "size-10 rounded-xl"
       }`}
     >
-      <Sparkles aria-hidden size={withLabel ? 14 : 18} strokeWidth={1.8} className="fill-current" />
+      <Sparkles aria-hidden size={withLabel ? 13 : 16} strokeWidth={1.8} className="fill-current" />
       {withLabel ? "Assistant IA" : null}
     </Link>
   );
@@ -83,23 +86,25 @@ export function NotificationBell({ phone = false }: { phone?: boolean }) {
       }
       className={phone ? phoneIcon : headerIcon}
     >
-      <Bell aria-hidden size={phone ? 18 : 15} strokeWidth={1.8} />
+      <Bell aria-hidden size={phone ? 16 : 14} strokeWidth={1.8} />
       <CountBadge
         count={notificationCount}
-        className={`absolute ${phone ? "top-2 right-2" : "-top-1.5 -right-1.5"}`}
+        className={`absolute ${phone ? "top-1 right-1" : "-top-1.5 -right-1.5"}`}
       />
     </Link>
   );
 }
 
+// Maquette « Sportifs » (03/11/2026) : 200 × 32, rayon 9, 12,5 px. Filet en ombre intérieure et
+// espacements de 6 px : « Rechercher dans Coory » tient entier sans écraser la loupe.
 const searchBox =
-  "flex h-8 w-56 items-center gap-2 rounded-lg border border-line bg-surface-2 px-2.5 text-[12px] text-faint";
+  "flex h-8 w-[200px] items-center gap-1.5 rounded-[9px] bg-surface-2 pr-1.5 pl-2 text-[12.5px] tracking-[-0.01em] text-muted inset-ring inset-ring-line";
 
 function Kbd() {
   return (
     <kbd
       aria-hidden
-      className="pointer-events-none rounded border border-line px-1 py-px text-[11px] text-faint"
+      className="pointer-events-none rounded-[5px] px-[5px] py-0.5 text-[10px] leading-none font-medium tracking-normal text-muted inset-ring inset-ring-line-2"
     >
       ⌘K
     </kbd>
@@ -134,20 +139,21 @@ function CoachSearch() {
     <form
       role="search"
       action="/coach/recherche"
-      className={`${searchBox} focus-within:border-muted`}
+      className={`${searchBox} focus-within:inset-ring-muted`}
     >
       <label htmlFor="coach-search" className="sr-only">
         Rechercher dans Coory
       </label>
-      <Search aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
+      <Search aria-hidden size={13} strokeWidth={2} className="shrink-0" />
       <input
         ref={input}
         id="coach-search"
         name="q"
         type="search"
         autoComplete="off"
-        placeholder="Rechercher dans Coory…"
-        className="h-full min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-faint"
+        placeholder="Rechercher dans Coory"
+        // Sans la croix d'effacement de Chrome : elle prend la place du texte dans ce champ étroit.
+        className="h-full min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
       />
       <Kbd />
     </form>
@@ -159,7 +165,7 @@ function SearchLink({ href }: { href: string }) {
   useCommandK(() => router.push(href));
   return (
     <Link href={href} className={`${searchBox} transition-colors duration-150 hover:bg-surface-2`}>
-      <Search aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
+      <Search aria-hidden size={13} strokeWidth={2} className="shrink-0" />
       <span className="flex-1 whitespace-nowrap">Rechercher dans Coory…</span>
       <Kbd />
     </Link>

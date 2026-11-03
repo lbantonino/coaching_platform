@@ -81,12 +81,18 @@ export const athleteStatusLabels = {
   paused: "En pause",
   archived: "Archivé",
 } as const;
+// Point de couleur du statut (liste et fiche, maquette « Sportifs » du 03/11/2026).
+export const athleteStatusDots = {
+  active: "bg-ok",
+  paused: "bg-warn-dot",
+  archived: "bg-archived-dot",
+} as const;
 
 export type AthleteStatus = keyof typeof athleteStatusLabels;
 
 export const ATHLETE_STATUSES = ["active", "paused", "archived"] as const;
 
-// Adresse postale (D-65) : sur la fiche du sportif, reprise sur ses factures. Alignée sur les
+// Adresse postale (D-65) : sur la fiche du sportif. Alignée sur les
 // contraintes CHECK de supabase/migrations/*_factures_emises.sql.
 // Pays d'une adresse (D-69) : tous les pays, noms en français (liste figée, triée).
 export const COUNTRIES = COUNTRY_NAMES;

@@ -7,13 +7,12 @@ import { COACH_MODULES, type CoachModule } from "@/components/layout/modules";
 import { PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { requireCoach } from "@/features/auth/guards";
 
-// Modules de l'espace coach pas encore construits (D-32) : /coach/programmes, /coach/facturation…
+// Modules de l'espace coach pas encore construits (D-32) : /coach/programmes…
 // Les pages construites (profil, sportifs, agenda) ont leur propre dossier et passent avant.
 // Modules qui ont maintenant leur propre page (D-35) : leur dossier passe avant celui-ci.
 const BUILT = new Set([
   "taches",
   "messages",
-  "facturation",
   "comptabilite",
   "notifications",
   "documents",

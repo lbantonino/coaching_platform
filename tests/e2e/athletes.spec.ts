@@ -98,18 +98,19 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
     await reachable(row.getByRole("link", { name: `Écrire à ${name}` }));
     await expect(row.getByRole("link", { name: `Inviter ${name}` })).toHaveCount(0);
   }
-  // Lucas a une invitation en attente : l'icône le signale, pas d'icône message, « Inviter » reste.
+  // Lucas a une invitation en attente : « Invité » (maquette du 03/11), qui mène à son invitation ;
+  // pas d'icône message ni de bouton « Inviter ».
   const lucas = list.getByRole("listitem").filter({ hasText: "Lucas Janssens" });
-  await expect(lucas.getByText("Invitation envoyée")).toBeAttached();
+  await reachable(lucas.getByRole("link", { name: /^Invitation envoyée à Lucas Janssens/ }));
   await expect(lucas.getByRole("link", { name: "Écrire à Lucas Janssens" })).toHaveCount(0);
-  await reachable(lucas.getByRole("link", { name: "Inviter Lucas Janssens" }));
+  await expect(lucas.getByRole("link", { name: "Inviter Lucas Janssens" })).toHaveCount(0);
 
   // Menu « ••• » : toutes les actions de la ligne ; « Écrire » ou « Inviter » selon le compte.
   await thomas.getByRole("button", { name: "Actions pour Thomas Peeters" }).click();
   const actions = page.getByRole("dialog", { name: "Thomas Peeters" });
   for (const label of [
     "Changer le statut",
-    "Changer le type de programme",
+    "Changer le programme",
     "Modifier l'objectif",
     "Modifier la fiche",
     "Écrire un message",
@@ -125,7 +126,7 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
   );
   // Flèche de retour : on revient au menu « ••• » (demande d'Antonino), sans rien changer.
   await status.getByRole("button", { name: "Retour" }).click();
-  await actions.getByRole("button", { name: "Changer le type de programme" }).click();
+  await actions.getByRole("button", { name: "Changer le programme" }).click();
   const program = page.getByRole("dialog", { name: "Programme de Thomas Peeters" });
   await expect(program.getByRole("button", { name: "Running" })).toHaveAttribute(
     "aria-current",
@@ -146,7 +147,7 @@ test("la liste montre l'accès de chaque sportif par une icône, et se filtre pa
     .click();
 
   // Type de programme (D-40), indépendant de l'objectif : Lucas prépare un Hyrox en programme hybride.
-  await chooseAthleteFilter(page, "Type de programme", "Hybride");
+  await chooseAthleteFilter(page, "Programme", "Hybride");
   await expect(page).toHaveURL(/discipline=hybride/);
   await expect(list.getByText("Lucas Janssens")).toBeVisible();
   await expect(list.getByText("Inès Benali")).toHaveCount(0);
@@ -179,7 +180,7 @@ test("le statut et le type de programme se changent d'un appui sur leur pastille
     await page
       .getByRole("dialog", { name })
       .getByRole("button", {
-        name: kind === "statut" ? "Changer le statut" : "Changer le type de programme",
+        name: kind === "statut" ? "Changer le statut" : "Changer le programme",
       })
       .click();
   };
@@ -209,10 +210,15 @@ test("le statut et le type de programme se changent d'un appui sur leur pastille
   await expect(shows("Hybride", /^Programme : Hybride/)).toBeVisible();
 
   // Actions groupées : cocher le sportif fait apparaître la barre ; il passe en « Archivé ».
-  await row.getByRole("checkbox", { name: `Sélectionner ${name}` }).check({ force: true });
+  await row
+    .getByRole("checkbox", { name: `Sélectionner ${name}` })
+    .filter({ visible: true })
+    .check({ force: true });
+  await expect(
+    page.getByText(/^1 (sportif )?sélectionné$/).filter({ visible: true }),
+  ).toBeVisible();
   const bar = page.getByRole("region", { name: "Actions sur la sélection" });
-  await expect(bar).toContainText("1 sélectionné");
-  await bar.getByRole("button", { name: "Statut" }).click();
+  await bar.getByRole("button", { name: "Changer le statut" }).click();
   await page
     .getByRole("dialog", { name: `Statut de ${name}` })
     .getByRole("button", { name: "Archivé" })
@@ -232,4 +238,49 @@ test("le statut et le type de programme se changent d'un appui sur leur pastille
     await page.mouse.click(pill!.x + pill!.width / 2, pill!.y + pill!.height / 2);
     await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   }
+});
+
+// Invitation groupée (maquette du 03/11/2026) : cocher plusieurs sportifs puis « Inviter » crée un
+// lien par sportif (à copier, Coory n'envoie pas d'e-mail) ; une fiche sans e-mail est signalée.
+test("plusieurs sportifs s'invitent d'un coup : un lien chacun, la fiche sans e-mail est signalée", async ({
+  page,
+}, testInfo) => {
+  test.skip(isPhone(page), "Crée des sportifs et des invitations : un seul projet.");
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const withEmail = `Lina Groupe ${suffix}`;
+  const withoutEmail = `Noah Groupe ${suffix}`;
+  await loginAsCoachA(page);
+  for (const [name, email] of [
+    [withEmail, `lina-${suffix}@example.test`],
+    [withoutEmail, ""],
+  ]) {
+    await page.goto(`/coach/o/${ORG_A}/sportifs/nouveau`);
+    await fillAthleteName(page, name);
+    if (email) await page.getByLabel(/Adresse e-mail/).fill(email);
+    await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+    await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  }
+
+  await page.goto(`/coach/o/${ORG_A}/sportifs?q=${encodeURIComponent(suffix)}`);
+  const list = page.getByRole("list", { name: "Liste des sportifs" });
+  await expect(list.getByRole("listitem")).toHaveCount(2);
+  await page.getByRole("checkbox", { name: "Tout sélectionner" }).filter({ visible: true }).check({
+    force: true,
+  });
+  await page
+    .getByRole("region", { name: "Actions sur la sélection" })
+    .getByRole("button", { name: "Inviter" })
+    .click();
+  const links = page.getByRole("dialog", { name: "Liens d'invitation" });
+  const lina = links.getByRole("listitem").filter({ hasText: withEmail });
+  await expect(lina).toContainText("/invitation/");
+  await expect(lina.getByRole("button", { name: `Copier le lien de ${withEmail}` })).toBeVisible();
+  await expect(links.getByRole("listitem").filter({ hasText: withoutEmail })).toContainText(
+    "Ajoute d'abord une adresse e-mail",
+  );
+  // Fermée, la liste montre Lina « Invitée ».
+  await links.getByRole("button", { name: "Fermer" }).click();
+  await expect(
+    list.getByRole("link", { name: new RegExp(`^Invitation envoyée à ${withEmail}`) }),
+  ).toBeVisible();
 });

@@ -9,23 +9,17 @@ import { COUNTRY_NAMES } from "@/domain/geo/country-names";
 import { defaultCurrencyFor } from "@/domain/geo/countries";
 import type { BillingSetupInput, VatChoice } from "@/features/auth/signup-schemas";
 
-// Étape « Ta facturation » de l'inscription d'un coach (D-69, demande d'Antonino du 29/10/2026) :
-// pays et devise (pré-remplis d'après la langue du navigateur), puis la TVA. La TVA peut attendre
-// (« Je verrai plus tard ») : un coach qui ne facture pas avec Coory utilise quand même l'agenda et
-// les programmes. Tout se modifie ensuite dans Paramètres › Facturation et légal.
+// Étape « Pays, devise et TVA » de l'inscription d'un coach (D-69, simplifiée par D-90) : pays et devise
+// (pré-remplis d'après la langue du navigateur), puis une seule question sur la TVA. Coory ne fait
+// pas de factures : le taux sert au prix des séances et au résultat HTVA. Tout se modifie ensuite
+// dans Paramètres › Pays, devise et TVA.
 const choices: { value: VatChoice; title: string; text: string }[] = [
-  { value: "subject", title: "Je suis soumis à la TVA", text: "Coory l'ajoute à tes factures." },
   {
-    value: "franchise",
-    title: "Franchise ou exonération",
-    text: "Petite entreprise exonérée : factures sans TVA.",
+    value: "none",
+    title: "Pas de TVA",
+    text: "Franchise, association, ou tu verras plus tard.",
   },
-  { value: "not_subject", title: "Pas de TVA", text: "Association ou activité non assujettie." },
-  {
-    value: "later",
-    title: "Je verrai plus tard",
-    text: "Coory te le demandera avant ta 1re facture.",
-  },
+  { value: "vat", title: "Je facture la TVA", text: "Tes gains s'affichent hors TVA." },
 ];
 
 export function BillingSetupFields({ initial }: { initial: BillingSetupInput }) {
@@ -33,14 +27,13 @@ export function BillingSetupFields({ initial }: { initial: BillingSetupInput }) 
   const [currency, setCurrency] = useState<Currency>(
     isCurrency(initial.currency) ? initial.currency : defaultCurrencyFor(initial.country),
   );
-  const [choice, setChoice] = useState(initial.vatChoice || "later");
-  const be = country === "BE";
+  const [choice, setChoice] = useState(initial.vatChoice === "vat" ? "vat" : "none");
 
   return (
     <section aria-labelledby="billing-setup-title" className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 id="billing-setup-title" className="font-display text-[18px] font-semibold">
-          Ta facturation
+          Pays, devise et TVA
         </h2>
         <p className="text-[14px] leading-[1.5] text-muted">
           Tes montants s&apos;affichent dans ta devise. Tout se modifie ensuite dans Paramètres.
@@ -117,16 +110,16 @@ export function BillingSetupFields({ initial }: { initial: BillingSetupInput }) 
         ))}
       </fieldset>
 
-      {choice === "subject" ? (
-        <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
-          <Field id="vatRate" label="Taux habituel" hint="Proposé sur chaque facture.">
+      {choice === "vat" ? (
+        <div className="sm:max-w-[220px]">
+          <Field id="vatRate" label="Taux de TVA" hint="Celui de tes séances.">
             <div className="relative">
               <input
                 id="vatRate"
                 name="vatRate"
                 inputMode="decimal"
                 autoComplete="off"
-                placeholder={be ? "21" : "Ex. : 20"}
+                placeholder={country === "BE" ? "21" : "Ex. : 20"}
                 defaultValue={initial.vatRate}
                 className={`${entryInputClass} pr-10 font-mono`}
               />
@@ -137,16 +130,6 @@ export function BillingSetupFields({ initial }: { initial: BillingSetupInput }) 
                 %
               </span>
             </div>
-          </Field>
-          <Field id="vatNumber" label="Numéro de TVA">
-            <input
-              id="vatNumber"
-              name="vatNumber"
-              autoComplete="off"
-              placeholder={be ? "BE0123.456.749" : "Ex. : FR40303265045"}
-              defaultValue={initial.vatNumber}
-              className={`${entryInputClass} font-mono uppercase`}
-            />
           </Field>
         </div>
       ) : null}

@@ -122,6 +122,9 @@ export async function loadNotificationPreview(
   const { user, membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
   const today = todayIsoInBrussels();
-  const [all, profile] = await Promise.all([getNotifications(orgId, today), getCoachProfile(user)]);
+  const [all, profile] = await Promise.all([
+    getNotifications(orgId, today, membership.vatRate),
+    getCoachProfile(user),
+  ]);
   return buildPreview(all, profile.preferences.notify, orgId, today);
 }

@@ -11,8 +11,7 @@ import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/
 import { Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import { VatRateInput } from "@/components/ui/vat-rate-input";
-import { totalsFromEntry } from "@/domain/billing/invoice-document";
-import { formatVatRate, parseAmount, parseVatRate } from "@/domain/billing/money";
+import { formatVatRate, parseAmount, parseVatRate, splitVat } from "@/domain/billing/money";
 import type { DocumentCategory } from "@/domain/documents/documents";
 import type { ExpenseFormState } from "@/features/billing/expense-actions";
 import type { CategoryResult } from "@/features/documents/actions";
@@ -160,7 +159,8 @@ function Fields({
   const [monthly, setMonthly] = useState(v.repeatsMonthly);
   const cents = parseAmount(amount);
   const rate = parseVatRate(vatRate);
-  const totals = cents !== null && rate !== null ? totalsFromEntry(cents, "incl", rate) : null;
+  // Montant payé, TVA comprise : on en déduit HTVA et TVA.
+  const totals = cents !== null && rate !== null ? splitVat(cents, rate) : null;
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
       <div className="flex flex-col gap-1.5">

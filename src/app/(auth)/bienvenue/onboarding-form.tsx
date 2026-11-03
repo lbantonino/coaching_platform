@@ -19,7 +19,7 @@ import type { AccountKind, BillingSetupInput } from "@/features/auth/signup-sche
 import { BillingSetupFields } from "./billing-setup-fields";
 
 // Dernière étape quand l'inscription n'a pas tout fourni (Google, Facebook, Apple) : type de compte,
-// identité, entreprise, facturation du coach (D-69) et conditions, pré-remplis avec ce que le
+// identité, entreprise, pays, devise et TVA du coach (D-69, D-90) et conditions, pré-remplis avec ce que le
 // fournisseur a transmis.
 type Props = { initial: SignupValues; billing: BillingSetupInput; termsAlreadyAccepted: boolean };
 

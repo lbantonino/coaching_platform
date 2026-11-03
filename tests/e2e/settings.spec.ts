@@ -66,7 +66,7 @@ test("téléphone : un sommaire façon Réglages, puis chaque section avec un re
   await loginAsCoachB(page);
   await page.goto("/coach/profil");
   const sections = page.getByRole("navigation", { name: "Sections des paramètres" });
-  for (const name of ["Profil", "Préférences", "Facturation et légal", "Sécurité", "Données"]) {
+  for (const name of ["Profil", "Préférences", "Pays, devise et TVA", "Sécurité", "Données"]) {
     await expect(sections.getByRole("link", { name: new RegExp(`^${name}`) })).toBeVisible();
   }
   await sections.getByRole("link", { name: /^Sécurité/ }).click();
@@ -97,7 +97,7 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await page.getByRole("dialog", { name: "Créer" }).getByRole("button", { name: "Séance" }).click();
   const sheet = page.getByRole("dialog", { name: "Nouvelle séance" });
-  await expect(sheet.getByLabel("Durée (min)")).toHaveValue("45");
+  await expect(sheet.getByLabel("Durée", { exact: true })).toHaveValue("45");
   await expect(sheet.getByLabel(/^Lieu/)).toHaveValue("Box de test");
   await expect(sheet.getByLabel(/^Prix de la séance/)).toHaveValue("70");
   await expect(sheet.getByRole("radio", { name: "Espèces" })).toBeChecked();
@@ -126,51 +126,31 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   await expect(defaults.getByRole("status")).toContainText("Préférences enregistrées.");
 });
 
-test("une structure légale s'ajoute, se modifie et se supprime, numéros vérifiés", async ({
-  page,
-}) => {
-  test.skip(!isPhone(page), "Écrit les structures de l'organisation B : un seul projet.");
+// TVA (D-90) : un seul taux, réglé par le propriétaire. Organisation B (sans TVA), remise à 0 ensuite.
+test("le propriétaire règle son taux de TVA, puis l'enlève", async ({ page }) => {
+  test.skip(!isPhone(page), "Écrit la TVA de l'organisation B : un seul projet.");
   await loginAsCoachB(page);
-  await page.goto("/coach/profil?onglet=facturation");
-  await page.getByRole("button", { name: "Ajouter une structure" }).click();
-  const sheet = page.getByRole("dialog", { name: "Nouvelle structure" });
-  await sheet.getByLabel("Raison sociale").fill("Structure de test");
-  await sheet.getByLabel(/^Numéro d'entreprise/).fill("0123.456.749");
-  await expect(sheet.getByText("Numéro de TVA déduit : BE0123.456.749")).toBeVisible();
-  // Taux habituel (D-69) : libre, proposé ensuite sur chaque facture.
-  await sheet.getByLabel("Taux habituel (%)").fill("21");
-  // IBAN faux : signalé dès qu'on quitte le champ, puis refusé à l'envoi.
-  const iban = sheet.getByRole("textbox", { name: /^IBAN/ });
-  await iban.fill("BE68 5390 0754 7035");
-  await sheet.getByLabel("BIC").focus();
-  await expect(sheet.getByText(/^IBAN invalide/).first()).toBeVisible();
-  await iban.fill("BE68 5390 0754 7034");
-  await sheet.getByRole("button", { name: "Enregistrer la structure" }).click();
-  await expect(page.getByText("Structure enregistrée.")).toBeVisible();
+  await page.goto("/coach/profil?onglet=argent");
+  const vat = page.getByRole("region", { name: "TVA" });
+  const toggle = vat.getByRole("switch", { name: "Je facture la TVA" });
+  await expect(toggle).not.toBeChecked();
+  await expect(vat.getByLabel("Taux de TVA")).toHaveCount(0);
 
-  const card = page.getByRole("region", { name: "Structure de test" });
-  await expect(card).toContainText("BE68 5390 0754 7034");
-  await expect(card).toContainText("Assujetti à la TVA · BE0123.456.749 · taux habituel 21 %");
-  // Première structure de l'organisation : par défaut d'office.
-  await expect(card).toContainText("Par défaut");
+  await toggle.check({ force: true });
+  await vat.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(vat.getByRole("alert")).toContainText("Indique ton taux de TVA");
+  await vat.getByLabel("Taux de TVA").fill("8,1");
+  await vat.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(vat.getByRole("status")).toContainText("TVA enregistrée.");
+  await page.reload();
+  await expect(vat.getByRole("switch", { name: "Je facture la TVA" })).toBeChecked();
+  await expect(vat.getByLabel("Taux de TVA")).toHaveValue("8,1");
 
-  await card.getByRole("button", { name: "Modifier Structure de test" }).click();
-  const edit = page.getByRole("dialog", { name: "Modifier Structure de test" });
-  await edit.getByLabel("Raison sociale").fill("Structure de test renommée");
-  await edit.getByRole("button", { name: "Enregistrer la structure" }).click();
-  const renamed = page.getByRole("region", { name: "Structure de test renommée" });
-  await expect(renamed).toBeVisible();
-
-  await renamed.getByRole("button", { name: "Plus d'actions" }).click();
-  await page
-    .getByRole("dialog", { name: "Structure de test renommée" })
-    .getByRole("button", { name: "Supprimer" })
-    .click();
-  await page
-    .getByRole("dialog", { name: "Supprimer cette structure ?" })
-    .getByRole("button", { name: "Supprimer" })
-    .click();
-  await expect(renamed).toHaveCount(0);
+  await vat.getByRole("switch", { name: "Je facture la TVA" }).uncheck({ force: true });
+  await vat.getByRole("button", { name: "Enregistrer" }).click();
+  await expect(vat.getByRole("status")).toContainText("TVA enregistrée.");
+  await page.reload();
+  await expect(vat.getByRole("switch", { name: "Je facture la TVA" })).not.toBeChecked();
 });
 
 test("sécurité : le mot de passe actuel est vérifié, et les données s'exportent", async ({

@@ -4,7 +4,6 @@ import type { Currency } from "@/domain/billing/money";
 import type { CoachMembership, CurrentUser } from "@/features/auth/session";
 
 import { listCurrencyChanges } from "./currency-queries";
-import { listLegalEntities, type LegalEntity } from "./legal-queries";
 import { getCoachProfile } from "./profile";
 import type { NotificationKind, PreferencesInput, ProfileInput } from "./settings";
 
@@ -17,11 +16,15 @@ export type SettingsData = {
   profile: ProfileInput;
   preferences: PreferencesInput;
   notify: Record<NotificationKind, boolean>;
-  // Facturation (D-66) : proposer aussi les espèces dans « À facturer ».
-  invoiceCash: boolean;
-  // Pays et devise de l'organisation (D-69).
-  organization: { id: string; name: string; isOwner: boolean; country: string; currency: Currency };
-  entities: LegalEntity[];
+  // Pays et devise (D-69), taux de TVA (D-90) de l'organisation.
+  organization: {
+    id: string;
+    name: string;
+    isOwner: boolean;
+    country: string;
+    currency: Currency;
+    vatRate: number;
+  };
   // Changements de devise passés (D-70), du plus ancien au plus récent.
   currencyChanges: { from: Currency; to: Currency; rate: number; changedOn: string }[];
 };
@@ -33,9 +36,8 @@ export async function getSettingsData(
   user: CurrentUser,
   membership: CoachMembership,
 ): Promise<SettingsData> {
-  const [profile, entities, currencyChanges] = await Promise.all([
+  const [profile, currencyChanges] = await Promise.all([
     getCoachProfile(user),
-    listLegalEntities(membership.organizationId),
     listCurrencyChanges(membership.organizationId),
   ]);
   const p = profile.preferences;
@@ -58,15 +60,14 @@ export async function getSettingsData(
       agendaLastHour: String(p.agendaLastHour),
     },
     notify: p.notify,
-    invoiceCash: p.invoiceCash,
     organization: {
       id: membership.organizationId,
       name: membership.organizationName,
       isOwner: membership.role === "owner",
       country: membership.country,
       currency: membership.currency,
+      vatRate: membership.vatRate,
     },
-    entities,
     currencyChanges,
   };
 }

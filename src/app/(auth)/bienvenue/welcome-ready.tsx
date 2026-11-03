@@ -21,8 +21,8 @@ import type { BillingSetupInput } from "@/features/auth/signup-schemas";
 import { BillingSetupFields } from "./billing-setup-fields";
 
 // Bienvenue (prompt Claude Design §7.1) pour une inscription par e-mail : le type de compte, le nom
-// et l'acceptation des conditions sont connus. Le coach règle encore sa facturation (pays, devise,
-// TVA facultative, D-69). Le bouton finalise le compte (complete_signup : organisation du coach,
+// et l'acceptation des conditions sont connus. Le coach règle encore son pays, sa devise et sa TVA
+// (D-69, D-90). Le bouton finalise le compte (complete_signup : organisation du coach,
 // ou compte sportif en attente d'invitation) puis ouvre l'espace.
 const firstSteps = [
   { icon: UserPlus, label: "Ajoute ton premier sportif", time: "2 min" },

@@ -102,7 +102,8 @@ export function CheckList({
             aria-checked={item.checked}
             aria-label={item.label}
             onClick={() => toggle(item)}
-            className="group -ml-2.5 inline-flex size-11 shrink-0 items-center justify-center rounded-full"
+            // relative z-10 : au-dessus d'une carte entièrement cliquable (tableau de bord).
+            className="group relative z-10 -ml-2.5 inline-flex size-11 shrink-0 items-center justify-center rounded-full"
           >
             <span
               aria-hidden
@@ -140,7 +141,7 @@ export function CheckList({
                 {item.title}
               </Title>
               {item.meta && !page ? (
-                <span className="shrink-0 font-mono text-[11px] text-muted tabular max-lg:hidden">
+                <span className="shrink-0 text-[11px] text-muted tabular max-lg:hidden">
                   {item.meta}
                 </span>
               ) : null}
@@ -149,7 +150,7 @@ export function CheckList({
               item.subHref ? (
                 <Link
                   href={item.subHref}
-                  className="w-fit max-w-full truncate text-[13px] leading-snug text-muted underline-offset-4 hover:text-text hover:underline"
+                  className="relative z-10 w-fit max-w-full truncate text-[13px] leading-snug text-muted underline-offset-4 hover:text-text hover:underline"
                 >
                   {item.sub}
                 </Link>
@@ -168,19 +169,20 @@ export function CheckList({
                 {item.urgent ? <StatusBadge label="Haute" /> : null}
                 {item.tag ? <Badge>{item.tag}</Badge> : null}
                 {item.meta ? (
-                  <span className="font-mono text-[12px] text-muted tabular">{item.meta}</span>
+                  <span className="text-[13px] text-muted tabular">{item.meta}</span>
                 ) : null}
               </span>
             ) : null}
           </div>
           {page ? (
             <span className="flex shrink-0 items-center gap-3 max-lg:hidden">
+              {/* Seule l'urgence porte une étiquette (02/11) : rien pour une priorité normale. */}
               <span className="flex items-center gap-1.5">
                 {item.tag ? <Badge>{item.tag}</Badge> : null}
-                <StatusBadge label={item.urgent ? "Haute" : "Normale"} />
+                {item.urgent ? <StatusBadge label="Haute" /> : null}
               </span>
               {item.meta ? (
-                <span className="font-mono text-[12px] text-muted tabular">{item.meta}</span>
+                <span className="text-[13px] text-muted tabular">{item.meta}</span>
               ) : null}
             </span>
           ) : null}
@@ -205,7 +207,7 @@ function Title({
     <button
       type="button"
       onClick={onOpen}
-      className="-my-1 flex min-w-0 flex-1 rounded-[6px] py-1 text-left underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="relative z-10 -my-1 flex min-w-0 flex-1 rounded-[6px] py-1 text-left underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <span className={className}>{children}</span>
     </button>

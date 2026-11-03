@@ -96,6 +96,11 @@
   --ok-line: rgba(52, 211, 153, 0.3);
   --warn: #fbbf24;
   --warn-soft: rgba(251, 191, 36, 0.1);
+  --warn-dot: #fbbf24;
+  --archived-dot: #71717a;
+  /* Barre d'onglets de la fiche sportif (piste) et onglet choisi. */
+  --track: #212125;
+  --track-active: #2d2d32;
   --alert: #fb7185;
   --alert-soft: rgba(251, 113, 133, 0.12);
   --alert-fill: #c13c3b; /* fond rouge sous texte blanc (5,3:1) */
@@ -199,11 +204,19 @@
   --chart-3: #1baf7a;
   --chart-4: #eda100;
 
-  --ok: #047857;
-  --ok-soft: rgba(16, 185, 129, 0.12);
-  --ok-line: rgba(4, 120, 87, 0.3);
-  --warn: #8a4c00;
+  /* Vert, ambre, ♀ et ♂ : teintes de la maquette « Sportifs » (choix d'Antonino du 03/11/2026) ;
+     au moins 4,5:1 sur une carte blanche, 4,2 à 4,5:1 sur le fond gris de la page. */
+  --ok: #15803d;
+  --ok-soft: rgba(21, 128, 61, 0.08);
+  --ok-line: rgba(21, 128, 61, 0.3);
+  --warn: #a86410;
   --warn-soft: rgba(234, 179, 8, 0.14);
+  /* Points de statut (puces de 6 à 7 px, sans texte) : « En pause » et « Archivé ». */
+  --warn-dot: #d08a1c;
+  --archived-dot: #a3a1ad;
+  /* Barre d'onglets de la fiche sportif (maquette « Sportifs » du 03/11/2026). */
+  --track: #e8e7ee;
+  --track-active: #ffffff;
   --alert: #be123c;
   --alert-soft: rgba(190, 18, 60, 0.08);
   --alert-fill: #ac3031;
@@ -233,10 +246,10 @@
   --amber-soft: rgba(234, 179, 8, 0.14);
   --green: #047857;
   --green-soft: rgba(16, 185, 129, 0.12);
-  --female: #903c61;
-  --female-soft: color-mix(in srgb, #903c61 10%, transparent);
-  --male: #006697;
-  --male-soft: color-mix(in srgb, #006697 10%, transparent);
+  --female: #c2266b;
+  --female-soft: color-mix(in srgb, #c2266b 10%, transparent);
+  --male: #2f6fbf;
+  --male-soft: color-mix(in srgb, #2f6fbf 10%, transparent);
   --shadow-frame: none;
   --tint-card: 0%;
   --tint-nav: 0%;

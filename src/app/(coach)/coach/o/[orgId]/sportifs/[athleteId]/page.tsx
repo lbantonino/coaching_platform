@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { PageBody, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { PageTabs } from "@/components/ui/page-tabs";
 import { listAthleteActivity } from "@/features/activity/queries";
 import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
 import { mondayOf, parseDay } from "@/features/agenda/week";
@@ -32,7 +31,7 @@ import { AthleteEditForm } from "./athlete-edit-form";
 import { ProgramWeeksSection } from "./program-weeks";
 import { AthleteDocuments } from "./athlete-documents";
 import { ActivityTimeline } from "./activity-timeline";
-import { AthleteHeader, KeyFigures } from "./athlete-header";
+import { AthleteHeader, AthleteIdentity } from "./athlete-header";
 import { AvailabilitySection } from "./availability-section";
 import { GoalsSection } from "./goals-section";
 import { NotesSection } from "./notes-section";
@@ -46,16 +45,15 @@ export const metadata: Metadata = {
 
 // Onglets de la fiche (P2-04). L'onglet est dans l'adresse (?onglet=…) ; une valeur inconnue
 // retombe sur la vue d'ensemble.
-// Ordre validé par Antonino (26/10) : le suivi au quotidien d'abord (Programme, Agenda), la saisie
-// plus rare ensuite.
+// Ordre de la maquette « Sportifs », choisi par Antonino le 03/11/2026 (il remplace celui du 26/10).
 const TABS = [
   { key: "vue", label: "Vue d'ensemble" },
-  { key: "programme", label: "Programme" },
-  { key: "agenda", label: "Agenda" },
-  { key: "objectifs", label: "Objectifs" },
   { key: "profil", label: "Profil" },
-  { key: "disponibilites", label: "Disponibilités" },
+  { key: "agenda", label: "Agenda" },
+  { key: "programme", label: "Programme" },
+  { key: "objectifs", label: "Objectifs" },
   { key: "reperes", label: "Repères" },
+  { key: "disponibilites", label: "Disponibilités" },
   { key: "notes", label: "Notes" },
   // Documents liés au sportif (D-67).
   { key: "documents", label: "Documents" },
@@ -193,203 +191,206 @@ async function AthleteSection({
 
   return (
     <>
-      <AthleteHeader
-        athlete={athlete}
-        organizationId={organizationId}
-        listPath={listPath}
-        invitePath={`${basePath}/inviter`}
-      />
+      <AthleteHeader athlete={athlete} organizationId={organizationId} listPath={listPath} />
       <PageBody>
-        {creationIncomplete ? (
-          <p
-            role="alert"
-            className="rounded-wide border border-warn/50 bg-warn-soft p-4 text-[14px]"
-          >
-            La fiche est créée, mais son objectif ou son accord santé n&apos;a pas pu être
-            enregistré. Ajoute-les depuis les onglets Objectifs et Profil.
-          </p>
-        ) : null}
-        <KeyFigures athlete={athlete} goals={goals} today={today} basePath={basePath} />
-
-        <PageTabs
-          label="Sections de la fiche"
-          items={TABS.map((item) => ({
-            href: item.key === "vue" ? basePath : `${basePath}?onglet=${item.key}`,
-            label: item.label,
-            active: item.key === tab,
-          }))}
-        />
-
-        {tab === "vue" ? (
-          <AthleteOverview
+        {/* La fiche : 1600 px au plus, centrée (maquette « Sportifs » : très grands écrans). */}
+        <div className="mx-auto flex w-full max-w-[1600px] min-w-0 flex-col gap-3.5">
+          <AthleteIdentity
             athlete={athlete}
-            goals={goals}
-            references={(await listReferences(organizationId, athlete.id)).current}
-            notes={await getAthleteNotes(organizationId, athlete.id)}
-            activity={await listAthleteActivity(organizationId, athlete)}
-            // Prochaines séances encadrées avec ce sportif (4 au plus, sur 30 jours) et sa prochaine
-            // compétition, toujours visible même quand les séances hebdomadaires remplissent la liste.
-            upcoming={upcomingFor(
-              await listSessions(organizationId),
-              goals,
-              { id: athlete.id, name: athlete.displayName },
-              today,
-            )}
-            agendaPath={`/coach/o/${organizationId}/agenda`}
-            today={today}
-            basePath={basePath}
+            organizationId={organizationId}
+            listPath={listPath}
+            invitePath={`${basePath}/inviter`}
+            tabs={TABS.map((item) => ({
+              key: item.key,
+              href: item.key === "vue" ? basePath : `${basePath}?onglet=${item.key}`,
+              label: item.label,
+              active: item.key === tab,
+            }))}
           />
-        ) : tab === "agenda" ? (
-          program ? (
-            <ProgramWeeksSection
-              name={athlete.firstName}
-              program={program}
+          {creationIncomplete ? (
+            <p
+              role="alert"
+              className="rounded-wide border border-warn/50 bg-warn-soft p-4 text-[14px]"
+            >
+              La fiche est créée, mais son objectif ou son accord santé n&apos;a pas pu être
+              enregistré. Ajoute-les depuis les onglets Objectifs et Profil.
+            </p>
+          ) : null}
+          {tab === "vue" ? (
+            <AthleteOverview
+              athlete={athlete}
+              goals={goals}
+              references={(await listReferences(organizationId, athlete.id)).current}
+              notes={await getAthleteNotes(organizationId, athlete.id)}
+              activity={await listAthleteActivity(organizationId, athlete)}
+              // Prochaines séances encadrées avec ce sportif (4 au plus, sur 30 jours) et sa prochaine
+              // compétition, toujours visible même quand les séances hebdomadaires remplissent la liste.
+              upcoming={upcomingFor(
+                await listSessions(organizationId),
+                goals,
+                { id: athlete.id, name: athlete.displayName },
+                today,
+              )}
+              agendaPath={`/coach/o/${organizationId}/agenda`}
               today={today}
               basePath={basePath}
-              agendaPath={`/coach/o/${organizationId}/agenda`}
-              coachItemsByMonday={groupByMonday(
-                agendaFor(
-                  await listSessions(organizationId),
-                  goals,
-                  { id: athlete.id, name: athlete.displayName },
-                  {
-                    from: program.weeks[0].monday,
-                    to: program.weeks[program.weeks.length - 1].sunday,
-                  },
-                ),
-              )}
             />
-          ) : (
-            // Pas encore de programme : l'agenda de ce qui a un jour (séances avec le coach,
-            // compétitions), en trois vues.
-            <div className="flex w-full max-w-3xl flex-col gap-6">
-              <AthleteAgendaSection
+          ) : tab === "agenda" ? (
+            program ? (
+              <ProgramWeeksSection
                 name={athlete.firstName}
-                view={agendaView}
-                date={agendaDay}
+                program={program}
                 today={today}
-                items={agendaFor(
-                  await listSessions(organizationId),
-                  goals,
-                  { id: athlete.id, name: athlete.displayName },
-                  agendaRange(agendaView, agendaDay),
-                )}
                 basePath={basePath}
                 agendaPath={`/coach/o/${organizationId}/agenda`}
-                goalsHref={`${basePath}?onglet=objectifs`}
+                coachItemsByMonday={groupByMonday(
+                  agendaFor(
+                    await listSessions(organizationId),
+                    goals,
+                    { id: athlete.id, name: athlete.displayName },
+                    {
+                      from: program.weeks[0].monday,
+                      to: program.weeks[program.weeks.length - 1].sunday,
+                    },
+                  ),
+                )}
+              />
+            ) : (
+              // Pas encore de programme : l'agenda de ce qui a un jour (séances avec le coach,
+              // compétitions), en trois vues.
+              <div className="flex w-full max-w-3xl flex-col gap-6">
+                <AthleteAgendaSection
+                  name={athlete.firstName}
+                  view={agendaView}
+                  date={agendaDay}
+                  today={today}
+                  items={agendaFor(
+                    await listSessions(organizationId),
+                    goals,
+                    { id: athlete.id, name: athlete.displayName },
+                    agendaRange(agendaView, agendaDay),
+                  )}
+                  basePath={basePath}
+                  agendaPath={`/coach/o/${organizationId}/agenda`}
+                  goalsHref={`${basePath}?onglet=objectifs`}
+                />
+              </div>
+            )
+          ) : tab === "programme" ? (
+            <div className="flex w-full max-w-3xl flex-col gap-6">
+              <AthleteProgramSection
+                name={athlete.firstName}
+                program={program}
+                agendaHref={`${basePath}?onglet=agenda`}
               />
             </div>
-          )
-        ) : tab === "programme" ? (
-          <div className="flex w-full max-w-3xl flex-col gap-6">
-            <AthleteProgramSection
-              name={athlete.firstName}
-              program={program}
-              agendaHref={`${basePath}?onglet=agenda`}
-            />
-          </div>
-        ) : (
-          // Les onglets de saisie gardent une largeur de lecture confortable.
-          <div className="flex w-full max-w-3xl flex-col gap-6">
-            {tab === "profil" ? (
-              <section
-                aria-labelledby="photo-title"
-                className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-              >
-                <h2 id="photo-title" className="text-title font-medium">
-                  Photo
-                </h2>
-                <PhotoForm
-                  name={athlete.displayName}
-                  photoPath={athlete.photoPath}
-                  upload={uploadAthletePhoto.bind(null, organizationId, athlete.id)}
-                  remove={removeAthletePhoto.bind(null, organizationId, athlete.id)}
-                />
-              </section>
-            ) : null}
-            {tab === "profil" ? (
-              <section
-                aria-labelledby="infos-title"
-                className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-              >
-                <h2 id="infos-title" className="text-title font-medium">
-                  Informations
-                </h2>
-                <AthleteEditForm
-                  organizationId={organizationId}
-                  athleteId={athlete.id}
-                  hasAccount={athlete.hasAccount}
-                  values={{
-                    firstName: athlete.firstName,
-                    lastName: athlete.lastName ?? "",
-                    sex: athlete.sex ?? "",
-                    email: athlete.email ?? "",
-                    phone: athlete.phone ?? "",
-                    status: athlete.status,
-                    preferredContact: athlete.preferredContact ?? "",
-                    level: athlete.level ?? "",
-                    experience: athlete.experience ?? "",
-                    trainingPlaces: athlete.trainingPlaces,
-                    equipment: athlete.equipment ?? "",
-                    addressLine: athlete.addressLine ?? "",
-                    postalCode: athlete.postalCode ?? "",
-                    city: athlete.city ?? "",
-                    country: athlete.country,
-                  }}
-                />
-              </section>
-            ) : null}
-            {tab === "objectifs" ? (
-              <GoalsSection organizationId={organizationId} athleteId={athlete.id} today={today} />
-            ) : null}
-            {tab === "disponibilites" ? (
-              <AvailabilitySection organizationId={organizationId} athlete={athlete} />
-            ) : null}
-            {tab === "reperes" ? (
-              <>
-                <ReferencesSection
-                  organizationId={organizationId}
-                  athleteId={athlete.id}
-                  today={today}
-                />
-                <RecordsSection
-                  organizationId={organizationId}
-                  athleteId={athlete.id}
-                  today={today}
-                />
-              </>
-            ) : null}
-            {tab === "notes" ? (
-              <NotesSection organizationId={organizationId} athlete={athlete} />
-            ) : null}
-            {tab === "documents" ? (
-              <AthleteDocuments
-                organizationId={organizationId}
-                athleteId={athlete.id}
-                athleteName={athlete.displayName}
-              />
-            ) : null}
-            {tab === "historique" ? (
-              <section
-                aria-labelledby="history-title"
-                className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-              >
-                <div className="flex flex-col gap-1">
-                  <h2 id="history-title" className="text-title font-medium">
-                    Historique
+          ) : (
+            // Les onglets de saisie gardent une largeur de lecture confortable.
+            <div className="flex w-full max-w-3xl flex-col gap-6">
+              {tab === "profil" ? (
+                <section
+                  aria-labelledby="photo-title"
+                  className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+                >
+                  <h2 id="photo-title" className="text-title font-medium">
+                    Photo
                   </h2>
-                  <p className="text-small text-muted">
-                    Tout ce qui s&apos;est passé sur cette fiche, du plus récent au plus ancien.
-                  </p>
-                </div>
-                <ActivityTimeline
-                  events={await listAthleteActivity(organizationId, athlete)}
-                  label="Historique de la fiche"
+                  <PhotoForm
+                    name={athlete.displayName}
+                    photoPath={athlete.photoPath}
+                    upload={uploadAthletePhoto.bind(null, organizationId, athlete.id)}
+                    remove={removeAthletePhoto.bind(null, organizationId, athlete.id)}
+                  />
+                </section>
+              ) : null}
+              {tab === "profil" ? (
+                <section
+                  aria-labelledby="infos-title"
+                  className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+                >
+                  <h2 id="infos-title" className="text-title font-medium">
+                    Informations
+                  </h2>
+                  <AthleteEditForm
+                    organizationId={organizationId}
+                    athleteId={athlete.id}
+                    hasAccount={athlete.hasAccount}
+                    values={{
+                      firstName: athlete.firstName,
+                      lastName: athlete.lastName ?? "",
+                      sex: athlete.sex ?? "",
+                      email: athlete.email ?? "",
+                      phone: athlete.phone ?? "",
+                      status: athlete.status,
+                      preferredContact: athlete.preferredContact ?? "",
+                      level: athlete.level ?? "",
+                      experience: athlete.experience ?? "",
+                      trainingPlaces: athlete.trainingPlaces,
+                      equipment: athlete.equipment ?? "",
+                      addressLine: athlete.addressLine ?? "",
+                      postalCode: athlete.postalCode ?? "",
+                      city: athlete.city ?? "",
+                      country: athlete.country,
+                    }}
+                  />
+                </section>
+              ) : null}
+              {tab === "objectifs" ? (
+                <GoalsSection
+                  organizationId={organizationId}
+                  athleteId={athlete.id}
+                  today={today}
                 />
-              </section>
-            ) : null}
-          </div>
-        )}
+              ) : null}
+              {tab === "disponibilites" ? (
+                <AvailabilitySection organizationId={organizationId} athlete={athlete} />
+              ) : null}
+              {tab === "reperes" ? (
+                <>
+                  <ReferencesSection
+                    organizationId={organizationId}
+                    athleteId={athlete.id}
+                    today={today}
+                  />
+                  <RecordsSection
+                    organizationId={organizationId}
+                    athleteId={athlete.id}
+                    today={today}
+                  />
+                </>
+              ) : null}
+              {tab === "notes" ? (
+                <NotesSection organizationId={organizationId} athlete={athlete} />
+              ) : null}
+              {tab === "documents" ? (
+                <AthleteDocuments
+                  organizationId={organizationId}
+                  athleteId={athlete.id}
+                  athleteName={athlete.displayName}
+                />
+              ) : null}
+              {tab === "historique" ? (
+                <section
+                  aria-labelledby="history-title"
+                  className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+                >
+                  <div className="flex flex-col gap-1">
+                    <h2 id="history-title" className="text-title font-medium">
+                      Historique
+                    </h2>
+                    <p className="text-small text-muted">
+                      Tout ce qui s&apos;est passé sur cette fiche, du plus récent au plus ancien.
+                    </p>
+                  </div>
+                  <ActivityTimeline
+                    events={await listAthleteActivity(organizationId, athlete)}
+                    label="Historique de la fiche"
+                  />
+                </section>
+              ) : null}
+            </div>
+          )}
+        </div>
       </PageBody>
     </>
   );

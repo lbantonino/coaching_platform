@@ -110,7 +110,7 @@ export function parseVatRate(text: string): number | null {
   return rate >= 0 && rate <= VAT_RATE_MAX ? rate : null;
 }
 
-// Champ « taux de TVA » d'un formulaire, validé côté serveur (actions des paiements et factures).
+// Champ « taux de TVA » d'un formulaire, validé côté serveur (paiements, dépenses, Paramètres).
 export const vatRateField = z.coerce.string().transform((text, context) => {
   const rate = parseVatRate(text);
   if (rate === null) {

@@ -32,6 +32,215 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Sportifs au pixel près, page 02 : fiche · vue d'ensemble (D-92)
+```
+Date : 2026-11-03
+Demande d'Antonino : page 01 validée (« on peut passer à la suite ») ; ordre des onglets de la
+  maquette (Vue d'ensemble, Profil, Agenda, Programme, Objectifs, Repères, Disponibilités, Notes,
+  Documents, Historique) à la place de celui du 26/10.
+En-tête de fiche (tous les onglets) : athlete-header.tsx refait (AthleteHeader = PageHeader de base,
+  visibleTitle false, « + Créer » 32 px et « ··· » 32 px ; AthleteIdentity = carte d'identité + barre
+  d'onglets), fiche-tab-select.tsx (sélecteur du téléphone, onglets sur deux colonnes), « + » dans la
+  barre du téléphone (FicheCreateMenu phone), « ··· » du téléphone dans la carte d'identité. KeyFigures
+  et PageTabs retirés de la fiche ; jetons --track et --track-active (piste des onglets).
+Vue d'ensemble (overview.tsx refait) : Section unique par carte (carte sur ordinateur, titre au-dessus
+  sur téléphone) ; Profil en liste de définitions (+ « Canal préféré » si renseigné) ; Prochaines
+  séances (lien vers la séance sur sa date) ; Repères (2, grand chiffre + unité : splitReferenceValue,
+  testée) ; Objectif (type écrit seulement s'il diffère de la discipline ; sans le lieu sur
+  téléphone) ; Disponibilités ; Notes (+ note visible par le sportif si elle existe) ; Historique
+  (ActivityTimeline restylée, sert aussi à l'onglet Historique). Points de couleur partagés :
+  disciplineStyles[…].dot et athleteStatusDots (une constante d'un fichier « use client » importée
+  dans un composant serveur devenait une référence vide : point de statut invisible).
+Écarts mesurés (maquette → app) : ordinateur 0 px sur l'en-tête, la carte d'identité, les dix
+  onglets, les lignes du Profil, les sous-cartes et l'Historique, ≤ 0,5 px ailleurs ; téléphone
+  ≤ 0,5 px par élément sous la carte d'identité. Écarts voulus : « Canal préféré » (+43 px sur
+  ordinateur), « ··· » dans la carte d'identité du téléphone, lien « ← Sportifs » sous la barre
+  (règle d'Antonino du 03/11), textes réels plus longs que ceux de la maquette.
+Tests : typecheck et lint propres ; Vitest 261/261 (splitReferenceValue) ; Playwright par lots :
+  vue d'ensemble, fiche, notes, disponibilités 18 + 2 ignorés ; objectifs, records, repères, photos,
+  nouveau sportif 20 ; invitation, sportifs, notifications, documents 29 + 1 ignoré. Aides de test :
+  openAthleteTab et expectAthleteTab (barre ou sélecteur du téléphone). db:reset fait après.
+Vérifié au navigateur : 1280 et 390 en clair et sombre ; 360 à 3440 sans débordement, fiche
+  plafonnée à 1600 px et centrée dès 1920.
+Suite : page 2b (Profil) après validation.
+```
+
+### Sportifs au pixel près, page 01 : liste des sportifs ; cadre commun aligné (D-91)
+```
+Date : 2026-11-03
+Demande d'Antonino : dossier COORY-SPORTIF-PIXEL-PERFECT/ (12 pages) ; étape 0 (MAPPING.md), puis
+  la page 01 seule, comparée aux captures, validation avant la page suivante, rien de supprimé.
+Décisions d'Antonino : chiffres clés retirés mais fonctions déplacées ; teintes claires vert, ambre,
+  ♀, ♂ alignées ; invitation groupée = liste de liens à copier ; menu de gauche identique partout.
+Méthode : la maquette HTML (reference/source) servie en local et mesurée dans Chrome
+  (getBoundingClientRect), l'app mesurée aux mêmes largeurs dans des iframes (1280 et 390 px).
+Cadre commun (toutes les pages) : menu 236 px à 14 px des bords, lignes de 34 px, filet entre les
+  groupes ; en-tête et contenu à 20 px du menu et 14 px à droite (inset-ring au lieu de border) ;
+  recherche d'en-tête 200 px ; téléphone : ☰ 44, pilule 48 (IA, cloche, « + » de 40), marges 14,
+  --top-bar 58 px ; éléments pleine largeur (-mx-3.5) et aperçu de la cloche suivent.
+Jetons clairs : --ok #15803d, --warn #a86410, --warn-dot #d08a1c, --archived-dot #a3a1ad,
+  --female #c2266b, --male #2f6fbf (sombre : points ajoutés, reste inchangé).
+Page 01 : Dropdown (components/ui/dropdown.tsx, liste ancrée sous le bouton, Échap, flèches) ;
+  AthleteSearch (recherche en direct, ?q= après 250 ms, Entrée sans JavaScript) ; AthleteTable
+  refait (colonnes de la maquette, tri ↑ ↓ ↕, pied « n sportifs affichés · Trié par… », barre de
+  sélection dans la carte, carte-ligne téléphone avec objectif en sous-carte, une seule ligne pour
+  les deux écrans) ; createInvitations (features/invitations/actions.ts) + feuille « Liens
+  d'invitation » ; « Fiches à compléter » dans le menu Statut ; résumé téléphone avec lien vers les
+  compétitions ; SexMark plain ; compact-filter.tsx supprimé (remplacé par Dropdown).
+Écarts mesurés (maquette → app, px) : 0 sur le menu, l'en-tête, les filtres, la recherche, l'en-tête
+  du tableau, les 6 colonnes, les lignes (68) et le pied ; téléphone : 0 sur la barre, le résumé, la
+  recherche, les filtres, la tête de carte (56), les cartes (141) et la sous-carte d'objectif.
+Tests : typecheck et lint propres ; Vitest 260/260 ; Playwright (par lots, base remise entre deux) :
+  sportifs, fiche, invitation, notifications 26 + 15 réussis après corrections ; audits UX, design,
+  connexion 23 ; Agenda interactif, séances, Paramètres 26 puis séances + sportifs 21/21 ; nouveau
+  parcours « plusieurs sportifs s'invitent d'un coup ». db:reset fait après.
+Vérifié au navigateur : 1280 / 390 en clair et sombre ; 360, 430, 1440, 1920, 2560, 3440 sans
+  débordement ; tableau de bord (bas aligné sur le menu) et Agenda après le nouveau cadre.
+Signalé : loupe écrasée dans la maquette (non reproduite) ; « Fiche à compléter » gardé sur
+  téléphone (absent de la maquette) ; crayon « Modifier la fiche » de la ligne → menu « ··· » ;
+  « +n ce mois-ci » des chiffres clés non repris ; compétitions sans raccourci sur ordinateur (cloche) ;
+  liste non plafonnée à 1600 px (la règle de la maquette vise la fiche).
+Suite : page 02 (fiche, vue d'ensemble) après validation ; l'ordre des onglets de la maquette
+  diffère de celui validé le 26/10 (à trancher).
+```
+
+### Comptabilité simple, plus de Facturation (D-90, décision OPEN-20)
+```
+Date : 2026-11-03
+Demande d'Antonino : option C de l'audit, simplifiée (« let's go ») : pas de règle légale d'aucun
+  pays, une Comptabilité visuelle (gagné, dépensé, résultat, ce qui reste à encaisser) ; export et
+  connexion Odoo plus tard, seulement si des coachs le demandent.
+Base : migration 20261103120000_comptabilite_simple.sql : organizations.vat_rate (0 à 100, repris de
+  la structure par défaut, modifiable par le propriétaire) ; coach_profiles.notify_invoices renommé
+  notify_unpaid ; clés de notification « unpaid:<séance>:<date> » (anciennes « invoice:* » effacées) ;
+  complete_signup(…, p_country, p_currency, p_vat_rate) sans structure. Tables des factures et des
+  structures CONSERVÉES (rien d'effacé, plus lues par l'application) ; rollback en commentaire.
+Seed : plus de factures ni de structures de démo ; TVA 21 % sur l'organisation A ; les séances de
+  plus d'une semaine sont payées, sauf la Remise en forme du mardi de Sophie depuis 3 semaines.
+Retiré : page Facturation (liste, détail, PDF, « Créer une facture », « À facturer »), structures
+  légales (Paramètres), réglage « espèces à facturer », entrée « Facture » du menu Créer, vérifications
+  IBAN / numéro d'entreprise, « factures envoyées » du tableau de bord.
+Ajouté : règle pure datesToCollect (features/sessions/prices.ts) + listUnpaidDates
+  (features/billing/collect-queries.ts) : séances passées des 12 dernières semaines avec un prix, ni
+  payées ni dans un forfait ; « en retard » après 7 jours. Comptabilité : onglet « À encaisser » avec
+  « Marquer payée » (CollectList, optimiste), lien de la cloche (?liste=a-encaisser, en premier sur
+  téléphone), mention « Aperçu de ton activité, pas une comptabilité officielle ». Tableau de bord :
+  « N séances à encaisser · Dont X en retard ». Cloche et page Notifications : « Séances à encaisser »
+  (en retard seulement), chaque ligne ouvre la séance sur sa date. Paramètres : section « Pays, devise
+  et TVA » (?onglet=argent) avec « Je facture la TVA » + taux. Inscription : « Pas de TVA » / « Je
+  facture la TVA » + taux, plus de numéro de TVA.
+Tests : typecheck et lint propres ; Vitest 260/260 (tests factures et structures retirés, « à
+  encaisser » et TVA ajoutés) ; pgTAP 443/443 (33_comptabilite_simple.test.sql ajouté, 28 adapté) ;
+  Playwright, 1er passage large (188 tests) : 154 réussis, 16 ignorés, 18 échecs, dont 16 dus à la
+  limite locale de 30 connexions par 5 minutes (supabase/config.toml) et 2 vrais : libellé « Devise »
+  ambigu à l'inscription, et date du lundi de Nadia déjà payée par le nouveau seed (corrigés) ;
+  relance des 18 : 18/18 ; cloche, états des notifications, Comptabilité et Paramètres sur le seed
+  final : 26 réussis + 6 ignorés. Nouveau parcours : « À encaisser : une séance passée se marque payée
+  depuis la Comptabilité ». db:reset fait après les tests.
+Vérifié au navigateur : Comptabilité ordinateur 1440 px ; téléphone 390 px sombre et clair
+  (Comptabilité « À encaisser », tableau de bord, Paramètres › TVA), aucun débordement horizontal.
+Limites : la dépendance @react-pdf/renderer reste (moteur PDF prévu pour les programmes, P5) ;
+  l'export JSON des données inclut encore les anciennes tables (anciennes factures éventuelles).
+Suite possible : export Excel des paiements et dépenses, puis « Créer la facture dans Odoo » (API
+  Odoo, formule Custom à vérifier chez Gianluca) ; migration de nettoyage des anciennes tables.
+```
+
+### Audit facturation et comptabilité (OPEN-20)
+```
+Date : 2026-11-03
+Demande d'Antonino : vérifier les règles belges (et l'international) avant de continuer : la page
+  Facturation est-elle nécessaire, ou une Comptabilité de suivi suffit-elle ? Que font Odoo et Peppol
+  (Gianluca facture par Odoo via Peppol) ?
+Fait : docs/AUDIT_FACTURATION_2026-11-03.md (sources officielles efacture.belgium.be, SPF Finances,
+  impots.gouv.fr ; inventaire de ce que Coory fait ; options A / B / C ; plan en 3 étapes si C).
+Constats clés : B2B belge = Peppol obligatoire depuis le 1/1/2026 (PDF plus valable), même en
+  franchise (25 000 €) ; B2C belge = pas de facture obligatoire, journal des recettes ; France =
+  réception 1/9/2026, émission PME et micro 1/9/2027 via plateforme agréée, e-reporting des ventes
+  aux particuliers ; un système par pays.
+Recommandation : C (retirer la création de factures et les structures légales, garder la
+  Comptabilité, ajouter des exports, connecter Odoo plus tard). Décidé le jour même : D-90.
+Code : aucun changement.
+```
+
+### Agenda : « + » flottant ; fenêtre « Nouvelle séance » sans glissé latéral (D-89)
+```
+Date : 2026-11-03
+Demandes d'Antonino (téléphone, essai sur iPhone) : le « + » de l'Agenda en bas à droite comme Google
+  Agenda ; plus de défilement sur le côté dans les fenêtres ; Heure et Durée se chevauchaient ; un
+  autre défilement pour la fenêtre « Nouvelle séance ».
+Cause : dans deux colonnes « 1fr », le champ heure de Safari (largeur minimale imposée) débordait sur
+  Durée et élargissait la fenêtre ; la fenêtre défilant en hauteur (overflow-y: auto), la largeur
+  devenait défilable aussi.
+Fait : new-session-sheet.tsx (variante « fab » : bouton flottant de 56 px en bas à droite, Agenda sur
+  téléphone ; la carte du haut garde vue, assistant, cloche) ; overlay.tsx (toutes les fenêtres :
+  overflow-x hidden + overscroll contain ; option tall : presque plein écran sur téléphone, titre et
+  croix fixes) ; session-form.tsx (Heure / Durée en minmax(0, 1fr), 12 px d'écart, « min » dans le
+  champ Durée ; dans la fenêtre, « Créer la séance » fixe en bas, pleine largeur sur téléphone) ;
+  globals.css (champs date et heure : min-width 0, apparence native retirée, texte à gauche ;
+  tactile : pas de rebond horizontal de la page).
+Vérifié : aucune page ne déborde en largeur à 390 px (15 pages) ; fenêtre : largeur défilable = 0.
+Tests : séances, paramètres, Agenda, glissés, audit UX, design 50/50 (+ 10 ignorés) ; db:reset fait.
+```
+
+### Page d'une séance : maquette au pixel près, puis compacte (D-88)
+```
+Date : 2026-11-03
+Demande d'Antonino : refaire la page « Détail d'une séance » au pixel près de sa maquette
+  (coory-seance-brief : 1a ordinateur ≥ 1024 px, 1e téléphone), structure seulement, jetons
+  existants, logique intacte ; puis, en cours de route, ses retouches : en-tête de base (sans le
+  titre de la séance), carte héro plus basse et plus petite, sportif sur une ligne, Prochaines dates
+  à gauche et Détails + Prix à droite (téléphone : Prochaines dates, Détails, Prix), Prix au strict
+  nécessaire, retour dans la barre du téléphone, page jusqu'au bas du menu sur ordinateur.
+Fait : seances/[sessionId]/page.tsx réécrite (héro : titre, discipline, date + pastille
+  « Aujourd'hui » / « Demain », heure, lieu, durée, encadré Sportif ou Participants dépliable,
+  « Écrire » ; Prochaines dates en frise, 4 dates + « Toutes les dates » (?dates=toutes) ; Détails :
+  rythme, période + barre de série « Séance X sur N », note ; Prix : montant, état de cette date,
+  « Marquer payée », le reste sous « Voir plus » ; barre d'actions sur ordinateur, barre fixe
+  Écrire / Modifier sur téléphone ; squelette de chargement) ; payment-rows.tsx (taille du bouton) ;
+  page-header.tsx (visibleTitle, backInPhoneBar) ; more-menu.tsx (buttonClassName) ;
+  schemas.ts (seriesPosition) + test unitaire.
+Mesures (version maquette, avant les retouches) : cartes et textes à ≤ 1,7 px de la maquette sur
+  ordinateur et téléphone, sauf l'interligne de la période sur téléphone (≈ 3 px).
+Écarts assumés : couleurs = jetons existants les plus proches ; avatar du design system (40 px) ;
+  phrase de la barre d'actions exacte (« Modifier » change toute la série) ; ni « Dupliquer » ni
+  « Annuler cette date » (logique absente).
+Tests : Vitest 280/280 ; e2e complet 178 + 2 dus à une séance laissée par un essai raté, repassés
+  après db:reset (Agenda + séances 32/32, 4 ignorés) ; tsc, eslint OK ; db:reset fait.
+Suite (même jour, ordinateur seulement) : Prochaines dates et Prix remplissent la hauteur de leur
+  carte selon l'écran (FitList : autant de lignes entières que la place en contient, ex. 2 paiements
+  sur un MacBook 13 pouces, 4 sur un 24 pouces ; les autres derrière « Toutes les dates », puis
+  « Voir moins ») ; Prix : détail (HTVA, mode) sous le montant, lignes de paiement de 48 px, douze
+  semaines de dates passées (téléphone : quatre, comme avant). Tests Agenda, séances, comptabilité
+  40/40 (+ 4 ignorés) ; db:reset fait.
+Puis (téléphone) : le nom de la page revient dans la barre du haut entre ☰ et les outils, sur toutes
+  les pages sauf l'Agenda (le mois) ; le lien de retour de la séance redescend sous la barre (option
+  backInPhoneBar retirée de PageHeader). Tests séances, design, Agenda 32/32 (+ 2 ignorés).
+```
+
+### Agenda du téléphone plus compact ; « Aujourd'hui » ; mois au doigt (D-87)
+```
+Date : 2026-11-02
+Demandes d'Antonino (Agenda du téléphone seulement, pour gagner de la place, d'après le Calendrier
+  de l'iPhone) : le mois à la place du titre, l'icône de la vue seule à côté de l'assistant IA, la
+  semaine remontée tout en haut, des jours et des heures plus petits, l'en-tête des jours plus bas ;
+  puis un bouton « Aujourd'hui », le petit calendrier qui glisse d'un mois à l'autre, et des mois
+  jusqu'en 2030.
+Fait : mobile-bar.tsx (deux emplacements : MobileBarTitle remplace le nom de la page, MobileBarTool
+  ajoute un bouton avant l'assistant IA ; marge réduite pour que « Septembre ▾ » tienne à 390 px) ;
+  agenda-controls.tsx (« Novembre ▾ » dans la barre, icône de la vue qui ouvre « Vue et filtres »,
+  plus de rangée sous la barre ; « Aujourd'hui · lun. 2 nov. » en tête de la feuille : la grille y
+  glisse sans recharger si elle contient ce jour, sinon la vue se rouvre à la date du jour ; petit
+  calendrier qui change de mois au doigt, sans ouvrir le jour touché ; rangée des mois centrée sur
+  le mois affiché) ; day-week-strip.tsx (lettres 11 px, chiffres 15 px dans des ronds de 32 px,
+  rangée de 48 px) ; week-grid.tsx (heures de 44 px au lieu de 64 sur téléphone, en-tête des jours
+  sur une ligne « Lun 2 » de 32 px ; ordinateur inchangé) ; agenda/page.tsx (lien et colonne
+  d'aujourd'hui, mois de novembre 2026 à décembre 2030 : jusqu'à décembre dans quatre ans).
+Tests : nouveau test « Aujourd'hui ramène à la date du jour, et le petit calendrier glisse d'un mois à
+  l'autre » ; e2e Agenda + glissés 20/20 (+ 4 ignorés : profil hors sujet) ; tsc, eslint, prettier
+  OK ; vérifié dans Chrome à 440 et 390 px, clair et sombre ; db:reset fait (avec Node 24 : sous
+  Node 21, seed-photos et dev-keep échouent faute de WebSocket natif).
+```
+
 ### Correctif : « Ce site est inaccessible » sur le vrai iPhone après connexion
 ```
 Date : 2026-11-02
@@ -48,6 +257,55 @@ Tests : nouveau test Playwright « les aiguillages serveur redirigent vers une a
   invitation 37/37 + 1 ignoré volontaire ; lint et prettier OK ; vérifié au curl via l'IP du Mac.
 ```
 
+### Bande de la semaine : téléphone seulement
+```
+Date : 2026-11-02
+Demande d'Antonino : retirer la bande de la semaine sur ordinateur (le petit calendrier du panneau
+  suffit), la garder sur téléphone.
+Fait : week-grid.tsx (une seule bande, lg:hidden ; en vue Jour, l'en-tête du jour revient sur
+  ordinateur, centré en hauteur, nom du jour en 14 px) ; agenda/page.tsx (bande de la Liste en
+  lg:hidden) ; day-week-strip.tsx simplifiée (plus de flèches ni de semaine entière en gris).
+Tests : bande comptée par vue (ordinateur 0, téléphone 1 en Semaine, Jour, Liste) ; e2e Agenda,
+  glissés, séances passés ; db:reset fait.
+```
+
+### Page d'une séance refaite (D-86)
+```
+Date : 2026-11-02
+Fait : seances/[sessionId]/page.tsx réécrite (date affichée d'après ?date=, en-tête de la séance,
+  sections Prix et paiements, Sportif/Inscrits avec photos, Détails, Prochaines dates en liens,
+  actions en bas sur téléphone) ; payment-rows.tsx (DatePayment : « Marquer payée » de la date
+  affichée, optimiste) ; more-menu.tsx (bouton « Supprimer… » et « ••• » compact) ; liens vers une
+  séance avec leur date (week-grid, session-day-list, upcoming-days, agenda/page, tableau de bord).
+Tests : captures téléphone 440 et ordinateur 1440, sombre et clair, aucun débordement ; e2e séances,
+  glissés, Agenda, comptabilité 39/39 (suppression : « Supprimer la séance » sur téléphone) ;
+  db:reset fait.
+```
+
+### Agenda du téléphone sur le fond gris (D-85)
+```
+Date : 2026-11-02
+Fait : globals.css (plus de fond --surface ni de --under-bar propres à l'Agenda) ; agenda/page.tsx
+  (carte du calendrier : fond seulement sur ordinateur) ; day-week-strip.tsx et agenda-controls.tsx
+  (gris --bar sur téléphone ; heures totales sur bg-surface) ; commentaires de sidebar-toggle et
+  sidebar.ts. Liste des tâches sans carte (D-84 suite).
+Tests : captures clair et sombre (Jour, 3 jours, Liste, mois déplié) ; e2e Agenda et glissés 19/19 ;
+  tâches 4/4 ; db:reset fait.
+```
+
+### Page Tâches simplifiée (D-84)
+```
+Date : 2026-11-02
+Fait : taches/page.tsx (plus de KpiGrid ni d'étiquette de catégorie) ; check-list.tsx (variante page :
+  étiquette « Haute » seulement, plus de « Normale » ; dates sans police mono, aussi sur la carte du
+  tableau de bord). Le serveur de dev s'était arrêté (mémoire épuisée après une longue journée de
+  recompilations) : relancé.
+Tests : e2e tâches et Agenda passés ; captures téléphone 440 et ordinateur 1440 ; db:reset fait.
+Suite : la carte Tâches du tableau de bord ouvre la page Tâches partout où l'on touche (lien du titre
+  étendu à toute la carte), sauf le rond et le titre de chaque tâche (au-dessus, relative z-10). Vérifié
+  au toucher sur 440 px ; e2e Agenda et tâches passés.
+```
+
 ### Bande de la semaine sur toutes les vues ; tableau de bord en widgets (D-82 suite, D-83)
 ```
 Date : 2026-11-02
@@ -61,6 +319,9 @@ Fait : day-week-strip.tsx généralisé (span 1/3/7, bande grise des jours affic
 Tests : gestes simulés (3 jours : toucher jeudi → grille du 5 sans recharger ; Liste ordinateur :
   clic jeudi → date=2026-11-05) ; captures 440 et 390 px ; e2e Agenda, glissés, tâches, design,
   audit UX 34/34 (agenda.spec adapté : un jour puis « Voir plus » sur téléphone) ; db:reset fait.
+Retouche : le bloc de la séance remplit le carré (sportif, type de séance, durée et lieu, puis
+  discipline · individuelle) ; sous 420 px de large (iPhone standard), la ligne durée · lieu cède sa
+  place ; lignes non compressibles (plus de chevauchement).
 ```
 
 ### Vue Jour : la semaine au-dessus de la grille (D-82)

@@ -877,10 +877,10 @@ export type Database = {
           invoice_cash: boolean;
           last_name: string | null;
           notify_competitions: boolean;
-          notify_invoices: boolean;
           notify_messages: boolean;
           notify_profiles: boolean;
           notify_tasks: boolean;
+          notify_unpaid: boolean;
           phone: string | null;
           photo_path: string | null;
           updated_at: string;
@@ -900,10 +900,10 @@ export type Database = {
           invoice_cash?: boolean;
           last_name?: string | null;
           notify_competitions?: boolean;
-          notify_invoices?: boolean;
           notify_messages?: boolean;
           notify_profiles?: boolean;
           notify_tasks?: boolean;
+          notify_unpaid?: boolean;
           phone?: string | null;
           photo_path?: string | null;
           updated_at?: string;
@@ -922,10 +922,10 @@ export type Database = {
           invoice_cash?: boolean;
           last_name?: string | null;
           notify_competitions?: boolean;
-          notify_invoices?: boolean;
           notify_messages?: boolean;
           notify_profiles?: boolean;
           notify_tasks?: boolean;
+          notify_unpaid?: boolean;
           phone?: string | null;
           photo_path?: string | null;
           updated_at?: string;
@@ -1579,6 +1579,7 @@ export type Database = {
           status: string;
           timezone: string;
           updated_at: string;
+          vat_rate: number;
         };
         ComputedFields: never;
         Insert: {
@@ -1592,6 +1593,7 @@ export type Database = {
           status?: string;
           timezone?: string;
           updated_at?: string;
+          vat_rate?: number;
         };
         Update: {
           country?: string;
@@ -1604,6 +1606,7 @@ export type Database = {
           status?: string;
           timezone?: string;
           updated_at?: string;
+          vat_rate?: number;
         };
         Relationships: [];
       };
@@ -1804,9 +1807,7 @@ export type Database = {
           p_organization_name: string;
           p_phone: string;
           p_terms_version: string;
-          p_vat_number?: string;
           p_vat_rate?: number;
-          p_vat_status?: string;
         };
         Returns: string;
       };

@@ -303,7 +303,7 @@ function NewAthleteFields({
 
       {/* Téléphone (audit apple-design du 28/10) : le bouton reste visible tout le long du formulaire,
           dans une barre translucide collée en bas ; le contenu défile dessous. */}
-      <div className="material sticky bottom-0 z-20 -mx-4 flex flex-col gap-2 border-t px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
+      <div className="material sticky bottom-0 z-20 -mx-3.5 flex flex-col gap-2 border-t px-3.5 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
         <SubmitArea pending={pending} error={error} />
       </div>
     </form>

@@ -22,6 +22,10 @@ import { useShell } from "./shell-context";
 // cartes, dans un fondu de la couleur de la page.
 // Sportif : barre du haut avec le logo, le titre de la page et la cloche (sa barre d'onglets est en bas).
 const ACTION_SLOT = "mobile-bar-action";
+// Agenda (02/11, gagner de la place) : le mois remplace le nom de la page, l'icône de la vue se pose
+// juste avant l'assistant IA.
+const TITLE_SLOT = "mobile-bar-title";
+const TOOL_SLOT = "mobile-bar-tool";
 
 export function MobileTopBar() {
   const { space } = useShell();
@@ -41,20 +45,25 @@ export function MobileTopBar() {
     );
   }
   return (
-    <header className="sticky top-0 z-30 flex h-[var(--top-bar)] items-center justify-between px-3 [background:linear-gradient(to_bottom,var(--under-bar)_60%,transparent)] lg:hidden">
+    <header className="sticky top-0 z-30 flex h-[var(--top-bar)] items-center justify-between px-3 pt-2.5 [background:linear-gradient(to_bottom,var(--under-bar)_60%,transparent)] lg:hidden">
       <MobileMenuButton />
       {/* Le nom de la page s'efface dès qu'on descend dans la page et revient tout en haut (02/11) ;
-          les boutons, eux, restent. */}
-      <p
-        aria-hidden
-        className={`flex min-w-0 flex-1 items-center gap-2 px-3 text-[17px] font-semibold tracking-tight transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none ${
-          atTop ? "" : "pointer-events-none -translate-y-1 opacity-0"
-        }`}
-      >
-        <PageIcon className="shrink-0 text-violet-text" />
-        <span className="truncate">{pageTitle(space, pathname)}</span>
-      </p>
-      <div className="flex shrink-0 items-center gap-0.5 rounded-2xl border border-line bg-panel p-1 shadow-[0_6px_20px_rgba(0,0,0,0.14)]">
+          les boutons, eux, restent. Une page peut le remplacer (MobileBarTitle : le mois de l'Agenda),
+          avec moins de marge pour que « Septembre ▾ » tienne entier sur un écran de 390 px. */}
+      <div className="flex min-w-0 flex-1 items-center pr-2.5 pl-3.5 [&:has([data-bar-title]>*)]:pr-0 [&:has([data-bar-title]>*)]:pl-2 [&:has([data-bar-title]>*)>p]:hidden">
+        <span id={TITLE_SLOT} data-bar-title="" className="contents" />
+        <p
+          aria-hidden
+          className={`flex min-w-0 items-center gap-[9px] text-[16px] font-medium tracking-[-0.01em] transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none ${
+            atTop ? "" : "pointer-events-none -translate-y-1 opacity-0"
+          }`}
+        >
+          <PageIcon className="shrink-0 text-violet-text" />
+          <span className="truncate">{pageTitle(space, pathname)}</span>
+        </p>
+      </div>
+      <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-panel p-1 inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]">
+        <span id={TOOL_SLOT} className="contents" />
         {space === "coach" ? <AssistantButton /> : null}
         <NotificationBell phone />
         <span id={ACTION_SLOT} className="contents" />
@@ -85,18 +94,29 @@ function useAtTop() {
 // Le « + » d'une page, posé dans la carte de droite de la barre du téléphone (portail React : il garde
 // le contexte de la page, comme les fenêtres « Nouvelle séance » ou « Créer »).
 const noSubscribe = () => () => {};
-export function MobileBarAction({ children }: { children: ReactNode }) {
+function InSlot({ id, children }: { id: string; children: ReactNode }) {
   const slot = useSyncExternalStore(
     noSubscribe,
-    () => document.getElementById(ACTION_SLOT),
+    () => document.getElementById(id),
     () => null,
   );
   return slot ? createPortal(children, slot) : null;
 }
+export function MobileBarAction({ children }: { children: ReactNode }) {
+  return <InSlot id={ACTION_SLOT}>{children}</InSlot>;
+}
+// À la place du nom de la page (Agenda : « Novembre ▾ »).
+export function MobileBarTitle({ children }: { children: ReactNode }) {
+  return <InSlot id={TITLE_SLOT}>{children}</InSlot>;
+}
+// Dans la carte de droite, avant l'assistant IA (Agenda : l'icône de la vue).
+export function MobileBarTool({ children }: { children: ReactNode }) {
+  return <InSlot id={TOOL_SLOT}>{children}</InSlot>;
+}
 
-// Classe du « + » de la barre : plein (action principale), 44 px, dans la carte de droite.
+// Classe du « + » de la barre : plein (action principale), 40 px, dans la carte de droite.
 export const barActionClass =
-  "grid size-11 shrink-0 place-items-center rounded-xl bg-cta text-on-cta transition-transform duration-150 active:scale-[0.94]";
+  "grid size-10 shrink-0 place-items-center rounded-xl bg-cta text-on-cta transition-transform duration-150 active:scale-[0.94]";
 
 // Barre du bas du sportif (téléphone) : 5 onglets de 52 px, icône 22, libellé 11/500, onglet actif
 // en rouge texte. La séance du jour reste à 2 actions maximum.

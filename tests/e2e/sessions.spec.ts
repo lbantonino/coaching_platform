@@ -20,7 +20,7 @@ async function loginAsCoachA(page: Page) {
 async function fillSchedule(scope: Locator, date: string, time: string, minutes: string) {
   await scope.getByLabel(/Première séance|^Date$/).fill(date);
   await scope.getByLabel("Heure", { exact: true }).fill(time);
-  await scope.getByLabel("Durée (min)").fill(minutes);
+  await scope.getByLabel("Durée", { exact: true }).fill(minutes);
 }
 
 // « Nouvelle séance » ouvre la même fenêtre sur toutes les pages (D-35), sans changer de page.
@@ -32,11 +32,16 @@ async function openNewSession(page: Page) {
 }
 
 async function deleteOpenSession(page: Page, title: string) {
-  await page.getByRole("button", { name: "Plus d'actions" }).click();
-  await page
-    .getByRole("dialog", { name: title })
-    .getByRole("button", { name: "Supprimer" })
-    .click();
+  // Ordinateur : « ••• » puis « Supprimer » ; téléphone : « Supprimer la séance » en bas de page (02/11).
+  if ((page.viewportSize()?.width ?? 1280) < 1024) {
+    await page.getByRole("button", { name: "Supprimer la séance" }).click();
+  } else {
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await page
+      .getByRole("dialog", { name: title })
+      .getByRole("button", { name: "Supprimer" })
+      .click();
+  }
   await page
     .getByRole("dialog", { name: "Supprimer cette séance ?" })
     .getByRole("button", { name: "Supprimer" })
@@ -88,6 +93,9 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   const details = page.getByRole("region", { name: "Détails", exact: true });
   await expect(details).toContainText("Chaque mercredi à 19:00 · 1 h 30");
   await expect(details).toContainText("Depuis le 6 janvier 2027, jusqu'au 27 janvier 2027");
+  // Séance collective : les participants se déplient depuis la carte de la séance (03/11).
+  await expect(page.getByText("2 inscrits", { exact: true })).toBeVisible();
+  await page.locator("summary", { hasText: "Participants" }).click();
   await expect(
     page.getByRole("list", { name: "Sportifs de la séance" }).getByRole("link"),
   ).toHaveCount(2);
@@ -108,7 +116,8 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
     .locator('[data-drop-date="2027-01-13"]')
     .getByRole("link", { name: new RegExp(title) })
     .click();
-  await page.getByRole("link", { name: "Modifier", exact: true }).click();
+  // Ordinateur : « Modifier » en haut et dans la barre d'actions du bas (même page).
+  await page.getByRole("link", { name: "Modifier", exact: true }).first().click();
   await expect(page.getByLabel(/^Prix pour toute la séance/)).toHaveValue("80");
   await page.getByLabel("Heure", { exact: true }).fill("19:30");
   await page
@@ -117,7 +126,7 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
     .click();
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(details).toContainText("19:30");
-  await expect(page.getByRole("heading", { name: "Inscrits · 1" })).toBeVisible();
+  await expect(page.getByText("1 inscrit", { exact: true })).toBeVisible();
 
   // Suppression par le menu « ••• », après confirmation : retour à l'agenda, la séance n'y est plus.
   await deleteOpenSession(page, title);
@@ -154,13 +163,16 @@ test("une séance individuelle demande son sportif (ou un nouveau client), et la
   await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=2027-01-13`);
   await page.getByRole("link", { name: new RegExp(title) }).click();
   await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Détails", exact: true })).toContainText(
-    "Le 13 janvier 2027 à 07:30 · 1 h",
-  );
+  // Séance unique : sa date et son heure sont dans la carte de la séance (pas de carte Détails, 03/11).
+  const hero = page.getByRole("region", { name: "Cette séance" });
+  await expect(hero).toContainText("Mercredi 13 janvier");
+  await expect(hero).toContainText("07:30");
+  await expect(page.getByRole("region", { name: "Détails", exact: true })).toHaveCount(0);
+  // Séance individuelle : le sportif sur une ligne dans la carte de la séance (03/11).
   await expect(
     page
-      .getByRole("list", { name: "Sportifs de la séance" })
-      .getByRole("link", { name: "Nadia El Amrani" }),
+      .getByRole("region", { name: "Cette séance" })
+      .getByRole("link", { name: /Nadia El Amrani/ }),
   ).toBeVisible();
   await deleteOpenSession(page, title);
 });
@@ -208,7 +220,9 @@ test("un nouveau sportif tapé dans « Nouvelle séance » a aussitôt sa fiche,
   await expect(session).toContainText(name);
   await session.click();
   await expect(
-    page.getByRole("list", { name: "Sportifs de la séance" }).getByRole("link", { name }),
+    page
+      .getByRole("region", { name: "Cette séance" })
+      .getByRole("link", { name: new RegExp(name) }),
   ).toBeVisible();
   await deleteOpenSession(page, title);
 });
@@ -244,6 +258,13 @@ test("une date de séance se marque payée, compte dans la comptabilité, puis s
   const price = page.getByRole("region", { name: "Prix et paiements" });
   // Facturée par virement : 65 € hors TVA, 78,65 € payés.
   await expect(price).toContainText(/65,00\s€ HTVA · 78,65\s€ TVAC/);
+  // Les dates à encaisser : sous « Voir plus » sur téléphone ; sur ordinateur, autant que la carte
+  // en contient, « Toutes les dates » montrant les autres (03/11).
+  const showPaymentDates = async () => {
+    if (isPhone(page)) await price.getByRole("button", { name: "Voir plus" }).click();
+    else await price.getByRole("button", { name: "Toutes les dates" }).click();
+  };
+  await showPaymentDates();
   const row = price.getByRole("listitem").filter({ hasText: when });
   await expect(row).toContainText("Pas encore payée");
   await row.getByRole("button", { name: `Marquer payée : ${when}` }).click();
@@ -261,6 +282,7 @@ test("une date de séance se marque payée, compte dans la comptabilité, puis s
 
   // Marquée par erreur : « Annuler » retire le paiement.
   await page.goto(`/coach/o/${ORG_A}/agenda/seances/ca000000-0000-4000-8000-000000000201`);
+  await showPaymentDates();
   await row.getByRole("button", { name: `Annuler le paiement : ${when}` }).click();
   await expect(row).toContainText("Pas encore payée");
 });

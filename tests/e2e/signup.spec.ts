@@ -60,12 +60,12 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   await expect(page).toHaveURL(/\/bienvenue$/);
   await expect(page.getByRole("heading", { name: "Bienvenue, Léa." })).toBeVisible();
   await expect(page.getByText("Studio Léa")).toBeVisible();
-  // Étape « Ta facturation » (D-69) : le pays propose sa devise ; la TVA crée la 1re structure.
-  await page.getByLabel("Pays").selectOption("CH");
-  await expect(page.getByLabel("Devise")).toHaveValue("CHF");
-  await page.getByText("Je suis soumis à la TVA").click();
-  await page.getByLabel("Taux habituel").fill("8,1");
-  await page.getByLabel("Numéro de TVA").fill("CHE-123.456.789 TVA");
+  // Étape « Pays, devise et TVA » (D-69, D-90) : le pays propose sa devise ; une seule question sur
+  // la TVA. Libellés exacts : la section porte aussi « pays » et « devise » dans son titre.
+  await page.getByLabel("Pays", { exact: true }).selectOption("CH");
+  await expect(page.getByLabel("Devise", { exact: true })).toHaveValue("CHF");
+  await page.getByText("Je facture la TVA").click();
+  await page.getByLabel("Taux de TVA").fill("8,1");
   await page.getByRole("button", { name: "Accéder à mon tableau de bord" }).click();
 
   // Son espace est vide et n'a rien en commun avec les organisations de démonstration.
@@ -78,11 +78,11 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   );
   await expect(page.getByText("Aucune séance prévue dans les 30 prochains jours.")).toBeVisible();
   await expect(page.getByText("Organisation Démo A")).toHaveCount(0);
-  // Sa structure suisse est prête : Paramètres › Facturation et légal.
-  await page.goto("/coach/profil?onglet=facturation");
-  await expect(page.getByRole("region", { name: "Studio Léa" })).toContainText(
-    "Assujetti à la TVA · CHE-123.456.789 TVA · taux habituel 8,1 %",
-  );
+  // Son taux est enregistré : Paramètres › Pays, devise et TVA.
+  await page.goto("/coach/profil?onglet=argent");
+  const vat = page.getByRole("region", { name: "TVA" });
+  await expect(vat.getByRole("switch", { name: "Je facture la TVA" })).toBeChecked();
+  await expect(vat.getByLabel("Taux de TVA")).toHaveValue("8,1");
 });
 
 test("un coach qui déménage change de devise : le futur passe en francs suisses", async ({
@@ -94,12 +94,12 @@ test("un coach qui déménage change de devise : le futur passe en francs suisse
   await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(page).toHaveURL(/\/verifier-email$/);
   await page.goto(await confirmationLink(request, email));
-  await page.getByLabel("Pays").selectOption("BE");
+  await page.getByLabel("Pays", { exact: true }).selectOption("BE");
   await page.getByRole("button", { name: "Accéder à mon tableau de bord" }).click();
   await expect(page).toHaveURL(/\/coach$/);
 
-  // Paramètres › Facturation : « Changer de devise » (D-70), taux saisi, aperçu, confirmation.
-  await page.goto("/coach/profil?onglet=facturation");
+  // Paramètres › Pays, devise et TVA : « Changer de devise » (D-70), taux saisi, aperçu, confirmation.
+  await page.goto("/coach/profil?onglet=argent");
   await page.getByRole("button", { name: "Changer de devise" }).click();
   const sheet = page.getByRole("dialog", { name: "Changer de devise" });
   await sheet.getByLabel("Nouvelle devise").selectOption("CHF");

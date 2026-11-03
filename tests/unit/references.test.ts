@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { formatDate } from "@/lib/format";
-import { formatReferenceDetail, formatReferenceValue } from "@/features/references/format";
+import {
+  formatReferenceDetail,
+  formatReferenceValue,
+  splitReferenceValue,
+} from "@/features/references/format";
 import { parseReferenceForm, type ReferenceFormInput } from "@/features/references/schemas";
 
 const TODAY = "2026-10-20";
@@ -110,6 +114,33 @@ describe("affichage des repères", () => {
         reps: 5,
       }),
     ).toBe("102,5 kg × 5");
+  });
+
+  // Vue d'ensemble de la fiche (maquette du 03/11/2026) : grand chiffre et unité séparés.
+  it("sépare la valeur de son unité", () => {
+    expect(splitReferenceValue({ ...base, kind: "pace_race", paceMin: 290, paceMax: 305 })).toEqual(
+      {
+        value: "4:50–5:05",
+        unit: "min/km",
+      },
+    );
+    expect(
+      splitReferenceValue({
+        ...base,
+        kind: "strength_load",
+        exercise: "Wall ball",
+        loadKg: 6,
+        reps: 25,
+      }),
+    ).toEqual({ value: "6 kg × 25", unit: "reps" });
+    expect(splitReferenceValue({ ...base, kind: "hr_rest", bpm: 52 })).toEqual({
+      value: "52",
+      unit: "bpm",
+    });
+    expect(splitReferenceValue({ ...base, kind: "strength_load", loadKg: 80 })).toEqual({
+      value: "80 kg",
+      unit: "",
+    });
   });
 
   it("formate une date SQL sans décalage de fuseau", () => {

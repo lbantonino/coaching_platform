@@ -14,7 +14,8 @@ import { SlotLayer } from "./slot-layer";
 // Grille horaire de la page Agenda (D-77, D-78) : des colonnes jointives séparées d'un filet, un jour
 // sur deux légèrement gris (--day-alt). Les séances sont posées à leur heure exacte ; une séance d'une
 // heure ou moins garde la hauteur d'une heure. Toute la journée, 00:00 - 24:00, se programme ; la
-// grille s'ouvre sur la plage du réglage « Heures de l'agenda ». Heure : 64 px sur téléphone, 48 px
+// grille s'ouvre sur la plage du réglage « Heures de l'agenda ». Heure : 44 px sur téléphone (02/11,
+// comme le Calendrier de l'iPhone, pour voir plus d'heures), 48 px
 // sur ordinateur (variable CSS --hour). Aujourd'hui : colonne teintée de violet, date en gras violet,
 // ligne « maintenant » violette. Clic sur un créneau vide pour ajouter une séance,
 // glisser-déposer pour la déplacer (D-35).
@@ -25,8 +26,7 @@ import { SlotLayer } from "./slot-layer";
 // Le total d'heures n'est plus sous la grille (02/11) : panneau de l'Agenda sur ordinateur, menu
 // déroulant du mois sur téléphone (data-minutes de chaque colonne).
 // En-tête des jours (demande d'Antonino du 01/11) : de l'air au-dessus du nom du jour, et le nom collé
-// à sa date.
-const HEAD = 64;
+// à sa date. Sur téléphone (02/11, pour gagner de la place) : une seule ligne basse, « Lun 2 ».
 // Air au-dessus de la première heure (en heures) : son chiffre, centré sur le filet, n'est pas coupé.
 const AIR = 0.25;
 // Une position dans la journée, en heures, d'après la hauteur d'une heure.
@@ -81,7 +81,8 @@ export function WeekGrid({
   today: string;
   // Heure actuelle (« 10:42 ») pour la ligne « maintenant ».
   now: string;
-  sessionHref: (sessionId: string) => string;
+  // Page de la séance, ouverte sur cette date (02/11).
+  sessionHref: (sessionId: string, date: string) => string;
   // Vue Jour : le jour écrit sous la bande de la semaine et des séances détaillées (le nom en entier,
   // l'horaire et le titre).
   single?: boolean;
@@ -117,40 +118,25 @@ export function WeekGrid({
       <ScrollToDay
         // Nouvelle période : la grille repart, ouverte sur son jour et son heure.
         key={`${layout.days[0]?.date}:${focus}:${perView}`}
-        className="@container flex h-full min-h-0 flex-col [--gut:40px] [--hour:64px] lg:[--gut:48px] lg:[--hour:48px]"
+        className="@container flex h-full min-h-0 flex-col [--gut:40px] [--hour:44px] lg:[--gut:48px] lg:[--hour:48px]"
         scrollHour={Math.max(first - AIR, 0)}
       >
-        {/* La semaine au-dessus de la grille (comme le Calendrier de l'iPhone), téléphone et ordinateur ;
-            en vue Jour, elle remplace l'en-tête du jour. */}
-        {single ? (
-          <DayWeekStrip initial={focus} today={today} dayHref={dayHref} viewHref={viewHref} title />
-        ) : (
-          <>
-            {/* Téléphone : les jours visibles en gris (3 ou 7) ; ordinateur : toute la semaine. */}
-            <div className="lg:hidden">
-              <DayWeekStrip
-                initial={focus}
-                today={today}
-                dayHref={dayHref}
-                viewHref={viewHref}
-                span={perView}
-              />
-            </div>
-            <div className="max-lg:hidden">
-              <DayWeekStrip
-                initial={desktopDays[0]}
-                today={today}
-                dayHref={dayHref}
-                viewHref={viewHref}
-                desktopWeek
-              />
-            </div>
-          </>
-        )}
+        {/* La semaine au-dessus de la grille (comme le Calendrier de l'iPhone) ; en vue Jour, elle
+            remplace l'en-tête du jour. */}
+        {/* Téléphone seulement (02/11 : sur ordinateur, le petit calendrier du panneau suffit). */}
+        <div className="lg:hidden">
+          <DayWeekStrip
+            initial={focus}
+            today={today}
+            dayHref={dayHref}
+            viewHref={viewHref}
+            span={single ? 1 : perView}
+            title={single}
+          />
+        </div>
         {/* En-tête des jours : suit le défilement horizontal des jours. */}
         <div
-          className={`flex shrink-0 border-b border-line-soft ${single ? "hidden" : ""}`}
-          style={{ height: HEAD }}
+          className={`flex h-8 shrink-0 border-b border-line-soft lg:h-16 ${single ? "max-lg:hidden" : ""}`}
         >
           <div aria-hidden className="w-[var(--gut)] shrink-0" />
           <div data-grid-head="" className="min-w-0 flex-1 overflow-hidden">
@@ -163,21 +149,21 @@ export function WeekGrid({
                     key={day.date}
                     className={`${column(day.date)} flex border-l border-line-soft ${
                       single
-                        ? "items-baseline gap-2.5 px-4 pt-1"
-                        : "flex-col items-center justify-center gap-1"
+                        ? "items-center gap-3 px-5"
+                        : "items-center justify-center gap-1 lg:flex-col"
                     }`}
                   >
                     {/* La date en gras, sans rond ; aujourd'hui en violet (demande d'Antonino du
                         02/11 : le rond rapprochait trop le chiffre du nom du jour). */}
                     <span
                       className={`leading-none tabular ${
-                        single ? "order-first text-[22px]" : "order-last text-[17px]"
+                        single ? "order-first text-[22px]" : "order-last text-[15px] lg:text-[17px]"
                       } ${isToday ? "font-bold text-violet-text" : "font-semibold text-text"}`}
                     >
                       {number}
                     </span>
                     <span
-                      className={`text-[13px] leading-none lg:text-[11px] ${isToday ? "font-medium text-violet-text" : "text-muted"}`}
+                      className={`text-[13px] leading-none ${single ? "lg:text-[14px] lg:font-medium" : "lg:text-[11px]"} ${isToday ? "font-medium text-violet-text" : single ? "text-text-2" : "text-muted"}`}
                     >
                       {single ? capitalize(dayLabel(day.date)) : name}
                     </span>
@@ -275,7 +261,7 @@ export function WeekGrid({
                               recurring: block.recurring,
                               moved: block.moved,
                             }}
-                            href={sessionHref(block.sessionId)}
+                            href={sessionHref(block.sessionId, block.date)}
                             title={`${block.label} · ${block.title} · ${block.subtitle}`}
                             style={style}
                             className={`absolute flex flex-col justify-center overflow-hidden rounded-lg px-1.5 transition-[filter,opacity] duration-150 hover:brightness-110 ${

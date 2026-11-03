@@ -1,5 +1,6 @@
 import type { EditableTask } from "@/components/blocks/task-sheet";
 import { formatMoney } from "@/domain/billing/money";
+import type { UnpaidDate } from "@/features/billing/collect-queries";
 import type { NotifyPreferences } from "@/features/notifications/filter";
 import { editableTask } from "@/features/tasks/editable";
 import { dayShortLabel, daysBetween, dueLabel, messageTime } from "@/lib/format";
@@ -9,20 +10,20 @@ import type { Notifications } from "./queries";
 // Aperçu des notifications sous la cloche (ordinateur, demande d'Antonino du 02/11) : les mêmes
 // sections et les mêmes règles que la page Notifications (getNotifications), quelques éléments par
 // section (non lus d'abord), chacun avec le lien où l'on s'en occupe, et un lien « Voir tout » vers la
-// page de la section, déjà filtrée (Messages non lues, Tâches d'aujourd'hui, Facturation en retard,
-// Sportifs à compléter ; les compétitions n'ont pas de page à elles : page Notifications). Règle
+// page de la section, déjà filtrée (Messages non lues, Tâches d'aujourd'hui, À encaisser de la
+// Comptabilité, Sportifs à compléter ; les compétitions n'ont pas de page à elles : page Notifications). Règle
 // PURE : les données viennent de getNotifications, les catégories décochées dans Paramètres (D-57) ne
 // sont pas montrées. Les textes sont prêts à afficher (dates relatives à `today`).
 export const PREVIEW_ITEMS = 3;
 
-export type PreviewKind = "competitions" | "messages" | "tasks" | "invoices" | "profiles";
+export type PreviewKind = "competitions" | "messages" | "tasks" | "unpaid" | "profiles";
 
 export type PreviewItem = {
   key: string;
   read: boolean;
   title: string;
   sub: string;
-  // À droite : heure du message, montant de la facture, « J-3 »…
+  // À droite : heure du message, montant attendu, « J-3 »…
   meta?: string;
   // Une tâche s'ouvre dans sa fenêtre (D-59) plutôt que sur une page.
   href?: string;
@@ -48,6 +49,15 @@ export type PreviewSection = {
 export type NotificationPreview = { sections: PreviewSection[] };
 
 // Non lus d'abord, puis l'ordre d'origine (le plus récent ou le plus urgent en premier).
+// Séance à encaisser (D-90) : « Hier · 07:00 · Coaching force » (individuelle : le titre, puisque la
+// ligne porte le nom du sportif) ou « Hier · 19:00 » (collective : la ligne porte le titre). La date
+// d'abord : c'est la fin de la ligne qui se coupe quand la place manque.
+export function unpaidSub(date: UnpaidDate, today: string): string {
+  return [dayShortLabel(date.date, today), date.startTime, date.athleteName ? date.title : null]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 const firstUnread = <T extends { read: boolean }>(items: T[]) =>
   [...items].sort((a, b) => Number(a.read) - Number(b.read));
 
@@ -114,27 +124,23 @@ export function buildPreview(
       ),
     );
   }
-  if (notify.invoices) {
+  if (notify.unpaid) {
     sections.push(
       section(
-        "invoices",
-        "Factures en retard",
-        all.invoices,
-        (invoice) => ({
-          key: invoice.key,
-          read: invoice.read,
-          title: invoice.athleteName,
-          sub: `${invoice.label} · échéance ${dayShortLabel(invoice.dueOn, today).toLowerCase()}`,
-          meta: formatMoney(invoice.amountCents, invoice.currency),
-          // Brouillons et factures numérotées ont leur page ; le simple suivi d'avant D-65, non.
-          href:
-            invoice.status === "draft" || invoice.number !== null
-              ? `/coach/facturation/${invoice.id}`
-              : "/coach/facturation?statut=en-retard",
+        "unpaid",
+        "Séances à encaisser",
+        all.unpaid,
+        (date) => ({
+          key: date.key,
+          read: date.read,
+          title: date.athleteName ?? date.title,
+          sub: unpaidSub(date, today),
+          meta: formatMoney(date.amountCents, date.currency),
+          href: date.sessionHref,
         }),
         {
-          href: "/coach/facturation?statut=en-retard",
-          label: "Voir toutes les factures en retard",
+          href: "/coach/comptabilite?liste=a-encaisser",
+          label: "Voir toutes les séances à encaisser",
         },
       ),
     );

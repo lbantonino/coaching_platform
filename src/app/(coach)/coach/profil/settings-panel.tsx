@@ -1,44 +1,31 @@
 "use client";
 
-import { ArrowLeft, ChevronRight, Download, Landmark, LogOut } from "lucide-react";
+import { ArrowLeft, ChevronRight, Download, LogOut } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { DeleteMoreMenu } from "@/components/blocks/more-menu";
 import type { SettingsSection } from "@/components/blocks/settings-context";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
-import { Card, CardEmpty } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { LogoutButton } from "@/components/ui/logout-button";
 import { ThemeChoice } from "@/components/ui/theme-choice";
-import { formatVatRate } from "@/domain/billing/money";
-import { countryName } from "@/domain/geo/countries";
-import {
-  formatEnterpriseNumber,
-  formatIban,
-  formatVatNumber,
-  legalFormLabels,
-  vatStatusLabels,
-} from "@/domain/billing/legal";
-import type { LegalEntity } from "@/features/coach/legal-queries";
 import type { SettingsData } from "@/features/coach/settings-data";
-import { deleteLegalEntity, signOutEverywhere } from "@/features/coach/settings-actions";
+import { signOutEverywhere } from "@/features/coach/settings-actions";
 import { removeCoachPhoto, uploadCoachPhoto, type PhotoState } from "@/features/photos/actions";
 
 import { PhotoForm } from "../photo-form";
-import { LegalEntityButton } from "./legal-entity-sheet";
 import { SECTIONS } from "./sections";
 import {
   EmailForm,
   CountryCurrencyForm,
-  InvoiceCashToggle,
   NotificationToggles,
   OrganizationForm,
   PasswordForm,
   PreferencesForm,
   ProfileForm,
+  VatRateForm,
 } from "./settings-forms";
 
 // Contenu des Paramètres (D-57, D-58), le même dans la grande fenêtre ouverte depuis le menu du
@@ -254,7 +241,7 @@ export function SettingsPanel({
           </>
         ) : null}
 
-        {shown === "facturation" ? (
+        {shown === "argent" ? (
           <>
             <Card id="settings-country" title="Pays et devise">
               <CountryCurrencyForm
@@ -266,39 +253,19 @@ export function SettingsPanel({
                 onChanged={onChanged}
               />
             </Card>
-            <Card id="settings-invoice-cash" title="Factures">
-              <InvoiceCashToggle value={data.invoiceCash} />
+            {/* TVA (D-90) : un seul taux, sans règle d'aucun pays. Coory ne fait pas de factures. */}
+            <Card
+              id="settings-vat"
+              title="TVA"
+              subtitle="Pour le prix de tes séances et ton résultat hors TVA dans la Comptabilité. Tes factures se font dans ton logiciel de facturation ou chez ton comptable."
+            >
+              <VatRateForm
+                organizationId={data.organization.id}
+                vatRate={data.organization.vatRate}
+                isOwner={data.organization.isOwner}
+                onChanged={onChanged}
+              />
             </Card>
-            {/* Coory ne décide d'aucune règle légale (D-66) : la structure s'imprime telle que le
-                coach l'a saisie ; à lui de l'adapter à son pays, avec son comptable s'il en a un. */}
-            <p className="text-small text-muted">
-              Une structure par activité : par exemple ton activité d&apos;indépendant et ton ASBL.
-              Tes factures reprennent telles quelles les infos de la structure choisie, mentions
-              comprises : à toi de les adapter aux règles de ton pays.
-            </p>
-            {data.entities.length === 0 ? (
-              <Card>
-                <CardEmpty icon={Landmark}>
-                  Aucune structure pour l&apos;instant. Ajoute la première : elle sera la structure
-                  par défaut.
-                </CardEmpty>
-              </Card>
-            ) : (
-              <ul aria-label="Structures légales" className="flex flex-col gap-4">
-                {data.entities.map((entity) => (
-                  <li key={entity.id}>
-                    <LegalEntityCard
-                      organizationId={data.organization.id}
-                      entity={entity}
-                      onChanged={onChanged}
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div>
-              <LegalEntityButton organizationId={data.organization.id} onSaved={onChanged} />
-            </div>
           </>
         ) : null}
 
@@ -357,126 +324,5 @@ export function SettingsPanel({
         ) : null}
       </div>
     </div>
-  );
-}
-
-function LegalEntityCard({
-  organizationId,
-  entity,
-  onChanged,
-}: {
-  organizationId: string;
-  entity: LegalEntity;
-  onChanged?: () => void;
-}) {
-  const rows: [string, string | null][] = [
-    ["Forme", legalFormLabels[entity.legalForm]],
-    [
-      "N° d'entreprise",
-      entity.enterpriseNumber ? formatEnterpriseNumber(entity.enterpriseNumber) : null,
-    ],
-    [
-      "TVA",
-      [
-        vatStatusLabels[entity.vatStatus],
-        entity.vatNumber ? formatVatNumber(entity.vatNumber) : null,
-        entity.defaultVatRate !== null
-          ? `taux habituel ${formatVatRate(entity.defaultVatRate)}`
-          : null,
-      ]
-        .filter(Boolean)
-        .join(" · "),
-    ],
-    [
-      "Adresse",
-      [
-        entity.addressLine,
-        [entity.postalCode, entity.city].filter(Boolean).join(" "),
-        countryName(entity.country),
-      ]
-        .filter(Boolean)
-        .join(", ") || null,
-    ],
-    [
-      "IBAN",
-      entity.iban ? `${formatIban(entity.iban)}${entity.bic ? ` · ${entity.bic}` : ""}` : null,
-    ],
-    ["Paiement", entity.paymentDetails],
-    ["Facturation", entity.billingEmail],
-    ["Factures", `${entity.invoicePrefix}-${new Date().getFullYear()}-001, -002…`],
-  ];
-  return (
-    <section
-      aria-label={entity.name}
-      className="flex flex-col gap-3 rounded-card border border-line bg-surface p-[18px]"
-    >
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h4 className="truncate text-block font-semibold">{entity.name}</h4>
-          {entity.isDefault ? (
-            <span className="w-fit">
-              <Badge tone="ok">Par défaut</Badge>
-            </span>
-          ) : null}
-        </div>
-        <span className="flex shrink-0 items-center gap-2">
-          <LegalEntityButton
-            organizationId={organizationId}
-            entityId={entity.id}
-            label={entity.name}
-            onSaved={onChanged}
-            values={{
-              name: entity.name,
-              legalForm: entity.legalForm,
-              enterpriseNumber: entity.enterpriseNumber
-                ? formatEnterpriseNumber(entity.enterpriseNumber)
-                : "",
-              vatStatus: entity.vatStatus,
-              vatNumber: entity.vatNumber ? formatVatNumber(entity.vatNumber) : "",
-              defaultVatRate:
-                entity.defaultVatRate !== null
-                  ? String(entity.defaultVatRate).replace(".", ",")
-                  : "",
-              addressLine: entity.addressLine ?? "",
-              postalCode: entity.postalCode ?? "",
-              city: entity.city ?? "",
-              country: entity.country,
-              iban: entity.iban ? formatIban(entity.iban) : "",
-              bic: entity.bic ?? "",
-              paymentDetails: entity.paymentDetails ?? "",
-              billingEmail: entity.billingEmail ?? "",
-              invoicePrefix: entity.invoicePrefix,
-              legalMentions: entity.legalMentions ?? "",
-              isDefault: entity.isDefault,
-            }}
-          />
-          <DeleteMoreMenu
-            menuTitle={entity.name}
-            action={async () => {
-              await deleteLegalEntity(organizationId, entity.id);
-              onChanged?.();
-            }}
-            confirmTitle="Supprimer cette structure ?"
-            confirmText="Ses infos disparaissent des paramètres. Les factures déjà faites ne changent pas."
-          />
-        </span>
-      </header>
-      <dl className="flex flex-col text-small">
-        {rows
-          .filter((row): row is [string, string] => row[1] !== null)
-          .map(([label, value]) => (
-            <div
-              key={label}
-              className="flex flex-col gap-0.5 border-t border-line py-2 sm:flex-row sm:gap-3"
-            >
-              <dt className="shrink-0 text-muted sm:w-36">{label}</dt>
-              <dd className="min-w-0 break-words">{value}</dd>
-            </div>
-          ))}
-      </dl>
-      {entity.legalMentions ? (
-        <p className="text-caption text-muted">{entity.legalMentions}</p>
-      ) : null}
-    </section>
   );
 }

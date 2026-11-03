@@ -264,7 +264,7 @@ export function DocumentsView({
           <div
             role="group"
             aria-label="Catégories"
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
+            className="-mx-3.5 flex gap-2 overflow-x-auto px-3.5 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
           >
             {[
               { key: ALL, label: "Tous", color: null },

@@ -10,13 +10,36 @@ export async function fillAthleteName(page: Page, fullName: string) {
   await page.getByRole("textbox", { name: /^Nom de famille/ }).fill(rest.join(" "));
 }
 
-// Ouvre un onglet de la fiche sportif (Vue d'ensemble, Profil, Objectifs, Disponibilités, Repères).
+// Onglets de la fiche sportif (maquette du 03/11/2026) : une barre sur ordinateur ; sur téléphone, un
+// sélecteur « Vue d'ensemble 1 / 10 » qui déplie les onglets.
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export async function expectAthleteTab(page: Page, label: string) {
+  if (isPhone(page)) {
+    await expect(
+      page.getByRole("button", {
+        name: new RegExp(`^Section de la fiche : ${escapeRegExp(label)},`),
+      }),
+    ).toBeVisible();
+    return;
+  }
+  await expect(
+    page
+      .getByRole("navigation", { name: "Sections de la fiche" })
+      .getByRole("link", { name: label, exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+}
+
+// Ouvre un onglet de la fiche sportif (Vue d'ensemble, Profil, Objectifs, Disponibilités, Repères…).
 export async function openAthleteTab(page: Page, label: string) {
-  const tab = page
+  if (isPhone(page)) {
+    await page.getByRole("button", { name: /^Section de la fiche : / }).click();
+  }
+  await page
     .getByRole("navigation", { name: "Sections de la fiche" })
-    .getByRole("link", { name: label, exact: true });
-  await tab.click();
-  await expect(tab).toHaveAttribute("aria-current", "page");
+    .getByRole("link", { name: label, exact: true })
+    .click();
+  await expectAthleteTab(page, label);
 }
 
 // Navigation de l'espace coach : barre latérale sur ordinateur, menu hamburger sur téléphone.
@@ -70,26 +93,18 @@ export async function logoutAthlete(page: Page) {
   await page.getByRole("button", { name: "Se déconnecter" }).filter({ visible: true }).click();
 }
 
-// Filtres de la liste des sportifs : pastilles sur ordinateur ; sur téléphone, bouton compact
-// (« Statut : Tous (8) ») qui ouvre la liste des choix (demande d'Antonino du 26/10).
+// Filtres de la liste des sportifs (maquette du 03/11/2026) : menus déroulants « Statut » et
+// « Programme » (bouton « Statut : Tous (18) »), sur ordinateur comme sur téléphone.
 export async function chooseAthleteFilter(
   page: Page,
-  group: "Statut" | "Type de programme",
+  group: "Statut" | "Programme",
   label: string,
 ) {
-  if (isPhone(page)) {
-    const button = group === "Statut" ? "Statut" : "Programme";
-    await page.getByRole("button", { name: new RegExp(`^${button} : .*Changer$`) }).click();
-    await page
-      .getByRole("dialog", { name: group })
-      .getByRole("button", { name: new RegExp(`^${label}`) })
-      .click();
-    return;
-  }
-  const nav = group === "Statut" ? "Filtrer par statut" : "Filtrer par type de programme";
+  // « Programme : Tous » (le menu), pas « Programme : Hyrox. Changer le programme de … » (une ligne).
+  await page.getByRole("button", { name: new RegExp(`^${group} : [^.]+$`) }).click();
   await page
-    .getByRole("navigation", { name: nav })
-    .getByRole("link", { name: new RegExp(`^${label}`) })
+    .getByRole("listbox", { name: group })
+    .getByRole("option", { name: new RegExp(`^${label}`) })
     .click();
 }
 

@@ -35,7 +35,42 @@ export async function createInvitation(
   athleteId: string,
 ): Promise<CreateInvitationState> {
   const { user, membership } = await requireOrgAccess(organizationId);
-  const target = await getInviteTarget(membership.organizationId, athleteId);
+  const origin = (await headers()).get("origin");
+  if (!origin) return { error: "Requête invalide. Recharge la page.", link: null, expiresAt: null };
+  return inviteOne(membership.organizationId, user.id, athleteId, origin);
+}
+
+// Invitation groupée (liste des sportifs, maquette du 03/11/2026) : un lien par sportif coché, avec
+// les mêmes règles qu'une invitation seule (e-mail obligatoire, pas de compte déjà activé). Le coach
+// copie ensuite chaque lien : Coory n'envoie pas d'e-mail pour l'instant.
+export type BulkInvitation = { athleteId: string; name: string } & CreateInvitationState;
+
+export async function createInvitations(
+  organizationId: string,
+  athleteIds: string[],
+): Promise<BulkInvitation[]> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const origin = (await headers()).get("origin");
+  const ids = [...new Set(athleteIds)].slice(0, 100);
+  const results: BulkInvitation[] = [];
+  for (const athleteId of ids) {
+    const target = await getInviteTarget(membership.organizationId, athleteId);
+    if (!target) continue;
+    const state = origin
+      ? await inviteOne(membership.organizationId, user.id, athleteId, origin)
+      : { error: "Requête invalide. Recharge la page.", link: null, expiresAt: null };
+    results.push({ athleteId, name: target.displayName, ...state });
+  }
+  return results;
+}
+
+async function inviteOne(
+  organizationId: string,
+  userId: string,
+  athleteId: string,
+  origin: string,
+): Promise<CreateInvitationState> {
+  const target = await getInviteTarget(organizationId, athleteId);
 
   if (!target) return { error: "Sportif introuvable.", link: null, expiresAt: null };
   if (target.hasAccount) {
@@ -49,9 +84,6 @@ export async function createInvitation(
       expiresAt: null,
     };
   }
-
-  const origin = (await headers()).get("origin");
-  if (!origin) return { error: "Requête invalide. Recharge la page.", link: null, expiresAt: null };
 
   const supabase = await createClient();
 
@@ -70,11 +102,11 @@ export async function createInvitation(
   ).toISOString();
 
   const { error } = await supabase.from("athlete_invites").insert({
-    organization_id: membership.organizationId,
+    organization_id: organizationId,
     athlete_id: target.athleteId,
     token_hash: hashInvitationToken(token),
     expires_at: expiresAt,
-    created_by: user.id,
+    created_by: userId,
   });
   if (error)
     return { error: "Le lien n'a pas pu être créé. Réessaie.", link: null, expiresAt: null };

@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { totalsFromEntry } from "@/domain/billing/invoice-document";
-import { formatVatNumber, normalizeVatNumber } from "@/domain/billing/legal";
 import {
   addVat,
   currencyLabel,
@@ -62,11 +60,6 @@ describe("taux de TVA libre", () => {
     expect(addVat(10000, 8.1)).toBe(10810);
     expect(addVat(10000, 5.5)).toBe(10550);
     expect(splitVat(10810, 8.1)).toEqual({ exclCents: 10000, vatCents: 810 });
-    expect(totalsFromEntry(6500, "excl", 20)).toEqual({
-      exclCents: 6500,
-      vatCents: 1300,
-      inclCents: 7800,
-    });
   });
 
   it("retrouve exactement le HTVA saisi, quel que soit le taux", () => {
@@ -100,40 +93,22 @@ describe("pays", () => {
     expect(paymentMethodLabel("bancontact", "FR")).toBe("Carte bancaire");
     expect(paymentMethodLabel("transfer", "FR")).toBe("Virement");
   });
-
-  it("vérifie le numéro de TVA belge, laisse libre celui des autres pays", () => {
-    expect(normalizeVatNumber("BE 0123.456.749", "BE")).toBe("BE0123456749");
-    expect(normalizeVatNumber("BE 0123.456.748", "BE")).toBeNull();
-    expect(normalizeVatNumber("fr40303265045", "FR")).toBe("FR40303265045");
-    expect(formatVatNumber("BE0123456749")).toBe("BE0123.456.749");
-    expect(formatVatNumber("FR40303265045")).toBe("FR40303265045");
-  });
 });
 
-describe("inscription : étape « Ta facturation »", () => {
-  const base = { country: "FR", currency: "EUR", vatChoice: "", vatRate: "", vatNumber: "" };
+describe("inscription : étape « Pays, devise et TVA » (D-90)", () => {
+  const base = { country: "FR", currency: "EUR", vatChoice: "", vatRate: "" };
 
-  it("sans choix de TVA, rien n'est créé (« plus tard »)", () => {
+  it("sans TVA choisie, le taux vaut 0", () => {
     expect(parseBillingSetup(base)).toEqual({
       ok: true,
-      setup: { country: "FR", currency: "EUR", vatStatus: null, vatRate: null, vatNumber: null },
+      setup: { country: "FR", currency: "EUR", vatRate: 0 },
     });
   });
 
-  it("un coach soumis à la TVA donne son taux et son numéro", () => {
-    const parsed = parseBillingSetup({
-      ...base,
-      vatChoice: "subject",
-      vatRate: "20",
-      vatNumber: "FR40303265045",
-    });
-    expect(parsed.ok && parsed.setup).toMatchObject({
-      vatStatus: "subject",
-      vatRate: 20,
-      vatNumber: "FR40303265045",
-    });
-    expect(parseBillingSetup({ ...base, vatChoice: "subject", vatNumber: "FR1" }).ok).toBe(false);
-    expect(parseBillingSetup({ ...base, vatChoice: "subject", vatRate: "20" }).ok).toBe(false);
+  it("un coach qui facture la TVA donne son taux", () => {
+    const parsed = parseBillingSetup({ ...base, vatChoice: "vat", vatRate: "20" });
+    expect(parsed.ok && parsed.setup.vatRate).toBe(20);
+    expect(parseBillingSetup({ ...base, vatChoice: "vat" }).ok).toBe(false);
   });
 
   it("refuse un pays ou une devise inconnus", () => {

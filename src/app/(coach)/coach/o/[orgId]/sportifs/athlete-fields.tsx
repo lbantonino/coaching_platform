@@ -182,7 +182,7 @@ export function ContactFields({
   );
 }
 
-// Adresse postale (D-65) : reprise sur les factures du sportif.
+// Adresse postale (D-65) : ses coordonnées, utiles pour ses factures faites hors de Coory (D-90).
 export function AddressFields({ values }: { values: AddressFormValues }) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -199,7 +199,7 @@ export function AddressFields({ values }: { values: AddressFormValues }) {
           className={inputClass}
         />
         <p id="address-hint" className={hintClass}>
-          Reprise sur ses factures.
+          Utile pour ses factures, faites dans ton logiciel de facturation.
         </p>
       </div>
       <div className="flex flex-col gap-1.5">

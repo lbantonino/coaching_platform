@@ -9,10 +9,11 @@ import {
   occurrencesBetween,
   parseSessionForm,
   type SessionFormInput,
+  seriesPosition,
   sessionOccurrences,
 } from "@/features/sessions/schemas";
 import { coveredByPackage } from "@/domain/billing/payments";
-import { plannedIncome } from "@/features/sessions/prices";
+import { datesToCollect, plannedIncome } from "@/features/sessions/prices";
 
 const ATHLETE = "da000000-0000-4000-8000-000000000002";
 const OTHER = "da000000-0000-4000-8000-000000000003";
@@ -317,5 +318,92 @@ describe("forfaits (D-52)", () => {
         coveredByPackage(covers, s.athleteId, date),
       ),
     ).toEqual({ count: 1, inclCents: 6500 });
+  });
+});
+
+// À encaisser (D-90) : mardi 3 novembre 2026, 10:00.
+describe("séances à encaisser (D-90)", () => {
+  const today = "2026-11-03";
+  const base = { repeatsWeekly: false, endsOn: null, priceVatIncluded: true, exceptions: [] };
+  // Chaque lundi à 07:00, 65 € HTVA (78,65 € à 21 %) ; le 19/10 déplacé au mardi 20 à 09:00.
+  const weekly = {
+    ...base,
+    id: "lundi",
+    startsOn: "2026-10-12",
+    startTime: "07:00",
+    repeatsWeekly: true,
+    priceCents: 6500,
+    priceVatIncluded: false,
+    exceptions: [{ originalDate: "2026-10-19", newDate: "2026-10-20", newStartTime: "09:00" }],
+  };
+  const morning = { ...base, id: "matin", startsOn: today, startTime: "08:00", priceCents: 4000 };
+  const evening = { ...base, id: "soir", startsOn: today, startTime: "18:00", priceCents: 4000 };
+  const free = {
+    ...base,
+    id: "gratuite",
+    startsOn: "2026-11-02",
+    startTime: "07:00",
+    priceCents: null,
+  };
+  const paid = new Set(["lundi:2026-10-26"]);
+
+  it("liste les dates commencées et pas payées, la plus récente d'abord", () => {
+    const dates = datesToCollect(
+      [weekly, morning, evening, free],
+      "2026-10-19",
+      today,
+      "10:00",
+      21,
+      (session, date) => paid.has(`${session.id}:${date}`),
+    );
+    expect(
+      dates.map(({ session, date, originalDate, amountCents }) => [
+        session.id,
+        date,
+        originalDate,
+        amountCents,
+      ]),
+    ).toEqual([
+      // Aujourd'hui 08:00 : commencée ; 18:00 : pas encore, donc absente.
+      ["matin", today, today, 4000],
+      ["lundi", "2026-11-02", "2026-11-02", 7865],
+      // Déplacée : à sa nouvelle date, payée sous sa date d'origine.
+      ["lundi", "2026-10-20", "2026-10-19", 7865],
+    ]);
+  });
+
+  it("ne garde pas les dates comprises dans un forfait", () => {
+    const dates = datesToCollect(
+      [weekly],
+      "2026-10-19",
+      today,
+      "10:00",
+      21,
+      () => false,
+      (_session, date) => date >= "2026-10-26",
+    );
+    expect(dates.map((date) => date.originalDate)).toEqual(["2026-10-19"]);
+  });
+});
+
+describe("rang d'une date dans sa série (page d'une séance)", () => {
+  const weekly = { startsOn: "2026-09-07", repeatsWeekly: true, endsOn: "2027-01-17" };
+
+  it("donne « Séance 9 sur 19 » pour le 2 novembre d'une série du 7 septembre au 17 janvier", () => {
+    expect(seriesPosition(weekly, "2026-09-07")).toEqual({ index: 1, total: 19 });
+    expect(seriesPosition(weekly, "2026-11-02")).toEqual({ index: 9, total: 19 });
+    expect(seriesPosition(weekly, "2027-01-11")).toEqual({ index: 19, total: 19 });
+  });
+
+  it("n'a pas de total sans date de fin, ni de rang hors de la série ou pour une séance unique", () => {
+    expect(seriesPosition({ ...weekly, endsOn: null }, "2026-11-02")).toEqual({
+      index: 9,
+      total: null,
+    });
+    expect(seriesPosition(weekly, "2026-11-03")).toBeNull();
+    expect(seriesPosition(weekly, "2027-01-18")).toBeNull();
+    expect(
+      seriesPosition({ startsOn: "2026-11-02", repeatsWeekly: false, endsOn: null }, "2026-11-02"),
+    ).toBeNull();
   });
 });

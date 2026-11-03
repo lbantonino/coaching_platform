@@ -150,7 +150,7 @@ export type OnboardingState = {
   error: string | null;
   attempt: number;
   values: SignupValues | null;
-  // Étape « Ta facturation » du coach (D-69), renvoyée après une erreur.
+  // Étape « Pays, devise et TVA » du coach (D-69, D-90), renvoyée après une erreur.
   billing?: BillingSetupInput | null;
 };
 
@@ -180,7 +180,6 @@ export async function completeSignup(
     currency: field("currency"),
     vatChoice: field("vatChoice"),
     vatRate: field("vatRate"),
-    vatNumber: field("vatNumber"),
   };
   const fail = (error: string) => ({
     error,
@@ -211,9 +210,7 @@ export async function completeSignup(
       ? {
           p_country: setup.country,
           p_currency: setup.currency,
-          p_vat_status: setup.vatStatus ?? undefined,
-          p_vat_rate: setup.vatRate ?? undefined,
-          p_vat_number: setup.vatNumber ?? undefined,
+          p_vat_rate: setup.vatRate,
         }
       : {}),
   });

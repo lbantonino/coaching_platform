@@ -19,13 +19,6 @@ describe("checkField", () => {
     expect(checkField("phone", "appelle-moi", today)).toMatch(/^Numéro de téléphone invalide/);
   });
 
-  it("vérifie un IBAN et un numéro d'entreprise par leur clé de contrôle", () => {
-    expect(checkField("iban", "BE68 5390 0754 7034", today)).toBeNull();
-    expect(checkField("iban", "BE68 5390 0754 7035", today)).toMatch(/^IBAN invalide/);
-    expect(checkField("enterprise-number", "0123.456.749", today)).toBeNull();
-    expect(checkField("enterprise-number", "0123.456.748", today)).toMatch(/^Numéro d'entreprise/);
-  });
-
   it("refuse une date passée et un montant illisible", () => {
     expect(checkField("future-date", "2026-10-28", today)).toBeNull();
     expect(checkField("future-date", "2026-10-27", today)).toBe("Cette date est déjà passée.");

@@ -80,12 +80,15 @@ export function SideNav({ large = false }: { large?: boolean }) {
     );
   }
   return (
-    <nav aria-label="Navigation principale" className="flex flex-col gap-3">
+    // Ordinateur (maquette « Sportifs », 03/11) : lignes espacées de 2 px, filet entre les deux groupes
+    // (10 px au-dessus et dessous, 4 px en retrait).
+    <nav aria-label="Navigation principale" className="flex flex-col gap-0.5">
       <NavList entries={main} large={false} />
       {secondary ? (
-        <div className="border-t border-line-soft pt-3">
+        <>
+          <div aria-hidden className="mx-1 my-2.5 h-px shrink-0 bg-line" />
           <NavList entries={secondary} large={false} />
-        </div>
+        </>
       ) : null}
     </nav>
   );

@@ -33,8 +33,9 @@ test("une tâche se crée, se modifie et se supprime, avec « associée à »", 
   await expect(sheet).toBeHidden();
 
   const row = page.getByRole("listitem").filter({ hasText: title });
-  await expect(row).toContainText("Paiement");
+  // Seule l'urgence porte une étiquette (D-84) : la catégorie reste dans la tâche, pas sur la ligne.
   await expect(row).toContainText("Haute");
+  await expect(row).not.toContainText("Paiement");
 
   // Modifier : la fenêtre s'ouvre déjà remplie.
   await row.getByRole("button", { name: title }).click();
@@ -42,19 +43,19 @@ test("une tâche se crée, se modifie et se supprime, avec « associée à »", 
   await expect(edit.getByRole("textbox", { name: "Tâche" })).toHaveValue(title);
   await expect(edit.getByLabel(/^Note/)).toHaveValue("Vérifier le virement");
   await expect(edit.getByRole("radio", { name: "Haute" })).toBeChecked();
+  await expect(edit.getByRole("radio", { name: "Paiement" })).toBeChecked();
   await edit.getByRole("textbox", { name: "Tâche" }).fill(`${title} (modifiée)`);
   await edit.getByText("Suivi", { exact: true }).click();
   await edit.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByText("Tâche enregistrée.")).toBeVisible();
   const renamed = page.getByRole("listitem").filter({ hasText: `${title} (modifiée)` });
-  await expect(renamed).toContainText("Suivi");
+  await expect(renamed).toBeVisible();
 
-  // Supprimer : confirmation d'abord ; « Annuler » ne supprime rien.
+  // Supprimer : confirmation d'abord ; « Annuler » ne supprime rien. La nouvelle catégorie est gardée.
   await renamed.getByRole("button", { name: `${title} (modifiée)` }).click();
-  await page
-    .getByRole("dialog", { name: "Modifier la tâche" })
-    .getByRole("button", { name: "Supprimer" })
-    .click();
+  const again = page.getByRole("dialog", { name: "Modifier la tâche" });
+  await expect(again.getByRole("radio", { name: "Suivi" })).toBeChecked();
+  await again.getByRole("button", { name: "Supprimer" }).click();
   const confirm = page.getByRole("dialog", { name: "Supprimer cette tâche ?" });
   await confirm.getByRole("button", { name: "Supprimer" }).click();
   await expect(page.getByText("Tâche supprimée.")).toBeVisible();

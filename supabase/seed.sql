@@ -82,10 +82,11 @@ insert into public.platform_admins (user_id) values ('c0000000-0000-4000-8000-00
 -- ---------------------------------------------------------------------
 -- Deux organisations de test indépendantes (isolation multi-tenant)
 -- ---------------------------------------------------------------------
-insert into public.organizations (id, name, slug, created_by)
+-- Taux de TVA (D-90) : le coach A est soumis à la TVA belge (21 %), le coach B n'en a pas.
+insert into public.organizations (id, name, slug, vat_rate, created_by)
 values
-  ('0a000000-0000-4000-8000-0000000000a1', 'Organisation Démo A', 'demo-a', 'a0000000-0000-4000-8000-00000000000a'),
-  ('0b000000-0000-4000-8000-0000000000b1', 'Organisation Démo B', 'demo-b', 'b0000000-0000-4000-8000-00000000000b');
+  ('0a000000-0000-4000-8000-0000000000a1', 'Organisation Démo A', 'demo-a', 21, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0b000000-0000-4000-8000-0000000000b1', 'Organisation Démo B', 'demo-b', 0, 'b0000000-0000-4000-8000-00000000000b');
 
 insert into public.organization_members (organization_id, user_id, role)
 values
@@ -566,33 +567,13 @@ values
    'db000000-0000-4000-8000-000000000001', 'athlete', 'Bonjour, la séance de lundi est maintenue ?', null,
    now() - interval '1 hour', null);
 
--- Suivi des factures (4a, D-35 / D-17 étape A), inventé : trois factures envoyées ces deux dernières
--- semaines (450 €), deux payées (300 €), celle de Sophie en retard (150 €). Dates relatives au reset.
--- Adresses de démonstration (D-65), FICTIVES : reprises sur les factures de ces sportifs.
+-- Adresses de démonstration (D-65), FICTIVES.
 update public.athlete_profiles set address_line = 'Rue de l''Exemple 1', postal_code = '1000', city = 'Bruxelles'
 where id = 'da000000-0000-4000-8000-000000000001';
 update public.athlete_profiles set address_line = 'Avenue de la Démo 25', postal_code = '1050', city = 'Ixelles'
 where id = 'da000000-0000-4000-8000-000000000002';
 
-insert into public.athlete_invoices (
-  id, organization_id, athlete_id, label, amount_cents, issued_on, due_on, paid_on, created_by
-)
-values
-  ('fa000000-0000-4000-8000-0000000000a1', '0a000000-0000-4000-8000-0000000000a1',
-   'da000000-0000-4000-8000-000000000001', 'Forfait 8 séances', 15000,
-   current_date - 14, current_date - 1, null, 'a0000000-0000-4000-8000-00000000000a'),
-  ('fa000000-0000-4000-8000-0000000000a2', '0a000000-0000-4000-8000-0000000000a1',
-   'da000000-0000-4000-8000-000000000002', 'Suivi running mensuel', 20000,
-   current_date - 12, current_date + 2, current_date - 5, 'a0000000-0000-4000-8000-00000000000a'),
-  ('fa000000-0000-4000-8000-0000000000a3', '0a000000-0000-4000-8000-0000000000a1',
-   'da000000-0000-4000-8000-000000000005', 'Coaching force · 2 séances', 10000,
-   current_date - 8, current_date + 6, current_date - 2, 'a0000000-0000-4000-8000-00000000000a'),
-  -- Organisation B : invisible pour le coach A (isolation).
-  ('fb000000-0000-4000-8000-0000000000b1', '0b000000-0000-4000-8000-0000000000b1',
-   'db000000-0000-4000-8000-000000000001', 'Forfait 10 km', 9000,
-   current_date - 3, current_date + 11, null, 'b0000000-0000-4000-8000-00000000000b');
-
--- Paiements reçus (D-36), inventés : les deux factures payées (virement, espèces) et un forfait de
+-- Paiements reçus (D-36), inventés : deux paiements (virement, espèces) et un forfait de
 -- trois mois réglé hier par Inès. Montants TVA comprise (21 %), dates relatives au reset.
 insert into public.athlete_payments (
   organization_id, athlete_id, received_on, amount_cents, vat_rate, method, label, created_by
@@ -644,20 +625,27 @@ select s.organization_id, s.athlete_id, date_trunc('week', current_date)::date, 
 from public.coach_sessions s
 where s.id in ('ca000000-0000-4000-8000-000000000201', 'ca000000-0000-4000-8000-000000000202');
 
--- Structures légales (D-57), INVENTÉES : l'activité d'indépendant du coach A (assujetti à la TVA)
--- et une ASBL de démonstration (non assujettie). Numéros fictifs mais valides (clé modulo 97).
-insert into public.organization_legal_entities (
-  organization_id, name, legal_form, enterprise_number, vat_status, vat_number, default_vat_rate,
-  address_line, postal_code, city, country, iban, bic, billing_email, invoice_prefix, legal_mentions,
-  is_default, created_by
+-- Séances passées payées (D-90), INVENTÉ : le coach A marque ses séances payées au fil des semaines.
+-- Tout ce qui a plus d'une semaine est payé, à sa date, sauf, depuis trois semaines, la Remise en
+-- forme du mardi de Sophie (« à encaisser », en retard : cloche et Comptabilité) et le Coaching force
+-- du lundi de Nadia (marqué payé puis annulé par sessions.spec). La semaine écoulée reste à encaisser. Montants comme « Marquer payée » : prix HTVA + 21 %, ou TVA comprise.
+insert into public.athlete_payments (
+  organization_id, athlete_id, received_on, amount_cents, vat_rate, method, label, session_id,
+  session_date, created_by
 )
-values
-  ('0a000000-0000-4000-8000-0000000000a1', 'Bianchi Performance', 'independent', '0123456749',
-   'subject', 'BE0123456749', 21, 'Rue de la Démo 12', '1000', 'Bruxelles', 'BE', 'BE68539007547034',
-   'GEBABEBB', 'factures@example.test', 'FAC', null, true, 'a0000000-0000-4000-8000-00000000000a'),
-  ('0a000000-0000-4000-8000-0000000000a1', 'ASBL Club de démonstration', 'asbl', '0987654394',
-   'not_subject', null, null, 'Avenue du Parc 3', '1040', 'Etterbeek', 'BE', null, null, null, 'ASBL',
-   null, false, 'a0000000-0000-4000-8000-00000000000a');
+select s.organization_id, s.athlete_id, d::date,
+       case when s.price_vat_included then s.price_cents else round(s.price_cents * 1.21)::int end,
+       21, s.payment_method, s.title || ' · ' || to_char(d, 'DD/MM'), s.id, d::date,
+       'a0000000-0000-4000-8000-00000000000a'
+from public.coach_sessions s
+cross join lateral generate_series(s.starts_on, current_date - 8, interval '7 days') as d
+where s.organization_id = '0a000000-0000-4000-8000-0000000000a1'
+  and s.price_cents is not null
+  and s.repeats_weekly
+  and (s.ends_on is null or d::date <= s.ends_on)
+  and not (s.id in ('ca000000-0000-4000-8000-00000000020c', 'ca000000-0000-4000-8000-000000000201')
+           and d::date >= current_date - 21)
+on conflict do nothing;
 
 -- Dépenses (D-73), INVENTÉES : le loyer de la salle chaque mois depuis août, du matériel et une
 -- assurance, rangés dans les catégories de départ de l'organisation A.

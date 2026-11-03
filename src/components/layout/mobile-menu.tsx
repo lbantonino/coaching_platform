@@ -13,8 +13,9 @@ import { useShell } from "./shell-context";
 // Menu du téléphone (coach, admin), en plein écran : voir mobile-menu-context.tsx.
 
 // Carte du bouton ☰ (et du ✕ qui le remplace, menu ouvert, à la même place).
+// 44 px, rayon 14 (maquette « Sportifs », 03/11/2026) ; filet en ombre intérieure (sans place prise).
 const cornerButton =
-  "grid size-[52px] shrink-0 place-items-center rounded-2xl border border-line bg-panel text-text shadow-[0_6px_20px_rgba(0,0,0,0.14)] transition-transform duration-150 active:scale-[0.96]";
+  "grid size-11 shrink-0 place-items-center rounded-[14px] bg-panel text-text inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)] transition-transform duration-150 active:scale-[0.96]";
 
 // Le bouton ☰, seul dans sa petite carte en haut à gauche.
 export function MobileMenuButton() {
@@ -27,7 +28,7 @@ export function MobileMenuButton() {
       onClick={openMenu}
       className={cornerButton}
     >
-      <Menu aria-hidden size={20} strokeWidth={1.8} />
+      <Menu aria-hidden size={18} strokeWidth={1.8} />
     </button>
   );
 }
@@ -69,7 +70,7 @@ export function MobileMenuPanel() {
         active ? "" : "invisible"
       } ${open ? "translate-none" : "-translate-x-full"}`}
     >
-      <div className="flex h-[var(--top-bar)] shrink-0 items-center gap-3.5 px-3">
+      <div className="flex h-[var(--top-bar)] shrink-0 items-center gap-3.5 px-3 pt-2.5">
         <button
           type="button"
           aria-label="Fermer le menu"

@@ -31,6 +31,25 @@ export function formatReferenceValue(entry: Formattable): string {
   return "—";
 }
 
+// La valeur et son unité séparées (maquette « Sportifs » du 03/11/2026 : grand chiffre, unité en
+// plus petit) : « 4:50–5:05 » + « min/km », « 6 kg × 25 » + « reps », « 58 » + « bpm ».
+export function splitReferenceValue(entry: Formattable): { value: string; unit: string } {
+  if (entry.kind === "pace_vma" && entry.paceMin !== null) {
+    return { value: numberFr.format(paceToSpeedKmh(entry.paceMin)), unit: "km/h" };
+  }
+  if (entry.paceMin !== null && entry.paceMax !== null) {
+    return { value: formatPaceRange(entry.paceMin, entry.paceMax), unit: "min/km" };
+  }
+  if (entry.bpm !== null) return { value: String(entry.bpm), unit: "bpm" };
+  if (entry.loadKg !== null) {
+    const load = `${numberFr.format(entry.loadKg)} kg`;
+    return entry.reps
+      ? { value: `${load} × ${entry.reps}`, unit: "reps" }
+      : { value: load, unit: "" };
+  }
+  return { value: "—", unit: "" };
+}
+
 // Information secondaire : vitesse dérivée pour une allure (milieu de plage), exercice pour une charge.
 export function formatReferenceDetail(entry: Formattable): string | null {
   if (entry.kind === "pace_vma" && entry.paceMin !== null) {

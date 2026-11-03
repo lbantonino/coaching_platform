@@ -3,7 +3,7 @@
 import {
   Bell,
   CheckCheck,
-  FileWarning,
+  Coins,
   Flag,
   ListChecks,
   MessageSquare,
@@ -31,7 +31,7 @@ import { useShell } from "./shell-context";
 // carte), et la cloche reste teintée tant qu'il est ouvert. Aligné sur la droite de la cloche ;
 // sur un écran étroit, il prend la largeur de l'écran (12 px de marge) et la pointe vise toujours la
 // cloche. Sections de la page
-// Notifications (messages non lus, tâches du jour ou en retard, factures en retard, fiches à
+// Notifications (messages non lus, tâches du jour ou en retard, séances à encaisser, fiches à
 // compléter, compétitions), 3 éléments chacune (non lus d'abord), un lien « Voir tout » par section ;
 // une section vide n'est pas montrée. Les données sont lues à chaque ouverture (action serveur). Ouvrir
 // un élément le marque lu (comme sur la page) et le mène là où on s'en occupe ; une tâche s'ouvre dans
@@ -40,21 +40,21 @@ import { useShell } from "./shell-context";
 const icons: Record<PreviewKind, LucideIcon> = {
   messages: MessageSquare,
   tasks: ListChecks,
-  invoices: FileWarning,
+  unpaid: Coins,
   profiles: UserPen,
   competitions: Flag,
 };
 
-// Ordinateur : 32 px avec filet (outils de l'en-tête) ; téléphone : 44 px dans la carte des outils.
+// Ordinateur : 32 px avec filet (outils de l'en-tête) ; téléphone : 40 px dans la carte des outils.
 const bellClass = {
   desktop:
-    "relative inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-line text-text-2 transition-colors duration-150 hover:bg-selected-hover aria-expanded:border-violet-line aria-expanded:bg-selected aria-expanded:text-violet-text",
+    "relative inline-flex size-8 shrink-0 items-center justify-center rounded-[9px] border border-line text-text-2 transition-colors duration-150 hover:bg-selected-hover aria-expanded:border-violet-line aria-expanded:bg-selected aria-expanded:text-violet-text",
   phone:
-    "relative inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-text-2 transition-colors duration-150 hover:bg-selected-hover aria-expanded:bg-selected aria-expanded:text-violet-text",
+    "relative inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-text-2 transition-colors duration-150 hover:bg-selected-hover aria-expanded:bg-selected aria-expanded:text-violet-text",
 };
 const GUTTER = 12;
-// Marge des pages sur téléphone (px-4 du corps de page) : l'aperçu s'aligne sur les cartes.
-const PAGE_GUTTER = 16;
+// Marge des pages sur téléphone (px-3.5 du corps de page) : l'aperçu s'aligne sur les cartes.
+const PAGE_GUTTER = 14;
 // La languette : 30 × 10 px, son sommet à 4 px sous la cloche.
 const TAB_W = 30;
 const TAB_H = 10;
@@ -186,10 +186,10 @@ export function NotificationsPopover({
         }
         className={bellClass[phone ? "phone" : "desktop"]}
       >
-        <Bell aria-hidden size={phone ? 18 : 15} strokeWidth={1.8} />
+        <Bell aria-hidden size={phone ? 16 : 14} strokeWidth={1.8} />
         <CountBadge
           count={notificationCount}
-          className={`absolute ${phone ? "top-2 right-2" : "-top-1.5 -right-1.5"}`}
+          className={`absolute ${phone ? "top-1 right-1" : "-top-1.5 -right-1.5"}`}
         />
       </button>
       <div

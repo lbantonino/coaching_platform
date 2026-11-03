@@ -259,7 +259,7 @@ export function AthleteAgendaSection({
           </ul>
         )
       ) : view === "semaine" ? (
-        <div className="-mx-4 snap-x snap-mandatory scroll-px-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:scroll-px-0 md:px-0">
+        <div className="-mx-3.5 snap-x snap-mandatory scroll-px-3.5 overflow-x-auto px-3.5 [scrollbar-width:none] md:mx-0 md:scroll-px-0 md:px-0">
           <ol
             aria-label="Jours de la semaine"
             className="grid w-max grid-flow-col auto-cols-[calc((100vw-88px)/3)] gap-2 md:w-full md:auto-cols-fr md:grid-cols-7"
