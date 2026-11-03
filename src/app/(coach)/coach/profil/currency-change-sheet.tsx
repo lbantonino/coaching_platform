@@ -23,8 +23,8 @@ import {
 
 // « Changer de devise » (D-70, choix d'Antonino : « passé gardé, futur converti ») : le coach qui
 // déménage choisit sa nouvelle devise et saisit le taux (1 EUR = 0,94 CHF). Avant de confirmer, il
-// voit ce qui sera converti (prix à venir, brouillons, prix par défaut) et ce qui reste dans
-// l'ancienne devise (paiements reçus, factures émises : de l'argent réel).
+// voit ce qui sera converti (prix à venir, prix par défaut) et ce qui reste dans l'ancienne devise
+// (paiements reçus : de l'argent réel).
 const plural = (count: number, one: string, many: string) => `${count} ${count > 1 ? many : one}`;
 
 export function CurrencyChangeButton({
@@ -165,7 +165,6 @@ function CurrencyChangeForm({
               <li>
                 {plural(preview.sessions, "séance à venir avec prix", "séances à venir avec prix")}
               </li>
-              <li>{plural(preview.drafts, "brouillon de facture", "brouillons de facture")}</li>
               <li>Ton prix par défaut des séances</li>
             </ul>
           ) : (
@@ -180,7 +179,6 @@ function CurrencyChangeForm({
           {preview ? (
             <ul className="flex flex-col gap-1 text-muted">
               <li>{plural(preview.payments, "paiement reçu", "paiements reçus")}</li>
-              <li>{plural(preview.issued, "facture émise", "factures émises")}</li>
             </ul>
           ) : (
             <p className="text-muted">Calcul…</p>

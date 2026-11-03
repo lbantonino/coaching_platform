@@ -10,6 +10,7 @@ import { FieldCheck } from "@/components/ui/field-check";
 import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { useToast } from "@/components/ui/toast";
+import { VatRateInput } from "@/components/ui/vat-rate-input";
 import { currencyLabel, currencySymbol, type Currency } from "@/domain/billing/money";
 import { COUNTRY_NAMES } from "@/domain/geo/country-names";
 import { formatDate } from "@/lib/format";
@@ -17,9 +18,9 @@ import {
   changeEmail,
   changePassword,
   renameOrganization,
-  setInvoiceCashPreference,
   setNotificationPreference,
   setOrganizationCountry,
+  setOrganizationVatRate,
   updatePreferences,
   updateProfile,
   type SettingsState,
@@ -29,6 +30,7 @@ import {
   type NotificationKind,
   type PreferencesInput,
   type ProfileInput,
+  type VatSettingInput,
 } from "@/features/coach/settings";
 
 import { CurrencyChangeButton } from "./currency-change-sheet";
@@ -292,6 +294,79 @@ export function CountryCurrencyForm({
   );
 }
 
+// TVA (D-90) : « Je facture la TVA » et son taux, 0 sinon. Propriétaire seulement, comme le pays.
+export function VatRateForm({
+  organizationId,
+  vatRate,
+  isOwner,
+  onChanged,
+}: {
+  organizationId: string;
+  vatRate: number;
+  isOwner: boolean;
+  onChanged?: () => void;
+}) {
+  const [state, formAction, pending] = useActionState(
+    setOrganizationVatRate.bind(null, organizationId),
+    initial<VatSettingInput>(),
+  );
+  const values = state.values ?? {
+    vatEnabled: vatRate > 0,
+    vatRate: vatRate > 0 ? String(vatRate).replace(".", ",") : "",
+  };
+  const [enabled, setEnabled] = useState(values.vatEnabled);
+  const [rate, setRate] = useState(values.vatRate);
+  // Fenêtre : relire les données après un enregistrement.
+  useEffect(() => {
+    if (state.saved) onChanged?.();
+  }, [state.saved, onChanged]);
+  return (
+    <form key={state.attempt} action={formAction} className="flex flex-col gap-4" noValidate>
+      <div className="flex items-center justify-between gap-4">
+        <span className="flex min-w-0 flex-col">
+          <span className="text-[15px] font-medium">Je facture la TVA</span>
+          <span className="text-[13px] text-muted">
+            {isOwner
+              ? "Sinon, tes prix et tes gains s'affichent sans TVA."
+              : "Seul le propriétaire peut changer la TVA."}
+          </span>
+        </span>
+        <Toggle
+          name="vatEnabled"
+          label={<span className="sr-only">Je facture la TVA</span>}
+          checked={enabled}
+          disabled={!isOwner}
+          onChange={(event) => setEnabled(event.target.checked)}
+        />
+      </div>
+      {enabled ? (
+        <div className="flex max-w-[220px] flex-col gap-1.5">
+          <label htmlFor="settings-vat-rate" className={labelClass}>
+            Taux de TVA
+          </label>
+          <VatRateInput
+            id="settings-vat-rate"
+            value={rate}
+            onChange={setRate}
+            describedBy="settings-vat-rate-hint"
+          />
+          <p id="settings-vat-rate-hint" className={hintClass}>
+            Pour tes prochains paiements ; ceux déjà notés gardent leur taux.
+          </p>
+        </div>
+      ) : null}
+      {isOwner ? (
+        <div className="flex flex-col gap-2">
+          <div>
+            <Submit pending={pending} label="Enregistrer" />
+          </div>
+          <Feedback state={state} saved="TVA enregistrée." />
+        </div>
+      ) : null}
+    </form>
+  );
+}
+
 // --- Préférences --------------------------------------------------------------------------------
 const hours = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
@@ -465,7 +540,7 @@ export function NotificationToggles({ values }: { values: Record<NotificationKin
   return (
     <ul aria-label="Ce qui compte dans la cloche" className="flex flex-col">
       {(
-        ["messages", "tasks", "invoices", "competitions", "profiles"] satisfies NotificationKind[]
+        ["messages", "tasks", "unpaid", "competitions", "profiles"] satisfies NotificationKind[]
       ).map((kind) => (
         <li
           key={kind}
@@ -496,43 +571,6 @@ export function NotificationToggles({ values }: { values: Record<NotificationKin
         </li>
       ))}
     </ul>
-  );
-}
-
-// Facturation (D-66) : proposer aussi les paiements en espèces dans « À facturer ». Effet immédiat.
-export function InvoiceCashToggle({ value }: { value: boolean }) {
-  const { methodLabel } = useMoney();
-  const toast = useToast();
-  const [, startTransition] = useTransition();
-  const [shown, setShown] = useOptimistic(value, (_state, on: boolean) => on);
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="flex min-w-0 flex-col">
-        <span className="text-[15px] font-medium">Proposer aussi les espèces à facturer</span>
-        <span className="text-[13px] text-muted">
-          Les paiements en espèces apparaissent dans « À facturer », comme les virements et{" "}
-          {methodLabel("bancontact")}.
-        </span>
-      </span>
-      <Toggle
-        label={<span className="sr-only">Proposer aussi les espèces à facturer</span>}
-        checked={shown}
-        onChange={(event) => {
-          const on = event.target.checked;
-          startTransition(async () => {
-            setShown(on);
-            const { ok } = await setInvoiceCashPreference(on);
-            toast(
-              ok
-                ? on
-                  ? "Les espèces seront proposées à facturer."
-                  : "Les espèces ne seront plus proposées à facturer."
-                : "Le réglage n'a pas pu être enregistré. Réessaie.",
-            );
-          });
-        }}
-      />
-    </div>
   );
 }
 

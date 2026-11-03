@@ -75,7 +75,7 @@ export function NextSessionCard({
       // les deux petites icônes passent au-dessus et gardent leur propre action.
       className={`relative flex h-full min-w-0 flex-col justify-between gap-5 rounded-[20px] border border-violet-line bg-surface p-5 transition-colors duration-150 hover:border-violet max-md:aspect-square max-md:justify-start max-md:gap-0 max-md:overflow-hidden max-md:p-4 ${className}`}
     >
-      <div>
+      <div className="max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col">
         <div className="mb-3 flex items-center justify-between gap-3 max-md:mb-2">
           <h2
             id="next-session-title"
@@ -114,10 +114,11 @@ export function NextSessionCard({
             <div className="text-[26px] leading-none font-semibold tracking-tight whitespace-nowrap text-violet-text tabular">
               {block.label.slice(0, 5)}
             </div>
-            {/* Téléphone : la séance en petit bloc, un filet de la couleur de la discipline à gauche
-                (comme un évènement du widget Calendrier de l'iPhone) ; sans photo. */}
+            {/* Téléphone : la séance en bloc qui remplit le reste du carré, un filet de la couleur de la
+                discipline à gauche (comme un évènement du widget Calendrier de l'iPhone) ; sans photo :
+                le sportif, le type de séance, la durée et le lieu, puis la discipline (02/11). */}
             <div
-              className={`mt-2.5 flex min-w-0 items-center gap-2.5 max-md:mt-3 max-md:rounded-lg max-md:border-l-[3px] max-md:bg-surface-2 max-md:py-1.5 max-md:pr-2 max-md:pl-2.5 ${
+              className={`mt-2.5 flex min-w-0 items-center gap-2.5 max-md:mt-3 max-md:min-h-0 max-md:flex-1 max-md:items-stretch max-md:rounded-lg max-md:border-l-[3px] max-md:bg-surface-2 max-md:py-2 max-md:pr-2 max-md:pl-2.5 ${
                 block.discipline ? disciplineBars[block.discipline] : "max-md:border-line-2"
               }`}
             >
@@ -126,11 +127,11 @@ export function NextSessionCard({
                   <Avatar name={person.name} photoPath={person.photoPath} size="xs" />
                 </span>
               ) : null}
-              <div className="min-w-0">
-                <div className="truncate text-[15px] font-medium text-text md:text-[16px] lg:text-[13px]">
+              <div className="min-w-0 max-md:flex max-md:flex-1 max-md:flex-col">
+                <div className="shrink-0 truncate text-[15px] font-medium text-text md:text-[16px] lg:text-[13px]">
                   {block.title}
                 </div>
-                <div className="mt-0.5 truncate text-[13px] text-muted md:text-[14px] lg:text-[12px]">
+                <div className="mt-0.5 truncate text-[13px] text-muted max-md:hidden md:text-[14px] lg:text-[12px]">
                   {[
                     block.individual ? block.subtitle : `Collective · ${block.subtitle}`,
                     `${block.end - block.start} min`,
@@ -139,6 +140,26 @@ export function NextSessionCard({
                     .filter(Boolean)
                     .join(" · ")}
                 </div>
+                {/* Téléphone : une information par ligne, la discipline en bas du bloc ; sur un écran de
+                    moins de 420 px (iPhone standard), la durée et le lieu cèdent leur place. */}
+                <div className="mt-0.5 shrink-0 truncate text-[13px] text-muted md:hidden">
+                  {block.individual ? block.subtitle : `Collective · ${block.subtitle}`}
+                </div>
+                <div className="shrink-0 truncate text-[13px] text-muted tabular max-[419px]:hidden md:hidden">
+                  {[`${block.end - block.start} min`, location].filter(Boolean).join(" · ")}
+                </div>
+                {block.discipline ? (
+                  <div className="mt-auto flex shrink-0 items-center gap-1.5 pt-1.5 text-[12px] font-medium text-text-2 md:hidden">
+                    <span
+                      aria-hidden
+                      className={`size-1.5 shrink-0 rounded-full ${disciplineDots[block.discipline]}`}
+                    />
+                    <span className="truncate">
+                      {disciplineLabels[block.discipline]} ·{" "}
+                      {block.individual ? "Individuelle" : "Collective"}
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
           </>

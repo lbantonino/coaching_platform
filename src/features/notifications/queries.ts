@@ -1,29 +1,29 @@
 import "server-only";
 
-import { invoiceStatus } from "@/domain/billing/invoices";
 import {
   competitionKey,
   countUnread,
-  invoiceKey,
   latestUnreadByAthlete,
   messageKey,
   profileKey,
   stateMap,
   taskKey,
+  unpaidKey,
   type NotificationState,
 } from "@/domain/notifications/keys";
 import { addDays } from "@/features/agenda/items";
 import { listAgendaEvents, type AgendaEvent } from "@/features/agenda/queries";
 import { listAthletes } from "@/features/athletes/queries";
-import { listInvoices, type AthleteInvoice } from "@/features/billing/queries";
+import { listUnpaidDates, type UnpaidDate } from "@/features/billing/collect-queries";
 import { listConversations, type Conversation } from "@/features/messages/queries";
 import { listTasks, type CoachTask } from "@/features/tasks/queries";
 import { createClient } from "@/lib/supabase/server";
 
 // Notifications du coach (D-37) : ce qui demande son attention, en sections, calculé à partir des
-// vraies données (rien n'est stocké à part) : messages non lus, tâches du jour ou en retard, factures
-// en retard, fiches à compléter, compétitions des sportifs dans les 7 jours (demande d'Antonino du
-// 26/10 : les compétitions ne sont plus dans l'agenda du coach, ce sont des rappels). Les retours de
+// vraies données (rien n'est stocké à part) : messages non lus, tâches du jour ou en retard, séances
+// à encaisser (D-90, à la place des factures en retard), fiches à compléter, compétitions des
+// sportifs dans les 7 jours (demande d'Antonino du 26/10 : les compétitions ne sont plus dans
+// l'agenda du coach, ce sont des rappels). Les retours de
 // séance s'ajouteront en P6.
 // 4e (D-61) : chacune se marque lue ou se masque (table coach_notification_states, par coach) ; la
 // cloche ne compte que ce qui n'est ni lu ni masqué.
@@ -60,7 +60,7 @@ export type NotificationCounts = {
   competitions: number;
   messages: number;
   tasks: number;
-  invoices: number;
+  unpaid: number;
   profiles: number;
   total: number;
 };
@@ -72,7 +72,7 @@ export async function countNotifications(
   today: string,
 ): Promise<NotificationCounts> {
   const supabase = await createClient();
-  const [competitions, heads, tasks, invoices, profiles, states] = await Promise.all([
+  const [competitions, heads, tasks, unpaid, profiles, states] = await Promise.all([
     // Compétitions (objectifs en cours avec un nom) d'aujourd'hui aux 7 prochains jours.
     supabase
       .from("athlete_goals")
@@ -90,13 +90,8 @@ export async function countNotifications(
       .eq("organization_id", organizationId)
       .is("done_at", null)
       .lte("due_on", today),
-    supabase
-      .from("athlete_invoices")
-      .select("id, due_on")
-      .eq("organization_id", organizationId)
-      .eq("status", "issued")
-      .is("paid_on", null)
-      .lt("due_on", today),
+    // Le montant ne compte pas ici : taux de TVA 0.
+    listUnpaidDates(organizationId, 0).then((dates) => dates.filter((date) => date.late)),
     // Même règle que features/athletes/completeness : sans nom de famille, ou sans aucun contact.
     supabase
       .from("athlete_profiles")
@@ -119,8 +114,8 @@ export async function countNotifications(
       (tasks.data ?? []).map((row) => taskKey(row.id, row.due_on)),
       states,
     ),
-    invoices: countUnread(
-      (invoices.data ?? []).map((row) => invoiceKey(row.id, row.due_on)),
+    unpaid: countUnread(
+      unpaid.map((date) => unpaidKey(date.sessionId, date.originalDate)),
       states,
     ),
     profiles: countUnread(
@@ -130,7 +125,7 @@ export async function countNotifications(
   };
   return {
     ...counts,
-    total: counts.competitions + counts.messages + counts.tasks + counts.invoices + counts.profiles,
+    total: counts.competitions + counts.messages + counts.tasks + counts.unpaid + counts.profiles,
   };
 }
 
@@ -150,21 +145,23 @@ export type Notifications = {
   competitions: (AgendaEvent & NotificationMeta)[];
   messages: (Conversation & NotificationMeta)[];
   tasks: (CoachTask & NotificationMeta)[];
-  invoices: (AthleteInvoice & NotificationMeta)[];
+  unpaid: (UnpaidDate & NotificationMeta)[];
   profiles: (IncompleteProfile & NotificationMeta)[];
 };
 
-// Le détail de chaque section (page Notifications).
+// Le détail de chaque section (page Notifications). `vatRate` : montant attendu des séances à
+// encaisser, TVA comprise.
 export async function getNotifications(
   organizationId: string,
   today: string,
+  vatRate: number,
 ): Promise<Notifications> {
   const supabase = await createClient();
-  const [events, conversations, tasks, invoices, athletes, heads, states] = await Promise.all([
+  const [events, conversations, tasks, unpaid, athletes, heads, states] = await Promise.all([
     listAgendaEvents(organizationId),
     listConversations(organizationId),
     listTasks(organizationId),
-    listInvoices(organizationId),
+    listUnpaidDates(organizationId, vatRate),
     listAthletes(organizationId, { status: "all", q: "" }),
     unreadMessageHeads(supabase, organizationId),
     readStates(supabase, organizationId),
@@ -197,9 +194,10 @@ export async function getNotifications(
       tasks.open.filter((task) => task.dueOn !== null && task.dueOn <= today),
       (task) => taskKey(task.id, task.dueOn),
     ),
-    invoices: withState(
-      invoices.filter((invoice) => invoiceStatus(invoice, today) === "overdue"),
-      (invoice) => invoiceKey(invoice.id, invoice.dueOn),
+    // En retard seulement (plus d'une semaine) : la cloche ne sonne pas après chaque séance.
+    unpaid: withState(
+      unpaid.filter((date) => date.late),
+      (date) => unpaidKey(date.sessionId, date.originalDate),
     ),
     profiles: withState(
       athletes

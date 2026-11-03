@@ -44,3 +44,43 @@ export function plannedIncome<T extends PricedSessionLike>(
   }
   return { count, inclCents };
 }
+
+// À encaisser (D-90) : les dates de séance avec un prix déjà commencées (avant aujourd'hui, ou
+// aujourd'hui à partir de leur heure de début), depuis `from`, que le coach n'a ni marquées payées
+// ni couvertes par un forfait. La plus récente d'abord, avec le montant attendu TVA comprise. Règle
+// PURE, testée par Vitest ; elle remplace les « factures en retard ».
+export type DateToCollect<T> = {
+  session: T;
+  date: string;
+  // Date d'origine de la série (clé du paiement), différente de `date` si la séance a été déplacée.
+  originalDate: string;
+  startTime: string;
+  amountCents: number;
+};
+
+export function datesToCollect<T extends PricedSessionLike>(
+  sessions: T[],
+  from: string,
+  today: string,
+  // Heure actuelle, « 14:30 ».
+  now: string,
+  vatRate: number,
+  paid: (session: T, originalDate: string) => boolean,
+  covered: (session: T, originalDate: string) => boolean = () => false,
+): DateToCollect<T>[] {
+  const result: DateToCollect<T>[] = [];
+  for (const session of sessions) {
+    if (session.priceCents === null) continue;
+    const amountCents = sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate);
+    for (const occurrence of sessionOccurrences(session, from, today)) {
+      if (occurrence.date === today && occurrence.startTime.slice(0, 5) > now) continue;
+      if (paid(session, occurrence.originalDate) || covered(session, occurrence.originalDate)) {
+        continue;
+      }
+      result.push({ session, ...occurrence, amountCents });
+    }
+  }
+  return result.sort(
+    (a, b) => b.date.localeCompare(a.date) || b.startTime.localeCompare(a.startTime),
+  );
+}

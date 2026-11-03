@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { listAthletes } from "@/features/athletes/queries";
-import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { coveredByPackage } from "@/domain/billing/payments";
 import { dayLabel } from "@/features/agenda/calendar";
@@ -380,7 +379,7 @@ export async function markSessionPaid(
   if (coveredByPackage(await listPackageCovers(orgId), athleteId, sessionDate))
     return { ok: false };
 
-  const vatRate = await getDefaultVatRate(orgId);
+  const { vatRate } = membership;
   const supabase = await createClient();
   const { error } = await supabase.from("athlete_payments").insert({
     organization_id: orgId,

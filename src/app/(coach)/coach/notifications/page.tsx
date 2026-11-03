@@ -1,11 +1,4 @@
-import {
-  FileWarning,
-  Flag,
-  ListChecks,
-  MessageSquare,
-  UserPen,
-  type LucideIcon,
-} from "lucide-react";
+import { Coins, Flag, ListChecks, MessageSquare, UserPen, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
@@ -26,6 +19,7 @@ import {
   restoreNotification,
   setNotificationsRead,
 } from "@/features/notifications/actions";
+import { unpaidSub } from "@/features/notifications/preview";
 import { COMPETITION_NOTICE_DAYS, getNotifications } from "@/features/notifications/queries";
 import {
   dayShortLabel,
@@ -41,10 +35,10 @@ export const metadata: Metadata = {
 
 // Page Notifications (demande d'Antonino, 24/10, D-37) : ce qui demande l'attention du coach, en
 // sections : compétitions des sportifs dans les 7 jours (rappels, 26/10 : elles ne sont plus dans
-// l'agenda du coach), messages non lus, tâches du jour ou en retard, factures en retard, fiches à
-// compléter.
+// l'agenda du coach), messages non lus, tâches du jour ou en retard, séances à encaisser (D-90),
+// fiches à compléter.
 // Tout est calculé à partir des vraies données ; chaque ligne mène là où on s'en occupe, et une ligne
-// disparaît d'elle-même une fois la chose faite (message lu, tâche cochée, facture payée, fiche
+// disparaît d'elle-même une fois la chose faite (message lu, tâche cochée, séance payée, fiche
 // complétée). Les retours de séance des sportifs s'ajouteront en P6.
 // 4e (D-61) : chaque ligne se marque lue (en l'ouvrant, ou par « ••• ») ou se masque ; « Tout marquer
 // comme lu » en rouge. La cloche ne compte que ce qui n'est ni lu ni masqué.
@@ -64,7 +58,7 @@ async function NotificationList() {
   const organizationId = memberships[0].organizationId;
   const today = todayIsoInBrussels();
   const [all, profile] = await Promise.all([
-    getNotifications(organizationId, today),
+    getNotifications(organizationId, today, memberships[0].vatRate),
     getCoachProfile(user),
   ]);
   // Catégories gardées dans Paramètres > Préférences (D-57) : les autres ne s'affichent pas ici.
@@ -72,11 +66,11 @@ async function NotificationList() {
   const competitions = notify.competitions ? all.competitions : [];
   const messages = notify.messages ? all.messages : [];
   const tasks = notify.tasks ? all.tasks : [];
-  const invoices = notify.invoices ? all.invoices : [];
+  const unpaid = notify.unpaid ? all.unpaid : [];
   const profiles = notify.profiles ? all.profiles : [];
   const hidden = NOTIFICATION_KINDS.filter((kind) => !notify[kind]);
   const unreadOf = (items: { read: boolean }[]) => items.filter((item) => !item.read).length;
-  const unreadKeys = [...competitions, ...messages, ...tasks, ...invoices, ...profiles]
+  const unreadKeys = [...competitions, ...messages, ...tasks, ...unpaid, ...profiles]
     .filter((item) => !item.read)
     .map((item) => item.key);
   const total = unreadKeys.length;
@@ -212,29 +206,28 @@ async function NotificationList() {
           </Section>
         ) : null}
 
-        {notify.invoices ? (
+        {/* Séances à encaisser (D-90, à la place des factures en retard) : chacune ouvre sa séance,
+            sur la bonne date, où elle se marque payée. */}
+        {notify.unpaid ? (
           <Section
-            id="notif-invoices"
-            title="Factures en retard"
-            count={unreadOf(invoices)}
-            icon={FileWarning}
+            id="notif-unpaid"
+            title="Séances à encaisser"
+            count={unreadOf(unpaid)}
+            icon={Coins}
           >
-            {invoices.map((invoice) => (
+            {unpaid.map((date) => (
               <NotificationRow
-                key={rowKey(invoice)}
-                notificationKey={invoice.key}
-                read={invoice.read}
+                key={rowKey(date)}
+                notificationKey={date.key}
+                read={date.read}
                 actions={actions}
-                href="/coach/facturation"
-                title={invoice.athleteName}
-                sub={`${invoice.label} · échéance ${dayShortLabel(invoice.dueOn, today).toLowerCase()}`}
+                href={date.sessionHref}
+                title={date.athleteName ?? date.title}
+                sub={unpaidSub(date, today)}
                 trailing={
-                  <>
-                    <span className="text-[15px] font-semibold tabular">
-                      {formatMoney(invoice.amountCents, invoice.currency)}
-                    </span>
-                    <StatusBadge label="En retard" />
-                  </>
+                  <span className="text-[15px] font-semibold tabular">
+                    {formatMoney(date.amountCents, date.currency)}
+                  </span>
                 }
               />
             ))}

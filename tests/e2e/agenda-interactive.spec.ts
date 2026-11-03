@@ -104,11 +104,16 @@ async function touchDrag(page: Page, block: Locator, date: string, hour: number)
 }
 
 async function deleteSession(page: Page, title: string) {
-  await page.getByRole("button", { name: "Plus d'actions" }).click();
-  await page
-    .getByRole("dialog", { name: title })
-    .getByRole("button", { name: "Supprimer" })
-    .click();
+  // Ordinateur : « ••• » puis « Supprimer » ; téléphone : « Supprimer la séance » en bas de page (02/11).
+  if ((page.viewportSize()?.width ?? 1280) < 1024) {
+    await page.getByRole("button", { name: "Supprimer la séance" }).click();
+  } else {
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await page
+      .getByRole("dialog", { name: title })
+      .getByRole("button", { name: "Supprimer" })
+      .click();
+  }
   await page
     .getByRole("dialog", { name: "Supprimer cette séance ?" })
     .getByRole("button", { name: "Supprimer" })
@@ -133,9 +138,10 @@ test("un clic sur un créneau vide crée une séance à ce jour et à cette heur
 
   await block.click();
   await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Détails", exact: true })).toContainText(
-    `Le 3 mars 2027 à ${hour}:00 · 1 h`,
-  );
+  // Séance unique : la date et l'heure dans la carte de la séance (03/11).
+  const hero = page.getByRole("region", { name: "Cette séance" });
+  await expect(hero).toContainText("Mercredi 3 mars");
+  await expect(hero).toContainText(`${hour}:00`);
   await deleteSession(page, title);
 });
 
@@ -169,9 +175,9 @@ test("une séance se déplace à la souris, ou au doigt après un appui long", a
   // Téléphone : la séance peut se trouver sous le bouton rond « + » ; on l'amène au centre.
   await moved.evaluate((element) => element.scrollIntoView({ block: "center", inline: "center" }));
   await moved.click();
-  await expect(page.getByRole("region", { name: "Détails", exact: true })).toContainText(
-    phone ? "Le 10 mars 2027 à 12:00" : "Le 11 mars 2027 à 14:00",
-  );
+  const hero = page.getByRole("region", { name: "Cette séance" });
+  await expect(hero).toContainText(phone ? "Mercredi 10 mars" : "Jeudi 11 mars");
+  await expect(hero).toContainText(phone ? "12:00" : "14:00");
   await deleteSession(page, title);
 });
 
@@ -252,13 +258,11 @@ test("l'agenda défile d'un bloc, de minuit à minuit, et une séance se crée a
 });
 
 // Glissé horizontal du doigt (Chromium : événements tactiles du protocole DevTools), au milieu de
-// l'agenda.
-async function swipe(page: Page, direction: "suivant" | "précédent") {
+// l'agenda (ou de `target`).
+async function swipe(page: Page, direction: "suivant" | "précédent", target?: Locator) {
   // L'agenda affiché (pas la copie cachée du chargement progressif), amené dans l'écran.
-  const board = page
-    .locator("[data-grid-scroll], ol.grid-cols-7")
-    .filter({ visible: true })
-    .first();
+  const board =
+    target ?? page.locator("[data-grid-scroll], ol.grid-cols-7").filter({ visible: true }).first();
   await expect(board).toBeVisible();
   await board.scrollIntoViewIfNeeded();
   const box = (await board.boundingBox())!;
@@ -323,4 +327,67 @@ test("téléphone : les jours défilent au doigt d'une semaine à l'autre sans r
   await page.goto(`${AGENDA}?vue=mois&date=2027-03-01`);
   await swipe(page, "suivant");
   await expect(page).toHaveURL(/vue=mois&date=2027-04-01/);
+});
+
+// Aujourd'hui à Bruxelles (AAAA-MM-JJ) et la veille : la vue 3 jours s'ouvre sur la veille.
+const brussels = (offset = 0) => {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(
+    new Date(),
+  );
+  const date = new Date(`${today}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
+};
+
+test("téléphone : « Aujourd'hui » ramène à la date du jour, et le petit calendrier glisse d'un mois à l'autre", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "telephone", "feuille et gestes du téléphone");
+  await loginAsCoachA(page);
+  const days = page.locator("[data-grid-x]");
+  const firstDay = () =>
+    days.evaluate(
+      (element) =>
+        [...element.querySelectorAll<HTMLElement>("[data-day-col]")].find(
+          (column) => column.offsetLeft + column.offsetWidth / 2 > element.scrollLeft,
+        )?.dataset.date ?? "",
+    );
+  const today = async () => {
+    await page.getByRole("button", { name: /Vue et filtres/ }).click();
+    await page
+      .getByRole("dialog", { name: "Vue et filtres" })
+      .getByRole("link", { name: /Aujourd'hui/ })
+      .click();
+  };
+
+  // Dans les semaines chargées : la grille glisse jusqu'à la veille (aujourd'hui au milieu), même page.
+  const later = brussels(14);
+  await page.goto(`${AGENDA}?date=${later}`);
+  await expect.poll(firstDay).toBe(later);
+  await today();
+  await expect.poll(firstDay).toBe(brussels(-1));
+  await expect(page).toHaveURL(new RegExp(`date=${later}$`));
+
+  // Hors des semaines chargées : la vue se rouvre à la date du jour.
+  await page.goto(`${AGENDA}?vue=jour&date=2027-06-15`);
+  await expect.poll(firstDay).toBe("2027-06-15");
+  await today();
+  await expect(page).toHaveURL(/agenda\?vue=jour$/);
+  await expect.poll(firstDay).toBe(brussels());
+
+  // Le mois déplié : glisser le petit calendrier change de mois, sans ouvrir le jour touché.
+  await page.goto(`${AGENDA}?vue=jour&date=2027-03-03`);
+  await page.locator("[data-bar-title] button").click();
+  const calendar = page.getByRole("group", { name: /^Calendrier, / });
+  await expect(calendar).toHaveAccessibleName("Calendrier, mars 2027");
+  await swipe(page, "suivant", calendar);
+  await expect(calendar).toHaveAccessibleName("Calendrier, avril 2027");
+  await swipe(page, "précédent", calendar);
+  await swipe(page, "précédent", calendar);
+  await expect(calendar).toHaveAccessibleName("Calendrier, février 2027");
+  await expect(page).toHaveURL(/vue=jour&date=2027-03-03$/);
+  // Les mois vont jusqu'à décembre dans quatre ans.
+  await expect(
+    page.getByText(String(Number(brussels().slice(0, 4)) + 4), { exact: true }).first(),
+  ).toBeAttached();
 });

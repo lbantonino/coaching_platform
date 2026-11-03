@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e9e8ee}*{box-sizing:border-box}a{color:#6a3ee0;text-decoration:none}a:hover{color:#8b5cf6}</style>
+</helmet>
+<div style="display:flex;gap:64px;align-items:flex-start;padding:64px;width:max-content;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#17151d">
+
+<div id="1a" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">1a</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">Desktop · 1280</span></div>
+<div data-screen-label="Séance desktop" style="width:1280px;min-height:860px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;align-items:flex-start">
+
+<aside style="width: 236px; flex: none; min-height: 740px; border-radius: 20px; background: #fff; padding: 24px 14px 16px; display: flex; flex-direction: column; gap: 2px; height: 802px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 10px 24px"><svg viewBox="0 0 472 72" width="96" role="img" aria-label="Coory"><g fill="none" stroke="#17151d" stroke-width="16"><path d="M84 8H36A28 28 0 0 0 36 64H84"></path><path d="M320 72V8H352A18 18 0 0 1 352 44H320"></path><path d="M342 44L385 80"></path><path d="M394 -10L428 40L462 -10M428 40V80"></path></g><rect x="108" y="8" width="104" height="56" rx="28" fill="none" stroke="#17151d" stroke-width="16"></rect><rect x="184" y="8" width="104" height="56" rx="28" fill="none" stroke="#8b5cf6" stroke-width="16"></rect></svg><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M9 3v18M15 10l-2 2 2 2"></path></svg></div>
+<sc-for list="{{ nav1 }}" as="n" hint-placeholder-count="7"><span style="display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:9px;font:400 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ n.bg }};color:{{ n.c }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.l }}</span></sc-for>
+<div style="height:1px;background:rgba(22,18,40,.08);margin:10px 4px"></div>
+<sc-for list="{{ nav2 }}" as="n" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:9px;font:400 13.5px 'Plus Jakarta Sans';white-space:nowrap;color:#4a4855"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg><span style="flex:1">{{ n.l }}</span><sc-if value="{{ n.b }}"><span style="min-width:20px;height:20px;border-radius:10px;background:rgba(139,92,246,.12);color:#6a3ee0;font:500 11px/20px 'Plus Jakarta Sans';text-align:center">{{ n.b }}</span></sc-if></span></sc-for>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:10px;padding:8px"><span style="position:relative;width:38px;height:38px;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans';box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6">GL<span style="position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;border-radius:50%;background:#15803d;box-shadow:0 0 0 2px #fff"></span></span><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 14px 'Plus Jakarta Sans';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gianluca Lo Bianco</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Coach</span></div></div>
+</aside>
+
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+<header style="border-radius:20px;background:#fff;padding:16px 18px 16px 22px;display:flex;align-items:center;gap:10px">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+<span style="display:flex;align-items:center;gap:6px;font:400 13.5px 'Plus Jakarta Sans';color:#64626e"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Agenda</span>
+<div style="display:flex;align-items:center;gap:10px"><h1 style="margin:0;font:600 15px 'Plus Jakarta Sans';white-space:nowrap">Coaching hybride</h1><span style="display:flex;align-items:center;gap:6px;font:400 13.5px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:#2dd4bf"></span>Hybride · Individuelle</span></div>
+</div>
+<span style="height:32px;width:200px;padding:0 6px 0 10px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);background:#f8f7fb;display:flex;align-items:center;gap:7px;font:400 12.5px 'Plus Jakarta Sans';color:#64626e"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3"></path></svg><span style="flex:1;white-space:nowrap">Rechercher dans Coory</span><span style="font:500 10px 'Plus Jakarta Sans';padding:2px 5px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14)">⌘K</span></span>
+<span style="height:32px;padding:0 12px;border-radius:9px;background:#8b5cf6;color:#fff;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg>Assistant IA</span>
+<span style="position:relative;width:32px;height:32px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#8b5cf6;color:#fff;font:600 9.5px/16px 'Plus Jakarta Sans';text-align:center">4</span></span>
+<span style="height:32px;padding:0 12px;border-radius:9px;background:#17151d;color:#fff;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifier</span>
+<button type="button" onClick="{{ toggleMenu }}" aria-label="Plus d'actions" style="position:relative;cursor:pointer;border:0;width:32px;height:32px;border-radius:9px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center;font:700 14px 'Plus Jakarta Sans';color:#17151d">···
+<sc-if value="{{ menu }}"><span style="position:absolute;top:40px;right:0;z-index:5;width:210px;padding:6px;border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(22,18,40,.14),0 0 0 1px rgba(22,18,40,.06);display:flex;flex-direction:column;text-align:left">
+<span style="height:36px;padding:0 10px;border-radius:8px;display:flex;align-items:center;font:400 13.5px 'Plus Jakarta Sans';color:#17151d">Dupliquer la séance</span>
+<span style="height:36px;padding:0 10px;border-radius:8px;display:flex;align-items:center;font:400 13.5px 'Plus Jakarta Sans';color:#17151d">Annuler cette date</span>
+<span style="height:36px;padding:0 10px;border-radius:8px;display:flex;align-items:center;gap:8px;font:400 13.5px 'Plus Jakarta Sans';color:#d4223d"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"></path></svg>Supprimer la séance</span>
+</span></sc-if></button>
+</header>
+
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:28px 28px 24px;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:28px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+<div style="display:flex;flex-direction:column;gap:8px"><h2 style="margin:0;font:600 30px/1.1 'Plus Jakarta Sans';letter-spacing:-.025em">Coaching hybride</h2><span style="display:flex;align-items:center;gap:7px;font:400 14.5px 'Plus Jakarta Sans';color:#4a4855"><span style="width:8px;height:8px;border-radius:50%;background:#2dd4bf"></span>Hybride · Individuelle</span></div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px;font:500 14.5px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18"></path></svg>Lundi 2 novembre<span style="height:22px;padding:0 9px;border-radius:11px;background:rgba(139,92,246,.10);color:#6a3ee0;display:flex;align-items:center;font:500 12px 'Plus Jakarta Sans'">Aujourd'hui</span></div>
+<div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap"><span style="display:flex;align-items:baseline;gap:8px"><span style="font:600 52px/1 'Plus Jakarta Sans';letter-spacing:-.03em;color:#6a3ee0;font-variant-numeric:tabular-nums">17:30</span><span style="font:400 20px 'Plus Jakarta Sans';color:#64626e">– 18:30</span></span><span style="width:1px;height:22px;background:rgba(22,18,40,.12)"></span><span style="display:flex;align-items:center;gap:7px;font:400 14.5px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>Salle de sport</span><span style="width:1px;height:22px;background:rgba(22,18,40,.12)"></span><span style="display:flex;align-items:center;gap:7px;font:400 14.5px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>1 h</span></div>
+</div>
+<span style="align-self:flex-start;height:40px;padding:0 16px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;gap:8px;font:500 14px 'Plus Jakarta Sans';cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.5-5.6A8.5 8.5 0 1 1 21 12z"></path></svg>Écrire</span>
+</div>
+<div style="border-radius:16px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.09);padding:16px;display:flex;flex-direction:column;gap:12px;cursor:pointer" style-hover="box-shadow:inset 0 0 0 1px rgba(139,92,246,.45)">
+<span style="font:500 13px 'Plus Jakarta Sans';color:#64626e">Sportif</span>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:42px;height:42px;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px 'Plus Jakarta Sans'">LJ</span><span style="flex:1;font:600 15px 'Plus Jakarta Sans'">Lucas Janssens</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></div>
+</div>
+</section>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch">
+<div style="display:flex;flex-direction:column;gap:16px">
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:22px;display:flex;flex-direction:column;gap:10px"><span style="font:600 17px 'Plus Jakarta Sans';letter-spacing:-.01em">Prix et paiements</span><span style="font:400 14px/1.55 'Plus Jakarta Sans';color:#4a4855">Pas de prix pour cette séance. Ajoute-le avec « Modifier » : chaque date payée comptera dans l'encaissé de la semaine.</span></section>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);flex:1;padding:22px 22px 18px;display:flex;flex-direction:column;gap:4px"><span style="font:600 17px 'Plus Jakarta Sans';letter-spacing:-.01em">Détails</span><div style="display:flex;flex-direction:column">
+<div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid rgba(22,18,40,.07)"><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e">Rythme</span><span style="font:500 14.5px/1.45 'Plus Jakarta Sans'">Chaque lundi à 17:30 · 1 h</span></div>
+<div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:12px 0 4px"><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e">Période</span><div style="display:flex;flex-direction:column;gap:10px"><span style="font:500 14.5px/1.45 'Plus Jakarta Sans'">Depuis le 7 septembre 2026, jusqu'au 17 janvier 2027</span><div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:2px"><sc-for list="{{ series }}" as="s" hint-placeholder-count="19"><span style="flex:1;height:6px;border-radius:2px;background:{{ s.c }}"></span></sc-for></div><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">Séance 9 sur 19</span></div></div></div>
+</div></section>
+</div>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:22px 22px 10px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font:600 17px 'Plus Jakarta Sans';letter-spacing:-.01em;white-space:nowrap">Prochaines dates</span><a href="#" style="font:400 13px 'Plus Jakarta Sans';white-space:nowrap">Toutes les dates</a></div><div style="display:flex;flex-direction:column">
+<sc-for list="{{ next }}" as="d" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;column-gap:14px;cursor:pointer" style-hover="background:#faf9fc">
+<span style="position:relative;align-self:stretch;display:flex;justify-content:center"><span style="position:absolute;left:10px;width:2px;top:{{ d.lt }};bottom:{{ d.lb }};background:#e6e1f7"></span><span style="position:relative;margin-top:24px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 2.5px #b9a3ff"></span></span>
+<span style="display:flex;flex-direction:column;gap:2px;padding:13px 0;border-bottom:{{ d.bb }}"><span style="font:500 15px 'Plus Jakarta Sans';white-space:nowrap">{{ d.full }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">17:30 – 18:30</span></span>
+<span style="align-self:stretch;display:flex;align-items:center;border-bottom:{{ d.bb }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span>
+</div></sc-for></div></section>
+</div>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:14px 22px;display:flex;align-items:center;gap:16px">
+<span style="font:400 13.5px 'Plus Jakarta Sans';color:#64626e;flex:1">Les changements s'appliquent à cette date ou à toute la série.</span>
+<span style="height:42px;padding:0 22px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;gap:8px;font:500 14px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifier</span>
+<span style="height:42px;padding:0 14px;border-radius:11px;display:flex;align-items:center;gap:8px;font:500 14px 'Plus Jakarta Sans';color:#d4223d"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"></path></svg>Supprimer la séance</span>
+</section>
+</main>
+</div>
+</div>
+
+<div id="1b" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">1b</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">Mobile · 390</span></div>
+<div data-screen-label="Séance mobile" style="position:relative;width:390px;background:#f3f2f7;border-radius:36px;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 0">
+<span style="width:44px;height:44px;border-radius:14px;background:#fff;box-shadow:0 2px 10px rgba(22,18,40,.06);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span>
+<span style="display:flex;gap:4px;padding:4px;border-radius:16px;background:#fff;box-shadow:0 2px 10px rgba(22,18,40,.06)"><span style="width:40px;height:40px;border-radius:12px;background:#8b5cf6;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg></span><span style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:4px;right:4px;width:15px;height:15px;border-radius:50%;background:#8b5cf6;color:#fff;font:600 9px/15px 'Plus Jakarta Sans';text-align:center">4</span></span></span>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="padding:18px 22px 26px;display:flex;flex-direction:column;gap:18px">
+<span style="display:flex;align-items:center;gap:6px;font:400 13.5px 'Plus Jakarta Sans';color:#64626e"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Agenda</span>
+<div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font:600 28px/1.1 'Plus Jakarta Sans';letter-spacing:-.025em">Coaching hybride</h1><span style="display:flex;align-items:center;gap:6px;font:400 14px 'Plus Jakarta Sans';color:#4a4855"><span style="width:7px;height:7px;border-radius:50%;background:#2dd4bf"></span>Hybride · Individuelle</span></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:8px;font:500 14px 'Plus Jakarta Sans'">Lundi 2 novembre<span style="height:22px;padding:0 9px;border-radius:11px;background:rgba(139,92,246,.10);color:#6a3ee0;display:flex;align-items:center;font:500 12px 'Plus Jakarta Sans'">Aujourd'hui</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><span style="font:600 60px/1 'Plus Jakarta Sans';letter-spacing:-.04em;color:#6a3ee0;font-variant-numeric:tabular-nums">17:30</span><span style="font:400 21px 'Plus Jakarta Sans';color:#64626e">– 18:30</span></div>
+<div style="display:flex;align-items:center;gap:16px;font:400 14px 'Plus Jakarta Sans';color:#17151d;padding-top:4px"><span style="display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>Salle de sport</span><span style="width:1px;height:16px;background:rgba(22,18,40,.14)"></span><span style="display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>1 h</span></div>
+</div>
+</div>
+<div style="background: #fff; border-radius: 0px; box-shadow: 0 -1px 0 rgba(22,18,40,.05); padding: 8px 22px 40px; display: flex; flex-direction: column">
+
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0 18px;min-height:44px"><span style="width:46px;height:46px;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px 'Plus Jakarta Sans'">LJ</span><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px 'Plus Jakarta Sans'">Lucas Janssens</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">Sportif · voir la fiche</span></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></div>
+<div style="height:1px;background:rgba(22,18,40,.08)"></div>
+<div style="display:flex;flex-direction:column;gap:14px;padding:20px 0"><span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.09em;color:#8b8996;white-space:nowrap">SÉRIE</span>
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font:500 15px 'Plus Jakarta Sans';white-space:nowrap">Chaque lundi à 17:30 · 1 h</span><span style="font:500 13px 'Plus Jakarta Sans';color:#6a3ee0;white-space:nowrap">9 / 19</span></div>
+<div style="display:flex;gap:2px"><sc-for list="{{ series }}" as="s" hint-placeholder-count="19"><span style="flex:1;height:6px;border-radius:2px;background:{{ s.c }}"></span></sc-for></div>
+<span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">Du 7 septembre 2026 au 17 janvier 2027</span>
+</div>
+<div style="height:1px;background:rgba(22,18,40,.08)"></div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:20px 0">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.09em;color:#8b8996;white-space:nowrap">PROCHAINES DATES</span><a href="#" style="font:400 13px 'Plus Jakarta Sans';white-space:nowrap">Toutes</a></div>
+<div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -22px;padding:0 22px 2px">
+<sc-for list="{{ next }}" as="d" hint-placeholder-count="4"><span style="flex:none;width:96px;padding:12px;border-radius:14px;background:#f5f4f9;display:flex;flex-direction:column;gap:2px"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Lun.</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">{{ d.l }}</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">17:30</span></span></sc-for>
+</div>
+</div>
+<div style="height:1px;background:rgba(22,18,40,.08)"></div>
+<div style="display:flex;flex-direction:column;gap:8px;padding:20px 0"><span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.09em;color:#8b8996;white-space:nowrap">PRIX ET PAIEMENTS</span><span style="font:400 14px/1.55 'Plus Jakarta Sans';color:#4a4855">Pas de prix pour cette séance. Ajoute-le avec « Modifier » : chaque date payée comptera dans l'encaissé de la semaine.</span></div>
+<div style="height:1px;background:rgba(22,18,40,.08)"></div>
+<span style="align-self:center;display:flex;align-items:center;gap:8px;min-height:44px;margin-top:16px;font:500 14px 'Plus Jakarta Sans';color:#d4223d"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"></path></svg>Supprimer la séance</span>
+<div style="height:80px"></div>
+</div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 14px 26px;background:rgba(243,242,247,.92);backdrop-filter:blur(12px);border-top:1px solid rgba(22,18,40,.06);display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<span style="height:50px;border-radius:13px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center;gap:8px;font:500 15px 'Plus Jakarta Sans'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.5-5.6A8.5 8.5 0 1 1 21 12z"></path></svg>Écrire</span>
+<span style="height:50px;border-radius:13px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:500 15px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifier</span>
+</div>
+</div>
+</div>
+
+
+<div id="1c" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">1c</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">Mobile · onglets</span></div>
+<div data-screen-label="Séance mobile onglets" style="position:relative;width:390px;min-height:844px;background:#f3f2f7;border-radius:36px;overflow:hidden">
+<div style="display:grid;grid-template-columns:44px 1fr 44px;align-items:center;padding:12px 14px 0">
+<span style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>
+<span style="text-align:center;font:500 14px 'Plus Jakarta Sans';color:#64626e">Agenda</span>
+<span style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font:700 15px 'Plus Jakarta Sans'">···</span>
+</div>
+<div style="padding:22px 18px 120px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;gap:14px;align-items:center">
+<div style="width:68px;height:78px;flex:none;border-radius:18px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px"><span style="font:600 11px 'Plus Jakarta Sans';letter-spacing:.08em;color:#6a3ee0">LUN.</span><span style="font:600 28px/1 'Plus Jakarta Sans';letter-spacing:-.02em">2</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">nov.</span></div>
+<div style="display:flex;flex-direction:column;gap:5px;min-width:0"><h1 style="margin:0;font:600 21px/1.2 'Plus Jakarta Sans';letter-spacing:-.02em;white-space:nowrap">Coaching hybride</h1><span style="display:flex;align-items:center;gap:6px;font:400 13.5px 'Plus Jakarta Sans';color:#4a4855;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:#2dd4bf"></span>Hybride · Individuelle</span><span style="font:600 20px 'Plus Jakarta Sans';letter-spacing:-.02em;color:#6a3ee0;white-space:nowrap">17:30 <span style="font-weight:400;color:#64626e">– 18:30</span></span></div>
+</div>
+<div style="display:grid;grid-template-columns:1.3fr 0.8fr 1fr;padding:14px 0;border-top:1px solid rgba(22,18,40,.09);border-bottom:1px solid rgba(22,18,40,.09)"><div style="display:flex;flex-direction:column;gap:3px;padding:0 14px;min-width:0"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Lieu</span><span style="font:600 14px 'Plus Jakarta Sans';white-space:nowrap;color:#17151d">Salle de sport</span></div><div style="border-left:1px solid rgba(22,18,40,.09)"><div style="display:flex;flex-direction:column;gap:3px;padding:0 14px;min-width:0"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Durée</span><span style="font:600 14px 'Plus Jakarta Sans';white-space:nowrap;color:#17151d">1 h</span></div></div><div style="border-left:1px solid rgba(22,18,40,.09)"><div style="display:flex;flex-direction:column;gap:3px;padding:0 14px;min-width:0"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Statut</span><span style="font:600 14px 'Plus Jakarta Sans';white-space:nowrap;color:#6a3ee0">Aujourd’hui</span></div></div></div>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 10px 10px 12px;border-radius:18px;background:#fff">
+<span style="width:42px;height:42px;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12.5px 'Plus Jakarta Sans'">LJ</span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:600 15px 'Plus Jakarta Sans'">Lucas Janssens</span><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">Sportif</span></div>
+<span aria-label="Écrire" style="width:44px;height:44px;border-radius:50%;background:#f3f2f7;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.5-5.6A8.5 8.5 0 1 1 21 12z"></path></svg></span>
+</div>
+<div role="tablist" style="display:grid;grid-template-columns:repeat(3,1fr);padding:4px;border-radius:14px;background:#e8e7ee">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3"><button type="button" role="tab" aria-selected="{{ t.sel }}" onClick="{{ t.on }}" style="cursor:pointer;border:0;height:38px;border-radius:10px;font:500 14px 'Plus Jakarta Sans';background:{{ t.bg }};color:{{ t.c }};box-shadow:{{ t.sh }}">{{ t.l }}</button></sc-for>
+</div>
+<sc-if value="{{ tab0 }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:14px;padding:4px 2px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font:600 32px/1 'Plus Jakarta Sans';letter-spacing:-.03em;white-space:nowrap">9<span style="font-weight:400;font-size:18px;color:#64626e"> / 19 séances</span></span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap">10 restantes</span></div>
+<div style="display:flex;gap:2px"><sc-for list="{{ series }}" as="s" hint-placeholder-count="19"><span style="flex:1;height:8px;border-radius:2px;background:{{ s.c }}"></span></sc-for></div>
+<div style="display:flex;flex-direction:column;border-top:1px solid rgba(22,18,40,.09);margin-top:4px">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid rgba(22,18,40,.09)"><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e">Rythme</span><span style="font:500 14px 'Plus Jakarta Sans';white-space:nowrap">Chaque lundi à 17:30 · 1 h</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid rgba(22,18,40,.09)"><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e">Début</span><span style="font:500 14px 'Plus Jakarta Sans'">7 septembre 2026</span></div>
+<div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0"><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e">Fin</span><span style="font:500 14px 'Plus Jakarta Sans'">17 janvier 2027</span></div>
+</div></div></sc-if>
+<sc-if value="{{ tab1 }}"><div style="display:flex;flex-direction:column;border-radius:18px;background:#fff;padding:0 16px">
+<sc-for list="{{ next }}" as="d" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:12px;min-height:60px;border-bottom:{{ d.bb }}"><span style="width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 2px #b9a3ff"></span><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:500 15px 'Plus Jakarta Sans'">{{ d.full }}</span><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">17:30 – 18:30</span></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></div></sc-for>
+</div></sc-if>
+<sc-if value="{{ tab2 }}"><div style="display:flex;flex-direction:column;gap:14px;padding:4px 2px">
+<span style="font:400 14.5px/1.6 'Plus Jakarta Sans';color:#4a4855">Pas de prix pour cette séance. Ajoute-le avec « Modifier » : chaque date payée comptera dans l'encaissé de la semaine.</span>
+<span style="align-self:flex-start;height:44px;padding:0 16px;border-radius:12px;background:#fff;display:flex;align-items:center;gap:6px;font:500 14px 'Plus Jakarta Sans'">+ Ajouter un prix</span>
+</div></sc-if>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 14px 26px;background:rgba(243,242,247,.92);backdrop-filter:blur(12px);display:flex;gap:10px">
+<span aria-label="Supprimer la séance" style="width:52px;height:52px;flex:none;border-radius:14px;background:#fff;color:#d4223d;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"></path></svg></span>
+<span style="flex:1;height:52px;border-radius:14px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:500 15px 'Plus Jakarta Sans'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifier la séance</span>
+</div>
+</div>
+</div>
+
+<div id="1d" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">1d</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">Mobile · ticket</span></div>
+<div data-screen-label="Séance mobile ticket" style="position:relative;width:390px;min-height:844px;background:#f3f2f7;border-radius:36px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:10px;padding:12px 14px 0">
+<span style="width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span>
+<span style="flex:1;font:500 14px 'Plus Jakarta Sans';color:#64626e">Agenda</span>
+<span style="height:28px;padding:0 11px;border-radius:14px;background:rgba(139,92,246,.10);color:#6a3ee0;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans'"><span style="width:6px;height:6px;border-radius:50%;background:#8b5cf6"></span>Aujourd'hui</span>
+</div>
+<div style="padding:18px 16px 120px;display:flex;flex-direction:column;gap:20px">
+<div style="position:relative;border-radius:24px;background:#fff;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 20px;background:#17151d;color:#fff;border-radius:24px 24px 0 0">
+<span style="font:600 13px 'Plus Jakarta Sans';letter-spacing:.14em;white-space:nowrap">LUNDI <span style="color:#b9a3ff">2</span> NOVEMBRE</span>
+<span style="font:500 12px 'Plus Jakarta Sans';letter-spacing:.06em;color:#bdbbc6;white-space:nowrap">2026</span>
+</div>
+<div style="padding:18px 20px 18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font:600 24px/1.15 'Plus Jakarta Sans';letter-spacing:-.02em">Coaching hybride</h1><span style="display:flex;align-items:center;gap:6px;font:400 13.5px 'Plus Jakarta Sans';color:#4a4855;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:#2dd4bf"></span>Hybride · Individuelle</span></div>
+<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:10px;padding-top:4px">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Début</span><span style="font:600 38px/1 'Plus Jakarta Sans';letter-spacing:-.03em;color:#6a3ee0;font-variant-numeric:tabular-nums">17:30</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:8px"><span style="font:500 12px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap">1 h</span><span style="display:flex;align-items:center;gap:3px"><span style="width:6px;height:6px;border-radius:50%;background:#8b5cf6"></span><span style="width:46px;height:0;border-top:1.5px dashed #c9c2e8"></span><span style="width:6px;height:6px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #8b5cf6"></span></span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Fin</span><span style="font:600 38px/1 'Plus Jakarta Sans';letter-spacing:-.03em;color:#17151d;font-variant-numeric:tabular-nums">18:30</span></div>
+</div>
+<span style="font:400 13.5px 'Plus Jakarta Sans';color:#4a4855;text-align:center">Salle de sport</span>
+</div>
+<div style="position:relative;height:0;border-top:1.5px dashed rgba(22,18,40,.14);margin:0 18px"><span style="position:absolute;left:-30px;top:-12px;width:22px;height:22px;border-radius:50%;background:#f3f2f7"></span><span style="position:absolute;right:-30px;top:-12px;width:22px;height:22px;border-radius:50%;background:#f3f2f7"></span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:16px 16px 16px 20px">
+<span style="width:40px;height:40px;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans'">LJ</span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:600 15px 'Plus Jakarta Sans'">Lucas Janssens</span><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">Sportif · voir la fiche</span></div>
+<span style="height:40px;padding:0 14px;border-radius:12px;background:#f3f2f7;display:flex;align-items:center;gap:7px;font:500 14px 'Plus Jakarta Sans'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.5-5.6A8.5 8.5 0 1 1 21 12z"></path></svg>Écrire</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid rgba(22,18,40,.09)">
+<div style="border-bottom:1px solid rgba(22,18,40,.09)">
+<button type="button" onClick="{{ acc0.toggle }}" aria-expanded="{{ acc0.exp }}" style="cursor:pointer;border:0;background:transparent;width:100%;min-height:58px;padding:0 4px;display:flex;align-items:center;gap:12px;text-align:left;color:#17151d"><span style="flex:1;font:600 15.5px 'Plus Jakarta Sans'">Série</span><span style="font:400 13.5px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap">9 / 19</span><span style="display:flex;transform:{{ acc0.rot }};transition:transform .25s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span></button>
+<sc-if value="{{ acc0.open }}"><div style="padding:0 4px 18px"><div style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:2px"><sc-for list="{{ series }}" as="s" hint-placeholder-count="19"><span style="flex:1;height:6px;border-radius:2px;background:{{ s.c }}"></span></sc-for></div><span style="font:500 14px 'Plus Jakarta Sans'">Chaque lundi à 17:30 · 1 h</span><span style="font:400 13.5px 'Plus Jakarta Sans';color:#64626e">Du 7 septembre 2026 au 17 janvier 2027</span></div></div></sc-if></div>
+<div style="border-bottom:1px solid rgba(22,18,40,.09)">
+<button type="button" onClick="{{ acc1.toggle }}" aria-expanded="{{ acc1.exp }}" style="cursor:pointer;border:0;background:transparent;width:100%;min-height:58px;padding:0 4px;display:flex;align-items:center;gap:12px;text-align:left;color:#17151d"><span style="flex:1;font:600 15.5px 'Plus Jakarta Sans'">Prochaines dates</span><span style="font:400 13.5px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap">Lun. 9 nov.</span><span style="display:flex;transform:{{ acc1.rot }};transition:transform .25s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span></button>
+<sc-if value="{{ acc1.open }}"><div style="padding:0 4px 18px"><div style="display:flex;flex-direction:column"><sc-for list="{{ next }}" as="d" hint-placeholder-count="4"><div style="display:flex;align-items:center;justify-content:space-between;min-height:46px;border-bottom:{{ d.bb }}"><span style="font:500 14.5px 'Plus Jakarta Sans'">{{ d.full }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">17:30 – 18:30</span></div></sc-for></div></div></sc-if></div>
+<div style="border-bottom:1px solid rgba(22,18,40,.09)">
+<button type="button" onClick="{{ acc2.toggle }}" aria-expanded="{{ acc2.exp }}" style="cursor:pointer;border:0;background:transparent;width:100%;min-height:58px;padding:0 4px;display:flex;align-items:center;gap:12px;text-align:left;color:#17151d"><span style="flex:1;font:600 15.5px 'Plus Jakarta Sans'">Prix et paiements</span><span style="font:400 13.5px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap">Aucun prix</span><span style="display:flex;transform:{{ acc2.rot }};transition:transform .25s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span></button>
+<sc-if value="{{ acc2.open }}"><div style="padding:0 4px 18px"><span style="font:400 14px/1.6 'Plus Jakarta Sans';color:#4a4855">Pas de prix pour cette séance. Ajoute-le avec « Modifier » : chaque date payée comptera dans l'encaissé de la semaine.</span></div></sc-if></div>
+</div>
+<span style="align-self:center;display:flex;align-items:center;gap:8px;min-height:44px;font:500 14px 'Plus Jakarta Sans';color:#d4223d"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"></path></svg>Supprimer la séance</span>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 26px;background:rgba(243,242,247,.92);backdrop-filter:blur(12px)">
+<span style="height:52px;border-radius:14px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:500 15px 'Plus Jakarta Sans'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifier la séance</span>
+</div>
+</div>
+</div>
+
+<div id="1e" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">1e</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">Mobile · aligné desktop</span></div>
+<div data-screen-label="Séance mobile desktop" style="position:relative;width:390px;min-height:844px;background:#f3f2f7;border-radius:36px;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px 0">
+<span style="width:44px;height:44px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span>
+<span style="display:flex;gap:4px;padding:4px;border-radius:16px;background:#fff"><span style="width:40px;height:40px;border-radius:12px;background:#8b5cf6;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg></span><span style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:4px;right:4px;width:15px;height:15px;border-radius:50%;background:#8b5cf6;color:#fff;font:600 9px/15px 'Plus Jakarta Sans';text-align:center">4</span></span></span>
+</div>
+<div style="padding:14px 14px 120px;display:flex;flex-direction:column;gap:12px">
+<span style="display:flex;align-items:center;gap:6px;padding:0 4px;font:400 13.5px 'Plus Jakarta Sans';color:#64626e"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Agenda</span>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:20px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px"><h1 style="margin:0;font:600 24px/1.15 'Plus Jakarta Sans';letter-spacing:-.025em">Coaching hybride</h1><span style="display:flex;align-items:center;gap:7px;font:400 14px 'Plus Jakarta Sans';color:#4a4855"><span style="width:8px;height:8px;border-radius:50%;background:#2dd4bf"></span>Hybride · Individuelle</span></div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px;font:500 14px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18"></path></svg>Lundi 2 novembre<span style="height:22px;padding:0 9px;border-radius:11px;background:rgba(139,92,246,.10);color:#6a3ee0;display:flex;align-items:center;font:500 12px 'Plus Jakarta Sans'">Aujourd'hui</span></div>
+<div style="display:flex;align-items:baseline;gap:8px;white-space:nowrap"><span style="font:600 46px/1 'Plus Jakarta Sans';letter-spacing:-.03em;color:#6a3ee0;font-variant-numeric:tabular-nums">17:30</span><span style="font:400 19px 'Plus Jakarta Sans';color:#64626e">– 18:30</span></div>
+<div style="display:flex;align-items:center;gap:14px;font:400 14px 'Plus Jakarta Sans';padding-top:4px"><span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>Salle de sport</span><span style="width:1px;height:18px;background:rgba(22,18,40,.12)"></span><span style="display:flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>1 h</span></div>
+</div>
+<div style="border-radius:16px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.09);padding:14px;display:flex;flex-direction:column;gap:10px">
+<span style="font:500 13px 'Plus Jakarta Sans';color:#64626e">Sportif</span>
+<div style="display:flex;align-items:center;gap:12px;min-height:44px"><span style="width:40px;height:40px;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12.5px 'Plus Jakarta Sans'">LJ</span><span style="flex:1;font:600 15px 'Plus Jakarta Sans'">Lucas Janssens</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></div>
+</div>
+</section>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:18px 18px 14px;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px 'Plus Jakarta Sans';letter-spacing:-.01em">Détails</span>
+<div style="display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid rgba(22,18,40,.07)"><span style="font:400 13.5px 'Plus Jakarta Sans';color:#64626e">Rythme</span><span style="font:500 14px/1.45 'Plus Jakarta Sans'">Chaque lundi à 17:30 · 1 h</span></div>
+<div style="display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;padding:12px 0 4px"><span style="font:400 13.5px 'Plus Jakarta Sans';color:#64626e">Période</span><div style="display:flex;flex-direction:column;gap:10px"><span style="font:500 14px/1.45 'Plus Jakarta Sans'">Depuis le 7 septembre 2026, jusqu'au 17 janvier 2027</span><div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;gap:2px"><sc-for list="{{ series }}" as="s" hint-placeholder-count="19"><span style="flex:1;height:6px;border-radius:2px;background:{{ s.c }}"></span></sc-for></div><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">Séance 9 sur 19</span></div></div></div>
+</section>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:18px 18px 6px;display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font:600 16px 'Plus Jakarta Sans';letter-spacing:-.01em;white-space:nowrap">Prochaines dates</span><a href="#" style="font:400 13px 'Plus Jakarta Sans';white-space:nowrap">Toutes les dates</a></div>
+<div style="display:flex;flex-direction:column"><sc-for list="{{ next }}" as="d" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;column-gap:10px">
+<span style="position:relative;align-self:stretch;display:flex;justify-content:center"><span style="position:absolute;left:10px;width:2px;top:{{ d.lt }};bottom:{{ d.lb }};background:#e6e1f7"></span><span style="position:relative;margin-top:20px;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 2.5px #b9a3ff"></span></span>
+<span style="display:flex;flex-direction:column;gap:2px;padding:11px 0;border-bottom:{{ d.bb }}"><span style="font:500 14.5px 'Plus Jakarta Sans';white-space:nowrap">{{ d.full }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">17:30 – 18:30</span></span>
+<span style="align-self:stretch;display:flex;align-items:center;border-bottom:{{ d.bb }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b8996" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span>
+</div></sc-for></div>
+</section>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:18px;display:flex;flex-direction:column;gap:8px"><span style="font:600 16px 'Plus Jakarta Sans';letter-spacing:-.01em">Prix et paiements</span><span style="font:400 13.5px/1.55 'Plus Jakarta Sans';color:#4a4855">Pas de prix pour cette séance. Ajoute-le avec « Modifier » : chaque date payée comptera dans l'encaissé de la semaine.</span></section>
+<span style="align-self:center;display:flex;align-items:center;gap:8px;min-height:44px;font:500 14px 'Plus Jakarta Sans';color:#d4223d"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"></path></svg>Supprimer la séance</span>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;padding:12px 14px 26px;background:rgba(243,242,247,.92);backdrop-filter:blur(12px);border-top:1px solid rgba(22,18,40,.06);display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<span style="height:50px;border-radius:13px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;justify-content:center;gap:8px;font:500 15px 'Plus Jakarta Sans'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.4 7.5L3 21l1.5-5.6A8.5 8.5 0 1 1 21 12z"></path></svg>Écrire</span>
+<span style="height:50px;border-radius:13px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:500 15px 'Plus Jakarta Sans'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>Modifier</span>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { menu: false, tab: 0, acc: 0 };
+  accV(i) { const open = this.state.acc === i; return { open, exp: open ? 'true' : 'false', rot: open ? 'rotate(90deg)' : 'none', toggle: () => this.setState({ acc: open ? -1 : i }) }; }
+  renderVals() {
+    const dates = [];
+    const d0 = new Date(2026, 8, 7);
+    for (let i = 0; i < 19; i++) { const d = new Date(d0); d.setDate(d0.getDate() + i * 7); dates.push(d); }
+    const M = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+    const MF = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const fmt = d => d.getDate() + ' ' + M[d.getMonth()];
+    return {
+      menu: this.state.menu,
+      acc0: this.accV(0), acc1: this.accV(1), acc2: this.accV(2),
+      tab0: this.state.tab === 0, tab1: this.state.tab === 1, tab2: this.state.tab === 2,
+      tabs: ['Série', 'Dates', 'Paiement'].map((l, i) => { const on = this.state.tab === i; return { l, sel: on ? 'true' : 'false', on: () => this.setState({ tab: i }), bg: on ? '#fff' : 'transparent', c: on ? '#17151d' : '#64626e', sh: on ? '0 1px 3px rgba(22,18,40,.08)' : 'none' }; }),
+      toggleMenu: () => this.setState(s => ({ menu: !s.menu })),
+      series: dates.map((d, i) => ({ l: fmt(d), c: i < 8 ? '#d9d2f2' : i === 8 ? '#8b5cf6' : '#ecebf1', bh: i === 8 ? '26px' : ([18, 22, 14, 20, 16, 24, 18][i % 7]) + 'px', bc: i < 8 ? '#17151d' : i === 8 ? '#8b5cf6' : '#dcdae3' })),
+      next: dates.slice(9, 13).map((d, i) => ({ l: fmt(d), full: 'Lundi ' + d.getDate() + ' ' + MF[d.getMonth()], lt: i === 0 ? '28px' : '0', lb: i === 3 ? 'calc(100% - 28px)' : '0', bb: i === 3 ? '0' : '1px solid rgba(22,18,40,.07)' })),
+      nav1: N1.map(([l, d], i) => ({ l, d, bg: i === 1 ? 'rgba(139,92,246,.12)' : 'transparent', c: i === 1 ? '#17151d' : '#4a4855' })),
+      nav2: N2.map(([l, d, b]) => ({ l, d, b: b || '' }))
+    };
+  }
+}
+const N1 = [['Tableau de bord', 'M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['Agenda', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18'], ['Sportifs', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'], ['Programmes', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5'], ['Facturation', 'M5 3h14v18H5zM12 7v10M15 9.5c0-1.4-1.3-2-3-2s-3 .8-3 2 1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2-3-.6-3-2'], ['Comptabilité', 'M5 2h14v20H5zM8 6h8M8 10h2M12 10h2M8 14h2M12 14h2M8 18h2M12 18h2'], ['Bibliothèque', 'M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z']];
+const N2 = [['Assistant IA', 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z'], ['Messages', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', '1'], ['Tâches', 'M3 5l2 2 3-3M3 12l2 2 3-3M3 19l2 2 3-3M12 6h9M12 13h9M12 20h9'], ['Documents', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'], ['Notifications', 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0', '4']];
+</script>
+</body>
+</html>

@@ -1,6 +1,5 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -8,14 +7,14 @@ import { useEffect, useRef, useState } from "react";
 import { GOTO_EVENT, VISIBLE_EVENT, type VisibleDays } from "./scroll-to-day";
 
 // La semaine au-dessus de l'Agenda (demandes d'Antonino du 02/11, d'après le Calendrier de l'iPhone),
-// dans toutes les vues sauf Mois, sur téléphone et ordinateur : L M M J V S D et leurs dates ; en vue
+// dans toutes les vues sauf Mois : L M M J V S D et leurs dates ; en vue
 // Jour, le jour écrit en entier dessous. Aujourd'hui : un rond violet plein (toujours). Les jours
 // affichés sont en gris : un rond pour un seul jour (Jour, début de la Liste), une bande pour plusieurs
 // (3 jours, Semaine).
-// Téléphone : toucher un jour y fait glisser la grille sans recharger ; glisser la grille met la bande à
-// jour ; glisser la BANDE sur le côté change de semaine (même jour de la semaine) ; la bande se cache
-// quand le mois est déplié (« Novembre ▾ », html[data-agenda-month]). Ordinateur : un clic ouvre ce
-// jour, les flèches ‹ › changent de semaine (liens).
+// Toucher un jour y fait glisser la grille sans recharger ; glisser la grille met la bande à jour ;
+// glisser la BANDE sur le côté change de semaine (même jour de la semaine) ; la bande se cache quand le
+// mois est déplié (« Novembre ▾ », html[data-agenda-month]). Téléphone seulement (02/11) : sur
+// ordinateur, le petit calendrier du panneau de l'Agenda suffit.
 const letters = ["L", "M", "M", "J", "V", "S", "D"];
 const longDay = new Intl.DateTimeFormat("fr-BE", {
   weekday: "long",
@@ -39,20 +38,17 @@ export function DayWeekStrip({
   dayHref,
   viewHref,
   span = 1,
-  desktopWeek = false,
   title = false,
 }: {
   // Le premier jour affiché (jour de la vue Jour, premier jour visible, début de la Liste).
   initial: string;
   today: string;
-  // Adresses avec « __DATE__ » : un jour ouvert d'un clic (ordinateur), et la même vue à une autre
-  // date (flèches, glissé hors des semaines chargées).
+  // Adresses avec « __DATE__ » : un jour ouvert (si la grille ne le contient pas), et la même vue à une
+  // autre date (glissé hors des semaines chargées).
   dayHref: string;
   viewHref: string;
-  // Téléphone : jours affichés à partir du premier (1, 3 ou 7).
+  // Jours affichés à partir du premier (1, 3 ou 7).
   span?: number;
-  // Ordinateur : toute la semaine est affichée (vue Semaine).
-  desktopWeek?: boolean;
   // Le jour en entier sous la bande (vue Jour).
   title?: boolean;
 }) {
@@ -109,55 +105,27 @@ export function DayWeekStrip({
   const phoneEnd = addDays(shown, span - 1);
   const week = letters.map((letter, index) => ({ letter, date: addDays(monday, index), index }));
   const dayTitle = longDay.format(utc(shown));
-  const arrow =
-    "hidden size-9 shrink-0 place-items-center self-center rounded-lg text-text-2 transition-colors duration-150 hover:bg-selected-hover lg:grid";
-
   // Le gris des jours affichés : rond (un jour) ou bande aux bouts arrondis (plusieurs jours).
   const highlight = (date: string, index: number) => {
-    const isToday = date === today;
-    // Téléphone.
-    const onPhone = date >= shown && date <= phoneEnd;
-    const phone =
-      span === 1
-        ? { circle: onPhone, band: "" }
-        : {
-            circle: false,
-            band: onPhone
-              ? `max-lg:bg-chip ${date === shown || index === 0 ? "max-lg:rounded-l-full" : ""} ${
-                  date === phoneEnd || index === 6 ? "max-lg:rounded-r-full" : ""
-                }`
-              : "",
-          };
-    // Ordinateur.
-    const desktop = desktopWeek
-      ? {
-          circle: false,
-          band: `lg:bg-chip ${index === 0 ? "lg:rounded-l-full" : ""} ${index === 6 ? "lg:rounded-r-full" : ""}`,
-        }
-      : { circle: date === shown, band: "" };
-    const number = isToday
-      ? "bg-accent font-semibold text-on-accent"
-      : `${phone.circle ? "max-lg:bg-chip max-lg:font-semibold" : ""} ${
-          desktop.circle ? "lg:bg-chip lg:font-semibold" : ""
-        } text-text`;
-    return { band: `${phone.band} ${desktop.band}`, number };
+    const shownDay = date >= shown && date <= phoneEnd;
+    const band =
+      span > 1 && shownDay
+        ? `bg-bar ${date === shown || index === 0 ? "rounded-l-full" : ""} ${
+            date === phoneEnd || index === 6 ? "rounded-r-full" : ""
+          }`
+        : "";
+    const number =
+      date === today
+        ? "bg-accent font-semibold text-on-accent"
+        : span === 1 && shownDay
+          ? "bg-bar font-semibold text-text"
+          : "text-text";
+    return { band, number };
   };
 
   return (
-    <div className="shrink-0 border-b border-line-soft max-lg:[html[data-agenda-month]_&]:hidden">
-      <div
-        className={`mx-auto flex max-w-[720px] items-stretch gap-2 px-1 pt-1.5 lg:px-3 lg:pt-2.5 ${
-          title ? "" : "pb-1.5 lg:pb-2.5"
-        }`}
-      >
-        <Link
-          href={toView(addDays(shown, -7))}
-          scroll={false}
-          aria-label="Semaine précédente"
-          className={arrow}
-        >
-          <ChevronLeft aria-hidden size={16} strokeWidth={1.8} />
-        </Link>
+    <div className="shrink-0 border-b border-line-soft [html[data-agenda-month]_&]:hidden">
+      <div className={`flex px-1 pt-0.5 ${title ? "" : "pb-1"}`}>
         <div
           key={monday}
           role="group"
@@ -212,19 +180,19 @@ export function DayWeekStrip({
                   event.preventDefault();
                   go(date);
                 }}
-                className="group flex min-h-14 flex-col items-center justify-center gap-1 select-none"
+                className="group flex min-h-12 flex-col items-center justify-center gap-0.5 select-none"
               >
                 <span
                   aria-hidden
-                  className={`text-[12px] leading-none font-medium ${
+                  className={`text-[11px] leading-none font-medium ${
                     isToday ? "text-violet-text" : "text-muted"
                   }`}
                 >
                   {letter}
                 </span>
-                <span aria-hidden className={`flex h-9 w-full items-center justify-center ${band}`}>
+                <span aria-hidden className={`flex h-8 w-full items-center justify-center ${band}`}>
                   <span
-                    className={`grid size-9 place-items-center rounded-full text-[17px] leading-none tabular transition-colors duration-150 ${number}`}
+                    className={`grid size-8 place-items-center rounded-full text-[15px] leading-none tabular transition-colors duration-150 ${number}`}
                   >
                     {utc(date).getUTCDate()}
                   </span>
@@ -233,17 +201,9 @@ export function DayWeekStrip({
             );
           })}
         </div>
-        <Link
-          href={toView(addDays(shown, 7))}
-          scroll={false}
-          aria-label="Semaine suivante"
-          className={arrow}
-        >
-          <ChevronRight aria-hidden size={16} strokeWidth={1.8} />
-        </Link>
       </div>
       {title ? (
-        <p className="pt-1.5 pb-2.5 text-center text-[15px] font-semibold tracking-tight lg:text-[14px]">
+        <p className="pt-1 pb-2 text-center text-[14px] font-semibold tracking-tight">
           {dayTitle.charAt(0).toUpperCase() + dayTitle.slice(1)}
         </p>
       ) : null}

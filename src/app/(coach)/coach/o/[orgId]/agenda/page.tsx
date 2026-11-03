@@ -191,7 +191,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   const focus =
     perView === 7 ? monday : perView === 3 && date === today ? addDays(today, -1) : date;
   const todayHref = href({ date: today });
-  const sessionHref = (id: string) => `${base}/seances/${id}`;
+  const sessionHref = (id: string, day: string) => `${base}/seances/${id}?date=${day}`;
 
   // Le choix de la vue : quatre vues sur ordinateur, cinq sur téléphone (3 jours et Semaine).
   const desktopViews: AgendaViewItem[] = [
@@ -252,9 +252,11 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     weekStart: grid ? monday : mondayOf(today),
     dayHref: dayHrefTemplate,
   };
-  // Téléphone : les puces des mois suivants (à partir du mois en cours), l'année glissée entre deux.
+  // Téléphone : les puces des mois suivants (à partir du mois en cours), l'année glissée entre deux ;
+  // jusqu'à décembre dans quatre ans (02/11 : de novembre 2026 à décembre 2030).
   const thisMonth = today.slice(0, 7);
-  const months = Array.from({ length: 9 }, (_, i) => shiftMonth(thisMonth, i)).map(
+  const monthCount = 48 + 13 - Number(thisMonth.slice(5, 7));
+  const months = Array.from({ length: monthCount }, (_, i) => shiftMonth(thisMonth, i)).map(
     (ym, i, all) => ({
       label: monthShort.format(utc(`${ym}-01`)),
       year: i > 0 && ym.slice(0, 4) !== all[i - 1].slice(0, 4) ? ym.slice(0, 4) : undefined,
@@ -299,13 +301,16 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
     periodText = periodLabel(date, addDays(date, LIST_DAYS - 1));
     content = (
       <div className="flex h-full min-h-0 flex-col">
-        {/* La semaine au-dessus de la liste (02/11) : un jour la fait commencer à cette date. */}
-        <DayWeekStrip
-          initial={date}
-          today={today}
-          dayHref={href({ vue: "liste", date: "__DATE__" })}
-          viewHref={href({ vue: "liste", date: "__DATE__" })}
-        />
+        {/* La semaine au-dessus de la liste (02/11), sur téléphone : un jour la fait commencer à
+            cette date. Sur ordinateur, le petit calendrier du panneau suffit. */}
+        <div className="lg:hidden">
+          <DayWeekStrip
+            initial={date}
+            today={today}
+            dayHref={href({ vue: "liste", date: "__DATE__" })}
+            viewHref={href({ vue: "liste", date: "__DATE__" })}
+          />
+        </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {blocks.length === 0 ? (
             <div className="p-5">
@@ -446,6 +451,17 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
           kindHrefs={kindHrefs}
           mini={{ ...miniProps, dots }}
           months={months}
+          todayLink={{
+            href: todayHref,
+            // La même ouverture qu'à l'arrivée : 3 jours d'hier à demain, la semaine depuis lundi.
+            column: grid
+              ? perView === 7
+                ? mondayOf(today)
+                : perView === 3
+                  ? addDays(today, -1)
+                  : today
+              : null,
+          }}
         />
 
         {/* Ordinateur : le panneau de l'agenda (le bouton ☰ de la barre le masque ou le montre). */}
@@ -519,10 +535,11 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
             </div>
           </header>
 
-          {/* Le calendrier : une carte sur ordinateur ; sur téléphone, l'écran lui-même. */}
+          {/* Le calendrier : une carte sur ordinateur ; sur téléphone, l'écran lui-même, sur le fond gris des
+              autres pages (02/11, choix d'Antonino : un seul fond dans toute l'app). */}
           <section
             aria-labelledby="agenda-title"
-            className="isolate flex min-h-0 flex-1 flex-col overflow-hidden border-t border-line bg-surface lg:rounded-[20px] lg:border"
+            className="isolate flex min-h-0 flex-1 flex-col overflow-hidden border-t border-line lg:rounded-[20px] lg:border lg:bg-surface"
           >
             <h2 id="agenda-title" className="sr-only">
               {title}
@@ -538,8 +555,9 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
           </section>
         </div>
       </div>
-      {/* Téléphone : « Nouvelle séance » est le « + » de la carte en haut à droite. */}
-      <NewSessionButton variant="bar" date={shownView === "jour" ? date : undefined} />
+      {/* Téléphone : « Nouvelle séance » est un bouton flottant en bas à droite, comme Google Agenda
+          (03/11) ; la carte du haut garde la vue, l'assistant et la cloche. */}
+      <NewSessionButton variant="fab" date={shownView === "jour" ? date : undefined} />
     </>
   );
 }

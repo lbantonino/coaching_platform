@@ -14,7 +14,7 @@ export function PageTabs({
   return (
     <nav
       aria-label={label}
-      className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:px-0"
+      className="-mx-3.5 overflow-x-auto px-3.5 [scrollbar-width:none] md:mx-0 md:px-0"
     >
       <ul className="flex min-w-max gap-2 md:gap-6 md:border-b md:border-line">
         {items.map((item) => (
@@ -44,7 +44,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
   return (
     <ol
       aria-label="Étapes"
-      className="-mx-4 flex min-w-0 gap-2 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:gap-6 md:border-b md:border-line md:px-0"
+      className="-mx-3.5 flex min-w-0 gap-2 overflow-x-auto px-3.5 [scrollbar-width:none] md:mx-0 md:gap-6 md:border-b md:border-line md:px-0"
     >
       {steps.map((step, index) => {
         const done = index < current;

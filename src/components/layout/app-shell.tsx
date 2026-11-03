@@ -27,17 +27,24 @@ export function AppShell({ value, children }: { value: ShellValue; children: Rea
           <MobileMenuPanel />
           <aside
             data-app-sidebar=""
-            className="sticky top-3 my-3 ml-3 hidden h-[calc(100dvh-24px)] w-[240px] shrink-0 flex-col gap-5 overflow-y-auto rounded-[20px] border border-line bg-panel px-4 pt-[30px] pb-4 lg:flex"
+            // Cadre de la maquette « Sportifs » (03/11/2026), le même pour toutes les pages : 236 px, à
+            // 14 px des bords, padding 24 / 14 / 16. Filet en ombre intérieure (n'occupe pas de place).
+            className="sticky top-3.5 my-3.5 ml-3.5 hidden h-[calc(100dvh-28px)] w-[236px] shrink-0 flex-col overflow-y-auto rounded-[20px] bg-panel px-3.5 pt-6 pb-4 inset-ring inset-ring-line lg:flex"
           >
             {/* Replié (29/10/2026, comme ChatGPT) : la boucle du logo seule et les icônes des pages. */}
-            <div data-sidebar-head="" className="flex items-center justify-between gap-2 pb-1.5">
+            {/* Ligne du logo : 4 px au-dessus, 24 px dessous ; le bouton « Replier » (34 px) ne la
+                grandit pas (marges négatives), comme l'icône de 17 px de la maquette. */}
+            <div
+              data-sidebar-head=""
+              className="flex items-center justify-between gap-2 pt-1 pb-6 [&>[data-sidebar-hide]]:-my-[8.5px]"
+            >
               <Link
                 href={homeHref[value.space]}
                 aria-label="Accueil"
                 data-logo-full=""
                 className="w-fit rounded-sm px-2.5"
               >
-                <CooryLogo size={15} />
+                <CooryLogo size={14.6} />
               </Link>
               <HideSidebarButton />
               <ShowSidebarButton />

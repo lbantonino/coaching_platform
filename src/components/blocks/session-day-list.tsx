@@ -78,7 +78,8 @@ export function SessionDayList({
   blocks: WeekBlock[];
   today: string;
   nowMinutes: number;
-  sessionHref: (sessionId: string) => string;
+  // Page de la séance, ouverte sur cette date (02/11).
+  sessionHref: (sessionId: string, date: string) => string;
 }) {
   const days = [...new Set(blocks.map((block) => block.date))];
   let lastWeek = "";
@@ -134,7 +135,7 @@ export function SessionDayList({
                       {index === nowIndex ? <NowLine /> : null}
                       {/* Ordinateur : une ligne. */}
                       <Link
-                        href={sessionHref(block.sessionId)}
+                        href={sessionHref(block.sessionId, block.date)}
                         className="hidden grid-cols-[14px_120px_minmax(0,1fr)] items-center gap-2 rounded-lg px-2 py-1.5 transition-colors duration-150 hover:bg-selected-hover lg:grid"
                       >
                         <span
@@ -153,7 +154,7 @@ export function SessionDayList({
                       </Link>
                       {/* Téléphone : une carte de la couleur de la discipline. */}
                       <Link
-                        href={sessionHref(block.sessionId)}
+                        href={sessionHref(block.sessionId, block.date)}
                         className={`block rounded-xl px-3 py-2 lg:hidden ${cards[discipline]}`}
                       >
                         <span className="flex min-w-0 items-center gap-1 text-[13.5px] font-semibold">

@@ -191,8 +191,10 @@ function SessionFields({
             className={`${inputClass} font-mono`}
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col gap-1.5">
+        {/* Deux colonnes qui peuvent rétrécir (minmax(0, 1fr)) : l'heure ne déborde plus sur la
+            durée sur iPhone (03/11). */}
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3">
+          <div className="flex min-w-0 flex-col gap-1.5">
             <label htmlFor="session-time" className={labelClass}>
               Heure
             </label>
@@ -204,21 +206,31 @@ function SessionFields({
               className={`${inputClass} font-mono`}
             />
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex min-w-0 flex-col gap-1.5">
             <label htmlFor="session-duration" className={labelClass}>
-              Durée (min)
+              Durée
             </label>
-            <input
-              id="session-duration"
-              name="durationMinutes"
-              type="number"
-              inputMode="numeric"
-              min={15}
-              max={480}
-              step={5}
-              defaultValue={v.durationMinutes}
-              className={`${inputClass} font-mono`}
-            />
+            {/* L'unité dans le champ, à droite. */}
+            <div className="relative">
+              <input
+                id="session-duration"
+                name="durationMinutes"
+                type="number"
+                inputMode="numeric"
+                min={15}
+                max={480}
+                step={5}
+                defaultValue={v.durationMinutes}
+                aria-describedby="session-duration-unit"
+                className={`${inputClass} pr-14 font-mono`}
+              />
+              <span
+                id="session-duration-unit"
+                className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[15px] text-muted"
+              >
+                min
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -414,7 +426,7 @@ function SessionFields({
           {priceCents === null
             ? "Sans prix, la séance ne compte pas dans l'encaissé."
             : vatRate === 0
-              ? `${format(priceCents)} reçus, sans TVA (ta structure n'en facture pas).`
+              ? `${format(priceCents)} reçus, sans TVA (réglage dans Paramètres).`
               : vatIncluded
                 ? `${format(priceCents)} reçus, TVA comprise : ${format(splitVat(priceCents, vatRate).exclCents)} HTVA et ${format(splitVat(priceCents, vatRate).vatCents)} de TVA (${formatVatRate(vatRate)}).`
                 : `${format(priceCents)} HTVA : le sportif paie ${format(addVat(priceCents, vatRate))}, TVA de ${formatVatRate(vatRate)} comprise.`}
@@ -436,11 +448,23 @@ function SessionFields({
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-4">
+      {/* Dans la fenêtre « Nouvelle séance » (stay) : le bouton reste en bas pendant qu'on fait
+          défiler le formulaire (03/11) ; pleine largeur sur téléphone. */}
+      <div
+        className={`flex flex-wrap items-center gap-4 ${
+          stay
+            ? "sticky bottom-0 z-10 -mx-[18px] -mb-[22px] border-t border-line bg-bg px-[18px] pt-3 pb-[max(16px,env(safe-area-inset-bottom))] md:pb-4"
+            : ""
+        }`}
+      >
         <button
           type="submit"
           disabled={pending}
-          className={buttonClass({ variant: "primary", size: "md" })}
+          className={buttonClass({
+            variant: "primary",
+            size: "md",
+            className: stay ? "max-md:w-full" : "",
+          })}
         >
           {pending ? "Enregistrement…" : submitLabel}
         </button>

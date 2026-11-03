@@ -148,7 +148,7 @@ export type AthleteFormValues = {
   equipment: string;
 };
 
-// Adresse (D-65), modifiée avec la fiche (onglet Profil) et reprise sur les factures.
+// Adresse (D-65), modifiée avec la fiche (onglet Profil).
 export type AddressFormValues = {
   addressLine: string;
   postalCode: string;

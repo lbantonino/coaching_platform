@@ -4,7 +4,6 @@ import { Ellipsis, Layers, MessageSquare, Pencil, RefreshCw, Send, Target } from
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { iconButtonClass } from "@/components/ui/button";
 import { disciplineIcons } from "@/components/ui/discipline-icon";
 import { ActionMenu } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
@@ -22,6 +21,7 @@ export function AthleteFicheMenu({
   organizationId,
   athlete,
   basePath,
+  phone = false,
 }: {
   organizationId: string;
   athlete: {
@@ -32,6 +32,8 @@ export function AthleteFicheMenu({
     hasAccount: boolean;
   };
   basePath: string;
+  // Téléphone : bouton de 44 px dans la carte d'identité ; ordinateur : 32 px dans l'en-tête.
+  phone?: boolean;
 }) {
   const [menu, setMenu] = useState<MenuKind | null>(null);
   const [pending, startTransition] = useTransition();
@@ -76,7 +78,7 @@ export function AthleteFicheMenu({
         : [
             { label: "Changer le statut", icon: RefreshCw, onSelect: () => setMenu("status") },
             {
-              label: "Changer le type de programme",
+              label: "Changer le programme",
               icon: Layers,
               onSelect: () => setMenu("type"),
             },
@@ -116,9 +118,13 @@ export function AthleteFicheMenu({
         aria-label={`Actions pour ${athlete.name}`}
         disabled={pending}
         onClick={() => setMenu("actions")}
-        className={iconButtonClass()}
+        className={
+          phone
+            ? "grid size-11 shrink-0 place-items-center rounded-[13px] bg-bg text-text"
+            : "grid size-8 shrink-0 place-items-center rounded-[9px] text-text-2 inset-ring inset-ring-line transition-colors duration-150 hover:bg-selected-hover"
+        }
       >
-        <Ellipsis aria-hidden size={18} strokeWidth={1.8} />
+        <Ellipsis aria-hidden size={phone ? 18 : 16} strokeWidth={1.8} />
       </button>
       <ActionMenu
         open={menu !== null}

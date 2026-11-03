@@ -42,6 +42,7 @@ function Overlay({
   labelledBy,
   describedBy,
   wide = false,
+  tall = false,
   children,
 }: {
   open: boolean;
@@ -50,6 +51,9 @@ function Overlay({
   describedBy?: string;
   // Grande fenêtre (Paramètres, D-58) : presque tout l'écran du téléphone, 960 px sur ordinateur.
   wide?: boolean;
+  // Feuille haute sur téléphone (Nouvelle séance, 03/11) : ouverte presque en plein écran, comme une
+  // feuille de l'iPhone, son contenu défile sous un titre fixe.
+  tall?: boolean;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -330,10 +334,14 @@ function Overlay({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerEnd}
       onPointerCancel={onPointerEnd}
-      className={`m-0 mt-auto w-full max-w-none overflow-y-auto rounded-t-sheet border border-line-2 bg-bg p-0 text-text backdrop:bg-[rgba(3,6,12,0.6)] md:m-auto md:rounded-card ${
+      // Défilement vertical seulement (03/11) : un contenu un peu trop large ne fait plus glisser la
+      // fenêtre sur le côté ; arrivé en haut ou en bas, le défilement ne passe pas à la page derrière.
+      className={`m-0 mt-auto w-full max-w-none overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-sheet border border-line-2 bg-bg p-0 text-text backdrop:bg-[rgba(3,6,12,0.6)] md:m-auto md:rounded-card ${
         wide
           ? "h-[94%] max-h-[94%] md:h-[min(86vh,800px)] md:max-h-[86vh] md:max-w-[min(960px,calc(100vw-48px))]"
-          : "max-h-[88%] md:max-h-[86vh] md:max-w-[560px]"
+          : tall
+            ? "max-md:h-[94%] max-h-[94%] md:max-h-[86vh] md:max-w-[560px]"
+            : "max-h-[88%] md:max-h-[86vh] md:max-w-[560px]"
       }`}
     >
       {rendered ? (
@@ -373,6 +381,7 @@ export function Sheet({
   title,
   subtitle,
   footer,
+  tall = false,
   children,
 }: {
   open: boolean;
@@ -380,12 +389,21 @@ export function Sheet({
   title: string;
   subtitle?: string;
   footer?: ReactNode;
+  // Presque plein écran sur téléphone, titre et croix fixes en haut (voir Overlay).
+  tall?: boolean;
   children: ReactNode;
 }) {
   const titleId = useId();
   return (
-    <Overlay open={open} onClose={onClose} labelledBy={titleId}>
-      <div data-sheet-grab className="flex touch-none items-start justify-between gap-3">
+    <Overlay open={open} onClose={onClose} labelledBy={titleId} tall={tall}>
+      <div
+        data-sheet-grab
+        className={`flex touch-none items-start justify-between gap-3 ${
+          tall
+            ? "sticky top-0 z-10 -mx-[18px] -mt-2 bg-bg px-[18px] pt-2 pb-3 shadow-[0_1px_0_var(--line)]"
+            : ""
+        }`}
+      >
         <div className="flex min-w-0 flex-col gap-1">
           <h2 id={titleId} className="font-display text-[20px] font-semibold tracking-[-0.02em]">
             {title}

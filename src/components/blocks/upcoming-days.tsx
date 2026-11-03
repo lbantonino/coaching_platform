@@ -45,7 +45,8 @@ export function UpcomingDays({
   days: UpcomingDay[];
   // La séance la plus proche (« Prochaine »).
   nextKey: string | null;
-  sessionHref: (sessionId: string) => string;
+  // Page de la séance, ouverte sur cette date (02/11).
+  sessionHref: (sessionId: string, date: string) => string;
 }) {
   return (
     <div className="grid gap-y-6 pt-2 sm:grid-cols-2 sm:gap-x-8">
@@ -95,7 +96,7 @@ export function UpcomingDays({
                   }`}
                 />
                 <Link
-                  href={sessionHref(block.sessionId)}
+                  href={sessionHref(block.sessionId, block.date)}
                   className={`block rounded-xl px-3 py-2 transition-colors duration-150 ${
                     next ? "bg-violet-soft" : "hover:bg-selected-hover"
                   }`}

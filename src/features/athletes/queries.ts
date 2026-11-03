@@ -141,7 +141,7 @@ export type AthleteDetail = {
   experience: string | null;
   trainingPlaces: TrainingPlace[];
   equipment: string | null;
-  // Adresse (D-65), reprise sur les factures.
+  // Adresse (D-65).
   addressLine: string | null;
   postalCode: string | null;
   city: string | null;

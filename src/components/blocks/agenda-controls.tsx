@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CalendarCheck,
   CalendarDays,
   Check,
   ChevronDown,
@@ -17,10 +18,11 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { MobileBarTitle, MobileBarTool } from "@/components/layout/mobile-bar";
 import type { Discipline } from "@/domain/training/discipline";
 
 import { hoursLabel as hoursText } from "./coaching-hours";
-import { VISIBLE_EVENT, type VisibleDays } from "./scroll-to-day";
+import { GOTO_EVENT, VISIBLE_EVENT, type VisibleDays } from "./scroll-to-day";
 
 // Commandes de la page Agenda, à la façon de Google Agenda (D-78, maquette agenda-v1 validée par
 // Antonino le 01/11) : menu des vues (ordinateur, au centre de la barre du haut, raccourcis J S M L,
@@ -235,6 +237,7 @@ export function AgendaFilters({
 // semaine affichée surlignée en gris (02/11, toujours) ; le jour affiché cerclé hors de cette semaine ; la semaine
 // affichée surlignée ; un jour ouvre cette date (dans la vue en cours). `dayHref` : adresse modèle où
 // « __DATE__ » est remplacé par la date. `dots` (téléphone) : les disciplines du jour en petits points.
+// Glisser le calendrier sur le côté change de mois (02/11), comme les flèches, sans limite.
 const monthTitle = new Intl.DateTimeFormat("fr-BE", {
   month: "long",
   year: "numeric",
@@ -242,6 +245,12 @@ const monthTitle = new Intl.DateTimeFormat("fr-BE", {
 });
 const monthOnly = new Intl.DateTimeFormat("fr-BE", { month: "long", timeZone: "UTC" });
 const dayMonth = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+const shortDay = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "short",
   day: "numeric",
   month: "short",
   timeZone: "UTC",
@@ -261,6 +270,12 @@ function weekName(monday: string, today: string): string {
 }
 const utc = (day: string) => new Date(`${day}T00:00:00Z`);
 const iso = (date: Date) => date.toISOString().slice(0, 10);
+// La rangée des mois (jusqu'à quatre ans) s'ouvre sur le mois affiché, au centre.
+const centerActiveMonth = (row: HTMLDivElement | null) => {
+  const active = row?.querySelector<HTMLElement>("[aria-current]");
+  if (row && active)
+    row.scrollLeft = active.offsetLeft - (row.clientWidth - active.offsetWidth) / 2;
+};
 const dotClass: Record<Discipline, string> = {
   running: "bg-run-fill",
   strength: "bg-strength-fill",
@@ -284,18 +299,24 @@ export function AgendaMiniMonth({
   dots?: Record<string, Discipline[]>;
 }) {
   const [month, setMonth] = useState(initialMonth);
+  // Sens du dernier changement de mois : le nouveau mois arrive de ce côté.
+  const [from, setFrom] = useState<"left" | "right" | null>(null);
   // Une autre période affichée : le petit calendrier revient sur son mois (ajusté au rendu).
   const [shownFor, setShownFor] = useState(initialMonth);
   if (shownFor !== initialMonth) {
     setShownFor(initialMonth);
     setMonth(initialMonth);
+    setFrom(null);
   }
+  const press = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
   const first = utc(`${month}-01`);
   const start = new Date(first);
   start.setUTCDate(1 - ((first.getUTCDay() + 6) % 7));
   const shift = (direction: number) => {
     const next = new Date(first);
     next.setUTCMonth(next.getUTCMonth() + direction);
+    setFrom(direction > 0 ? "right" : "left");
     setMonth(iso(next).slice(0, 7));
   };
   const weekEnd = weekStart ? iso(new Date(utc(weekStart).getTime() + 6 * 86_400_000)) : null;
@@ -325,7 +346,44 @@ export function AgendaMiniMonth({
           </button>
         </span>
       </div>
-      <div className="grid grid-cols-7" aria-label={`Calendrier, ${title}`} role="group">
+      <div
+        key={month}
+        aria-label={`Calendrier, ${title}`}
+        role="group"
+        // Glisser sur le côté (au moins 40 px, nettement plus horizontal que vertical) change de mois ;
+        // le navigateur garde le défilement vertical.
+        onPointerDown={(event) => {
+          press.current = { x: event.clientX, y: event.clientY };
+          swiped.current = false;
+        }}
+        onPointerUp={(event) => {
+          const origin = press.current;
+          press.current = null;
+          if (!origin) return;
+          const dx = event.clientX - origin.x;
+          const dy = event.clientY - origin.y;
+          if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+          swiped.current = true;
+          shift(dx < 0 ? 1 : -1);
+        }}
+        onPointerCancel={() => {
+          press.current = null;
+        }}
+        // Un glissé n'est pas un appui sur le jour où il finit.
+        onClickCapture={(event) => {
+          if (!swiped.current) return;
+          event.preventDefault();
+          event.stopPropagation();
+          swiped.current = false;
+        }}
+        className={`grid touch-pan-y grid-cols-7 transition-[opacity,translate] duration-200 ease-out select-none motion-reduce:transition-none ${
+          from === "right"
+            ? "starting:translate-x-6 starting:opacity-0"
+            : from === "left"
+              ? "starting:-translate-x-6 starting:opacity-0"
+              : ""
+        }`}
+      >
         {["L", "M", "M", "J", "V", "S", "D"].map((day, index) => (
           <span
             key={index}
@@ -349,6 +407,7 @@ export function AgendaMiniMonth({
               key={day}
               href={dayHref.replace("__DATE__", day)}
               scroll={false}
+              draggable={false}
               aria-label={date.toLocaleDateString("fr-BE", {
                 weekday: "long",
                 day: "numeric",
@@ -358,7 +417,7 @@ export function AgendaMiniMonth({
               aria-current={day === selected ? "date" : undefined}
               className={`flex flex-col items-center ${dots ? "h-11" : "h-8"} ${
                 inWeek
-                  ? `bg-chip ${weekday === 0 ? "rounded-l-full" : ""} ${weekday === 6 ? "rounded-r-full" : ""}`
+                  ? `bg-bar lg:bg-chip ${weekday === 0 ? "rounded-l-full" : ""} ${weekday === 6 ? "rounded-r-full" : ""}`
                   : ""
               }`}
             >
@@ -372,8 +431,8 @@ export function AgendaMiniMonth({
                           : day === selected
                             ? "font-semibold text-text"
                             : inMonth
-                            ? "text-text-2 hover:bg-selected-hover"
-                            : "text-faint"
+                              ? "text-text-2 hover:bg-selected-hover"
+                              : "text-faint"
                       }`
                 }`}
               >
@@ -407,6 +466,7 @@ export function AgendaPhoneBar({
   kindHrefs,
   mini,
   months,
+  todayLink,
 }: {
   monthLabel: string;
   // Heures de coaching à l'ouverture (filtres compris) : la semaine du premier jour visible (Jour,
@@ -417,6 +477,9 @@ export function AgendaPhoneBar({
   kindHrefs: Record<AgendaKind, string>;
   mini: Parameters<typeof AgendaMiniMonth>[0];
   months: { label: string; year?: string; href: string; active: boolean }[];
+  // « Aujourd'hui » : la vue en cours à la date du jour, et la colonne où la grille glisse (Jour,
+  // 3 jours, Semaine ; null pour Mois et Liste, qui se rouvrent).
+  todayLink: { href: string; column: string | null };
 }) {
   const [unfolded, setUnfolded] = useState(false);
   const sheet = useRef<HTMLDialogElement>(null);
@@ -467,36 +530,39 @@ export function AgendaPhoneBar({
   }, []);
   return (
     <div className="shrink-0 lg:hidden">
-      <div className="flex h-14 items-center justify-between px-3">
+      {/* Dans la barre du haut (02/11, pour laisser la place au calendrier) : le mois à la place du nom
+          de la page, et l'icône de la vue juste avant l'assistant IA. */}
+      <MobileBarTitle>
         <button
           type="button"
           aria-expanded={unfolded}
           onClick={() => setUnfolded((value) => !value)}
-          className="flex h-11 items-center gap-1.5 rounded-xl pr-1 pl-1.5 text-[18px] font-semibold tracking-tight"
+          className="flex h-11 min-w-0 items-center gap-0.5 rounded-xl text-[17px] font-semibold tracking-tight"
         >
-          {visibleMonth ?? monthLabel}
+          <span className="truncate">{visibleMonth ?? monthLabel}</span>
           <ChevronDown
             aria-hidden
             size={16}
             strokeWidth={2.2}
-            className={`text-muted transition-transform duration-200 ${unfolded ? "rotate-180" : ""}`}
+            className={`shrink-0 text-muted transition-transform duration-200 ${unfolded ? "rotate-180" : ""}`}
           />
         </button>
+      </MobileBarTitle>
+      <MobileBarTool>
         <button
           type="button"
           onClick={() => sheet.current?.showModal()}
           aria-label={`Vue : ${current.label}. Vue et filtres`}
-          className="flex h-11 items-center gap-1.5 rounded-xl border border-line pr-2.5 pl-3 text-[13px] font-medium"
+          title={current.label}
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-violet-text transition-colors duration-150 hover:bg-selected-hover active:bg-selected-hover"
         >
-          <CurrentIcon aria-hidden size={16} strokeWidth={1.8} className="text-violet-text" />
-          {current.label}
-          <ChevronDown aria-hidden size={13} strokeWidth={2} className="text-muted" />
+          <CurrentIcon aria-hidden size={19} strokeWidth={1.8} />
         </button>
-      </div>
+      </MobileBarTool>
       {unfolded ? (
-        <div className="px-3 pb-2">
+        <div className="px-3 pt-1 pb-2">
           {/* Heures totales de coaching de la semaine affichée, au-dessus du mois (02/11). */}
-          <p className="mb-3 flex h-11 items-center gap-2.5 rounded-xl bg-surface-2 px-3 text-[13px] text-text-2">
+          <p className="mb-3 flex h-11 items-center gap-2.5 rounded-xl bg-surface px-3 text-[13px] text-text-2">
             <Clock3 aria-hidden size={16} strokeWidth={1.8} className="shrink-0 text-violet-text" />
             <span className="min-w-0 flex-1 truncate">
               Heures totales · {hoursLabel.charAt(0).toLowerCase() + hoursLabel.slice(1)}
@@ -507,7 +573,10 @@ export function AgendaPhoneBar({
           </p>
           {/* La semaine affichée, en gris : elle suit les jours qu'on fait défiler. */}
           <AgendaMiniMonth {...mini} weekStart={visibleWeek?.weekStart ?? mini.weekStart} />
-          <div className="-mx-3 mt-2 flex items-center gap-2 overflow-x-auto px-3 [scrollbar-width:none]">
+          <div
+            ref={centerActiveMonth}
+            className="-mx-3 mt-2 flex items-center gap-2 overflow-x-auto px-3 [scrollbar-width:none]"
+          >
             {months.map((month) => (
               <span key={month.href} className="contents">
                 {month.year ? (
@@ -516,6 +585,7 @@ export function AgendaPhoneBar({
                 <Link
                   href={month.href}
                   scroll={false}
+                  aria-current={month.active ? "date" : undefined}
                   className={`h-9 shrink-0 rounded-full border px-4 text-[13px] leading-[34px] ${
                     month.active
                       ? "border-violet-line bg-violet-soft font-medium text-violet-text"
@@ -538,6 +608,28 @@ export function AgendaPhoneBar({
         className="fixed inset-x-0 top-auto bottom-0 m-0 w-full max-w-none translate-none rounded-t-[24px] border-t border-line bg-surface px-4 pt-2 pb-[max(20px,env(safe-area-inset-bottom))] text-text transition-[translate,display,overlay] transition-discrete duration-[260ms] ease-[cubic-bezier(0.32,0.72,0,1)] backdrop:bg-black/45 not-open:translate-y-full starting:open:translate-y-full motion-reduce:transition-none lg:hidden"
       >
         <div aria-hidden className="mx-auto mb-3 h-1 w-10 rounded-full bg-line-2" />
+        {/* Aujourd'hui (demande d'Antonino du 02/11) : la grille y glisse sans recharger quand elle
+            contient ce jour ; sinon la vue se rouvre à la date du jour. */}
+        <Link
+          href={todayLink.href}
+          scroll={false}
+          onClick={(event) => {
+            const column = todayLink.column;
+            if (column && document.querySelector(`[data-day-col][data-date="${column}"]`)) {
+              event.preventDefault();
+              window.dispatchEvent(new CustomEvent(GOTO_EVENT, { detail: column }));
+            }
+            sheet.current?.close();
+          }}
+          className="flex min-h-12 items-center gap-3.5 rounded-xl px-3 text-[15px] font-medium text-violet-text transition-colors duration-150 active:bg-selected-hover"
+        >
+          <CalendarCheck aria-hidden size={20} strokeWidth={1.7} />
+          Aujourd&apos;hui
+          <span className="ml-auto text-[13px] font-normal text-muted">
+            {shortDay.format(utc(mini.today))}
+          </span>
+        </Link>
+        <div className="my-2 border-t border-line-soft" />
         <p className="px-1 pb-1 text-[12px] font-medium text-muted">Vue</p>
         <nav aria-label="Vue de l'agenda" className="flex flex-col">
           {views.map((view) => {

@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   countUnread,
-  invoiceKey,
   isNotificationKey,
   latestUnreadByAthlete,
   messageKey,
   stateMap,
   taskKey,
+  unpaidKey,
 } from "@/domain/notifications/keys";
 
 const ID = "7a000000-0000-4000-8000-0000000000a1";
@@ -20,7 +20,9 @@ describe("clés des notifications", () => {
   });
 
   it("n'accepte que des clés connues, sans caractère libre", () => {
-    expect(isNotificationKey(invoiceKey(ID, "2026-10-01"))).toBe(true);
+    expect(isNotificationKey(unpaidKey(ID, "2026-10-01"))).toBe(true);
+    // Les anciennes notifications de factures (avant D-90) ne sont plus des clés valables.
+    expect(isNotificationKey(`invoice:${ID}:2026-10-01`)).toBe(false);
     expect(isNotificationKey("task:'; drop table x;--")).toBe(false);
     expect(isNotificationKey("autre:123")).toBe(false);
     expect(isNotificationKey(42)).toBe(false);

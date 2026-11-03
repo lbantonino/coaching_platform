@@ -191,7 +191,7 @@ export function AccountMenu() {
         }}
         // Sans bordure (02/11) : la photo cerclée, le nom, le rôle et la flèche ; fond au survol et
         // tant que le menu est ouvert.
-        className={`flex w-full items-center gap-3 rounded-wide px-2.5 py-2 text-left text-text transition-colors duration-150 hover:bg-surface-2 ${
+        className={`flex w-full items-center gap-2.5 rounded-wide p-2 text-left text-text transition-colors duration-150 hover:bg-surface-2 ${
           open ? "bg-surface-2" : ""
         }`}
       >

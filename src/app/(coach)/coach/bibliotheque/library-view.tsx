@@ -134,7 +134,7 @@ export function LibraryView({
             ref={rubrics}
             role="group"
             aria-label="Rubriques"
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
+            className="-mx-3.5 flex gap-2 overflow-x-auto px-3.5 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
           >
             {/* Une rubrique vide n'apparaît pas (la Mobilité, si on la masque de nouveau). */}
             {(["all", ...LIBRARY_CATEGORIES] as const)

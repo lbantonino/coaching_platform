@@ -4,9 +4,10 @@ import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Notifications du coach (D-37) : la cloche compte ce qui attend, la page le range en sections
 // (compétitions des sportifs dans les 7 jours, messages non lus, tâches du jour ou en retard,
-// factures en retard, fiches à compléter), et chaque
-// ligne mène là où on s'en occupe. Lignes stables du seed : la facture en retard de Sophie et la
-// fiche de Manon (prénom seul) ; les messages et les tâches bougent avec les autres tests.
+// séances à encaisser depuis plus d'une semaine (D-90), fiches à compléter), et chaque ligne mène là
+// où on s'en occupe. Lignes stables du seed : la Remise en forme du mardi de Sophie, pas payée depuis
+// trois semaines, et la fiche de Manon (prénom seul) ; les messages et les tâches bougent avec les
+// autres tests.
 async function loginAsCoachA(page: Page) {
   await page.goto("/login");
   await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
@@ -43,15 +44,16 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
     "Compétitions dans les 7 jours",
     "Messages non lus",
     "Tâches du jour ou en retard",
-    "Factures en retard",
+    "Séances à encaisser",
     "Fiches à compléter",
   ]) {
     await expect(page.getByRole("region", { name })).toBeVisible();
   }
-  const invoices = page.getByRole("region", { name: "Factures en retard" });
-  await expect(invoices.getByRole("link", { name: /Sophie Lambert/ })).toHaveAttribute(
+  // Chaque séance à encaisser ouvre sa page, sur la date à payer.
+  const unpaid = page.getByRole("region", { name: "Séances à encaisser" });
+  await expect(unpaid.getByRole("link", { name: /Sophie Lambert/ }).first()).toHaveAttribute(
     "href",
-    "/coach/facturation",
+    /\/agenda\/seances\/ca000000-0000-4000-8000-00000000020c\?date=\d{4}-\d{2}-\d{2}$/,
   );
 
   await page
@@ -103,11 +105,11 @@ test("la cloche déplie l'aperçu des notifications, rangé en sections, avec «
   const popover = page.getByRole("dialog", { name: /^Notifications/ });
   // Les vraies données, en sections (les autres tests lisent des messages et cochent des tâches en
   // parallèle : on vérifie les sections qui ne bougent pas). Chaque section a son « Voir tout ».
-  const invoices = popover.getByRole("region", { name: "Factures en retard" });
-  await expect(invoices).toContainText("Sophie Lambert");
+  const unpaid = popover.getByRole("region", { name: "Séances à encaisser" });
+  await expect(unpaid).toContainText("Sophie Lambert");
   await expect(
-    invoices.getByRole("link", { name: /^Voir toutes les factures en retard/ }),
-  ).toHaveAttribute("href", "/coach/facturation?statut=en-retard");
+    unpaid.getByRole("link", { name: /^Voir toutes les séances à encaisser/ }),
+  ).toHaveAttribute("href", "/coach/comptabilite?liste=a-encaisser");
   // Fiches à compléter : 3 au plus (les plus récentes, les autres tests en créent), puis « Voir tout ».
   const profiles = popover
     .getByRole("region", { name: "Fiches à compléter" })
@@ -126,19 +128,19 @@ test("la cloche déplie l'aperçu des notifications, rangé en sections, avec «
     .click();
   await expect(page).toHaveURL(/\/sportifs\?fiche=a-completer$/);
   await expect(popover).toBeHidden();
-  // « Voir toutes les factures en retard » : la Facturation, filtre « En retard ».
+  // « Voir toutes les séances à encaisser » : la Comptabilité, liste « À encaisser ».
   await bell.click();
   await popover
-    .getByRole("region", { name: "Factures en retard" })
-    .getByRole("link", { name: /^Voir toutes les factures en retard/ })
+    .getByRole("region", { name: "Séances à encaisser" })
+    .getByRole("link", { name: /^Voir toutes les séances à encaisser/ })
     .click();
-  await expect(page).toHaveURL(/\/coach\/facturation\?statut=en-retard/);
-  const filters = page.getByRole("navigation", { name: "Filtrer les factures" });
-  await expect(filters.getByRole("link", { name: /^En retard/ })).toHaveAttribute(
-    "aria-current",
-    "true",
-  );
-  await expect(page.getByRole("list", { name: "Liste des factures" })).toContainText(
+  await expect(page).toHaveURL(/\/coach\/comptabilite\?liste=a-encaisser$/);
+  await expect(
+    page.getByRole("navigation", { name: "Liste affichée" }).getByRole("link", {
+      name: /^À encaisser/,
+    }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("list", { name: "Séances à encaisser" })).toContainText(
     "Sophie Lambert",
   );
 });

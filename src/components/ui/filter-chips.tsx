@@ -23,7 +23,7 @@ export function FilterChips({
     <nav
       aria-label={label}
       className={`flex overflow-x-auto [scrollbar-width:none] md:flex-wrap md:overflow-visible ${
-        size === "sm" ? "gap-1" : "-mx-4 gap-2 px-4 pb-1 md:mx-0 md:px-0"
+        size === "sm" ? "gap-1" : "-mx-3.5 gap-2 px-3.5 pb-1 md:mx-0 md:px-0"
       }`}
     >
       {options.map((option) => (

@@ -71,10 +71,10 @@ export function ShowSidebarButton() {
 // Page Agenda (D-78, comme Google Agenda) : en arrivant, le menu se replie en icônes pour laisser la
 // place au panneau de l'agenda, SANS changer le choix retenu ; en repartant, il reprend ce choix (sauf
 // si on l'a déplié ou replié à la main entre-temps). Au premier chargement, sidebarInitScript l'a déjà
-// replié avant l'affichage. Marque aussi la page (data-agenda : fond plein sur téléphone). Téléphone
-// (02/11) : la barre du navigateur, tout en haut, prend la couleur de ce fond (meta theme-color), pour
-// que le blanc de l'Agenda remplisse tout l'écran sans bande grise au-dessus ; elle suit le thème et
-// reprend sa couleur en quittant l'Agenda.
+// replié avant l'affichage. Marque aussi la page (data-agenda). Téléphone
+// (02/11) : la barre du navigateur, tout en haut, prend la couleur du fond de la page (meta
+// theme-color), pour qu'il remplisse tout l'écran sans bande d'une autre couleur au-dessus ; elle suit le
+// thème et reprend sa couleur en quittant l'Agenda.
 export function AgendaSidebarCollapse() {
   useLayoutEffect(() => {
     const html = document.documentElement;

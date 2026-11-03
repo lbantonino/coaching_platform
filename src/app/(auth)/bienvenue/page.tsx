@@ -65,15 +65,9 @@ async function Welcome() {
     organizationName: text(meta.organization_name),
   };
   const termsAccepted = text(meta.terms_version) === TERMS_VERSION;
-  // Étape « Ta facturation » d'un coach (D-69) : pays deviné d'après la langue du navigateur.
+  // Étape « Pays, devise et TVA » d'un coach (D-69, D-90) : pays deviné d'après la langue du navigateur.
   const country = countryFromAcceptLanguage((await headers()).get("accept-language"));
-  const billing = {
-    country,
-    currency: defaultCurrencyFor(country),
-    vatChoice: "",
-    vatRate: "",
-    vatNumber: "",
-  };
+  const billing = { country, currency: defaultCurrencyFor(country), vatChoice: "", vatRate: "" };
   // Tout vient de l'inscription par e-mail (type, nom, conditions acceptées) : écran de bienvenue.
   const ready =
     (text(meta.kind) === "coach" || text(meta.kind) === "athlete") &&

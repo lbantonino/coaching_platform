@@ -29,7 +29,13 @@ import {
   totalRow,
   type AccountingUnit,
 } from "@/domain/billing/accounting";
-import { describeTotal, formatMoney, formatVatRate } from "@/domain/billing/money";
+import {
+  addTo,
+  describeTotal,
+  formatMoney,
+  formatVatRate,
+  type ByCurrency,
+} from "@/domain/billing/money";
 import { isBankMethod, paymentMethodLabel, splitVat } from "@/domain/billing/payments";
 import { requireCoach } from "@/features/auth/guards";
 import {
@@ -44,11 +50,14 @@ import {
 import { listExpenseCategories, listExpenses } from "@/features/billing/expense-queries";
 import { deletePayment } from "@/features/billing/payment-actions";
 import { listPayments } from "@/features/billing/payment-queries";
+import { COLLECT_WEEKS, listUnpaidDates } from "@/features/billing/collect-queries";
 import { getConverter } from "@/features/coach/currency-queries";
-import { isVatSubject } from "@/features/coach/legal-queries";
-import { todayIsoInBrussels } from "@/lib/format";
+import { unpaidSub } from "@/features/notifications/preview";
+import { markSessionPaid } from "@/features/sessions/actions";
+import { dayShortLabel, todayIsoInBrussels } from "@/lib/format";
 
 import { BarChart } from "./bar-chart";
+import { CollectList } from "./collect-list";
 import { DonutChart } from "./donut-chart";
 import { NewExpenseButton } from "./expense-sheet";
 
@@ -61,15 +70,16 @@ export const metadata: Metadata = {
 // coach soumis à la TVA, TVA comprise sinon). Page en widgets comme le tableau de bord, chaque
 // rangée à la même hauteur : les chiffres clés du mois ; « Répartition » (graphique circulaire des
 // modes de paiement) et « Gagné et dépensé » (barres par période) ; le tableau de comptabilité et,
-// à sa hauteur, la liste des paiements ou des dépenses (elle défile). Semaine, mois ou année pour
-// toute la page. Vue de gestion, pas une comptabilité légale.
+// à sa hauteur, la liste des paiements, des dépenses ou des séances À ENCAISSER (D-90 : séances passées
+// pas encore payées, à la place des factures en retard ; elle défile). Semaine, mois ou année pour
+// toute la page. Aperçu de gestion, pas une comptabilité officielle : Coory ne fait pas de factures.
 const filters = [
   { key: "tous", label: "Tous" },
   { key: "banque", label: "Compte bancaire" },
   { key: "especes", label: "Espèces et autres" },
 ] as const;
 type Filter = (typeof filters)[number]["key"];
-type List = "paiements" | "depenses";
+type List = "paiements" | "depenses" | "a-encaisser";
 
 const unitLabels: Record<AccountingUnit, string> = {
   semaine: "Semaine",
@@ -95,7 +105,11 @@ export default function AccountingPage({ searchParams }: PageProps<"/coach/compt
             filter={filters.find((f) => f.key === query.mode)?.key ?? "tous"}
             unit={ACCOUNTING_UNITS.find((unit) => unit === query.vue) ?? "mois"}
             period={typeof query.periode === "string" ? query.periode : null}
-            list={query.liste === "depenses" ? "depenses" : "paiements"}
+            list={
+              query.liste === "depenses" || query.liste === "a-encaisser"
+                ? query.liste
+                : "paiements"
+            }
           />
         ))}
       </Suspense>
@@ -139,14 +153,16 @@ async function Accounting({
   const { currency, country } = membership;
   const money = (cents: number) => formatMoney(cents, currency);
   const today = todayIsoInBrussels();
-  const [payments, expenses, categories, convert, vatSubject] = await Promise.all([
+  const [payments, expenses, categories, convert, unpaid] = await Promise.all([
     listPayments(organizationId),
     listExpenses(organizationId),
     listExpenseCategories(organizationId),
     getConverter(membership),
-    isVatSubject(organizationId),
+    listUnpaidDates(organizationId, membership.vatRate),
   ]);
-  // Résultat (D-73) : HTVA pour un coach soumis à la TVA, TVA comprise sinon.
+  // Résultat (D-73) : HTVA pour un coach soumis à la TVA (taux de l'organisation, D-90), TVA
+  // comprise sinon.
+  const vatSubject = membership.vatRate > 0;
   const basis = vatSubject ? "excl" : "incl";
   const basisLabel = vatSubject ? "HTVA" : "";
 
@@ -179,7 +195,8 @@ async function Accounting({
     if (chosen && next.vue === undefined) params.set("periode", chosen);
     const mode = next.mode ?? filter;
     if (mode !== "tous") params.set("mode", mode);
-    if ((next.liste ?? list) === "depenses") params.set("liste", "depenses");
+    const liste = next.liste ?? list;
+    if (liste !== "paiements") params.set("liste", liste);
     const text = params.toString();
     return text ? `/coach/comptabilite?${text}` : "/coach/comptabilite";
   };
@@ -196,6 +213,15 @@ async function Accounting({
     (p) => filter === "tous" || (filter === "banque") === isBankMethod(p.method),
   );
   const head = "border-t border-line px-2.5 text-right";
+  // À encaisser (D-90) : total attendu, « ≈ » après un changement de devise (D-70).
+  const toCollect = unpaid.reduce(
+    (tally, date) => {
+      tally.cents += convert(date.amountCents, date.currency);
+      addTo(tally.byCurrency, date.currency, date.amountCents);
+      return tally;
+    },
+    { cents: 0, byCurrency: {} as ByCurrency },
+  );
 
   return (
     <>
@@ -447,19 +473,30 @@ async function Accounting({
           </div>
         </Card>
 
-        <div className="lg:relative lg:col-span-4">
+        {/* « À encaisser » (lien de la cloche) : sur téléphone, la liste passe en premier. */}
+        <div
+          className={`lg:relative lg:col-span-4 ${list === "a-encaisser" ? "max-lg:order-first" : ""}`}
+        >
           <Card
             id="list-title"
             className="lg:absolute lg:inset-0"
             title={
               <CardTitle icon={Wallet} color="var(--ok)">
-                {list === "depenses" ? "Dépenses" : "Paiements reçus"}
+                {list === "depenses"
+                  ? "Dépenses"
+                  : list === "a-encaisser"
+                    ? "À encaisser"
+                    : "Paiements reçus"}
               </CardTitle>
             }
             subtitle={
               list === "depenses"
                 ? `${plural(expenses.length, "dépense")} · les mensuelles comptent chaque mois`
-                : `${plural(shown.length, "paiement")} · montants TVA comprise`
+                : list === "a-encaisser"
+                  ? unpaid.length === 0
+                    ? `Séances passées des ${COLLECT_WEEKS} dernières semaines : tout est payé.`
+                    : `${plural(unpaid.length, "séance")} · ${describeTotal(toCollect.cents, toCollect.byCurrency, currency).value} attendus · ${COLLECT_WEEKS} dernières semaines`
+                  : `${plural(shown.length, "paiement")} · montants TVA comprise`
             }
           >
             <SegmentedNav
@@ -474,6 +511,12 @@ async function Accounting({
                   href: query({ liste: "depenses" }),
                   label: "Dépenses",
                   active: list === "depenses",
+                },
+                {
+                  href: query({ liste: "a-encaisser" }),
+                  // Sans compteur : trois onglets tiennent sur un téléphone de 390 px.
+                  label: "À encaisser",
+                  active: list === "a-encaisser",
                 },
               ]}
             />
@@ -537,6 +580,28 @@ async function Accounting({
                   )}
                 </div>
               </>
+            ) : list === "a-encaisser" ? (
+              <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
+                {unpaid.length === 0 ? (
+                  <CardEmpty icon={Coins}>
+                    Aucune séance à encaisser. Les séances passées avec un prix apparaissent ici
+                    tant qu&apos;elles ne sont pas marquées payées.
+                  </CardEmpty>
+                ) : (
+                  <CollectList
+                    mark={markSessionPaid.bind(null, organizationId)}
+                    rows={unpaid.map((date) => ({
+                      key: `${date.sessionId}:${date.originalDate}`,
+                      sessionId: date.sessionId,
+                      originalDate: date.originalDate,
+                      title: date.athleteName ?? date.title,
+                      sub: `${formatMoney(date.amountCents, date.currency)} · ${unpaidSub(date, today)}`,
+                      href: date.sessionHref,
+                      label: `${date.athleteName ?? date.title}, ${dayShortLabel(date.date, today).toLowerCase()} à ${date.startTime}`,
+                    }))}
+                  />
+                )}
+              </div>
             ) : (
               <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
                 {expenses.length === 0 ? (
@@ -623,6 +688,12 @@ async function Accounting({
             )}
           </Card>
         </div>
+
+        {/* D-90 : Coory ne fait ni factures ni déclarations, et ne suit les règles d'aucun pays. */}
+        <p className="text-caption text-muted lg:col-span-12">
+          Aperçu de ton activité, pas une comptabilité officielle : tes factures et tes déclarations
+          se font avec ton logiciel de facturation ou ton comptable.
+        </p>
       </PageBody>
     </>
   );

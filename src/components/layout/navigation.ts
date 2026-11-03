@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   ListChecks,
   MessageSquare,
-  Receipt,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -72,8 +71,8 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
     });
   }
   main.push(moduleEntry("programmes", FileText));
+  // Plus de Facturation (D-90) : Coory ne fait pas de factures, la Comptabilité suit l'argent.
   main.push(
-    moduleEntry("facturation", Receipt),
     moduleEntry("comptabilite", Calculator),
     // La fiche d'un exercice (/coach/bibliotheque/<clé>) allume la Bibliothèque.
     { ...moduleEntry("bibliotheque", BookOpen), match: under("/coach/bibliotheque") },
@@ -186,7 +185,6 @@ const coachTitles: [RegExp, string][] = [
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/nouvelle$/, "Nouvelle séance"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+\/modifier$/, "Modifier la séance"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+$/, "Séance"],
-  [/^\/coach\/facturation\/[^/]+$/, "Facture"],
   [/^\/coach\/bibliotheque\/[^/]+$/, "Exercice"],
 ];
 

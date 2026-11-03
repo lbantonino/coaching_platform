@@ -1,6 +1,6 @@
 -- Coory à l'international (D-69) : pays et devise de l'organisation, devise portée par chaque montant
 -- (jamais choisie par le navigateur), taux de TVA libre, numéros hors Belgique, et l'étape
--- « Ta facturation » de l'inscription (structure créée ou non).
+-- « Ta devise » de l'inscription (pays, devise, taux de TVA de l'organisation depuis D-90).
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
@@ -108,42 +108,41 @@ select is(
   'EUR', 'Le paiement d''une facture garde la devise de la facture'
 );
 
--- Inscription : pays, devise et TVA (étape « Ta facturation »).
+-- Inscription : pays, devise et taux de TVA (étape « Ta devise », D-90 : plus de structure créée).
 set local request.jwt.claims = '{"sub":"61616161-6161-4616-8616-616161616161","role":"authenticated"}';
 select lives_ok(
   $$ select public.complete_signup('coach', 'Lina', 'Meier', null, 'Lina Coaching', '2026-10-23',
-       'CH', 'CHF', 'subject', 8.1, 'CHE-123.456.789 TVA') $$,
+       'CH', 'CHF', 8.1) $$,
   'Un coach suisse s''inscrit avec sa TVA'
 );
 reset role;
 select results_eq(
-  $$ select o.country, o.currency from public.organizations o
+  $$ select o.country, o.currency, o.vat_rate from public.organizations o
      join public.organization_members m on m.organization_id = o.id
      where m.user_id = '61616161-6161-4616-8616-616161616161' $$,
-  $$ values ('CH'::text, 'CHF'::text) $$,
-  'Son organisation est en Suisse, en francs suisses'
+  $$ values ('CH'::text, 'CHF'::text, 8.10::numeric) $$,
+  'Son organisation est en Suisse, en francs suisses, avec son taux de TVA'
 );
-select results_eq(
-  $$ select e.name, e.vat_status, e.default_vat_rate, e.vat_number, e.is_default
-     from public.organization_legal_entities e
+select is_empty(
+  $$ select 1 from public.organization_legal_entities e
      join public.organization_members m on m.organization_id = e.organization_id
      where m.user_id = '61616161-6161-4616-8616-616161616161' $$,
-  $$ values ('Lina Coaching'::text, 'subject'::text, 8.10::numeric, 'CHE-123.456.789 TVA'::text, true) $$,
-  'Sa première structure est créée, par défaut, avec son taux habituel'
+  'Aucune structure n''est créée'
 );
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"62626262-6262-4626-8626-626262626262","role":"authenticated"}';
 select lives_ok(
   $$ select public.complete_signup('coach', 'Tom', 'Durand', null, '', '2026-10-23', 'FR', 'EUR') $$,
-  'Un coach peut remettre sa TVA à plus tard'
+  'Un coach peut s''inscrire sans TVA'
 );
 reset role;
-select is_empty(
-  $$ select 1 from public.organization_legal_entities e
-     join public.organization_members m on m.organization_id = e.organization_id
+select results_eq(
+  $$ select o.vat_rate from public.organizations o
+     join public.organization_members m on m.organization_id = o.id
      where m.user_id = '62626262-6262-4626-8626-626262626262' $$,
-  'Sans TVA choisie, aucune structure n''est créée'
+  $$ values (0::numeric) $$,
+  'Sans TVA choisie, le taux vaut 0'
 );
 
 select * from finish();

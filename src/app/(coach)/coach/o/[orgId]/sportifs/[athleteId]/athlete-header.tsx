@@ -1,254 +1,243 @@
-import {
-  ChartNoAxesColumn,
-  Clock,
-  Flag,
-  MessageCircle,
-  Target,
-  UserPen,
-  type LucideIcon,
-} from "lucide-react";
+import { MessageCircle, Send } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
-import { buttonClass } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { SexMark } from "@/components/ui/sex-mark";
+import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import { completionLabel, missingProfileInfo } from "@/features/athletes/completeness";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
+  athleteStatusDots,
   athleteStatusLabels,
-  contactChannelLabels,
 } from "@/features/athletes/schemas";
-import type { GoalEntry } from "@/features/goals/queries";
-import { disciplineStyles } from "@/domain/training/discipline";
-import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
-import { daysBetween, formatDate, formatDay } from "@/lib/format";
 
 import { AthleteFicheMenu } from "./athlete-fiche-menu";
 import { FicheCreateMenu } from "./fiche-create-menu";
+import { FicheTabSelect, type FicheTab } from "./fiche-tab-select";
 
-const statusTone = { active: "ok", paused: "warn", archived: "neutral" } as const;
-
-// En-tête de la fiche (prompt Claude Design §7.2) : retour vers la liste, nom et repère ♀ / ♂,
-// statut, niveau ; rouge « + Créer » (Programme, cœur de Coory, ou Séance avec ce sportif),
-// « Inviter dans son espace » sur ordinateur, et « ••• » avec les mêmes actions que la liste
-// (demandes du 26/10).
-// L'accès à son espace n'est plus écrit en toutes lettres (comme dans la liste, D-39).
+// En-tête de la fiche, d'après la maquette « Sportifs » du 03/11/2026 (pages 2a à 2k), commun à tous
+// les onglets. L'en-tête de page reste celui de base (D-88) : retour « Sportifs », recherche,
+// assistant, cloche, « + Créer » et « ··· » (mêmes actions que la liste). Dessous, la carte
+// d'identité : photo, nom, ♀ / ♂, « Actif · Confirmé · Hyrox », et « Écrire » (ou « Inviter » sans
+// compte). Puis les onglets : une barre sur ordinateur, un sélecteur dans la carte sur téléphone.
+// Les anciens chiffres clés (D-24) sont dans la vue d'ensemble : objectif, séances et durée
+// (Disponibilités), prochaine compétition (Prochaines séances), canal préféré (Profil).
 export function AthleteHeader({
   athlete,
   organizationId,
   listPath,
+}: {
+  athlete: AthleteDetail;
+  organizationId: string;
+  listPath: string;
+}) {
+  const basePath = `${listPath}/${athlete.id}`;
+  const menuAthlete = {
+    id: athlete.id,
+    name: athlete.displayName,
+    status: athlete.status,
+    programType: athlete.programType,
+    hasAccount: athlete.hasAccount,
+  };
+
+  return (
+    <>
+      <PageHeader
+        back={{ href: listPath, label: "Sportifs" }}
+        title={athlete.displayName}
+        visibleTitle={false}
+        actions={
+          <div className="flex items-center gap-2.5 max-lg:hidden">
+            <FicheCreateMenu
+              athlete={{
+                id: athlete.id,
+                name: athlete.displayName,
+                programType: athlete.programType,
+              }}
+            />
+            <AthleteFicheMenu
+              organizationId={organizationId}
+              athlete={menuAthlete}
+              basePath={basePath}
+            />
+          </div>
+        }
+      />
+
+      {/* Téléphone : « + Créer » dans la barre du haut. */}
+      <FicheCreateMenu
+        athlete={{ id: athlete.id, name: athlete.displayName, programType: athlete.programType }}
+        phone
+      />
+    </>
+  );
+}
+
+// Carte d'identité et onglets : dans le corps de la page, au-dessus du contenu de l'onglet.
+export function AthleteIdentity({
+  athlete,
+  organizationId,
+  listPath,
   invitePath,
+  tabs,
 }: {
   athlete: AthleteDetail;
   organizationId: string;
   listPath: string;
   invitePath: string;
+  tabs: FicheTab[];
 }) {
+  const basePath = `${listPath}/${athlete.id}`;
   const missing = missingProfileInfo(athlete);
+  const menuAthlete = {
+    id: athlete.id,
+    name: athlete.displayName,
+    status: athlete.status,
+    programType: athlete.programType,
+    hasAccount: athlete.hasAccount,
+  };
+  const canInvite = !athlete.hasAccount && athlete.status !== "archived";
+  // Le point de séparation des informations (« · »), en gris clair.
+  const dot = (
+    <span aria-hidden className="text-checkbox">
+      ·
+    </span>
+  );
   return (
-    <PageHeader
-      back={{ href: listPath, label: "Sportifs" }}
-      title={athlete.displayName}
-      titleAside={<SexMark sex={athlete.sex} />}
-      subtitle={
-        <span className="flex flex-wrap items-center gap-2">
-          <Badge tone={statusTone[athlete.status]}>{athleteStatusLabels[athlete.status]}</Badge>
-          {/* Fiche créée d'un simple nom (D-35) : la pastille mène à l'onglet Profil. */}
-          {missing.length > 0 ? (
+    <>
+      {/* La carte d'identité (le sélecteur d'onglets du téléphone en bas de la carte). */}
+      <section
+        aria-label="Identité du sportif"
+        className="relative rounded-[20px] bg-surface inset-ring inset-ring-line-soft"
+      >
+        <div className="flex items-center gap-3 pt-4 pr-4 pb-3.5 pl-5 lg:flex-wrap lg:gap-4 lg:px-[22px] lg:py-5">
+          <span className="relative flex shrink-0 [&>span>*]:size-[46px]! [&>span>*]:text-[15px]! lg:[&>span>*]:size-[60px]! lg:[&>span>*]:text-[19px]!">
+            <Avatar
+              name={athlete.displayName}
+              colorClass={
+                athlete.programType ? disciplineStyles[athlete.programType].avatar : undefined
+              }
+              photoPath={athlete.photoPath}
+            />
+            {/* Téléphone : le statut est le point sur la photo. */}
+            <span
+              aria-hidden
+              className={`absolute right-0 bottom-0 size-3 rounded-full ring-[2.5px] ring-surface lg:hidden ${athleteStatusDots[athlete.status]}`}
+            />
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-[3px] lg:basis-[200px] lg:gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5 lg:gap-2">
+              {/* Le titre de la page (h1) est dans l'en-tête, lu par les lecteurs d'écran. */}
+              <p
+                aria-hidden
+                className="truncate text-[16.5px] leading-[normal] font-semibold tracking-[-0.01em] lg:text-[26px] lg:leading-[1.15] lg:tracking-[-0.025em]"
+              >
+                {athlete.displayName}
+              </p>
+              <span className="lg:hidden">
+                <SexMark sex={athlete.sex} plain />
+              </span>
+              <span className="max-lg:hidden [&>span]:size-[22px]! [&>span]:text-[13px]! [&>span]:font-medium!">
+                <SexMark sex={athlete.sex} size="sm" />
+              </span>
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] leading-[normal] text-muted lg:gap-x-3 lg:gap-y-2 lg:text-[13.5px] lg:text-text-2">
+              <span className="flex items-center gap-1.5 max-lg:hidden">
+                <span
+                  aria-hidden
+                  className={`size-[7px] rounded-full ${athleteStatusDots[athlete.status]}`}
+                />
+                {athleteStatusLabels[athlete.status]}
+              </span>
+              {athlete.level ? (
+                <>
+                  <span className="max-lg:hidden">{dot}</span>
+                  <span>{athleteLevelLabels[athlete.level]}</span>
+                </>
+              ) : null}
+              {athlete.programType ? (
+                <>
+                  {athlete.level ? dot : <span className="max-lg:hidden">{dot}</span>}
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      aria-hidden
+                      className={`size-1.5 rounded-full lg:size-[7px] ${disciplineStyles[athlete.programType].dot}`}
+                    />
+                    {disciplineLabels[athlete.programType]}
+                  </span>
+                </>
+              ) : null}
+              {/* Fiche créée d'un simple nom (D-35) : le lien mène à l'onglet Profil. */}
+              {missing.length > 0 ? (
+                <>
+                  {dot}
+                  <Link
+                    href={`${basePath}?onglet=profil`}
+                    scroll={false}
+                    title={completionLabel(missing)}
+                    className="whitespace-nowrap text-warn hover:underline"
+                  >
+                    Fiche à compléter
+                  </Link>
+                </>
+              ) : null}
+            </div>
+          </div>
+          {athlete.hasAccount ? (
             <Link
-              href={`${listPath}/${athlete.id}?onglet=profil`}
-              scroll={false}
-              title={completionLabel(missing)}
-              className="inline-flex items-center gap-1.5 rounded-pill bg-warn-soft px-2.5 py-1 text-[12px] leading-[1.3] font-medium whitespace-nowrap text-warn transition-[filter] duration-150 hover:brightness-95"
+              href={`/coach/messages?sportif=${athlete.id}`}
+              aria-label={`Écrire à ${athlete.displayName}`}
+              className="grid size-11 shrink-0 place-items-center rounded-[13px] bg-bg text-text transition-colors duration-150 lg:flex lg:h-10 lg:w-auto lg:gap-2 lg:rounded-[11px] lg:bg-transparent lg:px-3.5 lg:text-[14px] lg:font-medium lg:inset-ring lg:inset-ring-line-2 lg:hover:bg-surface-2"
             >
-              <UserPen aria-hidden size={13} strokeWidth={2} />
-              Fiche à compléter
+              <MessageCircle aria-hidden strokeWidth={1.8} className="size-[17px] lg:size-[15px]" />
+              <span className="max-lg:sr-only">Écrire</span>
             </Link>
-          ) : null}
-          {athlete.level ? (
-            <Badge>Niveau {athleteLevelLabels[athlete.level].toLowerCase()}</Badge>
-          ) : null}
-          <span className="text-[13px] text-muted">Ajouté le {formatDay(athlete.createdAt)}</span>
-        </span>
-      }
-      actions={
-        // Un seul conteneur : sur téléphone, le bouton rouge prend la place et « ••• » garde sa taille.
-        <div className="flex items-center gap-2">
-          {athlete.hasAccount || athlete.status === "archived" ? null : (
+          ) : canInvite ? (
             <Link
               href={invitePath}
-              className={buttonClass({ variant: "outline", className: "max-lg:hidden" })}
+              aria-label={`Inviter ${athlete.displayName} dans son espace`}
+              className="grid size-11 shrink-0 place-items-center rounded-[13px] bg-bg text-text transition-colors duration-150 lg:flex lg:h-10 lg:w-auto lg:gap-2 lg:rounded-[11px] lg:bg-transparent lg:px-3.5 lg:text-[14px] lg:font-medium lg:inset-ring lg:inset-ring-line-2 lg:hover:bg-surface-2"
             >
-              Inviter dans son espace
+              <Send aria-hidden strokeWidth={1.8} className="size-[17px] lg:size-[15px]" />
+              <span className="max-lg:sr-only">Inviter</span>
             </Link>
-          )}
-          <FicheCreateMenu
-            athlete={{
-              id: athlete.id,
-              name: athlete.displayName,
-              programType: athlete.programType,
-            }}
-          />
-          <AthleteFicheMenu
-            organizationId={organizationId}
-            athlete={{
-              id: athlete.id,
-              name: athlete.displayName,
-              status: athlete.status,
-              programType: athlete.programType,
-              hasAccount: athlete.hasAccount,
-            }}
-            basePath={`${listPath}/${athlete.id}`}
-          />
+          ) : null}
+          {/* Téléphone : « ··· » (absent de la maquette) garde les actions de l'en-tête de l'ordinateur. */}
+          <span className="lg:hidden">
+            <AthleteFicheMenu
+              organizationId={organizationId}
+              athlete={menuAthlete}
+              basePath={basePath}
+              phone
+            />
+          </span>
         </div>
-      }
-    />
-  );
-}
+        <FicheTabSelect tabs={tabs} />
+      </section>
 
-// Couleur de chaque chiffre clé (D-24, D-25) : icône dans un cercle bordé, et valeur dans la même couleur.
-const figureColors = {
-  neutral: { icon: "border border-line-2 bg-chip text-muted", text: "" },
-  red: {
-    icon: "border border-accent/50 bg-accent-soft text-accent-text",
-    text: "text-accent-text",
-  },
-  blue: { icon: "border border-blue/50 bg-blue-soft text-blue", text: "text-blue" },
-  amber: { icon: "border border-amber/50 bg-amber-soft text-amber", text: "text-amber" },
-  green: { icon: "border border-green/50 bg-green-soft text-green", text: "text-green" },
-} as const;
-
-function KeyFigure({
-  icon: Icon,
-  color,
-  label,
-  value,
-  filled,
-  detail,
-  href,
-}: {
-  icon: LucideIcon;
-  color: { icon: string; text: string };
-  label: string;
-  value: ReactNode;
-  // La valeur prend la couleur seulement si elle est renseignée (pas « Non renseigné »).
-  filled: boolean;
-  detail?: ReactNode;
-  href?: string;
-}) {
-  const content = (
-    <>
-      <span className={`inline-flex size-9 items-center justify-center rounded-full ${color.icon}`}>
-        <Icon aria-hidden size={16} strokeWidth={1.7} />
-      </span>
-      <span className="text-caption text-muted">{label}</span>
-      <span
-        className={`font-display text-[20px] leading-tight font-medium break-words ${filled ? color.text : ""}`}
+      {/* Ordinateur : la barre des dix onglets (elle défile si elle ne tient pas). */}
+      <nav
+        aria-label="Sections de la fiche"
+        className="flex gap-0.5 overflow-x-auto rounded-[14px] bg-track p-1 [scrollbar-width:none] max-lg:hidden"
       >
-        {value}
-      </span>
-      {detail ? <span className="text-caption text-muted">{detail}</span> : null}
+        {tabs.map((tab) => (
+          <Link
+            key={tab.key}
+            href={tab.href}
+            scroll={false}
+            aria-current={tab.active ? "page" : undefined}
+            className={`flex h-[38px] flex-[1_0_auto] items-center justify-center rounded-[10px] px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors duration-150 ${
+              tab.active
+                ? "bg-track-active text-text shadow-[0_1px_3px_rgba(22,18,40,0.10)]"
+                : "text-muted hover:text-text"
+            }`}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
     </>
-  );
-  // Sur téléphone : cartes de largeur fixe dans un bandeau qui défile (on voit dépasser la suivante).
-  const box = `flex w-[44%] min-w-36 shrink-0 snap-start flex-col gap-1.5 rounded-card border border-line bg-surface p-4 md:w-auto md:min-w-0`;
-  return href ? (
-    <Link href={href} scroll={false} className={`${box} transition-colors hover:bg-surface-2`}>
-      {content}
-    </Link>
-  ) : (
-    <div className={box}>{content}</div>
-  );
-}
-
-function countdownText(days: number): string {
-  if (days === 0) return "Aujourd'hui";
-  if (days === 1) return "Demain";
-  return `Dans ${days} jours`;
-}
-
-// Chiffres clés, tous calculés depuis la fiche et les objectifs (aucune valeur inventée).
-// PROVISOIRES : en P6, ils deviendront des indicateurs de suivi (séances faites, dernier RPE, régularité).
-export function KeyFigures({
-  athlete,
-  goals,
-  today,
-  basePath,
-}: {
-  athlete: AthleteDetail;
-  goals: GoalEntry[];
-  today: string;
-  basePath: string;
-}) {
-  const main = goals.find((goal) => goal.priority === "main");
-  const mainDiscipline = main ? goalDiscipline(main.type) : null;
-  // Prochaine compétition : la plus proche parmi les objectifs en cours qui en sont une.
-  const nextCompetition = goals
-    .filter((goal) => goal.competitionName && goal.targetDate && goal.targetDate >= today)
-    .sort((a, b) => (a.targetDate ?? "").localeCompare(b.targetDate ?? ""))[0];
-  const goalsHref = `${basePath}?onglet=objectifs`;
-  const empty = <span className="text-muted">Non renseigné</span>;
-
-  return (
-    <section
-      aria-label="Chiffres clés"
-      className="-mx-4 flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-5"
-    >
-      <KeyFigure
-        icon={Target}
-        color={mainDiscipline ? disciplineStyles[mainDiscipline] : figureColors.neutral}
-        filled={Boolean(main)}
-        label="Objectif principal"
-        value={
-          main ? (
-            (main.competitionName ?? goalTypeLabels[main.type])
-          ) : (
-            <span className="text-muted">Aucun</span>
-          )
-        }
-        detail={main ? (main.targetDate ? formatDate(main.targetDate) : "Sans date") : null}
-        href={goalsHref}
-      />
-      <KeyFigure
-        icon={ChartNoAxesColumn}
-        color={figureColors.blue}
-        filled={athlete.sessionsPerWeek !== null}
-        label="Séances / semaine"
-        value={athlete.sessionsPerWeek ?? empty}
-        detail={athlete.sessionsPerWeek ? "souhaitées" : null}
-      />
-      <KeyFigure
-        icon={Clock}
-        color={figureColors.amber}
-        filled={athlete.maxSessionMinutes !== null}
-        label="Durée max / séance"
-        value={athlete.maxSessionMinutes ? `${athlete.maxSessionMinutes} min` : empty}
-      />
-      <KeyFigure
-        icon={Flag}
-        color={figureColors.red}
-        filled={Boolean(nextCompetition)}
-        label="Prochaine compétition"
-        value={
-          nextCompetition?.targetDate ? (
-            countdownText(daysBetween(today, nextCompetition.targetDate))
-          ) : (
-            <span className="text-muted">Aucune</span>
-          )
-        }
-        detail={nextCompetition?.competitionName}
-        href={goalsHref}
-      />
-      <KeyFigure
-        icon={MessageCircle}
-        color={figureColors.green}
-        filled={athlete.preferredContact !== null}
-        label="Canal préféré"
-        value={athlete.preferredContact ? contactChannelLabels[athlete.preferredContact] : empty}
-      />
-    </section>
   );
 }

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 
 import { requireCoach, requireOrgAccess } from "@/features/auth/guards";
 import { isCurrency, parseExchangeRate } from "@/domain/billing/money";
@@ -15,14 +14,14 @@ import {
   NOTIFICATION_KINDS,
   emailChangeSchema,
   organizationNameSchema,
-  parseLegalEntity,
   parsePreferences,
+  parseVatSetting,
   passwordChangeSchema,
   profileSchema,
-  type LegalEntityInput,
   type NotificationKind,
   type PreferencesInput,
   type ProfileInput,
+  type VatSettingInput,
 } from "./settings";
 
 // Page Paramètres (D-57). Chaque action revérifie qui appelle (requireCoach / requireOrgAccess) :
@@ -154,14 +153,41 @@ export async function setOrganizationCountry(
   return { ok: true, error: null };
 }
 
+// Taux de TVA de l'organisation (D-90) : propriétaire seulement, comme le pays. Il vaut pour les
+// nouveaux paiements ; ceux déjà notés gardent leur taux.
+export async function setOrganizationVatRate(
+  organizationId: string,
+  previous: SettingsState<VatSettingInput>,
+  formData: FormData,
+): Promise<SettingsState<VatSettingInput>> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const values: VatSettingInput = {
+    vatEnabled: formData.get("vatEnabled") === "on",
+    vatRate: field(formData, "vatRate"),
+  };
+  const attempt = previous.attempt + 1;
+  const fail = (error: string) => ({ error, saved: false, attempt, values });
+  if (membership.role !== "owner") return fail("Seul le propriétaire peut changer la TVA.");
+  const parsed = parseVatSetting(values);
+  if (!parsed.ok) return fail(parsed.error);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("organizations")
+    .update({ vat_rate: parsed.vatRate })
+    .eq("id", membership.organizationId)
+    .select("id");
+  if (error || (data ?? []).length !== 1) {
+    return fail("La TVA n'a pas pu être enregistrée. Réessaie.");
+  }
+  revalidatePath("/coach", "layout");
+  return { error: null, saved: true, attempt, values: null };
+}
+
 // Changement de devise (D-70, déménagement) : ce que le changement va convertir, et ce qui reste dans
-// l'ancienne devise. Mêmes critères que la fonction de la base (séances qui ont encore des dates,
-// brouillons sans paiement relié).
+// l'ancienne devise. Mêmes critères que la fonction de la base (séances qui ont encore des dates).
 export type CurrencyChangePreview = {
   sessions: number;
-  drafts: number;
   payments: number;
-  issued: number;
 };
 
 export async function previewCurrencyChange(
@@ -178,7 +204,7 @@ export async function previewCurrencyChange(
     return value ?? 0;
   };
   const head = { count: "exact", head: true } as const;
-  const [repeating, single, drafts, payments, issued] = await Promise.all([
+  const [repeating, single, payments] = await Promise.all([
     count(
       supabase
         .from("coach_sessions")
@@ -201,30 +227,13 @@ export async function previewCurrencyChange(
     ),
     count(
       supabase
-        .from("athlete_invoices")
-        .select("id", head)
-        .eq("organization_id", orgId)
-        .eq("status", "draft")
-        .is("payment_id", null)
-        .eq("currency", membership.currency),
-    ),
-    count(
-      supabase
         .from("athlete_payments")
         .select("id", head)
         .eq("organization_id", orgId)
         .eq("currency", membership.currency),
     ),
-    count(
-      supabase
-        .from("athlete_invoices")
-        .select("id", head)
-        .eq("organization_id", orgId)
-        .eq("status", "issued")
-        .eq("currency", membership.currency),
-    ),
   ]);
-  return { sessions: repeating + single, drafts, payments, issued };
+  return { sessions: repeating + single, payments };
 }
 
 export async function changeOrganizationCurrency(
@@ -297,8 +306,8 @@ function notifyColumn(kind: NotificationKind, enabled: boolean) {
       return { notify_messages: enabled };
     case "tasks":
       return { notify_tasks: enabled };
-    case "invoices":
-      return { notify_invoices: enabled };
+    case "unpaid":
+      return { notify_unpaid: enabled };
     case "profiles":
       return { notify_profiles: enabled };
   }
@@ -319,101 +328,6 @@ export async function setNotificationPreference(
     .upsert({ user_id: user.id, ...notifyColumn(kind, enabled) }, { onConflict: "user_id" });
   revalidatePath("/coach", "layout");
   return { ok: !error };
-}
-
-// Facturation (D-66) : proposer aussi les espèces dans « À facturer ». Enregistré tout de suite.
-export async function setInvoiceCashPreference(enabled: boolean): Promise<{ ok: boolean }> {
-  const { user } = await requireCoach();
-  if (typeof enabled !== "boolean") return { ok: false };
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("coach_profiles")
-    .upsert({ user_id: user.id, invoice_cash: enabled }, { onConflict: "user_id" });
-  revalidatePath("/coach", "layout");
-  return { ok: !error };
-}
-
-// --- Structures légales -------------------------------------------------------------------------
-function readLegalEntity(formData: FormData): LegalEntityInput {
-  return {
-    name: field(formData, "name"),
-    legalForm: field(formData, "legalForm"),
-    enterpriseNumber: field(formData, "enterpriseNumber"),
-    vatStatus: field(formData, "vatStatus"),
-    vatNumber: field(formData, "vatNumber"),
-    defaultVatRate: field(formData, "defaultVatRate"),
-    addressLine: field(formData, "addressLine"),
-    postalCode: field(formData, "postalCode"),
-    city: field(formData, "city"),
-    country: field(formData, "country"),
-    iban: field(formData, "iban"),
-    bic: field(formData, "bic"),
-    paymentDetails: field(formData, "paymentDetails"),
-    billingEmail: field(formData, "billingEmail"),
-    invoicePrefix: field(formData, "invoicePrefix"),
-    legalMentions: field(formData, "legalMentions"),
-    isDefault: formData.get("isDefault") === "on",
-  };
-}
-
-// Création (entityId = null) ou modification d'une structure. Par défaut : les autres ne le sont
-// plus (l'index unique en base n'en accepte qu'une). La première structure l'est d'office.
-export async function saveLegalEntity(
-  organizationId: string,
-  entityId: string | null,
-  previous: SettingsState<LegalEntityInput>,
-  formData: FormData,
-): Promise<SettingsState<LegalEntityInput>> {
-  const { user, membership } = await requireOrgAccess(organizationId);
-  const orgId = membership.organizationId;
-  const values = readLegalEntity(formData);
-  const attempt = previous.attempt + 1;
-  const fail = (error: string) => ({ error, saved: false, attempt, values });
-  if (entityId !== null && !z.uuid().safeParse(entityId).success)
-    return fail("Structure introuvable.");
-  const parsed = parseLegalEntity(values);
-  if (!parsed.ok) return fail(parsed.error);
-
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from("organization_legal_entities")
-    .select("id", { count: "exact", head: true })
-    .eq("organization_id", orgId);
-  const isDefault = parsed.values.is_default || (entityId === null && (count ?? 0) === 0);
-  if (isDefault) {
-    const reset = await supabase
-      .from("organization_legal_entities")
-      .update({ is_default: false })
-      .eq("organization_id", orgId)
-      .eq("is_default", true);
-    if (reset.error) return fail("La structure n'a pas pu être enregistrée. Réessaie.");
-  }
-  const row = { ...parsed.values, is_default: isDefault };
-  const { error } =
-    entityId === null
-      ? await supabase
-          .from("organization_legal_entities")
-          .insert({ ...row, organization_id: orgId, created_by: user.id })
-      : await supabase
-          .from("organization_legal_entities")
-          .update(row)
-          .eq("id", entityId)
-          .eq("organization_id", orgId);
-  if (error) return fail("La structure n'a pas pu être enregistrée. Réessaie.");
-  revalidatePath("/coach/profil");
-  return { error: null, saved: true, attempt, values: null };
-}
-
-export async function deleteLegalEntity(organizationId: string, entityId: string): Promise<void> {
-  const { membership } = await requireOrgAccess(organizationId);
-  if (!z.uuid().safeParse(entityId).success) return;
-  const supabase = await createClient();
-  await supabase
-    .from("organization_legal_entities")
-    .delete()
-    .eq("id", entityId)
-    .eq("organization_id", membership.organizationId);
-  revalidatePath("/coach/profil");
 }
 
 // --- Sécurité -----------------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { isPhone } from "./helpers";
+
 // Paiements reçus et Comptabilité (D-36) : « Créer → Paiement reçu » ouvre la fenêtre, le HTVA se
 // calcule en direct, le paiement apparaît dans la Comptabilité avec son mode (filtre compte bancaire /
 // espèces), puis se supprime. Libellé unique par test : les projets tournent en parallèle.
@@ -162,4 +164,33 @@ test("une dépense mensuelle compte chaque mois, s'arrête, puis se supprime", a
     .getByRole("button", { name: "Supprimer" })
     .click();
   await expect(page.getByRole("listitem").filter({ hasText: label })).toHaveCount(0);
+});
+
+// À encaisser (D-90) : les séances passées avec un prix, pas encore payées, à la place des factures.
+// Le tableau de bord les compte (en retard après une semaine : Sophie, dans le seed) ; la Comptabilité
+// les liste et chacune se marque payée sur place. Ni Sophie (cloche) ni « Coaching force » (testé
+// par sessions.spec) : les tests tournent en parallèle.
+test("À encaisser : une séance passée se marque payée depuis la Comptabilité", async ({ page }) => {
+  test.skip(!isPhone(page), "Enregistre un paiement de démonstration : un seul projet.");
+  await loginAsCoachA(page);
+  const finance = page.getByRole("region", { name: "Activité financière" });
+  await expect(finance).toContainText(/\d+ séances? à encaisser/);
+  await expect(finance).toContainText(/en retard/i);
+
+  await page.goto("/coach/comptabilite?liste=a-encaisser");
+  const list = page.getByRole("list", { name: "Séances à encaisser" });
+  const row = list
+    .getByRole("listitem")
+    .filter({ hasNotText: "Sophie" })
+    .filter({ hasNotText: "Coaching force" })
+    .first();
+  const href = await row.getByRole("link").getAttribute("href");
+  const button = row.getByRole("button", { name: /^Marquer payée : / });
+  const label = (await button.getAttribute("aria-label")) ?? "";
+  await button.click();
+  await expect(page.getByText("Paiement enregistré.")).toBeVisible();
+  // Payée : elle quitte la liste, et sa page la montre payée.
+  await expect(list.getByRole("button", { name: label, exact: true })).toHaveCount(0);
+  await page.goto(href ?? "/");
+  await expect(page.getByText(/^Payée le /).first()).toBeVisible();
 });

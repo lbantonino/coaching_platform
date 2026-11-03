@@ -20,9 +20,9 @@ export const SECTIONS = [
     icon: SlidersHorizontal,
   },
   {
-    key: "facturation",
-    label: "Facturation et légal",
-    hint: "Tes structures : TVA, adresse, IBAN",
+    key: "argent",
+    label: "Pays, devise et TVA",
+    hint: "Ta devise et ton taux de TVA",
     icon: Landmark,
   },
   {

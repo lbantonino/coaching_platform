@@ -28,31 +28,42 @@ const icons: Record<ActivityKind, LucideIcon> = {
   note: NotebookPen,
 };
 
-// Frise de l'historique (vue d'ensemble : les derniers événements ; onglet Historique : tout).
+// Frise de l'historique (vue d'ensemble : les derniers événements ; onglet Historique : tout), d'après
+// la maquette « Sportifs » du 03/11/2026 : pastille ronde de 32 px, trait qui relie les événements,
+// titre en gras, date à droite (dessous quand la place manque), détail en gris.
 export function ActivityTimeline({ events, label }: { events: ActivityEvent[]; label: string }) {
   return (
     <ol aria-label={label} className="flex flex-col">
       {events.map((event, index) => {
         const Icon = icons[event.kind];
         return (
-          <li key={event.id} className="relative flex gap-3 pb-4 last:pb-0">
-            {/* Trait vertical qui relie les événements (sauf après le dernier). */}
-            {index < events.length - 1 ? (
-              <span aria-hidden className="absolute top-9 bottom-0 left-[17px] w-px bg-line" />
-            ) : null}
-            <span className="flex size-[34px] shrink-0 items-center justify-center rounded-full border border-line bg-bg text-muted">
-              <Icon aria-hidden size={15} strokeWidth={1.7} />
+          <li key={event.id} className="relative grid grid-cols-[32px_minmax(0,1fr)] gap-x-3">
+            <span className="relative flex justify-center">
+              {/* Trait vertical qui relie les événements (sauf après le dernier). */}
+              {index < events.length - 1 ? (
+                <span aria-hidden className="absolute top-9 bottom-0 left-[15.5px] w-px bg-line" />
+              ) : null}
+              <span className="grid size-8 place-items-center rounded-full bg-bg text-text-2">
+                <Icon aria-hidden size={15} strokeWidth={1.8} />
+              </span>
             </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5 pt-1.5 sm:flex-row sm:justify-between sm:gap-4">
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-small font-medium break-words">{event.title}</span>
-                {event.detail ? (
-                  <span className="text-caption break-words text-muted">{event.detail}</span>
-                ) : null}
+            <div className="flex min-w-0 flex-col gap-0.5 pt-[5px] pb-[18px]">
+              <div className="flex flex-wrap justify-between gap-x-3 gap-y-0.5">
+                <span className="flex-[1_1_220px] text-[14px] leading-[1.4] font-semibold break-words">
+                  {event.title}
+                </span>
+                <time
+                  dateTime={event.at}
+                  className="text-[12.5px] leading-[normal] whitespace-nowrap text-faint"
+                >
+                  {formatDay(event.at)}
+                </time>
               </div>
-              <time dateTime={event.at} className="shrink-0 text-caption text-muted">
-                {formatDay(event.at)}
-              </time>
+              {event.detail ? (
+                <span className="text-[13px] leading-[1.45] break-words text-muted">
+                  {event.detail}
+                </span>
+              ) : null}
             </div>
           </li>
         );

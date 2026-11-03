@@ -10,16 +10,20 @@ import { WeekIncomeBars, type IncomeDay } from "@/components/blocks/week-income-
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardEmpty } from "@/components/ui/card";
-import { monthActivity } from "@/domain/billing/invoices";
-import { describeTotal, formatMoney, type ByCurrency, type Currency } from "@/domain/billing/money";
+import {
+  addTo,
+  describeTotal,
+  formatMoney,
+  type ByCurrency,
+  type Currency,
+} from "@/domain/billing/money";
 import { coveredByPackage, paymentTotals } from "@/domain/billing/payments";
 import { addDays } from "@/features/agenda/items";
 import { layoutDays, mondayOf } from "@/features/agenda/week";
 import { requireCoach } from "@/features/auth/guards";
+import { listUnpaidDates } from "@/features/billing/collect-queries";
 import { listPackageCovers, listPayments } from "@/features/billing/payment-queries";
-import { listMonthInvoices } from "@/features/billing/queries";
 import { getConverter } from "@/features/coach/currency-queries";
-import { getDefaultVatRate } from "@/features/coach/legal-queries";
 import { currentWeekIndex, listActivePrograms } from "@/features/programs/queries";
 import { plannedIncome } from "@/features/sessions/prices";
 import { listSessions } from "@/features/sessions/queries";
@@ -82,15 +86,16 @@ async function Dashboard() {
   // Paiements depuis le lundi ou le 1er du mois (le plus ancien des deux) : semaine et mois.
   const monthStart = `${today.slice(0, 7)}-01`;
   const weekStart = mondayOf(today);
-  const [sessions, tasks, invoices, payments, programs, covers, vatRate] = await Promise.all([
+  const { vatRate } = current;
+  const [sessions, tasks, payments, programs, covers] = await Promise.all([
     listSessions(current.organizationId),
     getDashboardTasks(current.organizationId),
-    listMonthInvoices(current.organizationId, today),
     listPayments(current.organizationId, weekStart < monthStart ? weekStart : monthStart),
     listActivePrograms(current.organizationId),
     listPackageCovers(current.organizationId),
-    getDefaultVatRate(current.organizationId),
   ]);
+  // Séances passées pas encore payées (D-90), à partir des séances et forfaits déjà lus.
+  const unpaid = await listUnpaidDates(current.organizationId, vatRate, { sessions, covers });
   // Montants dans la devise de l'organisation (D-69).
   const money = (cents: number) => formatMoney(cents, current.currency);
   // Après un changement de devise (D-70) : les montants d'avant sont convertis, total « ≈ ».
@@ -139,7 +144,16 @@ async function Dashboard() {
     }))
     .filter((day) => day.blocks.length > 0)
     .slice(0, 2);
-  const activity = monthActivity(invoices, today, convert);
+  // À encaisser (D-90) : total attendu, converti « ≈ » après un changement de devise (D-70).
+  const toCollect = unpaid.reduce(
+    (tally, date) => {
+      tally.cents += convert(date.amountCents, date.currency);
+      addTo(tally.byCurrency, date.currency, date.amountCents);
+      return tally;
+    },
+    { cents: 0, byCurrency: {} as ByCurrency },
+  );
+  const late = unpaid.filter((date) => date.late).length;
 
   // Prochaine séance : la plus proche, avec son rang dans sa journée.
   const next = upcomingDays[0]?.blocks[0] ?? null;
@@ -182,7 +196,9 @@ async function Dashboard() {
               dayLabel={next ? dayShortLabel(next.date, today) : ""}
               today={today}
               nowMinutes={nowMinutes}
-              sessionHref={next ? `${orgBase}/agenda/seances/${next.sessionId}` : null}
+              sessionHref={
+                next ? `${orgBase}/agenda/seances/${next.sessionId}?date=${next.date}` : null
+              }
               messageHref={nextAthlete ? `/coach/messages?sportif=${nextAthlete.id}` : null}
               location={nextSession?.location ?? null}
               person={
@@ -195,7 +211,7 @@ async function Dashboard() {
                 (maquette v6, D-77). */}
             <section
               aria-labelledby="tasks-title"
-              className="flex min-w-0 flex-col rounded-[20px] border border-line bg-surface p-5 max-md:order-2 max-md:aspect-square max-md:overflow-hidden max-md:p-4"
+              className="relative flex min-w-0 flex-col rounded-[20px] border border-line bg-surface p-5 max-md:order-2 max-md:aspect-square max-md:overflow-hidden max-md:p-4"
             >
               <div className="mb-2 flex items-center justify-between gap-3">
                 <h2
@@ -205,7 +221,9 @@ async function Dashboard() {
                   <Link
                     href="/coach/taches"
                     aria-label={`${tasks.openCount} ${tasks.openCount > 1 ? "tâches à faire" : "tâche à faire"}`}
-                    className="hover:underline"
+                    // Toute la carte ouvre la page Tâches (02/11), sauf les tâches elles-mêmes (rond et
+                    // titre), posées au-dessus.
+                    className="after:absolute after:inset-0 after:rounded-[20px] hover:underline focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-accent"
                   >
                     Tâches
                   </Link>
@@ -288,7 +306,7 @@ async function Dashboard() {
                   <UpcomingDays
                     days={upcomingDays}
                     nextKey={next?.key ?? null}
-                    sessionHref={(id) => `${orgBase}/agenda/seances/${id}`}
+                    sessionHref={(id, day) => `${orgBase}/agenda/seances/${id}?date=${day}`}
                   />
                 </div>
               )}
@@ -364,22 +382,11 @@ async function Dashboard() {
               <Card
                 id="finance-title"
                 title="Activité financière"
-                action={{ href: "/coach/facturation", label: "Voir tout" }}
+                action={{ href: "/coach/comptabilite", label: "Voir tout" }}
                 compact
                 className="max-md:order-5 max-md:col-span-2 lg:min-h-0 lg:flex-1"
               >
                 <ul className="-mt-1 divide-y divide-line-soft lg:min-h-0 lg:overflow-y-auto">
-                  <FinanceRow
-                    title={`${activity.sent.count} ${activity.sent.count > 1 ? "factures envoyées" : "facture envoyée"}`}
-                    sub="Ce mois-ci"
-                    amount={
-                      <FinanceAmount
-                        currency={current.currency}
-                        cents={activity.sent.cents}
-                        byCurrency={activity.sent.byCurrency}
-                      />
-                    }
-                  />
                   <FinanceRow
                     title={`${monthIncome.count} ${monthIncome.count > 1 ? "paiements reçus" : "paiement reçu"}`}
                     sub="Ce mois-ci"
@@ -391,24 +398,26 @@ async function Dashboard() {
                       />
                     }
                   />
+                  {/* Séances passées avec un prix, pas encore marquées payées (D-90, à la place des
+                      factures envoyées et en attente) ; en retard après une semaine. */}
                   <FinanceRow
-                    title={`${activity.pending.count} paiement${activity.pending.count > 1 ? "s" : ""} en attente`}
+                    title={`${unpaid.length} séance${unpaid.length > 1 ? "s" : ""} à encaisser`}
                     sub={
-                      activity.pending.overdue > 0
-                        ? activity.pending.overdue === activity.pending.count
+                      late > 0
+                        ? late === unpaid.length
                           ? "En retard"
-                          : `Dont ${activity.pending.overdue} en retard`
-                        : activity.pending.count > 0
+                          : `Dont ${late} en retard`
+                        : unpaid.length > 0
                           ? "Dans les délais"
-                          : "Rien en attente"
+                          : "Rien à encaisser"
                     }
-                    late={activity.pending.overdue > 0}
+                    late={late > 0}
                     amount={
                       <FinanceAmount
                         currency={current.currency}
-                        cents={activity.pending.cents}
-                        byCurrency={activity.pending.byCurrency}
-                        late={activity.pending.overdue > 0}
+                        cents={toCollect.cents}
+                        byCurrency={toCollect.byCurrency}
+                        late={late > 0}
                       />
                     }
                   />
@@ -448,7 +457,7 @@ function FinanceRow({
   );
 }
 
-// Montant d'une ligne : en rouge quand des paiements sont en retard.
+// Montant d'une ligne : en rouge quand des séances sont en retard de paiement.
 function FinanceAmount({
   cents,
   currency,

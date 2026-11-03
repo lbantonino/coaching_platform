@@ -4,7 +4,7 @@ export type NotifyPreferences = {
   competitions: boolean;
   messages: boolean;
   tasks: boolean;
-  invoices: boolean;
+  unpaid: boolean;
   profiles: boolean;
 };
 

@@ -28,6 +28,8 @@ export const disciplineStyles = {
     frame: "border-run",
     icon: "border border-run/50 bg-run-soft text-run",
     text: "text-run",
+    // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
+    dot: "bg-run-fill",
   },
   strength: {
     header: "border-strength/35 bg-surface",
@@ -35,6 +37,8 @@ export const disciplineStyles = {
     frame: "border-strength",
     icon: "border border-strength/50 bg-strength-soft text-strength",
     text: "text-strength",
+    // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
+    dot: "bg-strength-fill",
   },
   hyrox: {
     header: "border-hyrox/35 bg-surface",
@@ -42,6 +46,8 @@ export const disciplineStyles = {
     frame: "border-hyrox",
     icon: "border border-hyrox/50 bg-hyrox-soft text-hyrox",
     text: "text-hyrox",
+    // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
+    dot: "bg-hyrox-fill",
   },
   hybrid: {
     header: "border-hybrid/35 bg-surface",
@@ -49,8 +55,10 @@ export const disciplineStyles = {
     frame: "border-hybrid",
     icon: "border border-hybrid/50 bg-hybrid-soft text-hybrid",
     text: "text-hybrid",
+    // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
+    dot: "bg-hybrid-fill",
   },
 } as const satisfies Record<
   Discipline,
-  Record<"header" | "avatar" | "frame" | "icon" | "text", string>
+  Record<"header" | "avatar" | "frame" | "icon" | "text" | "dot", string>
 >;

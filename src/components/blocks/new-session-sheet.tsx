@@ -102,7 +102,13 @@ export function NewSessionSheet({
   return (
     <OpenContext.Provider value={open}>
       {children}
-      <Sheet open={slot !== null} onClose={close} title="Nouvelle séance" subtitle={slot?.label}>
+      <Sheet
+        open={slot !== null}
+        onClose={close}
+        title="Nouvelle séance"
+        subtitle={slot?.label}
+        tall
+      >
         {slot && athletes === null ? (
           <p className="flex items-center gap-2 text-[14px] text-muted">
             <Spinner /> Chargement de tes sportifs…
@@ -142,15 +148,29 @@ export function NewSessionSheet({
 
 // Bouton rouge « Nouvelle séance » (Agenda, Séances) : ouvre la fenêtre, à `date` si elle est donnée.
 // `variant` : « header » (barre du haut de l'Agenda, 32 px, D-78) ; « bar » (téléphone : le « + » de la
-// carte en haut à droite, son nom reste lu « Nouvelle séance »).
+// carte en haut à droite, son nom reste lu « Nouvelle séance ») ; « fab » (Agenda sur téléphone,
+// 03/11, comme Google Agenda : un bouton flottant en bas à droite, au-dessus du calendrier).
 export function NewSessionButton({
   date,
   variant = "default",
 }: {
   date?: string;
-  variant?: "default" | "header" | "bar";
+  variant?: "default" | "header" | "bar" | "fab";
 }) {
   const open = useOpenNewSession();
+  if (variant === "fab") {
+    return (
+      <button
+        type="button"
+        aria-label="Nouvelle séance"
+        disabled={!open}
+        onClick={() => open?.(date ? { date } : undefined)}
+        className="fixed right-4 bottom-[calc(20px+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-2xl bg-cta text-on-cta shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-transform duration-150 ease-out active:scale-95 lg:hidden"
+      >
+        <Plus aria-hidden size={24} strokeWidth={2.2} />
+      </button>
+    );
+  }
   if (variant === "bar") {
     return (
       <MobileBarAction>

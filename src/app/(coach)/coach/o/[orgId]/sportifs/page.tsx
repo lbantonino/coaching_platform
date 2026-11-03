@@ -1,13 +1,12 @@
-import { CirclePause, Flag, LayoutGrid, Plus, Search, UserPen, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 
+import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { buttonClass } from "@/components/ui/button";
-import { chipActiveClass, chipClass, chipIdleClass } from "@/components/ui/chip";
-import { disciplineIcons } from "@/components/ui/discipline-icon";
-import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
+import { Dropdown } from "@/components/ui/dropdown";
 import {
   DISCIPLINES,
   disciplineLabels,
@@ -25,16 +24,18 @@ import { requireOrgAccess } from "@/features/auth/guards";
 import { goalTypeLabels } from "@/features/goals/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
+import { AthleteSearch } from "./athlete-search";
 import { AthleteTable, type AthleteTableRow, type SortColumn } from "./athlete-table";
-import { CompactFilter } from "./compact-filter";
 
 export const metadata: Metadata = {
   title: "Sportifs",
 };
 
-// Liste des sportifs (prompt Claude Design §7 `/coach/sportifs`, étape 4a), d'après la maquette
-// d'Antonino du 24/10 (D-40) : chiffres clés, recherche, filtres Statut et Type de programme (dans
-// l'adresse), puis le tableau (cartes sur téléphone) où statut et type se changent d'un appui.
+// Liste des sportifs (prompt Claude Design §7 `/coach/sportifs`), d'après la maquette « Sportifs » du
+// 03/11/2026 (dossier COORY-SPORTIF-PIXEL-PERFECT, pages 1a et 1b) : filtres Statut et Programme en
+// menus déroulants, recherche en direct (filtres et recherche dans l'adresse), puis le tableau (cartes
+// sur téléphone). Les anciens chiffres clés (D-40) sont dans les menus et le résumé : compteurs,
+// « Fiches à compléter » dans le menu Statut, compétitions à venir dans le résumé du téléphone.
 const statusSlugs = {
   tous: "all",
   actifs: "active",
@@ -45,11 +46,11 @@ type StatusSlug = keyof typeof statusSlugs;
 const slugByStatus = Object.fromEntries(
   Object.entries(statusSlugs).map(([slug, status]) => [status, slug]),
 ) as Record<AthleteListFilter["status"], StatusSlug>;
-const statusChips: { status: AthleteListFilter["status"]; label: string; dot: string | null }[] = [
-  { status: "all", label: "Tous", dot: null },
+const statusChoices: { status: AthleteListFilter["status"]; label: string; dot: string }[] = [
+  { status: "all", label: "Tous", dot: "bg-text" },
   { status: "active", label: "Actifs", dot: "bg-ok" },
-  { status: "paused", label: "En pause", dot: "bg-warn" },
-  { status: "archived", label: "Archivés", dot: "bg-faint" },
+  { status: "paused", label: "En pause", dot: "bg-warn-dot" },
+  { status: "archived", label: "Archivés", dot: "bg-archived-dot" },
 ];
 const disciplineSlugs = {
   running: "running",
@@ -78,13 +79,6 @@ export default function AthletesPage({
     </main>
   );
 }
-
-const shortDate = new Intl.DateTimeFormat("fr-BE", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
-const formatShort = (day: string) => shortDate.format(new Date(`${day}T00:00:00Z`));
 
 // Tri du tableau : nom, statut (actif, en pause, archivé), type (ordre des disciplines, sans type
 // en dernier), objectif (date visée la plus proche d'abord, sans date en dernier).
@@ -129,19 +123,25 @@ async function AthleteList({
     ? (query.tri as SortColumn)
     : "sportif";
   const desc = query.ordre === "desc";
-  // Carte « Fiches à compléter » (29/10/2026) : la liste ne montre que les fiches incomplètes.
+  // « Fiches à compléter » (choix du menu Statut depuis le 03/11) : seulement les fiches incomplètes.
   const onlyIncomplete = query.fiche === "a-completer";
 
-  // Une seule lecture : les chiffres clés portent sur toute l'organisation, la liste sur le filtre.
+  // Une seule lecture : le résumé porte sur toute l'organisation, la liste sur le filtre.
   const everyone = await listAthletes(membership.organizationId, { status: "all", q: filter.q });
   const all = filter.q
     ? await listAthletes(membership.organizationId, { status: "all", q: "" })
     : everyone;
-  // Nombres des filtres de statut : sur la recherche et le type choisis, pour annoncer ce qu'on verra.
+  const isIncomplete = (a: AthleteListItem) => a.status !== "archived" && a.missingInfo.length > 0;
+  // Nombres des menus : sur la recherche et l'autre filtre choisis, pour annoncer ce qu'on verra.
   const ofType = everyone.filter((a) => !discipline || a.programType === discipline);
+  const ofStatus = everyone.filter(
+    (a) =>
+      (filter.status === "all" || a.status === filter.status) &&
+      (!onlyIncomplete || isIncomplete(a)),
+  );
   const athletes = ofType
     .filter((a) => filter.status === "all" || a.status === filter.status)
-    .filter((a) => !onlyIncomplete || (a.status !== "archived" && a.missingInfo.length > 0))
+    .filter((a) => !onlyIncomplete || isIncomplete(a))
     .sort(compare(sortColumn));
   if (desc) athletes.reverse();
   const statusCount = (status: AthleteListFilter["status"]) =>
@@ -149,25 +149,24 @@ async function AthleteList({
 
   const today = todayIsoInBrussels();
   const active = all.filter((athlete) => athlete.status === "active");
-  const paused = all.filter((athlete) => athlete.status === "paused");
-  const newThisMonth = active.filter((a) => a.createdAt.slice(0, 7) === today.slice(0, 7));
-  const competitions = all
-    .filter((athlete) => athlete.status !== "archived" && athlete.nextCompetition)
-    .map((athlete) => athlete.nextCompetition!)
-    .sort((a, b) => a.date.localeCompare(b.date));
-  const incomplete = all.filter((a) => a.status !== "archived" && a.missingInfo.length > 0);
-  const followed = all.filter((athlete) => athlete.status !== "archived").length;
+  const competitions = all.filter(
+    (athlete) => athlete.status !== "archived" && athlete.nextCompetition,
+  ).length;
 
   const basePath = `/coach/o/${membership.organizationId}/sportifs`;
   const hrefFor = (changes: {
     status?: AthleteListFilter["status"];
     discipline?: DisciplineSlug | null;
+    incomplete?: boolean;
     tri?: SortColumn;
     desc?: boolean;
   }) => {
     const search = new URLSearchParams();
     const status = changes.status ?? filter.status;
     if (status !== "all") search.set("statut", slugByStatus[status]);
+    // Choisir un statut quitte « Fiches à compléter » (les deux sont dans le même menu).
+    const incomplete = changes.incomplete ?? (changes.status === undefined && onlyIncomplete);
+    if (incomplete) search.set("fiche", "a-completer");
     const nextDiscipline = changes.discipline === undefined ? disciplineSlug : changes.discipline;
     if (nextDiscipline) search.set("discipline", nextDiscipline);
     if (filter.q) search.set("q", filter.q);
@@ -204,242 +203,132 @@ async function AthleteList({
       : null,
   }));
 
+  const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
+  const incompleteCount = ofType.filter(isIncomplete).length;
+
   return (
     <>
       <PageHeader
         title="Sportifs"
-        subtitle={`${followed} sportif${followed > 1 ? "s" : ""} · ${active.length} actif${active.length > 1 ? "s" : ""}`}
         actions={
-          <Link href={`${basePath}/nouveau`} className={buttonClass()}>
-            <Plus aria-hidden size={16} strokeWidth={2} />
+          // Ordinateur : le bouton de l'en-tête (32 px) ; téléphone : le « + » de la barre du haut.
+          <Link
+            href={`${basePath}/nouveau`}
+            className={buttonClass({
+              className:
+                "max-lg:hidden lg:h-8! lg:gap-1.5! lg:rounded-[9px]! lg:px-3.5! lg:text-[12.5px]! lg:font-medium!",
+            })}
+          >
+            <Plus aria-hidden size={13} strokeWidth={2.2} />
             Nouveau sportif
           </Link>
         }
       />
+      <MobileBarAction>
+        <Link href={`${basePath}/nouveau`} aria-label="Nouveau sportif" className={barActionClass}>
+          <Plus aria-hidden size={17} strokeWidth={2.2} />
+        </Link>
+      </MobileBarAction>
       <PageBody>
-        <KpiGrid label="Chiffres des sportifs">
-          {/* Cartes cliquables (29/10/2026) : chacune mène à la liste filtrée correspondante. */}
-          <KpiCard
-            color="run"
-            icon={Users}
-            href={hrefFor({ status: "active" })}
-            value={String(active.length)}
-            label={active.length > 1 ? "Sportifs actifs" : "Sportif actif"}
-            detail={
-              newThisMonth.length > 0
-                ? `+${newThisMonth.length} ce mois-ci`
-                : "Aucun nouveau ce mois-ci"
-            }
-          />
-          <KpiCard
-            color="warn"
-            icon={CirclePause}
-            href={hrefFor({ status: "paused" })}
-            value={String(paused.length)}
-            label="En pause"
-          />
-          <KpiCard
-            color="accent"
-            icon={Flag}
-            href="/coach/notifications#notif-competitions"
-            value={String(competitions.length)}
-            label={competitions.length > 1 ? "Compétitions à venir" : "Compétition à venir"}
-            detail={competitions[0] ? `Prochaine : ${formatShort(competitions[0].date)}` : "Aucune"}
-          />
-          <KpiCard
-            color="amber"
-            icon={UserPen}
-            href={`${basePath}?fiche=a-completer`}
-            value={String(incomplete.length)}
-            label={incomplete.length > 1 ? "Fiches à compléter" : "Fiche à compléter"}
-            detail="Nom ou contact manquant"
-          />
-        </KpiGrid>
-
-        {/* Recherche : formulaire GET classique, les filtres restent dans l'URL. */}
-        <form role="search" action={basePath} className="relative">
-          <Search
-            aria-hidden
-            size={15}
-            strokeWidth={1.7}
-            className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted"
-          />
-          <label htmlFor="athlete-search" className="sr-only">
-            Rechercher un sportif
-          </label>
-          <input
-            id="athlete-search"
-            name="q"
-            type="search"
-            defaultValue={filter.q}
-            placeholder="Rechercher un sportif…"
-            className="h-11 w-full rounded-control border border-line bg-surface pr-3 pl-10 text-[16px] text-text outline-none placeholder:text-faint focus:border-accent"
-          />
-          {filter.status !== "all" ? (
-            <input type="hidden" name="statut" value={slugByStatus[filter.status]} />
-          ) : null}
-          {disciplineSlug ? <input type="hidden" name="discipline" value={disciplineSlug} /> : null}
-        </form>
-
-        {/* Téléphone et tablette : deux boutons compacts (choix en cours + flèche) ; ordinateur : la
-            carte de la maquette avec toutes les pastilles. */}
-        <div className="grid grid-cols-2 gap-3 lg:hidden">
-          <CompactFilter
-            title="Statut"
-            options={statusChips.map((chip) => ({
-              key: chip.status,
-              label: `${chip.label} (${statusCount(chip.status)})`,
-              href: hrefFor({ status: chip.status }),
-              selected: filter.status === chip.status,
-            }))}
-          />
-          <CompactFilter
-            title="Type de programme"
-            shortTitle="Programme"
-            options={[
-              {
-                key: "all",
-                label: "Tous",
-                href: hrefFor({ discipline: null }),
-                selected: !discipline,
-              },
-              ...DISCIPLINES.map((item) => ({
-                key: item,
-                label: disciplineLabels[item],
-                href: hrefFor({ discipline: slugByDiscipline[item] }),
-                selected: discipline === item,
-              })),
-            ]}
-          />
-        </div>
-
-        {/* Filtres (maquette) : deux groupes titrés dans une carte, Statut puis Type de programme. */}
-        <div className="hidden rounded-card border border-line bg-surface p-4 lg:flex lg:flex-row lg:items-start">
-          <FilterGroup title="Statut" label="Filtrer par statut">
-            {statusChips.map((chip) => {
-              const count = statusCount(chip.status);
-              return (
-                <FilterLink
-                  key={chip.status}
-                  href={hrefFor({ status: chip.status })}
-                  active={filter.status === chip.status}
+        <AthleteTable
+          organizationId={membership.organizationId}
+          basePath={basePath}
+          rows={rows}
+          today={today}
+          sort={{ column: sortColumn, desc, hrefs: sortHrefs }}
+          toolbar={
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-4 lg:px-6 lg:pt-[26px] lg:pb-[18px]">
+              {/* Téléphone : le résumé de l'organisation (maquette 1b) ; les compétitions mènent à
+                  leurs rappels (comme l'ancienne carte « Compétitions à venir »). */}
+              <p className="px-1 pb-1 text-[14px] leading-[normal] whitespace-nowrap text-text-2 lg:hidden">
+                {plural(all.length, "sportif")} · {plural(active.length, "actif")} ·{" "}
+                <Link
+                  href="/coach/notifications#notif-competitions"
+                  className="underline-offset-2 hover:underline"
                 >
-                  {chip.dot ? (
-                    <span aria-hidden className={`size-2 rounded-full ${chip.dot}`} />
-                  ) : null}
-                  {chip.label} ({count})
-                </FilterLink>
-              );
-            })}
-          </FilterGroup>
-          <span aria-hidden className="hidden w-px self-stretch bg-line lg:mx-6 lg:block" />
-          <FilterGroup title="Type de programme" label="Filtrer par type de programme">
-            <FilterLink href={hrefFor({ discipline: null })} active={!discipline}>
-              <LayoutGrid aria-hidden size={15} strokeWidth={1.8} />
-              Tous
-            </FilterLink>
-            {DISCIPLINES.map((item) => {
-              const Icon = disciplineIcons[item];
-              return (
-                <FilterLink
-                  key={item}
-                  href={hrefFor({ discipline: slugByDiscipline[item] })}
-                  active={discipline === item}
-                >
-                  <Icon
-                    aria-hidden
-                    size={15}
-                    strokeWidth={2}
-                    className={discipline === item ? "" : disciplineStyles[item].text}
-                  />
-                  {disciplineLabels[item]}
-                </FilterLink>
-              );
-            })}
-          </FilterGroup>
-        </div>
-
-        {onlyIncomplete ? (
-          <p className="flex flex-wrap items-center gap-2 text-[14px] text-muted">
-            <UserPen aria-hidden size={15} strokeWidth={1.8} className="text-amber" />
-            Seulement les fiches à compléter.
-            <Link
-              href={basePath}
-              className="border-b border-accent-line pb-px font-medium text-accent-text hover:text-text"
-            >
-              Tout afficher
-            </Link>
-          </p>
-        ) : null}
-
-        {athletes.length === 0 ? (
-          <div
-            role="status"
-            className="flex flex-col items-start gap-3 rounded-card border border-dashed border-line-2 p-6 text-muted"
-          >
-            <p>
-              {filter.q
-                ? `Aucun sportif ne correspond à « ${filter.q} ».`
-                : all.length === 0
-                  ? "Ajoute ton premier sportif : il apparaîtra ici avec son objectif et sa prochaine compétition."
-                  : "Aucun sportif dans cette catégorie."}
-            </p>
-            {all.length === 0 ? (
-              <Link href={`${basePath}/nouveau`} className={buttonClass({ variant: "outline" })}>
-                Ajouter mon premier sportif
-              </Link>
-            ) : null}
-          </div>
-        ) : (
-          <AthleteTable
-            organizationId={membership.organizationId}
-            basePath={basePath}
-            rows={rows}
-            sort={{ column: sortColumn, desc, hrefs: sortHrefs }}
-          />
-        )}
+                  {competitions} compétition{competitions > 1 ? "s" : ""} à venir
+                </Link>
+              </p>
+              <div className="lg:order-last">
+                <AthleteSearch action={basePath} initial={filter.q} />
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 lg:flex">
+                <Dropdown
+                  label="Statut"
+                  className="lg:w-[220px]"
+                  options={[
+                    ...statusChoices.map((choice) => ({
+                      key: choice.status,
+                      label: choice.label,
+                      dot: choice.dot,
+                      count: statusCount(choice.status),
+                      href: hrefFor({ status: choice.status, incomplete: false }),
+                      selected: !onlyIncomplete && filter.status === choice.status,
+                    })),
+                    {
+                      key: "a-completer",
+                      label: "Fiches à compléter",
+                      dot: "bg-warn-dot",
+                      count: incompleteCount,
+                      href: hrefFor({ status: "all", incomplete: true }),
+                      selected: onlyIncomplete,
+                      separated: true,
+                    },
+                  ]}
+                />
+                <Dropdown
+                  label="Programme"
+                  className="lg:w-[220px]"
+                  options={[
+                    {
+                      key: "all",
+                      label: "Tous",
+                      dot: "bg-text",
+                      href: hrefFor({ discipline: null }),
+                      selected: !discipline,
+                    },
+                    ...DISCIPLINES.map((item) => ({
+                      key: item,
+                      label: disciplineLabels[item],
+                      dot: disciplineStyles[item].dot,
+                      count: ofStatus.filter((a) => a.programType === item).length,
+                      href: hrefFor({ discipline: slugByDiscipline[item] }),
+                      selected: discipline === item,
+                    })),
+                  ]}
+                />
+              </div>
+            </div>
+          }
+          empty={
+            all.length === 0 ? (
+              <div
+                role="status"
+                className="flex flex-col items-center gap-3 px-6 py-12 text-center"
+              >
+                <p className="text-[15px] font-semibold">Aucun sportif pour l&apos;instant</p>
+                <p className="text-[13.5px] text-muted">
+                  Ajoute ton premier sportif : il apparaîtra ici avec son objectif et sa prochaine
+                  compétition.
+                </p>
+                <Link href={`${basePath}/nouveau`} className={buttonClass({ variant: "outline" })}>
+                  Ajouter mon premier sportif
+                </Link>
+              </div>
+            ) : (
+              <div
+                role="status"
+                className="flex flex-col items-center gap-1.5 px-5 py-10 text-center lg:px-6 lg:py-12"
+              >
+                <p className="text-[15px] font-semibold">Aucun sportif trouvé</p>
+                <p className="text-[13.5px] text-muted">
+                  Essaie un autre filtre ou une autre recherche.
+                </p>
+              </div>
+            )
+          }
+        />
       </PageBody>
     </>
-  );
-}
-
-function FilterGroup({
-  title,
-  label,
-  children,
-}: {
-  title: string;
-  label: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-2.5">
-      <span className="text-[14px] font-medium text-muted">{title}</span>
-      {/* Retour à la ligne partout : tous les choix restent visibles, même sur téléphone. */}
-      <nav aria-label={label} className="flex flex-wrap gap-2">
-        {children}
-      </nav>
-    </div>
-  );
-}
-
-function FilterLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      scroll={false}
-      aria-current={active ? "true" : undefined}
-      className={`${chipClass} ${active ? chipActiveClass : chipIdleClass}`}
-    >
-      {children}
-    </Link>
   );
 }

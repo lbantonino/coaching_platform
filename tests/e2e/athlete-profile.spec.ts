@@ -63,7 +63,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   await page.getByLabel("Téléphone").fill("+32 470 12 34 56");
 
   // Archivage : disparaît des actifs, apparaît dans « Archivés ».
-  await page.getByText("Archivé", { exact: true }).click();
+  await page.getByText("Archivé", { exact: true }).filter({ visible: true }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
@@ -76,7 +76,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   // Filtre « Tous » par défaut (maquette du 24/10) : il reste visible, marqué « Archivé ».
   await expect(list.getByRole("listitem").filter({ hasText: renamed })).toContainText("Archivé");
   await chooseAthleteFilter(page, "Statut", "Actifs");
-  await expect(page.getByText(/Aucun sportif ne correspond/)).toBeVisible();
+  await expect(page.getByText("Aucun sportif trouvé")).toBeVisible();
 
   await chooseAthleteFilter(page, "Statut", "Archivés");
   await expect(list.getByText(renamed)).toBeVisible();
@@ -84,7 +84,7 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
   // Restauration.
   await list.getByRole("link", { name: new RegExp(`^${renamed}`) }).click();
   await openAthleteTab(page, "Profil");
-  await page.getByText("Actif", { exact: true }).click();
+  await page.getByText("Actif", { exact: true }).filter({ visible: true }).click();
   await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
   await expect(
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),

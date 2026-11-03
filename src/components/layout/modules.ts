@@ -11,7 +11,6 @@ import {
   History,
   ListChecks,
   MessageSquare,
-  Receipt,
   ScrollText,
   Search,
   ShieldCheck,
@@ -48,15 +47,6 @@ export const COACH_MODULES = {
     emptyText:
       "Tu créeras ici les programmes de tes sportifs sur plusieurs semaines, à partir de tes modèles, puis tu les publieras dans leur espace.",
   },
-  facturation: {
-    label: "Facturation",
-    h1: "Facturation",
-    sub: "Factures, paiements et relances · pas de paiement en ligne via Coory.",
-    icon: Receipt,
-    emptyTitle: "Aucune facture pour l'instant",
-    emptyText:
-      "Tu prépareras ici les factures de tes sportifs et tu suivras les paiements reçus. Aucun paiement ne passe par Coory.",
-  },
   comptabilite: {
     label: "Comptabilité",
     h1: "Comptabilité",
@@ -64,7 +54,7 @@ export const COACH_MODULES = {
     icon: Calculator,
     emptyTitle: "Aucun mouvement pour l'instant",
     emptyText:
-      "Ton chiffre d'affaires, tes dépenses et ton résultat estimé apparaîtront ici à partir de tes factures et de tes dépenses.",
+      "Ce que tu gagnes, ce que tu dépenses et ton résultat apparaîtront ici à partir de tes paiements reçus et de tes dépenses.",
   },
   bibliotheque: {
     label: "Bibliothèque",
@@ -105,11 +95,11 @@ export const COACH_MODULES = {
   notifications: {
     label: "Notifications",
     h1: "Notifications",
-    sub: "Retours, messages, invitations, factures et tâches.",
+    sub: "Retours, messages, invitations, séances à encaisser et tâches.",
     icon: Bell,
     emptyTitle: "Aucune notification",
     emptyText:
-      "Tu seras prévenu ici d'un nouveau retour de séance, d'un message, d'une invitation acceptée ou d'une facture en retard.",
+      "Tu seras prévenu ici d'un nouveau retour de séance, d'un message, d'une invitation acceptée ou d'une séance à encaisser.",
   },
   recherche: {
     label: "Recherche",
