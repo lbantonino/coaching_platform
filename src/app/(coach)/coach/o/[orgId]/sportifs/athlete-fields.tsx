@@ -3,6 +3,13 @@ import type { ReactNode } from "react";
 
 import {
   checkboxChipClass,
+  ficheChipClass,
+  ficheGridClass,
+  ficheHintClass,
+  ficheInputClass,
+  ficheLabelClass,
+  ficheOvertitleClass,
+  ficheTextareaClass,
   hintClass,
   inputClass,
   textareaClass,
@@ -32,11 +39,53 @@ import {
 // et Disponibilités de la fiche : mêmes libellés, mêmes limites, une seule source. Chaque groupe ne
 // contient que des champs ; le formulaire qui les entoure (et son action) reste à la page.
 
-// Intertitre d'une partie du formulaire (micro-libellé du design system).
-export function Part({ title, children }: { title: string; children: ReactNode }) {
+// Habillage des champs : celui de l'app (page « Nouveau sportif ») ou celui de la fiche (maquette
+// « Sportifs » du 03/11/2026 : champs de 46 px, sur-titres en capitales, grille de colonnes de 240 px).
+export type FieldLook = "app" | "fiche";
+
+function looks(look: FieldLook) {
+  return look === "fiche"
+    ? {
+        input: ficheInputClass,
+        textarea: ficheTextareaClass,
+        label: ficheLabelClass,
+        hint: ficheHintClass,
+        chip: ficheChipClass,
+        grid: ficheGridClass,
+        field: "flex min-w-0 flex-col gap-2",
+        optional: "font-normal text-faint",
+      }
+    : {
+        input: inputClass,
+        textarea: textareaClass,
+        label: labelClass,
+        hint: hintClass,
+        chip: checkboxChipClass,
+        grid: "grid gap-4 md:grid-cols-2",
+        field: "flex flex-col gap-1.5",
+        optional: "font-normal text-muted",
+      };
+}
+
+// Intertitre d'une partie du formulaire (micro-libellé du design system ; sur-titre sur la fiche).
+export function Part({
+  title,
+  look = "app",
+  children,
+}: {
+  title: string;
+  look?: FieldLook;
+  children: ReactNode;
+}) {
   return (
-    <fieldset className="flex flex-col gap-4">
-      <legend className="mb-4 font-mono text-data tracking-wide text-muted uppercase">
+    <fieldset className="flex min-w-0 flex-col gap-4">
+      <legend
+        className={
+          look === "fiche"
+            ? `${ficheOvertitleClass} mb-4`
+            : "mb-4 font-mono text-data tracking-wide text-muted uppercase"
+        }
+      >
         {title}
       </legend>
       {children}
@@ -49,14 +98,17 @@ type Values = Pick<AthleteFormValues, "firstName" | "lastName" | "sex">;
 export function IdentityFields({
   values,
   optionalLastName = false,
+  look = "app",
 }: {
   values: Values;
   optionalLastName?: boolean;
+  look?: FieldLook;
 }) {
+  const s = looks(look);
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="firstName" className={labelClass}>
+    <div className={s.grid}>
+      <div className={s.field}>
+        <label htmlFor="firstName" className={s.label}>
           Prénom
         </label>
         <input
@@ -67,13 +119,13 @@ export function IdentityFields({
           required
           maxLength={80}
           defaultValue={values.firstName}
-          className={inputClass}
+          className={s.input}
         />
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="lastName" className={labelClass}>
+      <div className={s.field}>
+        <label htmlFor="lastName" className={s.label}>
           Nom de famille
-          {optionalLastName ? <span className="font-normal text-muted"> (facultatif)</span> : null}
+          {optionalLastName ? <span className={s.optional}> (facultatif)</span> : null}
         </label>
         <input
           id="lastName"
@@ -82,14 +134,14 @@ export function IdentityFields({
           autoComplete="off"
           maxLength={80}
           defaultValue={values.lastName}
-          className={inputClass}
+          className={s.input}
         />
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="sex" className={labelClass}>
-          Sexe <span className="font-normal text-muted">(facultatif)</span>
+      <div className={s.field}>
+        <label htmlFor="sex" className={s.label}>
+          Sexe <span className={s.optional}>(facultatif)</span>
         </label>
-        <select id="sex" name="sex" defaultValue={values.sex} className={inputClass}>
+        <select id="sex" name="sex" defaultValue={values.sex} className={s.input}>
           <option value="">Non renseigné</option>
           {SEXES.map((sex) => (
             <option key={sex} value={sex}>
@@ -106,20 +158,21 @@ export function ContactFields({
   values,
   hasAccount = false,
   optional = false,
+  look = "app",
 }: {
   values: Pick<AthleteFormValues, "email" | "phone" | "preferredContact">;
   // Compte activé : l'e-mail est l'identifiant de connexion, il ne se change pas ici.
   hasAccount?: boolean;
   // Nouveau sportif : on précise que l'e-mail et le téléphone sont facultatifs.
   optional?: boolean;
+  look?: FieldLook;
 }) {
-  const facultatif = optional ? (
-    <span className="font-normal text-muted"> (facultatif)</span>
-  ) : null;
+  const s = looks(look);
+  const facultatif = optional ? <span className={s.optional}> (facultatif)</span> : null;
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className={labelClass}>
+    <div className={s.grid}>
+      <div className={s.field}>
+        <label htmlFor="email" className={s.label}>
           Adresse e-mail{facultatif}
         </label>
         <input
@@ -131,21 +184,21 @@ export function ContactFields({
           defaultValue={values.email}
           readOnly={hasAccount}
           aria-describedby={hasAccount ? "email-hint" : optional ? "email-invite-hint" : undefined}
-          className={inputClass}
+          className={s.input}
         />
         {hasAccount ? null : <FieldCheck htmlFor="email" rule="email" />}
         {hasAccount ? (
-          <p id="email-hint" className={hintClass}>
+          <p id="email-hint" className={s.hint}>
             Identifiant de connexion du sportif : non modifiable ici.
           </p>
         ) : optional ? (
-          <p id="email-invite-hint" className={hintClass}>
+          <p id="email-invite-hint" className={s.hint}>
             Il servira à l&apos;inviter dans son espace sportif.
           </p>
         ) : null}
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="phone" className={labelClass}>
+      <div className={s.field}>
+        <label htmlFor="phone" className={s.label}>
           Téléphone{facultatif}
         </label>
         <input
@@ -156,19 +209,19 @@ export function ContactFields({
           inputMode="tel"
           placeholder="+32 …"
           defaultValue={values.phone}
-          className={inputClass}
+          className={s.input}
         />
         <FieldCheck htmlFor="phone" rule="phone" />
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="preferredContact" className={labelClass}>
+      <div className={s.field}>
+        <label htmlFor="preferredContact" className={s.label}>
           Canal de contact préféré
         </label>
         <select
           id="preferredContact"
           name="preferredContact"
           defaultValue={values.preferredContact}
-          className={inputClass}
+          className={s.input}
         >
           <option value="">Non précisé</option>
           {CONTACT_CHANNELS.map((channel) => (
@@ -183,11 +236,18 @@ export function ContactFields({
 }
 
 // Adresse postale (D-65) : ses coordonnées, utiles pour ses factures faites hors de Coory (D-90).
-export function AddressFields({ values }: { values: AddressFormValues }) {
+export function AddressFields({
+  values,
+  look = "app",
+}: {
+  values: AddressFormValues;
+  look?: FieldLook;
+}) {
+  const s = looks(look);
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <div className="flex flex-col gap-1.5 md:col-span-2">
-        <label htmlFor="addressLine" className={labelClass}>
+    <div className={s.grid}>
+      <div className={`${s.field} col-span-full`}>
+        <label htmlFor="addressLine" className={s.label}>
           Rue et numéro
         </label>
         <input
@@ -196,14 +256,14 @@ export function AddressFields({ values }: { values: AddressFormValues }) {
           autoComplete="off"
           defaultValue={values.addressLine}
           aria-describedby="address-hint"
-          className={inputClass}
+          className={s.input}
         />
-        <p id="address-hint" className={hintClass}>
+        <p id="address-hint" className={s.hint}>
           Utile pour ses factures, faites dans ton logiciel de facturation.
         </p>
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="postalCode" className={labelClass}>
+      <div className={s.field}>
+        <label htmlFor="postalCode" className={s.label}>
           Code postal
         </label>
         <input
@@ -211,11 +271,11 @@ export function AddressFields({ values }: { values: AddressFormValues }) {
           name="postalCode"
           autoComplete="off"
           defaultValue={values.postalCode}
-          className={inputClass}
+          className={s.input}
         />
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="city" className={labelClass}>
+      <div className={s.field}>
+        <label htmlFor="city" className={s.label}>
           Ville
         </label>
         <input
@@ -223,14 +283,14 @@ export function AddressFields({ values }: { values: AddressFormValues }) {
           name="city"
           autoComplete="off"
           defaultValue={values.city}
-          className={inputClass}
+          className={s.input}
         />
       </div>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="country" className={labelClass}>
+      <div className={s.field}>
+        <label htmlFor="country" className={s.label}>
           Pays
         </label>
-        <select id="country" name="country" defaultValue={values.country} className={inputClass}>
+        <select id="country" name="country" defaultValue={values.country} className={s.input}>
           {COUNTRIES.map(([code, label]) => (
             <option key={code} value={code}>
               {label}
@@ -247,31 +307,33 @@ export function AddressFields({ values }: { values: AddressFormValues }) {
 export function SportProfileFields({
   values,
   besideLevel,
+  look = "app",
 }: {
   values: Pick<AthleteFormValues, "level" | "experience" | "trainingPlaces" | "equipment">;
   besideLevel?: ReactNode;
+  look?: FieldLook;
 }) {
+  const s = looks(look);
+  const fiche = look === "fiche";
   return (
-    <>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="level" className={labelClass}>
-            Niveau
-          </label>
-          <select id="level" name="level" defaultValue={values.level} className={inputClass}>
-            <option value="">Non précisé</option>
-            {ATHLETE_LEVELS.map((level) => (
-              <option key={level} value={level}>
-                {athleteLevelLabels[level]}
-              </option>
-            ))}
-          </select>
-        </div>
-        {besideLevel}
+    <div className={s.grid}>
+      <div className={s.field}>
+        <label htmlFor="level" className={s.label}>
+          Niveau
+        </label>
+        <select id="level" name="level" defaultValue={values.level} className={s.input}>
+          <option value="">Non précisé</option>
+          {ATHLETE_LEVELS.map((level) => (
+            <option key={level} value={level}>
+              {athleteLevelLabels[level]}
+            </option>
+          ))}
+        </select>
       </div>
+      {besideLevel}
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="experience" className={labelClass}>
+      <div className={`${s.field} col-span-full`}>
+        <label htmlFor="experience" className={s.label}>
           Expérience
         </label>
         <textarea
@@ -281,15 +343,15 @@ export function SportProfileFields({
           maxLength={500}
           placeholder="Ex. : course depuis 3 ans, un Hyrox en Open, musculation régulière"
           defaultValue={values.experience}
-          className={textareaClass}
+          className={s.textarea}
         />
       </div>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className={`${labelClass} mb-2`}>Lieux d&apos;entraînement</legend>
+      <fieldset className="col-span-full flex min-w-0 flex-col gap-2">
+        <legend className={`${s.label} mb-2`}>Lieux d&apos;entraînement</legend>
         <div className="flex flex-wrap gap-2">
           {TRAINING_PLACES.map((place) => (
-            <label key={place} className={checkboxChipClass}>
+            <label key={place} className={s.chip}>
               <input
                 type="checkbox"
                 name="trainingPlaces"
@@ -297,20 +359,27 @@ export function SportProfileFields({
                 defaultChecked={values.trainingPlaces.includes(place)}
                 className="sr-only"
               />
-              <Check
-                aria-hidden
-                size={14}
-                strokeWidth={2}
-                className="hidden group-has-checked:block"
-              />
-              {trainingPlaceLabels[place]}
+              {fiche ? (
+                // Fiche : le « ✓ » est dessiné par la pastille (ficheChipClass), le libellé reste seul.
+                trainingPlaceLabels[place]
+              ) : (
+                <>
+                  <Check
+                    aria-hidden
+                    size={14}
+                    strokeWidth={2}
+                    className="hidden group-has-checked:block"
+                  />
+                  {trainingPlaceLabels[place]}
+                </>
+              )}
             </label>
           ))}
         </div>
       </fieldset>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="equipment" className={labelClass}>
+      <div className={`${s.field} col-span-full`}>
+        <label htmlFor="equipment" className={s.label}>
           Matériel disponible
         </label>
         <textarea
@@ -320,10 +389,10 @@ export function SportProfileFields({
           maxLength={500}
           placeholder="Ex. : haltères jusqu'à 20 kg, kettlebell 16 kg, rameur"
           defaultValue={values.equipment}
-          className={textareaClass}
+          className={s.textarea}
         />
       </div>
-    </>
+    </div>
   );
 }
 

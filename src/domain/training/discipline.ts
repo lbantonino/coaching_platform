@@ -30,6 +30,9 @@ export const disciplineStyles = {
     text: "text-run",
     // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
     dot: "bg-run-fill",
+    // Carte d'une séance du programme (maquette « Sportifs », page 2c) : fond teinté et numéro plein.
+    tint: "bg-run-soft",
+    number: "bg-run-fill text-on-run-fill",
   },
   strength: {
     header: "border-strength/35 bg-surface",
@@ -39,6 +42,9 @@ export const disciplineStyles = {
     text: "text-strength",
     // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
     dot: "bg-strength-fill",
+    // Carte d'une séance du programme (maquette « Sportifs », page 2c) : fond teinté et numéro plein.
+    tint: "bg-strength-soft",
+    number: "bg-strength-fill text-on-strength-fill",
   },
   hyrox: {
     header: "border-hyrox/35 bg-surface",
@@ -48,6 +54,9 @@ export const disciplineStyles = {
     text: "text-hyrox",
     // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
     dot: "bg-hyrox-fill",
+    // Carte d'une séance du programme (maquette « Sportifs », page 2c) : fond teinté et numéro plein.
+    tint: "bg-hyrox-soft",
+    number: "bg-hyrox-fill text-on-hyrox-fill",
   },
   hybrid: {
     header: "border-hybrid/35 bg-surface",
@@ -57,8 +66,11 @@ export const disciplineStyles = {
     text: "text-hybrid",
     // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
     dot: "bg-hybrid-fill",
+    // Carte d'une séance du programme (maquette « Sportifs », page 2c) : fond teinté et numéro plein.
+    tint: "bg-hybrid-soft",
+    number: "bg-hybrid-fill text-on-hybrid-fill",
   },
 } as const satisfies Record<
   Discipline,
-  Record<"header" | "avatar" | "frame" | "icon" | "text" | "dot", string>
+  Record<"header" | "avatar" | "frame" | "icon" | "text" | "dot" | "tint" | "number", string>
 >;

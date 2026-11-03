@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { PageBody, PageLoading, pageMainClass } from "@/components/layout/page-header";
+import { disciplineStyles } from "@/domain/training/discipline";
 import { listAthleteActivity } from "@/features/activity/queries";
 import { addDays, buildAgendaItems, type AgendaItem } from "@/features/agenda/items";
 import { mondayOf, parseDay } from "@/features/agenda/week";
@@ -28,7 +29,7 @@ import {
   type AgendaView,
 } from "./athlete-agenda";
 import { AthleteEditForm } from "./athlete-edit-form";
-import { ProgramWeeksSection } from "./program-weeks";
+import { ProgramWeeksSection, type ProgramView } from "./program-weeks";
 import { AthleteDocuments } from "./athlete-documents";
 import { ActivityTimeline } from "./activity-timeline";
 import { AthleteHeader, AthleteIdentity } from "./athlete-header";
@@ -148,6 +149,10 @@ export default function AthletePage({
             tab={tabSchema.parse(query.onglet)}
             agendaView={agendaViewSchema.parse(query.vue)}
             agendaDate={typeof query.date === "string" ? query.date : undefined}
+            programView={query.vue === "toutes" ? "toutes" : "semaine"}
+            programWeek={
+              typeof query.semaine === "string" ? Number.parseInt(query.semaine, 10) || null : null
+            }
             creationIncomplete={query.creation === "incomplete"}
           />
         ))}
@@ -162,6 +167,8 @@ async function AthleteSection({
   tab,
   agendaView,
   agendaDate,
+  programView,
+  programWeek,
   creationIncomplete,
 }: {
   orgId: string;
@@ -169,6 +176,9 @@ async function AthleteSection({
   tab: TabKey;
   agendaView: AgendaView;
   agendaDate: string | undefined;
+  // Agenda d'un sportif avec programme (maquette 2c) : une semaine (?semaine=…) ou toutes (?vue=toutes).
+  programView: ProgramView;
+  programWeek: number | null;
   // Page « Nouveau sportif » (D-54) : la fiche est créée, mais son objectif ou son accord santé
   // n'a pas pu être enregistré.
   creationIncomplete: boolean;
@@ -193,8 +203,9 @@ async function AthleteSection({
     <>
       <AthleteHeader athlete={athlete} organizationId={organizationId} listPath={listPath} />
       <PageBody>
-        {/* La fiche : 1600 px au plus, centrée (maquette « Sportifs » : très grands écrans). */}
-        <div className="mx-auto flex w-full max-w-[1600px] min-w-0 flex-col gap-3.5">
+        {/* La fiche : 1600 px au plus, centrée (maquette « Sportifs » : très grands écrans) ; téléphone :
+            16 px sous la barre, comme la maquette. */}
+        <div className="mx-auto flex w-full max-w-[1600px] min-w-0 flex-col gap-3.5 max-lg:-mt-0.5">
           <AthleteIdentity
             athlete={athlete}
             organizationId={organizationId}
@@ -235,10 +246,69 @@ async function AthleteSection({
               today={today}
               basePath={basePath}
             />
+          ) : tab === "profil" ? (
+            // Onglet Profil (maquette « Sportifs » du 03/11/2026, page 2b) : la carte photo, puis la
+            // carte Informations, en pleine largeur.
+            <div className="flex flex-col gap-4">
+              <section
+                aria-labelledby="photo-title"
+                className="rounded-[20px] bg-surface px-[22px] py-[18px] inset-ring inset-ring-line-soft"
+              >
+                <PhotoForm
+                  look="fiche"
+                  name={athlete.displayName}
+                  photoPath={athlete.photoPath}
+                  colorClass={
+                    athlete.programType ? disciplineStyles[athlete.programType].avatar : undefined
+                  }
+                  upload={uploadAthletePhoto.bind(null, organizationId, athlete.id)}
+                  remove={removeAthletePhoto.bind(null, organizationId, athlete.id)}
+                />
+              </section>
+              <section
+                aria-labelledby="infos-title"
+                className="flex flex-col gap-4 rounded-[20px] bg-surface p-[22px] inset-ring inset-ring-line-soft"
+              >
+                <h2
+                  id="infos-title"
+                  className="text-[17px] leading-[21.5px] font-semibold tracking-[-0.01em]"
+                >
+                  Informations
+                </h2>
+                <AthleteEditForm
+                  organizationId={organizationId}
+                  athleteId={athlete.id}
+                  hasAccount={athlete.hasAccount}
+                  values={{
+                    firstName: athlete.firstName,
+                    lastName: athlete.lastName ?? "",
+                    sex: athlete.sex ?? "",
+                    email: athlete.email ?? "",
+                    phone: athlete.phone ?? "",
+                    status: athlete.status,
+                    preferredContact: athlete.preferredContact ?? "",
+                    level: athlete.level ?? "",
+                    experience: athlete.experience ?? "",
+                    trainingPlaces: athlete.trainingPlaces,
+                    equipment: athlete.equipment ?? "",
+                    addressLine: athlete.addressLine ?? "",
+                    postalCode: athlete.postalCode ?? "",
+                    city: athlete.city ?? "",
+                    country: athlete.country,
+                  }}
+                />
+              </section>
+            </div>
+          ) : tab === "objectifs" ? (
+            // Onglet Objectifs (maquette « Sportifs », page 2f) : pleine largeur, deux cartes.
+            <GoalsSection organizationId={organizationId} athleteId={athlete.id} today={today} />
           ) : tab === "agenda" ? (
             program ? (
               <ProgramWeeksSection
                 name={athlete.firstName}
+                sex={athlete.sex}
+                view={programView}
+                requestedWeek={programWeek}
                 program={program}
                 today={today}
                 basePath={basePath}
@@ -287,61 +357,6 @@ async function AthleteSection({
           ) : (
             // Les onglets de saisie gardent une largeur de lecture confortable.
             <div className="flex w-full max-w-3xl flex-col gap-6">
-              {tab === "profil" ? (
-                <section
-                  aria-labelledby="photo-title"
-                  className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-                >
-                  <h2 id="photo-title" className="text-title font-medium">
-                    Photo
-                  </h2>
-                  <PhotoForm
-                    name={athlete.displayName}
-                    photoPath={athlete.photoPath}
-                    upload={uploadAthletePhoto.bind(null, organizationId, athlete.id)}
-                    remove={removeAthletePhoto.bind(null, organizationId, athlete.id)}
-                  />
-                </section>
-              ) : null}
-              {tab === "profil" ? (
-                <section
-                  aria-labelledby="infos-title"
-                  className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-                >
-                  <h2 id="infos-title" className="text-title font-medium">
-                    Informations
-                  </h2>
-                  <AthleteEditForm
-                    organizationId={organizationId}
-                    athleteId={athlete.id}
-                    hasAccount={athlete.hasAccount}
-                    values={{
-                      firstName: athlete.firstName,
-                      lastName: athlete.lastName ?? "",
-                      sex: athlete.sex ?? "",
-                      email: athlete.email ?? "",
-                      phone: athlete.phone ?? "",
-                      status: athlete.status,
-                      preferredContact: athlete.preferredContact ?? "",
-                      level: athlete.level ?? "",
-                      experience: athlete.experience ?? "",
-                      trainingPlaces: athlete.trainingPlaces,
-                      equipment: athlete.equipment ?? "",
-                      addressLine: athlete.addressLine ?? "",
-                      postalCode: athlete.postalCode ?? "",
-                      city: athlete.city ?? "",
-                      country: athlete.country,
-                    }}
-                  />
-                </section>
-              ) : null}
-              {tab === "objectifs" ? (
-                <GoalsSection
-                  organizationId={organizationId}
-                  athleteId={athlete.id}
-                  today={today}
-                />
-              ) : null}
               {tab === "disponibilites" ? (
                 <AvailabilitySection organizationId={organizationId} athlete={athlete} />
               ) : null}

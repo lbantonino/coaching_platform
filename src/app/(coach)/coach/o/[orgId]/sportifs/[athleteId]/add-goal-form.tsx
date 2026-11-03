@@ -1,14 +1,16 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
 import {
   errorTextClass,
-  hintClass,
-  inputClass,
-  textareaClass,
-  labelClass,
+  ficheGridClass,
+  ficheHintClass,
+  ficheInputClass,
+  ficheLabelClass,
+  ficheTextareaClass,
 } from "@/components/ui/form-styles";
 import { FieldCheck } from "@/components/ui/field-check";
 import { Segmented } from "@/components/ui/segmented";
@@ -33,8 +35,17 @@ export function AddGoalForm({ organizationId, athleteId, today, hasMain }: Props
   );
 
   return (
-    <div className="flex flex-col gap-3 border-t border-line pt-5">
-      <h3 className="text-small font-medium">Ajouter un objectif</h3>
+    // Carte à part sous les objectifs (maquette « Sportifs », page 2f).
+    <section
+      aria-labelledby="add-goal-title"
+      className="flex min-w-0 flex-col gap-4 rounded-[20px] bg-surface p-[22px] inset-ring inset-ring-line-soft"
+    >
+      <h2
+        id="add-goal-title"
+        className="text-[17px] leading-[21.5px] font-semibold tracking-[-0.01em]"
+      >
+        Ajouter un objectif
+      </h2>
       {/* La clé change après chaque réponse : le formulaire se vide après un ajout réussi, et
           réaffiche toute la saisie (listes et cases comprises) après une erreur. */}
       <GoalFields
@@ -49,7 +60,7 @@ export function AddGoalForm({ organizationId, athleteId, today, hasMain }: Props
         submitLabel="Ajouter l'objectif"
         savedMessage={state.saved > 0 && state.error === null ? "Objectif ajouté." : null}
       />
-    </div>
+    </section>
   );
 }
 
@@ -81,15 +92,21 @@ export function GoalFields({
   const v = values;
   const [goalType, setGoalType] = useState(v?.goalType ?? "");
   const [isCompetition, setIsCompetition] = useState(v?.isCompetition ?? false);
+  // Date vide : « jj/mm/aaaa » en gris clair, comme un texte d'exemple.
+  const [hasDate, setHasDate] = useState(Boolean(v?.targetDate));
   // Par défaut, le premier objectif est principal ; les suivants sont secondaires.
   const defaultPriority =
     (v?.priority as GoalPriority | undefined) ?? (hasMain ? "secondary" : "main");
 
+  const optional = (text: string) => <span className="font-normal text-faint">({text})</span>;
+
+  // Habillage de la fiche (maquette « Sportifs », page 2f) : grille de colonnes de 240 px (3 à
+  // 1280 px, 1 sur téléphone), la case et la description sur toute la largeur.
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`${idPrefix}-type`} className={labelClass}>
+      <div className={ficheGridClass}>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor={`${idPrefix}-type`} className={ficheLabelClass}>
             Type d&apos;objectif
           </label>
           <select
@@ -97,7 +114,8 @@ export function GoalFields({
             name="goalType"
             defaultValue={v?.goalType ?? ""}
             onChange={(event) => setGoalType(event.target.value)}
-            className={inputClass}
+            className={`${ficheInputClass} invalid:text-faint`}
+            required
           >
             <option value="" disabled>
               Choisir…
@@ -113,12 +131,9 @@ export function GoalFields({
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`${idPrefix}-date`} className={labelClass}>
-            Date cible{" "}
-            <span className="font-normal text-muted">
-              ({isCompetition ? "date de la compétition" : "facultatif"})
-            </span>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor={`${idPrefix}-date`} className={ficheLabelClass}>
+            Date cible {optional(isCompetition ? "date de la compétition" : "facultatif")}
           </label>
           <input
             id={`${idPrefix}-date`}
@@ -126,14 +141,15 @@ export function GoalFields({
             type="date"
             min={minDate}
             defaultValue={v?.targetDate}
-            className={`${inputClass} font-mono`}
+            onChange={(event) => setHasDate(event.target.value !== "")}
+            className={`${ficheInputClass} ${hasDate ? "" : "text-faint!"}`}
           />
           {/* Ajout seulement : une modification garde une date passée qui n'a pas changé. */}
           {idPrefix === "goal" ? <FieldCheck htmlFor="goal-date" rule="future-date" /> : null}
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor={`${idPrefix}-time`} className={labelClass}>
-            Temps visé <span className="font-normal text-muted">(facultatif)</span>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor={`${idPrefix}-time`} className={ficheLabelClass}>
+            Temps visé {optional("facultatif")}
           </label>
           <input
             id={`${idPrefix}-time`}
@@ -143,113 +159,128 @@ export function GoalFields({
             autoComplete="off"
             placeholder="Ex. : 1:15:00"
             defaultValue={v?.targetTime}
-            className={`${inputClass} font-mono`}
+            className={ficheInputClass}
           />
         </div>
-      </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Segmented
-          name="priority"
-          legend="Priorité"
-          defaultValue={defaultPriority}
-          options={[
-            { value: "main", label: "Principal" },
-            { value: "secondary", label: "Secondaire" },
-          ]}
-        />
-        {hasMain ? (
-          <p className={hintClass}>
-            Choisir « Principal » fait passer l&apos;objectif principal actuel en secondaire.
-          </p>
-        ) : null}
-      </div>
-
-      <label className="flex w-fit cursor-pointer items-center gap-2.5 text-small font-medium">
-        <input
-          type="checkbox"
-          name="isCompetition"
-          checked={isCompetition}
-          onChange={(event) => setIsCompetition(event.target.checked)}
-          className="size-4 accent-[var(--accent)]"
-        />
-        C&apos;est une compétition
-      </label>
-
-      {isCompetition ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${idPrefix}-competition`} className={labelClass}>
-              Nom de la compétition
-            </label>
-            <input
-              id={`${idPrefix}-competition`}
-              name="competitionName"
-              type="text"
-              maxLength={120}
-              autoComplete="off"
-              placeholder="Ex. : Hyrox Bruxelles"
-              defaultValue={v?.competitionName}
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor={`${idPrefix}-location`} className={labelClass}>
-              Lieu <span className="font-normal text-muted">(facultatif)</span>
-            </label>
-            <input
-              id={`${idPrefix}-location`}
-              name="competitionLocation"
-              type="text"
-              maxLength={120}
-              autoComplete="off"
-              defaultValue={v?.competitionLocation}
-              className={inputClass}
-            />
-          </div>
-          {goalType === "hyrox" ? (
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor={`${idPrefix}-hyrox-category`} className={labelClass}>
-                Catégorie Hyrox
-              </label>
-              <select
-                id={`${idPrefix}-hyrox-category`}
-                name="hyroxCategory"
-                defaultValue={v?.hyroxCategory ?? ""}
-                className={inputClass}
-              >
-                <option value="">Pas encore décidée</option>
-                {HYROX_CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {hyroxCategoryLabels[category]}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="flex min-w-0 flex-col gap-2">
+          <Segmented
+            name="priority"
+            legend="Priorité"
+            look="track"
+            defaultValue={defaultPriority}
+            options={[
+              { value: "main", label: "Principal" },
+              { value: "secondary", label: "Secondaire" },
+            ]}
+          />
+          {hasMain ? (
+            <p className={ficheHintClass}>
+              Choisir « Principal » fait passer l&apos;objectif principal actuel en secondaire.
+            </p>
           ) : null}
         </div>
-      ) : null}
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={`${idPrefix}-description`} className={labelClass}>
-          Description <span className="font-normal text-muted">(facultatif)</span>
+        {/* Case de 20 px (maquette) : la vraie case, transparente, est posée sur la case dessinée
+            (clavier, lecteurs d'écran et clics l'atteignent) ; cochée, elle passe en violet. */}
+        <label className="col-span-full flex w-fit cursor-pointer items-center gap-2.5 text-[14px] leading-5 font-medium">
+          <span className="relative grid size-5 shrink-0">
+            <input
+              type="checkbox"
+              name="isCompetition"
+              checked={isCompetition}
+              onChange={(event) => setIsCompetition(event.target.checked)}
+              className="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none opacity-0"
+            />
+            <span
+              aria-hidden
+              className="pointer-events-none grid size-5 place-items-center rounded-md text-on-accent inset-ring-[1.5px] inset-ring-checkbox transition-colors duration-150 peer-checked:bg-violet peer-checked:inset-ring-violet peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-violet [&>svg]:hidden peer-checked:[&>svg]:block"
+            >
+              <Check size={14} strokeWidth={3} />
+            </span>
+          </span>
+          C&apos;est une compétition
         </label>
-        <textarea
-          id={`${idPrefix}-description`}
-          name="description"
-          rows={2}
-          maxLength={500}
-          placeholder="Ex. : finir sous 1 h 45 ; tenir 45 min de cardio ; squat à 100 kg"
-          defaultValue={v?.description}
-          className={textareaClass}
-        />
+
+        {isCompetition ? (
+          <>
+            <div className="flex min-w-0 flex-col gap-2">
+              <label htmlFor={`${idPrefix}-competition`} className={ficheLabelClass}>
+                Nom de la compétition
+              </label>
+              <input
+                id={`${idPrefix}-competition`}
+                name="competitionName"
+                type="text"
+                maxLength={120}
+                autoComplete="off"
+                placeholder="Ex. : Hyrox Bruxelles"
+                defaultValue={v?.competitionName}
+                className={ficheInputClass}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-2">
+              <label htmlFor={`${idPrefix}-location`} className={ficheLabelClass}>
+                Lieu {optional("facultatif")}
+              </label>
+              <input
+                id={`${idPrefix}-location`}
+                name="competitionLocation"
+                type="text"
+                maxLength={120}
+                autoComplete="off"
+                defaultValue={v?.competitionLocation}
+                className={ficheInputClass}
+              />
+            </div>
+            {goalType === "hyrox" ? (
+              <div className="flex min-w-0 flex-col gap-2">
+                <label htmlFor={`${idPrefix}-hyrox-category`} className={ficheLabelClass}>
+                  Catégorie Hyrox
+                </label>
+                <select
+                  id={`${idPrefix}-hyrox-category`}
+                  name="hyroxCategory"
+                  defaultValue={v?.hyroxCategory ?? ""}
+                  className={ficheInputClass}
+                >
+                  <option value="">Pas encore décidée</option>
+                  {HYROX_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {hyroxCategoryLabels[category]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+
+        <div className="col-span-full flex min-w-0 flex-col gap-2">
+          <label htmlFor={`${idPrefix}-description`} className={ficheLabelClass}>
+            Description {optional("facultatif")}
+          </label>
+          <textarea
+            id={`${idPrefix}-description`}
+            name="description"
+            rows={2}
+            maxLength={500}
+            placeholder="Ex. : finir sous 1 h 45 ; tenir 45 min de cardio ; squat à 100 kg"
+            defaultValue={v?.description}
+            className={ficheTextareaClass}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
         <button
           type="submit"
           disabled={pending}
-          className={buttonClass({ variant: "inverse", size: "md" })}
+          className={buttonClass({
+            variant: "primary",
+            size: "md",
+            className: "self-start rounded-[12px]! text-[14px]! font-medium!",
+          })}
         >
           {pending ? "Enregistrement…" : submitLabel}
         </button>
@@ -258,7 +289,7 @@ export function GoalFields({
             {error}
           </p>
         ) : savedMessage ? (
-          <p role="status" className="text-small text-ok">
+          <p role="status" className="text-[13px] font-medium text-ok">
             {savedMessage}
           </p>
         ) : null}

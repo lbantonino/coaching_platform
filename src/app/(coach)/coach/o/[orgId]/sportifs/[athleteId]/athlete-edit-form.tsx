@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { errorTextClass, hintClass } from "@/components/ui/form-styles";
+import { errorTextClass, ficheHintClass, ficheOvertitleClass } from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import {
   updateAthlete,
@@ -42,27 +42,34 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
 
   return (
     // Reconstruit après chaque réponse : la saisie renvoyée (ou enregistrée) s'affiche partout.
-    <form key={state.attempt} action={formAction} className="flex flex-col gap-7" noValidate>
-      <Part title="Identité">
-        <IdentityFields values={shown} />
+    // Habillage de la maquette « Sportifs » du 03/11/2026 (onglet Profil) : groupes sous sur-titres,
+    // champs en grille, statut en contrôle segmenté, « Enregistrer » en bas à gauche.
+    <form key={state.attempt} action={formAction} className="flex flex-col gap-4" noValidate>
+      <Part title="Identité" look="fiche">
+        <IdentityFields values={shown} look="fiche" />
       </Part>
 
-      <Part title="Contact">
-        <ContactFields values={shown} hasAccount={hasAccount} />
+      <Part title="Contact" look="fiche">
+        <ContactFields values={shown} hasAccount={hasAccount} look="fiche" />
       </Part>
 
-      <Part title="Adresse">
-        <AddressFields values={shown} />
+      <Part title="Adresse" look="fiche">
+        <AddressFields values={shown} look="fiche" />
       </Part>
 
-      <Part title="Profil sportif">
-        <SportProfileFields values={shown} />
+      <Part title="Profil sportif" look="fiche">
+        <SportProfileFields values={shown} look="fiche" />
       </Part>
 
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
+        {/* Le sur-titre seul ; le groupe garde son nom « Statut » pour les lecteurs d'écran. */}
+        <p aria-hidden className={`${ficheOvertitleClass} mb-2`}>
+          Statut
+        </p>
         <Segmented
           name="status"
           legend="Statut"
+          look="track"
           defaultValue={shown.status as AthleteStatus}
           options={[
             { value: "active", label: "Actif" },
@@ -70,7 +77,7 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
             { value: "archived", label: "Archivé" },
           ]}
         />
-        <p className={hintClass}>
+        <p className={ficheHintClass}>
           Archiver retire le sportif de la liste active sans rien effacer ; tu peux le restaurer à
           tout moment.
         </p>
@@ -80,7 +87,11 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
         <button
           type="submit"
           disabled={pending}
-          className={buttonClass({ variant: "primary", size: "md" })}
+          className={buttonClass({
+            variant: "primary",
+            size: "md",
+            className: "rounded-[12px]! text-[14px]! font-medium!",
+          })}
         >
           {pending ? "Enregistrement…" : "Enregistrer"}
         </button>
@@ -89,7 +100,7 @@ export function AthleteEditForm({ organizationId, athleteId, hasAccount, values 
             {state.error}
           </p>
         ) : state.saved ? (
-          <p role="status" className="text-small text-ok">
+          <p role="status" className="text-[13px] font-medium text-ok">
             Modifications enregistrées.
           </p>
         ) : null}

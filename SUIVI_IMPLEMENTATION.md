@@ -32,6 +32,146 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Sportifs au pixel près, page 2d : détail d'une séance du programme (D-96)
+```
+Date : 2026-11-03
+Demande d'Antonino : 2f validée (« c'est parfait ») ; refaire aussi la page qui s'ouvre depuis une
+  séance de l'Agenda (2d, sautée plus tôt avec l'onglet Programme).
+Page programme/[sessionId]/page.tsx refaite : PageHeader (retour « Inès Benali », titre lu par les
+  lecteurs d'écran, retour dans la barre du téléphone), PageBody fill ; grille 1fr + 300 px qui
+  remplit la hauteur. Carte séance : sur-titre discipline · « Séance n sur N », titre 26 px,
+  « Semaine n · dates · au jour choisi par X » (« avec le coach » sinon), « n blocs · durée » ;
+  étapes (rond noir pour échauffement et retour au calme, couleur de la discipline sinon ; bloc
+  répété teinté, « Répéter n fois », rangées Effort / Récupération avec barre de couleur) ;
+  « Déroulé de la séance » en bas. Récapitulatif (durée, type, objectif, suivi « À faire ») et
+  Conseil du coach signé (getCoachProfile du coach qui a créé le programme : programs.created_by,
+  ajouté à AthleteProgram).
+Lecture des lignes (features/programs/session-display.ts, tests/unit/session-display.test.ts) :
+  « 4 min @4:55 min/km », « Run 1 km @5:15 min/km », « 1:45 min de récupération (trot lent) »,
+  « Goblet squat · 10 » ; durée d'une étape (pastille ou répétitions × lignes) ; déroulé (largeur
+  proportionnelle, dernière récupération non dessinée, légende courte). Une ligne non comprise
+  s'affiche telle quelle ; sans toutes les durées, pas de déroulé. Le résumé d'un bloc répété
+  (« 5 répétitions de 4 min à 4:55 min/km ») n'est écrit que si une rangée n'a pas été comprise.
+  Le futur éditeur (P4) enregistrera ces valeurs directement. Jeton --effort-easy (allure facile).
+Écarts mesurés (maquette → app) : ordinateur 0 px (carte, étapes, déroulé, récapitulatif, conseil,
+  signature) ; téléphone ≤ 1 px. Écart voulu : numéro du bloc principal en texte foncé (jetons
+  --on-x-fill). Séance sans durées (renforcement) : lignes d'exercices, légende coupée par « … » si
+  un morceau du déroulé est étroit. Responsive 360 à 3440 sans débordement.
+Tests : session-display 5/5 ; athlete-overview (« Conseil du coach », déroulé « ≈ 54 min », retour
+  dans la barre du téléphone), séances, objectifs 19 + 1 ignoré ; Vitest 266/266 ; suite
+  Playwright complète 170 réussis, 17 ignorés, 3 échecs sous la charge (séances, recherche),
+  réussis en relance (14/14). db:reset fait après.
+Suite : page 2g (Repères) après validation d'Antonino.
+```
+
+### Sportifs au pixel près, page 2f : fiche · Objectifs (D-95)
+```
+Date : 2026-11-03
+Demande d'Antonino : 2c validée ; l'onglet Programme ne change pas, on le laisse (2d et 2e
+  sautées) ; continuer avec l'onglet Objectifs, téléphone et ordinateur. Noté aussi (mémoire) :
+  plus tard, des séances de programme sur un jour fixe pour les coachs qui le veulent.
+Onglet Objectifs (goals-section.tsx, add-goal-form.tsx, edit-goal-button.tsx ;
+  goal-discipline-badge.tsx retiré, plus utilisé) : deux cartes pleine largeur (hors de la colonne
+  3xl). Objectif principal = carte jaune (jetons --goal-main, -line, -text, -icon, clair et
+  sombre) ; secondaire = carte blanche ; pastilles 24 px (point de discipline, priorité,
+  compétition) ; compte à rebours violet, « Date passée » en ambre ; boutons 38 px ; poubelle à
+  droite (en fin de ligne sur téléphone). Ligne de détails sans le type quand la pastille le dit
+  déjà (« Hyrox »). « Objectifs passés » : details/summary 46 px avec chevron. Carte « Ajouter un
+  objectif » : champs « fiche » en grille, Priorité en Segmented « track », case de 20 px (la
+  vraie case transparente posée sur la case dessinée : les clics l'atteignent), date vide en gris.
+  La fenêtre « Modifier l'objectif » reprend ces champs.
+Rien de retiré : ajout, modification, Atteint, Abandonné, Rendre principal, suppression,
+  historique, compétition (nom, lieu, catégorie Hyrox), contrôle de date, messages.
+Écarts mesurés (maquette → app) : ordinateur et téléphone 0 px (cartes 593,8 / 514,8 px sur
+  ordinateur, 851,8 / 688,8 px sur téléphone). Responsive : 1024 (2 colonnes) à 3440 (6), 360 et
+  430 sans débordement.
+Incident : le serveur de dev ne relisait pas les nouveaux jetons du thème (@theme) : classes
+  bg-goal-main, bg-glass, inset-ring-glass-edge non générées. Relancé (cache .next/dev vidé).
+  Conséquence : l'onglet ouvert validé par Antonino était rendu SANS ces jetons (fond transparent,
+  contour couleur du texte) ; ce rendu a d'abord été écrit dans les jetons --glass, puis Antonino
+  a tranché : onglet ouvert BLANC (« et puis c'est tout ») : --glass #fff en clair, gris surélevé
+  en sombre, ombre douce, SANS contour (contour jugé « bizarre », retiré ; jetons --glass-edge et
+  --glass-shine supprimés).
+Retour d'Antonino (même soir) : pas fan des pastilles dans les cartes. Trois styles proposés, il a
+  choisi « compte à rebours en grand » (téléphone et ordinateur) : sur-titre en capitales
+  (« Objectif Principal · Compétition », violet pour le principal), titre, détails précédés de la
+  discipline (point + nom), et à droite le nombre de jours en grand (« 137 / jours », lu « Dans 137
+  jours ») ; « Aujourd'hui » en violet, « Date passée » en ambre. Objectifs passés : discipline en
+  texte aussi. Écart voulu avec la maquette (pastilles et « J-137 » retirés à sa demande).
+Tests : goals.spec (titre « Objectifs et compétitions », compte à rebours « Dans N jours ») ;
+  Vitest 261/261 ; suite Playwright complète 171 réussis, 17 ignorés, 2 échecs sous la charge
+  (invitation groupée, bibliothèque), réussis en relance (13/13) ; après le nouveau style :
+  objectifs, vue d'ensemble, nouveau sportif, notifications 17 + 1 ignoré, objectifs 2/2.
+  db:reset fait après.
+Suite : page 2g (Repères) après validation d'Antonino.
+```
+
+### Sportifs au pixel près, page 2c : fiche · Agenda (D-94)
+```
+Date : 2026-11-03
+Demande d'Antonino : 2b validée (« c'est ok ! on passe à la suite »).
+Agenda d'un sportif avec programme (program-weeks.tsx refait, week-picker.tsx nouveau) : carte du
+  programme (titre, « 12 semaines · 26 oct. → 17 janv. · 5 séances par semaine », règle « Dans
+  l'ordre, au jour choisi » avec « quand elle / il veut » selon le sexe, « à son rythme » sinon) ;
+  vue Semaine par défaut (semaine actuelle ; avant le début la première, après la fin la dernière)
+  ou Toutes les semaines, en liens (?semaine=N, ?vue=toutes) ; ‹ › grisés aux bornes ; menu des
+  semaines (client : clic dehors et Échap ferment) ; bandeau de retour à la semaine actuelle ; carte
+  de semaine (anneau violet si actuelle, badges, sous-titre sur une ligne) ; cartes de séance d'un
+  seul DOM (colonne sur ordinateur, ligne sur téléphone ; « Avec le coach » / « Coach » par le même
+  texte, début masqué) ; compétitions « Compétition · Sam 12 déc. · Hyrox Gent » et rendez-vous en
+  plus sous la semaine. disciplineStyles : tint (fond teinté) et number (numéro plein).
+Rien de retiré : lien vers chaque séance (2d), rendez-vous liés à leur séance, rendez-vous en plus,
+  compétitions, semaines de repos, agenda en trois vues sans programme.
+Écarts mesurés (maquette → app) : ordinateur ≤ 0,5 px (carte programme, barre, carte de semaine,
+  cartes de séance) ; téléphone 0 px (carte de semaine 543,1 px). Écart voulu : numéro des séances
+  Running et Hyrox en texte foncé (jetons --on-run-fill, --on-hyrox-fill, contraste), blanc dans la
+  maquette. Défauts de la capture non reproduits (sous-titre coupé, carte 4 rognée).
+Responsive : 1024 à 3440 sans débordement (cartes de 133 à 305 px), 360 et 430 sans débordement.
+Tests : test de l'agenda d'Inès réécrit (menu des semaines, ›, Toutes les semaines : 12) ; vue
+  d'ensemble, Profil, séances, objectifs 25 + 1 ignoré ; Vitest 261/261 ; suite Playwright complète
+  172 réussis, 17 ignorés, 1 échec sous la charge (séance collective, téléphone), réussi en
+  relance (séances 12/12). db:reset fait après.
+Retour d'Antonino (téléphone) : le menu des semaines sortait de l'écran à gauche (ancré sur le
+  bouton, à droite) ; ancré maintenant sur tout le groupe ‹ Semaine ›, à gauche sur téléphone, à
+  droite sur ordinateur (comme la maquette) ; vérifié à 360, 390 et 1280.
+Suite : page 2d (détail d'une séance) après validation d'Antonino.
+```
+
+### Sportifs au pixel près, page 2b : fiche · Profil ; réglages de la fiche (D-93)
+```
+Date : 2026-11-03
+Demande d'Antonino : 2a validée (« nickel ») ; « ← Sportifs » dans la barre du téléphone sur tous
+  les onglets ; onglet ouvert plus visible sur ordinateur ; puis l'onglet suivant (Profil).
+Réglages de la fiche : PageHeader.backInPhoneBar (BackLink variante « bar », portée dans la barre du
+  téléphone par MobileBarTitle) ; barre d'onglets de l'ordinateur sans piste (demande du soir :
+  « pas d'encadré autour des vues »), seul l'onglet ouvert a un fond : verre façon Apple, fond
+  translucide, contour, reflet en haut, ombre douce (jetons --glass, --glass-edge, --glass-shine en
+  sombre et en clair) ; il ne veut pas d'aplat blanc. Jetons --track revenus à leurs valeurs.
+Onglet Profil : photo-form.tsx (look « fiche » : carte sur une ligne, pastille appareil photo qui ouvre
+  aussi le choix du fichier, « Changer / Ajouter la photo » noir, « Retirer » à contour ; même envoi,
+  même retrait, mêmes messages) ; athlete-fields.tsx (prop look sur Part et sur les champs Identité,
+  Contact, Adresse, Profil sportif ; « app » par défaut pour « Nouveau sportif ») ; form-styles.ts
+  (champs fiche 46 px / 15 px, 16 px sur téléphone, focus violet, sur-titres, grille auto-fill 240 px,
+  pastilles violettes avec « ✓ » en pseudo-élément) ; Segmented look « track » (statut) ;
+  athlete-edit-form.tsx ; page.tsx (onglet pleine largeur, deux cartes).
+Rien de retiré : tous les champs, validations (FieldCheck e-mail et téléphone), e-mail verrouillé si
+  compte, messages enregistré / erreur, photo (envoi, contrôle du format, retrait).
+Écarts mesurés (maquette → app) : ordinateur 0 px jusqu'au bas de la carte Informations (1287,5 px),
+  pastilles ≤ 0,8 px ; téléphone 0 px, sauf +18 px sous l'adresse : aide de D-90 (« Utile pour ses
+  factures, faites dans ton logiciel de facturation. ») sur deux lignes au lieu de « Reprise sur ses
+  factures. ». Hauteurs de ligne écrites en pixels (la police servie donne 0,3 px de moins en
+  « normal »). Piège corrigé : :read-only vise aussi les <select> (menus grisés) : grisé limité aux
+  champs texte.
+Responsive : 1024 (2 colonnes), 1440 (4), 1920 à 3440 (6, fiche plafonnée à 1600 px), 360 et 430
+  sans débordement.
+Tests : typecheck et lint propres ; Vitest 261/261 ; Playwright, suite complète (190) : 168 réussis,
+  17 ignorés, 5 échecs, dont 4 venus du « ✓ » écrit dans les pastilles (texte « ✓ Domicile ») et
+  corrigés (pseudo-élément), 1 dépassement de délai en Comptabilité sous la charge. Relances après
+  correction : Profil, Nouveau sportif, Repères, Photos, Vue d'ensemble 27 + 1 ignoré ; Comptabilité
+  seule 9 + 1 ignoré. Test du lien retour adapté (barre du haut sur téléphone). db:reset fait après.
+Suite : page 2c (Agenda de la fiche) après validation d'Antonino.
+```
+
 ### Sportifs au pixel près, page 02 : fiche · vue d'ensemble (D-92)
 ```
 Date : 2026-11-03
