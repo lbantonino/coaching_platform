@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { SkeletonLines } from "@/components/ui/skeleton";
 
 import { BackLink } from "./back-link";
+import { MobileBarTitle } from "./mobile-bar";
 import { HeaderTools } from "./header-tools";
 import { PageIcon } from "./page-icon";
 
@@ -26,6 +27,7 @@ export function PageHeader({
   tools = true,
   icon,
   visibleTitle = true,
+  backInPhoneBar = false,
 }: {
   title: ReactNode;
   // À côté du titre (ex. repère ♀ / ♂ d'un sportif)
@@ -42,6 +44,9 @@ export function PageHeader({
   // false : seul le lien de retour se voit, la page écrit son titre dans son contenu (page d'une
   // séance, 03/11 : l'en-tête reste celui de base) ; il reste pour les lecteurs d'écran.
   visibleTitle?: boolean;
+  // Téléphone : le lien de retour dans la barre du haut, à la place du nom de la page (fiche sportif,
+  // demande d'Antonino du 03/11) ; il n'est plus répété sous la barre.
+  backInPhoneBar?: boolean;
 }) {
   return (
     // Ordinateur (maquette v6, D-77) : l'en-tête est une carte de 64 px (titre 15 px, outils à droite),
@@ -55,7 +60,20 @@ export function PageHeader({
         className={`flex min-w-0 flex-[1_1_auto] flex-col gap-1.5 ${back ? "lg:gap-0.5" : "lg:flex-row lg:items-center lg:gap-2.5"}`}
       >
         {/* Retour « là où j'étais » (29/10/2026), voir back-link.tsx. */}
-        {back ? <BackLink href={back.href} label={back.label} /> : null}
+        {back ? (
+          backInPhoneBar ? (
+            <>
+              <span className="max-lg:hidden">
+                <BackLink href={back.href} label={back.label} />
+              </span>
+              <MobileBarTitle>
+                <BackLink href={back.href} label={back.label} variant="bar" />
+              </MobileBarTitle>
+            </>
+          ) : (
+            <BackLink href={back.href} label={back.label} />
+          )
+        ) : null}
         <div
           className={`flex min-w-0 flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-2.5 ${back ? "lg:flex-wrap" : "lg:contents"} ${visibleTitle ? "" : "sr-only"}`}
         >

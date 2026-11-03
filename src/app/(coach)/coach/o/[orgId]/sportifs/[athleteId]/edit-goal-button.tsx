@@ -3,7 +3,6 @@
 import { Pencil } from "lucide-react";
 import { useActionState, useState } from "react";
 
-import { buttonClass } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import { updateGoal, type EditGoalState } from "@/features/goals/actions";
@@ -38,6 +37,7 @@ export function EditGoalButton({
   title,
   today,
   otherMain,
+  className,
 }: {
   organizationId: string;
   athleteId: string;
@@ -46,6 +46,8 @@ export function EditGoalButton({
   today: string;
   // Un AUTRE objectif est principal : choisir « Principal » ici le fera passer en secondaire.
   otherMain: boolean;
+  // Habillage du bouton « Modifier » (celui des boutons de la carte de l'objectif).
+  className: string;
 }) {
   const [open, setOpen] = useState(false);
   const toast = useToast();
@@ -71,9 +73,9 @@ export function EditGoalButton({
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Modifier : ${title}`}
-        className={buttonClass({ variant: "outline", size: "sm" })}
+        className={className}
       >
-        <Pencil aria-hidden size={13} strokeWidth={1.7} />
+        <Pencil aria-hidden size={13} strokeWidth={1.8} />
         Modifier
       </button>
       <Sheet

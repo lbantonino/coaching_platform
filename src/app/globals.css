@@ -45,6 +45,11 @@
   --color-archived-dot: var(--archived-dot);
   --color-track: var(--track);
   --color-track-active: var(--track-active);
+  --color-glass: var(--glass);
+  --color-goal-main: var(--goal-main);
+  --color-goal-main-line: var(--goal-main-line);
+  --color-goal-main-text: var(--goal-main-text);
+  --color-goal-main-icon: var(--goal-main-icon);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-logo-loop: var(--logo-loop);

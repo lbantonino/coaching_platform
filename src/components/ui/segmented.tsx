@@ -16,20 +16,37 @@ export function Segmented<T extends string>({
   legend,
   options,
   defaultValue,
+  look = "app",
 }: {
   name: string;
   legend: string;
   options: { value: T; label: string }[];
   defaultValue: T;
+  // « track » : l'habillage de la fiche sportif (piste grise, option choisie en verre, largeur du
+  // contenu même sur téléphone).
+  look?: "app" | "track";
 }) {
+  const track = look === "track";
   return (
-    <fieldset className="flex flex-col gap-1.5">
-      <legend className="mb-2 text-[14px] font-medium">{legend}</legend>
-      <div className={segmentedGroupClass}>
+    <fieldset className="flex min-w-0 flex-col gap-1.5">
+      <legend
+        className={`mb-2 font-medium ${track ? "text-[13.5px] leading-[17px]" : "text-[14px]"}`}
+      >
+        {legend}
+      </legend>
+      <div
+        className={
+          track
+            ? "inline-flex flex-wrap self-start rounded-[12px] bg-track p-1"
+            : segmentedGroupClass
+        }
+      >
         {options.map((option) => (
           <label
             key={option.value}
-            className="flex-1 cursor-pointer rounded-[9px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent sm:flex-none"
+            className={`cursor-pointer rounded-[9px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent ${
+              track ? "" : "flex-1 sm:flex-none"
+            }`}
           >
             <input
               type="radio"
@@ -38,7 +55,17 @@ export function Segmented<T extends string>({
               defaultChecked={option.value === defaultValue}
               className="peer sr-only"
             />
-            <span className={segmentedItemClass}>{option.label}</span>
+            <span
+              className={
+                track
+                  ? // Option choisie « verre » (maquette « Sportifs » du 03/11/2026) : sur la piste grise,
+                    // un aplat plus clair avec une ombre douce.
+                    "flex h-9 items-center rounded-[9px] px-3.5 text-[13.5px] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text peer-checked:bg-track-active peer-checked:text-text peer-checked:shadow-[0_1px_3px_rgba(22,18,40,0.10)]"
+                  : segmentedItemClass
+              }
+            >
+              {option.label}
+            </span>
           </label>
         ))}
       </div>

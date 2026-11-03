@@ -69,8 +69,13 @@ test("le coach modifie, archive, retrouve et restaure un sportif", async ({ page
     page.getByRole("status").filter({ hasText: "Modifications enregistrées." }),
   ).toBeVisible();
 
-  // Lien retour de l'en-tête de page (le menu latéral a aussi un lien « Sportifs », hors de <main>).
-  await page.getByRole("main").getByRole("link", { name: "Sportifs", exact: true }).click();
+  // Lien retour « ← Sportifs » : dans l'en-tête de page sur ordinateur, dans la barre du haut sur
+  // téléphone (le menu latéral a aussi un lien « Sportifs », hors des deux).
+  await page
+    .getByRole(testInfo.project.name === "telephone" ? "banner" : "main")
+    .getByRole("link", { name: "Sportifs", exact: true })
+    .filter({ visible: true })
+    .click();
   await page.getByLabel("Rechercher un sportif").fill(suffix);
   await page.getByLabel("Rechercher un sportif").press("Enter");
   // Filtre « Tous » par défaut (maquette du 24/10) : il reste visible, marqué « Archivé ».

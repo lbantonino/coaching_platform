@@ -101,6 +101,17 @@
   /* Barre d'onglets de la fiche sportif (piste) et onglet choisi. */
   --track: #212125;
   --track-active: #2d2d32;
+  /* Onglet ouvert de la fiche sportif (ordinateur) : fond plein, blanc en clair (décision
+     d'Antonino du 03/11), gris surélevé en sombre ; sans contour. */
+  --glass: var(--track-active);
+  /* Objectif principal de la fiche sportif (maquette « Sportifs », page 2f) : la seule carte jaune ;
+     en sombre, une teinte ambre sur la carte. */
+  --goal-main: rgba(255, 192, 79, 0.1);
+  --goal-main-line: rgba(255, 192, 79, 0.3);
+  --goal-main-text: #d9cba8;
+  --goal-main-icon: #c2b190;
+  /* Déroulé d'une séance (page 2d) : allure facile (échauffement, retour au calme). */
+  --effort-easy: #3a3942;
   --alert: #fb7185;
   --alert-soft: rgba(251, 113, 133, 0.12);
   --alert-fill: #c13c3b; /* fond rouge sous texte blanc (5,3:1) */
@@ -217,6 +228,15 @@
   /* Barre d'onglets de la fiche sportif (maquette « Sportifs » du 03/11/2026). */
   --track: #e8e7ee;
   --track-active: #ffffff;
+  /* Onglet ouvert de la fiche sportif : fond blanc, sans contour (décision d'Antonino du 03/11). */
+  --glass: #ffffff;
+  /* Objectif principal : carte jaune, détails et poubelle en brun (maquette 2f). */
+  --goal-main: #fdf0d2;
+  --goal-main-line: rgba(214, 150, 30, 0.28);
+  --goal-main-text: #5c5340;
+  --goal-main-icon: #6b5f45;
+  /* Déroulé d'une séance : allure facile, gris violacé (maquette 2d). */
+  --effort-easy: #d8d7e2;
   --alert: #be123c;
   --alert-soft: rgba(190, 18, 60, 0.08);
   --alert-fill: #ac3031;

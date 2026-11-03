@@ -56,7 +56,7 @@ test("la recherche du haut trouve un sportif, quel que soit son statut", async (
 
 test("la fiche propose « Créer un programme », le menu « ••• » et les prochaines séances", async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto("/login");
   await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
   await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
@@ -107,23 +107,36 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   const summary = page.getByRole("region", { name: "Prépa Hyrox Bruxelles · bloc 1" });
   await expect(summary).toContainText("12 semaines");
   await expect(summary).toContainText("Publiée n° 1");
-  // Agenda d'Inès = son programme (D-46) : une ligne par semaine, 5 séances numérotées sans jour.
+  // Agenda d'Inès = son programme (D-46), une semaine à la fois (maquette 2c du 03/11) : 5 séances
+  // numérotées sans jour. Ses 5 séances par semaine COMPRENNENT ses 2 rendez-vous avec le coach (pas
+  // 5 + 2) : coaching du mardi 7 h et circuit collectif du samedi 10 h, écrits sur leur carte.
   await openAthleteTab(page, "Agenda");
-  await expect(page.getByRole("heading", { name: "Programme hebdomadaire" })).toBeVisible();
-  const firstWeek = page.getByRole("region", { name: "Semaine du 26 oct. au 1 nov." });
-  // Ses 5 séances par semaine COMPRENNENT ses 2 rendez-vous avec le coach (pas 5 + 2) : coaching du
-  // mardi 7 h et circuit collectif du samedi 10 h, affichés sur la carte de la séance.
-  await expect(firstWeek).toContainText("5 séances : 2 avec le coach, 3 à placer librement");
+  await expect(page.getByRole("heading", { name: "Prépa Hyrox Bruxelles · bloc 1" })).toBeVisible();
+  await expect(
+    page.getByText("12 semaines · 26 oct. → 17 janv. · 5 séances par semaine"),
+  ).toBeVisible();
+  // Le menu des semaines (la semaine 1, quelle que soit la date du jour).
+  await page.getByRole("button", { name: /: choisir une semaine$/ }).click();
+  await page
+    .getByRole("navigation", { name: "Semaines du programme" })
+    .getByRole("link", { name: /^Semaine 1( \(actuelle\))?$/ })
+    .click();
+  const firstWeek = page.getByRole("region", { name: "Semaine 1", exact: true });
+  await expect(firstWeek).toContainText("26 oct. – 1 nov. · 2 avec le coach · 3 libres");
   await expect(firstWeek.getByRole("listitem").filter({ hasText: "Renfo Hyrox" })).toContainText(
-    /Avec le coach · .* 07:00/,
+    /Avec le coach · .* · 07:00/,
   );
   await expect(firstWeek.getByRole("listitem").filter({ hasText: "Circuit Hyrox" })).toContainText(
-    /Avec le coach · Sam 31 10:00/,
+    /Avec le coach · Sam 31 · 10:00/,
   );
   await expect(
-    firstWeek.getByRole("list", { name: /^Séances, semaine du 26 oct/ }).getByRole("listitem"),
+    firstWeek.getByRole("list", { name: "Séances de la semaine 1" }).getByRole("listitem"),
   ).toHaveCount(5);
-  await expect(page.getByRole("region", { name: /^Semaine du / })).toHaveCount(12);
+  // › : la semaine suivante ; puis toutes les semaines.
+  await page.getByRole("link", { name: "Semaine suivante" }).click();
+  await expect(page.getByRole("region", { name: "Semaine 2", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Toutes les semaines" }).click();
+  await expect(page.getByRole("region", { name: /^Semaine \d+$/ })).toHaveCount(12);
 
   // Une séance s'ouvre : étapes, bloc répété, conseils, statut « À faire ».
   await firstWeek.getByRole("link", { name: /Endurance rapide/ }).click();
@@ -131,9 +144,18 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   const steps = page.getByRole("list", { name: "Étapes de la séance" });
   await expect(steps).toContainText("Échauffement");
   await expect(steps).toContainText("Répéter 5 fois");
-  await expect(page.getByRole("heading", { name: "Conseils du coach" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Conseil du coach" })).toBeVisible();
+  // Déroulé (maquette 2d) : 20 + 5 × (4 + 1:45) + 5 ≈ 54 min.
+  await expect(page.getByRole("region", { name: "Déroulé de la séance" })).toContainText(
+    "≈ 54 min",
+  );
   await expect(page.getByRole("main").getByText("À faire").first()).toBeVisible();
-  await page.getByRole("main").getByRole("link", { name: "Inès Benali" }).click();
+  // Retour : dans l'en-tête de page sur ordinateur, dans la barre du haut sur téléphone.
+  await page
+    .getByRole(testInfo.project.name === "telephone" ? "banner" : "main")
+    .getByRole("link", { name: "Inès Benali" })
+    .filter({ visible: true })
+    .click();
   await expect(page).toHaveURL(/onglet=agenda/);
 
   // Sans programme (Julien, en pause), l'onglet Agenda montre ce qui a un jour, en trois vues.

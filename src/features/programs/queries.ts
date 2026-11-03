@@ -34,6 +34,8 @@ export type AthleteProgram = {
   weeksCount: number;
   publicationNumber: number;
   publishedAt: string;
+  // Coach qui a créé le programme (signature des conseils sur la page d'une séance).
+  createdBy: string | null;
   weeks: ProgramWeek[];
 };
 
@@ -53,7 +55,7 @@ export async function getAthleteProgram(
   const { data: program, error } = await supabase
     .from("programs")
     .select(
-      "id, title, goal, start_date, weeks_count, active_publication_id, program_publications!programs_active_publication_fkey ( id, number, published_at, snapshot_json )",
+      "id, title, goal, start_date, weeks_count, created_by, active_publication_id, program_publications!programs_active_publication_fkey ( id, number, published_at, snapshot_json )",
     )
     .eq("organization_id", organizationId)
     .eq("athlete_id", athleteId)
@@ -109,6 +111,7 @@ export async function getAthleteProgram(
     weeksCount: program.weeks_count,
     publicationNumber: publication.number,
     publishedAt: publication.published_at,
+    createdBy: program.created_by,
     weeks,
   };
 }

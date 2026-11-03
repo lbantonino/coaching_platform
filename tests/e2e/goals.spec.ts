@@ -26,7 +26,7 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   // Le sportif enregistré, on arrive sur sa fiche (D-54).
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await openAthleteTab(page, "Objectifs");
-  await expect(page.getByRole("heading", { name: "Objectifs & compétitions" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Objectifs et compétitions" })).toBeVisible();
   const current = page.getByRole("list", { name: "Objectifs en cours" });
 
   // Une compétition sans date est refusée, avec un message clair.
@@ -47,7 +47,8 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   const hyrox = current.getByRole("listitem").filter({ hasText: competition });
   await expect(hyrox).toContainText("Principal");
   await expect(hyrox).toContainText("Catégorie Pro");
-  await expect(hyrox).toContainText(/J-\d+/);
+  // Compte à rebours en grand (choix d'Antonino du 03/11), lu « Dans 60 jours ».
+  await expect(hyrox.getByLabel(/^Dans \d+ jours?$/)).toBeVisible();
 
   // Un nouvel objectif principal fait passer l'ancien en secondaire.
   await page

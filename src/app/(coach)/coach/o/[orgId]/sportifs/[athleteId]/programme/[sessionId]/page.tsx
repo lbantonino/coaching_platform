@@ -1,36 +1,45 @@
 import {
   CircleDashed,
   Clock,
-  FileText,
   ListChecks,
+  MessageSquare,
   Repeat,
   Target,
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { disciplineIcons } from "@/components/ui/discipline-icon";
+import { Avatar } from "@/components/ui/avatar";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import type { ProgramSessionStep } from "@/domain/training/program-session";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { getCoachProfile } from "@/features/coach/profile";
 import { getProgramSession } from "@/features/programs/queries";
+import {
+  parseSegment,
+  sessionTimeline,
+  stepLine,
+  stepRole,
+  type Timeline,
+  type TimelineStep,
+} from "@/features/programs/session-display";
 import { formatDuration } from "@/features/sessions/schemas";
-
-import { weekRange } from "../../program-weeks";
 
 export const metadata: Metadata = {
   title: "Séance du programme",
 };
 
-// Détail d'une séance du programme d'un sportif (D-46, maquette d'Antonino du 26/10) : en-tête
-// (discipline, semaine, statut), chiffres clés, étapes numérotées avec leurs blocs répétés, conseils
-// du coach. Lecture de la version PUBLIÉE, celle que le sportif suit. La validation par le sportif
-// (« Je l'ai faite », ressenti, commentaire) arrive avec son espace (tranche 3).
+// Détail d'une séance du programme d'un sportif (D-46), d'après la maquette « Sportifs » du
+// 03/11/2026 (page 2d). Ordinateur : la carte de la séance (en-tête, étapes, déroulé en bas) et, à
+// droite sur 300 px, le récapitulatif puis le conseil du coach ; le tout jusqu'au bas de l'écran.
+// Téléphone : la séance, le récapitulatif, le conseil, l'un sous l'autre. Lecture de la version
+// PUBLIÉE, celle que le sportif suit. La validation par le sportif (« Je l'ai faite », ressenti,
+// commentaire) arrive avec son espace (tranche 3).
 export default function ProgramSessionPage({
   params,
 }: PageProps<"/coach/o/[orgId]/sportifs/[athleteId]/programme/[sessionId]">) {
@@ -45,112 +54,272 @@ export default function ProgramSessionPage({
   );
 }
 
-// Couleurs de la page (demande d'Antonino du 26/10, comme Garmin Connect) : plus de cartes grises.
-// Chiffres clés : durée en ambre, type dans la couleur de la discipline, objectif en vert.
-// Étapes : échauffement en orange, bloc principal dans la couleur de la discipline, retour au calme
-// en vert d'eau ; dans un bloc répété, les récupérations sont en gris.
-const disciplineVar: Record<Discipline, string> = {
+// Couleur pleine de chaque discipline (numéro du bloc principal, efforts du déroulé).
+const fillVar: Record<Discipline, string> = {
+  running: "var(--run-fill)",
+  strength: "var(--strength-fill)",
+  hyrox: "var(--hyrox-fill)",
+  hybrid: "var(--hybrid-fill)",
+};
+const textVar: Record<Discipline, string> = {
   running: "var(--run)",
   strength: "var(--strength)",
   hyrox: "var(--hyrox)",
   hybrid: "var(--hybrid)",
 };
-const WARMUP = "var(--amber)";
-const COOLDOWN = "var(--hybrid)";
-const RECOVERY = "var(--muted)";
+const onFillVar: Record<Discipline, string> = {
+  running: "var(--on-run-fill)",
+  strength: "var(--on-strength-fill)",
+  hyrox: "var(--on-hyrox-fill)",
+  hybrid: "var(--on-hybrid-fill)",
+};
 
-function stepColor(title: string, main: string): string {
-  const t = title.toLowerCase();
-  if (t.startsWith("échauffement")) return WARMUP;
-  if (t.startsWith("retour au calme")) return COOLDOWN;
-  return main;
+const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
+const dayMonth = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+const utc = (day: string) => new Date(`${day}T00:00:00Z`);
+// « d'Inès », « de Julien ».
+const ofName = (name: string) =>
+  /^[aeiouyhàâéèêëîïôöûü]/i.test(name) ? `d'${name}` : `de ${name}`;
+
+// Numéro rond d'une étape (28 px) : noir pour l'échauffement et le retour au calme, couleur de la
+// discipline pour les autres.
+function StepNumber({ index, colored }: { index: number; colored: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`grid size-7 shrink-0 place-items-center rounded-full text-[12.5px] font-bold ${
+        colored ? "bg-[var(--fill)] text-[var(--on-fill)]" : "bg-text text-surface"
+      }`}
+    >
+      {index}
+    </span>
+  );
 }
-const isRecovery = (line: string) => /récup|repos|marche|retour en/i.test(line);
 
-function Figure({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  color: string;
-}) {
+// Une étape : fond gris clair ; un bloc répété a un fond teinté de la discipline, « Répéter 5 fois »
+// à droite et ses lignes en rangées blanches (barre de couleur : effort plein, récupération pâle).
+function Step({ step, index }: { step: ProgramSessionStep; index: number }) {
+  const role = stepRole(step);
+  if (!step.repeat) {
+    return (
+      <li className="grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-3.5 gap-y-1 rounded-2xl bg-surface-2 px-5 py-[18px]">
+        <StepNumber index={index} colored={role === "main"} />
+        <h3 className="text-[16px] leading-5 font-semibold">{step.title}</h3>
+        {step.badge ? (
+          <span className="text-[14px] leading-[17.5px] font-semibold whitespace-nowrap">
+            {step.badge}
+          </span>
+        ) : (
+          <span />
+        )}
+        {step.lines.map((line) => (
+          <p
+            key={line}
+            className="col-start-2 col-end-4 text-[14px] leading-[1.5] break-words text-text-2"
+          >
+            {stepLine(line, step.badge)}
+          </p>
+        ))}
+      </li>
+    );
+  }
+  const segments = step.repeat.lines.map(parseSegment);
+  return (
+    <li className="flex flex-col gap-3 rounded-2xl bg-[color-mix(in_srgb,var(--fill)_9%,var(--surface))] px-[18px] py-4">
+      <div className="grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3.5">
+        <StepNumber index={index} colored />
+        <h3 className="text-[16px] leading-5 font-semibold">{step.title}</h3>
+        <span className="flex items-center gap-1.5 text-[13px] leading-[16.5px] font-semibold whitespace-nowrap text-[var(--fill-text)]">
+          <Repeat aria-hidden size={15} strokeWidth={2} />
+          Répéter {step.repeat.times} fois
+        </span>
+      </div>
+      {/* Le résumé du bloc (« 5 répétitions de 4 min à 4:55 min/km ») répète les rangées
+          dessous : il n'est écrit que si une rangée n'a pas pu être lue. */}
+      {segments.every((segment) => segment.value !== null)
+        ? null
+        : step.lines.map((line) => (
+            <p
+              key={line}
+              className="text-[14px] leading-[1.5] break-words text-text-2 lg:ml-[42px]"
+            >
+              {stepLine(line, step.badge)}
+            </p>
+          ))}
+      <ul className="flex flex-col gap-1.5 lg:ml-[42px]">
+        {segments.map((segment, i) => {
+          const line = step.repeat!.lines[i];
+          const recovery = segment.kind === "recovery";
+          return (
+            <li
+              key={line}
+              className={`grid grid-cols-[4px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl px-3.5 py-3 ${
+                recovery ? "bg-surface/55" : "bg-surface"
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`h-8 rounded-[2px] ${
+                  recovery
+                    ? "bg-[color-mix(in_srgb,var(--fill)_40%,var(--surface))]"
+                    : "bg-[var(--fill)]"
+                }`}
+              />
+              <span className="flex min-w-0 flex-col gap-px">
+                <span className="text-[14.5px] leading-[18px] font-semibold break-words">
+                  {segment.label}
+                </span>
+                {segment.detail ? (
+                  <span className="text-[13.5px] leading-[17px] text-text-2">{segment.detail}</span>
+                ) : null}
+              </span>
+              {segment.value ? (
+                <span className="text-[14px] leading-[17.5px] font-semibold whitespace-nowrap">
+                  {segment.value}
+                </span>
+              ) : (
+                <span />
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </li>
+  );
+}
+
+// Un morceau du déroulé : sa largeur suit sa durée (au moins 6 sur ordinateur, 8 sur téléphone,
+// pour que sa légende tienne) ; échauffement en pente montante, retour au calme en pente
+// descendante, bloc répété en barres (efforts pleins, récupérations basses).
+function TimelinePart({ part, last }: { part: TimelineStep; last: boolean }) {
+  const { role, step, index } = part;
+  const title = `${index} · ${step.badge ?? formatDuration(Math.round(part.minutes))}`;
+  const aside = step.repeat
+    ? part.recovery
+      ? `Récup. ${part.recovery}`
+      : null
+    : last
+      ? null
+      : step.title;
   return (
     <div
-      style={{ "--c": color } as CSSProperties}
-      // Carte neutre (29/10/2026) : la couleur va à l'icône et à l'intitulé, plus un contour léger.
-      className="flex h-full min-w-0 flex-col gap-1.5 rounded-card border border-[color-mix(in_srgb,var(--c)_30%,transparent)] bg-surface p-4"
+      style={{ "--f": part.minutes } as CSSProperties}
+      className={`flex min-w-0 [flex:max(var(--f),8)_1_0%] flex-col gap-1.5 lg:[flex:max(var(--f),6)_1_0%] ${
+        last ? "items-end" : ""
+      }`}
     >
-      <span
-        aria-hidden
-        className="inline-flex size-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--c)_18%,transparent)] text-[var(--c)]"
-      >
-        <Icon size={16} strokeWidth={1.8} />
+      <div aria-hidden className="flex h-[22px] w-full items-end gap-0.5">
+        {role === "warmup" ? (
+          <span className="h-[60%] w-full rounded-[4px] bg-[var(--effort-easy)] [clip-path:polygon(0_45%,100%_0,100%_100%,0_100%)]" />
+        ) : role === "cooldown" ? (
+          <span className="h-[45%] w-full rounded-[4px] bg-[var(--effort-easy)] [clip-path:polygon(0_0,100%_50%,100%_100%,0_100%)]" />
+        ) : part.bars.length > 0 ? (
+          part.bars.map((bar, i) => (
+            <span
+              key={i}
+              style={{ flexGrow: bar.minutes }}
+              className={`basis-0 rounded-[3px] ${
+                bar.kind === "recovery"
+                  ? "h-[32%] bg-[color-mix(in_srgb,var(--fill)_40%,var(--surface))]"
+                  : "h-full bg-[var(--fill)]"
+              }`}
+            />
+          ))
+        ) : (
+          <span className="h-full w-full rounded-[3px] bg-[var(--fill)]" />
+        )}
+      </div>
+      {/* Légende : coupée par « … » si le morceau est trop étroit (jamais sur le morceau voisin). */}
+      <span className="flex max-w-full min-w-0 flex-col gap-px overflow-hidden text-[11.5px] leading-[1.35] whitespace-nowrap text-muted lg:flex-row lg:gap-1">
+        <b
+          className={`truncate font-semibold lg:shrink-0 ${role === "main" ? "text-[var(--fill-text)]" : "text-text"}`}
+        >
+          {title}
+        </b>
+        {aside ? <span className="min-w-0 truncate">{aside}</span> : null}
       </span>
-      <span className="text-[13px] font-medium text-[var(--c)]">{label}</span>
-      <span className="text-[16px] leading-snug font-semibold break-words">{value}</span>
     </div>
   );
 }
 
-function Step({ step, index, color }: { step: ProgramSessionStep; index: number; color: string }) {
+function SessionTimeline({ timeline }: { timeline: Timeline }) {
+  const legend = [
+    timeline.effort !== null
+      ? {
+          key: "effort",
+          label: timeline.effort ? `Effort · ${timeline.effort}` : "Effort",
+          className: "bg-[var(--fill)]",
+        }
+      : null,
+    timeline.recovery !== null
+      ? {
+          key: "recovery",
+          label: timeline.recovery ? `Récup · ${timeline.recovery}` : "Récup",
+          className: "bg-[color-mix(in_srgb,var(--fill)_40%,var(--surface))]",
+        }
+      : null,
+    timeline.easy
+      ? { key: "easy", label: "Allure facile", className: "bg-[var(--effort-easy)]" }
+      : null,
+  ].filter((item) => item !== null);
   return (
-    <li
-      style={{ "--c": color } as CSSProperties}
-      // Étape (29/10/2026) : plus de bordure gauche épaisse ni de fond teinté ; contour léger,
-      // numéro et titre en couleur.
-      className="flex gap-3.5 rounded-[14px] border border-[color-mix(in_srgb,var(--c)_35%,transparent)] bg-surface p-3.5"
+    <section
+      aria-label="Déroulé de la séance"
+      className="mt-auto flex flex-col gap-2.5 rounded-[14px] bg-[color-mix(in_srgb,var(--surface-2)_60%,var(--surface))] px-3.5 py-3 inset-ring inset-ring-line-soft"
     >
+      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
+        <h2 className="text-[13px] leading-[16.5px] font-semibold whitespace-nowrap">
+          Déroulé de la séance
+        </h2>
+        <span className="text-[12px] leading-[15.5px] font-medium whitespace-nowrap text-muted">
+          ≈ {formatDuration(Math.round(timeline.totalMinutes))}
+        </span>
+        <span aria-hidden className="max-lg:hidden lg:flex-1" />
+        <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] leading-[14.5px] font-medium text-text-2 max-lg:basis-full">
+          {legend.map((item) => (
+            <li key={item.key} className="flex items-center gap-[5px] whitespace-nowrap">
+              <span aria-hidden className={`size-2 rounded-[2px] ${item.className}`} />
+              {item.label}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex gap-1">
+        {timeline.steps.map((part, i) => (
+          <TimelinePart key={part.index} part={part} last={i === timeline.steps.length - 1} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// Une ligne du récapitulatif : pictogramme dans un carré gris, intitulé, valeur.
+function RecapRow({
+  icon: Icon,
+  label,
+  children,
+}: {
+  icon: LucideIcon;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-3.5 py-2.5">
       <span
         aria-hidden
-        className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--c)] font-mono text-[14px] font-semibold text-on-accent tabular"
+        className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-bg text-text-2"
       >
-        {index}
+        <Icon size={17} strokeWidth={1.8} />
       </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-[16px] font-semibold text-[var(--c)]">{step.title}</h3>
-          {step.badge ? (
-            <span className="shrink-0 rounded-pill bg-[color-mix(in_srgb,var(--c)_18%,transparent)] px-2.5 py-1 font-mono text-[12px] font-semibold text-[var(--c)] tabular">
-              {step.badge}
-            </span>
-          ) : null}
-        </div>
-        {step.lines.map((line) => (
-          <p key={line} className="text-small break-words text-muted">
-            {line}
-          </p>
-        ))}
-        {step.repeat ? (
-          <div className="mt-1 flex gap-3 rounded-[12px] border border-[color-mix(in_srgb,var(--c)_30%,transparent)] bg-surface p-3.5">
-            <Repeat
-              aria-hidden
-              size={18}
-              strokeWidth={1.8}
-              className="mt-0.5 shrink-0 text-[var(--c)]"
-            />
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <p className="font-medium">Répéter {step.repeat.times} fois</p>
-              <ul className="flex flex-col gap-1 text-small">
-                {step.repeat.lines.map((line) => (
-                  <li key={line} className="flex items-center gap-2">
-                    <span
-                      aria-hidden
-                      className="size-2.5 shrink-0 rounded-full"
-                      style={{ background: isRecovery(line) ? RECOVERY : color }}
-                    />
-                    <span className={isRecovery(line) ? "text-muted" : "font-medium"}>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ) : null}
+      <div className="flex min-w-0 flex-col gap-px">
+        <span className="text-[12.5px] leading-[1.4] whitespace-nowrap text-muted">{label}</span>
+        {children}
       </div>
-    </li>
+    </div>
   );
 }
 
@@ -163,134 +332,159 @@ async function SessionDetail({
   athleteId: string;
   sessionId: string;
 }) {
-  const { membership } = await requireOrgAccess(orgId);
+  const { user, membership } = await requireOrgAccess(orgId);
   const athlete = await getAthlete(membership.organizationId, athleteId);
   if (!athlete) notFound();
   const found = await getProgramSession(membership.organizationId, athlete.id, sessionId);
   // Séance inconnue ou d'un autre sportif : même réponse (404), sans révéler son existence.
   if (!found) notFound();
-  const { week, session } = found;
+  const { program, week, session } = found;
   const { content } = session;
-  const Icon = content.discipline ? disciplineIcons[content.discipline] : ListChecks;
-  const styles = content.discipline ? disciplineStyles[content.discipline] : null;
+  const discipline = content.discipline;
   const athletePath = `/coach/o/${membership.organizationId}/sportifs/${athlete.id}`;
-  const mainColor = content.discipline ? disciplineVar[content.discipline] : "var(--accent)";
+  const timeline = sessionTimeline(content);
+  // Les conseils sont signés par le coach qui a créé le programme (sinon le coach connecté).
+  const coach = content.coachTips
+    ? await getCoachProfile(
+        program.createdBy
+          ? { id: program.createdBy, email: null }
+          : { id: user.id, email: user.email ?? null },
+      )
+    : null;
+  const range = `${dayMonth.format(utc(week.monday))} – ${dayMonth.format(utc(week.sunday))}`;
+  // Couleurs de la discipline pour toute la carte : aplat, texte sur l'aplat, texte coloré.
+  const colors = {
+    "--fill": discipline ? fillVar[discipline] : "var(--violet)",
+    "--on-fill": discipline ? onFillVar[discipline] : "var(--on-accent)",
+    "--fill-text": discipline ? textVar[discipline] : "var(--violet-text)",
+  } as CSSProperties;
 
   return (
     <>
       <PageHeader
         back={{ href: `${athletePath}?onglet=agenda`, label: athlete.displayName }}
+        // Téléphone : « ← Inès Benali » dans la barre du haut, comme la fiche.
+        backInPhoneBar
         title={content.title}
-        titleAside={
-          <span
-            aria-hidden
-            className={`inline-flex size-10 shrink-0 items-center justify-center rounded-full ${
-              styles ? styles.icon : "border border-line-2 bg-chip text-muted"
-            }`}
-          >
-            <Icon size={18} strokeWidth={2} />
-          </span>
-        }
-        subtitle={
-          <span className="flex flex-wrap items-center gap-2">
-            {content.discipline ? (
-              <span
-                className={`rounded-pill px-2.5 py-1 text-[12px] font-medium ${styles?.icon ?? ""}`}
-              >
-                {disciplineLabels[content.discipline]}
-              </span>
-            ) : null}
-            <span className="rounded-pill bg-chip px-2.5 py-1 text-[12px] font-medium text-muted">
-              {weekRange(week)} · Séance {session.slotIndex}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-pill bg-warn-soft px-2.5 py-1 text-[12px] font-medium text-warn">
-              <CircleDashed aria-hidden size={12} strokeWidth={2.2} />À faire
-            </span>
-          </span>
-        }
+        visibleTitle={false}
       />
-      <PageBody>
-        <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-          <div className="flex min-w-0 flex-col gap-4 lg:col-span-8">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-              <Figure
-                icon={Clock}
-                label="Durée estimée"
-                value={formatDuration(content.durationMinutes)}
-                color="var(--amber)"
-              />
-              <Figure
-                icon={ListChecks}
-                label="Type de séance"
-                value={content.sessionType}
-                color={mainColor}
-              />
-              {content.objective ? (
-                <div className="col-span-2 md:col-span-1">
-                  <Figure
-                    icon={Target}
-                    label="Objectif"
-                    value={content.objective}
-                    color="var(--ok)"
-                  />
-                </div>
-              ) : null}
+      <PageBody fill>
+        <div className="mx-auto flex w-full max-w-[1600px] min-w-0 flex-col gap-4 max-lg:-mt-0.5 lg:grid lg:flex-1 lg:grid-cols-[minmax(0,1fr)_300px] lg:grid-rows-[minmax(0,1fr)] lg:items-stretch">
+          {/* La séance. */}
+          <article
+            style={colors}
+            className="flex min-w-0 flex-col gap-5 rounded-[20px] bg-surface px-4 py-5 inset-ring inset-ring-line-soft lg:p-[26px]"
+          >
+            <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2.5">
+              <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-1.5">
+                <p
+                  className={`text-[11.5px] leading-[14.5px] font-semibold tracking-[0.08em] uppercase ${
+                    discipline ? disciplineStyles[discipline].text : "text-muted"
+                  }`}
+                >
+                  {discipline ? `${disciplineLabels[discipline]} · ` : ""}Séance {session.slotIndex}{" "}
+                  sur {week.sessions.length}
+                </p>
+                {/* Le titre de la page (h1) est dans l'en-tête, lu par les lecteurs d'écran. */}
+                <p
+                  aria-hidden
+                  className="text-[26px] leading-[1.2] font-semibold tracking-[-0.02em] break-words"
+                >
+                  {content.title}
+                </p>
+                <p className="text-[13.5px] leading-[1.5] text-muted">
+                  Semaine {week.index} · {range} ·{" "}
+                  {content.withCoach ? "avec le coach" : `au jour choisi par ${athlete.firstName}`}
+                </p>
+              </div>
+              <span className="text-[13px] leading-[16.5px] font-medium whitespace-nowrap text-muted">
+                {plural(content.steps.length, "bloc")} · {formatDuration(content.durationMinutes)}
+              </span>
             </div>
 
+            <ol aria-label="Étapes de la séance" className="flex flex-col gap-3">
+              {content.steps.map((step, i) => (
+                <Step key={`${i}-${step.title}`} step={step} index={i + 1} />
+              ))}
+            </ol>
+
+            {timeline ? <SessionTimeline timeline={timeline} /> : null}
+          </article>
+
+          {/* Récapitulatif et conseil du coach. */}
+          <div className="flex min-w-0 flex-col gap-4">
             <section
-              aria-labelledby="session-steps-title"
-              className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+              aria-labelledby="session-recap-title"
+              className="flex flex-col gap-0.5 rounded-[20px] bg-surface p-2 inset-ring inset-ring-line-soft"
             >
-              <h2 id="session-steps-title" className="text-title font-medium">
-                Détail de la séance
+              <h2
+                id="session-recap-title"
+                className="px-3.5 pt-3 pb-1.5 text-[15px] leading-[19px] font-semibold"
+              >
+                Récapitulatif
               </h2>
-              <ol aria-label="Étapes de la séance" className="flex flex-col gap-2.5">
-                {content.steps.map((step, i) => (
-                  <Step
-                    key={`${i}-${step.title}`}
-                    step={step}
-                    index={i + 1}
-                    color={stepColor(step.title, mainColor)}
-                  />
-                ))}
-              </ol>
+              <RecapRow icon={Clock} label="Durée estimée">
+                <span className="text-[15px] leading-[19px] font-semibold">
+                  {formatDuration(content.durationMinutes)}
+                </span>
+              </RecapRow>
+              <RecapRow icon={ListChecks} label="Type de séance">
+                <span className="text-[15px] leading-[19px] font-semibold">
+                  {content.sessionType}
+                </span>
+              </RecapRow>
+              {content.objective ? (
+                <RecapRow icon={Target} label="Objectif">
+                  <span className="text-[15px] leading-[1.35] font-semibold break-words">
+                    {content.objective}
+                  </span>
+                </RecapRow>
+              ) : null}
+              <RecapRow icon={CircleDashed} label="Suivi">
+                <span className="text-[15px] leading-[19px] font-semibold">À faire</span>
+                <span className="text-[12px] leading-[1.4] text-muted">
+                  Ressenti et commentaire {ofName(athlete.firstName)} ici
+                </span>
+              </RecapRow>
             </section>
 
-            {content.coachTips ? (
+            {content.coachTips && coach ? (
               <section
                 aria-labelledby="session-tips-title"
-                className="flex flex-col gap-3 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+                className="flex flex-col gap-3 rounded-[20px] bg-surface px-[22px] py-5 inset-ring inset-ring-line-soft lg:flex-1"
               >
                 <h2
                   id="session-tips-title"
-                  className="flex items-center gap-2.5 text-title font-medium"
+                  className="flex items-center gap-2 text-[15px] leading-[19px] font-semibold"
                 >
-                  <FileText aria-hidden size={17} strokeWidth={1.7} className="text-accent-text" />
-                  Conseils du coach
+                  <MessageSquare
+                    aria-hidden
+                    size={17}
+                    strokeWidth={1.8}
+                    className="text-violet-text"
+                  />
+                  Conseil du coach
                 </h2>
-                <p className="rounded-[12px] bg-bg p-4 text-small leading-relaxed">
-                  {content.coachTips}
-                </p>
+                <p className="text-[14.5px] leading-[1.6] text-text">{content.coachTips}</p>
+                <div className="mt-auto flex items-center gap-2.5 pt-1.5">
+                  <span className="flex [&_span]:text-on-inv!">
+                    <Avatar
+                      name={coach.displayName}
+                      size="sm"
+                      photoPath={coach.photoPath}
+                      colorClass="bg-inv"
+                    />
+                  </span>
+                  <span className="flex flex-col gap-px">
+                    <span className="text-[13.5px] leading-[17px] font-semibold whitespace-nowrap">
+                      {coach.displayName}
+                    </span>
+                    <span className="text-[12px] leading-[17.5px] text-muted">Ton coach</span>
+                  </span>
+                </div>
               </section>
             ) : null}
           </div>
-
-          <aside
-            aria-labelledby="session-follow-title"
-            className="flex flex-col gap-3 rounded-card border border-line bg-surface p-5 md:p-[22px] lg:col-span-4"
-          >
-            <h2 id="session-follow-title" className="text-title font-medium">
-              Suivi de la séance
-            </h2>
-            <p className="inline-flex w-fit items-center gap-1.5 rounded-pill bg-warn-soft px-3 py-1.5 text-[13px] font-medium text-warn">
-              <CircleDashed aria-hidden size={14} strokeWidth={2.2} />À faire
-            </p>
-            <p className="text-small text-muted">
-              {athlete.firstName} fait cette séance le jour de son choix dans sa semaine (
-              {weekRange(week).toLowerCase()}). Depuis son espace, {athlete.firstName} indiquera si
-              la séance est faite, son ressenti et un commentaire pour toi : tu le verras ici.
-            </p>
-          </aside>
         </div>
       </PageBody>
     </>

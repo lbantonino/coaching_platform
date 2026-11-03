@@ -46,6 +46,9 @@ export function AthleteHeader({
     <>
       <PageHeader
         back={{ href: listPath, label: "Sportifs" }}
+        // Téléphone (demande d'Antonino du 03/11, comme la maquette) : « ← Sportifs » dans la barre
+        // du haut, entre ☰ et les outils, sur tous les onglets de la fiche.
+        backInPhoneBar
         title={athlete.displayName}
         visibleTitle={false}
         actions={
@@ -217,10 +220,13 @@ export function AthleteIdentity({
         <FicheTabSelect tabs={tabs} />
       </section>
 
-      {/* Ordinateur : la barre des dix onglets (elle défile si elle ne tient pas). */}
+      {/* Ordinateur : les dix onglets posés sur le fond de la page, sans cadre autour (demande
+          d'Antonino du 03/11) ; ils défilent s'ils ne tiennent pas. Onglets aux mêmes places qu'avec
+          le cadre de la maquette (4 px du bord) ; marges intérieures plus larges que ces 4 px : la
+          place de l'ombre de l'onglet ouvert, que le défilement couperait sinon. */}
       <nav
         aria-label="Sections de la fiche"
-        className="flex gap-0.5 overflow-x-auto rounded-[14px] bg-track p-1 [scrollbar-width:none] max-lg:hidden"
+        className="-mx-1 -my-1.5 flex gap-0.5 overflow-x-auto px-2 py-2.5 [scrollbar-width:none] max-lg:hidden"
       >
         {tabs.map((tab) => (
           <Link
@@ -230,7 +236,9 @@ export function AthleteIdentity({
             aria-current={tab.active ? "page" : undefined}
             className={`flex h-[38px] flex-[1_0_auto] items-center justify-center rounded-[10px] px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors duration-150 ${
               tab.active
-                ? "bg-track-active text-text shadow-[0_1px_3px_rgba(22,18,40,0.10)]"
+                ? // Seul l'onglet ouvert se détache (décision d'Antonino du 03/11) : fond blanc (gris
+                  // surélevé en sombre), ombre douce, sans contour.
+                  "bg-glass text-text shadow-[0_1px_2px_rgba(22,18,40,0.08),0_4px_12px_rgba(22,18,40,0.08)]"
                 : "text-muted hover:text-text"
             }`}
           >

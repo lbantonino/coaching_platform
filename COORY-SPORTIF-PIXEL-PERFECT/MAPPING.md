@@ -48,10 +48,10 @@
 | Bouton contour | `buttonClass({ variant: "outline" })` | idem | Réutiliser |
 | Bouton icône carré 32 / 40 | `iconButtonClass({ size })` (36 / 44) | idem | Réutiliser, taille ajustée par classe |
 | Bouton IA violet | `HeaderTools` / barre mobile | `header-tools.tsx` | Existe |
-| Champ / select / textarea h46 r12 | `inputClass`, `entryInputClass`, `textareaClass`, `labelClass`, `hintClass` | `components/ui/form-styles.ts` | Réutiliser |
-| Contrôle segmenté | `Segmented`, `SegmentedNav` | `components/ui/segmented.tsx` | Réutiliser (fond actif : jaune `--selected` depuis D-71, la maquette met du blanc : à signaler page par page) |
-| Menu déroulant (listbox sous le bouton) | **`Dropdown` créé le 3/11** (`components/ui/dropdown.tsx`) ; `ActionMenu` reste pour les menus d'actions | `components/ui/dropdown.tsx` | À réutiliser en 2c, 2g et pour le sélecteur d'onglets mobile |
-| Onglets de la fiche (piste `#e8e7ee`) | Barre dans `AthleteIdentity` (`sportifs/[athleteId]/athlete-header.tsx`), jetons `--track` | — | **Fait le 3/11 (D-92)**, ordre de la maquette choisi par Antonino |
+| Champ / select / textarea h46 r12 | `inputClass`, `entryInputClass`, `textareaClass`, `labelClass`, `hintClass` ; **habillage fiche** `ficheInputClass`, `ficheTextareaClass`, `ficheLabelClass`, `ficheHintClass`, `ficheOvertitleClass`, `ficheGridClass` (3/11, D-93) | `components/ui/form-styles.ts` | Fiche : `look="fiche"` sur les champs partagés (`athlete-fields.tsx`), à réutiliser en 2f à 2i |
+| Contrôle segmenté | `Segmented` (`look="track"` : piste grise, option en verre, 3/11, D-93), `SegmentedNav` | `components/ui/segmented.tsx` | Fiche : `look="track"` |
+| Menu déroulant (listbox sous le bouton) | **`Dropdown` créé le 3/11** (`components/ui/dropdown.tsx`) ; `ActionMenu` reste pour les menus d'actions ; menu des semaines de 2c : `WeekPicker` (grille de liens, D-94) | `components/ui/dropdown.tsx`, `sportifs/[athleteId]/week-picker.tsx` | À réutiliser en 2g |
+| Onglets de la fiche | Barre dans `AthleteIdentity` (`sportifs/[athleteId]/athlete-header.tsx`) | — | **Fait le 3/11 (D-92)**, ordre de la maquette choisi par Antonino ; **sans piste** à sa demande (D-93), onglet ouvert en verre (jetons `--glass`) |
 | Sélecteur d'onglet mobile (n / 10) | `FicheTabSelect` | `sportifs/[athleteId]/fiche-tab-select.tsx` | **Fait le 3/11 (D-92)** |
 | Carte standard r20 p22 | `Card`, `CardTitle`, `CardEmpty`, `MicroLabel` | `components/ui/card.tsx` | Réutiliser |
 | Sous-carte `#f8f7fb` | classes `bg-surface-2 rounded-2xl` | — | Classes directes |
@@ -60,7 +60,7 @@
 | Symbole ♀ / ♂ | `SexMark` | `components/ui/sex-mark.tsx` | Réutiliser |
 | Case à cocher | `Checkbox` | `components/ui/checkbox.tsx` | Réutiliser (style de la case à aligner : 18 px desktop, 22 px mobile) |
 | Interrupteur | `Toggle` | idem | Réutiliser |
-| Puces de choix multiples (« ✓ ») | `checkboxChipClass`, `chipClass` | `form-styles.ts`, `chip.ts` | Réutiliser |
+| Puces de choix multiples (« ✓ ») | `checkboxChipClass`, `chipClass` ; fiche : `ficheChipClass` (violet, « ✓ » en pseudo-élément, D-93) | `form-styles.ts`, `chip.ts` | Réutiliser |
 | Accordéon | `<details>` natif (déjà utilisé) | — | Réutiliser |
 | Confirmation destructive | `ConfirmDialog`, `ConfirmSubmitButton`, `DeleteMoreMenu` | `overlay.tsx`, `more-menu.tsx` | Conserver les confirmations existantes |
 | Message éphémère (toast) | `useToast` | `components/ui/toast.tsx` | Réutiliser (non dessiné dans la maquette) |
