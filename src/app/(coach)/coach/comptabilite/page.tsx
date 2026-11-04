@@ -554,7 +554,13 @@ async function Accounting({
                                 payment.coversFrom && payment.coversTo
                                   ? `Forfait du ${day(payment.coversFrom)} au ${day(payment.coversTo)}`
                                   : null,
-                                `${formatMoney(exclCents, payment.currency)} HTVA (TVA ${formatVatRate(payment.vatRate)})`,
+                                // TVA (D-118) : comme les dépenses, rien chez un coach sans TVA ;
+                                // « Sans TVA » pour un paiement noté sans.
+                                payment.vatRate > 0
+                                  ? `${formatMoney(exclCents, payment.currency)} HTVA (TVA ${formatVatRate(payment.vatRate)})`
+                                  : vatSubject
+                                    ? "Sans TVA"
+                                    : null,
                                 payment.label ?? "Paiement",
                               ]
                                 .filter(Boolean)

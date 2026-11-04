@@ -42,7 +42,8 @@ import type { PaymentFormState, PaymentFormValues } from "@/features/billing/pay
 // Fenêtre « Nouveau paiement » de l'espace coach (D-36), la même partout : « Créer → Paiement » et le
 // bouton de la page Comptabilité. Le coach note l'argent reçu (TVA comprise), le taux de TVA (libre,
 // pré-rempli avec son taux habituel, D-69) et le mode ; le HTVA s'affiche en direct. On reste sur la
-// page ; un toast confirme.
+// page ; un toast confirme. TVA (D-118) : organisation sans TVA, ni taux ni « TVAC » (comme les
+// dépenses) ; avec TVA, « Appliquer la TVA » (cochée par défaut) permet un paiement sans TVA.
 type Athlete = { id: string; name: string };
 type Action = (previous: PaymentFormState, formData: FormData) => Promise<PaymentFormState>;
 
@@ -66,6 +67,7 @@ export function NewPaymentSheet({
 }) {
   const [open, setOpen] = useState(false);
   const [athletes, setAthletes] = useState<Athlete[] | null>(null);
+  const { vatRate: habitual } = useMoney();
   const openSheet = useCallback(() => {
     setAthletes(null);
     setOpen(true);
@@ -79,7 +81,9 @@ export function NewPaymentSheet({
         open={open}
         onClose={() => setOpen(false)}
         title="Nouveau paiement"
-        subtitle="L'argent reçu d'un sportif, TVA comprise."
+        subtitle={
+          habitual > 0 ? "L'argent reçu d'un sportif, TVA comprise." : "L'argent reçu d'un sportif."
+        }
         bare
       >
         {open && athletes === null ? (
@@ -166,13 +170,22 @@ function PaymentFields({
   onCancel: () => void;
 }) {
   const formId = useId();
+  const { currency, format, methodLabel, vatRate: habitual } = useMoney();
+  // TVA (D-118) : une organisation sans TVA n'en voit pas ; une organisation avec TVA peut noter un
+  // paiement sans TVA (« Appliquer la TVA » décochée : taux 0). Après une erreur, la saisie revient
+  // (taux 0 = décochée) ; recocher redonne le taux habituel.
+  const vatSubject = habitual > 0;
+  const initialRate = parseVatRate(v.vatRate);
+  const [applyVat, setApplyVat] = useState(initialRate !== 0);
+  const withVat = vatSubject && applyVat;
   const [amount, setAmount] = useState(v.amount);
-  const [vatRate, setVatRate] = useState(v.vatRate);
+  const [vatRate, setVatRate] = useState(
+    initialRate === 0 ? String(habitual).replace(".", ",") : v.vatRate,
+  );
   const [isPackage, setIsPackage] = useState(v.package);
-  const { currency, format, methodLabel } = useMoney();
   const cents = parseAmount(amount);
   const rate = parseVatRate(vatRate);
-  const split = cents === null || rate === null ? null : splitVat(cents, rate);
+  const split = !withVat || cents === null || rate === null ? null : splitVat(cents, rate);
 
   // Kit (boîte 04) : grille de 12 colonnes, montant et TVA à suffixe, forfait en carte à cocher,
   // boutons dans le pied fixe (reliés au formulaire par son id).
@@ -195,11 +208,16 @@ function PaymentFields({
             // Le suffixe « € TVAC » est dessiné dans le champ ; le libellé lu le dit aussi.
             label={
               <>
-                Montant reçu<span className="sr-only"> (TVAC, {currency})</span>
+                Montant reçu
+                <span className="sr-only">
+                  {" "}
+                  ({withVat ? "TVAC, " : ""}
+                  {currency})
+                </span>
               </>
             }
             htmlFor="payment-amount"
-            half
+            half={withVat}
           >
             <DlgSuffixInput
               id="payment-amount"
@@ -209,27 +227,43 @@ function PaymentFields({
               placeholder="Ex. : 3 000"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
-              suffix={`${currencySymbol(currency)} TVAC`}
+              suffix={withVat ? `${currencySymbol(currency)} TVAC` : currencySymbol(currency)}
             />
             <FieldCheck htmlFor="payment-amount" rule="amount" />
           </DlgField>
-          <DlgField label="Taux de TVA" htmlFor="payment-vat" half>
-            <DlgSuffixInput
-              id="payment-vat"
-              name="vatRate"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="21"
-              value={vatRate}
-              onChange={(event) => setVatRate(event.target.value)}
-              suffix="%"
-            />
-          </DlgField>
+          {withVat ? (
+            <DlgField label="Taux de TVA" htmlFor="payment-vat" half>
+              <DlgSuffixInput
+                id="payment-vat"
+                name="vatRate"
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="21"
+                value={vatRate}
+                onChange={(event) => setVatRate(event.target.value)}
+                suffix="%"
+              />
+            </DlgField>
+          ) : (
+            <input type="hidden" name="vatRate" value="0" />
+          )}
           <DlgHint live>
             {split
               ? `${format(split.exclCents)} HTVA · ${format(split.vatCents)} de TVA (${formatVatRate(rate ?? 0)})`
-              : "Le montant HTVA se calcule à partir du montant reçu."}
+              : withVat
+                ? "Le montant HTVA se calcule à partir du montant reçu."
+                : vatSubject
+                  ? "Sans TVA : le montant reçu compte tel quel."
+                  : "Le montant que tu as reçu."}
           </DlgHint>
+          {vatSubject ? (
+            <DlgCheckCard
+              checked={applyVat}
+              onChange={(event) => setApplyVat(event.target.checked)}
+              label="Appliquer la TVA"
+              description="Décoche pour un paiement sans TVA."
+            />
+          ) : null}
 
           <DlgField label="Reçu le" htmlFor="payment-date" half>
             <DlgDate id="payment-date" name="receivedOn" defaultValue={v.receivedOn} />

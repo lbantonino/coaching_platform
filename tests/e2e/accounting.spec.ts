@@ -194,3 +194,78 @@ test("À encaisser : une séance passée se marque payée depuis la Comptabilit�
   await page.goto(href ?? "/");
   await expect(page.getByText(/^Payée le /).first()).toBeVisible();
 });
+
+// TVA (D-118) : un coach soumis à la TVA peut noter un paiement ou une dépense sans TVA ; un coach
+// sans TVA n'en voit nulle part (ni taux, ni « TVAC »).
+test("« Appliquer la TVA » décochée : un paiement et une dépense sans TVA", async ({
+  page,
+}, testInfo) => {
+  const label = `Sans TVA ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  await loginAsCoachA(page);
+  await page.goto("/coach/comptabilite");
+
+  await page.getByRole("button", { name: "Nouveau paiement" }).filter({ visible: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
+  await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Sophie Lambert" });
+  await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("80");
+  await expect(dialog.getByLabel("Taux de TVA")).toBeVisible();
+  await dialog.getByLabel(/^Appliquer la TVA/).uncheck();
+  await expect(dialog.getByLabel("Taux de TVA")).toHaveCount(0);
+  await expect(dialog.getByText("Sans TVA : le montant reçu compte tel quel.")).toBeVisible();
+  await dialog.getByLabel(/^Libellé/).fill(label);
+  await dialog.getByRole("button", { name: "Enregistrer le paiement" }).click();
+  await expect(page.getByText("Paiement enregistré.")).toBeVisible();
+  const row = page
+    .getByRole("list", { name: "Liste des paiements" })
+    .getByRole("listitem")
+    .filter({ hasText: label });
+  await expect(row).toContainText("Sans TVA");
+  await expect(row).not.toContainText("HTVA");
+
+  // Dépense : même case, la TVA récupérable disparaît.
+  await page.getByRole("button", { name: "Nouvelle dépense" }).filter({ visible: true }).click();
+  const expense = page.getByRole("dialog", { name: "Nouvelle dépense" });
+  await expense.getByLabel(/^Montant payé \(TVAC/).fill("50");
+  await expect(expense.getByText(/de TVA récupérable/)).toBeVisible();
+  await expense.getByLabel(/^Appliquer la TVA/).uncheck();
+  await expect(expense.getByLabel("Taux de TVA")).toHaveCount(0);
+  await expect(expense.getByText("Sans TVA : le montant payé compte tel quel.")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Nettoyage : le paiement se supprime.
+  await row.getByRole("button", { name: "Plus d'actions" }).click();
+  await page
+    .getByRole("dialog", { name: "Paiement de Sophie Lambert" })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Supprimer ce paiement ?" })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await expect(page.getByRole("listitem").filter({ hasText: label })).toHaveCount(0);
+});
+
+test("un coach sans TVA ne voit ni taux ni « TVAC » dans ses paiements et dépenses", async ({
+  page,
+}) => {
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-b@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+  await page.goto("/coach/comptabilite");
+
+  await page.getByRole("button", { name: "Nouveau paiement" }).filter({ visible: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
+  await expect(dialog.getByLabel(/^Montant reçu \(EUR\)$/)).toBeVisible();
+  await expect(dialog.getByLabel("Taux de TVA")).toHaveCount(0);
+  await expect(dialog.getByText("Appliquer la TVA")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+
+  await page.getByRole("button", { name: "Nouvelle dépense" }).filter({ visible: true }).click();
+  const expense = page.getByRole("dialog", { name: "Nouvelle dépense" });
+  await expect(expense.getByLabel(/^Montant payé \(EUR\)$/)).toBeVisible();
+  await expect(expense.getByLabel("Taux de TVA")).toHaveCount(0);
+  await expect(expense.getByText("Appliquer la TVA")).toHaveCount(0);
+});
