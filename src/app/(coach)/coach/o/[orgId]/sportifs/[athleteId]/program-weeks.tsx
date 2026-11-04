@@ -36,10 +36,6 @@ const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "
 const ofName = (name: string) =>
   /^[aeiouyhàâéèêëîïôöûü]/i.test(name) ? `d'${name}` : `de ${name}`;
 
-export function weekRange(week: { monday: string; sunday: string }): string {
-  return `Semaine du ${dayMonth.format(utc(week.monday))} au ${dayMonth.format(utc(week.sunday))}`;
-}
-
 // Jour d'une compétition : « Sam 12 déc. ».
 function competitionDay(day: string): string {
   const text = weekdayDayMonth.format(utc(day)).replace(".", "");

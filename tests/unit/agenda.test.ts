@@ -5,19 +5,8 @@ import {
   groupByDay,
   monthGrid,
   monthLabel,
-  parseMonth,
   shiftMonth,
-  shortMonth,
 } from "@/features/agenda/calendar";
-
-describe("parseMonth", () => {
-  it("lit le mois de l'URL, sinon le mois d'aujourd'hui", () => {
-    expect(parseMonth("2027-03", "2026-10-22")).toBe("2027-03");
-    expect(parseMonth(undefined, "2026-10-22")).toBe("2026-10");
-    expect(parseMonth("2026-13", "2026-10-22")).toBe("2026-10");
-    expect(parseMonth("n'importe quoi", "2026-10-22")).toBe("2026-10");
-  });
-});
 
 describe("shiftMonth et monthLabel", () => {
   it("passe d'une année à l'autre et écrit le mois en français", () => {
@@ -25,7 +14,6 @@ describe("shiftMonth et monthLabel", () => {
     expect(shiftMonth("2027-01", -1)).toBe("2026-12");
     expect(monthLabel("2026-10")).toBe("octobre 2026");
     expect(dayLabel("2026-12-12")).toBe("samedi 12 décembre");
-    expect(shortMonth("2026-12-12")).toBe("déc.");
   });
 });
 

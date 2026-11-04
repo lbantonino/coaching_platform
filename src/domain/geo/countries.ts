@@ -4,23 +4,12 @@ import { COUNTRY_NAMES } from "./country-names";
 
 // Pays (D-69) : codes ISO 3166-1 alpha-2, noms français figés dans country-names.ts (les mêmes au
 // serveur et au navigateur). Ils seront traduits avec l'app.
-export const COUNTRY_CODES: readonly string[] = COUNTRY_NAMES.map(([code]) => code);
 export const DEFAULT_COUNTRY = "BE";
 
 const NAMES = new Map(COUNTRY_NAMES);
 
 export const isCountryCode = (value: unknown): value is string =>
   typeof value === "string" && NAMES.has(value);
-
-export function countryName(code: string): string {
-  return NAMES.get(code) ?? code;
-}
-
-// Liste triée pour un menu déroulant.
-export type CountryOption = { code: string; name: string };
-export function countryOptions(): CountryOption[] {
-  return COUNTRY_NAMES.map(([code, name]) => ({ code, name }));
-}
 
 // Devise proposée d'office pour un pays (le coach peut en choisir une autre). Zone euro et pays dont
 // la devise est dans la liste de Coory ; sinon l'euro.

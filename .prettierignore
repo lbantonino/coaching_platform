@@ -10,9 +10,5 @@ supabase/.branches/
 test-results/
 playwright-report/
 blob-report/
-# Référence du design system Graphite & Or : gardée telle qu'Antonino l'a fournie
-coory-design-system/
-# Kit de la bibliothèque d'exercices (données, curation, exemple du kit) : pas du code de l'app
+# Chaîne du catalogue d'exercices (données, curation, illustrations) : pas du code de l'app
 resources/
-# Maquettes HTML autonomes (référence visuelle, générées)
-docs/design/maquettes/

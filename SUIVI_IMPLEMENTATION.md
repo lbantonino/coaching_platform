@@ -32,6 +32,40 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Nettoyage du dossier : code mort et fichiers inutiles (D-105)
+```
+Date : 2026-11-04
+Demande d'Antonino : « supprimer tout le code mort, tous les fichiers inutilisés et plus nécessaires
+  (les maquettes…) ; ne garder que les fichiers nécessaires à notre avancement (le bon design system) ».
+Méthode : script sur le compilateur TypeScript du projet (graphe des imports depuis les points d'entrée
+  Next, les tests et les scripts ; références de chaque export par le service de langage), puis
+  vérification à la main ; fichiers de public/ cherchés dans le code, les migrations et le seed.
+Code retiré :
+  - fiche exercice : les 5 maquettes temporaires du 31/10 (?maquette=1 à 5 ; maquettes.tsx,
+    movement-stage.tsx, sheet-tabs.tsx, sheetParts de la page) — aucune n'avait été retenue ; la fiche
+    par défaut est inchangée ; variante « icon » de BackLink (servait à la maquette 5) ;
+  - src/components/ui/states.tsx (jamais importé) ; KpiListCard, Stepper, MicroLabel ;
+  - weekRange (program-weeks), disciplineTones, countryName / countryOptions / COUNTRY_CODES ;
+  - restes d'anciennes versions, utilisés seulement par leurs tests : layoutWeek, formatHours,
+    lastSessionFor, weekCounts, parseMonth, shortMonth, monthBounds, sessionSummary (tests retirés ou
+    réécrits sur layoutDays) ;
+  - 14 jetons de couleur jamais utilisés (accent-hover, amber-soft, avatar, blue, blue-soft,
+    goal-main-icon, gold-surface, green, green-soft, logo-loop, shadow-frame, tint-block, tint-card,
+    tint-nav), dans les deux thèmes et dans @theme.
+  Gardé exprès : metricInfo (libellés et unités des réglages de séance, pour l'éditeur de programmes),
+  @react-pdf/renderer (moteur PDF choisi, ADR 0002, P5), les types générés par Supabase.
+Fichiers retirés (récupérables : commit cc7312c) : COORY-SPORTIF-PIXEL-PERFECT/ (fiche finie ; son
+  design system déplacé), coory-design-system/ (Graphite & Or, remplacé), coory-seance-brief/ (fait),
+  docs/design/maquettes/ (9 maquettes HTML), docs/design/AUDIT_DESIGN_2026-11-01.md (appliqué),
+  public/logo/ (ancien logo, plus référencé), le kit de départ de la bibliothèque (exemple de composant, dossier public vide,
+  prompt d'intégration), supabase/snippets (vide) ; rapports de tests générés mis à la Corbeille.
+Design system gardé et regroupé : docs/design/ = README.md (ce qui fait foi), design-system/ et
+  composants/ (maquette « Sportifs » du 03/11), COORY_VIOLET_ACCENTS.md, coory-brand/ (à remplacer par
+  le nouveau logo). CLAUDE.md (charte visuelle) et .prettierignore mis à jour.
+Gardés par sécurité (choix d'Antonino) : les PDF du cahier des charges et de la roadmap d'origine.
+Vérifié : typecheck, lint, Vitest 264/264 (4 tests de fonctions retirées en moins), suite Playwright.
+```
+
 ### Sportifs au pixel près, page 2k : fiche · Historique (D-104) — fin de la fiche sportif
 ```
 Date : 2026-11-04

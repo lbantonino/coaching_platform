@@ -47,8 +47,3 @@ export function parseProgramSession(value: unknown): ProgramSessionContent | nul
   const parsed = programSessionSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 }
-
-// Résumé d'une carte (3 lignes au plus) : la version courte de chaque étape, sinon son titre.
-export function sessionSummary(session: ProgramSessionContent, max = 3): string[] {
-  return session.steps.slice(0, max).map((step) => step.short ?? step.title);
-}

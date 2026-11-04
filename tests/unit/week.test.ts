@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  formatHours,
-  lastSessionFor,
-  layoutWeek,
-  mondayOf,
-  withHours,
-  weekCounts,
-  type WeekSession,
-} from "@/features/agenda/week";
+import { layoutDays, mondayOf, withHours, type WeekSession } from "@/features/agenda/week";
+
+// Les 7 jours d'une semaine (AAAA-MM-JJ), du lundi au dimanche.
+const weekOf = (monday: string) =>
+  Array.from({ length: 7 }, (_, i) =>
+    new Date(Date.parse(`${monday}T00:00:00Z`) + i * 86_400_000).toISOString().slice(0, 10),
+  );
 
 const NADIA = { id: "n", name: "Nadia El Amrani" };
 const THOMAS = { id: "t", name: "Thomas Peeters" };
@@ -46,9 +44,9 @@ describe("semaine affichée", () => {
   });
 });
 
-describe("layoutWeek", () => {
+describe("layoutDays sur une semaine", () => {
   it("place les séances par jour, compte les heures et met côte à côte celles qui se chevauchent", () => {
-    const week = layoutWeek([piste, force], "2026-10-19");
+    const week = layoutDays([piste, force], weekOf("2026-10-19"));
     const wednesday = week.days[2];
     expect(wednesday.date).toBe("2026-10-21");
     expect(wednesday.blocks.map((b) => [b.title, b.label, b.lane, b.lanes])).toEqual([
@@ -66,29 +64,13 @@ describe("layoutWeek", () => {
 describe("plage horaire, heures courtes et numéro de semaine", () => {
   it("élargit la grille pour ne couper aucune séance", () => {
     const late = { ...piste, id: "late", startTime: "21:30", durationMinutes: 75 };
-    expect(layoutWeek([late], "2026-10-19").lastHour).toBe(23);
-  });
-});
-
-describe("résumés", () => {
-  it("compte les séances par jour et met les durées en mots", () => {
-    expect(weekCounts([piste, force], "2026-10-19")).toEqual([0, 0, 2, 0, 0, 0, 0]);
-    expect(formatHours(150)).toBe("2 h 30");
-    expect(formatHours(45)).toBe("45 min");
-  });
-
-  it("trouve la dernière séance d'un sportif", () => {
-    expect(lastSessionFor("n", [piste, force], "2026-10-22", "09:00")).toEqual({
-      date: "2026-10-21",
-      time: "19:00",
-    });
-    expect(lastSessionFor("x", [piste], "2026-10-22", "09:00")).toBeNull();
+    expect(layoutDays([late], weekOf("2026-10-19")).lastHour).toBe(23);
   });
 });
 
 describe("layoutDays et parseDay", () => {
   it("met en page une seule journée et lit la date de l'adresse", async () => {
-    const { layoutDays, parseDay } = await import("@/features/agenda/week");
+    const { parseDay } = await import("@/features/agenda/week");
     const day = layoutDays([piste, force], ["2026-10-21"]);
     expect(day.days).toHaveLength(1);
     expect(day.days[0].blocks.map((b) => b.title)).toEqual([
@@ -103,10 +85,10 @@ describe("layoutDays et parseDay", () => {
 describe("heures affichées (Paramètres, D-57)", () => {
   it("garde la plage choisie, élargie par une séance hors plage", () => {
     // Piste du mercredi : 19:00 – 20:30.
-    const layout = layoutWeek([piste], "2026-09-28");
+    const layout = layoutDays([piste], weekOf("2026-09-28"));
     expect(withHours(layout, 7, 21)).toMatchObject({ firstHour: 7, lastHour: 21 });
     expect(withHours(layout, 8, 18)).toMatchObject({ firstHour: 8, lastHour: 21 });
-    expect(withHours(layoutWeek([], "2026-09-28"), 9, 20)).toMatchObject({
+    expect(withHours(layoutDays([], weekOf("2026-09-28")), 9, 20)).toMatchObject({
       firstHour: 9,
       lastHour: 20,
     });

@@ -120,12 +120,7 @@ export function buildAgendaItems(
   );
 }
 
-// Dernier jour d'un mois « AAAA-MM » ; jour + n (AAAA-MM-JJ), en UTC.
-export function monthBounds(month: string): { from: string; to: string } {
-  const [year, monthIndex] = [Number(month.slice(0, 4)), Number(month.slice(5, 7))];
-  const last = new Date(Date.UTC(year, monthIndex, 0)).toISOString().slice(0, 10);
-  return { from: `${month}-01`, to: last };
-}
+// Jour + n (AAAA-MM-JJ), en UTC.
 
 export function addDays(iso: string, days: number): string {
   return new Date(Date.parse(`${iso}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);

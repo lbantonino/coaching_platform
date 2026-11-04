@@ -1,9 +1,0 @@
-import { useMemo, useState } from 'react';
-import './ExerciseLibrary.css';
-export type Exercise = {id:string;slug:string;name_fr:string|null;name_en:string;discipline:string;equipment:string[];review_status:string;image_status:string;images:{main:string|null;start:string|null;end:string|null}};
-export function ExerciseLibrary({exercises}:{exercises:Exercise[]}) {
- const [search,setSearch]=useState(''); const [discipline,setDiscipline]=useState('all');
- const categories=useMemo(()=>['all',...new Set(exercises.map(e=>e.discipline))],[exercises]);
- const results=useMemo(()=>exercises.filter(e=>(discipline==='all'||e.discipline===discipline)&&`${e.name_fr??''} ${e.name_en} ${e.equipment.join(' ')}`.toLocaleLowerCase().includes(search.toLocaleLowerCase())),[exercises,search,discipline]);
- return <section className="coory-exercises"><header><h1>Bibliothèque d’exercices</h1><p>{results.length} exercices affichés</p></header><div className="exercise-controls"><input aria-label="Rechercher un exercice" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher un mouvement…"/><select aria-label="Discipline" value={discipline} onChange={e=>setDiscipline(e.target.value)}>{categories.map(c=><option key={c} value={c}>{c==='all'?'Toutes les disciplines':c}</option>)}</select></div><div className="exercise-grid">{results.map(e=>{const img=e.images?.main||e.images?.start;return <article key={e.id} className="exercise-card"><div className="exercise-media">{img?<img src={img} loading="lazy" alt={e.name_fr||e.name_en} onError={ev=>{ev.currentTarget.style.display='none';ev.currentTarget.parentElement?.classList.add('missing')}}/>:null}<span className="exercise-placeholder">Illustration à venir</span></div><div className="exercise-info"><strong>{e.name_fr||e.name_en}</strong><small>{e.name_fr?e.name_en:'Traduction à compléter'}</small><span>{e.discipline}</span></div></article>})}</div></section>
-}
