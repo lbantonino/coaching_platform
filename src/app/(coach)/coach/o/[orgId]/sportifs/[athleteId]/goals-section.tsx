@@ -1,7 +1,7 @@
 import { ChevronRight, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { deleteGoal, makeGoalMain, setGoalStatus } from "@/features/goals/actions";
+import { deleteGoal } from "@/features/goals/actions";
 import { listGoals, type GoalEntry } from "@/features/goals/queries";
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import {
@@ -15,16 +15,16 @@ import { formatRaceTime } from "@/features/records/schemas";
 import { daysBetween, formatDate } from "@/lib/format";
 
 import { AddGoalForm } from "./add-goal-form";
-import { EditGoalButton } from "./edit-goal-button";
+import { GoalMenu } from "./goal-menu";
 
 // Titre d'un objectif : le nom de la compétition s'il y en a une, sinon le type d'objectif.
 function goalTitle(goal: GoalEntry): string {
   return goal.competitionName ?? goalTypeLabels[goal.type];
 }
 
-// Ligne de détails : type (si le titre est un nom de compétition et que la discipline, écrite devant,
-// ne le dit pas déjà), catégorie Hyrox, lieu, date.
-function goalDetails(goal: GoalEntry): string {
+// Précisions d'un objectif : type (si le titre est un nom de compétition et que la discipline ne le
+// dit pas déjà), catégorie Hyrox, lieu, temps visé.
+function goalExtras(goal: GoalEntry): string[] {
   const discipline = goalDiscipline(goal.type);
   const typeLabel = goalTypeLabels[goal.type];
   return [
@@ -33,15 +33,18 @@ function goalDetails(goal: GoalEntry): string {
       : null,
     goal.hyroxCategory ? `Catégorie ${hyroxCategoryLabels[goal.hyroxCategory]}` : null,
     goal.competitionLocation,
-    goal.targetDate ? formatDate(goal.targetDate) : "Sans date",
     goal.targetTimeSeconds ? `Temps visé ${formatRaceTime(goal.targetTimeSeconds)}` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ].filter((part): part is string => Boolean(part));
 }
 
-// Discipline de l'objectif écrite en tête des détails : son point de couleur et son nom (rien pour un
-// objectif personnel). Choix d'Antonino du 03/11 : plus de pastilles dans les cartes.
+// Ligne de détails d'un objectif passé : précisions et date.
+function goalDetails(goal: GoalEntry): string {
+  return [...goalExtras(goal), goal.targetDate ? formatDate(goal.targetDate) : "Sans date"].join(
+    " · ",
+  );
+}
+
+// Discipline de l'objectif : son point de couleur et son nom (rien pour un objectif personnel).
 function DisciplineLabel({ goal }: { goal: GoalEntry }) {
   const discipline = goalDiscipline(goal.type);
   return discipline ? (
@@ -55,38 +58,16 @@ function DisciplineLabel({ goal }: { goal: GoalEntry }) {
   ) : null;
 }
 
-// Compte à rebours en grand, à droite du titre (choix d'Antonino du 03/11) : « 137 / jours »,
-// « Aujourd'hui », ou « Date passée » (en ambre) pour un objectif en cours dont la date est dépassée.
+// Compte à rebours en petit, après la discipline (choix d'Antonino du 03/11 au soir : plus de
+// gros chiffre) : « dans 137 jours », « aujourd'hui », ou « date passée » (en ambre) pour un objectif
+// en cours dont la date est dépassée.
 function Countdown({ today, targetDate }: { today: string; targetDate: string }) {
   const days = daysBetween(today, targetDate);
-  if (days < 0) {
-    return (
-      <span className="shrink-0 pt-0.5 text-[13px] font-semibold whitespace-nowrap text-warn">
-        Date passée
-      </span>
-    );
-  }
-  if (days === 0) {
-    return (
-      <span className="shrink-0 pt-0.5 text-[13px] font-semibold whitespace-nowrap text-violet-text">
-        Aujourd&apos;hui
-      </span>
-    );
-  }
+  if (days < 0) return <span className="font-medium text-warn">date passée</span>;
+  if (days === 0) return <span className="font-medium text-violet-text">aujourd&apos;hui</span>;
   return (
-    <span
-      aria-label={`Dans ${days} jour${days > 1 ? "s" : ""}`}
-      className="flex shrink-0 flex-col items-end"
-    >
-      <span
-        aria-hidden
-        className="text-[28px] leading-[30px] font-semibold tracking-[-0.03em] text-violet-text tabular-nums"
-      >
-        {days}
-      </span>
-      <span aria-hidden className="text-[12px] leading-4 font-medium text-muted">
-        jour{days > 1 ? "s" : ""}
-      </span>
+    <span className="font-medium whitespace-nowrap text-violet-text">
+      dans {days} jour{days > 1 ? "s" : ""}
     </span>
   );
 }
@@ -95,12 +76,10 @@ function DeleteGoalButton({
   organizationId,
   athleteId,
   goal,
-  className = "text-faint",
 }: {
   organizationId: string;
   athleteId: string;
   goal: GoalEntry;
-  className?: string;
 }) {
   return (
     <form action={deleteGoal.bind(null, organizationId, athleteId, goal.id)}>
@@ -108,7 +87,7 @@ function DeleteGoalButton({
         type="submit"
         aria-label={`Supprimer : ${goalTitle(goal)}`}
         title="Supprimer (objectif saisi par erreur)"
-        className={`grid size-[38px] place-items-center rounded-[10px] transition-colors duration-150 hover:bg-surface-2 hover:text-alert ${className}`}
+        className="grid size-[38px] place-items-center rounded-[10px] text-faint transition-colors duration-150 hover:bg-surface-2 hover:text-alert"
       >
         <Trash2 aria-hidden size={15} strokeWidth={1.8} />
       </button>
@@ -116,13 +95,10 @@ function DeleteGoalButton({
   );
 }
 
-// Boutons de la carte : 38 px, rayon 10 ; « Modifier » et « Atteint » encadrés (fond blanc sur la
-// carte jaune), « Abandonné » et « Rendre principal » en texte.
-const outlinedAction =
-  "flex h-[38px] items-center gap-[7px] rounded-[10px] px-3.5 text-[13.5px] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2";
-const textAction =
-  "flex h-[38px] items-center rounded-[10px] px-2.5 text-[13.5px] font-medium whitespace-nowrap transition-colors duration-150 hover:bg-surface-2/60";
-
+// Carte d'un objectif en cours, allégée (choix d'Antonino du 03/11 au soir, « Essentiel + menu ») :
+// le titre, puis la discipline et le compte à rebours, puis la date et les précisions en gris ; toutes
+// les actions dans le menu « ··· ». La carte jaune signale l'objectif principal (et le mot, pour les
+// lecteurs d'écran). La description se lit dans « Modifier ».
 function GoalCard({
   organizationId,
   athleteId,
@@ -138,82 +114,44 @@ function GoalCard({
 }) {
   const title = goalTitle(goal);
   const main = goal.priority === "main";
-  const outlined = `${outlinedAction} ${main ? "bg-surface" : ""}`;
+  const details = [
+    goal.targetDate ? formatDate(goal.targetDate) : null,
+    ...goalExtras(goal),
+  ].filter((part): part is string => Boolean(part));
+  const discipline = goalDiscipline(goal.type);
 
   return (
-    // L'objectif principal est la seule carte jaune (maquette « Sportifs », page 2f).
     <article
-      className={`flex flex-col gap-2.5 rounded-2xl p-[18px] ${
+      className={`flex items-start gap-3 rounded-2xl p-[18px] ${
         main ? "bg-goal-main inset-ring inset-ring-goal-main-line" : "inset-ring inset-ring-line"
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <p
-            className={`text-[11.5px] leading-[14.5px] font-semibold tracking-[0.08em] uppercase ${
-              main ? "text-violet-text" : "text-faint"
-            }`}
-          >
-            Objectif {goalPriorityLabels[goal.priority]}
-            {goal.competitionName ? " · Compétition" : ""}
-          </p>
-          <h3 className="text-[18px] leading-[22.5px] font-semibold tracking-[-0.015em] break-words">
-            {title}
-          </h3>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <h3 className="text-[16.5px] leading-[1.3] font-semibold tracking-[-0.01em] break-words">
+          <span className="sr-only">{goalPriorityLabels[goal.priority]} : </span>
+          {title}
+        </h3>
+        {/* Discipline et compte à rebours (ligne courte : elle tient sur un téléphone), puis la date
+            et les précisions en gris. */}
+        <p className="text-[13.5px] leading-[1.5] text-text-2">
+          <DisciplineLabel goal={goal} />
+          {discipline ? " · " : ""}
+          {goal.targetDate ? <Countdown today={today} targetDate={goal.targetDate} /> : "sans date"}
+        </p>
+        {details.length > 0 ? (
           <p className={`text-[13px] leading-[1.5] ${main ? "text-goal-main-text" : "text-muted"}`}>
-            <DisciplineLabel goal={goal} />
-            {goalDiscipline(goal.type) ? " · " : ""}
-            {goalDetails(goal)}
+            {details.join(" · ")}
           </p>
-        </div>
-        {goal.targetDate ? <Countdown today={today} targetDate={goal.targetDate} /> : null}
-      </div>
-      {goal.description ? (
-        <p className="text-[14px] leading-[1.5] text-text-2">{goal.description}</p>
-      ) : null}
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <EditGoalButton
-          organizationId={organizationId}
-          athleteId={athleteId}
-          goal={goal}
-          title={title}
-          today={today}
-          otherMain={hasMain && goal.priority !== "main"}
-          className={outlined}
-        />
-        <form action={setGoalStatus.bind(null, organizationId, athleteId, goal.id, "achieved")}>
-          <button type="submit" aria-label={`Atteint : ${title}`} className={outlined}>
-            Atteint
-          </button>
-        </form>
-        <form action={setGoalStatus.bind(null, organizationId, athleteId, goal.id, "dropped")}>
-          <button
-            type="submit"
-            aria-label={`Abandonné : ${title}`}
-            className={`${textAction} text-text-2`}
-          >
-            Abandonné
-          </button>
-        </form>
-        {goal.priority === "secondary" ? (
-          <form action={makeGoalMain.bind(null, organizationId, athleteId, goal.id)}>
-            <button
-              type="submit"
-              aria-label={`Rendre principal : ${title}`}
-              className={`${textAction} text-violet-text`}
-            >
-              Rendre principal
-            </button>
-          </form>
         ) : null}
-        <span aria-hidden className="flex-1" />
-        <DeleteGoalButton
-          organizationId={organizationId}
-          athleteId={athleteId}
-          goal={goal}
-          className={main ? "text-goal-main-icon" : "text-faint"}
-        />
       </div>
+      <GoalMenu
+        organizationId={organizationId}
+        athleteId={athleteId}
+        goal={goal}
+        title={title}
+        today={today}
+        otherMain={hasMain && goal.priority !== "main"}
+      />
     </article>
   );
 }
@@ -221,7 +159,7 @@ function GoalCard({
 // Onglet « Objectifs » de la fiche (P2-02 partie 2), d'après la maquette « Sportifs » du 03/11/2026
 // (page 2f) : la carte des objectifs (principal en jaune, secondaires, objectifs passés repliés),
 // puis la carte « Ajouter un objectif ». Serveur : lit les objectifs, déjà filtrés par la RLS. Les
-// compteurs (J-45) sont calculés depuis la date du jour à Bruxelles.
+// comptes à rebours sont calculés depuis la date du jour à Bruxelles.
 export async function GoalsSection({
   organizationId,
   athleteId,

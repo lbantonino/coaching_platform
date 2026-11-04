@@ -330,8 +330,17 @@ function ReferencesSection({
   references: ReferenceEntry[];
   editHref: string;
 }) {
-  // Deux repères dans la vue d'ensemble (maquette) ; tous sont dans l'onglet Repères.
-  const shown = references.slice(0, 2);
+  // Deux repères dans la vue d'ensemble (maquette) : la dernière allure mesurée (sinon une FC) et la
+  // dernière charge, comme les cartes de l'onglet Repères, où tous les repères se retrouvent.
+  const recent = [...references].sort((a, b) => b.measuredOn.localeCompare(a.measuredOn));
+  const first =
+    recent.find((entry) => entry.kind.startsWith("pace_")) ??
+    recent.find((entry) => entry.kind.startsWith("hr_")) ??
+    recent[0];
+  const second =
+    recent.find((entry) => entry !== first && entry.kind === "strength_load") ??
+    recent.find((entry) => entry !== first);
+  const shown = [first, second].filter((entry): entry is ReferenceEntry => entry !== undefined);
   return (
     <Section
       id="overview-references"

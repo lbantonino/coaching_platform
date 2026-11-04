@@ -59,6 +59,18 @@ describe("buildReferenceSeries", () => {
     expect(vma.points[2].day - vma.points[1].day).toBe(88);
   });
 
+  it("inverse aussi l'axe de la FC de repos (plus basse = mieux), pas celui de la FC max", () => {
+    const hr = buildReferenceSeries([
+      entry({ kind: "hr_rest", bpm: 52, measuredOn: "2026-10-30" }),
+      entry({ kind: "hr_max", bpm: 189, measuredOn: "2026-09-01" }),
+      entry({ kind: "hr_rest", bpm: 58, measuredOn: "2026-05-05" }),
+    ]);
+    const rest = hr.find((item) => item.kind === "hr_rest")!;
+    expect(rest.inverted).toBe(true);
+    expect(rest.progress).toBe("6 bpm de moins depuis le 5 mai 2026");
+    expect(hr.find((item) => item.kind === "hr_max")!.inverted).toBe(false);
+  });
+
   it("inverse l'axe des allures et décrit le progrès en mots", () => {
     const fiveK = series[1];
     expect(fiveK.inverted).toBe(true);

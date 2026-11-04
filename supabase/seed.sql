@@ -278,7 +278,41 @@ values
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', 'strength_load', null, null, null,
    'Squat', 105, 1, 'test', '2026-08-15', null, 'a0000000-0000-4000-8000-00000000000a'),
   ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000005', 'strength_load', null, null, null,
-   'Soulevé de terre', 130, 1, 'test', '2026-06-20', null, 'a0000000-0000-4000-8000-00000000000a');
+   'Soulevé de terre', 130, 1, 'test', '2026-06-20', null, 'a0000000-0000-4000-8000-00000000000a'),
+  -- Inès (demande d'Antonino du 03/11) : plusieurs repères avec un historique, pour comparer les
+  -- courbes de l'onglet Repères (seuil, endurance, FC repos et max, charges).
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_threshold', 292, 292, null,
+   null, null, null, 'test', '2026-05-12', 'Test de 20 min au seuil.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_threshold', 286, 286, null,
+   null, null, null, 'observed', '2026-07-07', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_threshold', 281, 281, null,
+   null, null, null, 'test', '2026-09-01', 'Test de 20 min au seuil.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_threshold', 276, 276, null,
+   null, null, null, 'test', '2026-10-27', 'Test de 20 min au seuil : 4:36 min/km tenus.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_easy', 365, 390, null,
+   null, null, null, 'coach_estimate', '2026-06-10', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'pace_easy', 350, 375, null,
+   null, null, null, 'observed', '2026-10-20', 'Sortie longue à 140 bpm.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hr_rest', null, null, 58,
+   null, null, null, 'observed', '2026-05-05', 'Mesurée au réveil.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hr_rest', null, null, 55,
+   null, null, null, 'observed', '2026-08-04', 'Mesurée au réveil.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hr_rest', null, null, 52,
+   null, null, null, 'observed', '2026-10-30', 'Mesurée au réveil.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'hr_max', null, null, 189,
+   null, null, null, 'observed', '2026-09-01', 'Relevée en fin de test au seuil.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'strength_load', null, null, null,
+   'Back squat', 60, 5, 'test', '2026-05-20', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'strength_load', null, null, null,
+   'Back squat', 65, 5, 'test', '2026-07-15', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'strength_load', null, null, null,
+   'Back squat', 70, 5, 'test', '2026-09-10', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'strength_load', null, null, null,
+   'Back squat', 72.5, 5, 'test', '2026-10-28', '5 répétitions propres, RPE 8.', 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'strength_load', null, null, null,
+   'Soulevé de terre', 85, 3, 'test', '2026-06-01', null, 'a0000000-0000-4000-8000-00000000000a'),
+  ('0a000000-0000-4000-8000-0000000000a1', 'da000000-0000-4000-8000-000000000003', 'strength_load', null, null, null,
+   'Soulevé de terre', 95, 3, 'test', '2026-09-15', null, 'a0000000-0000-4000-8000-00000000000a');
 
 -- Records personnels (P2-02 partie 4) : performances inventées, cohérentes avec les fiches.
 -- Le record d'une épreuve est calculé (meilleur temps) ; les anciennes performances restent.

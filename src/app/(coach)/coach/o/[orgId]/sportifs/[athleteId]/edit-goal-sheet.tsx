@@ -1,7 +1,6 @@
 "use client";
 
-import { Pencil } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 
 import { Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
@@ -12,8 +11,8 @@ import { formatRaceTime } from "@/features/records/schemas";
 
 import { GoalFields } from "./add-goal-form";
 
-// « Modifier » sur un objectif en cours (demande d'Antonino du 26/10) : la fenêtre reprend les champs
-// de l'ajout, remplis avec l'objectif. Corriger une date ou un nom ne demande plus de le supprimer.
+// « Modifier » un objectif en cours (demande d'Antonino du 26/10) : la fenêtre reprend les champs de
+// l'ajout, remplis avec l'objectif. Corriger une date ou un nom ne demande plus de le supprimer.
 const initialState: EditGoalState = { error: null, saved: 0, attempt: 0, values: null };
 
 function toForm(goal: GoalEntry): GoalFormInput {
@@ -30,14 +29,17 @@ function toForm(goal: GoalEntry): GoalFormInput {
   };
 }
 
-export function EditGoalButton({
+// Fenêtre « Modifier l'objectif », ouverte depuis le menu « ··· » de la carte (choix d'Antonino du
+// 03/11 : les actions d'un objectif sont dans ce menu).
+export function EditGoalSheet({
   organizationId,
   athleteId,
   goal,
   title,
   today,
   otherMain,
-  className,
+  open,
+  onClose,
 }: {
   organizationId: string;
   athleteId: string;
@@ -46,17 +48,16 @@ export function EditGoalButton({
   today: string;
   // Un AUTRE objectif est principal : choisir « Principal » ici le fera passer en secondaire.
   otherMain: boolean;
-  // Habillage du bouton « Modifier » (celui des boutons de la carte de l'objectif).
-  className: string;
+  open: boolean;
+  onClose: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const toast = useToast();
   // Enregistré : la fenêtre se ferme et un message le confirme.
   const [state, formAction, pending] = useActionState(
     async (previous: EditGoalState, formData: FormData) => {
       const next = await updateGoal(organizationId, athleteId, goal.id, previous, formData);
       if (next.error === null) {
-        setOpen(false);
+        onClose();
         toast("Objectif modifié.");
       }
       return next;
@@ -68,36 +69,20 @@ export function EditGoalButton({
   const minDate = goal.targetDate && goal.targetDate < today ? goal.targetDate : today;
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label={`Modifier : ${title}`}
-        className={className}
-      >
-        <Pencil aria-hidden size={13} strokeWidth={1.8} />
-        Modifier
-      </button>
-      <Sheet
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Modifier l'objectif"
-        subtitle={title}
-      >
-        {open ? (
-          <GoalFields
-            key={state.attempt}
-            idPrefix={`edit-goal-${goal.id}`}
-            formAction={formAction}
-            pending={pending}
-            minDate={minDate}
-            hasMain={otherMain}
-            error={state.error}
-            values={state.values ?? toForm(goal)}
-            submitLabel="Enregistrer"
-          />
-        ) : null}
-      </Sheet>
-    </>
+    <Sheet open={open} onClose={onClose} title="Modifier l'objectif" subtitle={title}>
+      {open ? (
+        <GoalFields
+          key={state.attempt}
+          idPrefix={`edit-goal-${goal.id}`}
+          formAction={formAction}
+          pending={pending}
+          minDate={minDate}
+          hasMain={otherMain}
+          error={state.error}
+          values={state.values ?? toForm(goal)}
+          submitLabel="Enregistrer"
+        />
+      ) : null}
+    </Sheet>
   );
 }

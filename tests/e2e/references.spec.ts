@@ -16,7 +16,17 @@ async function openNewAthleteProfile(page: Page, name: string) {
   // Le sportif enregistré, on arrive sur sa fiche (D-54).
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await openAthleteTab(page, "Repères");
-  await expect(page.getByRole("heading", { name: "Allures & repères" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Allures et repères" })).toBeVisible();
+}
+
+// Deux repères sont affichés en cartes (maquette 2g) ; tous les repères actuels, avec leur valeur, se
+// lisent dans le menu « Changer » de la première carte (Échap le referme).
+async function openReferenceMenu(page: Page) {
+  await page
+    .getByRole("button", { name: /^Changer le repère/ })
+    .first()
+    .click();
+  return page.getByRole("listbox", { name: /^Changer le repère/ });
 }
 
 async function addMeasure(
@@ -36,7 +46,7 @@ test("le coach enregistre des repères datés et conserve l'historique", async (
 }, testInfo) => {
   const name = `Repères ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   await openNewAthleteProfile(page, name);
-  const current = page.getByRole("list", { name: "Repères actuels" });
+  const cards = page.getByRole("list", { name: "Repères affichés" });
   const saved = page.getByRole("status").filter({ hasText: "Mesure ajoutée." });
 
   // Plage d'allure des PDF de référence.
@@ -44,7 +54,7 @@ test("le coach enregistre des repères datés et conserve l'historique", async (
     p.getByLabel("Allure (min/km)").fill("6:40-7:15"),
   );
   await expect(saved).toBeVisible();
-  await expect(current.getByText("6:40–7:15 min/km")).toBeVisible();
+  await expect(cards).toContainText("6:40–7:15");
 
   // Saisie ambiguë : erreur claire ET la saisie reste affichée pour être corrigée.
   await addMeasure(page, "Allure 5 km", (p) => p.getByLabel("Allure (min/km)").fill("4:5"));
@@ -62,26 +72,33 @@ test("le coach enregistre des repères datés et conserve l'historique", async (
   );
   await expect(saved).toBeVisible();
   await addMeasure(page, "Allure 5 km", (p) => p.getByLabel("Allure (min/km)").fill("4:45"));
-  await expect(current.getByText("4:45 min/km")).toBeVisible();
-  await expect(current.getByText("4:55 min/km")).toHaveCount(0);
+  let menu = await openReferenceMenu(page);
+  await expect(menu).toContainText("4:45 min/km");
+  await expect(menu).not.toContainText("4:55 min/km");
+  await page.keyboard.press("Escape");
 
   // FC et charge de référence.
   await addMeasure(page, "FC max", (p) => p.getByLabel("Fréquence cardiaque (bpm)").fill("192"));
-  await expect(current.getByText("192 bpm")).toBeVisible();
+  menu = await openReferenceMenu(page);
+  await expect(menu).toContainText("192 bpm");
+  await page.keyboard.press("Escape");
   await addMeasure(page, "Charge de référence", async (p) => {
     await p.getByLabel("Exercice").fill("Squat");
     await p.getByLabel("Charge (kg)").fill("102,5");
     await p.getByLabel(/Répétitions/).fill("5");
   });
-  await expect(current.getByText("102,5 kg × 5")).toBeVisible();
+  // La charge s'affiche dans la seconde carte.
+  await expect(cards).toContainText("102,5 kg × 5");
 
   // Historique : 5 mesures ; suppression d'une mesure erronée.
   await page.getByText("Historique et corrections (5 mesures)").click();
   const history = page.getByRole("list", { name: "Historique des repères" });
   await expect(history.getByRole("listitem")).toHaveCount(5);
   await history.getByRole("button", { name: /Supprimer la mesure FC max/ }).click();
-  await expect(current.getByText("192 bpm")).toHaveCount(0);
   await expect(page.getByText("Historique et corrections (4 mesures)")).toBeVisible();
+  menu = await openReferenceMenu(page);
+  await expect(menu).not.toContainText("192 bpm");
+  await page.keyboard.press("Escape");
 });
 
 test("le graphique montre l'évolution d'un repère dès deux mesures", async ({ page }, testInfo) => {
@@ -106,9 +123,9 @@ test("le graphique montre l'évolution d'un repère dès deux mesures", async ({
   await page.keyboard.press("ArrowLeft");
   await expect(evolution.getByText("1 septembre 2026 · Test")).toBeVisible();
 
-  // Les valeurs restent lisibles sans graphique, dans un tableau.
-  await evolution.getByText("Voir les valeurs en tableau").click();
-  const table = evolution.getByRole("table", { name: "Mesures : Squat" });
+  // Les valeurs restent lisibles sans graphique, dans un tableau (accordéon sous le graphique).
+  await page.getByText("Voir les valeurs en tableau").click();
+  const table = page.getByRole("table", { name: "Mesures : Squat" });
   await expect(table.getByRole("row")).toHaveCount(3);
   await expect(table.getByRole("cell", { name: "100 kg" })).toBeVisible();
 });
@@ -144,7 +161,6 @@ test("le coach calcule les allures depuis un test de Cooper et valide avant enre
 }, testInfo) => {
   const name = `Cooper ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   await openNewAthleteProfile(page, name);
-  const current = page.getByRole("list", { name: "Repères actuels" });
 
   await page.getByText("Calculer les allures depuis un test").click();
 
@@ -170,10 +186,12 @@ test("le coach calcule les allures depuis un test de Cooper et valide avant enre
   // Le formulaire repart de zéro (pas de double enregistrement).
   await expect(page.getByLabel("Distance parcourue en 12 min (m)")).toHaveValue("");
 
-  await expect(current.getByText("15 km/h")).toBeVisible();
-  await expect(current.getByText("5:20–6:09 min/km")).toBeVisible();
-  await expect(current.getByText("4:13 min/km")).toBeVisible();
-  await expect(current.getByText("Allure marathon")).toHaveCount(0);
+  const menu = await openReferenceMenu(page);
+  await expect(menu).toContainText("15 km/h");
+  await expect(menu).toContainText("5:20–6:09 min/km");
+  await expect(menu).toContainText("4:13 min/km");
+  await expect(menu).not.toContainText("Allure marathon");
+  await page.keyboard.press("Escape");
 
   // L'origine du calcul est tracée dans l'historique.
   await page.getByText(/Historique et corrections \(6 mesures\)/).click();

@@ -3,7 +3,13 @@
 import { useActionState, useState } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import {
+  errorTextClass,
+  ficheGridClass,
+  ficheHintClass,
+  ficheInputClass,
+  ficheLabelClass,
+} from "@/components/ui/form-styles";
 import { HYROX_CATEGORIES, hyroxCategoryLabels } from "@/features/goals/schemas";
 import { addRecord, type AddRecordState } from "@/features/records/actions";
 import {
@@ -24,8 +30,8 @@ export function AddRecordForm({ organizationId, athleteId, today }: Props) {
   );
 
   return (
-    <div className="flex flex-col gap-3 border-t border-line pt-5">
-      <h3 className="text-small font-medium">Ajouter une performance</h3>
+    <div className="flex flex-col gap-4">
+      <h3 className="text-[15px] leading-[19px] font-semibold">Ajouter une performance</h3>
       {/* Reconstruit après chaque réponse : vide après un ajout, saisie renvoyée après une erreur. */}
       <RecordFields
         key={state.attempt}
@@ -63,9 +69,10 @@ function RecordFields({
 
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="rec-event" className={labelClass}>
+      {/* Habillage de la fiche (maquette « Sportifs », page 2g). */}
+      <div className={ficheGridClass}>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor="rec-event" className={ficheLabelClass}>
             Épreuve
           </label>
           <select
@@ -73,7 +80,7 @@ function RecordFields({
             name="event"
             value={event}
             onChange={(e) => setEvent(e.target.value as RecordEvent)}
-            className={inputClass}
+            className={ficheInputClass}
           >
             {RECORD_EVENTS.map((candidate) => (
               <option key={candidate} value={candidate}>
@@ -84,15 +91,15 @@ function RecordFields({
         </div>
 
         {event === "hyrox" ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="rec-category" className={labelClass}>
+          <div className="flex min-w-0 flex-col gap-2">
+            <label htmlFor="rec-category" className={ficheLabelClass}>
               Catégorie Hyrox
             </label>
             <select
               id="rec-category"
               name="hyroxCategory"
               defaultValue={v?.hyroxCategory ?? ""}
-              className={inputClass}
+              className={ficheInputClass}
             >
               <option value="">Choisir…</option>
               {HYROX_CATEGORIES.map((category) => (
@@ -104,8 +111,8 @@ function RecordFields({
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="rec-time" className={labelClass}>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor="rec-time" className={ficheLabelClass}>
             Temps
           </label>
           <input
@@ -116,15 +123,15 @@ function RecordFields({
             placeholder={event === "run_5k" || event === "run_10k" ? "21:45" : "1:42:30"}
             defaultValue={v?.time}
             aria-describedby="rec-time-hint"
-            className={`${inputClass} font-mono`}
+            className={ficheInputClass}
           />
-          <p id="rec-time-hint" className={hintClass}>
+          <p id="rec-time-hint" className={ficheHintClass}>
             mm:ss ou h:mm:ss, temps officiel ou chrono final.
           </p>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="rec-date" className={labelClass}>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor="rec-date" className={ficheLabelClass}>
             Date de la performance
           </label>
           <input
@@ -133,22 +140,22 @@ function RecordFields({
             type="date"
             max={today}
             defaultValue={v?.achievedOn || today}
-            className={`${inputClass} font-mono`}
+            className={ficheInputClass}
           />
         </div>
 
-        <div className="flex flex-col gap-1.5 md:col-span-2">
-          <label htmlFor="rec-race" className={labelClass}>
-            Course <span className="font-normal text-muted">(facultatif)</span>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor="rec-race" className={ficheLabelClass}>
+            Course <span className="font-normal text-faint">(facultatif)</span>
           </label>
           <input
             id="rec-race"
             name="raceName"
             autoComplete="off"
             maxLength={120}
-            placeholder="Ex. : 20 km de Bruxelles, Hyrox Gent, entraînement"
+            placeholder="Ex. : 20 km de Bruxelles, Hyrox Gent"
             defaultValue={v?.raceName}
-            className={inputClass}
+            className={ficheInputClass}
           />
         </div>
       </div>
@@ -157,7 +164,11 @@ function RecordFields({
         <button
           type="submit"
           disabled={pending}
-          className={buttonClass({ variant: "inverse", size: "md" })}
+          className={buttonClass({
+            variant: "primary",
+            size: "md",
+            className: "rounded-[12px]! text-[14px]! font-medium!",
+          })}
         >
           {pending ? "Enregistrement…" : "Ajouter la performance"}
         </button>
@@ -166,7 +177,7 @@ function RecordFields({
             {error}
           </p>
         ) : justSaved ? (
-          <p role="status" className="text-small text-ok">
+          <p role="status" className="text-[13px] font-medium text-ok">
             Performance ajoutée.
           </p>
         ) : null}

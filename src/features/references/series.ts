@@ -38,7 +38,8 @@ export type ReferenceSeries = {
   title: string;
   tone: ReferenceTone;
   unit: SeriesUnit;
-  // Allure : une valeur plus petite est plus rapide, donc l'axe est inversé (le progrès monte).
+  // Allure : une valeur plus petite est plus rapide, donc l'axe est inversé (le progrès monte) ; de
+  // même pour la FC de repos (plus basse = mieux, maquette « Sportifs », page 2g).
   inverted: boolean;
   points: SeriesPoint[];
   // Graduations de l'axe vertical (valeurs et libellés), calculées ici pour que le graphique reste simple.
@@ -46,7 +47,9 @@ export type ReferenceSeries = {
   progress: string | null;
 };
 
-function seriesKey(entry: ReferenceEntry): string {
+// Clé d'un repère : son type, ou son exercice pour une charge (une courbe par exercice). Partagée par
+// les cartes et le graphique de l'onglet Repères.
+export function seriesKey(entry: Pick<ReferenceEntry, "kind" | "exercise">): string {
   return entry.kind === "strength_load"
     ? `strength_load:${entry.exercise?.trim().toLowerCase() ?? ""}`
     : entry.kind;
@@ -89,7 +92,7 @@ export function buildReferenceSeries(history: ReferenceEntry[]): ReferenceSeries
             : referenceKindLabels[entry.kind],
         tone: referenceTone(entry.kind),
         unit: plotted.unit,
-        inverted: plotted.unit === "min/km",
+        inverted: plotted.unit === "min/km" || entry.kind === "hr_rest",
         points: [],
         ticks: [],
         progress: null,

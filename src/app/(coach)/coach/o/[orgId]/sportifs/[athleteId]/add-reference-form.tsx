@@ -5,10 +5,11 @@ import { useActionState, useState } from "react";
 import { buttonClass } from "@/components/ui/button";
 import {
   errorTextClass,
-  hintClass,
-  inputClass,
-  textareaClass,
-  labelClass,
+  ficheGridClass,
+  ficheHintClass,
+  ficheInputClass,
+  ficheLabelClass,
+  ficheTextareaClass,
 } from "@/components/ui/form-styles";
 import { Segmented } from "@/components/ui/segmented";
 import { addReference, type AddReferenceState } from "@/features/references/actions";
@@ -48,8 +49,8 @@ export function AddReferenceForm({ organizationId, athleteId, today }: Props) {
   );
 
   return (
-    <div className="flex flex-col gap-3 border-t border-line pt-5">
-      <h3 className="text-small font-medium">Ajouter une mesure</h3>
+    <div className="flex flex-col gap-4">
+      <h3 className="text-[15px] leading-[19px] font-semibold">Ajouter une mesure</h3>
       {/* Reconstruit après chaque réponse : vide après un ajout, saisie renvoyée après une erreur. */}
       <ReferenceFields
         key={state.attempt}
@@ -87,11 +88,14 @@ function ReferenceFields({
   );
   const group = referenceGroup(kind);
 
+  const optional = <span className="font-normal text-faint">(facultatif)</span>;
+  // Habillage de la fiche (maquette « Sportifs », page 2g) : grille de colonnes de 240 px, la source
+  // en contrôle segmenté, la note sur toute la largeur.
   return (
     <form action={formAction} className="flex flex-col gap-4" noValidate>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="ref-kind" className={labelClass}>
+      <div className={ficheGridClass}>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor="ref-kind" className={ficheLabelClass}>
             Type de repère
           </label>
           <select
@@ -99,7 +103,7 @@ function ReferenceFields({
             name="kind"
             value={kind}
             onChange={(event) => setKind(event.target.value as ReferenceKind)}
-            className={inputClass}
+            className={ficheInputClass}
           >
             {groups.map((g) => (
               <optgroup key={g.label} label={g.label}>
@@ -114,8 +118,8 @@ function ReferenceFields({
         </div>
 
         {group === "pace" ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="ref-pace" className={labelClass}>
+          <div className="flex min-w-0 flex-col gap-2">
+            <label htmlFor="ref-pace" className={ficheLabelClass}>
               Allure (min/km)
             </label>
             <input
@@ -126,17 +130,17 @@ function ReferenceFields({
               placeholder="4:55 ou 6:40-7:15"
               defaultValue={v?.pace}
               aria-describedby="ref-pace-hint"
-              className={`${inputClass} font-mono`}
+              className={ficheInputClass}
             />
-            <p id="ref-pace-hint" className={hintClass}>
+            <p id="ref-pace-hint" className={ficheHintClass}>
               Une allure ou une plage, secondes sur deux chiffres.
             </p>
           </div>
         ) : null}
 
         {group === "hr" ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="ref-bpm" className={labelClass}>
+          <div className="flex min-w-0 flex-col gap-2">
+            <label htmlFor="ref-bpm" className={ficheLabelClass}>
               Fréquence cardiaque (bpm)
             </label>
             <input
@@ -147,15 +151,15 @@ function ReferenceFields({
               min={30}
               max={240}
               defaultValue={v?.bpm}
-              className={`${inputClass} font-mono`}
+              className={ficheInputClass}
             />
           </div>
         ) : null}
 
         {group === "strength" ? (
           <>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="ref-exercise" className={labelClass}>
+            <div className="flex min-w-0 flex-col gap-2">
+              <label htmlFor="ref-exercise" className={ficheLabelClass}>
                 Exercice
               </label>
               <input
@@ -165,44 +169,42 @@ function ReferenceFields({
                 maxLength={80}
                 placeholder="Squat, Sled push…"
                 defaultValue={v?.exercise}
-                className={inputClass}
+                className={ficheInputClass}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4 md:col-span-2">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="ref-load" className={labelClass}>
-                  Charge (kg)
-                </label>
-                <input
-                  id="ref-load"
-                  name="loadKg"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  defaultValue={v?.loadKg}
-                  className={`${inputClass} font-mono`}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="ref-reps" className={labelClass}>
-                  Répétitions <span className="font-normal text-muted">(facultatif)</span>
-                </label>
-                <input
-                  id="ref-reps"
-                  name="reps"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={100}
-                  defaultValue={v?.reps}
-                  className={`${inputClass} font-mono`}
-                />
-              </div>
+            <div className="flex min-w-0 flex-col gap-2">
+              <label htmlFor="ref-load" className={ficheLabelClass}>
+                Charge (kg)
+              </label>
+              <input
+                id="ref-load"
+                name="loadKg"
+                inputMode="decimal"
+                autoComplete="off"
+                defaultValue={v?.loadKg}
+                className={ficheInputClass}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-2">
+              <label htmlFor="ref-reps" className={ficheLabelClass}>
+                Répétitions {optional}
+              </label>
+              <input
+                id="ref-reps"
+                name="reps"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={100}
+                defaultValue={v?.reps}
+                className={ficheInputClass}
+              />
             </div>
           </>
         ) : null}
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="ref-date" className={labelClass}>
+        <div className="flex min-w-0 flex-col gap-2">
+          <label htmlFor="ref-date" className={ficheLabelClass}>
             Date de la mesure
           </label>
           <input
@@ -211,41 +213,50 @@ function ReferenceFields({
             type="date"
             max={today}
             defaultValue={v?.measuredOn || today}
-            className={`${inputClass} font-mono`}
+            className={ficheInputClass}
           />
         </div>
-      </div>
 
-      <Segmented
-        name="source"
-        legend="Source"
-        defaultValue={(v?.source as "test" | "observed" | "coach_estimate" | undefined) || "test"}
-        options={[
-          { value: "test", label: "Test" },
-          { value: "observed", label: "Constaté" },
-          { value: "coach_estimate", label: "Estimation coach" },
-        ]}
-      />
+        <div className="col-span-full flex min-w-0 flex-col gap-2 [&>fieldset]:self-start">
+          <Segmented
+            name="source"
+            legend="Source"
+            look="track"
+            defaultValue={
+              (v?.source as "test" | "observed" | "coach_estimate" | undefined) || "test"
+            }
+            options={[
+              { value: "test", label: "Test" },
+              { value: "observed", label: "Constaté" },
+              { value: "coach_estimate", label: "Estimation coach" },
+            ]}
+          />
+        </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="ref-note" className={labelClass}>
-          Note privée du coach <span className="font-normal text-muted">(facultatif)</span>
-        </label>
-        <textarea
-          id="ref-note"
-          name="note"
-          rows={2}
-          maxLength={500}
-          defaultValue={v?.note}
-          className={textareaClass}
-        />
+        <div className="col-span-full flex min-w-0 flex-col gap-2">
+          <label htmlFor="ref-note" className={ficheLabelClass}>
+            Note privée du coach {optional}
+          </label>
+          <textarea
+            id="ref-note"
+            name="note"
+            rows={2}
+            maxLength={500}
+            defaultValue={v?.note}
+            className={ficheTextareaClass}
+          />
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4">
         <button
           type="submit"
           disabled={pending}
-          className={buttonClass({ variant: "inverse", size: "md" })}
+          className={buttonClass({
+            variant: "primary",
+            size: "md",
+            className: "rounded-[12px]! text-[14px]! font-medium!",
+          })}
         >
           {pending ? "Enregistrement…" : "Ajouter la mesure"}
         </button>
@@ -254,7 +265,7 @@ function ReferenceFields({
             {error}
           </p>
         ) : justSaved ? (
-          <p role="status" className="text-small text-ok">
+          <p role="status" className="text-[13px] font-medium text-ok">
             Mesure ajoutée.
           </p>
         ) : null}
