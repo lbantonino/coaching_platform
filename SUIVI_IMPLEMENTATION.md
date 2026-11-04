@@ -32,6 +32,28 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### TVA facultative sur un paiement ou une dépense (D-118)
+```
+Date : 2026-11-04
+Question d'Antonino : pourquoi la TVA est-elle obligatoire dans « Nouveau paiement » ? Vérifié : aucun
+  interrupteur n'a jamais existé (historique Git, boîte 04 du kit) ; le taux libre acceptait 0.
+new-payment-sheet.tsx : organisation sans TVA (taux habituel 0) → ni taux ni « TVAC », champ caché
+  vatRate=0, aide « Le montant que tu as reçu. », sous-titre sans « TVA comprise » ; avec TVA → carte
+  « Appliquer la TVA » (DlgCheckCard, cochée par défaut) ; décochée : taux caché (vatRate=0), « € »,
+  aide « Sans TVA : le montant reçu compte tel quel. » ; recochée : taux habituel ; après une erreur,
+  un taux 0 revient décoché.
+expense-sheet.tsx : même carte pour un coach soumis à la TVA (« Décoche pour une dépense sans TVA. »).
+comptabilite/page.tsx : ligne d'un paiement : « HTVA (TVA n %) » seulement si taux > 0 ; « Sans TVA »
+  chez un coach soumis ; rien chez un coach sans TVA (comme les dépenses).
+Tests : 2 nouveaux parcours (accounting.spec.ts) : paiement et dépense sans TVA (coach A), aucune TVA
+  visible pour un coach sans TVA (coach B). Vérifié au navigateur (ordinateur et téléphone, avec et
+  sans TVA, case décochée puis recochée).
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright 177 réussis, 17 ignorés, 2 échecs
+  instables sans lien (recherche du téléphone, déjà connue ; favori de la Bibliothèque, ordinateur :
+  le retrait n'était pas encore enregistré au rechargement, sous charge) ; les deux relancés seuls :
+  18 sur 18. Base remise à zéro, puis TVA de l'organisation A remise à 0 % (réglage d'Antonino).
+```
+
 ### Navigation du téléphone harmonisée (D-117)
 ```
 Date : 2026-11-04

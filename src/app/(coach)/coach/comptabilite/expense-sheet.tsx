@@ -37,8 +37,8 @@ import type { CategoryResult } from "@/features/documents/actions";
 
 // « Nouvelle dépense » (D-73, décisions d'Antonino du 29/10/2026) : description, catégorie (liste du
 // coach, modifiable ici), montant PAYÉ TVA comprise, taux de TVA (coach soumis : pré-rempli avec son
-// taux habituel, la TVA récupérable s'affiche), date, et « Se répète chaque mois » (loyer,
-// abonnement) avec une fin facultative.
+// taux habituel, la TVA récupérable s'affiche ; « Appliquer la TVA » décochée : dépense sans TVA,
+// D-118), date, et « Se répète chaque mois » (loyer, abonnement) avec une fin facultative.
 type Action = (previous: ExpenseFormState, formData: FormData) => Promise<ExpenseFormState>;
 export type ExpenseCategoryActions = {
   create: (name: string) => Promise<CategoryResult>;
@@ -191,13 +191,21 @@ function Fields({
   onCancel: () => void;
 }) {
   const formId = useId();
+  const { vatRate: habitual } = useMoney();
+  // « Appliquer la TVA » (D-118, coach soumis à la TVA) : décochée, la dépense est notée sans TVA
+  // (taux 0) ; après une erreur, la saisie revient ; recocher redonne le taux habituel.
+  const initialRate = parseVatRate(v.vatRate);
+  const [applyVat, setApplyVat] = useState(initialRate !== 0);
+  const withVat = vatSubject && applyVat;
   const [amount, setAmount] = useState(v.amount);
-  const [vatRate, setVatRate] = useState(v.vatRate);
+  const [vatRate, setVatRate] = useState(
+    initialRate === 0 ? String(habitual).replace(".", ",") : v.vatRate,
+  );
   const [monthly, setMonthly] = useState(v.repeatsMonthly);
   const cents = parseAmount(amount);
   const rate = parseVatRate(vatRate);
   // Montant payé, TVA comprise : on en déduit HTVA et TVA.
-  const totals = cents !== null && rate !== null ? splitVat(cents, rate) : null;
+  const totals = withVat && cents !== null && rate !== null ? splitVat(cents, rate) : null;
   // Kit (boîte 27) : grille de 12 colonnes, montant et TVA à suffixe, aide sous les montants,
   // répétition en carte à cocher, boutons dans le pied fixe.
   return (
@@ -245,13 +253,13 @@ function Fields({
                 Montant payé
                 <span className="sr-only">
                   {" "}
-                  ({vatSubject ? "TVAC, " : ""}
+                  ({withVat ? "TVAC, " : ""}
                   {currency})
                 </span>
               </>
             }
             htmlFor="expense-amount"
-            half={vatSubject}
+            half={withVat}
           >
             <DlgSuffixInput
               id="expense-amount"
@@ -262,11 +270,11 @@ function Fields({
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
               aria-describedby="expense-amount-hint"
-              suffix={vatSubject ? `${currencySymbol(currency)} TVAC` : currencySymbol(currency)}
+              suffix={withVat ? `${currencySymbol(currency)} TVAC` : currencySymbol(currency)}
             />
             <FieldCheck htmlFor="expense-amount" rule="amount" />
           </DlgField>
-          {vatSubject ? (
+          {withVat ? (
             <DlgField label="Taux de TVA" htmlFor="expense-vat" half>
               <DlgSuffixInput
                 id="expense-vat"
@@ -285,10 +293,20 @@ function Fields({
           <DlgHint id="expense-amount-hint" live>
             {!vatSubject
               ? "Le montant que tu as payé."
-              : totals && rate !== null
-                ? `${format(totals.exclCents)} HTVA + ${format(totals.vatCents)} de TVA récupérable (${formatVatRate(rate)}).`
-                : "TVA comprise : la TVA récupérable se calcule toute seule."}
+              : !withVat
+                ? "Sans TVA : le montant payé compte tel quel."
+                : totals && rate !== null
+                  ? `${format(totals.exclCents)} HTVA + ${format(totals.vatCents)} de TVA récupérable (${formatVatRate(rate)}).`
+                  : "TVA comprise : la TVA récupérable se calcule toute seule."}
           </DlgHint>
+          {vatSubject ? (
+            <DlgCheckCard
+              checked={applyVat}
+              onChange={(event) => setApplyVat(event.target.checked)}
+              label="Appliquer la TVA"
+              description="Décoche pour une dépense sans TVA."
+            />
+          ) : null}
 
           <DlgField
             label={monthly ? "Première dépense le" : "Payée le"}
