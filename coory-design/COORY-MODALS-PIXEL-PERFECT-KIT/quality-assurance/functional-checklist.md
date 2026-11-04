@@ -25,3 +25,10 @@ Vérifié sur la coque partagée (menu « Créer », formulaire « Nouvelle tâc
 ### Phase B : menus simples 36, 30, 17, 05, 22, 09 (04/11/2026)
 - [x] chaque action garde son appel métier (notifications, paiement, séance, documents, objectifs, « Créer pour »)
 - [x] tests de parcours concernés : 57 réussis, 9 ignorés, 0 échec (comptabilité, agenda, vue d'ensemble, documents, objectifs, notifications, séances, audit UX)
+
+### Phase C : confirmations 11, 12, 18, 20, 25, 29, 31, 35 (04/11/2026)
+- [x] appels de suppression inchangés ; seuls les textes (nom cité en gras) et les icônes changent
+
+### Phase D : menus à sélection et sous-menus 07, 08, 14, 15, 06, 13, 01 (04/11/2026)
+- [x] retour sous-menu : 06 → 07 / 08 et 13 → 14 / 15, flèche ← vers le menu de départ ; 14 / 15 sans retour depuis la pastille
+- [x] changement de statut et de programme : mêmes appels qu'avant (setAthletesStatus, setAthletesProgramType)

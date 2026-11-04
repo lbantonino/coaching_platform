@@ -40,6 +40,7 @@ export function AthleteHeader({
     status: athlete.status,
     programType: athlete.programType,
     hasAccount: athlete.hasAccount,
+    level: athlete.level ? athleteLevelLabels[athlete.level] : null,
   };
 
   return (
@@ -100,6 +101,7 @@ export function AthleteIdentity({
     status: athlete.status,
     programType: athlete.programType,
     hasAccount: athlete.hasAccount,
+    level: athlete.level ? athleteLevelLabels[athlete.level] : null,
   };
   const canInvite = !athlete.hasAccount && athlete.status !== "archived";
   // Le point de séparation des informations (« · »), en gris clair.

@@ -78,7 +78,9 @@ export function NewExpenseButton({
         title="Catégories de dépenses"
         subtitle="Supprimer une catégorie garde ses dépenses : elles deviennent « sans catégorie »."
       >
-        {managing ? <CategoryManager categories={categories} actions={categoryActions} /> : null}
+        {managing ? (
+          <CategoryManager categories={categories} actions={categoryActions} items="dépenses" />
+        ) : null}
       </Sheet>
     </>
   );

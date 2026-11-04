@@ -3,7 +3,7 @@
 const { chromium, devices } = require("@playwright/test");
 const path = require("path");
 const OUT = process.argv[2];
-const ONLY = (process.argv[3] || "36,30,17,05,22,09").split(",");
+const ONLY = (process.argv[3] || "36,30,17,05,22,09,11,12,18,20,25,29,31,35,07,08,14,15,06,13,01").split(",");
 const APP = "http://localhost:3000";
 const KIT = "http://127.0.0.1:8766/Coory%20Boites.dc.html";
 
@@ -72,6 +72,119 @@ const openers = {
     await p.locator('button[aria-label^="Actions : "]').first().click();
   },
 };
+// Confirmations (phase C) : ouvrir le déclencheur, puis attendre la confirmation par son titre.
+const confirmOf = async (p, title) => p.getByRole("dialog", { name: title }).waitFor();
+const phone = (p) => (p.viewportSize()?.width ?? 0) < 1024;
+Object.assign(openers, {
+  "11": async (p) => {
+    await openers["09"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Supprimer/ }).click();
+    await confirmOf(p, "Supprimer cet objectif ?");
+  },
+  "12": async (p) => {
+    await goFiche(p, "?onglet=notes");
+    await p.getByRole("button", { name: "Retirer l'accord", exact: true }).first().click();
+    await confirmOf(p, "Retirer l'accord ?");
+  },
+  "18": async (p) => {
+    await p.goto(`${APP}/coach`);
+    await p.waitForTimeout(800);
+    const href = await p.locator('a[href*="/agenda/seances/"]').filter({ hasText: "Piste du mercredi" }).first().getAttribute("href");
+    await p.goto(`${APP}${href}`);
+    await p.waitForTimeout(800);
+    if (phone(p)) {
+      await p.getByRole("button", { name: "Supprimer la séance" }).filter({ visible: true }).first().click();
+    } else {
+      await p.getByRole("button", { name: "Plus d'actions" }).filter({ visible: true }).first().click();
+      await p.locator("dialog[open]").getByRole("button", { name: /^Supprimer la séance/ }).click();
+    }
+    await confirmOf(p, "Supprimer cette séance ?");
+  },
+  "20": async (p) => {
+    await p.goto(`${APP}/coach/taches`);
+    await p.getByRole("button", { name: /Préparer le bloc 2/ }).first().click();
+    await p.getByRole("dialog", { name: "Modifier la tâche" }).getByRole("button", { name: "Supprimer" }).click();
+    await confirmOf(p, "Supprimer cette tâche ?");
+  },
+  "25": async (p) => {
+    await openers["22"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Supprimer/ }).click();
+    await confirmOf(p, "Supprimer ce document ?");
+  },
+  "29": async (p) => {
+    await p.goto(`${APP}/coach/comptabilite`);
+    await p.getByRole("button", { name: "Nouvelle dépense" }).filter({ visible: true }).first().click();
+    await p.getByRole("button", { name: "Gérer les catégories" }).click();
+    const sheet = p.getByRole("dialog", { name: "Catégories de dépenses" });
+    await sheet.getByRole("button", { name: /^Supprimer la catégorie / }).first().click();
+    await confirmOf(p, "Supprimer cette catégorie ?");
+  },
+  "31": async (p) => {
+    await openers["30"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Supprimer/ }).click();
+    await confirmOf(p, "Supprimer ce paiement ?");
+  },
+  "35": async (p) => {
+    await p.goto(`${APP}/coach/profil?onglet=securite`);
+    await p.getByRole("button", { name: "Déconnecter partout" }).first().click();
+    await confirmOf(p, "Déconnecter tous les appareils ?");
+  },
+});
+
+// Menus à sélection et sous-menus (phase D).
+const goList = async (p) => {
+  await p.goto(`${APP}/coach`);
+  const org = await p.evaluate(() => document.querySelector('a[href*="/coach/o/"]')?.getAttribute("href")?.split("/")[3]);
+  await p.goto(`${APP}/coach/o/${org}/sportifs`);
+  await p.waitForTimeout(800);
+};
+Object.assign(openers, {
+  "06": async (p) => {
+    await goFiche(p, "");
+    await p.getByRole("button", { name: "Actions pour Inès Benali" }).filter({ visible: true }).first().click();
+  },
+  "07": async (p) => {
+    await openers["06"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Changer le statut/ }).click();
+    await p.getByRole("dialog", { name: "Statut de Inès Benali" }).waitFor();
+  },
+  "08": async (p) => {
+    await openers["06"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Changer le programme/ }).click();
+    await p.getByRole("dialog", { name: "Programme de Inès Benali" }).waitFor();
+  },
+  "13": async (p) => {
+    await goList(p);
+    await p.getByRole("button", { name: "Actions pour Antoine Maes" }).filter({ visible: true }).first().click();
+  },
+  // 14 et 15 : depuis la pastille sur ordinateur (sans retour), depuis « ··· » sur téléphone (avec retour).
+  "14": async (p) => {
+    if (phone(p)) {
+      await openers["13"](p);
+      await p.locator("dialog[open]").getByRole("button", { name: /^Changer le statut/ }).click();
+    } else {
+      await goList(p);
+      await p.getByRole("button", { name: /Changer le statut de Antoine Maes$/ }).filter({ visible: true }).first().click();
+    }
+    await p.getByRole("dialog", { name: "Statut de Antoine Maes" }).waitFor();
+  },
+  "15": async (p) => {
+    if (phone(p)) {
+      await openers["13"](p);
+      await p.locator("dialog[open]").getByRole("button", { name: /^Changer le programme/ }).click();
+    } else {
+      await goList(p);
+      await p.getByRole("button", { name: /Changer le programme de Antoine Maes$/ }).filter({ visible: true }).first().click();
+    }
+    await p.getByRole("dialog", { name: "Programme de Antoine Maes" }).waitFor();
+  },
+  "01": async (p) => {
+    await p.goto(`${APP}/coach`);
+    await p.waitForTimeout(600);
+    await p.getByRole("button", { name: "Créer", exact: true }).filter({ visible: true }).first().click();
+  },
+});
+
 async function goFiche(p, query) {
   await p.goto(`${APP}/coach`);
   const org = await p.evaluate(() => document.querySelector('a[href*="/coach/o/"]')?.getAttribute("href")?.split("/")[3]);
@@ -114,13 +227,16 @@ async function goFiche(p, query) {
       let app = null;
       try {
         await openers[n](p);
-        const dialog = p.locator("dialog[open]");
+        // La dernière boîte ouverte (une confirmation s'ouvre par-dessus une autre boîte).
+        const dialog = p.locator("dialog[open]").last();
         await dialog.waitFor();
         await p.waitForTimeout(700);
         app = await dialog.evaluate((d, src) => eval(src)(d), `(${measure.toString()})`);
         await p.screenshot({ path: path.join(OUT, `${shot}.png`) });
-        await p.keyboard.press("Escape");
-        await p.waitForTimeout(300);
+        for (let k = 0; k < 3 && (await p.locator("dialog[open]").count()) > 0; k++) {
+          await p.keyboard.press("Escape");
+          await p.waitForTimeout(350);
+        }
       } catch (error) {
         app = { size: "—", items: [`(${error.message.split("\n")[0]})`] };
       }

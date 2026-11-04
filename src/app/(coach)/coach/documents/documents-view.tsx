@@ -36,6 +36,7 @@ import {
 import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
 import { ActionMenu, ConfirmDialog, PanelDialog, Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
+import { Quoted } from "@/components/ui/quoted";
 import {
   DOCUMENT_ACCEPT,
   DOCUMENT_MAX_BYTES,
@@ -458,7 +459,9 @@ export function DocumentsView({
         title="Gérer les catégories"
         subtitle="Supprimer une catégorie ne supprime pas ses documents : ils deviennent « sans catégorie »."
       >
-        {managing ? <CategoryManager categories={categories} actions={categoryActions} /> : null}
+        {managing ? (
+          <CategoryManager categories={categories} actions={categoryActions} items="documents" />
+        ) : null}
       </Sheet>
 
       <ConfirmDialog
@@ -469,9 +472,12 @@ export function DocumentsView({
         title="Supprimer ce document ?"
         confirmLabel={pendingDelete ? "Suppression…" : "Supprimer"}
       >
-        {deleting
-          ? `« ${deleting.name} » et son fichier seront supprimés. Ce n'est pas réversible.`
-          : null}
+        {deleting ? (
+          <>
+            <Quoted>{deleting.name}</Quoted> et son fichier seront supprimés. Ce n&apos;est pas
+            réversible.
+          </>
+        ) : null}
       </ConfirmDialog>
     </>
   );

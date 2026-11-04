@@ -4,7 +4,7 @@ import { Ellipsis, Layers, MessageSquare, Pencil, RefreshCw, Send, Target } from
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { disciplineIcons } from "@/components/ui/discipline-icon";
+import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
 import { ActionMenu } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import { DISCIPLINES, disciplineLabels, type Discipline } from "@/domain/training/discipline";
@@ -30,6 +30,8 @@ export function AthleteFicheMenu({
     status: AthleteStatus;
     programType: Discipline | null;
     hasAccount: boolean;
+    // Niveau en toutes lettres (« Confirmé »), pour le sous-titre du menu.
+    level: string | null;
   };
   basePath: string;
   // Téléphone : bouton de 44 px dans la carte d'identité ; ordinateur : 32 px dans l'en-tête.
@@ -53,6 +55,7 @@ export function AthleteFicheMenu({
       ? statusChoices.map((choice) => ({
           label: choice.label,
           icon: choice.icon,
+          tone: choice.tone,
           selected: athlete.status === choice.status,
           onSelect: () => {
             if (athlete.status === choice.status) return;
@@ -65,7 +68,8 @@ export function AthleteFicheMenu({
       : menu === "type"
         ? DISCIPLINES.map((discipline) => ({
             label: disciplineLabels[discipline],
-            icon: disciplineIcons[discipline],
+            icon: dialogDisciplineIcons[discipline],
+            tone: discipline,
             selected: athlete.programType === discipline,
             onSelect: () => {
               if (athlete.programType === discipline) return;
@@ -76,10 +80,16 @@ export function AthleteFicheMenu({
             },
           }))
         : [
-            { label: "Changer le statut", icon: RefreshCw, onSelect: () => setMenu("status") },
+            {
+              label: "Changer le statut",
+              icon: RefreshCw,
+              chevron: true,
+              onSelect: () => setMenu("status"),
+            },
             {
               label: "Changer le programme",
               icon: Layers,
+              chevron: true,
               onSelect: () => setMenu("type"),
             },
             {
@@ -136,6 +146,18 @@ export function AthleteFicheMenu({
             : menu === "type"
               ? `Programme de ${athlete.name}`
               : athlete.name
+        }
+        // Kit (boîte 06) : « Actif · Confirmé · Hyrox » sous le nom.
+        subtitle={
+          menu === "actions"
+            ? [
+                statusChoices.find((choice) => choice.status === athlete.status)?.label,
+                athlete.level,
+                athlete.programType ? disciplineLabels[athlete.programType] : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : undefined
         }
         items={items}
       />

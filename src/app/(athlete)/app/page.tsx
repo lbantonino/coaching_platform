@@ -110,6 +110,7 @@ function HealthConsentCard({ consent }: { consent: OwnHealthConsent }) {
               title="Retirer ton accord ?"
               message="Ce que ton coach a noté sur tes contraintes physiques sera effacé."
               confirmLabel="Retirer mon accord"
+              icon="shield"
               className={buttonClass({ variant: "outline", size: "md" })}
             >
               Retirer mon accord

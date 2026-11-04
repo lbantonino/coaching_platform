@@ -32,6 +32,38 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Boîtes de dialogue, Phase D : menus à sélection et sous-menus (D-111)
+```
+Date : 2026-11-04
+Boîtes : 07 / 14 (statut), 08 / 15 (programme), 06 (« ··· » de la fiche), 13 (« ··· » de la liste),
+  01 (Créer).
+Coque : teintes de tuile muted, running, strength, hyrox, hybrid (jetons --dlg-*-tile, deux thèmes).
+Icônes : src/components/ui/kit-icons.ts (RunnerIcon, HybridIcon via createLucideIcon, tracés du
+  kit ; dialogDisciplineIcons). discipline-icon.tsx supprimé (plus utilisé).
+Données : statusChoices porte la teinte ; sous-titre « statut · niveau · discipline » (niveau ajouté
+  au menu de la fiche, ligne de la liste) ; chevrons ; « Créer » : sous-titre + 5 descriptions.
+Mesure : 0 px d'écart sur les 7 boîtes, ordinateur et téléphone.
+Tests : suite Playwright complète 175 réussis + 17 ignorés, 0 échec (la recherche sur téléphone,
+  en échec avant la phase A, est passée : échec intermittent, course au chargement).
+```
+
+### Boîtes de dialogue, Phase C : les confirmations (D-110)
+```
+Date : 2026-11-04
+Boîtes : 11 (objectif), 12 (accord), 18 (séance), 20 (tâche), 25 (document), 29 (catégorie),
+  31 (paiement), 35 (déconnexion de tous les appareils).
+ConfirmDialog : prop `icon` (Lucide), trait 1,9, titre sans équilibrage (comme la source),
+  « Annuler » en 15 px (dlgCancelButtonClass) avec autoFocus ; boutons du kit en interligne normal
+  (0,7 px d'écart corrigé). ConfirmSubmitButton : `icon` par NOM ("shield" | "logout"), car les
+  pages serveur ne peuvent pas passer une fonction à un composant client. Nouveau : Quoted
+  (src/components/ui/quoted.tsx, sans "use client", utilisable côté serveur).
+Textes : nom en gras en tête (objectif, séance, tâche, document, catégorie). Défaut corrigé :
+  CategoryManager prend `items` ("documents" | "dépenses") pour « ses … restent » et le nom de sa
+  liste.
+Mesure : 0 px d'écart sur les 8 boîtes, ordinateur et téléphone (outils/compare-boites.cjs).
+Tests : Vitest 264/264 ; Playwright 71 réussis + 11 ignorés (13 fichiers concernés).
+```
+
 ### Boîtes de dialogue, Phase B : les menus simples (D-109)
 ```
 Date : 2026-11-04

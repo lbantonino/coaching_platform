@@ -65,6 +65,15 @@
   --color-dlg-ok-tile: var(--dlg-ok-tile);
   --color-dlg-warn: var(--dlg-warn);
   --color-dlg-warn-tile: var(--dlg-warn-tile);
+  --color-dlg-muted-tile: var(--dlg-muted-tile);
+  --color-dlg-run: var(--dlg-run);
+  --color-dlg-run-tile: var(--dlg-run-tile);
+  --color-dlg-strength: var(--dlg-strength);
+  --color-dlg-strength-tile: var(--dlg-strength-tile);
+  --color-dlg-hyrox: var(--dlg-hyrox);
+  --color-dlg-hyrox-tile: var(--dlg-hyrox-tile);
+  --color-dlg-hybrid: var(--dlg-hybrid);
+  --color-dlg-hybrid-tile: var(--dlg-hybrid-tile);
   --color-ok: var(--ok);
   --color-ok-soft: var(--ok-soft);
   --color-ok-line: var(--ok-line);

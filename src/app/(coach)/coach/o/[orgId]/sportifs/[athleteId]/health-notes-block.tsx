@@ -74,6 +74,7 @@ export async function HealthNotesBlock({
                   title="Retirer l'accord ?"
                   message="Les blessures et points d'attention notés seront effacés."
                   confirmLabel="Retirer l'accord"
+                  icon="shield"
                   className="flex h-[38px] items-center rounded-[10px] px-3.5 text-[13.5px] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2 active:scale-[0.97]"
                 >
                   Retirer l&apos;accord

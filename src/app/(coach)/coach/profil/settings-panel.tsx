@@ -111,9 +111,7 @@ export function SettingsPanel({
       {/* Sommaire (téléphone, sans section choisie) et menu (ordinateur, toujours). */}
       <nav
         aria-label="Sections des paramètres"
-        className={`flex flex-col gap-4 lg:sticky lg:top-0 ${
-          section ? "max-lg:hidden" : ""
-        }`}
+        className={`flex flex-col gap-4 lg:sticky lg:top-0 ${section ? "max-lg:hidden" : ""}`}
       >
         <Go
           onSection={onSection}
@@ -288,6 +286,7 @@ export function SettingsPanel({
                     title="Déconnecter tous les appareils ?"
                     message="Tu devras te reconnecter partout, y compris ici."
                     confirmLabel="Déconnecter partout"
+                    icon="logout"
                     className={buttonClass({ variant: "outline" })}
                   >
                     <LogOut aria-hidden size={16} strokeWidth={1.8} />

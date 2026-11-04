@@ -12,6 +12,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { SkeletonBar } from "@/components/ui/skeleton";
+import { Quoted } from "@/components/ui/quoted";
 import { formatMoney, formatVatRate } from "@/domain/billing/money";
 import { addVat, coveredByPackage, paymentMethodLabel, splitVat } from "@/domain/billing/payments";
 import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
@@ -273,9 +274,17 @@ async function SessionDetail({
     label: session.repeatsWeekly ? "Modifier toute la série" : "Modifier la séance",
     href: `${sessionPath}/modifier`,
   };
-  const deleteText = session.repeatsWeekly
-    ? "Toutes ses dates seront supprimées. Pour l'arrêter à une date, utilise plutôt « Modifier »."
-    : "Elle disparaîtra de l'agenda et des sportifs inscrits.";
+  // Kit (boîte 18) : le nom de la séance en gras en tête du texte.
+  const deleteText = session.repeatsWeekly ? (
+    <>
+      <Quoted>{session.title}</Quoted> : toutes ses dates seront supprimées. Pour l&apos;arrêter à
+      une date, utilise plutôt « Modifier ».
+    </>
+  ) : (
+    <>
+      <Quoted>{session.title}</Quoted> disparaîtra de l&apos;agenda et des sportifs inscrits.
+    </>
+  );
 
   // Détails : le rythme et la période d'une série (avec sa barre), la note du coach.
   const detailRows = [

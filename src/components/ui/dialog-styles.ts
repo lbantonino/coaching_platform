@@ -7,11 +7,14 @@
 // 600. Principal : encre (--cta, noir en clair, blanc en sombre) ; secondaire : blanc à filet ;
 // danger : rouge plein ; lien destructif : texte rouge.
 const dlgButtonBase =
-  "inline-flex h-[52px] shrink-0 items-center justify-center gap-2 rounded-[12px] px-[22px] text-[15px] font-semibold whitespace-nowrap transition-[background-color,transform,opacity] duration-150 active:scale-[0.98] disabled:cursor-not-allowed md:h-[46px]";
+  "inline-flex h-[52px] shrink-0 items-center justify-center gap-2 rounded-[12px] px-[22px] text-[15px] leading-[normal] font-semibold whitespace-nowrap transition-[background-color,transform,opacity] duration-150 active:scale-[0.98] disabled:cursor-not-allowed md:h-[46px]";
 
 export const dlgPrimaryButtonClass = `${dlgButtonBase} bg-cta text-on-cta hover:bg-cta-hover disabled:bg-dlg-disabled disabled:text-white`;
 
 export const dlgSecondaryButtonClass = `${dlgButtonBase} bg-dlg px-[18px] text-[14.5px] text-text inset-ring inset-ring-dlg-border hover:bg-dlg-tile`;
+
+// « Annuler » d'une confirmation : comme le secondaire, mais en 15 px (kit, famille confirmation).
+export const dlgCancelButtonClass = `${dlgButtonBase} bg-dlg text-text inset-ring inset-ring-dlg-border hover:bg-dlg-tile`;
 
 export const dlgDangerButtonClass = `${dlgButtonBase} bg-dlg-danger text-white hover:brightness-95 disabled:opacity-60`;
 

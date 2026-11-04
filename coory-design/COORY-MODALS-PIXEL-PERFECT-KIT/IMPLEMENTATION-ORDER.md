@@ -15,10 +15,12 @@ Risque : faible. Vérifier tuiles d’icônes, états destructifs.
 ## Phase C — Confirmations (ConfirmDialog)
 11, 12, 18, 20, 25, 29, 31, 35 — composant unique, textes différents.
 Prérequis : B (ouvertes depuis des menus). Risque : actions destructives — ne pas changer les appels.
+**État** : ✅ faite le 04/11/2026, 0 px d'écart mesuré ; texte de 29 corrigé selon l'endroit (documents / dépenses).
 
 ## Phase D — Menus avec sélection et sous-menus
 07, 08, 14, 15 (sélection ✓), puis 06, 13 (chevrons vers 07/08/14/15), puis 01 (chevrons vers formulaires).
 Risque : navigation menu → sous-menu → retour.
+**État** : ✅ faite le 04/11/2026, 0 px d'écart mesuré ; sous-titres réels (statut · niveau · discipline), icônes du kit pour Running et Hybride.
 
 ## Phase E — Formulaires simples
 24, 03, 19 (avec Supprimer → 20), 21 (zone de dépôt).
