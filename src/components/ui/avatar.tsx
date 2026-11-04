@@ -21,6 +21,11 @@ const boxes = {
   card: "size-[58px] text-[18px]",
   photo: "size-[72px] text-[22px]",
   lg: "size-[52px] text-[17px]",
+  // Carte « Inviter » (kit « Coory Pages », 09) : 48 px sur téléphone, 52 sur ordinateur.
+  invite: "size-12 text-[15px] lg:size-[52px] lg:text-[16px]",
+  // « Modifier la séance » (kit « Coory Pages », 06 / 12) : le sportif (42) et la pile des inscrits (34).
+  who: "size-[42px] text-[13px]",
+  stack: "size-[34px] text-[11px]",
   xl: "size-16 text-[21px]",
 } as const;
 

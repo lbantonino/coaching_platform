@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { SettingsSection } from "@/components/blocks/settings-context";
-import { barBackClass } from "@/components/layout/back-link";
+import { barBackClass, barBackIcon } from "@/components/layout/back-link";
 import { MobileBarTitle } from "@/components/layout/mobile-bar";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
@@ -141,7 +141,7 @@ export function SettingsPanel({
         {section ? (
           <MobileBarTitle>
             <Go to={null} className={barBackClass}>
-              <ArrowLeft aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+              <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />
               <span className="truncate">Paramètres</span>
             </Go>
           </MobileBarTitle>

@@ -1,0 +1,341 @@
+# 04 · Comptabilité — mesures extraites du fichier source
+
+> **Valeurs EXACTES** lues dans les styles inline de `source-design-files/pages/04-comptabilite/Coory Comptabilite.dc.html` (aucune estimation). Les valeurs entre `{{ }}` sont dynamiques (calculées dans `logic.js`).
+> Arborescence : un niveau d’indentation = un niveau DOM. `sc-for` = liste répétée (`list` = source, `as` = variable), `sc-if` = bloc conditionnel (`value`).
+> Police partout : **Plus Jakarta Sans**. Le cadre de l’artboard (box-shadow externe, border-radius 18/44 px) est un artefact de présentation : ne pas le reproduire dans l’app.
+> Les `span` sans handler sont des boutons/champs statiques dans la maquette : dans l’app ce sont des `button`/`input` réels.
+
+## Artboard « Comptabilité desktop »
+
+- **artboard** — `box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:1280px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;align-items:stretch`
+  - **aside** — `width:236px; flex:none; min-height:740px; border-radius:20px; background:#fff; padding:24px 14px 16px; display:flex; flex-direction:column; gap:2px; position:sticky; top:14px`
+    - **div** — `display:flex; align-items:center; justify-content:space-between; padding:4px 10px 24px`
+      - **svg** 96× viewBox=0 0 472 72 stroke= fill= sw=
+      - **svg** 17×17 viewBox=0 0 24 24 stroke=#64626e fill=none sw=1.8
+    - **sc-for** [list={{ nav1 }} as=n]
+      - **span** « {{ n.l }} » — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ n.bg }}; color:{{ n.c }}`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+    - **div** — `height:1px; background:rgba(22,18,40,.08); margin:10px 4px`
+    - **sc-for** [list={{ nav2 }} as=n]
+      - **span** — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ n.bg }}; color:{{ n.c }}`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+        - **span** « {{ n.l }} » — `flex:1`
+        - **sc-if** [value={{ n.b }}]
+          - **span** « {{ n.b }} » — `min-width:20px; height:20px; border-radius:10px; background:rgba(139,92,246,.12); color:#6a3ee0; font:500 11px/20px 'Plus Jakarta Sans'; text-align:center`
+    - **div** — `flex:1`
+    - **div** — `display:flex; align-items:center; gap:10px; padding:8px`
+      - **span** « GL » — `position:relative; width:38px; height:38px; border-radius:50%; background:#2a2733; color:#fff; display:flex; align-items:center; justify-content:center; font:600 12px 'Plus Jakarta Sans'; box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6`
+        - **span** — `position:absolute; right:-2px; bottom:-2px; width:10px; height:10px; border-radius:50%; background:#15803d; box-shadow:0 0 0 2px #fff`
+      - **div** — `flex:1; min-width:0; display:flex; flex-direction:column`
+        - **span** « Gianluca Lo Bianco » — `font:600 14px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden`
+        - **span** « Coach » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+  - **main** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:16px`
+    - **header** — `border-radius:20px; background:#fff; padding:16px 18px 16px 22px; display:flex; align-items:center; gap:10px`
+      - **span** « Comptabilité » — `flex:1; display:flex; align-items:center; gap:10px; font:600 15px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 17×17 viewBox=0 0 24 24 stroke=#6a3ee0 fill=none sw=1.8
+      - **span** — `height:32px; width:200px; padding:0 6px 0 10px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); background:#f8f7fb; display:flex; align-items:center; gap:7px; font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+        - **span** « Rechercher dans Coory » — `flex:1; white-space:nowrap`
+        - **span** « ⌘K » — `font:500 10px 'Plus Jakarta Sans'; padding:2px 5px; border-radius:5px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.14)`
+      - **span** « Assistant IA » — `height:32px; padding:0 12px; border-radius:9px; background:#8b5cf6; color:#fff; display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:32px; height:32px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; justify-content:center`
+        - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 9 » — `position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%; background:#8b5cf6; color:#fff; font:600 9.5px/16px 'Plus Jakarta Sans'; text-align:center`
+      - **span** « Nouvelle dépense » — `height:32px; padding:0 12px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.14); display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+      - **span** « Nouveau paiement » — `height:32px; padding:0 14px; border-radius:9px; background:#17151d; color:#fff; display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+    - **div** — `display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 4px 0`
+      - **span** « {{ cur.label }} » — `font:700 22px 'Plus Jakarta Sans'; letter-spacing:-.02em`
+      - **div** [aria-label=Période role=tablist] — `display:flex; gap:2px; padding:4px; border-radius:12px; background:#f3f2f7`
+        - **sc-for** [list={{ periods }} as=p]
+          - **button** [role=tab onClick={{ p.pick }}] « {{ p.l }} » — `border:0; height:32px; padding:0 14px; border-radius:9px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ p.bg }}; color:{{ p.c }}; box-shadow:{{ p.sh }}`
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:32px 32px; display:grid; grid-template-columns:minmax(0,1.2fr) repeat(3,minmax(0,1fr)); gap:0`
+      - **div** — `display:flex; flex-direction:column; gap:10px`
+        - **span** « Résultat · {{ cur.label }} » — `font:500 13.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **span** « {{ cur.res }} » — `font:600 32px/1 'Plus Jakarta Sans'; letter-spacing:-.03em; color:{{ cur.resC }}; white-space:nowrap`
+        - **span** « Gagné HTVA − dépensé HTVA » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+      - **sc-for** [list={{ heroStats }} as=k]
+        - **div** — `display:flex; flex-direction:column; gap:10px; padding:2px 28px; border-left:1px solid rgba(22,18,40,.07)`
+          - **span** « {{ k.l }} » — `display:flex; align-items:center; gap:7px; font:500 13px 'Plus Jakarta Sans'; color:#4a4855; white-space:nowrap`
+            - **span** — `width:8px; height:8px; border-radius:50%; background:{{ k.c }}`
+          - **span** « {{ k.v }} » — `font:600 18px/1.2 'Plus Jakarta Sans'; letter-spacing:-.01em; white-space:nowrap`
+          - **span** — `display:flex; flex-direction:column; gap:3px; font:400 13px/1.4 'Plus Jakarta Sans'; color:#64626e`
+            - **span** « {{ k.s1 }} » — `white-space:nowrap`
+            - **span** « {{ k.s2 }} » — `white-space:nowrap`
+    - **div** — `display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:16px`
+      - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:24px 26px; display:flex; flex-direction:column; gap:20px; min-width:0`
+        - **div** — `display:flex; align-items:center; justify-content:space-between; gap:12px`
+          - **span** « Gagné et dépensé » — `font:600 16px 'Plus Jakarta Sans'`
+          - **div** — `display:flex; gap:14px; font:500 12.5px 'Plus Jakarta Sans'; color:#4a4855`
+            - **span** « Gagné » — `display:flex; align-items:center; gap:6px; white-space:nowrap`
+              - **span** — `width:8px; height:8px; border-radius:50%; background:#8b5cf6`
+            - **span** « Dépensé » — `display:flex; align-items:center; gap:6px; white-space:nowrap`
+              - **span** — `width:8px; height:8px; border-radius:50%; background:#FEC14F`
+        - **div** — `display:flex; align-items:baseline; gap:16px; flex-wrap:nowrap; min-width:0`
+          - **span** « {{ cs.label }} » — `font:600 14px 'Plus Jakarta Sans'; white-space:nowrap`
+          - **sc-for** [list={{ cs.items }} as=c]
+            - **span** « {{ c.l }} » — `display:flex; align-items:baseline; gap:6px; white-space:nowrap; font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+              - **strong** « {{ c.v }} » — `font:600 14px 'Plus Jakarta Sans'; color:{{ c.vc }}`
+        - **div** — `flex:1; min-height:240px; display:flex; gap:12px`
+          - **div** — `position:relative; width:38px; flex:none`
+            - **sc-for** [list={{ yTicks }} as=y]
+              - **span** « {{ y.l }} » — `position:absolute; right:0; bottom:{{ y.b }}; transform:translateY(50%); font:500 11px 'Plus Jakarta Sans'; color:#8b8996; white-space:nowrap`
+          - **div** — `flex:1; min-width:0; display:flex; flex-direction:column`
+            - **div** — `position:relative; flex:1; display:flex; align-items:flex-end; gap:8px; border-bottom:1px solid rgba(22,18,40,.12)`
+              - **sc-for** [list={{ yTicks }} as=y]
+                - **span** — `position:absolute; left:0; right:0; bottom:{{ y.b }}; height:1px; background:{{ y.line }}`
+              - **sc-for** [list={{ bars }} as=b]
+                - **button** [aria-label={{ b.aria }} onClick={{ b.pick }} aria-pressed={{ b.sel }}] — `position:relative; flex:1; min-width:0; height:100%; border:0; padding:0 5px; border-radius:10px 10px 0 0; background:{{ b.bg }}; display:flex; align-items:flex-end; justify-content:center; gap:4px`
+                  - **span** — `flex:1; max-width:18px; height:{{ b.g }}; border-radius:5px 5px 0 0; background:{{ b.gc }}`
+                  - **span** — `flex:1; max-width:18px; height:{{ b.d }}; border-radius:5px 5px 0 0; background:{{ b.dc }}`
+            - **div** — `display:flex; gap:8px; height:24px; align-items:flex-end`
+              - **sc-for** [list={{ bars }} as=b]
+                - **span** « {{ b.m }} » — `flex:1; min-width:0; text-align:center; font:500 12px 'Plus Jakarta Sans'; color:{{ b.lc }}; white-space:nowrap; overflow:hidden`
+      - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:22px 24px; display:flex; flex-direction:column; gap:18px; min-width:0`
+        - **div** — `display:flex; align-items:flex-start; justify-content:space-between; gap:12px`
+          - **div** — `display:flex; flex-direction:column; gap:4px; min-width:0`
+            - **span** « Reçu par mode de paiement » — `font:600 16px 'Plus Jakarta Sans'`
+            - **span** « {{ rep.sub }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+          - **div** [aria-label=Type de graphique role=group] — `flex:none; display:flex; gap:2px; padding:3px; border-radius:10px; background:#f3f2f7`
+            - **sc-for** [list={{ chartTypes }} as=c]
+              - **button** [aria-label={{ c.l }} onClick={{ c.pick }} aria-pressed={{ c.sel }}] — `border:0; width:34px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:{{ c.bg }}; color:{{ c.c }}; box-shadow:{{ c.sh }}`
+                - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+        - **sc-if** [value={{ isBar }}]
+          - **div** — `display:flex; flex-direction:column; gap:16px`
+            - **div** — `display:flex; flex-direction:column; gap:6px`
+              - **span** « Total reçu » — `font:500 13px 'Plus Jakarta Sans'; color:#64626e`
+              - **span** « {{ rep.total }} » — `font:600 26px/1 'Plus Jakarta Sans'; letter-spacing:-.025em`
+            - **div** — `display:flex; height:10px; border-radius:6px; overflow:hidden; gap:2px; background:#f1f0f6`
+              - **sc-for** [list={{ rep.rows }} as=r]
+                - **span** — `width:{{ r.w }}; background:{{ r.c }}`
+        - **sc-if** [value={{ isPie }}]
+          - **div** — `position:relative; width:180px; height:180px; align-self:center`
+            - **svg** 180×180 viewBox=0 0 180 180 stroke= fill= sw=
+            - **div** — `position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px`
+              - **span** « Total reçu » — `font:500 12.5px 'Plus Jakarta Sans'; color:#64626e`
+              - **span** « {{ rep.total }} » — `font:600 20px/1 'Plus Jakarta Sans'; letter-spacing:-.02em; white-space:nowrap`
+        - **div** — `display:flex; flex-direction:column`
+          - **sc-for** [list={{ rep.rows }} as=r]
+            - **div** — `display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid rgba(22,18,40,.06); font:500 14px 'Plus Jakarta Sans'`
+              - **span** — `width:8px; height:8px; border-radius:50%; background:{{ r.c }}`
+              - **span** « {{ r.l }} » — `flex:1`
+              - **span** « {{ r.p }} » — `width:44px; text-align:right; font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+              - **span** « {{ r.v }} » — `width:100px; text-align:right; color:{{ r.vc }}`
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:22px 0 8px; display:flex; flex-direction:column; gap:14px; min-width:0`
+      - **div** — `padding:0 24px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap`
+        - **div** — `display:flex; flex-direction:column; gap:4px`
+          - **span** « Mouvements » — `font:600 16px 'Plus Jakarta Sans'`
+          - **span** « {{ mv.sub }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e; white-space:nowrap`
+        - **div** [role=tablist] — `display:flex; gap:2px; padding:4px; border-radius:12px; background:#f3f2f7`
+          - **sc-for** [list={{ mvTabs }} as=t]
+            - **button** [role=tab onClick={{ t.pick }}] « {{ t.l }} » — `border:0; height:32px; padding:0 12px; border-radius:9px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ t.bg }}; color:{{ t.c }}; box-shadow:{{ t.sh }}`
+      - **sc-if** [value={{ mv.hasFilters }}]
+        - **div** — `padding:0 24px; display:flex; gap:6px`
+          - **sc-for** [list={{ mvFilters }} as=f]
+            - **button** [onClick={{ f.pick }} aria-pressed={{ f.sel }}] « {{ f.l }} » — `flex:none; border:0; height:32px; padding:0 12px; border-radius:16px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ f.bg }}; color:{{ f.c }}; box-shadow:inset 0 0 0 1px {{ f.bd }}`
+      - **div** — `display:flex; flex-direction:column`
+        - **sc-for** [list={{ mv.rows }} as=r]
+          - **div** — `display:flex; align-items:center; gap:16px; min-height:58px; padding:0 24px; border-top:1px solid rgba(22,18,40,.06)`
+            - **span** « {{ r.d }} » — `width:56px; flex:none; font:500 12.5px 'Plus Jakarta Sans'; color:#64626e; white-space:nowrap`
+            - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:2px`
+              - **span** « {{ r.n }} » — `font:600 14.5px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden`
+              - **span** « {{ r.s }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e; white-space:nowrap; overflow:hidden`
+            - **span** « {{ r.v }} » — `font:600 14.5px 'Plus Jakarta Sans'; white-space:nowrap; color:{{ r.vc }}`
+            - **button** [aria-label=Actions] — `flex:none; width:36px; height:36px; border:0; border-radius:10px; background:transparent; color:#8b8996; display:flex; align-items:center; justify-content:center` — états: `style-hover: background:#f3f2f7`
+              - **svg** 16×16 viewBox=0 0 24 24 stroke= fill=currentColor sw=
+      - **div** — `display:flex; flex-direction:column`
+        - **sc-if** [value={{ mv.more }}]
+          - **button** [onClick={{ toggleAll }}] « {{ mv.moreL }} » — `align-self:stretch; white-space:nowrap; margin:0 24px; height:44px; border:0; border-top:1px solid rgba(22,18,40,.06); background:transparent; display:flex; align-items:center; justify-content:center; gap:6px; font:600 13.5px 'Plus Jakarta Sans'; color:#6a3ee0`
+            - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); display:flex; flex-direction:column; overflow:hidden`
+      - **button** [onClick={{ toggleTable }} aria-expanded={{ tableExp }}] — `border:0; background:transparent; text-align:left; padding:18px 24px; display:flex; align-items:center; gap:12px`
+        - **span** — `width:34px; height:34px; flex:none; border-radius:10px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+          - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:2px`
+          - **span** « Tableau de comptabilité » — `font:600 15px 'Plus Jakarta Sans'; color:#17151d`
+          - **span** « {{ tableSub }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **span** « {{ tableBtn }} » — `font:600 13px 'Plus Jakarta Sans'; color:#6a3ee0; white-space:nowrap`
+        - **svg** 15×15 viewBox=0 0 24 24 stroke=#6a3ee0 fill=none sw=2.2
+      - **sc-if** [value={{ tableOpen }}]
+        - **div** — `border-top:1px solid rgba(22,18,40,.06); padding:0 24px 12px`
+          - **div** — `display:grid; grid-template-columns:1.2fr repeat(6,1fr); font:600 11.5px 'Plus Jakarta Sans'; letter-spacing:.04em; color:#8b8996; padding:12px 0; border-bottom:1px solid rgba(22,18,40,.08)`
+            - **span** « PÉRIODE »
+            - **span** « VIREMENT » — `text-align:right`
+            - **span** « BANCONTACT » — `text-align:right`
+            - **span** « ESPÈCES » — `text-align:right`
+            - **span** « GAGNÉ HTVA » — `text-align:right`
+            - **span** « DÉPENSÉ HTVA » — `text-align:right`
+            - **span** « RÉSULTAT » — `text-align:right`
+          - **sc-for** [list={{ tRows }} as=r]
+            - **div** — `display:grid; grid-template-columns:1.2fr repeat(6,1fr); align-items:center; min-height:44px; font:400 13.5px 'Plus Jakarta Sans'; border-bottom:1px solid rgba(22,18,40,.05); background:{{ r.bg }}; margin:0 -10px; padding:0 10px; border-radius:8px`
+              - **span** « {{ r.m }} »
+              - **span** « {{ r.v }} » — `text-align:right`
+              - **span** « {{ r.b }} » — `text-align:right`
+              - **span** « {{ r.e }} » — `text-align:right`
+              - **span** « {{ r.g }} » — `text-align:right`
+              - **span** « {{ r.d }} » — `text-align:right`
+              - **span** « {{ r.r }} » — `text-align:right; color:{{ r.rc }}`
+          - **sc-if** [value={{ emptyHidden }}]
+            - **button** [onClick={{ toggleEmpty }}] « {{ emptyL }} » — `border:0; background:transparent; width:100%; height:40px; font:500 12.5px 'Plus Jakarta Sans'; color:#64626e`
+          - **div** — `display:grid; grid-template-columns:1.2fr repeat(6,1fr); align-items:center; min-height:46px; font:700 13.5px 'Plus Jakarta Sans'; border-top:1.5px solid rgba(22,18,40,.14)`
+            - **span** « Total »
+            - **span** « {{ tTot.v }} » — `text-align:right`
+            - **span** « {{ tTot.b }} » — `text-align:right`
+            - **span** « {{ tTot.e }} » — `text-align:right`
+            - **span** « {{ tTot.g }} » — `text-align:right`
+            - **span** « {{ tTot.d }} » — `text-align:right`
+            - **span** « {{ tTot.r }} » — `text-align:right; color:#11867a`
+    - **p** « Aperçu de ton activité, pas une comptabilité officielle : tes factu… » — `margin:0; padding:0 4px; font:400 12.5px/1.5 'Plus Jakarta Sans'; color:#64626e`
+
+## Artboard « Comptabilité mobile »
+
+- **artboard** — `box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);position:relative;width:390px;height:844px;background:#f3f2f7;border-radius:36px;overflow:hidden;display:flex;flex-direction:column`
+  - **div** — `display:flex; align-items:center; gap:10px; padding:10px 12px 0`
+    - **span** — `width:44px; height:44px; flex:none; border-radius:14px; background:#fff; display:flex; align-items:center; justify-content:center`
+      - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+    - **span** « Comptabilité » — `flex:1; display:flex; align-items:center; gap:9px; font:500 16px 'Plus Jakarta Sans'; letter-spacing:-.01em; white-space:nowrap`
+      - **svg** 18×18 viewBox=0 0 24 24 stroke=#6a3ee0 fill=none sw=1.8
+    - **span** — `display:flex; gap:4px; padding:4px; border-radius:16px; background:#fff`
+      - **span** — `width:40px; height:40px; border-radius:12px; background:#8b5cf6; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:40px; height:40px; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 16 » — `position:absolute; top:4px; right:4px; width:15px; height:15px; border-radius:50%; background:#8b5cf6; color:#fff; font:600 9px/15px 'Plus Jakarta Sans'; text-align:center`
+  - **div** — `flex:1; min-height:0; overflow:auto; padding:16px 14px 110px; display:flex; flex-direction:column; gap:12px`
+    - **div** [aria-label=Période role=tablist] — `display:flex; gap:2px; padding:4px; border-radius:12px; background:#fff`
+      - **sc-for** [list={{ periods }} as=p]
+        - **button** [role=tab onClick={{ p.pick }}] « {{ p.l }} » — `border:0; flex:1; height:40px; padding:0 14px; border-radius:9px; font:500 14px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ p.bgM }}; color:{{ p.c }}; box-shadow:{{ p.shM }}`
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:24px 22px; display:flex; flex-direction:column; gap:24px`
+      - **div** — `display:flex; flex-direction:column; gap:8px`
+        - **span** « Résultat · {{ cur.label }} » — `font:500 13.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **span** « {{ cur.res }} » — `font:600 30px/1 'Plus Jakarta Sans'; letter-spacing:-.03em; color:{{ cur.resC }}; white-space:nowrap`
+        - **span** « Gagné HTVA − dépensé HTVA » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+      - **div** — `display:grid; grid-template-columns:1fr 1fr; gap:12px`
+        - **sc-for** [list={{ heroStats }} as=k]
+          - **div** — `display:flex; flex-direction:column; gap:6px; padding:16px; border-radius:14px; background:#f8f7fb; gap:8px`
+            - **span** « {{ k.l }} » — `display:flex; align-items:center; gap:7px; font:500 13px 'Plus Jakarta Sans'; color:#4a4855; white-space:nowrap`
+              - **span** — `width:8px; height:8px; border-radius:50%; background:{{ k.c }}`
+            - **span** « {{ k.v }} » — `font:600 17px/1.2 'Plus Jakarta Sans'; letter-spacing:-.01em; white-space:nowrap`
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:22px 20px; display:flex; flex-direction:column; gap:18px; min-width:0`
+      - **div** — `display:flex; align-items:center; justify-content:space-between; gap:12px`
+        - **span** « Gagné et dépensé » — `font:600 16px 'Plus Jakarta Sans'`
+        - **div** — `display:flex; gap:14px; font:500 12.5px 'Plus Jakarta Sans'; color:#4a4855`
+          - **span** « Gagné » — `display:flex; align-items:center; gap:6px; white-space:nowrap`
+            - **span** — `width:8px; height:8px; border-radius:50%; background:#8b5cf6`
+          - **span** « Dépensé » — `display:flex; align-items:center; gap:6px; white-space:nowrap`
+            - **span** — `width:8px; height:8px; border-radius:50%; background:#FEC14F`
+      - **div** — `display:flex; align-items:baseline; gap:8px 16px; flex-wrap:wrap`
+        - **span** « {{ cs.label }} » — `font:600 14px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **sc-for** [list={{ cs.items }} as=c]
+          - **span** « {{ c.l }} » — `display:flex; align-items:baseline; gap:6px; white-space:nowrap; font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+            - **strong** « {{ c.v }} » — `font:600 14px 'Plus Jakarta Sans'; color:{{ c.vc }}`
+      - **div** — `flex:1; min-height:200px; display:flex; gap:8px`
+        - **div** — `position:relative; width:30px; flex:none`
+          - **sc-for** [list={{ yTicks }} as=y]
+            - **span** « {{ y.l }} » — `position:absolute; right:0; bottom:{{ y.b }}; transform:translateY(50%); font:500 11px 'Plus Jakarta Sans'; color:#8b8996; white-space:nowrap`
+        - **div** — `flex:1; min-width:0; display:flex; flex-direction:column`
+          - **div** — `position:relative; flex:1; display:flex; align-items:flex-end; gap:3px; border-bottom:1px solid rgba(22,18,40,.12)`
+            - **sc-for** [list={{ yTicks }} as=y]
+              - **span** — `position:absolute; left:0; right:0; bottom:{{ y.b }}; height:1px; background:{{ y.line }}`
+            - **sc-for** [list={{ bars }} as=b]
+              - **button** [aria-label={{ b.aria }} onClick={{ b.pick }} aria-pressed={{ b.sel }}] — `position:relative; flex:1; min-width:0; height:100%; border:0; padding:0 1px; border-radius:10px 10px 0 0; background:{{ b.bg }}; display:flex; align-items:flex-end; justify-content:center; gap:2px`
+                - **span** — `flex:1; max-width:9px; height:{{ b.g }}; border-radius:5px 5px 0 0; background:{{ b.gc }}`
+                - **span** — `flex:1; max-width:9px; height:{{ b.d }}; border-radius:5px 5px 0 0; background:{{ b.dc }}`
+          - **div** — `display:flex; gap:3px; height:24px; align-items:flex-end`
+            - **sc-for** [list={{ bars }} as=b]
+              - **span** « {{ b.ms }} » — `flex:1; min-width:0; text-align:center; font:500 10.5px 'Plus Jakarta Sans'; color:{{ b.lc }}; white-space:nowrap; overflow:hidden`
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:24px 22px; display:flex; flex-direction:column; gap:24px; min-width:0`
+      - **div** — `display:flex; align-items:flex-start; justify-content:space-between; gap:12px`
+        - **div** — `display:flex; flex-direction:column; gap:4px; min-width:0`
+          - **span** « Reçu par mode de paiement » — `font:600 16px 'Plus Jakarta Sans'`
+          - **span** « {{ rep.sub }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+        - **div** [aria-label=Type de graphique role=group] — `flex:none; display:flex; gap:2px; padding:3px; border-radius:10px; background:#f3f2f7`
+          - **sc-for** [list={{ chartTypes }} as=c]
+            - **button** [aria-label={{ c.l }} onClick={{ c.pick }} aria-pressed={{ c.sel }}] — `border:0; width:34px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; background:{{ c.bg }}; color:{{ c.c }}; box-shadow:{{ c.sh }}`
+              - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+      - **sc-if** [value={{ isBar }}]
+        - **div** — `display:flex; flex-direction:column; gap:16px`
+          - **div** — `display:flex; flex-direction:column; gap:6px`
+            - **span** « Total reçu » — `font:500 13px 'Plus Jakarta Sans'; color:#64626e`
+            - **span** « {{ rep.total }} » — `font:600 26px/1 'Plus Jakarta Sans'; letter-spacing:-.025em`
+          - **div** — `display:flex; height:10px; border-radius:6px; overflow:hidden; gap:2px; background:#f1f0f6`
+            - **sc-for** [list={{ rep.rows }} as=r]
+              - **span** — `width:{{ r.w }}; background:{{ r.c }}`
+      - **sc-if** [value={{ isPie }}]
+        - **div** — `position:relative; width:180px; height:180px; align-self:center`
+          - **svg** 180×180 viewBox=0 0 180 180 stroke= fill= sw=
+          - **div** — `position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px`
+            - **span** « Total reçu » — `font:500 12.5px 'Plus Jakarta Sans'; color:#64626e`
+            - **span** « {{ rep.total }} » — `font:600 20px/1 'Plus Jakarta Sans'; letter-spacing:-.02em; white-space:nowrap`
+      - **div** — `display:flex; flex-direction:column`
+        - **sc-for** [list={{ rep.rows }} as=r]
+          - **div** — `display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid rgba(22,18,40,.06); font:500 14px 'Plus Jakarta Sans'`
+            - **span** — `width:8px; height:8px; border-radius:50%; background:{{ r.c }}`
+            - **span** « {{ r.l }} » — `flex:1`
+            - **span** « {{ r.p }} » — `width:44px; text-align:right; font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+            - **span** « {{ r.v }} » — `width:100px; text-align:right; color:{{ r.vc }}`
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:20px 0 8px; display:flex; flex-direction:column; gap:14px; min-width:0`
+      - **div** — `padding:0 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap`
+        - **div** — `display:flex; flex-direction:column; gap:4px`
+          - **span** « Mouvements » — `font:600 16px 'Plus Jakarta Sans'`
+          - **span** « {{ mv.sub }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e; white-space:nowrap`
+        - **div** [role=tablist] — `display:flex; gap:2px; padding:4px; border-radius:12px; background:#f3f2f7; width:100%`
+          - **sc-for** [list={{ mvTabs }} as=t]
+            - **button** [role=tab onClick={{ t.pick }}] « {{ t.l }} » — `border:0; flex:1; height:38px; padding:0 12px; border-radius:9px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ t.bg }}; color:{{ t.c }}; box-shadow:{{ t.sh }}`
+      - **sc-if** [value={{ mv.hasFilters }}]
+        - **div** — `padding:0 20px; display:flex; gap:6px`
+          - **sc-for** [list={{ mvFilters }} as=f]
+            - **button** [onClick={{ f.pick }} aria-pressed={{ f.sel }}] « {{ f.l }} » — `flex:none; border:0; height:32px; padding:0 12px; border-radius:16px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ f.bg }}; color:{{ f.c }}; box-shadow:inset 0 0 0 1px {{ f.bd }}`
+      - **div** — `display:flex; flex-direction:column`
+        - **sc-for** [list={{ mv.rows }} as=r]
+          - **div** — `display:flex; align-items:center; gap:12px; min-height:62px; padding:0 20px; border-top:1px solid rgba(22,18,40,.06)`
+            - **span** « {{ r.d }} » — `width:48px; flex:none; font:500 12.5px 'Plus Jakarta Sans'; color:#64626e; white-space:nowrap`
+            - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:2px`
+              - **span** « {{ r.n }} » — `font:600 14.5px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden`
+              - **span** « {{ r.s }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e; white-space:nowrap; overflow:hidden`
+            - **span** « {{ r.v }} » — `font:600 14.5px 'Plus Jakarta Sans'; white-space:nowrap; color:{{ r.vc }}`
+            - **button** [aria-label=Actions] — `flex:none; width:36px; height:36px; border:0; border-radius:10px; background:transparent; color:#8b8996; display:flex; align-items:center; justify-content:center` — états: `style-hover: background:#f3f2f7`
+              - **svg** 16×16 viewBox=0 0 24 24 stroke= fill=currentColor sw=
+      - **div** — `display:flex; flex-direction:column`
+        - **sc-if** [value={{ mv.more }}]
+          - **button** [onClick={{ toggleAll }}] « {{ mv.moreL }} » — `align-self:stretch; white-space:nowrap; margin:0 20px; height:44px; border:0; border-top:1px solid rgba(22,18,40,.06); background:transparent; display:flex; align-items:center; justify-content:center; gap:6px; font:600 13.5px 'Plus Jakarta Sans'; color:#6a3ee0`
+            - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+    - **section** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); display:flex; flex-direction:column; overflow:hidden`
+      - **button** [onClick={{ toggleTable }} aria-expanded={{ tableExp }}] — `border:0; background:transparent; text-align:left; padding:18px 20px; display:flex; align-items:center; gap:12px`
+        - **span** — `width:34px; height:34px; flex:none; border-radius:10px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+          - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:2px`
+          - **span** « Tableau de comptabilité » — `font:600 15px 'Plus Jakarta Sans'; color:#17151d`
+          - **span** « {{ tableSub }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **span** « {{ tableBtn }} » — `font:600 13px 'Plus Jakarta Sans'; color:#6a3ee0; white-space:nowrap`
+        - **svg** 15×15 viewBox=0 0 24 24 stroke=#6a3ee0 fill=none sw=2.2
+      - **sc-if** [value={{ tableOpen }}]
+        - **div** — `display:flex; flex-direction:column; border-top:1px solid rgba(22,18,40,.06)`
+          - **sc-for** [list={{ tRows }} as=r]
+            - **div** — `padding:14px 20px; border-bottom:1px solid rgba(22,18,40,.06); display:flex; flex-direction:column; gap:8px; background:{{ r.bg }}`
+              - **div** — `display:flex; justify-content:space-between; gap:10px`
+                - **span** « {{ r.m }} » — `font:600 14.5px 'Plus Jakarta Sans'`
+                - **span** « {{ r.r }} » — `font:700 14.5px 'Plus Jakarta Sans'; color:{{ r.rc }}`
+              - **div** — `display:grid; grid-template-columns:1fr 1fr; gap:4px 12px; font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+                - **span** « Gagné »
+                  - **strong** « {{ r.g }} » — `color:#17151d`
+                - **span** « Dépensé »
+                  - **strong** « {{ r.d }} » — `color:#17151d`
+                - **span** « Virement {{ r.v }} · Bancontact {{ r.b }} · Espèces {{ r.e }} » — `grid-column:1 / -1`
+          - **div** — `padding:14px 20px; display:flex; justify-content:space-between; font:700 14.5px 'Plus Jakarta Sans'`
+            - **span** « Total »
+            - **span** « {{ tTot.r }} » — `color:#11867a`
+    - **p** « Aperçu de ton activité, pas une comptabilité officielle : tes factu… » — `margin:0; padding:0 4px; font:400 12.5px/1.5 'Plus Jakarta Sans'; color:#64626e`
+  - **sc-if** [value={{ sheetOpen }}]
+    - **div** [onClick={{ closeSheet }}] — `position:absolute; inset:0; z-index:20; background:rgba(22,18,40,.32)`
+    - **div** [role=menu] — `position:absolute; right:20px; bottom:104px; z-index:21; width:230px; padding:6px; border-radius:18px; background:#fff; box-shadow:0 24px 48px -12px rgba(22,18,40,.35); display:flex; flex-direction:column`
+      - **sc-for** [list={{ sheetItems }} as=s]
+        - **button** [role=menuitem onClick={{ closeSheet }}] — `border:0; background:transparent; min-height:52px; padding:0 12px; border-radius:12px; display:flex; align-items:center; gap:12px; text-align:left` — états: `style-hover: background:#f3f2f7`
+          - **span** — `width:36px; height:36px; flex:none; border-radius:11px; background:{{ s.bg }}; color:{{ s.c }}; display:flex; align-items:center; justify-content:center`
+            - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+          - **span** « {{ s.l }} » — `font:600 15px 'Plus Jakarta Sans'; color:#17151d`
+  - **button** [aria-label={{ fabLabel }} onClick={{ toggleSheet }} aria-expanded={{ sheetExp }}] — `position:absolute; right:20px; bottom:28px; z-index:22; width:60px; height:60px; border:0; border-radius:18px; background:#17151d; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 28px -8px rgba(22,18,40,.5)` — états: `style-active: transform:scale(.95)`
+    - **svg** 24×24 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+

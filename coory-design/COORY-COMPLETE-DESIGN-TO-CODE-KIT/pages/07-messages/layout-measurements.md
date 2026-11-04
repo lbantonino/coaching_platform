@@ -1,0 +1,331 @@
+# 07 · Messages — mesures extraites du fichier source
+
+> **Valeurs EXACTES** lues dans les styles inline de `source-design-files/pages/07-messages/Coory Messages.dc.html` (aucune estimation). Les valeurs entre `{{ }}` sont dynamiques (calculées dans `logic.js`).
+> Arborescence : un niveau d’indentation = un niveau DOM. `sc-for` = liste répétée (`list` = source, `as` = variable), `sc-if` = bloc conditionnel (`value`).
+> Police partout : **Plus Jakarta Sans**. Le cadre de l’artboard (box-shadow externe, border-radius 18/44 px) est un artefact de présentation : ne pas le reproduire dans l’app.
+> Les `span` sans handler sont des boutons/champs statiques dans la maquette : dans l’app ce sont des `button`/`input` réels.
+
+## Artboard « Messages desktop »
+
+- **artboard** — `box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:1280px;height:800px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;align-items:stretch`
+  - **aside** — `width:236px; flex:none; border-radius:20px; background:#fff; padding:24px 14px 16px; display:flex; flex-direction:column; gap:2px`
+    - **div** — `display:flex; align-items:center; justify-content:space-between; padding:4px 10px 24px`
+      - **svg** 96× viewBox=0 0 472 72 stroke= fill= sw=
+      - **svg** 17×17 viewBox=0 0 24 24 stroke=#64626e fill=none sw=1.8
+    - **sc-for** [list={{ nav1 }} as=n]
+      - **span** « {{ n.l }} » — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; color:#4a4855`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+    - **div** — `height:1px; background:rgba(22,18,40,.08); margin:10px 4px`
+    - **sc-for** [list={{ nav2 }} as=n]
+      - **span** — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ n.bg }}; color:{{ n.c }}`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+        - **span** « {{ n.l }} » — `flex:1`
+        - **sc-if** [value={{ n.b }}]
+          - **span** « {{ n.b }} » — `min-width:20px; height:20px; border-radius:10px; background:rgba(139,92,246,.12); color:#6a3ee0; font:500 11px/20px 'Plus Jakarta Sans'; text-align:center`
+    - **div** — `flex:1`
+    - **div** — `display:flex; align-items:center; gap:10px; padding:8px`
+      - **span** « GL » — `position:relative; width:38px; height:38px; border-radius:50%; background:#2a2733; color:#fff; display:flex; align-items:center; justify-content:center; font:600 12px 'Plus Jakarta Sans'; box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6`
+        - **span** — `position:absolute; right:-2px; bottom:-2px; width:10px; height:10px; border-radius:50%; background:#15803d; box-shadow:0 0 0 2px #fff`
+      - **div** — `flex:1; min-width:0; display:flex; flex-direction:column`
+        - **span** « Gianluca Lo Bianco » — `font:600 14px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden`
+        - **span** « Coach » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+  - **main** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:16px`
+    - **header** — `border-radius:20px; background:#fff; padding:16px 18px 16px 22px; display:flex; align-items:center; gap:10px; position:relative`
+      - **span** « Messages » — `flex:1; display:flex; align-items:center; gap:10px; font:600 15px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 17×17 viewBox=0 0 24 24 stroke=#6a3ee0 fill=none sw=1.8
+      - **span** — `height:32px; width:200px; padding:0 6px 0 10px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); background:#f8f7fb; display:flex; align-items:center; gap:7px; font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+        - **span** « Rechercher dans Coory » — `flex:1; white-space:nowrap`
+        - **span** « ⌘K » — `font:500 10px 'Plus Jakarta Sans'; padding:2px 5px; border-radius:5px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.14)`
+      - **span** « Assistant IA » — `height:32px; padding:0 12px; border-radius:9px; background:#8b5cf6; color:#fff; display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:32px; height:32px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; justify-content:center`
+        - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 9 » — `position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%; background:#8b5cf6; color:#fff; font:600 9.5px/16px 'Plus Jakarta Sans'; text-align:center`
+      - **button** [onClick={{ toggleMenu }}] « Nouveau message » — `border:0; height:32px; padding:0 14px; border-radius:9px; background:#17151d; color:#fff; display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+      - **sc-if** [value={{ menuOpen }}]
+        - **div** — `position:absolute; right:18px; top:56px; z-index:5; width:300px; padding:6px; border-radius:14px; background:#fff; box-shadow:0 0 0 1px rgba(22,18,40,.08),0 18px 40px -12px rgba(22,18,40,.3); display:flex; flex-direction:column`
+          - **button** [onClick={{ toggleMenu }}] — `border:0; background:transparent; text-align:left; display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px` — états: `style-hover: background:#f3f2f7`
+            - **span** — `width:34px; height:34px; flex:none; border-radius:10px; background:rgba(139,92,246,.12); color:#6a3ee0; display:flex; align-items:center; justify-content:center`
+              - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+            - **span** — `display:flex; flex-direction:column; gap:2px`
+              - **span** « Nouvelle conversation » — `font:600 13.5px 'Plus Jakarta Sans'; color:#17151d`
+              - **span** « Écrire à un sportif » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+          - **a** [onClick={{ toggleMenu }} href=#2a] — `display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px` — états: `style-hover: background:#f3f2f7`
+            - **span** — `width:34px; height:34px; flex:none; border-radius:10px; background:rgba(254,193,79,.2); color:#8a5a00; display:flex; align-items:center; justify-content:center`
+              - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+            - **span** — `display:flex; flex-direction:column; gap:2px`
+              - **span** « Nouveau groupe » — `font:600 13.5px 'Plus Jakarta Sans'; color:#17151d`
+              - **span** « Cours collectif, small group » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+    - **div** — `flex:1; min-height:0; display:grid; grid-template-columns:340px minmax(0,1fr); gap:16px`
+      - **section** — `min-height:0; border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); display:flex; flex-direction:column; overflow:hidden`
+        - **div** — `padding:20px 20px 14px; display:flex; flex-direction:column; gap:14px`
+          - **div** — `display:flex; align-items:center; justify-content:space-between`
+            - **span** « Conversations » — `font:600 18px 'Plus Jakarta Sans'; letter-spacing:-.01em`
+            - **button** [aria-label=Nouveau message onClick={{ toggleMenu }}] — `border:0; width:32px; height:32px; border-radius:9px; background:#f3f2f7; color:#17151d; display:flex; align-items:center; justify-content:center`
+              - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+          - **span** « Rechercher une conversation » — `height:38px; padding:0 12px; border-radius:10px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.1); display:flex; align-items:center; gap:8px; font:400 13px 'Plus Jakarta Sans'; color:#8b8996`
+            - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+          - **div** — `display:flex; flex-wrap:wrap; gap:6px`
+            - **sc-for** [list={{ filters }} as=f]
+              - **button** [onClick={{ f.on }}] « {{ f.l }} » — `border:0; height:30px; padding:0 10px; border-radius:15px; font:500 12px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ f.bg }}; color:{{ f.c }}; box-shadow:{{ f.sh }}`
+        - **div** — `flex:1; min-height:0; overflow-y:auto; padding:0 10px 10px; display:flex; flex-direction:column; gap:2px`
+          - **sc-for** [list={{ convs }} as=c]
+            - **button** [onClick={{ c.pick }}] — `border:0; text-align:left; width:100%; display:flex; align-items:center; gap:12px; padding:12px 10px; border-radius:12px; background:{{ c.bg }}`
+              - **sc-if** [value={{ c.isPerson }}]
+                - **span** « {{ c.ini }} » — `position:relative; width:42px; height:42px; flex:none; border-radius:50%; background:#ecebf1; display:flex; align-items:center; justify-content:center; font:600 13px 'Plus Jakarta Sans'; color:#17151d`
+                  - **span** « {{ c.sx }} » — `position:absolute; right:-2px; bottom:-2px; width:17px; height:17px; border-radius:50%; box-shadow:0 0 0 2px #fff; display:flex; align-items:center; justify-content:center; font:600 10px 'Plus Jakarta Sans'; background:{{ c.sxBg }}; color:{{ c.sxC }}`
+              - **sc-if** [value={{ c.isGroup }}]
+                - **span** — `width:42px; height:42px; flex:none; border-radius:13px; display:flex; align-items:center; justify-content:center; background:{{ c.gBg }}; color:{{ c.gC }}`
+                  - **svg** 19×19 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+              - **span** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:3px`
+                - **span** — `display:flex; align-items:baseline; gap:8px`
+                  - **span** « {{ c.name }} » — `flex:1; min-width:0; font:600 14px 'Plus Jakarta Sans'; color:#17151d; white-space:nowrap; overflow:hidden`
+                  - **span** « {{ c.time }} » — `font:500 11.5px 'Plus Jakarta Sans'; white-space:nowrap; color:{{ c.tc }}`
+                - **span** — `display:flex; align-items:center; gap:8px`
+                  - **span** « {{ c.last }} » — `flex:1; min-width:0; font:400 12.5px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden; color:{{ c.lc }}`
+                  - **sc-if** [value={{ c.unread }}]
+                    - **span** « {{ c.unread }} » — `min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:#8b5cf6; color:#fff; font:600 11px/20px 'Plus Jakarta Sans'; text-align:center`
+          - **sc-if** [value={{ noConv }}]
+            - **div** — `padding:32px 12px; text-align:center; display:flex; flex-direction:column; gap:6px`
+              - **span** « Aucune conversation » — `font:600 14px 'Plus Jakarta Sans'`
+              - **span** « Essaie un autre filtre. » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+      - **section** — `min-height:0; border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); display:flex; flex-direction:column; overflow:hidden`
+        - **div** — `padding:16px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(22,18,40,.07)`
+          - **sc-if** [value={{ cur.isPerson }}]
+            - **span** « {{ cur.ini }} » — `position:relative; width:42px; height:42px; flex:none; border-radius:50%; background:#ecebf1; display:flex; align-items:center; justify-content:center; font:600 13px 'Plus Jakarta Sans'`
+              - **span** « {{ cur.sx }} » — `position:absolute; right:-2px; bottom:-2px; width:17px; height:17px; border-radius:50%; box-shadow:0 0 0 2px #fff; display:flex; align-items:center; justify-content:center; font:600 10px 'Plus Jakarta Sans'; background:{{ cur.sxBg }}; color:{{ cur.sxC }}`
+          - **sc-if** [value={{ cur.isGroup }}]
+            - **span** — `width:42px; height:42px; flex:none; border-radius:13px; display:flex; align-items:center; justify-content:center; background:{{ cur.gBg }}; color:{{ cur.gC }}`
+              - **svg** 19×19 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+          - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:2px`
+            - **span** « {{ cur.name }} » — `font:600 16px 'Plus Jakarta Sans'; white-space:nowrap`
+            - **a** [href=#] « {{ cur.sub }} » — `font:500 12.5px 'Plus Jakarta Sans'; color:#6a3ee0; white-space:nowrap`
+          - **span** « {{ cur.cta }} » — `height:32px; padding:0 12px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap; color:#17151d`
+            - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+          - **span** [aria-label=Actions] — `width:32px; height:32px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; justify-content:center`
+            - **svg** 15×15 viewBox=0 0 24 24 stroke=currentColor fill=none sw=3
+        - **div** — `flex:1; min-height:0; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:6px; background:#fcfcfd`
+          - **div** — `display:flex; align-items:center; gap:12px; padding:4px 0 10px`
+            - **span** — `flex:1; height:1px; background:rgba(22,18,40,.08)`
+            - **span** « Aujourd’hui » — `font:500 11.5px 'Plus Jakarta Sans'; color:#8b8996`
+            - **span** — `flex:1; height:1px; background:rgba(22,18,40,.08)`
+          - **sc-for** [list={{ msgs }} as=m]
+            - **div** — `display:flex; flex-direction:column; gap:4px; max-width:66%; align-self:{{ m.align }}; align-items:{{ m.align }}`
+              - **sc-if** [value={{ m.sender }}]
+                - **span** « {{ m.sender }} » — `font:600 12px 'Plus Jakarta Sans'; color:{{ m.sc }}`
+              - **span** « {{ m.t }} » — `padding:11px 15px; font:400 14px/1.45 'Plus Jakarta Sans'; background:{{ m.bg }}; color:{{ m.c }}; border-radius:{{ m.r }}`
+              - **span** « {{ m.time }} » — `font:400 11px 'Plus Jakarta Sans'; color:#8b8996; padding:0 4px`
+        - **div** — `padding:12px 20px 16px; border-top:1px solid rgba(22,18,40,.07); display:flex; flex-direction:column; gap:8px`
+          - **div** — `display:flex; align-items:flex-end; gap:10px`
+            - **span** [aria-label=Joindre un fichier] — `width:44px; height:44px; flex:none; border-radius:12px; background:#f3f2f7; display:flex; align-items:center; justify-content:center; color:#4a4855`
+              - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+            - **input** [placeholder=Écrire un message… value={{ draft }} onChange={{ setDraft }}] — `flex:1; min-width:0; height:44px; padding:0 16px; border-radius:12px; border:0; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); font:400 14px 'Plus Jakarta Sans'; color:#17151d` — états: `style-focus: box-shadow:inset 0 0 0 1.5px #8b5cf6`
+            - **button** [aria-label=Envoyer onClick={{ send }}] — `border:0; width:44px; height:44px; flex:none; border-radius:12px; display:flex; align-items:center; justify-content:center; background:{{ sendBg }}; color:#fff`
+              - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+          - **span** « {{ cur.note }} » — `font:400 11.5px 'Plus Jakarta Sans'; color:#8b8996`
+
+## Artboard « Messages mobile liste »
+
+- **artboard** — `position:relative;width:390px;height:844px;border-radius:44px;background:#f3f2f7;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);overflow:hidden;display:flex;flex-direction:column`
+  - **div** — `height:50px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:6px 30px 0; font:600 15px 'Plus Jakarta Sans'`
+    - **span** « 9:41 »
+    - **span** « 5G ▮ » — `font:600 12px 'Plus Jakarta Sans'`
+  - **div** — `flex:none; display:flex; align-items:center; gap:10px; padding:8px 16px 12px`
+    - **span** — `width:44px; height:44px; border-radius:13px; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(22,18,40,.06)`
+      - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+    - **span** « Messages » — `flex:1; display:flex; align-items:center; gap:8px; font:600 16px 'Plus Jakarta Sans'`
+      - **svg** 17×17 viewBox=0 0 24 24 stroke=#6a3ee0 fill=none sw=1.8
+    - **span** — `display:flex; align-items:center; gap:2px; padding:3px; border-radius:14px; background:#fff; box-shadow:0 1px 2px rgba(22,18,40,.06)`
+      - **span** — `width:40px; height:40px; border-radius:11px; background:#8b5cf6; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:40px; height:40px; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 9 » — `position:absolute; top:3px; right:2px; min-width:18px; height:18px; border-radius:9px; background:#8b5cf6; color:#fff; font:600 10px/18px 'Plus Jakarta Sans'; text-align:center`
+  - **div** — `flex:1; min-height:0; margin:0 12px 14px; border-radius:22px; background:#fff; display:flex; flex-direction:column; overflow:hidden`
+    - **div** — `padding:20px 20px 14px; display:flex; flex-direction:column; gap:14px`
+      - **span** « Rechercher » — `height:44px; padding:0 14px; border-radius:12px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.1); display:flex; align-items:center; gap:8px; font:400 15px 'Plus Jakarta Sans'; color:#8b8996`
+        - **svg** 15×15 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+      - **div** — `display:flex; gap:6px`
+        - **sc-for** [list={{ filters }} as=f]
+          - **button** [onClick={{ f.on }}] « {{ f.l }} » — `border:0; flex:none; height:36px; padding:0 14px; border-radius:18px; font:500 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ f.bg }}; color:{{ f.c }}; box-shadow:{{ f.sh }}`
+    - **div** — `flex:1; min-height:0; overflow-y:auto; padding:0 8px 88px; display:flex; flex-direction:column`
+      - **sc-for** [list={{ convsM }} as=c]
+        - **a** [href={{ c.href }}] — `display:flex; align-items:center; gap:13px; padding:13px 12px; border-radius:14px; color:#17151d`
+          - **sc-if** [value={{ c.isPerson }}]
+            - **span** « {{ c.ini }} » — `position:relative; width:46px; height:46px; flex:none; border-radius:50%; background:#ecebf1; display:flex; align-items:center; justify-content:center; font:600 14px 'Plus Jakarta Sans'`
+              - **span** « {{ c.sx }} » — `position:absolute; right:-2px; bottom:-2px; width:18px; height:18px; border-radius:50%; box-shadow:0 0 0 2px #fff; display:flex; align-items:center; justify-content:center; font:600 10px 'Plus Jakarta Sans'; background:{{ c.sxBg }}; color:{{ c.sxC }}`
+          - **sc-if** [value={{ c.isGroup }}]
+            - **span** — `width:46px; height:46px; flex:none; border-radius:14px; display:flex; align-items:center; justify-content:center; background:{{ c.gBg }}; color:{{ c.gC }}`
+              - **svg** 20×20 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+          - **span** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:4px`
+            - **span** — `display:flex; align-items:baseline; gap:8px`
+              - **span** « {{ c.name }} » — `flex:1; min-width:0; font:600 15px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden`
+              - **span** « {{ c.time }} » — `font:500 12px 'Plus Jakarta Sans'; white-space:nowrap; color:{{ c.tc }}`
+            - **span** — `display:flex; align-items:center; gap:8px`
+              - **span** « {{ c.last }} » — `flex:1; min-width:0; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden; color:{{ c.lc }}`
+              - **sc-if** [value={{ c.unread }}]
+                - **span** « {{ c.unread }} » — `min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:#8b5cf6; color:#fff; font:600 11px/20px 'Plus Jakarta Sans'; text-align:center`
+  - **a** [aria-label=Nouveau message href=#2b] — `position:absolute; right:24px; bottom:32px; width:58px; height:58px; border-radius:18px; background:#17151d; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 28px -8px rgba(22,18,40,.45)`
+    - **svg** 22×22 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+
+## Artboard « Messages mobile groupe »
+
+- **artboard** — `width:390px;height:844px;border-radius:44px;background:#f3f2f7;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);overflow:hidden;display:flex;flex-direction:column`
+  - **div** — `height:50px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:6px 30px 0; font:600 15px 'Plus Jakarta Sans'`
+    - **span** « 9:41 »
+    - **span** « 5G ▮ » — `font:600 12px 'Plus Jakarta Sans'`
+  - **div** — `flex:none; display:flex; align-items:center; gap:10px; padding:8px 16px 12px`
+    - **span** — `width:44px; height:44px; border-radius:13px; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 1px 2px rgba(22,18,40,.06)`
+      - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+    - **a** [href=#1b] « Messages » — `flex:1; display:flex; align-items:center; gap:7px; font:500 15px 'Plus Jakarta Sans'; color:#64626e`
+      - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+    - **span** — `display:flex; align-items:center; gap:2px; padding:3px; border-radius:14px; background:#fff; box-shadow:0 1px 2px rgba(22,18,40,.06)`
+      - **span** — `width:40px; height:40px; border-radius:11px; background:#8b5cf6; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:40px; height:40px; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 9 » — `position:absolute; top:3px; right:2px; min-width:18px; height:18px; border-radius:9px; background:#8b5cf6; color:#fff; font:600 10px/18px 'Plus Jakarta Sans'; text-align:center`
+  - **div** — `flex:1; min-height:0; margin:0 12px 14px; border-radius:22px; background:#fff; display:flex; flex-direction:column; overflow:hidden`
+    - **div** — `padding:16px 18px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(22,18,40,.07)`
+      - **span** — `width:44px; height:44px; flex:none; border-radius:14px; background:rgba(254,193,79,.22); color:#8a5a00; display:flex; align-items:center; justify-content:center`
+        - **svg** 19×19 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+      - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:2px`
+        - **span** « Small group Hyrox » — `font:600 16px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **span** « 8 membres · Voir les membres » — `font:500 12.5px 'Plus Jakarta Sans'; color:#6a3ee0`
+      - **span** [aria-label=Actions] — `width:44px; height:44px; border-radius:12px; background:#f3f2f7; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=3
+    - **div** — `margin:12px 18px 0; padding:10px 12px; border-radius:12px; background:#f8f7fb; display:flex; align-items:center; gap:10px`
+      - **span** — `width:4px; height:30px; border-radius:2px; background:#FEC14F`
+      - **span** — `flex:1; display:flex; flex-direction:column; gap:1px`
+        - **span** « Prochaine séance · jeu. 19:00 » — `font:600 13px 'Plus Jakarta Sans'`
+        - **span** « Behybrid Box · 8 inscrits » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+    - **div** — `flex:1; min-height:0; overflow-y:auto; padding:14px 18px; display:flex; flex-direction:column; gap:6px`
+      - **sc-for** [list={{ grpMsgs }} as=m]
+        - **div** — `display:flex; flex-direction:column; gap:4px; max-width:82%; align-self:{{ m.align }}; align-items:{{ m.align }}`
+          - **sc-if** [value={{ m.sender }}]
+            - **span** « {{ m.sender }} » — `font:600 12px 'Plus Jakarta Sans'; color:{{ m.sc }}`
+          - **span** « {{ m.t }} » — `padding:11px 14px; font:400 15px/1.45 'Plus Jakarta Sans'; background:{{ m.bg }}; color:{{ m.c }}; border-radius:{{ m.r }}`
+          - **span** « {{ m.time }} » — `font:400 11px 'Plus Jakarta Sans'; color:#8b8996; padding:0 4px`
+    - **div** — `padding:10px 14px 14px; border-top:1px solid rgba(22,18,40,.07); display:flex; align-items:center; gap:8px`
+      - **span** — `width:44px; height:44px; flex:none; border-radius:12px; background:#f3f2f7; display:flex; align-items:center; justify-content:center; color:#4a4855`
+        - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+      - **span** « Écrire au groupe… » — `flex:1; height:44px; padding:0 14px; border-radius:12px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; font:400 15px 'Plus Jakarta Sans'; color:#8b8996`
+      - **span** — `width:44px; height:44px; flex:none; border-radius:12px; background:#17151d; color:#fff; display:flex; align-items:center; justify-content:center`
+        - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+
+## Artboard « Nouveau groupe desktop »
+
+- **artboard** — `position:relative;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:1280px;height:800px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;overflow:hidden`
+  - **div** — `width:236px; border-radius:20px; background:#fff`
+  - **div** — `flex:1; display:flex; flex-direction:column; gap:16px`
+    - **div** — `height:64px; border-radius:20px; background:#fff`
+    - **div** — `flex:1; display:grid; grid-template-columns:340px 1fr; gap:16px`
+      - **div** — `border-radius:20px; background:#fff`
+      - **div** — `border-radius:20px; background:#fff`
+  - **div** — `position:absolute; inset:0; background:rgba(23,21,29,.42); display:flex; align-items:center; justify-content:center`
+    - **div** — `width:560px; border-radius:22px; background:#fff; box-shadow:0 30px 80px -20px rgba(22,18,40,.45); display:flex; flex-direction:column; overflow:hidden`
+      - **div** — `padding:24px 24px 0; display:flex; align-items:flex-start; gap:14px`
+        - **span** — `width:44px; height:44px; flex:none; border-radius:13px; background:rgba(254,193,79,.22); color:#8a5a00; display:flex; align-items:center; justify-content:center`
+          - **svg** 19×19 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **div** — `flex:1; display:flex; flex-direction:column; gap:4px`
+          - **span** « Nouveau groupe » — `font:600 20px 'Plus Jakarta Sans'; letter-spacing:-.01em`
+          - **span** « Pour un cours collectif ou un small group. Chaque membre voit les m… » — `font:400 13.5px/1.45 'Plus Jakarta Sans'; color:#64626e`
+        - **span** [aria-label=Fermer] — `width:36px; height:36px; flex:none; border-radius:50%; background:#f3f2f7; display:flex; align-items:center; justify-content:center`
+          - **svg** 15×15 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+      - **div** — `padding:22px 24px; display:flex; flex-direction:column; gap:18px`
+        - **label** — `display:flex; flex-direction:column; gap:8px`
+          - **span** « Nom du groupe » — `font:600 13.5px 'Plus Jakarta Sans'`
+          - **input** [value={{ gName }} onChange={{ setGName }}] — `height:46px; padding:0 14px; border-radius:12px; border:0; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); font:400 14px 'Plus Jakarta Sans'; color:#17151d` — états: `style-focus: box-shadow:inset 0 0 0 1.5px #8b5cf6`
+        - **div** — `display:flex; flex-direction:column; gap:8px`
+          - **span** « Séance collective liée » — `font:600 13.5px 'Plus Jakarta Sans'`
+            - **em** « (facultatif) » — `color:#64626e`
+          - **span** — `height:46px; padding:0 14px; border-radius:12px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; gap:10px; font:400 14px 'Plus Jakarta Sans'`
+            - **span** — `width:8px; height:8px; border-radius:2px; background:#FEC14F`
+            - **span** « Small group Hyrox · lun. et jeu. 19:00 » — `flex:1`
+            - **svg** 14×14 viewBox=0 0 24 24 stroke=#64626e fill=none sw=2
+          - **span** « Les inscrits à cette séance sont proposés automatiquement. » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+        - **div** — `display:flex; flex-direction:column; gap:10px`
+          - **div** — `display:flex; align-items:baseline; justify-content:space-between`
+            - **span** « Membres » — `font:600 13.5px 'Plus Jakarta Sans'`
+            - **span** « {{ gCount }} » — `font:500 12.5px 'Plus Jakarta Sans'; color:#6a3ee0`
+          - **div** — `border-radius:14px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.1); padding:6px; display:flex; flex-direction:column; max-height:236px; overflow-y:auto`
+            - **sc-for** [list={{ gList }} as=a]
+              - **button** [role=checkbox onClick={{ a.toggle }} aria-checked={{ a.on }}] — `border:0; background:transparent; text-align:left; display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:10px` — états: `style-hover: background:#f8f7fb`
+                - **span** « {{ a.ini }} » — `width:34px; height:34px; flex:none; border-radius:50%; background:#ecebf1; display:flex; align-items:center; justify-content:center; font:600 12px 'Plus Jakarta Sans'; color:#17151d`
+                - **span** — `flex:1; display:flex; flex-direction:column`
+                  - **span** « {{ a.n }} » — `font:600 13.5px 'Plus Jakarta Sans'; color:#17151d`
+                  - **span** « {{ a.s }} » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+                - **span** « {{ a.mark }} » — `width:22px; height:22px; flex:none; border-radius:7px; display:flex; align-items:center; justify-content:center; color:#fff; font:700 12px 'Plus Jakarta Sans'; background:{{ a.bg }}; box-shadow:{{ a.bd }}`
+      - **div** — `padding:16px 24px; border-top:1px solid rgba(22,18,40,.07); display:flex; justify-content:flex-end; gap:10px`
+        - **span** « Annuler » — `height:42px; padding:0 18px; border-radius:11px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.14); display:flex; align-items:center; font:500 14px 'Plus Jakarta Sans'`
+        - **span** « {{ gCta }} » — `height:42px; padding:0 18px; border-radius:11px; background:#17151d; color:#fff; display:flex; align-items:center; font:600 14px 'Plus Jakarta Sans'; white-space:nowrap`
+
+## Artboard « Nouveau message mobile »
+
+- **artboard** — `position:relative;width:390px;height:844px;border-radius:44px;background:#f3f2f7;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);overflow:hidden`
+  - **div** — `position:absolute; inset:0; padding:112px 12px 14px`
+    - **div** — `height:100%; border-radius:22px; background:#fff`
+  - **div** — `position:absolute; inset:0; background:rgba(23,21,29,.42)`
+  - **div** — `position:absolute; left:0; right:0; bottom:0; height:640px; border-radius:26px 26px 0 0; background:#fff; display:flex; flex-direction:column`
+    - **span** — `width:40px; height:4px; border-radius:2px; background:#d6d4de; align-self:center`
+    - **div** — `padding:16px 20px 12px; display:flex; align-items:center; justify-content:space-between`
+      - **span** « Nouveau message » — `font:600 20px 'Plus Jakarta Sans'`
+      - **span** — `width:40px; height:40px; border-radius:50%; background:#f3f2f7; display:flex; align-items:center; justify-content:center`
+        - **svg** 15×15 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+    - **div** — `padding:0 20px 14px`
+      - **span** « Rechercher un sportif » — `height:46px; padding:0 14px; border-radius:12px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.1); display:flex; align-items:center; gap:8px; font:400 15px 'Plus Jakarta Sans'; color:#8b8996`
+        - **svg** 15×15 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+    - **a** [href=#2c] — `margin:0 12px; display:flex; align-items:center; gap:13px; padding:12px; border-radius:14px; background:#f8f7fb; color:#17151d`
+      - **span** — `width:46px; height:46px; flex:none; border-radius:14px; background:rgba(254,193,79,.22); color:#8a5a00; display:flex; align-items:center; justify-content:center`
+        - **svg** 20×20 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+      - **span** — `flex:1; display:flex; flex-direction:column; gap:2px`
+        - **span** « Créer un groupe » — `font:600 15px 'Plus Jakarta Sans'`
+        - **span** « Cours collectif, small group » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+      - **svg** 16×16 viewBox=0 0 24 24 stroke=#8b8996 fill=none sw=2
+    - **span** « SPORTIFS » — `padding:20px 24px 6px; font:600 11.5px 'Plus Jakarta Sans'; letter-spacing:.06em; color:#8b8996`
+    - **div** — `flex:1; overflow-y:auto; padding:0 12px 20px; display:flex; flex-direction:column`
+      - **sc-for** [list={{ gList }} as=a]
+        - **div** — `display:flex; align-items:center; gap:13px; padding:10px 12px; min-height:60px; border-radius:14px`
+          - **span** « {{ a.ini }} » — `width:42px; height:42px; flex:none; border-radius:50%; background:#ecebf1; display:flex; align-items:center; justify-content:center; font:600 13px 'Plus Jakarta Sans'`
+          - **span** — `flex:1; display:flex; flex-direction:column; gap:1px`
+            - **span** « {{ a.n }} » — `font:600 15px 'Plus Jakarta Sans'`
+            - **span** « {{ a.s }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+
+## Artboard « Nouveau groupe mobile »
+
+- **artboard** — `position:relative;width:390px;height:844px;border-radius:44px;background:#f3f2f7;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);overflow:hidden`
+  - **div** — `position:absolute; inset:0; background:rgba(23,21,29,.42)`
+  - **div** — `position:absolute; left:0; right:0; bottom:0; height:780px; border-radius:26px 26px 0 0; background:#fff; display:flex; flex-direction:column`
+    - **span** — `width:40px; height:4px; border-radius:2px; background:#d6d4de; align-self:center`
+    - **div** — `padding:16px 20px 4px; display:flex; align-items:center; gap:10px`
+      - **a** [aria-label=Retour href=#2b] — `width:40px; height:40px; border-radius:50%; background:#f3f2f7; display:flex; align-items:center; justify-content:center; color:#17151d`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+      - **span** « Nouveau groupe » — `flex:1; font:600 20px 'Plus Jakarta Sans'`
+    - **div** — `flex:1; overflow-y:auto; padding:16px 20px; display:flex; flex-direction:column; gap:18px`
+      - **label** — `display:flex; flex-direction:column; gap:8px`
+        - **span** « Nom du groupe » — `font:600 14px 'Plus Jakarta Sans'`
+        - **input** [value={{ gName }} onChange={{ setGName }}] — `height:50px; padding:0 14px; border-radius:12px; border:0; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); font:400 16px 'Plus Jakarta Sans'; color:#17151d`
+      - **div** — `display:flex; flex-direction:column; gap:8px`
+        - **span** « Séance collective liée » — `font:600 14px 'Plus Jakarta Sans'`
+          - **em** « (facultatif) » — `color:#64626e`
+        - **span** — `height:50px; padding:0 14px; border-radius:12px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; gap:10px; font:400 15px 'Plus Jakarta Sans'`
+          - **span** — `width:8px; height:8px; border-radius:2px; background:#FEC14F`
+          - **span** « Small group Hyrox · lun., jeu. » — `flex:1; white-space:nowrap; overflow:hidden`
+          - **svg** 14×14 viewBox=0 0 24 24 stroke=#64626e fill=none sw=2
+      - **div** — `display:flex; flex-direction:column; gap:10px`
+        - **div** — `display:flex; align-items:baseline; justify-content:space-between`
+          - **span** « Membres » — `font:600 14px 'Plus Jakarta Sans'`
+          - **span** « {{ gCount }} » — `font:500 13px 'Plus Jakarta Sans'; color:#6a3ee0`
+        - **div** — `display:flex; flex-direction:column`
+          - **sc-for** [list={{ gList }} as=a]
+            - **button** [role=checkbox onClick={{ a.toggle }} aria-checked={{ a.on }}] — `border:0; background:transparent; text-align:left; display:flex; align-items:center; gap:12px; min-height:58px; padding:8px 4px`
+              - **span** « {{ a.ini }} » — `width:40px; height:40px; flex:none; border-radius:50%; background:#ecebf1; display:flex; align-items:center; justify-content:center; font:600 13px 'Plus Jakarta Sans'; color:#17151d`
+              - **span** — `flex:1; display:flex; flex-direction:column`
+                - **span** « {{ a.n }} » — `font:600 15px 'Plus Jakarta Sans'; color:#17151d`
+                - **span** « {{ a.s }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+              - **span** « {{ a.mark }} » — `width:26px; height:26px; flex:none; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font:700 13px 'Plus Jakarta Sans'; background:{{ a.bg }}; box-shadow:{{ a.bd }}`
+    - **div** — `padding:12px 20px 28px; border-top:1px solid rgba(22,18,40,.07)`
+      - **span** « {{ gCta }} » — `height:54px; border-radius:14px; background:#17151d; color:#fff; display:flex; align-items:center; justify-content:center; font:600 16px 'Plus Jakarta Sans'`
+

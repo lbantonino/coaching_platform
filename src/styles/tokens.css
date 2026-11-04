@@ -151,6 +151,16 @@
   --dlg-warn: #fbbf24;
   --dlg-warn-tile: color-mix(in srgb, #fbbf24 16%, #1a1a1d);
   --dlg-muted-tile: color-mix(in srgb, #a1a1aa 16%, #1a1a1d);
+  /* Pastilles d'état des pages (kit « Coory Pages », D-119) : texte et fond teinté. */
+  --status-neutral: #a1a1aa;
+  --status-neutral-soft: rgba(255, 255, 255, 0.07);
+  --status-accent: #c4b5fd;
+  --status-accent-soft: rgba(139, 92, 246, 0.18);
+  --status-warn: #fbbf24;
+  --status-warn-soft: rgba(251, 191, 36, 0.14);
+  --status-ok: #34d399;
+  --status-ok-soft: rgba(52, 211, 153, 0.14);
+  --status-danger: #fb7185;
   /* Disciplines (kit, programme d'un sportif) : tuile à 16 %, icône dans la couleur claire. */
   --dlg-run: #7776ff;
   --dlg-run-tile: color-mix(in srgb, #7776ff 16%, #1a1a1d);
@@ -315,6 +325,16 @@
   --dlg-warn: #b7791f;
   --dlg-warn-tile: color-mix(in srgb, #b7791f 16%, #fff);
   --dlg-muted-tile: color-mix(in srgb, #64626e 16%, #fff);
+  /* Pastilles d'état des pages (kit « Coory Pages », valeurs exactes, D-119). */
+  --status-neutral: #64626e;
+  --status-neutral-soft: #f1f0f5;
+  --status-accent: #5b30d6;
+  --status-accent-soft: #ede6ff;
+  --status-warn: #9a5b0a;
+  --status-warn-soft: #fff3d6;
+  --status-ok: #11867a;
+  --status-ok-soft: #e3f6f1;
+  --status-danger: #c0213d;
   /* Disciplines (kit, programme d'un sportif) : tuile à 16 %, icône foncée lisible. */
   --dlg-run: #5a58e8;
   --dlg-run-tile: color-mix(in srgb, #7776ff 16%, #fff);

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ExerciseImage, exerciseCategoryIcons } from "@/components/blocks/exercise-image";
 import { FavoriteButton } from "@/components/blocks/favorite-button";
+import { phoneFabClass } from "@/components/layout/mobile-bar";
 import { PageBody, PageHeader } from "@/components/layout/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { chipActiveClass, chipClass, chipIdleClass } from "@/components/ui/chip";
@@ -108,12 +109,28 @@ export function LibraryView({
         title="Bibliothèque"
         subtitle="Exercices de musculation, de cardio et d'Hyrox, à retrouver d'un sportif à l'autre."
         actions={
-          <Link href="/coach/bibliotheque/nouveau" className={buttonClass()}>
-            <Plus aria-hidden size={16} strokeWidth={2} />
+          // Ordinateur : le bouton de l'en-tête (32 px, comme les autres pages) ; téléphone : le
+          // bouton flottant (décision 4 d'Antonino, kit « Coory Pages », D-122).
+          <Link
+            href="/coach/bibliotheque/nouveau"
+            className={buttonClass({
+              className:
+                "max-lg:hidden lg:h-8! lg:gap-1.5! lg:rounded-[9px]! lg:px-3.5! lg:text-[12.5px]! lg:font-medium!",
+            })}
+          >
+            <Plus aria-hidden size={13} strokeWidth={2.2} />
             Créer un exercice
           </Link>
         }
       />
+      <Link
+        href="/coach/bibliotheque/nouveau"
+        aria-label="Créer un exercice"
+        data-phone-fab=""
+        className={phoneFabClass}
+      >
+        <Plus aria-hidden size={24} strokeWidth={2.2} />
+      </Link>
       <PageBody>
         <div className="flex flex-col gap-3">
           <label className="flex h-11 items-center gap-2.5 rounded-control border border-line bg-surface px-3 text-[14px] focus-within:border-accent md:w-[420px]">
