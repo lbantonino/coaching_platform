@@ -32,6 +32,30 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Navigation du téléphone harmonisée (D-117)
+```
+Date : 2026-11-04
+Brief d'Antonino : « + » des pages en bouton flottant (modèle de l'Agenda), retour dans la barre du
+  haut à la place du nom de la page, libellé selon la page d'origine. Pas de redesign, ordinateur intact.
+mobile-bar.tsx : emplacement du « + » de la barre retiré (MobileBarAction, barActionClass) ;
+  phoneFabClass = la classe du bouton flottant de l'Agenda, partagée. Boutons marqués data-phone-fab.
+Bouton flottant : create-menu.tsx (tableau de bord), sportifs/page.tsx, fiche-create-menu.tsx ;
+  new-session-sheet.tsx : variante « bar » retirée (plus utilisée), « fab » sur phoneFabClass.
+globals.css : main:has([data-phone-fab]) [data-page-body] → 96 px + zone du geste en bas (téléphone) ;
+  limité au <main> de la page : Next garde la page quittée cachée dans le document.
+page-header.tsx : le retour va toujours dans la barre du téléphone (option backInPhoneBar retirée) ;
+  6 px au-dessus du titre visible d'une page de détail sur téléphone.
+back-link.tsx : barBackClass partagé ; messages/page.tsx (« ← Conversations », fil ouvert) et
+  settings-panel.tsx (« ← Paramètres », section ouverte) le posent dans la barre (MobileBarTitle).
+Vérifié au navigateur à 360, 390 et 430 px et à 1280 px : position du bouton (16 px du bord, 20 px du
+  bas), fin de page au-dessus du bouton, retour dans la barre et libellé selon l'origine (tableau de
+  bord / Agenda, après rechargement), destination (Agenda avec sa vue), aucun débordement, ordinateur
+  sans bouton flottant ni changement.
+eslint.config.mjs : coory-design/** ignoré (scripts du kit et outil de mesure, pas du code de l'app :
+  `npm run lint` échouait depuis la phase A des boîtes).
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright 175 réussis, 17 ignorés, 0 échec.
+```
+
 ### Boîtes de dialogue, Phase I : validation globale (D-116)
 ```
 Date : 2026-11-04

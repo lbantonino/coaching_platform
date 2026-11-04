@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useOpenNewPayment } from "@/components/blocks/new-payment-sheet";
 import { useOpenNewSession } from "@/components/blocks/new-session-sheet";
 import { useOpenTaskSheet } from "@/components/blocks/task-sheet";
-import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
+import { phoneFabClass } from "@/components/layout/mobile-bar";
 import { buttonClass } from "@/components/ui/button";
 import { ActionMenu } from "@/components/ui/overlay";
 
@@ -34,17 +34,16 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
         <Plus aria-hidden size={16} strokeWidth={2} />
         Créer
       </button>
-      {/* Téléphone (D-78) : le « + » de la carte en haut à droite (avec l'assistant IA et la cloche). */}
-      <MobileBarAction>
-        <button
-          type="button"
-          aria-label="Créer"
-          onClick={() => setOpen(true)}
-          className={barActionClass}
-        >
-          <Plus aria-hidden size={20} strokeWidth={2.2} />
-        </button>
-      </MobileBarAction>
+      {/* Téléphone (D-117) : le bouton flottant en bas à droite, celui de l'Agenda. */}
+      <button
+        type="button"
+        aria-label="Créer"
+        onClick={() => setOpen(true)}
+        data-phone-fab=""
+        className={phoneFabClass}
+      >
+        <Plus aria-hidden size={24} strokeWidth={2.2} />
+      </button>
       <ActionMenu
         open={open}
         onClose={() => setOpen(false)}

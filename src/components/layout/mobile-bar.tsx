@@ -14,14 +14,13 @@ import { PageIcon } from "./page-icon";
 import { useShell } from "./shell-context";
 
 // Téléphone (prompt Claude Design §5.2 et §5.3). Coach et admin (D-78) : deux petites cartes flottantes
-// en haut, ☰ à gauche, et à droite l'assistant IA (coach), la cloche et le « + » de la page
-// (MobileBarAction : « Créer » sur le tableau de bord, « Nouvelle séance » sur l'Agenda). Entre les
-// deux, le nom de la page (02/11 : savoir tout de suite où l'on est), sans carte ni hauteur en plus ;
-// avec l'icône de la page (celle du menu) ; le titre propre à la page (PageHeader) reste pour les
-// lecteurs d'écran. Les pages défilent sous les
-// cartes, dans un fondu de la couleur de la page.
+// en haut, ☰ à gauche, et à droite l'assistant IA (coach) et la cloche. Entre les deux, le nom de la
+// page (02/11 : savoir tout de suite où l'on est), sans carte ni hauteur en plus, avec l'icône de la
+// page (celle du menu) ; une page de détail y met son retour à la place (« ← Tableau de bord »,
+// D-117). Le « + » d'une page n'est plus dans la barre : c'est le bouton flottant en bas à droite,
+// celui de l'Agenda (phoneFabClass, D-117). Les pages défilent sous les cartes, dans un fondu de la
+// couleur de la page.
 // Sportif : barre du haut avec le logo, le titre de la page et la cloche (sa barre d'onglets est en bas).
-const ACTION_SLOT = "mobile-bar-action";
 // Agenda (02/11, gagner de la place) : le mois remplace le nom de la page, l'icône de la vue se pose
 // juste avant l'assistant IA.
 const TITLE_SLOT = "mobile-bar-title";
@@ -66,7 +65,6 @@ export function MobileTopBar() {
         <span id={TOOL_SLOT} className="contents" />
         {space === "coach" ? <AssistantButton /> : null}
         <NotificationBell phone />
-        <span id={ACTION_SLOT} className="contents" />
       </div>
     </header>
   );
@@ -91,8 +89,7 @@ function useAtTop() {
   return atTop;
 }
 
-// Le « + » d'une page, posé dans la carte de droite de la barre du téléphone (portail React : il garde
-// le contexte de la page, comme les fenêtres « Nouvelle séance » ou « Créer »).
+// Ce qu'une page pose dans la barre du téléphone (portail React : il garde le contexte de la page).
 const noSubscribe = () => () => {};
 function InSlot({ id, children }: { id: string; children: ReactNode }) {
   const slot = useSyncExternalStore(
@@ -102,10 +99,7 @@ function InSlot({ id, children }: { id: string; children: ReactNode }) {
   );
   return slot ? createPortal(children, slot) : null;
 }
-export function MobileBarAction({ children }: { children: ReactNode }) {
-  return <InSlot id={ACTION_SLOT}>{children}</InSlot>;
-}
-// À la place du nom de la page (Agenda : « Novembre ▾ »).
+// À la place du nom de la page (Agenda : « Novembre ▾ » ; page de détail : son retour).
 export function MobileBarTitle({ children }: { children: ReactNode }) {
   return <InSlot id={TITLE_SLOT}>{children}</InSlot>;
 }
@@ -114,9 +108,13 @@ export function MobileBarTool({ children }: { children: ReactNode }) {
   return <InSlot id={TOOL_SLOT}>{children}</InSlot>;
 }
 
-// Classe du « + » de la barre : plein (action principale), 40 px, dans la carte de droite.
-export const barActionClass =
-  "grid size-10 shrink-0 place-items-center rounded-xl bg-cta text-on-cta transition-transform duration-150 active:scale-[0.94]";
+// Bouton flottant « + » du téléphone (D-117) : l'action principale de création d'une page, en bas à
+// droite, au-dessus de la zone du geste de l'iPhone. C'est celui de l'Agenda (03/11, comme Google
+// Agenda), repris tel quel par le tableau de bord, les Sportifs et la fiche d'un sportif. Le bouton
+// porte `data-phone-fab` : le corps de la page (PageBody) garde alors assez de place en bas pour
+// que la fin de la page passe au-dessus de lui (globals.css). Icône : Plus 24, trait 2,2.
+export const phoneFabClass =
+  "fixed right-4 bottom-[calc(20px+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-2xl bg-cta text-on-cta shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-transform duration-150 ease-out active:scale-95 lg:hidden";
 
 // Barre du bas du sportif (téléphone) : 5 onglets de 52 px, icône 22, libellé 11/500, onglet actif
 // en rouge texte. La séance du jour reste à 2 actions maximum.

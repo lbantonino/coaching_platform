@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { SettingsSection } from "@/components/blocks/settings-context";
+import { barBackClass } from "@/components/layout/back-link";
+import { MobileBarTitle } from "@/components/layout/mobile-bar";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -135,13 +137,15 @@ export function SettingsPanel({
       </nav>
 
       <div className={`flex min-w-0 flex-col gap-4 ${section ? "" : "max-lg:hidden"}`}>
-        <Go
-          to={null}
-          className="inline-flex min-h-11 w-fit items-center gap-1.5 text-[14px] font-medium text-muted hover:text-text lg:hidden"
-        >
-          <ArrowLeft aria-hidden size={16} strokeWidth={1.8} />
-          Paramètres
-        </Go>
+        {/* Téléphone, une section ouverte : « ← Paramètres » dans la barre du haut (D-117). */}
+        {section ? (
+          <MobileBarTitle>
+            <Go to={null} className={barBackClass}>
+              <ArrowLeft aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+              <span className="truncate">Paramètres</span>
+            </Go>
+          </MobileBarTitle>
+        ) : null}
         <h2 className="font-display text-[22px] font-semibold tracking-[-0.02em]">
           {current.label}
         </h2>
