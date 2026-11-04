@@ -191,7 +191,9 @@ export function AccountMenu() {
         }}
         // Sans bordure (02/11) : la photo cerclée, le nom, le rôle et la flèche ; fond au survol et
         // tant que le menu est ouvert.
-        className={`flex w-full items-center gap-2.5 rounded-wide p-2 text-left text-text transition-colors duration-150 hover:bg-surface-2 ${
+        // min-h 55 px : la même hauteur menu replié (photo seule) et déplié (photo, nom, rôle), pour que
+        // la photo ne bouge pas quand le menu se replie (demande d'Antonino du 04/11).
+        className={`flex min-h-[55px] w-full items-center gap-2.5 rounded-wide p-2 text-left text-text transition-colors duration-150 hover:bg-surface-2 ${
           open ? "bg-surface-2" : ""
         }`}
       >

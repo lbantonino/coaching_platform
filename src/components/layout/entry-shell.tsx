@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
-import { CooryLogo, CooryWatermark } from "@/components/ui/coory-logo";
+import { ThemedCooryLogo } from "@/components/brand/themed-logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 import { DefaultEyebrow, EntryEyebrow } from "./entry-eyebrow";
@@ -60,8 +60,7 @@ export function EntryShell({ children }: { children: ReactNode }) {
   return (
     <div className="group/auth flex min-h-dvh flex-1">
       <aside className="sticky top-4 m-4 hidden min-h-[calc(100dvh-32px)] w-[44%] max-w-[680px] shrink-0 flex-col justify-between self-start overflow-hidden rounded-[24px] border border-line bg-panel px-12 py-11 lg:flex">
-        <CooryWatermark className="absolute -right-[420px] -bottom-[140px] w-[700px] opacity-[0.05]" />
-        <CooryLogo size={20} />
+        <ThemedCooryLogo height={32} />
         <div className="relative flex flex-col gap-6">
           <Suspense fallback={<DefaultEyebrow />}>
             <EntryEyebrow />
@@ -74,7 +73,7 @@ export function EntryShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col px-5 pt-2.5 pb-7 lg:pt-6 lg:pr-10 lg:pb-7 lg:pl-6">
         <div className="flex min-h-11 items-center gap-2.5">
           <Link href="/login" aria-label="Accueil" className="rounded-sm lg:hidden">
-            <CooryLogo size={17} />
+            <ThemedCooryLogo height={28} />
           </Link>
           <div className="flex-1" />
           <ThemeToggle />
@@ -98,7 +97,7 @@ export function LegalShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-1 flex-col px-5 pt-2.5 pb-7 lg:px-10 lg:pt-6">
       <div className="flex min-h-11 items-center gap-2.5">
         <Link href="/login" aria-label="Accueil" className="rounded-sm">
-          <CooryLogo size={17} />
+          <ThemedCooryLogo height={28} />
         </Link>
         <div className="flex-1" />
         <ThemeToggle />

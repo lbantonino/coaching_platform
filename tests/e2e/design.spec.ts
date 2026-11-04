@@ -1,19 +1,39 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Identité visuelle Coory (design system Graphite & Or, 29/10/2026) : logo, icônes et thème.
+// Identité visuelle Coory : logo définitif (04/11/2026, docs/design/coory-brand), icônes et thème.
 
-test("le logo Coory est annoncé par son nom et le favicon est la boucle or", async ({ page }) => {
+test("le logo Coory est annoncé par son nom, avec le favicon, l'icône iPhone et l'aperçu de partage du kit", async ({
+  page,
+}) => {
   await page.goto("/");
-  // Le wordmark « C + boucle infinie + ry » est lu « Coory » par un lecteur d'écran.
+  // Le logo (icône + COORY) est lu « Coory » par un lecteur d'écran.
   await expect(page.getByRole("img", { name: "Coory" })).toBeVisible();
   await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveAttribute(
     "href",
-    /icon\.svg/,
+    "/icon.svg",
   );
+  await expect(page.locator('link[rel="icon"][sizes="32x32"]')).toHaveAttribute(
+    "href",
+    "/favicon.ico",
+  );
+  // Seuls le SVG (qui suit le thème du navigateur) et le .ico de secours : pas de PNG que Chrome
+  // pourrait préférer.
+  await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
     "href",
-    /apple-icon\.png/,
+    "/apple-touch-icon.png",
   );
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+    "content",
+    /\/og-image\.png$/,
+  );
+  // Le manifeste liste les trois icônes du kit (192, 512 et « maskable »).
+  const manifest = await (await page.request.get("/manifest.webmanifest")).json();
+  expect(manifest.icons.map((icon: { src: string }) => icon.src)).toEqual([
+    "/icon-192.png",
+    "/icon-512.png",
+    "/icon-maskable-512.png",
+  ]);
 });
 
 test("le graphite (sombre) est le défaut, le clair se choisit et reste après rechargement", async ({

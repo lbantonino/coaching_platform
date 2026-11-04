@@ -315,9 +315,9 @@ select:not([multiple]) {
     padding-inline: 10px;
     align-items: stretch;
   }
+  /* Même hauteur que dépliée (55 px, app-shell.tsx) : seule l'icône « Déplier », centrée. */
   [data-sidebar="hidden"] [data-sidebar-head] {
-    flex-direction: column;
-    gap: 8px;
+    justify-content: center;
   }
   [data-sidebar="hidden"] [data-logo-full],
   [data-sidebar="hidden"] [data-sidebar-hide] {
@@ -361,8 +361,8 @@ select:not([multiple]) {
   }
 }
 
-/* Logo et icônes du kit de marque (D-77) : la version « fond sombre » en thème sombre, « fond clair » en
-   thème clair (src/components/ui/coory-logo.tsx). */
+/* Logo (kit définitif du 04/11/2026) : le ton « fond sombre » en thème sombre, « fond clair » en thème
+   clair (src/components/brand/themed-logo.tsx). */
 [data-theme="light"] .brand-dark,
 :root:not([data-theme="light"]) .brand-light {
   display: none;
