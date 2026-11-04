@@ -24,15 +24,20 @@ Risque : navigation menu → sous-menu → retour.
 
 ## Phase E — Formulaires simples
 24, 03, 19 (avec Supprimer → 20), 21 (zone de dépôt).
+**État** : ✅ faite le 04/11/2026, 0 px d'écart mesuré ; composants de champs communs (dialog-fields.tsx), corps et pied réutilisables (DialogBody, DialogFooter, Sheet bare).
 
 ## Phase F — Formulaires riches
 02, 04, 10, 27, 34 (dépendances : récurrence, forfait, compétition, conversion), 26 et 28 (CategoryList, 28 ouvert depuis 27, 29 depuis 28).
+**État** : ✅ faite le 04/11/2026 ; 0 px sauf écarts signalés (02 : champs en plus ; 04 : erreur de la maquette).
 
 ## Phase G — Cas à part
 16 (menu ancré + feuille mobile différente), 32 (menu ancré bas-gauche, thème).
+**État** : ✅ faite le 04/11/2026, 0 px ; menus ancrés (Overlay `anchor`, MenuDialog, briques MenuTile / MenuSectionTitle / MenuSeparator / MenuShortcut / MenuSelectedMark).
 
 ## Phase H — Grands panneaux
 23 (aperçu PDF réel), 33 (paramètres, navigation latérale ; 34 et 35 s’y ouvrent).
+**État** : ✅ faite le 04/11/2026, 0 px ; PanelDialog `bare`, SettingsDialogPanel, ProfileDialogSection, Preview refait.
 
 ## Phase I — Validation globale
 Relancer quality-assurance/* sur les 36 boîtes, desktop et mobile.
+**État** : ✅ faite le 04/11/2026 : QA-REPORT.md complété (section « Implémentation dans Coory »).

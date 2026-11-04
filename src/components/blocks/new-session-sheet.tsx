@@ -7,7 +7,7 @@ import { createContext, useCallback, useContext, useState, type ReactNode } from
 import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
 import { Spinner } from "@/components/ui/spinner";
 import { buttonClass } from "@/components/ui/button";
-import { Sheet } from "@/components/ui/overlay";
+import { DialogBody, Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import type { Discipline } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
@@ -106,13 +106,16 @@ export function NewSessionSheet({
         open={slot !== null}
         onClose={close}
         title="Nouvelle séance"
-        subtitle={slot?.label}
+        subtitle={slot?.label ?? "Elle apparaît tout de suite dans l'agenda."}
         tall
+        bare
       >
         {slot && athletes === null ? (
-          <p className="flex items-center gap-2 text-[14px] text-muted">
-            <Spinner /> Chargement de tes sportifs…
-          </p>
+          <DialogBody>
+            <p className="flex items-center gap-2 text-[14px] text-muted">
+              <Spinner /> Chargement de tes sportifs…
+            </p>
+          </DialogBody>
         ) : slot && athletes ? (
           <SessionForm
             action={action}
@@ -139,6 +142,7 @@ export function NewSessionSheet({
             locked={false}
             submitLabel="Créer la séance"
             onCreated={onCreated}
+            onCancel={close}
           />
         ) : null}
       </Sheet>

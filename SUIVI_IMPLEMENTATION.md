@@ -32,6 +32,76 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Boîtes de dialogue, Phase I : validation globale (D-116)
+```
+Date : 2026-11-04
+Mesure des 36 boîtes (72 vues, outils/compare-boites.cjs) : 69 à 0 px ; écarts voulus : 02 (champs
+  en plus), 04 ordinateur (carte écrasée dans la maquette), 17 téléphone (pas de « ··· »).
+Sombre : 10 boîtes (une par famille), ordinateur et téléphone. Largeurs : 1280 → 3440, 360 → 430.
+Correctif : test d'invitation instable depuis la phase G (2 échecs sur 3 sous charge) : le menu du
+  compte (fenêtre modale) restait ouvert pendant la redirection de la déconnexion, la page de
+  connexion n'acceptait pas encore la saisie. AccountMenu : onSubmit={close} sur les deux formulaires
+  de déconnexion ; 3 sur 3 sous la même charge.
+Nettoyage : SettingsPanel sans le mode fenêtre (onSection, inModal).
+Serveur de dev : tombé une fois à court de mémoire après des heures (relancé avec
+  NODE_OPTIONS=--max-old-space-size=6144).
+Tests finaux : types et lint OK ; Vitest 264/264 ; Playwright 174 réussis, 17 ignorés, 1 échec
+  instable déjà connu (recherche depuis le menu ☰ du téléphone : 6 sur 6 relancé seul).
+```
+
+### Boîtes de dialogue, Phase H : grands panneaux (D-115)
+```
+Date : 2026-11-04
+23 : Preview refait (documents-view), PanelDialog `bare` taille « preview » ; vrai fichier (iframe PDF,
+  image) dans la zone grise ; téléphone : vignette, « Ouvrir le PDF », tuiles.
+33 : settings-dialog-panel.tsx (nouveau) ; SettingsSectionContent extrait de settings-panel (partagé
+  avec la page) ; ProfileDialogSection (settings-forms) : deux formulaires invisibles, champs reliés
+  par `form`, un seul pied ; PhotoForm look="dialog" ; Avatar « card » (58) et « photo » (72) ;
+  jeton --dlg-nav ; DialogIconButton exporté.
+Mesure : 0 px d'écart (23 hors contenu du fichier).
+```
+
+### Boîtes de dialogue, Phase G : cas à part (D-114)
+```
+Date : 2026-11-04
+16 (vue de l'agenda) : AgendaViewMenu → MenuDialog ancré (centré sous le bouton, 8 px sous la barre),
+  role="menu" / menuitemradio gardés, raccourcis en MenuShortcut ; feuille du téléphone → MenuDialog
+  « Vue et filtres » (Aujourd'hui en tuile « accent », sections, AgendaFilters `large` du kit).
+32 (menu du compte) : MenuDialog ancré x 24 / bas 24 (320 px), feuille sur téléphone, role="group"
+  « Menu du compte » gardé ; ThemeChoice look="dialog" ; Avatar size="menu" (46 px).
+Coque : Overlay `anchor` (MenuAnchor) et `label` ; briques exportées (menuRowClass, MenuTile,
+  MenuSelectedMark, MenuSectionTitle, MenuSeparator, MenuShortcut, MenuDialog) ; jetons
+  --dlg-accent-tone, --dlg-group-dot.
+Mesure : 0 px d'écart (16 et 32, ordinateur et téléphone).
+```
+
+### Boîtes de dialogue, Phase F : formulaires riches (D-113)
+```
+Date : 2026-11-04
+Boîtes : 02, 04, 10, 27, 34, 26, 28. dialog-fields : DlgSuffixInput, DlgCheckCard, DlgHint, DlgTime,
+  DlgChips multiple, DlgField `quarter` et `aside`, DlgSegmented contrôlé et `fit` ; bordure rouge
+  aria-invalid ; Sheet `bare` partout ; DialogFooter `start` (« Terminé » à gauche, comme la maquette).
+SessionForm : rendu propre à la boîte (SessionDialogFields) quand elle sert la fenêtre ; EditGoalFields
+  dans edit-goal-sheet ; CategoryManager refait (onDone, ligne de 54 px filet compris).
+Accessibilité : « Montant reçu » / « Montant payé » lus « (TVAC, EUR) » (texte pour lecteurs d'écran),
+  le suffixe dessiné étant décoratif.
+Mesure : 0 px sauf 02 (champs en plus) et 04 ordinateur (carte mal dessinée dans la maquette).
+```
+
+### Boîtes de dialogue, Phase E : formulaires simples (D-112)
+```
+Date : 2026-11-04
+Boîtes : 24 (modifier le document), 03 (nouvelle tâche), 19 (modifier la tâche), 21 (importer).
+Nouveau : src/components/ui/dialog-fields.tsx (DlgField, DlgFieldset, DlgChips, DlgSegmented,
+  DlgSelect, DlgDate) ; overlay.tsx : DialogBody, DialogFooter refait, Sheet `bare` (le formulaire pose
+  son corps et son pied ; boutons type="submit" form={id}) ; dialog-styles : boutons sans conflit de
+  classes (taille et marge par variante), « Annuler » à vrai filet (91 px comme le kit), pastilles
+  à filet et coche, segments pleine largeur (téléphone) ou à la largeur du contenu (ordinateur), zone
+  de dépôt ; jetons --dlg-chip-line, --dlg-drop, --dlg-drop-tile.
+Mesure : 0 px d'écart (script : police de la maquette vérifiée avant de mesurer).
+Tests : 24 réussis + 4 ignorés.
+```
+
 ### Boîtes de dialogue, Phase D : menus à sélection et sous-menus (D-111)
 ```
 Date : 2026-11-04

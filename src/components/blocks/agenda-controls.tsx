@@ -19,6 +19,15 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { MobileBarTitle, MobileBarTool } from "@/components/layout/mobile-bar";
+import {
+  MenuDialog,
+  MenuSectionTitle,
+  MenuSelectedMark,
+  MenuShortcut,
+  MenuTile,
+  menuRowClass,
+  type MenuAnchor,
+} from "@/components/ui/overlay";
 import type { Discipline } from "@/domain/training/discipline";
 
 import { hoursLabel as hoursText } from "./coaching-hours";
@@ -68,14 +77,15 @@ export function AgendaViewMenu({
   todayHref: string;
 }) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const box = useRef<HTMLDivElement>(null);
+  // Kit (boîte 16, ordinateur) : menu ancré de 280 px, centré sous « Semaine ⌄ », à 8 px sous la
+  // barre du haut ; voile derrière ; lignes de 50 px avec le raccourci clavier.
+  const [anchor, setAnchor] = useState<MenuAnchor | null>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
   const current = items.find((item) => item.active) ?? items[0];
   const CurrentIcon = icons[current.key];
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
       if (event.metaKey || event.ctrlKey || event.altKey || typing(event.target)) return;
       if (document.querySelector("dialog[open]")) return;
       const key = event.key.toLowerCase();
@@ -94,37 +104,40 @@ export function AgendaViewMenu({
         router.push(target, { scroll: false });
       }
     };
-    const onPointer = (event: PointerEvent) => {
-      if (!box.current?.contains(event.target as Node)) setOpen(false);
-    };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onPointer);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onPointer);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [items, prevHref, nextHref, todayHref, router]);
 
+  const openMenu = () => {
+    const button = trigger.current?.getBoundingClientRect();
+    if (!button) return;
+    const bar = trigger.current?.closest("header")?.getBoundingClientRect();
+    setAnchor({
+      x: Math.round(button.left + button.width / 2 - 140),
+      y: Math.round((bar?.bottom ?? button.bottom) + 8),
+      side: "top",
+      width: 280,
+    });
+  };
+  const close = () => setAnchor(null);
+
   return (
-    <div ref={box} className="relative">
+    <>
       <button
+        ref={trigger}
         type="button"
         aria-haspopup="menu"
-        aria-expanded={open}
+        aria-expanded={anchor !== null}
         aria-label={`Vue : ${current.label}. Changer de vue`}
-        onClick={() => setOpen((value) => !value)}
+        onClick={openMenu}
         className="flex h-8 items-center gap-2 rounded-lg border border-line pr-2.5 pl-3 text-[12px] font-medium text-text transition-colors duration-150 hover:bg-selected-hover"
       >
         <CurrentIcon aria-hidden size={14} strokeWidth={1.8} className="text-violet-text" />
         {current.label}
         <ChevronDown aria-hidden size={13} strokeWidth={2} className="text-muted" />
       </button>
-      {open ? (
-        <div
-          role="menu"
-          aria-label="Vue de l'agenda"
-          className="absolute top-10 left-1/2 z-50 w-52 -translate-x-1/2 rounded-xl border border-line bg-surface p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
-        >
+      <MenuDialog open={anchor !== null} onClose={close} label="Vue et filtres" anchor={anchor}>
+        <div role="menu" aria-label="Vue de l'agenda" className="flex flex-col gap-0.5">
           {items.map((item) => {
             const letter = Object.entries(shortcuts).find(([, view]) => view === item.key)?.[0];
             return (
@@ -134,31 +147,21 @@ export function AgendaViewMenu({
                 scroll={false}
                 role="menuitemradio"
                 aria-checked={item.active}
-                onClick={() => setOpen(false)}
-                className={`flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13px] transition-colors duration-150 ${
-                  item.active
-                    ? "bg-selected font-medium text-text"
-                    : "text-text-2 hover:bg-selected-hover"
-                }`}
+                onClick={close}
+                className={menuRowClass({ selected: item.active, anchored: true })}
               >
-                <Check
-                  aria-hidden
-                  size={14}
-                  strokeWidth={2}
-                  className={item.active ? "text-violet-text" : "opacity-0"}
-                />
-                <span className="flex-1">{item.label}</span>
-                {letter ? (
-                  <kbd aria-hidden className="font-sans text-[11px] text-faint">
-                    {letter.toUpperCase()}
-                  </kbd>
-                ) : null}
+                <MenuTile icon={icons[item.key]} />
+                <span className="min-w-0 flex-1 text-[15.5px] leading-[normal] font-semibold text-text">
+                  {item.label}
+                </span>
+                {letter ? <MenuShortcut>{letter.toUpperCase()}</MenuShortcut> : null}
+                {item.active ? <MenuSelectedMark /> : null}
               </Link>
             );
           })}
         </div>
-      ) : null}
-    </div>
+      </MenuDialog>
+    </>
   );
 }
 
@@ -191,6 +194,65 @@ export function AgendaFilters({
     setShown(next);
     router.replace(hrefs[next], { scroll: false });
   };
+  // Feuille du téléphone (kit, 16) : lignes de 50 px, case de 22 px violette, pastille de couleur à
+  // droite (individuelles en violet, collectives en violet clair).
+  if (large) {
+    const row = (
+      label: string,
+      checked: boolean,
+      onlyOne: boolean,
+      toggle: () => void,
+      dot: string,
+    ) => (
+      <label
+        className={`flex min-h-[50px] cursor-pointer items-center gap-3.5 rounded-[14px] px-3 py-1.5 ${
+          onlyOne ? "cursor-default" : ""
+        }`}
+        title={onlyOne ? "Au moins un type de séance reste affiché" : undefined}
+      >
+        <span className="relative grid size-[22px] shrink-0 place-items-center">
+          <input
+            type="checkbox"
+            checked={checked}
+            disabled={onlyOne}
+            onChange={toggle}
+            className="peer absolute inset-0 m-0 size-full cursor-pointer appearance-none rounded-[7px] border-[1.5px] border-dlg-check-line bg-dlg transition-colors duration-150 checked:border-dlg-accent checked:bg-dlg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dlg-accent disabled:cursor-default"
+          />
+          <Check
+            aria-hidden
+            size={13}
+            strokeWidth={3}
+            className="pointer-events-none relative hidden text-white peer-checked:block"
+          />
+        </span>
+        <span className="min-w-0 flex-1 text-[15.5px] leading-[normal] font-medium text-text">
+          {label}
+        </span>
+        <span aria-hidden className={`size-2.5 shrink-0 rounded-full ${dot}`} />
+      </label>
+    );
+    return (
+      <fieldset className="flex flex-col gap-0.5">
+        <legend className="contents">
+          <MenuSectionTitle>SÉANCES</MenuSectionTitle>
+        </legend>
+        {row(
+          "Individuelles",
+          individual,
+          individual && !group,
+          () => go(!individual, group),
+          "bg-dlg-accent",
+        )}
+        {row(
+          "Collectives",
+          group,
+          group && !individual,
+          () => go(individual, !group),
+          "bg-dlg-group-dot",
+        )}
+      </fieldset>
+    );
+  }
   const box = (label: string, checked: boolean, onlyOne: boolean, toggle: () => void) => (
     <label
       className={`flex cursor-pointer items-center gap-3 ${
@@ -482,7 +544,7 @@ export function AgendaPhoneBar({
   todayLink: { href: string; column: string | null };
 }) {
   const [unfolded, setUnfolded] = useState(false);
-  const sheet = useRef<HTMLDialogElement>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const pathname = usePathname();
   const search = useSearchParams();
   // Nouvelle adresse (une vue, un jour, un mois choisis) : on referme ce qui était ouvert.
@@ -491,10 +553,8 @@ export function AgendaPhoneBar({
   if (seen !== location) {
     setSeen(location);
     setUnfolded(false);
+    setSheetOpen(false);
   }
-  useEffect(() => {
-    sheet.current?.close();
-  }, [location]);
   // Mois déplié : la bande de la semaine de la vue Jour se cache (02/11), elle revient en le repliant.
   useEffect(() => {
     const html = document.documentElement;
@@ -551,7 +611,7 @@ export function AgendaPhoneBar({
       <MobileBarTool>
         <button
           type="button"
-          onClick={() => sheet.current?.showModal()}
+          onClick={() => setSheetOpen(true)}
           aria-label={`Vue : ${current.label}. Vue et filtres`}
           title={current.label}
           className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-violet-text transition-colors duration-150 hover:bg-selected-hover active:bg-selected-hover"
@@ -599,15 +659,9 @@ export function AgendaPhoneBar({
           </div>
         </div>
       ) : null}
-      <dialog
-        ref={sheet}
-        aria-label="Vue et filtres"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) sheet.current?.close();
-        }}
-        className="fixed inset-x-0 top-auto bottom-0 m-0 w-full max-w-none translate-none rounded-t-[24px] border-t border-line bg-surface px-4 pt-2 pb-[max(20px,env(safe-area-inset-bottom))] text-text transition-[translate,display,overlay] transition-discrete duration-[260ms] ease-[cubic-bezier(0.32,0.72,0,1)] backdrop:bg-black/45 not-open:translate-y-full starting:open:translate-y-full motion-reduce:transition-none lg:hidden"
-      >
-        <div aria-hidden className="mx-auto mb-3 h-1 w-10 rounded-full bg-line-2" />
+      {/* Kit (boîte 16, téléphone) : feuille « Vue et filtres » : Aujourd'hui (tuile violette, la
+          date à droite), VUE (lignes de 62 px, coche violette sur la vue en cours), SÉANCES (cases). */}
+      <MenuDialog open={sheetOpen} onClose={() => setSheetOpen(false)} title="Vue et filtres">
         {/* Aujourd'hui (demande d'Antonino du 02/11) : la grille y glisse sans recharger quand elle
             contient ce jour ; sinon la vue se rouvre à la date du jour. */}
         <Link
@@ -619,45 +673,38 @@ export function AgendaPhoneBar({
               event.preventDefault();
               window.dispatchEvent(new CustomEvent(GOTO_EVENT, { detail: column }));
             }
-            sheet.current?.close();
+            setSheetOpen(false);
           }}
-          className="flex min-h-12 items-center gap-3.5 rounded-xl px-3 text-[15px] font-medium text-violet-text transition-colors duration-150 active:bg-selected-hover"
+          className={menuRowClass()}
         >
-          <CalendarCheck aria-hidden size={20} strokeWidth={1.7} />
-          Aujourd&apos;hui
-          <span className="ml-auto text-[13px] font-normal text-muted">
+          <MenuTile icon={CalendarCheck} tone="accent" />
+          <span className="min-w-0 flex-1 text-[15.5px] leading-[normal] font-semibold text-dlg-accent-ink">
+            Aujourd&apos;hui
+          </span>
+          <span className="shrink-0 text-[12.5px] leading-[normal] font-semibold whitespace-nowrap text-dlg-accent">
             {shortDay.format(utc(mini.today))}
           </span>
         </Link>
-        <div className="my-2 border-t border-line-soft" />
-        <p className="px-1 pb-1 text-[12px] font-medium text-muted">Vue</p>
-        <nav aria-label="Vue de l'agenda" className="flex flex-col">
-          {views.map((view) => {
-            const Icon = icons[view.key];
-            return (
-              <Link
-                key={view.key}
-                href={view.href}
-                scroll={false}
-                aria-current={view.active ? "page" : undefined}
-                className={`flex min-h-12 items-center gap-3.5 rounded-xl px-3 text-[15px] ${
-                  view.active ? "bg-selected font-medium" : "text-text-2"
-                }`}
-              >
-                <Icon
-                  aria-hidden
-                  size={20}
-                  strokeWidth={1.7}
-                  className={view.active ? "text-violet-text" : "text-muted"}
-                />
+        <MenuSectionTitle>VUE</MenuSectionTitle>
+        <nav aria-label="Vue de l'agenda" className="flex flex-col gap-0.5">
+          {views.map((view) => (
+            <Link
+              key={view.key}
+              href={view.href}
+              scroll={false}
+              aria-current={view.active ? "page" : undefined}
+              className={menuRowClass({ selected: view.active })}
+            >
+              <MenuTile icon={icons[view.key]} />
+              <span className="min-w-0 flex-1 text-[15.5px] leading-[normal] font-semibold text-text">
                 {view.label}
-              </Link>
-            );
-          })}
+              </span>
+              {view.active ? <MenuSelectedMark /> : null}
+            </Link>
+          ))}
         </nav>
-        <div className="my-2 border-t border-line-soft" />
         <AgendaFilters kind={kind} hrefs={kindHrefs} large />
-      </dialog>
+      </MenuDialog>
     </div>
   );
 }

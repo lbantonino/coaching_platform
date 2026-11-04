@@ -132,6 +132,12 @@
   --dlg-accent-tile: rgba(139, 92, 246, 0.2);
   --dlg-accent-line: rgba(139, 92, 246, 0.4);
   --dlg-drop-line: rgba(139, 92, 246, 0.45);
+  --dlg-chip-line: rgba(139, 92, 246, 0.55);
+  --dlg-drop: rgba(139, 92, 246, 0.06);
+  --dlg-drop-tile: rgba(139, 92, 246, 0.22);
+  --dlg-accent-tone: color-mix(in srgb, #b9a3ff 16%, #1a1a1d);
+  --dlg-group-dot: #8b7fd4;
+  --dlg-nav: #202024;
   --dlg-danger: #e11d48;
   --dlg-danger-ink: #fb7185;
   --dlg-danger-soft: rgba(251, 113, 133, 0.14);
@@ -287,6 +293,15 @@
   --dlg-accent-tile: #f1edfd;
   --dlg-accent-line: #e2d8fb;
   --dlg-drop-line: #cfc8ea;
+  /* Pastille choisie (contour), zone de dépôt (fond) et sa tuile. */
+  --dlg-chip-line: #c9b8f7;
+  --dlg-drop: #faf8ff;
+  --dlg-drop-tile: #ece7fb;
+  /* Tuile violette (« Aujourd'hui ») et pastille des séances collectives (vue de l'agenda). */
+  --dlg-accent-tone: color-mix(in srgb, #6a3ee0 16%, #fff);
+  --dlg-group-dot: #c4b5fd;
+  /* Colonne des sections des Paramètres et carte photo (kit, 33). */
+  --dlg-nav: #f8f7fb;
   --dlg-danger: #d1293f;
   --dlg-danger-ink: #c8243c;
   --dlg-danger-soft: #fdecef;

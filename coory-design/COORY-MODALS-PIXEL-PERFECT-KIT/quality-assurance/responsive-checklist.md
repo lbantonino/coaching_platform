@@ -23,3 +23,12 @@ Vérifié sur la coque partagée (menu « Créer », formulaire « Nouvelle tâc
 
 ### Phase B : menus simples 36, 30, 17, 05, 22, 09 (04/11/2026)
 - [x] 1200 × 780 (cadre du kit) et 1440 ; 390 × 844 ; largeurs 1280 à 3440 et 360 à 430 couvertes par la coque (phase A)
+
+### Phase E : formulaires simples 24, 03, 19, 21 (04/11/2026)
+- [x] contenu long : seul le corps défile, pied fixe (19 et 03 sur téléphone, 800 px de haut)
+- [ ] clavier virtuel ouvert : à vérifier sur l'iPhone
+
+### Phase I : validation globale (04/11/2026)
+- [x] 1280, 1440, 1920, 2560, 3440 : 460 / 600 px fixes, centrées
+- [x] 360, 390, 430 : feuille pleine largeur, en-tête fixe quand le corps défile
+- [ ] clavier virtuel ouvert : à faire sur un vrai iPhone

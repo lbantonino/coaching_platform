@@ -7,7 +7,7 @@ import { PanelDialog } from "@/components/ui/overlay";
 import { Spinner } from "@/components/ui/spinner";
 import type { SettingsData } from "@/features/coach/settings-data";
 
-import { SettingsPanel } from "./settings-panel";
+import { SettingsDialogPanel } from "./settings-dialog-panel";
 
 // Fenêtre des Paramètres (D-58, demande d'Antonino : « une boîte par-dessus, comme Claude.ai ») :
 // ouverte depuis le menu du compte, par-dessus la page en cours, qu'on ne quitte pas. Ses données
@@ -28,7 +28,7 @@ export function SettingsDialogProvider({
   // Nouvelle section : on la lit depuis son début, pas depuis la hauteur de la précédente.
   const changeSection = (next: SettingsSection | null) => {
     setSection(next);
-    body.current?.closest("[data-dialog-body]")?.scrollTo({ top: 0 });
+    body.current?.querySelector("[data-dialog-body]")?.scrollTo({ top: 0 });
   };
 
   const refresh = useCallback(() => {
@@ -54,21 +54,23 @@ export function SettingsDialogProvider({
   return (
     <SettingsContext.Provider value={openSettings}>
       {children}
-      <PanelDialog open={open} onClose={() => setOpen(false)} title="Paramètres">
-        <div ref={body}>
+      {/* Kit (boîte 33) : la fenêtre pose sa propre mise en page (colonne des sections, section). */}
+      <PanelDialog open={open} onClose={() => setOpen(false)} title="Paramètres" bare>
+        <div ref={body} className="flex min-h-0 flex-1 flex-col">
           {failed ? (
-            <p role="alert" className="text-small text-alert">
+            <p role="alert" className="p-6 text-small text-alert">
               Les paramètres n&apos;ont pas pu être chargés. Ferme la fenêtre et réessaie.
             </p>
           ) : data ? (
-            <SettingsPanel
+            <SettingsDialogPanel
               data={data}
               section={section}
               onSection={changeSection}
               onChanged={refresh}
+              onClose={() => setOpen(false)}
             />
           ) : (
-            <p className="flex items-center gap-2 text-[14px] text-muted">
+            <p className="flex items-center gap-2 p-6 text-[14px] text-muted">
               <Spinner /> Chargement de tes paramètres…
             </p>
           )}

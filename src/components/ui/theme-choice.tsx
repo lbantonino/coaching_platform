@@ -49,11 +49,40 @@ const options: { value: ThemePreference; label: string; icon: LucideIcon }[] = [
 export function ThemeChoice({
   name = "theme",
   compact = false,
+  look = "page",
 }: {
   name?: string;
   compact?: boolean;
+  // « dialog » : segments du kit des boîtes (menu du compte, boîte 32).
+  look?: "page" | "dialog";
 }) {
   const preference = useSyncExternalStore(subscribe, readPreference, (): ThemePreference => "dark");
+  if (look === "dialog") {
+    return (
+      <fieldset className="mx-3 mb-1.5 min-w-0">
+        <legend className="sr-only">Thème</legend>
+        <div className="grid grid-cols-3 gap-1 rounded-[13px] bg-dlg-segment p-1">
+          {options.map(({ value, label, icon: Icon }) => (
+            <label
+              key={value}
+              className="flex h-[38px] cursor-pointer items-center justify-center gap-[7px] rounded-[10px] text-[13.5px] leading-[normal] font-semibold whitespace-nowrap text-muted transition-[color,background-color,box-shadow] duration-150 has-checked:bg-dlg-segment-active has-checked:text-text has-checked:shadow-[0_1px_3px_rgba(23,21,29,0.12)] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-dlg-accent"
+            >
+              <input
+                type="radio"
+                name={name}
+                value={value}
+                checked={preference === value}
+                onChange={() => applyThemePreference(value)}
+                className="sr-only"
+              />
+              <Icon aria-hidden size={15} strokeWidth={1.9} />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
   return (
     <fieldset className="min-w-0">
       <legend className="sr-only">Thème</legend>

@@ -15,6 +15,11 @@ const boxes = {
   xs: "size-7 text-[10px]",
   sm: "size-9 text-[12px]",
   md: "size-10 text-[13px]",
+  // Menu du compte (kit, boîte 32).
+  menu: "size-[46px] text-[15px]",
+  // Paramètres (kit, 33) : carte du sommaire (58) et photo de profil (72).
+  card: "size-[58px] text-[18px]",
+  photo: "size-[72px] text-[22px]",
   lg: "size-[52px] text-[17px]",
   xl: "size-16 text-[21px]",
 } as const;

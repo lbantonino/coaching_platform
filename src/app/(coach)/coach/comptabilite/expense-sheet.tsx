@@ -1,17 +1,36 @@
 "use client";
 
 import { Minus, Tags } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useId, useState } from "react";
 
 import { CategoryManager } from "@/components/blocks/category-manager";
 import { useMoney } from "@/components/blocks/money-context";
 import { buttonClass } from "@/components/ui/button";
+import {
+  DlgCheckCard,
+  DlgDate,
+  DlgField,
+  DlgHint,
+  DlgSelect,
+  DlgSuffixInput,
+} from "@/components/ui/dialog-fields";
+import {
+  dlgErrorClass,
+  dlgFormGridClass,
+  dlgInputClass,
+  dlgPrimaryButtonClass,
+} from "@/components/ui/dialog-styles";
 import { FieldCheck } from "@/components/ui/field-check";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
-import { Sheet } from "@/components/ui/overlay";
+import { DialogBody, DialogFooter, Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
-import { VatRateInput } from "@/components/ui/vat-rate-input";
-import { formatVatRate, parseAmount, parseVatRate, splitVat } from "@/domain/billing/money";
+import {
+  currencySymbol,
+  formatVatRate,
+  type Currency,
+  parseAmount,
+  parseVatRate,
+  splitVat,
+} from "@/domain/billing/money";
 import type { DocumentCategory } from "@/domain/documents/documents";
 import type { ExpenseFormState } from "@/features/billing/expense-actions";
 import type { CategoryResult } from "@/features/documents/actions";
@@ -60,9 +79,11 @@ export function NewExpenseButton({
         onClose={() => setOpen(false)}
         title="Nouvelle dépense"
         subtitle="Ce que tu as payé pour ton activité : salle, matériel, assurance…"
+        bare
       >
         {open ? (
           <ExpenseForm
+            onCancel={() => setOpen(false)}
             action={action}
             categories={categories}
             vatSubject={vatSubject}
@@ -75,11 +96,19 @@ export function NewExpenseButton({
       <Sheet
         open={managing}
         onClose={() => setManaging(false)}
+        onBack={() => setManaging(false)}
         title="Catégories de dépenses"
         subtitle="Supprimer une catégorie garde ses dépenses : elles deviennent « sans catégorie »."
+
+        bare
       >
         {managing ? (
-          <CategoryManager categories={categories} actions={categoryActions} items="dépenses" />
+          <CategoryManager
+            categories={categories}
+            actions={categoryActions}
+            items="dépenses"
+            onDone={() => setManaging(false)}
+          />
         ) : null}
       </Sheet>
     </>
@@ -93,6 +122,7 @@ function ExpenseForm({
   today,
   onManage,
   onSaved,
+  onCancel,
 }: {
   action: Action;
   categories: DocumentCategory[];
@@ -100,6 +130,7 @@ function ExpenseForm({
   today: string;
   onManage: () => void;
   onSaved: () => void;
+  onCancel: () => void;
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
   const toast = useToast();
@@ -131,6 +162,7 @@ function ExpenseForm({
       currency={currency}
       format={format}
       onManage={onManage}
+      onCancel={onCancel}
     />
   );
 }
@@ -145,6 +177,7 @@ function Fields({
   currency,
   format,
   onManage,
+  onCancel,
 }: {
   formAction: (formData: FormData) => void;
   pending: boolean;
@@ -152,10 +185,12 @@ function Fields({
   values: NonNullable<ExpenseFormState["values"]>;
   categories: DocumentCategory[];
   vatSubject: boolean;
-  currency: string;
+  currency: Currency;
   format: (cents: number) => string;
   onManage: () => void;
+  onCancel: () => void;
 }) {
+  const formId = useId();
   const [amount, setAmount] = useState(v.amount);
   const [vatRate, setVatRate] = useState(v.vatRate);
   const [monthly, setMonthly] = useState(v.repeatsMonthly);
@@ -163,145 +198,144 @@ function Fields({
   const rate = parseVatRate(vatRate);
   // Montant payé, TVA comprise : on en déduit HTVA et TVA.
   const totals = cents !== null && rate !== null ? splitVat(cents, rate) : null;
+  // Kit (boîte 27) : grille de 12 colonnes, montant et TVA à suffixe, aide sous les montants,
+  // répétition en carte à cocher, boutons dans le pied fixe.
   return (
-    <form action={formAction} className="flex flex-col gap-5" noValidate>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="expense-label" className={labelClass}>
-          Description
-        </label>
-        <input
-          id="expense-label"
-          name="label"
-          maxLength={120}
-          placeholder="Ex. : loyer de la salle"
-          defaultValue={v.label}
-          className={inputClass}
-        />
-      </div>
+    <>
+      <DialogBody>
+        <form id={formId} action={formAction} className={dlgFormGridClass} noValidate>
+          <DlgField label="Description" htmlFor="expense-label">
+            <input
+              id="expense-label"
+              name="label"
+              maxLength={120}
+              placeholder="Ex. : loyer de la salle"
+              defaultValue={v.label}
+              className={dlgInputClass}
+            />
+          </DlgField>
 
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between gap-3">
-          <label htmlFor="expense-category" className={labelClass}>
-            Catégorie
-          </label>
-          <button
-            type="button"
-            onClick={onManage}
-            className="inline-flex min-h-9 items-center gap-1.5 text-[13px] text-muted transition-colors duration-150 hover:text-text"
+          <DlgField
+            label="Catégorie"
+            htmlFor="expense-category"
+            aside={
+              <button
+                type="button"
+                onClick={onManage}
+                className="inline-flex items-center gap-1.5 text-[13px] leading-[normal] font-semibold whitespace-nowrap text-dlg-accent transition-opacity duration-150 hover:opacity-80"
+              >
+                <Tags aria-hidden size={14} strokeWidth={2} />
+                Gérer les catégories
+              </button>
+            }
           >
-            <Tags aria-hidden size={14} strokeWidth={1.8} />
-            Gérer les catégories
+            <DlgSelect id="expense-category" name="categoryId" defaultValue={v.categoryId}>
+              <option value="">Sans catégorie</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </DlgSelect>
+          </DlgField>
+
+          <DlgField
+            label={
+              <>
+                Montant payé
+                <span className="sr-only">
+                  {" "}
+                  ({vatSubject ? "TVAC, " : ""}
+                  {currency})
+                </span>
+              </>
+            }
+            htmlFor="expense-amount"
+            half={vatSubject}
+          >
+            <DlgSuffixInput
+              id="expense-amount"
+              name="amount"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="Ex. : 605"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              aria-describedby="expense-amount-hint"
+              suffix={vatSubject ? `${currencySymbol(currency)} TVAC` : currencySymbol(currency)}
+            />
+            <FieldCheck htmlFor="expense-amount" rule="amount" />
+          </DlgField>
+          {vatSubject ? (
+            <DlgField label="Taux de TVA" htmlFor="expense-vat" half>
+              <DlgSuffixInput
+                id="expense-vat"
+                name="vatRate"
+                inputMode="decimal"
+                autoComplete="off"
+                placeholder="21"
+                value={vatRate}
+                onChange={(event) => setVatRate(event.target.value)}
+                suffix="%"
+              />
+            </DlgField>
+          ) : (
+            <input type="hidden" name="vatRate" value="0" />
+          )}
+          <DlgHint id="expense-amount-hint" live>
+            {!vatSubject
+              ? "Le montant que tu as payé."
+              : totals && rate !== null
+                ? `${format(totals.exclCents)} HTVA + ${format(totals.vatCents)} de TVA récupérable (${formatVatRate(rate)}).`
+                : "TVA comprise : la TVA récupérable se calcule toute seule."}
+          </DlgHint>
+
+          <DlgField
+            label={monthly ? "Première dépense le" : "Payée le"}
+            htmlFor="expense-date"
+            half
+          >
+            <DlgDate id="expense-date" name="spentOn" defaultValue={v.spentOn} />
+          </DlgField>
+          <DlgCheckCard
+            name="repeatsMonthly"
+            checked={monthly}
+            onChange={(event) => setMonthly(event.target.checked)}
+            label="Se répète chaque mois"
+            description="Loyer, abonnement…"
+            half
+          />
+          {monthly ? (
+            <>
+              <DlgField label="Jusqu'au" htmlFor="expense-end" optional half>
+                <DlgDate
+                  id="expense-end"
+                  name="endsOn"
+                  defaultValue={v.endsOn}
+                  aria-describedby="expense-end-hint"
+                />
+              </DlgField>
+              <DlgHint id="expense-end-hint">
+                Sans date, elle compte chaque mois jusqu&apos;à ce que tu l&apos;arrêtes.
+              </DlgHint>
+            </>
+          ) : null}
+
+          {error ? (
+            <p role="alert" className={dlgErrorClass}>
+              {error}
+            </p>
+          ) : null}
+        </form>
+      </DialogBody>
+      <DialogFooter
+        onCancel={onCancel}
+        primary={
+          <button type="submit" form={formId} disabled={pending} className={dlgPrimaryButtonClass}>
+            {pending ? "Enregistrement…" : "Enregistrer la dépense"}
           </button>
-        </div>
-        <select
-          id="expense-category"
-          name="categoryId"
-          defaultValue={v.categoryId}
-          className={inputClass}
-        >
-          <option value="">Sans catégorie</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className={`grid gap-4 ${vatSubject ? "sm:grid-cols-2" : ""}`}>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="expense-amount" className={labelClass}>
-            Montant payé ({vatSubject ? "TVAC, " : ""}
-            {currency})
-          </label>
-          <input
-            id="expense-amount"
-            name="amount"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="Ex. : 605"
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            aria-describedby="expense-amount-hint"
-            className={`${inputClass} font-mono`}
-          />
-          <FieldCheck htmlFor="expense-amount" rule="amount" />
-        </div>
-        {vatSubject ? (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="expense-vat" className={labelClass}>
-              Taux de TVA
-            </label>
-            <VatRateInput id="expense-vat" value={vatRate} onChange={setVatRate} />
-          </div>
-        ) : (
-          <input type="hidden" name="vatRate" value="0" />
-        )}
-      </div>
-      <p id="expense-amount-hint" aria-live="polite" className={`-mt-2 ${hintClass}`}>
-        {!vatSubject
-          ? "Le montant que tu as payé."
-          : totals && rate !== null
-            ? `${format(totals.exclCents)} HTVA + ${format(totals.vatCents)} de TVA récupérable (${formatVatRate(rate)}).`
-            : "Le montant payé, TVA comprise : la TVA récupérable se calcule toute seule."}
-      </p>
-
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="expense-date" className={labelClass}>
-          {monthly ? "Première dépense le" : "Payée le"}
-        </label>
-        <input
-          id="expense-date"
-          name="spentOn"
-          type="date"
-          defaultValue={v.spentOn}
-          className={inputClass}
-        />
-      </div>
-
-      <label className="inline-flex w-fit cursor-pointer items-center gap-2.5 text-[15px]">
-        <input
-          type="checkbox"
-          name="repeatsMonthly"
-          checked={monthly}
-          onChange={(event) => setMonthly(event.target.checked)}
-          className="size-4 accent-[var(--text)]"
-        />
-        Se répète chaque mois (loyer, abonnement…)
-      </label>
-      {monthly ? (
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="expense-end" className={labelClass}>
-            Jusqu&apos;au <span className="font-normal text-muted">(facultatif)</span>
-          </label>
-          <input
-            id="expense-end"
-            name="endsOn"
-            type="date"
-            defaultValue={v.endsOn}
-            aria-describedby="expense-end-hint"
-            className={inputClass}
-          />
-          <p id="expense-end-hint" className={hintClass}>
-            Sans date, elle compte chaque mois jusqu&apos;à ce que tu l&apos;arrêtes.
-          </p>
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
-          disabled={pending}
-          className={buttonClass({ variant: "primary", size: "md" })}
-        >
-          {pending ? "Enregistrement…" : "Enregistrer la dépense"}
-        </button>
-        {error ? (
-          <p role="alert" className={errorTextClass}>
-            {error}
-          </p>
-        ) : null}
-      </div>
-    </form>
+        }
+      />
+    </>
   );
 }

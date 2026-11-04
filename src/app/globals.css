@@ -54,6 +54,12 @@
   --color-dlg-accent-tile: var(--dlg-accent-tile);
   --color-dlg-accent-line: var(--dlg-accent-line);
   --color-dlg-drop-line: var(--dlg-drop-line);
+  --color-dlg-chip-line: var(--dlg-chip-line);
+  --color-dlg-drop: var(--dlg-drop);
+  --color-dlg-drop-tile: var(--dlg-drop-tile);
+  --color-dlg-accent-tone: var(--dlg-accent-tone);
+  --color-dlg-group-dot: var(--dlg-group-dot);
+  --color-dlg-nav: var(--dlg-nav);
   --color-dlg-danger: var(--dlg-danger);
   --color-dlg-danger-ink: var(--dlg-danger-ink);
   --color-dlg-danger-soft: var(--dlg-danger-soft);
