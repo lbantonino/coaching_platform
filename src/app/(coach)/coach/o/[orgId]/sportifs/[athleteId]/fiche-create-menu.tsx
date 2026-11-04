@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useOpenNewSession } from "@/components/blocks/new-session-sheet";
-import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
+import { phoneFabClass } from "@/components/layout/mobile-bar";
 import { buttonClass } from "@/components/ui/button";
 import { ActionMenu } from "@/components/ui/overlay";
 import type { Discipline } from "@/domain/training/discipline";
@@ -14,8 +14,8 @@ import type { Discipline } from "@/domain/training/discipline";
 // Programme (cœur de Coory ; tant que le module n'existe pas, la page Programmes), et Séance, la
 // fenêtre « Nouvelle séance » déjà remplie avec ce sportif (individuelle, discipline de son type de
 // programme, date du jour). La séance apparaît ensuite dans l'agenda du tableau de bord et sur la fiche.
-// `phone` : le « + » de la barre du haut du téléphone (maquette « Sportifs » du 03/11/2026) ; sinon le
-// bouton « + Créer » de 32 px de l'en-tête, sur ordinateur.
+// `phone` : le bouton flottant « + » du téléphone, en bas à droite (celui de l'Agenda, D-117) ; sinon
+// le bouton « + Créer » de 32 px de l'en-tête, sur ordinateur.
 export function FicheCreateMenu({
   athlete,
   phone = false,
@@ -29,16 +29,15 @@ export function FicheCreateMenu({
   return (
     <>
       {phone ? (
-        <MobileBarAction>
-          <button
-            type="button"
-            aria-label={`Créer pour ${athlete.name}`}
-            onClick={() => setOpen(true)}
-            className={barActionClass}
-          >
-            <Plus aria-hidden size={17} strokeWidth={2.2} />
-          </button>
-        </MobileBarAction>
+        <button
+          type="button"
+          aria-label={`Créer pour ${athlete.name}`}
+          onClick={() => setOpen(true)}
+          data-phone-fab=""
+          className={phoneFabClass}
+        >
+          <Plus aria-hidden size={24} strokeWidth={2.2} />
+        </button>
       ) : (
         <button
           type="button"

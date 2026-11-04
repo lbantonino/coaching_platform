@@ -340,13 +340,23 @@ select:not([multiple]) {
 .nav-count-dot {
   display: none;
 }
-/* Téléphone (D-78) : en haut, deux petites cartes flottantes, ☰ à gauche (avec le nom de la page à
- * côté), assistant IA · cloche · « + » à droite. --top-bar : la hauteur de cette rangée (cartes de
+/* Téléphone (D-78) : en haut, deux petites cartes flottantes, ☰ à gauche (avec le nom de la page ou
+ * le retour à côté), assistant IA · cloche à droite. --top-bar : la hauteur de cette rangée (cartes de
  * 44 et 48 px, 10 px au-dessus : maquette « Sportifs » du 03/11/2026). --under-bar : la couleur du
  * fondu derrière les cartes, celle de la page. */
 :root {
   --top-bar: 58px;
   --under-bar: var(--bg);
+}
+/* Bouton flottant « + » du téléphone (D-117, celui de l'Agenda : 56 px, à 20 px du bas plus la zone du
+ * geste) : la page garde assez de place en bas pour que sa fin passe au-dessus de lui (20 px d'écart),
+ * au lieu des 28 px habituels (D-101). Chaque page a son <main> : Next garde la page quittée cachée
+ * dans le document, son bouton ne doit pas agrandir le bas de la suivante. L'Agenda n'a pas de
+ * PageBody : sa grille passe dessous. */
+@media (max-width: 1023.98px) {
+  main:has([data-phone-fab]) [data-page-body] {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
 }
 /* Page Agenda sur ordinateur (D-78) : le bouton ☰ de la barre masque le panneau de l'agenda. */
 @media (min-width: 1024px) {

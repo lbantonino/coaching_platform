@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
+import { phoneFabClass } from "@/components/layout/mobile-bar";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { Dropdown } from "@/components/ui/dropdown";
@@ -211,7 +211,7 @@ async function AthleteList({
       <PageHeader
         title="Sportifs"
         actions={
-          // Ordinateur : le bouton de l'en-tête (32 px) ; téléphone : le « + » de la barre du haut.
+          // Ordinateur : le bouton de l'en-tête (32 px) ; téléphone : le bouton flottant (D-117).
           <Link
             href={`${basePath}/nouveau`}
             className={buttonClass({
@@ -224,11 +224,14 @@ async function AthleteList({
           </Link>
         }
       />
-      <MobileBarAction>
-        <Link href={`${basePath}/nouveau`} aria-label="Nouveau sportif" className={barActionClass}>
-          <Plus aria-hidden size={17} strokeWidth={2.2} />
-        </Link>
-      </MobileBarAction>
+      <Link
+        href={`${basePath}/nouveau`}
+        aria-label="Nouveau sportif"
+        data-phone-fab=""
+        className={phoneFabClass}
+      >
+        <Plus aria-hidden size={24} strokeWidth={2.2} />
+      </Link>
       <PageBody>
         <AthleteTable
           organizationId={membership.organizationId}

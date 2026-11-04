@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
     "resources/**",
     // Documentation, dont les modèles de code du kit du logo (docs/design/coory-brand/code)
     "docs/**",
+    // Kits et maquettes de design (scripts des maquettes, outil de mesure) : pas du code de l'app
+    "coory-design/**",
   ]),
 ]);
 

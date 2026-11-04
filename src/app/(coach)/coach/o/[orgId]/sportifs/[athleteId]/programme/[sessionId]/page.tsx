@@ -363,8 +363,6 @@ async function SessionDetail({
     <>
       <PageHeader
         back={{ href: `${athletePath}?onglet=agenda`, label: athlete.displayName }}
-        // Téléphone : « ← Inès Benali » dans la barre du haut, comme la fiche.
-        backInPhoneBar
         title={content.title}
         visibleTitle={false}
       />

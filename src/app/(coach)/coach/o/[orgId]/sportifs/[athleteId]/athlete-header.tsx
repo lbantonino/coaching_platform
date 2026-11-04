@@ -47,9 +47,6 @@ export function AthleteHeader({
     <>
       <PageHeader
         back={{ href: listPath, label: "Sportifs" }}
-        // Téléphone (demande d'Antonino du 03/11, comme la maquette) : « ← Sportifs » dans la barre
-        // du haut, entre ☰ et les outils, sur tous les onglets de la fiche.
-        backInPhoneBar
         title={athlete.displayName}
         visibleTitle={false}
         actions={
@@ -70,7 +67,7 @@ export function AthleteHeader({
         }
       />
 
-      {/* Téléphone : « + Créer » dans la barre du haut. */}
+      {/* Téléphone : « + Créer » en bouton flottant, en bas à droite (D-117). */}
       <FicheCreateMenu
         athlete={{ id: athlete.id, name: athlete.displayName, programType: athlete.programType }}
         phone

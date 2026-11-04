@@ -69,7 +69,7 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   // En-tête (26/10) : plus d'étiquette d'accès ; « + Créer » propose Programme et Séance, la
   // séance déjà remplie pour Inès (individuelle, Hyrox, son type de programme).
   await expect(main.getByText(/^(Compte activé|Sans compte)$/)).toHaveCount(0);
-  // Ordinateur : « + Créer » de l'en-tête ; téléphone : le « + » de la barre du haut.
+  // Ordinateur : « + Créer » de l'en-tête ; téléphone : le bouton flottant « + » (D-117).
   if (isPhone(page)) await page.getByRole("button", { name: "Créer pour Inès Benali" }).click();
   else await main.getByRole("button", { name: "Créer", exact: true }).click();
   const create = page.getByRole("dialog", { name: "Créer pour Inès Benali" });

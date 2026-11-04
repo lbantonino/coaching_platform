@@ -81,6 +81,11 @@ function previousPage() {
   return { href: previous, title: sessionStorage.getItem(TITLE + previousPath) };
 }
 
+// Retour dans la barre du haut du téléphone, entre ☰ et les outils (D-117) : aussi pour les retours
+// propres à une page (« ← Conversations » de Messages, « ← Paramètres »).
+export const barBackClass =
+  "inline-flex min-h-11 min-w-0 items-center gap-2 pl-0.5 text-[15px] font-medium whitespace-nowrap text-muted transition-colors duration-150 active:text-text";
+
 const noSubscription = () => () => {};
 const previousTitle = () => {
   try {
@@ -120,7 +125,7 @@ export function BackLink({
       }}
       className={
         variant === "bar"
-          ? "inline-flex min-h-11 min-w-0 items-center gap-2 pl-0.5 text-[15px] font-medium whitespace-nowrap text-muted transition-colors duration-150 active:text-text"
+          ? barBackClass
           : "inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
       }
     >

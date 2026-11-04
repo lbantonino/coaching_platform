@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
 
-import { barActionClass, MobileBarAction } from "@/components/layout/mobile-bar";
+import { phoneFabClass } from "@/components/layout/mobile-bar";
 import { Spinner } from "@/components/ui/spinner";
 import { buttonClass } from "@/components/ui/button";
 import { DialogBody, Sheet } from "@/components/ui/overlay";
@@ -151,15 +151,14 @@ export function NewSessionSheet({
 }
 
 // Bouton rouge « Nouvelle séance » (Agenda, Séances) : ouvre la fenêtre, à `date` si elle est donnée.
-// `variant` : « header » (barre du haut de l'Agenda, 32 px, D-78) ; « bar » (téléphone : le « + » de la
-// carte en haut à droite, son nom reste lu « Nouvelle séance ») ; « fab » (Agenda sur téléphone,
-// 03/11, comme Google Agenda : un bouton flottant en bas à droite, au-dessus du calendrier).
+// `variant` : « header » (barre du haut de l'Agenda, 32 px, D-78) ; « fab » (Agenda sur téléphone,
+// 03/11, comme Google Agenda : le bouton flottant en bas à droite, modèle de toutes les pages, D-117).
 export function NewSessionButton({
   date,
   variant = "default",
 }: {
   date?: string;
-  variant?: "default" | "header" | "bar" | "fab";
+  variant?: "default" | "header" | "fab";
 }) {
   const open = useOpenNewSession();
   if (variant === "fab") {
@@ -169,25 +168,11 @@ export function NewSessionButton({
         aria-label="Nouvelle séance"
         disabled={!open}
         onClick={() => open?.(date ? { date } : undefined)}
-        className="fixed right-4 bottom-[calc(20px+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-2xl bg-cta text-on-cta shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-transform duration-150 ease-out active:scale-95 lg:hidden"
+        data-phone-fab=""
+        className={phoneFabClass}
       >
         <Plus aria-hidden size={24} strokeWidth={2.2} />
       </button>
-    );
-  }
-  if (variant === "bar") {
-    return (
-      <MobileBarAction>
-        <button
-          type="button"
-          aria-label="Nouvelle séance"
-          disabled={!open}
-          onClick={() => open?.(date ? { date } : undefined)}
-          className={barActionClass}
-        >
-          <Plus aria-hidden size={20} strokeWidth={2.2} />
-        </button>
-      </MobileBarAction>
     );
   }
   return (

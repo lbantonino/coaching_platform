@@ -5,6 +5,8 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { EmptyState } from "@/components/ui/empty-state";
+import { barBackClass } from "@/components/layout/back-link";
+import { MobileBarTitle } from "@/components/layout/mobile-bar";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -170,13 +172,19 @@ async function Messages({
         >
           {athlete ? (
             <>
-              <Link
-                href={unreadOnly ? "/coach/messages?filtre=non-lus" : "/coach/messages"}
-                className="inline-flex min-h-11 w-fit items-center gap-1.5 text-[14px] text-muted hover:text-text lg:hidden"
-              >
-                <ArrowLeft aria-hidden size={16} strokeWidth={1.8} />
-                Conversations
-              </Link>
+              {/* Téléphone, fil ouvert : « ← Conversations » dans la barre du haut, à la place de
+                  « Messages » (D-117). Sur ordinateur, la liste reste à côté du fil. */}
+              {requested ? (
+                <MobileBarTitle>
+                  <Link
+                    href={unreadOnly ? "/coach/messages?filtre=non-lus" : "/coach/messages"}
+                    className={barBackClass}
+                  >
+                    <ArrowLeft aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+                    <span className="truncate">Conversations</span>
+                  </Link>
+                </MobileBarTitle>
+              ) : null}
               <header className="flex items-center gap-3">
                 <Avatar
                   name={athlete.displayName}
