@@ -20,7 +20,7 @@ import { useState, useTransition, type ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
-import { disciplineIcons } from "@/components/ui/discipline-icon";
+import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
 import { ActionMenu, Sheet } from "@/components/ui/overlay";
 import { SexMark } from "@/components/ui/sex-mark";
 import { useToast } from "@/components/ui/toast";
@@ -57,10 +57,16 @@ export type AthleteTableRow = {
 
 export type SortColumn = "sportif" | "statut" | "type" | "objectif";
 
-export const statusChoices: { status: AthleteStatus; label: string; icon: LucideIcon }[] = [
-  { status: "active", label: "Actif", icon: CirclePlay },
-  { status: "paused", label: "En pause", icon: CirclePause },
-  { status: "archived", label: "Archivé", icon: Archive },
+// Tuile teintée dans les boîtes (kit, 07 et 14) : Actif vert, En pause ambre, Archivé gris.
+export const statusChoices: {
+  status: AthleteStatus;
+  label: string;
+  icon: LucideIcon;
+  tone: "ok" | "warn" | "muted";
+}[] = [
+  { status: "active", label: "Actif", icon: CirclePlay, tone: "ok" },
+  { status: "paused", label: "En pause", icon: CirclePause, tone: "warn" },
+  { status: "archived", label: "Archivé", icon: Archive, tone: "muted" },
 ];
 const statusLabel = Object.fromEntries(statusChoices.map((c) => [c.status, c.label])) as Record<
   AthleteStatus,
@@ -168,11 +174,13 @@ export function AthleteTable({
         {
           label: "Changer le statut",
           icon: RefreshCw,
+          chevron: true,
           onSelect: () => setMenu(menuFor(single, "status", true)),
         },
         {
           label: "Changer le programme",
           icon: Layers,
+          chevron: true,
           onSelect: () => setMenu(menuFor(single, "type", true)),
         },
         {
@@ -208,6 +216,7 @@ export function AthleteTable({
       return statusChoices.map((choice) => ({
         label: choice.label,
         icon: choice.icon,
+        tone: choice.tone,
         selected: single?.status === choice.status,
         onSelect: () => {
           if (single?.status === choice.status) return;
@@ -221,7 +230,8 @@ export function AthleteTable({
     }
     return DISCIPLINES.map((discipline) => ({
       label: disciplineLabels[discipline],
-      icon: disciplineIcons[discipline],
+      icon: dialogDisciplineIcons[discipline],
+      tone: discipline,
       selected: single?.programType === discipline,
       onSelect: () => {
         if (single?.programType === discipline) return;
@@ -232,6 +242,18 @@ export function AthleteTable({
         );
       },
     }));
+  };
+
+  const menuSubtitle = () => {
+    const single = menu?.kind === "actions" ? byId.get(menu.ids[0]) : undefined;
+    if (!single) return undefined;
+    return [
+      statusLabel[single.status],
+      single.sub,
+      single.programType ? disciplineLabels[single.programType] : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
   };
 
   const header = (column: SortColumn, label: string) => {
@@ -372,6 +394,8 @@ export function AthleteTable({
             : undefined
         }
         title={menu?.title ?? ""}
+        // Kit (boîte 13) : « Actif · Intermédiaire · Musculation » sous le nom.
+        subtitle={menuSubtitle()}
         items={menuItems()}
       />
 

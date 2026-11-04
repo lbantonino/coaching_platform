@@ -9,6 +9,7 @@ import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, inputClass } from "@/components/ui/form-styles";
 import { ConfirmDialog } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
+import { Quoted } from "@/components/ui/quoted";
 import {
   CATEGORY_COLORS,
   CATEGORY_NAME_MAX,
@@ -25,8 +26,12 @@ import type { CategoryResult } from "@/features/documents/actions";
 export function CategoryManager({
   categories,
   actions,
+  items,
 }: {
   categories: DocumentCategory[];
+  // Ce que la catégorie range, pour le texte de suppression (kit, boîte 29 : « ses dépenses
+  // restent » pour une catégorie de dépenses, « ses documents restent » pour les documents).
+  items: "documents" | "dépenses";
   actions: {
     create: (name: string) => Promise<CategoryResult>;
     rename: (categoryId: string, name: string) => Promise<CategoryResult>;
@@ -56,7 +61,7 @@ export function CategoryManager({
 
   return (
     <div className="flex flex-col gap-5">
-      <ul aria-label="Catégories de documents" className="flex flex-col">
+      <ul aria-label={`Catégories de ${items}`} className="flex flex-col">
         {categories.map((category) => (
           <CategoryRow
             key={`${category.id}-${category.name}`}
@@ -128,9 +133,12 @@ export function CategoryManager({
         title="Supprimer cette catégorie ?"
         confirmLabel={pending ? "Suppression…" : "Supprimer"}
       >
-        {deleting
-          ? `« ${deleting.name} » disparaît ; ses documents restent, « sans catégorie ».`
-          : null}
+        {deleting ? (
+          <>
+            <Quoted>{deleting.name}</Quoted> disparaît ; ses {items} restent, «&nbsp;sans
+            catégorie&nbsp;».
+          </>
+        ) : null}
       </ConfirmDialog>
     </div>
   );

@@ -4,6 +4,7 @@ import { CircleCheck, CircleX, Ellipsis, Pencil, Star, Trash2 } from "lucide-rea
 import { useState, useTransition } from "react";
 
 import { ActionMenu, ConfirmDialog } from "@/components/ui/overlay";
+import { Quoted } from "@/components/ui/quoted";
 import { deleteGoal, makeGoalMain, setGoalStatus } from "@/features/goals/actions";
 import type { GoalEntry } from "@/features/goals/queries";
 
@@ -124,8 +125,8 @@ export function GoalMenu({
         confirmLabel="Supprimer"
         pending={pending}
       >
-        « {title} » sera effacé, sans passer par l&apos;historique. Pour un objectif atteint ou
-        abandonné, choisis plutôt « Atteint » ou « Abandonné ».
+        <Quoted>{title}</Quoted> sera effacé, sans passer par l&apos;historique. Pour un objectif
+        atteint ou abandonné, choisis plutôt « Atteint » ou « Abandonné ».
       </ConfirmDialog>
     </div>
   );

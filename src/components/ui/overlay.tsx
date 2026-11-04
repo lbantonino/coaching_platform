@@ -13,7 +13,11 @@ import {
   springCurve,
 } from "@/lib/motion";
 
-import { dlgDangerButtonClass, dlgSecondaryButtonClass } from "./dialog-styles";
+import {
+  dlgCancelButtonClass,
+  dlgDangerButtonClass,
+  dlgSecondaryButtonClass,
+} from "./dialog-styles";
 
 // Fenêtres par-dessus la page : fenêtres de saisie, menus d'actions, confirmations, grands panneaux.
 // Dessin : kit « Coory Boites » (04/11/2026, coory-design/COORY-MODALS-PIXEL-PERFECT-KIT), au pixel près.
@@ -561,6 +565,16 @@ export function PanelDialog({
   );
 }
 
+const toneTiles = {
+  ok: "bg-dlg-ok-tile text-dlg-ok",
+  warn: "bg-dlg-warn-tile text-dlg-warn",
+  muted: "bg-dlg-muted-tile text-muted",
+  running: "bg-dlg-run-tile text-dlg-run",
+  strength: "bg-dlg-strength-tile text-dlg-strength",
+  hyrox: "bg-dlg-hyrox-tile text-dlg-hyrox",
+  hybrid: "bg-dlg-hybrid-tile text-dlg-hybrid",
+} as const;
+
 export type ActionMenuItem = {
   label: string;
   icon: LucideIcon;
@@ -573,18 +587,14 @@ export type ActionMenuItem = {
   selected?: boolean;
   // Mène à un sous-menu : chevron à droite.
   chevron?: boolean;
-  // Tuile teintée du kit : verte (« Atteint », « Actif ») ou ambre (« Abandonné », « En pause »).
-  tone?: "ok" | "warn";
+  // Tuile teintée du kit : verte (« Atteint », « Actif »), ambre (« Abandonné », « En pause »), grise
+  // (« Archivé ») ou couleur d'une discipline (programme d'un sportif).
+  tone?: keyof typeof toneTiles;
   // Couleurs propres de la tuile (ex. pastille de statut), à la place du gris du kit.
   tileClassName?: string;
   // Filet avant la ligne (posé tout seul avant une action destructrice qui n'est pas la seule).
   separatorBefore?: boolean;
 };
-
-const toneTiles = {
-  ok: "bg-dlg-ok-tile text-dlg-ok",
-  warn: "bg-dlg-warn-tile text-dlg-warn",
-} as const;
 
 // Flèches ↑ / ↓ (et Début / Fin) d'une ligne à l'autre du menu ; Entrée choisit (kit, interactions).
 function moveFocus(event: React.KeyboardEvent<HTMLUListElement>) {
@@ -714,8 +724,10 @@ export function ActionMenu({
   );
 }
 
-// Confirmation (kit, famille « confirmation », sans en-tête) : tuile rose 52 px avec l'icône
-// « triangle-alert » 24, titre 21/700, texte 15 gris, « Annuler » + action rouge côte à côte.
+// Confirmation (kit, famille « confirmation », sans en-tête) : tuile rose 52 px avec l'icône 24
+// (« triangle-alert » par défaut, bouclier ou déconnexion selon l'action), titre 21/700, texte 15
+// gris (nom cité en gras avec <Quoted>), « Annuler » + action rouge côte à côte. Le focus arrive sur
+// « Annuler », l'action qui ne détruit rien.
 export function ConfirmDialog({
   open,
   onClose,
@@ -723,6 +735,7 @@ export function ConfirmDialog({
   title,
   children,
   confirmLabel,
+  icon: Icon = TriangleAlert,
   pending = false,
 }: {
   open: boolean;
@@ -731,6 +744,7 @@ export function ConfirmDialog({
   title: string;
   children?: ReactNode;
   confirmLabel: string;
+  icon?: LucideIcon;
   pending?: boolean;
 }) {
   const titleId = useId();
@@ -751,11 +765,11 @@ export function ConfirmDialog({
           aria-hidden
           className="grid size-[52px] shrink-0 place-items-center rounded-[16px] bg-dlg-danger-soft text-dlg-danger-ink"
         >
-          <TriangleAlert size={24} strokeWidth={1.8} />
+          <Icon size={24} strokeWidth={1.9} />
         </span>
         <h2
           id={titleId}
-          className="mt-[18px] text-[21px] leading-[1.25] font-bold tracking-[-0.02em] text-balance"
+          className="mt-[18px] text-[21px] leading-[1.25] font-bold tracking-[-0.02em]"
         >
           {title}
         </h2>
@@ -765,7 +779,7 @@ export function ConfirmDialog({
           </p>
         ) : null}
         <div className="mt-[26px] grid grid-cols-2 gap-2.5">
-          <button type="button" onClick={onClose} className={dlgSecondaryButtonClass}>
+          <button type="button" autoFocus onClick={onClose} className={dlgCancelButtonClass}>
             Annuler
           </button>
           <button

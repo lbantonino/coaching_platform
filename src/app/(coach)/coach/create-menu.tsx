@@ -49,17 +49,45 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
         open={open}
         onClose={() => setOpen(false)}
         title="Créer"
-        // Ordre choisi par Antonino (26/10).
+        // Kit (boîte 01) : sous-titre, une description par choix et un chevron (chaque choix ouvre
+        // une autre boîte ou page). Ordre choisi par Antonino (26/10).
+        subtitle="Qu'est-ce que tu veux ajouter ?"
         items={[
           {
             label: "Séance",
+            description: "Individuelle ou collective, dans l'agenda",
             icon: CalendarPlus,
+            chevron: true,
             onSelect: () => openNewSession?.(),
           },
-          { label: "Programme", icon: FilePlus, onSelect: go("/coach/programmes") },
-          { label: "Tâche", icon: ClipboardList, onSelect: () => openTask?.() },
-          { label: "Sportif", icon: UserPlus, onSelect: go(`${orgBase}/sportifs/nouveau`) },
-          { label: "Paiement reçu", icon: Coins, onSelect: () => openNewPayment?.() },
+          {
+            label: "Programme",
+            description: "Plusieurs semaines pour un sportif",
+            icon: FilePlus,
+            chevron: true,
+            onSelect: go("/coach/programmes"),
+          },
+          {
+            label: "Tâche",
+            description: "Un rappel pour toi",
+            icon: ClipboardList,
+            chevron: true,
+            onSelect: () => openTask?.(),
+          },
+          {
+            label: "Sportif",
+            description: "Une nouvelle fiche",
+            icon: UserPlus,
+            chevron: true,
+            onSelect: go(`${orgBase}/sportifs/nouveau`),
+          },
+          {
+            label: "Paiement reçu",
+            description: "L'argent reçu d'un sportif",
+            icon: Coins,
+            chevron: true,
+            onSelect: () => openNewPayment?.(),
+          },
         ]}
       />
     </>

@@ -144,6 +144,16 @@
   --dlg-ok-tile: color-mix(in srgb, #34d399 16%, #1a1a1d);
   --dlg-warn: #fbbf24;
   --dlg-warn-tile: color-mix(in srgb, #fbbf24 16%, #1a1a1d);
+  --dlg-muted-tile: color-mix(in srgb, #a1a1aa 16%, #1a1a1d);
+  /* Disciplines (kit, programme d'un sportif) : tuile à 16 %, icône dans la couleur claire. */
+  --dlg-run: #7776ff;
+  --dlg-run-tile: color-mix(in srgb, #7776ff 16%, #1a1a1d);
+  --dlg-strength: #ea4d66;
+  --dlg-strength-tile: color-mix(in srgb, #dd2d4a 16%, #1a1a1d);
+  --dlg-hyrox: #ffc04f;
+  --dlg-hyrox-tile: color-mix(in srgb, #fec14f 16%, #1a1a1d);
+  --dlg-hybrid: #26cbb8;
+  --dlg-hybrid-tile: color-mix(in srgb, #26cbb8 16%, #1a1a1d);
   --alert-fill: #c13c3b; /* fond rouge sous texte blanc (5,3:1) */
   --danger: #ffffff;
   --danger-soft: #c13c3b;
@@ -289,6 +299,16 @@
   --dlg-ok-tile: color-mix(in srgb, #16834a 16%, #fff);
   --dlg-warn: #b7791f;
   --dlg-warn-tile: color-mix(in srgb, #b7791f 16%, #fff);
+  --dlg-muted-tile: color-mix(in srgb, #64626e 16%, #fff);
+  /* Disciplines (kit, programme d'un sportif) : tuile à 16 %, icône foncée lisible. */
+  --dlg-run: #5a58e8;
+  --dlg-run-tile: color-mix(in srgb, #7776ff 16%, #fff);
+  --dlg-strength: #c8243c;
+  --dlg-strength-tile: color-mix(in srgb, #dd2d4a 16%, #fff);
+  --dlg-hyrox: #9a6a00;
+  --dlg-hyrox-tile: color-mix(in srgb, #fec14f 16%, #fff);
+  --dlg-hybrid: #0d8576;
+  --dlg-hybrid-tile: color-mix(in srgb, #26cbb8 16%, #fff);
   --alert-fill: #ac3031;
   --danger: #ffffff;
   --danger-soft: #ac3031;

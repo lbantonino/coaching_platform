@@ -25,6 +25,7 @@ import { ConfirmDialog, Sheet } from "@/components/ui/overlay";
 import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
+import { Quoted } from "@/components/ui/quoted";
 import {
   TASK_CATEGORIES,
   TASK_NOTES_MAX,
@@ -334,7 +335,7 @@ function TaskForm({
           title="Supprimer cette tâche ?"
           confirmLabel={deleting ? "Suppression…" : "Supprimer"}
         >
-          « {task.title} » disparaîtra de tes tâches. Ce n&apos;est pas réversible.
+          <Quoted>{task.title}</Quoted> disparaîtra de tes tâches. Ce n&apos;est pas réversible.
         </ConfirmDialog>
       ) : null}
     </>

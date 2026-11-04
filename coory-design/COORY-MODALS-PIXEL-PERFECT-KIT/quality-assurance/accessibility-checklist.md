@@ -28,3 +28,10 @@ Vérifié sur la coque partagée (menu « Créer », formulaire « Nouvelle tâc
 - [x] navigation clavier menus : ↑ / ↓ en boucle, Début / Fin, Entrée ; focus initial sur ✕, Tab mène à la première ligne (vérifié sur 22)
 - [x] focus visible violet #6a3ee0 dès l'appui (la transition ne porte plus sur la couleur du contour)
 - [ ] role="menu" / "menuitem" (point ⚠️ du kit) : NON appliqué, les lignes restent des boutons (lecture correcte, et les tests existants les cherchent comme boutons) ; à décider avec Antonino
+
+### Phase C : confirmations 11, 12, 18, 20, 25, 29, 31, 35 (04/11/2026)
+- [x] focus initial sur « Annuler » (action non destructive, point ⚠️ du kit) ; restauration sur le déclencheur d'origine après Échap, même quand un menu s'était fermé entre-temps (vérifié sur 25)
+- [x] aria-labelledby (titre) et aria-describedby (texte)
+
+### Phase D : menus à sélection et sous-menus 07, 08, 14, 15, 06, 13, 01 (04/11/2026)
+- [x] ligne choisie annoncée (aria-current) ; rond coché décoratif (aria-hidden)

@@ -33,3 +33,9 @@ Vérifié sur la coque partagée (menu « Créer », formulaire « Nouvelle tâc
 ### Phase B : menus simples 36, 30, 17, 05, 22, 09 (04/11/2026)
 - [x] 0 px d'écart mesuré sur les 6 boîtes, ordinateur et téléphone (sauf 17 téléphone, non accessible) : boîte, en-tête, tuiles, icônes, libellés, descriptions (13 / 1,4), filet avant l'action rouge (marge 6 / 12), chevrons #a3a1ad, tuiles vertes et ambre (16 %)
 - [x] thème sombre vérifié (22, ordinateur et téléphone)
+
+### Phase C : confirmations 11, 12, 18, 20, 25, 29, 31, 35 (04/11/2026)
+- [x] 0 px d'écart sur les 8 boîtes, ordinateur et téléphone ; boutons en interligne normal (0,7 px corrigé), icône 24 trait 1,9, « Annuler » en 15 px
+
+### Phase D : menus à sélection et sous-menus 07, 08, 14, 15, 06, 13, 01 (04/11/2026)
+- [x] 0 px d'écart sur les 7 boîtes, ordinateur et téléphone ; tuiles teintées (statuts et disciplines) identiques au mélange 16 % du kit ; icônes Running et Hybride du kit
