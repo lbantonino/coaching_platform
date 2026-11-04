@@ -2,7 +2,7 @@
 
 > Document personnel d'Antonino, pour comprendre le projet et pouvoir l'expliquer (entretien, recruteur, client).
 > Le code est écrit avec l'aide de Claude Code ; ce carnet explique **les décisions**, pas chaque ligne.
-> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **03/11/2026** (fiche sportif au pixel près : page d'une séance et son déroulé, objectifs, agenda du programme semaine par semaine, onglet Profil, onglets en verre ; en-tête commun, nouvel ordre des onglets, vue d'ensemble ; avant : la liste des sportifs et le cadre commun de l'app).
+> Il est mis à jour à la fin de chaque story. Dernière mise à jour : **03/11/2026** (fiche sportif au pixel près : Repères à deux cartes, page d'une séance et son déroulé, objectifs, agenda du programme semaine par semaine, onglet Profil, onglets en verre ; en-tête commun, nouvel ordre des onglets, vue d'ensemble ; avant : la liste des sportifs et le cadre commun de l'app).
 >
 > Les autres documents : [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md) = le journal détaillé et les preuves de tests ;
 > [README.md](README.md) = comment lancer le projet ; `docs/` = le cahier des charges (ce qu'on VEUT construire).
@@ -471,6 +471,9 @@ La carte jaune de l'objectif principal restait blanche, alors que le jeton `--go
 
 ### Lire une séance écrite en texte, en attendant l'éditeur (03/11, nuit)
 La maquette de la page d'une séance découpe chaque ligne (« Effort · 4:55 min/km · 4 min ») et dessine le déroulé à l'échelle du temps. Or les séances actuelles sont écrites en texte libre (« 4 min @4:55 min/km »). Deux choix possibles : changer tout de suite le format des séances en base, ou lire ce texte pour l'affichage. On a choisi la lecture, dans un petit module de fonctions pures testé par Vitest, parce que le vrai format sera décidé avec l'éditeur de programmes (le cœur de Coory) et qu'il ne faut pas le figer trop tôt. Le module ne devine jamais : une ligne qu'il ne comprend pas s'affiche telle quelle, et si une seule durée manque, le déroulé n'est pas dessiné plutôt que d'être faux. Petite vérification qui rassure : la maquette annonçait « ≈ 54 min », et le calcul 20 + 5 × (4 + 1:45) + 5 donne bien 53,75 minutes.
+
+### Deux cartes au lieu d'une grille (03/11, nuit)
+L'onglet Repères montrait tous les repères en grille. La maquette n'en garde que deux, que le coach choisit (« Changer ») et qu'il peut échanger. Rien n'est perdu : le menu « Changer » liste tous les repères actuels avec leur valeur, et l'historique reste complet. Deux détails d'ingénierie. D'abord, le graphique est maintenant dessiné en pourcentages (le tracé dans un SVG étiré, les points en HTML) : il s'adapte à toutes les largeurs sans recalculer la taille du conteneur. Ensuite, les styles d'accordéon partagés entre une page serveur et un composant client vivent dans un module neutre : une constante exportée par un fichier « client » arrive vide côté serveur (leçon déjà notée plus haut). Un bug trouvé en testant à la main : choisir sur une carte le repère déjà affiché sur l'autre faisait disparaître une carte ; les deux cartes échangent maintenant leurs repères.
 
 ## 8. Problèmes rencontrés et ce qu'ils ont appris
 

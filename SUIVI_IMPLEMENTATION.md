@@ -32,6 +32,47 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Sportifs au pixel près, page 2g : fiche · Repères (D-97)
+```
+Date : 2026-11-03
+Demande d'Antonino : cartes d'objectif allégées validées (« ok super ») ; passer à l'onglet Repères.
+Allures et repères : references-section.tsx (serveur : données des cartes, accordéons historique et
+  calcul) + references-board.tsx (client : deux cartes, menus « Changer » groupés, échange si l'on
+  choisit le repère de l'autre carte, « Inverser les deux cartes », Évolution avec menu du repère et
+  de la période, graphique 160 px à 5 graduations régulières, survol et flèches ← →, accordéon des
+  valeurs en tableau). Période par défaut : 6 mois, ou la plus courte qui montre deux mesures ;
+  « Depuis le début » ajouté. Repère à une seule mesure : « Une seule mesure pour l'instant ».
+  reference-tile.tsx et reference-chart.tsx retirés (remplacés) ; seriesKey exporté (series.ts) ;
+  accordéons dans components/ui/accordion.tsx (module neutre : constantes partagées avec le serveur).
+Formulaires « Ajouter une mesure » et « Ajouter une performance » : champs « fiche », source en
+  segmenté « track », bouton noir. Records : tuiles (point de couleur, temps, allure ou course et
+  date), « Toutes les performances » (« Record » écrit en violet), mêmes suppressions.
+Rien de retiré : tous les repères restent lisibles (menu « Changer » avec leurs valeurs, historique),
+  suppression d'une mesure, calcul depuis un test, graphique au clavier, tableau des valeurs, records.
+Écarts mesurés (maquette → app) : ordinateur et téléphone 0 px jusqu'au dernier bouton (sections
+  1325 / 584,9 px sur ordinateur) ; valeur des cartes 2,5 px plus bas à l'intérieur de la carte.
+  Corrigés en route : écart courbe/dates (8 px), hauteur de la note, accordéon sur deux lignes (46 px).
+Responsive : 1024 à 3440 (cartes de 342 à 772 px), 360 et 430 sans débordement.
+Tests : references.spec réécrit (cartes « Repères affichés », valeurs lues dans le menu « Changer »,
+  tableau sous le graphique) ; repères, records, vue d'ensemble 15 + 1 ignoré ; Vitest 266/266 ;
+  suite Playwright complète 172 réussis, 17 ignorés, 1 échec sous la charge (recherche, téléphone),
+  réussi en relance. db:reset fait après.
+Retours d'Antonino (même soir) :
+  - Graphique : le menu ne proposait que les repères à deux mesures ou plus (son « Seuil » ajouté
+    n'y était pas). Il propose maintenant TOUS les repères ; avec une seule mesure, il l'explique
+    (« Une seule mesure, le … ») au lieu de tracer. Cartes par défaut et vue d'ensemble : la
+    dernière allure mesurée (sinon une FC) et la dernière charge. FC repos : axe inversé (plus
+    basse = mieux, testé) ; graduations arrondies (bpm entiers, kg à une décimale).
+  - Données de démo d'Inès (seed) : Seuil (4 mesures, 4:52 → 4:36 min/km), Endurance (2), FC repos
+    (3), FC max (1), Back squat (4), Soulevé de terre (2), en plus de Race pace et Wall ball.
+    Sa vue d'ensemble montre donc Seuil et Back squat (les plus récents).
+  - Objectifs (ordinateur seulement) : trois petits boutons Modifier, Atteint, Abandonné en bas à
+    droite de chaque carte, le menu « ··· » gardé ; téléphone inchangé.
+  Tests : Vitest 267/267 (FC repos) ; repères, records, vue d'ensemble 15 + 1 ignoré ; objectifs,
+  notifications, nouveau sportif 14/14.
+Suite : page 2h (Disponibilités) après validation d'Antonino.
+```
+
 ### Sportifs au pixel près, page 2d : détail d'une séance du programme (D-96)
 ```
 Date : 2026-11-03
@@ -98,6 +139,14 @@ Retour d'Antonino (même soir) : pas fan des pastilles dans les cartes. Trois st
   discipline (point + nom), et à droite le nombre de jours en grand (« 137 / jours », lu « Dans 137
   jours ») ; « Aujourd'hui » en violet, « Date passée » en ambre. Objectifs passés : discipline en
   texte aussi. Écart voulu avec la maquette (pastilles et « J-137 » retirés à sa demande).
+Retour d'Antonino (soir, avant 2g) : cartes encore trop chargées, gros chiffre des jours rejeté
+  (téléphone et ordinateur). Trois versions proposées, il a choisi « Essentiel + menu ··· » : titre ;
+  discipline · « dans 137 jours » (violet, petit ; « aujourd'hui », « date passée » en ambre,
+  « sans date ») ; date et précisions en gris ; menu ··· (goal-menu.tsx, ActionMenu) avec Modifier
+  (EditGoalSheet, ex-EditGoalButton), Atteint, Abandonné, Rendre principal (secondaire),
+  Supprimer (nouvelle confirmation). Carte jaune pour le principal, mot « Principal » lu par les
+  lecteurs d'écran. La description se lit dans « Modifier ». Tests : goals.spec (actions par le
+  menu, « dans N jours ») ; objectifs, nouveau sportif, notifications, vue d'ensemble 19 + 1 ignoré.
 Tests : goals.spec (titre « Objectifs et compétitions », compte à rebours « Dans N jours ») ;
   Vitest 261/261 ; suite Playwright complète 171 réussis, 17 ignorés, 2 échecs sous la charge
   (invitation groupée, bibliothèque), réussis en relance (13/13) ; après le nouveau style :

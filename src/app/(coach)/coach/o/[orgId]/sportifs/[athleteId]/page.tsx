@@ -299,6 +299,20 @@ async function AthleteSection({
                 />
               </section>
             </div>
+          ) : tab === "reperes" ? (
+            // Onglet Repères (maquette « Sportifs », page 2g) : pleine largeur, deux cartes.
+            <div className="flex flex-col gap-4">
+              <ReferencesSection
+                organizationId={organizationId}
+                athleteId={athlete.id}
+                today={today}
+              />
+              <RecordsSection
+                organizationId={organizationId}
+                athleteId={athlete.id}
+                today={today}
+              />
+            </div>
           ) : tab === "objectifs" ? (
             // Onglet Objectifs (maquette « Sportifs », page 2f) : pleine largeur, deux cartes.
             <GoalsSection organizationId={organizationId} athleteId={athlete.id} today={today} />
@@ -359,20 +373,6 @@ async function AthleteSection({
             <div className="flex w-full max-w-3xl flex-col gap-6">
               {tab === "disponibilites" ? (
                 <AvailabilitySection organizationId={organizationId} athlete={athlete} />
-              ) : null}
-              {tab === "reperes" ? (
-                <>
-                  <ReferencesSection
-                    organizationId={organizationId}
-                    athleteId={athlete.id}
-                    today={today}
-                  />
-                  <RecordsSection
-                    organizationId={organizationId}
-                    athleteId={athlete.id}
-                    today={today}
-                  />
-                </>
               ) : null}
               {tab === "notes" ? (
                 <NotesSection organizationId={organizationId} athlete={athlete} />

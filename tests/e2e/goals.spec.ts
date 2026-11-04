@@ -11,6 +11,15 @@ async function login(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
+// Les actions d'un objectif sont dans son menu « ··· » (cartes allégées, choix d'Antonino du 03/11).
+async function goalAction(page: Page, title: string, action: string) {
+  await page.getByRole("button", { name: `Actions : ${title}` }).click();
+  await page
+    .getByRole("dialog", { name: title })
+    .getByRole("button", { name: action, exact: true })
+    .click();
+}
+
 test("le coach ajoute des objectifs, change le principal et en clôture un", async ({
   page,
 }, testInfo) => {
@@ -47,8 +56,8 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   const hyrox = current.getByRole("listitem").filter({ hasText: competition });
   await expect(hyrox).toContainText("Principal");
   await expect(hyrox).toContainText("Catégorie Pro");
-  // Compte à rebours en grand (choix d'Antonino du 03/11), lu « Dans 60 jours ».
-  await expect(hyrox.getByLabel(/^Dans \d+ jours?$/)).toBeVisible();
+  // Compte à rebours en petit (choix d'Antonino du 03/11 au soir) : « dans 60 jours ».
+  await expect(hyrox).toContainText(/dans \d+ jours?/);
 
   // Un nouvel objectif principal fait passer l'ancien en secondaire.
   await page
@@ -64,19 +73,19 @@ test("le coach ajoute des objectifs, change le principal et en clôture un", asy
   await expect(hyrox).toContainText("Secondaire");
 
   // Atteint : l'objectif quitte la liste en cours et rejoint l'historique.
-  await page.getByRole("button", { name: "Atteint : Semi-marathon" }).click();
+  await goalAction(page, "Semi-marathon", "Atteint");
   await expect(half).toHaveCount(0);
   await page.getByText("Objectifs passés (1)").click();
   await expect(page.getByRole("list", { name: "Objectifs passés" })).toContainText("Atteint");
 
   // L'objectif restant redevient principal.
-  await page.getByRole("button", { name: `Rendre principal : ${competition}` }).click();
+  await goalAction(page, competition, "Rendre principal");
   await expect(hyrox).toContainText("Principal");
 
   // Modifier (demande d'Antonino du 26/10) : corriger le nom et la date sans supprimer l'objectif.
   const renamed = `${competition} Gand`;
   const inNinetyDays = new Date(Date.now() + 90 * 86_400_000).toISOString().slice(0, 10);
-  await page.getByRole("button", { name: `Modifier : ${competition}` }).click();
+  await goalAction(page, competition, "Modifier");
   const edit = page.getByRole("dialog", { name: "Modifier l'objectif" });
   await expect(edit.getByLabel("Nom de la compétition")).toHaveValue(competition);
   await edit.getByLabel("Nom de la compétition").fill(renamed);
