@@ -60,13 +60,6 @@ export type WeekLayout = {
   lastHour: number;
 };
 
-export function layoutWeek(sessions: WeekSession[], monday: string): WeekLayout {
-  return layoutDays(
-    sessions,
-    Array.from({ length: 7 }, (_, i) => addDays(monday, i)),
-  );
-}
-
 // Jour affiché dans l'adresse (?date=AAAA-MM-JJ), sinon aujourd'hui.
 export function parseDay(param: string | undefined, today: string): string {
   const valid =
@@ -160,41 +153,4 @@ function assignLanes(sorted: WeekBlock[]) {
     groupEnd = Math.max(groupEnd, block.end);
   }
   if (group.length > 0) close();
-}
-
-// « 4 h », « 1 h 30 », « 45 min » : durée totale lisible.
-export function formatHours(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  if (hours === 0) return `${rest} min`;
-  return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, "0")}`;
-}
-
-// Dernière séance passée d'un sportif (jusqu'à `now` inclus), dans les 60 derniers jours.
-export function lastSessionFor(
-  athleteId: string,
-  sessions: WeekSession[],
-  today: string,
-  nowTime: string,
-): { date: string; time: string } | null {
-  let best: { date: string; time: string } | null = null;
-  for (const session of sessions) {
-    if (!session.athletes.some((athlete) => athlete.id === athleteId)) continue;
-    const last = sessionOccurrences(session, addDays(today, -60), today)
-      .filter((o) => o.date < today || o.startTime <= nowTime)
-      .at(-1);
-    if (!last) continue;
-    if (!best || last.date > best.date || (last.date === best.date && last.startTime > best.time)) {
-      best = { date: last.date, time: last.startTime };
-    }
-  }
-  return best;
-}
-
-// Nombre de séances de la semaine (toutes, collectives et individuelles) et détail par jour.
-export function weekCounts(sessions: WeekSession[], monday: string): number[] {
-  return Array.from({ length: 7 }, (_, i) => {
-    const day = addDays(monday, i);
-    return sessions.filter((session) => sessionOccurrences(session, day, day).length > 0).length;
-  });
 }

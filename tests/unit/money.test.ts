@@ -15,7 +15,6 @@ import {
 import { paymentMethodLabel, paymentTotals } from "@/domain/billing/payments";
 import {
   countryFromAcceptLanguage,
-  countryName,
   defaultCurrencyFor,
   isCountryCode,
 } from "@/domain/geo/countries";
@@ -75,7 +74,6 @@ describe("pays", () => {
   it("connaît les pays et propose leur devise", () => {
     expect(isCountryCode("CH")).toBe(true);
     expect(isCountryCode("XX")).toBe(false);
-    expect(countryName("CH")).toBe("Suisse");
     expect(defaultCurrencyFor("FR")).toBe("EUR");
     expect(defaultCurrencyFor("CH")).toBe("CHF");
     expect(defaultCurrencyFor("CA")).toBe("CAD");

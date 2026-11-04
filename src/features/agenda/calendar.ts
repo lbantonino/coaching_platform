@@ -1,15 +1,6 @@
 // Calendrier du coach (P2-05) : règles PURES de date, testées par Vitest. Tout est calculé en UTC
 // sur des dates AAAA-MM-JJ : pas de décalage d'un jour au passage à l'heure d'été.
 
-// Mois affiché : « 2026-10 » depuis l'URL (?mois=), sinon le mois d'aujourd'hui.
-export function parseMonth(param: string | undefined, today: string): string {
-  if (param && /^\d{4}-(0[1-9]|1[0-2])$/.test(param)) {
-    const year = Number(param.slice(0, 4));
-    if (year >= 2000 && year <= 2100) return param;
-  }
-  return today.slice(0, 7);
-}
-
 export function shiftMonth(month: string, delta: number): string {
   const date = new Date(
     Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1 + delta, 1),
@@ -68,16 +59,10 @@ const dayFormatter = new Intl.DateTimeFormat("fr-BE", {
   month: "long",
   timeZone: "UTC",
 });
-const shortMonthFormatter = new Intl.DateTimeFormat("fr-BE", { month: "short", timeZone: "UTC" });
 
 // « samedi 12 décembre » (titres de la liste sur téléphone).
 export function dayLabel(iso: string): string {
   return dayFormatter.format(new Date(`${iso}T00:00:00Z`));
-}
-
-// « déc. » (bloc de date des prochaines échéances).
-export function shortMonth(iso: string): string {
-  return shortMonthFormatter.format(new Date(`${iso}T00:00:00Z`));
 }
 
 // Période d'une barre d'agenda (D-78 : déplacé depuis l'ancienne barre de l'agenda).

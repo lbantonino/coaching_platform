@@ -97,9 +97,8 @@ export function BackLink({
 }: {
   href: string;
   label: string;
-  // « icon » : rond posé sur une image (fiche d'un exercice, maquette 5), le libellé pour les lecteurs
-  // d'écran. « bar » : dans la barre du haut du téléphone, entre ☰ et les outils (fiche sportif).
-  variant?: "text" | "icon" | "bar";
+  // « bar » : dans la barre du haut du téléphone, entre ☰ et les outils (fiche sportif).
+  variant?: "text" | "bar";
 }) {
   const router = useRouter();
   // Libellé : le titre de la page précédente, lu dans le navigateur (le serveur rend le libellé
@@ -119,25 +118,14 @@ export function BackLink({
           // Stockage bloqué : lien normal.
         }
       }}
-      aria-label={variant === "icon" ? `Retour : ${shown}` : undefined}
       className={
-        variant === "icon"
-          ? "inline-flex size-11 items-center justify-center rounded-full transition-transform duration-100 active:scale-95"
-          : variant === "bar"
-            ? "inline-flex min-h-11 min-w-0 items-center gap-2 pl-0.5 text-[15px] font-medium whitespace-nowrap text-muted transition-colors duration-150 active:text-text"
-            : "inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
+        variant === "bar"
+          ? "inline-flex min-h-11 min-w-0 items-center gap-2 pl-0.5 text-[15px] font-medium whitespace-nowrap text-muted transition-colors duration-150 active:text-text"
+          : "inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
       }
     >
-      {variant === "icon" ? (
-        <span className="inline-flex size-8 items-center justify-center rounded-full bg-surface/90 text-text">
-          <ArrowLeft aria-hidden size={18} strokeWidth={1.9} />
-        </span>
-      ) : (
-        <>
-          <ArrowLeft aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
-          <span className={variant === "bar" ? "truncate" : ""}>{shown}</span>
-        </>
-      )}
+      <ArrowLeft aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+      <span className={variant === "bar" ? "truncate" : ""}>{shown}</span>
     </Link>
   );
 }

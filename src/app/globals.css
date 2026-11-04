@@ -25,7 +25,6 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
   --color-accent-text: var(--accent-text);
   --color-accent-soft: var(--accent-soft);
   --color-accent-line: var(--accent-line);
@@ -50,10 +49,8 @@
   --color-goal-main: var(--goal-main);
   --color-goal-main-line: var(--goal-main-line);
   --color-goal-main-text: var(--goal-main-text);
-  --color-goal-main-icon: var(--goal-main-icon);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
-  --color-logo-loop: var(--logo-loop);
   /* Noir, blanc et violet (D-77, 01/11/2026) : violet de marque, action principale, assistant IA. */
   --color-violet: var(--violet);
   --color-violet-soft: var(--violet-soft);
@@ -71,11 +68,9 @@
   --color-on-cta: var(--on-cta);
   /* Graphite & Or (29/10/2026) : champs, avatars, filets doux, erreur. */
   --color-field: var(--field);
-  --color-avatar: var(--avatar);
   --color-checkbox: var(--checkbox);
   --color-line-soft: var(--line-soft);
   --color-text-2: var(--text-2);
-  --color-gold-surface: var(--gold-surface);
   --color-alert: var(--alert);
   --color-alert-soft: var(--alert-soft);
   --color-alert-fill: var(--alert-fill);
@@ -98,12 +93,7 @@
   --color-hybrid-fill: var(--hybrid-fill);
   --color-on-hybrid-fill: var(--on-hybrid-fill);
   /* Teintes des icônes de chiffres clés (D-24) */
-  --color-blue: var(--blue);
-  --color-blue-soft: var(--blue-soft);
   --color-amber: var(--amber);
-  --color-amber-soft: var(--amber-soft);
-  --color-green: var(--green);
-  --color-green-soft: var(--green-soft);
   /* Repère ♀ / ♂ (D-25) */
   --color-female: var(--female);
   --color-female-soft: var(--female-soft);

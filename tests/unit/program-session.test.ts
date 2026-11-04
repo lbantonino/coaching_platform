@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseProgramSession, sessionSummary } from "@/domain/training/program-session";
+import { parseProgramSession } from "@/domain/training/program-session";
 
 const enduranceRapide = {
   title: "Endurance rapide",
@@ -38,21 +38,5 @@ describe("parseProgramSession (contenu figé d'une séance de programme)", () =>
     expect(parseProgramSession({ ...enduranceRapide, discipline: "yoga" })).toBeNull();
     expect(parseProgramSession({ ...enduranceRapide, durationMinutes: 0 })).toBeNull();
     expect(parseProgramSession("Endurance rapide")).toBeNull();
-  });
-});
-
-describe("sessionSummary (résumé d'une carte)", () => {
-  it("prend la version courte de chaque étape, 3 au plus, sinon le titre", () => {
-    const session = parseProgramSession(enduranceRapide)!;
-    expect(sessionSummary(session)).toEqual([
-      "20 min échauffement",
-      "4 × 5 min @4:55 min/km",
-      "5 min retour au calme",
-    ]);
-    const noShort = parseProgramSession({
-      ...enduranceRapide,
-      steps: [{ title: "Full body A" }],
-    })!;
-    expect(sessionSummary(noShort)).toEqual(["Full body A"]);
   });
 });

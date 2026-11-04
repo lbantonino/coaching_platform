@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   buildAgendaItems,
-  monthBounds,
   type AgendaEventSource,
   type AgendaSessionSource,
 } from "@/features/agenda/items";
@@ -78,9 +77,7 @@ describe("buildAgendaItems", () => {
 });
 
 describe("bornes de dates", () => {
-  it("donne le premier et le dernier jour d'un mois, et ajoute des jours", () => {
-    expect(monthBounds("2027-02")).toEqual({ from: "2027-02-01", to: "2027-02-28" });
-    expect(monthBounds("2026-12")).toEqual({ from: "2026-12-01", to: "2026-12-31" });
+  it("ajoute des jours, d'une année à l'autre", () => {
     expect(addDays("2026-12-28", 6)).toBe("2027-01-03");
   });
 });

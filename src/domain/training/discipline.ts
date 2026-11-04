@@ -10,14 +10,6 @@ export const disciplineLabels: Record<Discipline, string> = {
   hybrid: "Hybride",
 };
 
-// Ton de pastille (composant Badge) de chaque discipline.
-export const disciplineTones = {
-  running: "run",
-  strength: "strength",
-  hyrox: "hyrox",
-  hybrid: "hybrid",
-} as const satisfies Record<Discipline, string>;
-
 // Classes de couleur par discipline (D-24), écrites en entier pour que Tailwind les trouve :
 // carte neutre au contour légèrement coloré (29/10/2026 : la couleur va au titre et à l'icône, pas à
 // la carte), fond d'avatar, cadre d'objectif, icône dans son cercle, texte coloré.

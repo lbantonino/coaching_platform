@@ -32,7 +32,6 @@
   --surface-2: #212125; /* survol, colonnes de l'agenda */
   --field: #1d1d21;
   --chip: #27272b;
-  --avatar: #2d2d32;
   --bar: #313137;
   --checkbox: #52525b;
   --line: rgba(255, 255, 255, 0.08);
@@ -58,13 +57,10 @@
 
   /* « accent » = le violet là où l'app soulignait avec l'or (aujourd'hui, onglet actif, liens…). */
   --accent: #7c4deb;
-  --accent-hover: #8b5cf6;
   --accent-text: #b9a3ff;
   --accent-soft: rgba(139, 92, 246, 0.16);
   --accent-line: rgba(139, 92, 246, 0.35);
   --on-accent: #ffffff;
-  --gold-surface: #1a1a1d; /* ancienne carte or : une carte comme les autres */
-  --logo-loop: #8b5cf6;
   /* Action principale : blanc en sombre. */
   --cta: #f4f4f5;
   --cta-hover: #ffffff;
@@ -111,7 +107,6 @@
   --goal-main: rgba(255, 192, 79, 0.1);
   --goal-main-line: rgba(255, 192, 79, 0.3);
   --goal-main-text: #d9cba8;
-  --goal-main-icon: #c2b190;
   /* Déroulé d'une séance (page 2d) : allure facile (échauffement, retour au calme). */
   --effort-easy: #3a3942;
   --alert: #fb7185;
@@ -139,20 +134,11 @@
   --on-hybrid-fill: #18181b;
 
   /* Teintes héritées (icônes de chiffres clés), ramenées aux statuts. */
-  --blue: #7776ff;
-  --blue-soft: rgba(119, 118, 255, 0.14);
   --amber: #fbbf24;
-  --amber-soft: rgba(251, 191, 36, 0.12);
-  --green: #34d399;
-  --green-soft: rgba(52, 211, 153, 0.12);
   --female: #f198bb;
   --female-soft: color-mix(in srgb, #f198bb 14%, transparent);
   --male: #66c3f6;
   --male-soft: color-mix(in srgb, #66c3f6 14%, transparent);
-  --shadow-frame: none;
-  --tint-card: 0%;
-  --tint-nav: 0%;
-  --tint-block: 16%;
   color-scheme: dark;
 }
 
@@ -165,7 +151,6 @@
   --surface-2: #f8f7fb; /* colonnes de l'agenda */
   --field: #ffffff;
   --chip: #eeedf3;
-  --avatar: #e8e6ef;
   --bar: #e2e0ea;
   --checkbox: #a5a3b0;
   --line: rgba(22, 18, 40, 0.08);
@@ -189,13 +174,10 @@
   --ai-text: #ffffff;
 
   --accent: #7c4deb;
-  --accent-hover: #6a3ee0;
   --accent-text: #6a3ee0;
   --accent-soft: rgba(139, 92, 246, 0.1);
   --accent-line: rgba(139, 92, 246, 0.35);
   --on-accent: #ffffff;
-  --gold-surface: #ffffff;
-  --logo-loop: #8b5cf6;
   /* Action principale : noir en clair. */
   --cta: #17151d;
   --cta-hover: #2c2934;
@@ -237,7 +219,6 @@
   --goal-main: #fdf0d2;
   --goal-main-line: rgba(214, 150, 30, 0.28);
   --goal-main-text: #5c5340;
-  --goal-main-icon: #6b5f45;
   /* Déroulé d'une séance : allure facile, gris violacé (maquette 2d). */
   --effort-easy: #d8d7e2;
   --alert: #be123c;
@@ -262,20 +243,10 @@
   --hybrid-soft: rgba(38, 203, 184, 0.14);
   --hybrid-fill: #26cbb8;
   --on-hybrid-fill: #18181b;
-
-  --blue: #4b4ad6;
-  --blue-soft: rgba(119, 118, 255, 0.12);
   --amber: #8a4c00;
-  --amber-soft: rgba(234, 179, 8, 0.14);
-  --green: #047857;
-  --green-soft: rgba(16, 185, 129, 0.12);
   --female: #c2266b;
   --female-soft: color-mix(in srgb, #c2266b 10%, transparent);
   --male: #2f6fbf;
   --male-soft: color-mix(in srgb, #2f6fbf 10%, transparent);
-  --shadow-frame: none;
-  --tint-card: 0%;
-  --tint-nav: 0%;
-  --tint-block: 14%;
   color-scheme: light;
 }

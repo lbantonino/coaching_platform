@@ -72,15 +72,6 @@ export function Card({
   );
 }
 
-// Micro-libellé en capitales (Geist Mono 11–12, interlettrage .08em) : « PRINCIPAL », « CHAMPS »…
-export function MicroLabel({ children }: { children: ReactNode }) {
-  return (
-    <span className="font-mono text-[11px] font-medium tracking-[0.08em] text-muted uppercase">
-      {children}
-    </span>
-  );
-}
-
 // Bloc vide (module pas encore construit, ou rien à montrer) : icône et phrase grises, sous le filet.
 export function CardEmpty({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (

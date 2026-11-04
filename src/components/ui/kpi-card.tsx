@@ -126,66 +126,6 @@ export function KpiCard({
   );
 }
 
-// Carte chiffrée avec sa liste (Tâches du tableau de bord), façon widget Rappels de l'iPhone.
-// Téléphone (mobile first, demande d'Antonino du 24/10) : petite carte, deux par ligne ; en haut le
-// libellé en couleur et le nombre total, en dessous les premières lignes de la liste (intitulé seul,
-// avec leur rond). Ordinateur : chiffre et pastille, libellé, puis la liste détaillée.
-// Seul le bloc chiffré est un lien : la liste a ses propres boutons (CheckList).
-export function KpiListCard({
-  value,
-  label,
-  shortLabel,
-  color,
-  icon: Icon,
-  href,
-  children,
-}: {
-  value: string;
-  label: string;
-  // Titre du petit widget sur téléphone (« Tâches »).
-  shortLabel: string;
-  color: KpiColor;
-  icon: LucideIcon;
-  href: string;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      style={{ "--kpi": `var(--${color})` } as CSSProperties}
-      className="flex min-w-0 flex-col gap-0.5 rounded-kpi border border-line bg-surface px-3.5 py-3 text-text"
-    >
-      <Link
-        href={href}
-        aria-label={`${value} ${label}`}
-        className="flex min-w-0 flex-col gap-1.5 transition-[scale] duration-150 active:scale-[.98]"
-      >
-        <span className="flex items-center justify-between gap-2 lg:hidden">
-          <span className="text-[15px] font-semibold text-[var(--kpi)]">{shortLabel}</span>
-          <span className="font-display text-[24px] leading-none font-semibold text-[var(--kpi)] tabular">
-            {value}
-          </span>
-        </span>
-        {/* Ordinateur : chiffre, libellé et pastille sur une ligne (carte basse, 26/10). */}
-        <span className="hidden items-center justify-between gap-2 lg:flex">
-          <span className="flex min-w-0 items-baseline gap-2">
-            <span className="font-display text-[24px] leading-none font-semibold tracking-[-0.02em] text-[var(--kpi)] tabular">
-              {value}
-            </span>
-            <span className="truncate text-[13px] font-medium">{label}</span>
-          </span>
-          <span
-            aria-hidden
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--kpi)_16%,transparent)] text-[var(--kpi)]"
-          >
-            <Icon size={14} strokeWidth={1.8} />
-          </span>
-        </span>
-      </Link>
-      {children}
-    </div>
-  );
-}
-
 export function KpiGrid({
   label,
   columns = 4,
