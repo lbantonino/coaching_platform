@@ -1,6 +1,7 @@
 "use client";
 
-import { CircleStop, Ellipsis, Trash2 } from "lucide-react";
+import { CircleStop, Ellipsis, Pencil, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
 
 import { iconButtonClass } from "@/components/ui/button";
@@ -12,8 +13,14 @@ import { ActionMenu, ConfirmDialog } from "@/components/ui/overlay";
 // `button` (02/11, bas de la page d'une séance sur téléphone) : un simple bouton « Supprimer… » rouge à
 // la place du « ••• », qui ouvre directement la confirmation ; `buttonClassName` remplace son allure
 // (page d'une séance, 03/11 : barre d'actions de l'ordinateur, lien centré du téléphone).
+// Kit des boîtes (04/11) : `menuSubtitle` sous le titre, `edit` (ex. « Modifier toute la série »,
+// vers la page de modification existante), `deleteLabel` et `deleteDescription` pour la ligne rouge.
 export function DeleteMoreMenu({
   menuTitle,
+  menuSubtitle,
+  edit,
+  deleteLabel = "Supprimer",
+  deleteDescription,
   action,
   confirmTitle,
   confirmText,
@@ -23,6 +30,10 @@ export function DeleteMoreMenu({
   compact = false,
 }: {
   menuTitle: string;
+  menuSubtitle?: string;
+  edit?: { label: string; href: string };
+  deleteLabel?: string;
+  deleteDescription?: string;
   action: (formData: FormData) => void | Promise<void>;
   confirmTitle: string;
   confirmText: ReactNode;
@@ -35,6 +46,7 @@ export function DeleteMoreMenu({
   const [menu, setMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const form = useRef<HTMLFormElement>(null);
+  const router = useRouter();
   return (
     <form ref={form} action={action} className="contents">
       {button ? (
@@ -63,11 +75,21 @@ export function DeleteMoreMenu({
         open={menu}
         onClose={() => setMenu(false)}
         title={menuTitle}
+        subtitle={menuSubtitle}
         items={[
+          ...(edit
+            ? [{ label: edit.label, icon: Pencil, onSelect: () => router.push(edit.href) }]
+            : []),
           ...(stop
             ? [{ label: stop.label, icon: CircleStop, onSelect: () => void stop.action() }]
             : []),
-          { label: "Supprimer", icon: Trash2, destructive: true, onSelect: () => setConfirm(true) },
+          {
+            label: deleteLabel,
+            description: deleteDescription,
+            icon: Trash2,
+            destructive: true,
+            onSelect: () => setConfirm(true),
+          },
         ]}
       />
       <ConfirmDialog

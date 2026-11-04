@@ -28,7 +28,7 @@ export function SettingsDialogProvider({
   // Nouvelle section : on la lit depuis son début, pas depuis la hauteur de la précédente.
   const changeSection = (next: SettingsSection | null) => {
     setSection(next);
-    body.current?.closest("dialog")?.scrollTo({ top: 0 });
+    body.current?.closest("[data-dialog-body]")?.scrollTo({ top: 0 });
   };
 
   const refresh = useCallback(() => {

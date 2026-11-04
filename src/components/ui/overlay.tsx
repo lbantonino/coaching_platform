@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowLeft, Check, TriangleAlert, X, type LucideIcon } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { ArrowLeft, Check, ChevronRight, TriangleAlert, X, type LucideIcon } from "lucide-react";
+import { Fragment, useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 import {
   SHEET_SPRING,
@@ -13,13 +13,16 @@ import {
   springCurve,
 } from "@/lib/motion";
 
-import { buttonClass } from "./button";
+import { dlgDangerButtonClass, dlgSecondaryButtonClass } from "./dialog-styles";
 
-// Fenêtres par-dessus la page (prompt Claude Design §4 « Sheet », « ActionMenu », « Dialog »).
-// Téléphone : feuille du bas (rayon 22 22 0 0, poignée 40 × 4, 88 % de hauteur max, défile).
-// Ordinateur (≥ 768 px) : fenêtre centrée de 560 px, rayon 20. Fond d'écran rgba(3,6,12,.6).
-// Base : l'élément natif <dialog> ouvert avec showModal() : focus piégé, aria-modal et touche
-// Échap fournis par le navigateur. Fermeture aussi par la croix, « Annuler » et un clic sur le fond.
+// Fenêtres par-dessus la page : fenêtres de saisie, menus d'actions, confirmations, grands panneaux.
+// Dessin : kit « Coory Boites » (04/11/2026, coory-design/COORY-MODALS-PIXEL-PERFECT-KIT), au pixel près.
+// Téléphone (< 768 px) : feuille du bas, rayon 28 28 0 0, poignée 40 × 5, hauteur max « écran − 44 px ».
+// Ordinateur : fenêtre centrée, rayon 24, largeur selon la famille (menu et confirmation 460, saisie
+// 600, aperçu 980, paramètres 1000), hauteur max min(720 px, écran − 48 px). Voile rgba(23,21,29,.44)
+// et ombre du kit (jetons --dlg-*). Base : l'élément natif <dialog> ouvert avec showModal() : focus
+// piégé, aria-modal et touche Échap fournis par le navigateur. Fermeture aussi par la croix,
+// « Annuler » et un clic sur le fond.
 //
 // Mouvement (audit apple-design du 28/10) : la feuille monte du bas et y redescend (même chemin),
 // avec un ressort sans rebond ; on peut la glisser vers le bas pour la fermer, par sa poignée ou son
@@ -36,12 +39,22 @@ function shownOffset(element: HTMLElement): number {
   return transform && transform !== "none" ? new DOMMatrix(transform).m42 : 0;
 }
 
+// Largeur sur ordinateur, par famille du kit ; jamais plus large que l'écran moins 48 px.
+const WIDTHS = {
+  menu: "md:max-w-[min(460px,calc(100vw-48px))]",
+  confirm: "md:max-w-[min(460px,calc(100vw-48px))]",
+  form: "md:max-w-[min(600px,calc(100vw-48px))]",
+  preview: "md:max-w-[min(980px,calc(100vw-48px))] md:h-[min(700px,calc(100vh-48px))]",
+  settings: "md:max-w-[min(1000px,calc(100vw-48px))] md:h-[min(700px,calc(100vh-48px))]",
+} as const;
+export type OverlaySize = keyof typeof WIDTHS;
+
 function Overlay({
   open,
   onClose,
   labelledBy,
   describedBy,
-  wide = false,
+  size = "menu",
   tall = false,
   children,
 }: {
@@ -49,10 +62,9 @@ function Overlay({
   onClose: () => void;
   labelledBy: string;
   describedBy?: string;
-  // Grande fenêtre (Paramètres, D-58) : presque tout l'écran du téléphone, 960 px sur ordinateur.
-  wide?: boolean;
-  // Feuille haute sur téléphone (Nouvelle séance, 03/11) : ouverte presque en plein écran, comme une
-  // feuille de l'iPhone, son contenu défile sous un titre fixe.
+  size?: OverlaySize;
+  // Feuille haute sur téléphone (Nouvelle séance, 03/11) : ouverte à sa hauteur maximale, son contenu
+  // défile entre l'en-tête et le pied, fixes.
   tall?: boolean;
   children: ReactNode;
 }) {
@@ -166,6 +178,8 @@ function Overlay({
         margin: "0",
         maxHeight: "none",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
         zIndex: "2147483647",
         pointerEvents: "none",
         transform: `translateY(${offset}px)`,
@@ -175,13 +189,18 @@ function Overlay({
       Object.assign(backdrop.style, {
         position: "fixed",
         inset: "0",
-        background: "rgba(3, 6, 12, 0.6)",
+        background: "var(--dlg-scrim)",
         zIndex: "2147483646",
         pointerEvents: "none",
       });
-      const scrollTop = dialog.scrollTop;
+      // Le corps qui défile garde sa position dans la copie.
+      const scrolled = [...dialog.querySelectorAll<HTMLElement>("[data-dialog-body], ul")].map(
+        (element) => element.scrollTop,
+      );
       document.body.append(backdrop, sheet);
-      sheet.scrollTop = scrollTop;
+      sheet.querySelectorAll<HTMLElement>("[data-dialog-body], ul").forEach((element, index) => {
+        element.scrollTop = scrolled[index] ?? 0;
+      });
 
       running.current?.cancel();
       running.current = null;
@@ -334,25 +353,21 @@ function Overlay({
       onPointerMove={onPointerMove}
       onPointerUp={onPointerEnd}
       onPointerCancel={onPointerEnd}
-      // Défilement vertical seulement (03/11) : un contenu un peu trop large ne fait plus glisser la
-      // fenêtre sur le côté ; arrivé en haut ou en bas, le défilement ne passe pas à la page derrière.
-      className={`m-0 mt-auto w-full max-w-none overflow-x-hidden overflow-y-auto overscroll-contain rounded-t-sheet border border-line-2 bg-bg p-0 text-text backdrop:bg-[rgba(3,6,12,0.6)] md:m-auto md:rounded-card ${
-        wide
-          ? "h-[94%] max-h-[94%] md:h-[min(86vh,800px)] md:max-h-[86vh] md:max-w-[min(960px,calc(100vw-48px))]"
-          : tall
-            ? "max-md:h-[94%] max-h-[94%] md:max-h-[86vh] md:max-w-[560px]"
-            : "max-h-[88%] md:max-h-[86vh] md:max-w-[560px]"
-      }`}
+      // La fenêtre ne défile pas : en-tête et pied restent fixes, seul le corps défile (kit). En bas
+      // du téléphone, la zone du geste d'accueil est laissée libre (safe-area).
+      className={`m-0 mt-auto max-h-[calc(100%-44px)] w-full max-w-none overflow-hidden rounded-t-[28px] bg-dlg p-0 pb-[env(safe-area-inset-bottom)] text-text shadow-[var(--dlg-shadow)] backdrop:bg-[var(--dlg-scrim)] open:flex open:flex-col md:m-auto md:max-h-[min(720px,calc(100vh-48px))] md:rounded-[24px] md:pb-0 ${
+        WIDTHS[size]
+      } ${tall || size === "preview" || size === "settings" ? "max-md:h-[calc(100%-44px)]" : ""}`}
     >
       {rendered ? (
-        <div className="flex flex-col gap-4 px-[18px] pt-[18px] pb-[22px]">
-          {/* Poignée : une zone de 44 px de haut à attraper, pas seulement le trait. */}
+        <div className="flex min-h-0 flex-1 flex-col">
+          {/* Poignée du téléphone (40 × 5) ; on attrape aussi l'en-tête, juste dessous. */}
           <span
             aria-hidden
             data-sheet-grab
-            className="-mx-[18px] -mt-[18px] -mb-3 flex h-8 touch-none items-start justify-center pt-2.5 md:hidden"
+            className="flex shrink-0 touch-none justify-center pt-2.5 pb-0.5 md:hidden"
           >
-            <span className="h-1 w-10 rounded-[4px] bg-line-2" />
+            <span className="h-[5px] w-10 rounded-[5px] bg-dlg-handle" />
           </span>
           {children}
         </div>
@@ -361,90 +376,187 @@ function Overlay({
   );
 }
 
-function CloseButton({ onClose }: { onClose: () => void }) {
+// Boutons ronds de l'en-tête (retour, fermer) : 38 px gris clair, zone tactile élargie à 44 px.
+function HeaderButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
-      onClick={onClose}
-      aria-label="Fermer"
-      className="inline-flex size-11 shrink-0 items-center justify-center rounded-control border border-line bg-surface text-text transition-colors duration-150 hover:bg-surface-2"
+      onClick={onClick}
+      aria-label={label}
+      className="relative grid size-[38px] shrink-0 place-items-center rounded-full bg-dlg-tile text-text transition-[background-color,scale] duration-150 before:absolute before:-inset-[3px] before:content-[''] hover:bg-dlg-tile-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dlg-accent active:scale-[0.96]"
     >
-      <X aria-hidden size={18} strokeWidth={1.8} />
+      {children}
     </button>
   );
 }
 
-// Feuille de formulaire : titre 20/600, sous-titre 14 gris, contenu libre, pied (Annuler + action).
+// En-tête commun (kit, shared-components/modal-header) : retour facultatif, titre 20/700 (21 sur
+// téléphone) et sous-titre 14 gris, fermer. On peut glisser la feuille vers le bas en l'attrapant.
+export function DialogHeader({
+  titleId,
+  title,
+  subtitle,
+  subtitleId,
+  onClose,
+  onBack,
+}: {
+  titleId: string;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  subtitleId?: string;
+  onClose: () => void;
+  onBack?: () => void;
+}) {
+  return (
+    <div
+      data-sheet-grab
+      className="flex shrink-0 touch-none items-start gap-3 pt-2.5 pr-[18px] pb-2.5 pl-5 md:pt-[22px] md:pr-[22px] md:pl-6"
+    >
+      {onBack ? (
+        <HeaderButton label="Retour" onClick={onBack}>
+          <ArrowLeft aria-hidden size={18} strokeWidth={2} />
+        </HeaderButton>
+      ) : null}
+      <div className="flex min-w-0 flex-1 flex-col gap-1 pt-1.5">
+        <h2
+          id={titleId}
+          className="text-[21px] leading-[1.2] font-bold tracking-[-0.02em] text-balance md:text-[20px]"
+        >
+          {title}
+        </h2>
+        {subtitle ? (
+          <p id={subtitleId} className="text-[14px] leading-[1.5] text-pretty text-muted">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
+      <HeaderButton label="Fermer" onClick={onClose}>
+        <X aria-hidden size={17} strokeWidth={2} />
+      </HeaderButton>
+    </div>
+  );
+}
+
+// Corps qui défile entre l'en-tête et le pied ; arrivé en bout, le défilement ne passe pas à la page.
+const bodyClass =
+  "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 pt-2.5 pb-[22px] md:px-6";
+
+// Pied fixe (kit, shared-components/modal-footer) : filet en haut ; sur ordinateur, à droite,
+// « Annuler » puis l'action principale (une action destructrice éventuelle à gauche) ; sur
+// téléphone, l'action principale seule, pleine largeur.
+export function DialogFooter({
+  primary,
+  onCancel,
+  destructive,
+}: {
+  primary: ReactNode;
+  onCancel?: () => void;
+  destructive?: ReactNode;
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-2.5 border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:px-6 md:py-3.5 max-md:[&>[data-primary]]:flex-1">
+      {destructive ? <div className="max-md:hidden">{destructive}</div> : null}
+      {onCancel ? (
+        <button
+          type="button"
+          onClick={onCancel}
+          className={`${dlgSecondaryButtonClass} ml-auto max-md:hidden`}
+        >
+          Annuler
+        </button>
+      ) : null}
+      <div data-primary className={`flex ${onCancel ? "" : "md:ml-auto"} [&>*]:flex-1`}>
+        {primary}
+      </div>
+    </div>
+  );
+}
+
+// Fenêtre de saisie (kit, famille « formulaire ») : en-tête, corps qui défile, pied fixe facultatif.
+// `footer` libre (boutons existants) ; DialogFooter donne la disposition du kit.
 export function Sheet({
   open,
   onClose,
+  onBack,
   title,
   subtitle,
   footer,
   tall = false,
+  size = "form",
   children,
 }: {
   open: boolean;
   onClose: () => void;
+  onBack?: () => void;
   title: string;
   subtitle?: string;
   footer?: ReactNode;
-  // Presque plein écran sur téléphone, titre et croix fixes en haut (voir Overlay).
+  // Sur téléphone, ouverte à sa hauteur maximale (Nouvelle séance) même si le contenu est court.
   tall?: boolean;
+  size?: OverlaySize;
   children: ReactNode;
 }) {
   const titleId = useId();
+  const subtitleId = useId();
   return (
-    <Overlay open={open} onClose={onClose} labelledBy={titleId} tall={tall}>
-      <div
-        data-sheet-grab
-        className={`flex touch-none items-start justify-between gap-3 ${
-          tall
-            ? "sticky top-0 z-10 -mx-[18px] -mt-2 bg-bg px-[18px] pt-2 pb-3 shadow-[0_1px_0_var(--line)]"
-            : ""
-        }`}
-      >
-        <div className="flex min-w-0 flex-col gap-1">
-          <h2 id={titleId} className="font-display text-[20px] font-semibold tracking-[-0.02em]">
-            {title}
-          </h2>
-          {subtitle ? <p className="text-[14px] text-muted">{subtitle}</p> : null}
-        </div>
-        <CloseButton onClose={onClose} />
+    <Overlay
+      open={open}
+      onClose={onClose}
+      labelledBy={titleId}
+      describedBy={subtitle ? subtitleId : undefined}
+      size={size}
+      tall={tall}
+    >
+      <DialogHeader
+        titleId={titleId}
+        title={title}
+        subtitle={subtitle}
+        subtitleId={subtitleId}
+        onClose={onClose}
+        onBack={onBack}
+      />
+      <div data-dialog-body className={`${bodyClass} flex flex-col gap-4`}>
+        {children}
       </div>
-      {children}
-      {footer ? <div className="flex gap-2.5 [&>*]:flex-1">{footer}</div> : null}
+      {footer ? (
+        <div className="flex shrink-0 gap-2.5 border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:px-6 md:py-3.5 [&>*]:flex-1">
+          {footer}
+        </div>
+      ) : null}
     </Overlay>
   );
 }
 
-// Grande fenêtre de travail (Paramètres, D-58, comme les réglages de Claude.ai) : titre, fermer, et
-// un contenu libre qui défile (menu des sections compris).
+// Grand panneau (Paramètres 1000 px, aperçu d'un document 980 px ; 700 px de haut sur ordinateur) :
+// en-tête puis contenu libre qui défile (menu des sections compris).
 export function PanelDialog({
   open,
   onClose,
   title,
+  size = "settings",
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
+  size?: "settings" | "preview";
   children: ReactNode;
 }) {
   const titleId = useId();
   return (
-    <Overlay open={open} onClose={onClose} labelledBy={titleId} wide>
-      {/* Titre et croix restent en haut pendant qu'on défile (comme les réglages de Claude.ai). */}
-      <div
-        data-sheet-grab
-        className="sticky top-0 z-10 -mx-[18px] flex touch-none items-center justify-between gap-3 bg-bg px-[18px] py-2 md:-mt-[18px] md:pt-[18px] md:pb-3"
-      >
-        <h2 id={titleId} className="font-display text-[22px] font-semibold tracking-[-0.02em]">
-          {title}
-        </h2>
-        <CloseButton onClose={onClose} />
+    <Overlay open={open} onClose={onClose} labelledBy={titleId} size={size}>
+      <DialogHeader titleId={titleId} title={title} onClose={onClose} />
+      <div data-dialog-body className={bodyClass}>
+        {children}
       </div>
-      {children}
     </Overlay>
   );
 }
@@ -453,82 +565,157 @@ export type ActionMenuItem = {
   label: string;
   icon: LucideIcon;
   onSelect: () => void;
+  // Ligne de description sous le libellé (13 px gris, coupée par « … » si trop longue).
+  description?: string;
   destructive?: boolean;
-  // Choix en cours (ex. statut du sportif) : coche à droite, annoncé aux lecteurs d'écran.
+  // Choix en cours (ex. statut du sportif) : ligne violet pâle et rond violet coché à droite,
+  // annoncé aux lecteurs d'écran.
   selected?: boolean;
+  // Mène à un sous-menu : chevron à droite.
+  chevron?: boolean;
+  // Tuile teintée du kit : verte (« Atteint », « Actif ») ou ambre (« Abandonné », « En pause »).
+  tone?: "ok" | "warn";
+  // Couleurs propres de la tuile (ex. pastille de statut), à la place du gris du kit.
+  tileClassName?: string;
+  // Filet avant la ligne (posé tout seul avant une action destructrice qui n'est pas la seule).
+  separatorBefore?: boolean;
 };
 
-// Menu « ••• » : lignes de 52 px, icône 19 + libellé 16/500 ; action destructrice en rouge texte.
-// `onBack` : sous-menu ouvert depuis un autre menu (ex. « Changer le statut » depuis « ••• ») ;
-// une flèche avant le titre ramène au menu de départ.
+const toneTiles = {
+  ok: "bg-dlg-ok-tile text-dlg-ok",
+  warn: "bg-dlg-warn-tile text-dlg-warn",
+} as const;
+
+// Flèches ↑ / ↓ (et Début / Fin) d'une ligne à l'autre du menu ; Entrée choisit (kit, interactions).
+function moveFocus(event: React.KeyboardEvent<HTMLUListElement>) {
+  const keys = ["ArrowDown", "ArrowUp", "Home", "End"];
+  if (!keys.includes(event.key)) return;
+  const rows = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("button")];
+  if (rows.length === 0) return;
+  event.preventDefault();
+  const index = rows.indexOf(document.activeElement as HTMLButtonElement);
+  const next =
+    event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? rows.length - 1
+        : event.key === "ArrowDown"
+          ? (index + 1) % rows.length
+          : (index - 1 + rows.length) % rows.length;
+  rows[next].focus();
+}
+
+// Menu d'actions (kit, famille « menu ») : lignes de 58 px (62 sur téléphone), tuile d'icône 38,
+// libellé 15,5/600 et description 13 gris ; action destructrice en rouge (tuile rose), après un filet
+// quand d'autres actions la précèdent.
+// `onBack` : sous-menu ouvert depuis un autre menu ; la flèche ramène au menu de départ.
 export function ActionMenu({
   open,
   onClose,
   onBack,
   title,
+  subtitle,
   items,
 }: {
   open: boolean;
   onClose: () => void;
   onBack?: () => void;
   title: string;
+  subtitle?: string;
   items: ActionMenuItem[];
 }) {
   const titleId = useId();
+  const subtitleId = useId();
   return (
-    <Overlay open={open} onClose={onClose} labelledBy={titleId}>
-      <div data-sheet-grab className="flex touch-none items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {onBack ? (
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label="Retour"
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-control border border-line bg-surface text-text transition-colors duration-150 hover:bg-surface-2"
-            >
-              <ArrowLeft aria-hidden size={18} strokeWidth={1.8} />
-            </button>
-          ) : null}
-          <h2 id={titleId} className="min-w-0 font-display text-block font-semibold">
-            {title}
-          </h2>
-        </div>
-        <CloseButton onClose={onClose} />
-      </div>
-      <ul className="flex flex-col">
-        {items.map((item) => (
-          <li key={item.label}>
-            <button
-              type="button"
-              aria-current={item.selected ? "true" : undefined}
-              onClick={() => {
-                onClose();
-                item.onSelect();
-              }}
-              className={`flex min-h-[52px] w-full items-center gap-3.5 border-t border-line text-left text-[16px] font-medium transition-colors duration-150 hover:bg-surface ${
-                item.destructive ? "text-alert" : "text-text"
-              }`}
-            >
-              <item.icon aria-hidden size={19} strokeWidth={1.8} />
-              {item.label}
-              {item.selected ? (
-                <Check
+    <Overlay
+      open={open}
+      onClose={onClose}
+      labelledBy={titleId}
+      describedBy={subtitle ? subtitleId : undefined}
+      size="menu"
+    >
+      <DialogHeader
+        titleId={titleId}
+        title={title}
+        subtitle={subtitle}
+        subtitleId={subtitleId}
+        onClose={onClose}
+        onBack={onBack}
+      />
+      <ul
+        onKeyDown={moveFocus}
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-2.5 pt-1 pb-5 md:px-3 md:pb-3.5"
+      >
+        {items.map((item, index) => (
+          <Fragment key={item.label}>
+            {item.separatorBefore ||
+            (item.destructive && index > 0 && !items[index - 1].destructive) ? (
+              <li role="separator" className="mx-3 my-1.5 h-px shrink-0 bg-dlg-divider" />
+            ) : null}
+            <li>
+              <button
+                type="button"
+                aria-current={item.selected ? "true" : undefined}
+                onClick={() => {
+                  onClose();
+                  item.onSelect();
+                }}
+                className={`flex min-h-[62px] w-full items-center gap-3.5 rounded-[14px] px-3 py-2 text-left transition-[background-color] duration-150 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-dlg-accent md:min-h-[58px] ${
+                  item.selected ? "bg-dlg-accent-soft" : "hover:bg-dlg-field"
+                }`}
+              >
+                <span
                   aria-hidden
-                  size={18}
-                  strokeWidth={2.2}
-                  className="ml-auto text-accent-text"
-                />
-              ) : null}
-            </button>
-          </li>
+                  className={`grid size-[38px] shrink-0 place-items-center rounded-[11px] ${
+                    item.destructive
+                      ? "bg-dlg-danger-soft text-dlg-danger-ink"
+                      : item.tone
+                        ? toneTiles[item.tone]
+                        : (item.tileClassName ?? "bg-dlg-tile text-text")
+                  }`}
+                >
+                  <item.icon size={19} strokeWidth={1.8} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span
+                    className={`text-[15.5px] leading-[normal] font-semibold ${
+                      item.destructive ? "text-dlg-danger-ink" : "text-text"
+                    }`}
+                  >
+                    {item.label}
+                  </span>
+                  {item.description ? (
+                    <span className="truncate text-[13px] leading-[1.4] text-muted">
+                      {item.description}
+                    </span>
+                  ) : null}
+                </span>
+                {item.selected ? (
+                  <span
+                    aria-hidden
+                    className="grid size-6 shrink-0 place-items-center rounded-full bg-dlg-accent text-white"
+                  >
+                    <Check size={13} strokeWidth={3} />
+                  </span>
+                ) : item.chevron ? (
+                  <ChevronRight
+                    aria-hidden
+                    size={18}
+                    strokeWidth={2}
+                    className="shrink-0 text-dlg-chev"
+                  />
+                ) : null}
+              </button>
+            </li>
+          </Fragment>
         ))}
       </ul>
     </Overlay>
   );
 }
 
-// Confirmation (suppression, publication, suspension, déconnexion globale) : icône « triangle-alert »
-// dans un carré rouge doux de 48 px, titre 20/600, texte 15 gris, « Annuler » + action rouge.
+// Confirmation (kit, famille « confirmation », sans en-tête) : tuile rose 52 px avec l'icône
+// « triangle-alert » 24, titre 21/700, texte 15 gris, « Annuler » + action rouge côte à côte.
 export function ConfirmDialog({
   open,
   onClose,
@@ -549,39 +736,47 @@ export function ConfirmDialog({
   const titleId = useId();
   const bodyId = useId();
   return (
-    <Overlay open={open} onClose={onClose} labelledBy={titleId} describedBy={bodyId}>
-      <div data-sheet-grab className="flex touch-none flex-col gap-2.5">
+    <Overlay
+      open={open}
+      onClose={onClose}
+      labelledBy={titleId}
+      describedBy={children ? bodyId : undefined}
+      size="confirm"
+    >
+      <div
+        data-sheet-grab
+        className="flex min-h-0 flex-1 touch-none flex-col overflow-y-auto overscroll-contain px-5 pt-3.5 pb-[26px] md:p-7"
+      >
         <span
           aria-hidden
-          className="inline-flex size-12 items-center justify-center rounded-wide bg-alert-soft text-alert"
+          className="grid size-[52px] shrink-0 place-items-center rounded-[16px] bg-dlg-danger-soft text-dlg-danger-ink"
         >
-          <TriangleAlert size={22} strokeWidth={1.8} />
+          <TriangleAlert size={24} strokeWidth={1.8} />
         </span>
-        <h2 id={titleId} className="font-display text-[20px] font-semibold tracking-[-0.02em]">
+        <h2
+          id={titleId}
+          className="mt-[18px] text-[21px] leading-[1.25] font-bold tracking-[-0.02em] text-balance"
+        >
           {title}
         </h2>
         {children ? (
-          <p id={bodyId} className="text-[15px] leading-[1.55] text-muted">
+          <p id={bodyId} className="mt-2 text-[15px] leading-[1.55] text-pretty text-muted">
             {children}
           </p>
         ) : null}
-      </div>
-      <div className="flex gap-2.5">
-        <button
-          type="button"
-          onClick={onClose}
-          className={buttonClass({ variant: "outline", className: "flex-1 px-4" })}
-        >
-          Annuler
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={pending}
-          className={buttonClass({ variant: "danger", className: "flex-1" })}
-        >
-          {confirmLabel}
-        </button>
+        <div className="mt-[26px] grid grid-cols-2 gap-2.5">
+          <button type="button" onClick={onClose} className={dlgSecondaryButtonClass}>
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={pending}
+            className={dlgDangerButtonClass}
+          >
+            {confirmLabel}
+          </button>
+        </div>
       </div>
     </Overlay>
   );

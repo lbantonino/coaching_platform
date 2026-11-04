@@ -453,7 +453,7 @@ function SessionFields({
       <div
         className={`flex flex-wrap items-center gap-4 ${
           stay
-            ? "sticky bottom-0 z-10 -mx-[18px] -mb-[22px] border-t border-line bg-bg px-[18px] pt-3 pb-[max(16px,env(safe-area-inset-bottom))] md:pb-4"
+            ? "sticky bottom-0 z-10 -mx-5 -mb-[22px] border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:-mx-6 md:px-6 md:py-3.5"
             : ""
         }`}
       >

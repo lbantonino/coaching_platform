@@ -369,6 +369,14 @@ export function DocumentsView({
         open={menuFor !== null}
         onClose={() => setMenuFor(null)}
         title={menuFor?.name ?? "Document"}
+        // Kit (boîte 22) : « Lucas Janssens · PDF · 741 o ».
+        subtitle={
+          menuFor
+            ? [menuFor.athleteName, kindLabels[menuFor.kind], formatBytes(menuFor.sizeBytes)]
+                .filter(Boolean)
+                .join(" · ")
+            : undefined
+        }
         items={
           menuFor
             ? [

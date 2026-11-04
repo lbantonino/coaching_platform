@@ -26,6 +26,7 @@ export function NotificationRow({
   title,
   sub,
   trailing,
+  menuSubtitle,
   actions,
 }: {
   notificationKey: string;
@@ -35,6 +36,8 @@ export function NotificationRow({
   title: string;
   sub?: string;
   trailing?: ReactNode;
+  // Sous-titre du menu « ••• » (kit, boîte 36) : « Message · 09:00 · 1 non lu ».
+  menuSubtitle?: string;
   actions: Actions;
 }) {
   const [menu, setMenu] = useState(false);
@@ -117,6 +120,7 @@ export function NotificationRow({
         open={menu}
         onClose={() => setMenu(false)}
         title={title}
+        subtitle={menuSubtitle}
         items={[
           isRead
             ? { label: "Marquer comme non lue", icon: MailOpen, onSelect: () => markRead(false) }

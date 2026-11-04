@@ -17,6 +17,7 @@ export function GoalMenu({
   athleteId,
   goal,
   title,
+  subtitle,
   today,
   otherMain,
 }: {
@@ -24,6 +25,8 @@ export function GoalMenu({
   athleteId: string;
   goal: GoalEntry;
   title: string;
+  // Sous-titre du menu (kit, boîte 09) : la date et les précisions de la carte.
+  subtitle?: string;
   today: string;
   // Un AUTRE objectif est principal (avertissement dans « Modifier »).
   otherMain: boolean;
@@ -73,16 +76,19 @@ export function GoalMenu({
         open={menu}
         onClose={() => setMenu(false)}
         title={title}
+        subtitle={subtitle}
         items={[
           { label: "Modifier", icon: Pencil, onSelect: () => setEdit(true) },
           {
             label: "Atteint",
             icon: CircleCheck,
+            tone: "ok",
             onSelect: achieved,
           },
           {
             label: "Abandonné",
             icon: CircleX,
+            tone: "warn",
             onSelect: dropped,
           },
           ...(goal.priority === "secondary"

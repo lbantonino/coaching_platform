@@ -111,7 +111,7 @@ export function SettingsPanel({
       {/* Sommaire (téléphone, sans section choisie) et menu (ordinateur, toujours). */}
       <nav
         aria-label="Sections des paramètres"
-        className={`flex flex-col gap-4 lg:sticky ${inModal ? "lg:top-[90px]" : "lg:top-0"} ${
+        className={`flex flex-col gap-4 lg:sticky lg:top-0 ${
           section ? "max-lg:hidden" : ""
         }`}
       >
