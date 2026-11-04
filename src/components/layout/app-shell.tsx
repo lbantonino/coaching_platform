@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { CooryLogo } from "@/components/ui/coory-logo";
+import { ThemedCooryLogo } from "@/components/brand/themed-logo";
 
 import { AthleteTabBar, MobileTopBar } from "./mobile-bar";
 import { MenuPage, MobileMenuPanel } from "./mobile-menu";
@@ -32,19 +32,22 @@ export function AppShell({ value, children }: { value: ShellValue; children: Rea
             className="sticky top-3.5 my-3.5 ml-3.5 hidden h-[calc(100dvh-28px)] w-[236px] shrink-0 flex-col overflow-y-auto rounded-[20px] bg-panel px-3.5 pt-6 pb-4 inset-ring inset-ring-line lg:flex"
           >
             {/* Replié (29/10/2026, comme ChatGPT) : la boucle du logo seule et les icônes des pages. */}
-            {/* Ligne du logo : 4 px au-dessus, 24 px dessous ; le bouton « Replier » (34 px) ne la
-                grandit pas (marges négatives), comme l'icône de 17 px de la maquette. */}
+            {/* Ligne du logo : hauteur FIXE de 55 px (4 au-dessus, 24 dessous), dépliée comme repliée
+                (demande d'Antonino du 04/11) : les onglets ne bougent pas quand le menu se replie. Le
+                logo et l'icône du menu replié sont centrés sur la même ligne ; les boutons « Replier »
+                et « Déplier » (34 px) ne la grandissent pas (marges négatives). Logo 18,5 px (−7,5 %,
+                même demande ; le menu ☰ du téléphone garde 20 px). */}
             <div
               data-sidebar-head=""
-              className="flex items-center justify-between gap-2 pt-1 pb-6 [&>[data-sidebar-hide]]:-my-[8.5px]"
+              className="flex h-[55px] items-center justify-between gap-2 pt-1 pb-6 [&>[data-sidebar-hide]]:-my-[8.5px] [&>[data-sidebar-open]]:-my-[3.5px]"
             >
               <Link
                 href={homeHref[value.space]}
                 aria-label="Accueil"
                 data-logo-full=""
-                className="w-fit rounded-sm px-2.5"
+                className="flex w-fit rounded-sm px-2.5"
               >
-                <CooryLogo size={14.6} />
+                <ThemedCooryLogo height={18.5} />
               </Link>
               <HideSidebarButton />
               <ShowSidebarButton />

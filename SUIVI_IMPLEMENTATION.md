@@ -32,6 +32,61 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Sidebar : logo plus petit et plus aucun saut au repli (D-107)
+```
+Date : 2026-11-04
+Demande d'Antonino (ordinateur seulement) : logo de la sidebar 5 à 10 % plus petit ; quand le menu se
+  replie, les onglets ne doivent plus bouger verticalement.
+Cause mesurée (1440 × 900) : la ligne du logo faisait 55 px dépliée et 62 px repliée (le bouton
+  « Déplier », 34 px, plus haut que le logo) : tous les onglets et le séparateur descendaient de 7 px
+  (icône « Tableau de bord » 110 → 117 px) ; centre du logo 53,6 → 59 px ; bouton du profil 55 px
+  déplié, 52 px replié (photo 1,5 px plus bas). Espacement entre onglets déjà identique (36 px). Le
+  menu n'a pas d'animation (transition 0 s) : rien à fluidifier.
+Correction : ligne du logo à hauteur fixe de 55 px dans les deux états (logo et icône centrés sur la
+  même ligne, boutons Replier / Déplier sans effet sur la hauteur) ; bouton du profil min-h 55 px ;
+  logo 20 → 18,5 px (−7,5 %), le menu ☰ du téléphone garde 20 px.
+Mesuré après : logo (centre 55,5 px), 11 onglets, icônes, séparateur et photo à la même position
+  au pixel près, menu déplié comme replié ; onglets dépliés inchangés (0,1 px).
+Fichiers : app-shell.tsx, account-menu.tsx, globals.css. Tests : design, réglages, inscription,
+  photos 20 réussis + 2 ignorés.
+```
+
+### Logo définitif (D-106)
+```
+Date : 2026-11-04
+Kit fourni par Antonino (COORY-LOGO-KIT, rangé dans docs/design/coory-brand/ à la place de l'ancien) :
+  ovale coupé en deux par une diagonale, C du coach (encre ou papier) et O violet du sportif, nom
+  COORY en Plus Jakarta Sans 800. Règle : ne jamais redessiner.
+Intégration (tableaux §6 et §7 du kit) :
+  - public/ : favicon.ico, icon.svg, favicon-16/32.png, apple-touch-icon.png, icon-192/512.png,
+    icon-maskable-512.png, safari-pinned-tab.svg, og-image.png ; public/brand/ = les SVG du kit ;
+    retirés : src/app/favicon.ico, icon.svg, apple-icon.png (Next les aurait mis devant) et l'ancien
+    public/brand/ ;
+  - src/components/brand/CooryLogo.tsx (composant du kit, dessin identique, seule la mise en forme
+    Prettier change) + themed-logo.tsx (les deux tons light / dark, la CSS montre celui du thème) ;
+  - layout.tsx : Jakarta 800, icons, manifest, openGraph, twitter fusionnés ; metadataBase en
+    commentaire (domaine pas encore choisi) ; themeColor de l'app gardé (choix d'Antonino) ;
+  - manifest.ts : les 3 icônes du kit ;
+  - logos : menu latéral 20 px, menu replié icône 15 px, menu ☰ 20 px, barre de l'espace sportif
+    icône 18 px, panneau de connexion 32 px, en-têtes de connexion (téléphone), pages légales et 404
+    28 px ; filigranes des pages d'accès retirés (choix d'Antonino) ; ancien composant supprimé.
+  - tsconfig / eslint / prettier : docs/** exclus (modèles de code du kit).
+Vérifié : build OK (seul avertissement : metadataBase) ; /manifest.webmanifest liste les 3 icônes ;
+  tous les fichiers servis (200) ; en-tête : icônes, apple-touch-icon, mask-icon, og:image, twitter ;
+  plus aucun ancien logo dans le code ; captures clair et sombre de chaque emplacement. Suite
+  Playwright : 173 réussis, 2 échecs = le test du logo qui attendait l'ancien favicon, réécrit
+  (favicon, icône iPhone, og:image, manifeste) et réussi.
+À vérifier à la main : favicon dans l'onglet (clair et sombre, après vidage du cache), icône sur
+  l'écran d'accueil de l'iPhone, aperçu de partage (une fois le domaine en ligne).
+Retour d'Antonino (même jour) : le favicon doit suivre le thème du navigateur (C clair sur navigateur
+  sombre, C foncé sur navigateur clair). Le kit le prévoyait (« s'adapte au mode sombre ») mais son
+  favicon.svg n'avait pas la règle : ajoutée (@media prefers-color-scheme: dark → .ink #F4F4F2) dans
+  public/icon.svg et les deux copies du kit. En-tête : seuls icon.svg (« any ») et favicon.ico (32x32,
+  secours pour Safari) sont annoncés ; les liens PNG 16 et 32, que Chrome pouvait préférer et qui ne
+  changent pas de couleur, sont retirés (fichiers gardés). Vérifié : rendu clair / sombre ; test du
+  logo mis à jour (2 liens d'icône).
+```
+
 ### Nettoyage du dossier : code mort et fichiers inutiles (D-105)
 ```
 Date : 2026-11-04

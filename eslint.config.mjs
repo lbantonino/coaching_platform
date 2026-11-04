@@ -15,9 +15,10 @@ const eslintConfig = defineConfig([
     // Rapports Playwright générés
     "playwright-report/**",
     "test-results/**",
-    // Prototypes exportés de Claude Design : référence visuelle, pas du code de l'app
-    // Kit de la bibliothèque d'exercices (données, curation, exemple du kit) : pas du code de l'app
+    // Chaîne du catalogue d'exercices (données, curation, illustrations) : pas du code de l'app
     "resources/**",
+    // Documentation, dont les modèles de code du kit du logo (docs/design/coory-brand/code)
+    "docs/**",
   ]),
 ]);
 

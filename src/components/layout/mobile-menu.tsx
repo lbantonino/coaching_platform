@@ -3,7 +3,7 @@
 import { Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
-import { CooryLogo } from "@/components/ui/coory-logo";
+import { ThemedCooryLogo } from "@/components/brand/themed-logo";
 
 import { AccountMenu } from "./account-menu";
 import { useMobileMenu } from "./mobile-menu-context";
@@ -79,7 +79,7 @@ export function MobileMenuPanel() {
         >
           <X aria-hidden size={20} strokeWidth={1.8} />
         </button>
-        <CooryLogo size={15} />
+        <ThemedCooryLogo height={20} />
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-3.5 pt-2 pb-[max(16px,env(safe-area-inset-bottom))]">
         {/* Coach (D-62) : la recherche globale, en tête du menu. Même cadre que les lignes du menu

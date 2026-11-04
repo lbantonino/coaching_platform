@@ -11,7 +11,7 @@ Mis à jour le 04/11/2026, après le nettoyage du dossier.
    navigation) et l'extrait exact du cadre de l'app (`source-shell-fiche.md`, `source-fiche-header.md`).
 4. **`COORY_VIOLET_ACCENTS.md`** : la charte « Noir, blanc et violet » (D-77), dont la règle du violet
    rare et les accents du mode sombre.
-5. **`coory-brand/`** : le kit de marque (logo, icône, favicon), copié dans `public/brand/`.
+5. **`coory-brand/`** : le kit du **logo définitif** (04/11/2026) : son README (règles, couleurs, proportions, interdits), les 3 planches de `reference/`, les SVG (copiés dans `public/brand/`), les PNG (favicon, icônes d'écran d'accueil, image de partage, copiés dans `public/`) et le composant `CooryLogo.tsx` (copié dans `src/components/brand/`). Ne jamais redessiner le logo.
 
 Les maquettes déjà réalisées (tableaux de bord successifs, page séance, maquette « Sportifs » et ses
 fiches de pages, design system « Graphite & Or ») ont été retirées le 04/11/2026. Elles restent dans

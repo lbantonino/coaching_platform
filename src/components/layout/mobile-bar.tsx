@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-import { CooryLogo } from "@/components/ui/coory-logo";
+import { ThemedCooryMark } from "@/components/brand/themed-logo";
 
 import { AssistantButton, NotificationBell } from "./header-tools";
 import { MobileMenuButton } from "./mobile-menu";
@@ -35,7 +35,7 @@ export function MobileTopBar() {
     return (
       <header className="sticky top-3 z-30 mx-3 mt-3 flex h-16 items-center gap-2 rounded-[20px] border border-line bg-panel pr-2 pl-4 lg:hidden">
         <Link href={homeHref[space]} aria-label="Accueil" className="flex w-fit rounded-sm">
-          <CooryLogo variant="symbol" size={20} />
+          <ThemedCooryMark height={18} />
         </Link>
         <span className="min-w-0 flex-1 truncate text-center text-[15px] font-semibold">
           {pageTitle(space, pathname)}

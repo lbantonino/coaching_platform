@@ -3,7 +3,7 @@
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useLayoutEffect } from "react";
 
-import { CooryLogo } from "@/components/ui/coory-logo";
+import { ThemedCooryMark } from "@/components/brand/themed-logo";
 import { SIDEBAR_STORAGE_KEY } from "@/lib/sidebar";
 
 // Menu de gauche repliable (ordinateur, demande d'Antonino du 29/10/2026, comme ChatGPT) : un petit
@@ -55,8 +55,8 @@ export function ShowSidebarButton() {
       className={`${buttonClass} group`}
     >
       <span className="inline-flex group-hover:hidden group-focus-visible:hidden">
-        {/* Plus grand qu'avant (02/11) : le symbole reste dans le bouton de 34 px, menu à 68 px. */}
-        <CooryLogo variant="symbol" size={30} />
+        {/* Icône du logo définitif (04/11) : 30 px de large, dans le bouton de 34 px, menu à 68 px. */}
+        <ThemedCooryMark height={15} />
       </span>
       <PanelLeftOpen
         aria-hidden
