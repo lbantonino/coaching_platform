@@ -32,6 +32,48 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Boîtes de dialogue, Phase B : les menus simples (D-109)
+```
+Date : 2026-11-04
+Boîtes : 36 (notification), 30 (paiement), 17 (séance), 05 (« Créer pour »), 22 (document),
+  09 (objectif).
+Coque : séparateur automatique avant une action rouge qui n'est pas seule, tuiles teintées
+  (tone ok / warn, jetons --dlg-ok(-tile), --dlg-warn(-tile)), description en 13 / 1,4, flèches
+  ↑ / ↓ / Début / Fin, transitions limitées au fond (anneau violet sans passage par le noir).
+Branchements (vraies données, aucune logique changée) : menuSubtitle des notifications,
+  DeleteMoreMenu (menuSubtitle, edit, deleteLabel, deleteDescription), sous-titres des documents
+  et des objectifs, descriptions et chevrons de « Créer pour ».
+Mesure : script de comparaison app / maquette (positions relatives à la boîte, 1200 × 780 et
+  390 × 844) : 0 px d'écart sur les 6 boîtes (17 : ordinateur seulement).
+Écarts : 17 sans « ••• » sur téléphone ; 05 « préremplies pour elle » non tenu par le code ;
+  role="menu" non appliqué (les lignes restent des boutons).
+Tests : 57 réussis + 9 ignorés (9 fichiers e2e concernés), types, lint.
+```
+
+### Boîtes de dialogue, Phase A : les fondations (D-108)
+```
+Date : 2026-11-04
+Demande d'Antonino : redessiner les 36 boîtes au pixel près d'après son kit
+  (coory-design/COORY-MODALS-PIXEL-PERFECT-KIT), ordinateur et téléphone, sans toucher à la logique ;
+  composants communs d'abord, puis l'ordre du kit, phase par phase (A à I).
+Phase A (fondations) :
+  - jetons --dlg-* (tokens.css, deux thèmes) et leurs couleurs Tailwind (globals.css) ;
+  - dialog-styles.ts : boutons, champs, menu déroulant, zone de texte, suffixe, segments, pastilles,
+    case, carte à cocher, zone de dépôt, grille du formulaire ;
+  - overlay.tsx : coque (largeur par famille, hauteur max min(720, écran − 48), feuille du bas
+    « écran − 44 »), en-tête DialogHeader, pied DialogFooter, Sheet, PanelDialog, ActionMenu,
+    ConfirmDialog ; la copie animée de sortie garde la position du corps qui défile ;
+  - ajustés : Paramètres (retour en haut du corps, menu des sections), pied fixe de Nouvelle séance.
+Critère du kit : chaque famille s'ouvre et se ferme au clavier (Échap) et à la souris (✕, fond,
+  Annuler), focus rendu au bouton de départ, 1440 et 390, clair et sombre : 40 contrôles sur 40 ;
+  glissé vers le bas sur téléphone (petit geste : reste ouverte, grand : se ferme) ; largeurs
+  identiques de 1280 à 3440, feuille pleine largeur de 360 à 430, en-tête fixe quand le corps défile.
+Tests : typecheck, lint ; Vitest 264/264 ; Playwright 171 réussis + 17 ignorés. Piège : le terminal
+  prenait Node 21 (Homebrew) au lieu de 24 : le remplissage des documents de démo plantait au
+  db:reset, d'où 2 faux échecs Documents, verts une fois rejoués sous Node 24. Échec ANTÉRIEUR, hors
+  boîtes : « la recherche… » sur téléphone (q vide après Entrée), échoue aussi sur le code d'avant.
+```
+
 ### Sidebar : logo plus petit et plus aucun saut au repli (D-107)
 ```
 Date : 2026-11-04

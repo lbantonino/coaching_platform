@@ -566,6 +566,12 @@ async function Accounting({
                                   </span>
                                   <DeleteMoreMenu
                                     menuTitle={`Paiement de ${payment.athleteName}`}
+                                    menuSubtitle={[
+                                      day(payment.receivedOn),
+                                      formatMoney(payment.amountCents, payment.currency),
+                                      paymentMethodLabel(payment.method, country),
+                                    ].join(" · ")}
+                                    deleteDescription="Pour un paiement noté par erreur"
                                     action={deletePayment.bind(null, organizationId, payment.id)}
                                     confirmTitle="Supprimer ce paiement ?"
                                     confirmText="À utiliser pour un paiement noté par erreur : il disparaît des chiffres."

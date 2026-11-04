@@ -131,6 +131,7 @@ async function NotificationList() {
                   }
                   title={`${competition.title} · ${competition.athleteName}`}
                   sub={competition.detail || "Compétition"}
+                  menuSubtitle={`Compétition · ${gap === 0 ? "Jour J" : `J-${gap}`}`}
                 />
               );
             })}
@@ -160,6 +161,9 @@ async function NotificationList() {
                 }
                 title={conversation.athlete.name}
                 sub={conversation.lastBody}
+                menuSubtitle={`Message · ${messageTime(conversation.lastAt, today)} · ${
+                  conversation.unread
+                } non lu${conversation.unread > 1 ? "s" : ""}`}
                 trailing={
                   <span className="flex flex-col items-end gap-1">
                     <span className="font-mono text-[11px] text-muted tabular">
@@ -191,6 +195,9 @@ async function NotificationList() {
                 href="/coach/taches?onglet=aujourdhui"
                 title={task.title}
                 sub={task.athleteName ?? undefined}
+                menuSubtitle={`Tâche · ${
+                  dueLabel(task.dueOn, today) === "En retard" ? "En retard" : "Aujourd'hui"
+                }`}
                 trailing={
                   <>
                     {task.priority === "high" ? <StatusBadge label="Haute" /> : null}
@@ -224,6 +231,7 @@ async function NotificationList() {
                 href={date.sessionHref}
                 title={date.athleteName ?? date.title}
                 sub={unpaidSub(date, today)}
+                menuSubtitle={`Séance à encaisser · ${formatMoney(date.amountCents, date.currency)}`}
                 trailing={
                   <span className="text-[15px] font-semibold tabular">
                     {formatMoney(date.amountCents, date.currency)}
@@ -253,6 +261,7 @@ async function NotificationList() {
                 }
                 title={profile.name}
                 sub={`Manque : ${profile.missing.join(", ")}`}
+                menuSubtitle="Fiche à compléter"
               />
             ))}
           </Section>

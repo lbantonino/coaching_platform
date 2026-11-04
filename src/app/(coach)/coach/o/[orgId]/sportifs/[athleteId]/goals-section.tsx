@@ -149,6 +149,16 @@ function GoalCard({
         athleteId={athleteId}
         goal={goal}
         title={title}
+        // Kit (boîte 09) : « 20 mars 2027 · Catégorie Pro », sur une ligne ; le lieu et le temps
+        // visé restent sur la carte.
+        subtitle={
+          [
+            goal.targetDate ? formatDate(goal.targetDate) : null,
+            goal.hyroxCategory ? `Catégorie ${hyroxCategoryLabels[goal.hyroxCategory]}` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || undefined
+        }
         today={today}
         otherMain={hasMain && goal.priority !== "main"}
       />

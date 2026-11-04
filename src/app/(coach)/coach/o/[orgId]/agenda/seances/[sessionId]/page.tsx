@@ -83,6 +83,7 @@ const shortDate = new Intl.DateTimeFormat("fr-BE", {
   timeZone: "UTC",
 });
 const utc = (day: string) => new Date(`${day}T00:00:00Z`);
+const weekdayName = new Intl.DateTimeFormat("fr-BE", { weekday: "long", timeZone: "UTC" });
 // « 17:30 » + 60 min → « 18:30 ».
 const endTime = (start: string, minutes: number) => {
   const total = Number(start.slice(0, 2)) * 60 + Number(start.slice(3, 5)) + minutes;
@@ -257,6 +258,21 @@ async function SessionDetail({
         }${session.kind === "group" ? " · prix de toute la séance" : ""}`;
   const mark = markSessionPaid.bind(null, organizationId, session.id);
   const remove = deleteSession.bind(null, organizationId, session.id);
+  // Menu « ••• » (kit, boîte 17) : « Chaque mercredi · 19:00 · Running » ; « Modifier » change
+  // toute la série (même page que le bouton « Modifier »).
+  const menuSubtitle = [
+    session.repeatsWeekly
+      ? `Chaque ${weekdayName.format(utc(session.startsOn))}`
+      : shortDate.format(utc(current?.date ?? session.startsOn)),
+    session.startTime.slice(0, 5),
+    session.discipline ? disciplineLabels[session.discipline] : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const edit = {
+    label: session.repeatsWeekly ? "Modifier toute la série" : "Modifier la séance",
+    href: `${sessionPath}/modifier`,
+  };
   const deleteText = session.repeatsWeekly
     ? "Toutes ses dates seront supprimées. Pour l'arrêter à une date, utilise plutôt « Modifier »."
     : "Elle disparaîtra de l'agenda et des sportifs inscrits.";
@@ -339,6 +355,9 @@ async function SessionDetail({
             </Link>
             <DeleteMoreMenu
               menuTitle={session.title}
+              menuSubtitle={menuSubtitle}
+              edit={edit}
+              deleteLabel="Supprimer la séance"
               action={remove}
               confirmTitle="Supprimer cette séance ?"
               confirmText={deleteText}
