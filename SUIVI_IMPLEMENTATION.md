@@ -32,6 +32,139 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Kit « Coory Pages » : pages 06 et 12 Modifier la séance (D-123)
+```
+Date : 2026-11-04
+Fichiers validés par Antonino (« go page 6 et 12 ») avant de coder :
+  components/blocks/session-form.tsx : SessionFields (page Modifier seulement ; la fenêtre « Nouvelle
+    séance » garde SessionDialogFields) réécrit : récap (aside, Quand / Durée / Jusqu'au / Prix /
+    Paiement en état contrôlé, pile d'avatars ou sportif + « Voir la fiche », Enregistrer form=…,
+    Annuler), EditSection (carte par section sur téléphone, sections à filets sur ordinateur),
+    interrupteur role="switch", segments Virement / Espèces (radios, jetons dlg-segment), case TVA,
+    ligne de prix aria-live au taux de l'organisation (prix par inscrit pour une collective, affichage
+    seulement), inscrits (fieldset nommé, recherche qui masque sans désinscrire, « Tout désélectionner »),
+    note du coach ; bas de page (avertissement + `footer`) ; MobileActionBar. Props : cancelHref,
+    athletesPath, footer ; sportifs avec photo et sexe. Imports inutilisés retirés.
+  agenda/seances/[sessionId]/modifier/page.tsx : sans carte autour ; suppression = <form action=
+    deleteSession> + ConfirmSubmitButton (lien du bas sur ordinateur, corbeille en titleAside sur
+    téléphone), texte de confirmation de la page de la séance (série : « renseigne plutôt Jusqu'au »).
+En plus de la liste : ui/avatar.tsx (tailles « who » 42 et « stack » 34).
+Tests : sessions.spec.ts : récap « Chaque mercredi, 19:30 » (ordinateur), ligne « 80,00 € TTC pour la
+  séance, soit 40,00 € par inscrit. » puis « 80,00 € » après un désinscrit, confirmation de
+  suppression annulée.
+Vérifié : 1280 et 390 px, individuelle et collective, côte à côte avec les maquettes 06 et 12 (récap
+  et carte à 1 px), clair et sombre, taux 21 % (le temps des captures) puis 0 % ; 320 à 3 440 px sans
+  débordement ; à 1 024 px le récap se chevauchait → deux lignes de 1 024 à 1 279 px.
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright sessions + agenda + agenda-interactive +
+  accounting 45 réussis, 5 ignorés (2 workers, base de démo) ; base nettoyée, TVA de l'organisation
+  A remise à 0 %.
+```
+
+### Kit « Coory Pages » : page 08 Créer un exercice / Créer ma variante (D-122)
+```
+Date : 2026-11-04
+Fichiers validés par Antonino (« go page 8 ») avant de coder :
+  bibliotheque/exercise-form.tsx : bandeau de variante (GitBranch ; ordinateur : en tête de la carte,
+    « Voir l'original » ; téléphone : carte blanche au-dessus, lien « Original » nommé « Voir
+    l'original »), bouton « Enregistrer ma variante », aide des consignes selon la page (08 : « Une
+    étape par ligne, 15 au maximum. Le sportif les voit dans son programme. » ; 11 inchangée).
+  bibliotheque/nouveau/page.tsx : lien de l'original (variantOf.href).
+  bibliotheque/library-view.tsx : bouton flottant « Créer un exercice » (phoneFabClass,
+    data-phone-fab) ; bouton de l'en-tête en 32 px sur ordinateur, caché sur téléphone.
+Tests : coach-exercises.spec.ts : bandeau (texte visible), lien « Voir l'original » vers la fiche
+  de l'original, bouton « Enregistrer ma variante ».
+Vérifié : 1280 et 390 px, création et variante (Sled push) côte à côte avec la maquette ; bouton
+  flottant de la Bibliothèque au téléphone.
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright 177 réussis, 18 ignorés, 3 échecs sous
+  charge (Agenda « Chargement de l'agenda… » > 5 s, recherche téléphone, favori de la Bibliothèque,
+  déjà connus pour être instables) → relancés : Bibliothèque OK ; Agenda + recherche 14/14 avec un
+  seul worker. Base nettoyée, TVA de l'organisation A remise à 0 %.
+```
+
+### Kit « Coory Pages » : page 11 Modifier l'exercice (D-121)
+```
+Date : 2026-11-04
+Fichiers validés par Antonino (« go page 11 ») avant de coder :
+  bibliotheque/exercise-form.tsx (partagé avec 08) : aperçu en direct (aside, ordinateur, plafond
+    1 120 px) : nom, rubrique, muscles, matériel, Enregistrer (form=…), Annuler, « Supprimer
+    l'exercice » en modification, erreur du serveur ; formulaire : nom, rubrique et groupes en
+    pilules (vraies cases sr-only, état contrôlé pour l'aperçu), compteur, matériel, consignes
+    (aide liée par aria-describedby), photo en zone de dépôt (glisser-déposer → vrai champ fichier,
+    Parcourir / Remplacer = étiquette du champ, Retirer = removePhoto comme avant), lien vidéo avec
+    icône ; téléphone : MobileActionBar Annuler / Enregistrer, erreur au-dessus de la barre.
+  bibliotheque/[cle]/modifier/page.tsx : sans carte autour ; corbeille du téléphone en titleAside.
+  bibliotheque/[cle]/delete-exercise-button.tsx : variantes "button" (fiche), "link", "icon".
+En plus de la liste : nouveau/page.tsx (carte autour du formulaire retirée, sinon carte dans la
+  carte) ; ui/mobile-action-bar.tsx : mobileActionSecondaryClass (« Annuler », 54 px).
+Tests : coach-exercises.spec.ts : à la réouverture, « Photo actuelle », sa vignette et le lien vidéo ;
+  « Supprimer l'exercice » ouvre la confirmation, « Annuler » ne supprime rien.
+Vérifié : 1280 et 390 px côte à côte avec la maquette (aperçu et champs à 1 ou 2 px), photo
+  choisie, confirmation, clair et sombre ; 320 / 390 / 430 / 1024 / 1440 / 1920 / 3440 px sans
+  débordement (plafond 1 120 px). Serveur de dev relancé (rm -rf .next/dev) : il servait l'ancien
+  module de la barre fixe (classe « Annuler » vide).
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright coach-exercises + library + invitation
+  14/14 (base de démo) ; base nettoyée, TVA de l'organisation A remise à 0 %.
+```
+
+### Kit « Coory Pages » : page 05 Documents (D-120)
+```
+Date : 2026-11-04
+Fichiers validés par Antonino (« go ») avant de coder :
+  documents-view.tsx : en-tête « Documents » + « Importer un fichier » (32 px, ordinateur) ; une carte
+    « Tous les documents » (PageBody grow : jusqu'au bas du menu) : résumé « N documents · X utilisés »
+    (remplace les 4 cartes de chiffres), recherche (texte d'attente court / long, croix maison),
+    sportif (select natif invisible sous le bouton ; téléphone : icône, puis prénom choisi),
+    CategoryMenu (listbox sous le bouton : rond, nombre, coche ; « Sans catégorie » si besoin ;
+    Échap, clic dehors, ↑ ↓ Début Fin), « Gérer les catégories » (fenêtre existante).
+    Tableau ARIA (table / row / cell / columnheader + aria-sort) : Nom (tuile, nom, « PDF · 741 o »),
+    Catégorie (pastille), Sportif (lien vers la fiche), Taille, Ajouté le (created_at), « ••• ».
+    Tri : date décroissante par défaut, catégorie A→Z / Z→A. 7 lignes puis « Voir plus (N) » /
+    « Réduire ». Sous 1100 px : Taille et Sportif masqués ; dès 1920 px : colonnes en minmax.
+    Téléphone : lignes de 64 px, « Voir plus » violet sous un filet, bouton flottant « Importer »
+    (phoneFabClass, sans data-phone-fab : la carte passe dessous, place gardée en bas de carte).
+  ui/sort-header.tsx (nouveau, partagé) : en-tête triable, triangles du kit 9 × 12.
+  page.tsx : prop monthStart retirée (servait aux cartes de chiffres).
+En plus de la liste : page-header.tsx (PageBody grow, rétrocompatible) ; .prettierignore
+  (coory-design/ : les deux kits faisaient échouer format:check).
+Tests : documents.spec.ts adapté (lignes « row », menu « Catégorie » via chooseCategory) + 1 test
+  (tri par date et par catégorie, aria-sort, filtre « Contrat »), ordinateur seulement.
+Vérifié : 1280 et 390 px côte à côte avec la maquette (≤ 1 px sur ordinateur), menu ouvert, tri,
+  « Voir plus », filtre vide, filtre sportif sur téléphone, clair et sombre ; 320 / 430 / 1024 /
+  1100 / 1440 / 1920 / 2560 / 3440 px sans débordement ; clavier (menu, tri). 10 documents fictifs
+  ajoutés en base locale le temps des captures, effacés par db:reset.
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright 168 réussis, 18 ignorés, 12 échecs
+  (Comptabilité et Séances : TVA de l'organisation A remise à 0 % AVANT la suite par erreur, ils
+  attendent la TVA de la démo) → base remise à zéro, accounting + sessions + documents relancés :
+  32/32 réussis (2 ignorés). Base nettoyée, TVA de l'organisation A remise à 0 % (réglage d'Antonino).
+```
+
+### Kit « Coory Pages » : audit, décisions, fondations, page 09 Inviter (D-119)
+```
+Date : 2026-11-04
+Kit : coory-design/COORY-COMPLETE-DESIGN-TO-CODE-KIT (13 pages). Audit : colonne « Existant » de
+  FUNCTIONAL-GAP-ANALYSIS.md ; 15 décisions d'Antonino notées dans le même fichier.
+Fondations et composants partagés :
+  tokens.css + globals.css : --status-neutral / accent / warn / ok (+ -soft) et --status-danger,
+    clair (valeurs du kit) et sombre ; place de 110 px sous [data-phone-fab] ou [data-mobile-actionbar].
+  mobile-bar.tsx : phoneFabClass aux valeurs du kit (60 px, rayon 18, 20 / 28 px, ombre du kit).
+  back-link.tsx : barre du téléphone violet 16 px, flèche 18 (barBackIcon) ; variante « crumb »
+    (12 px, flèche 12) ; titre retenu par innerText (titre différent selon l'écran).
+  page-header.tsx : fil d'Ariane « crumb » au-dessus d'un titre visible, en-tête 14 px haut et bas.
+  nouveaux : ui/status-pill.tsx (StatusPill), ui/mobile-action-bar.tsx (MobileActionBar,
+    mobileActionPrimaryClass) ; avatar.tsx : taille « invite » (48 / 52).
+Page 09 : inviter/page.tsx (en-tête standard, titre prénom sur téléphone), invite-form.tsx
+  (InvitePanel : 4 états + lien expiré + sans e-mail ; copie avec toast ; WhatsApp / mailto / sms ;
+  ConfirmDialog avant « Révoquer » et « Générer un nouveau lien » ; formulaires cachés vers les
+  actions serveur existantes) ; features/invitations/queries.ts : prénom, photo, sexe, téléphone.
+Tests : invitation.spec.ts adapté (toast, liens de partage, texte « valable jusqu'au », confirmation).
+Vérifié : 1280 et 390 px, 4 états, clair et sombre, planches côte à côte avec la maquette (carte à
+  ≤ 2 px), 320 / 430 / 1440 / 3440 px sans débordement.
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright 177 réussis, 17 ignorés, 2 échecs
+  (invitation sur téléphone : le test attendait « Inviter Prénom Nom », la page affiche le prénom
+  seul comme le kit) → test corrigé, invitation.spec.ts 6/6. Base remise à zéro, TVA de
+  l'organisation A remise à 0 % (réglage d'Antonino).
+```
+
 ### TVA facultative sur un paiement ou une dépense (D-118)
 ```
 Date : 2026-11-04

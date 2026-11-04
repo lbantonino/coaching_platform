@@ -14,7 +14,6 @@ import {
 } from "@/features/documents/actions";
 import { listDocumentCategories, listDocuments } from "@/features/documents/queries";
 import { listSessionAthletes } from "@/features/sessions/actions";
-import { todayIsoInBrussels } from "@/lib/format";
 
 import { DocumentsView } from "./documents-view";
 
@@ -58,7 +57,6 @@ async function Documents({ athleteId, openImport }: { athleteId: string; openImp
       initialAthleteId={athletes.some((athlete) => athlete.id === athleteId) ? athleteId : ""}
       openImport={openImport}
       orgBase={`/coach/o/${organizationId}`}
-      monthStart={`${todayIsoInBrussels().slice(0, 7)}-01`}
       upload={uploadDocument.bind(null, organizationId)}
       update={updateDocument.bind(null, organizationId)}
       remove={deleteDocument.bind(null, organizationId)}

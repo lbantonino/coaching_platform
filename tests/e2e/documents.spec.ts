@@ -13,6 +13,13 @@ async function login(page: Page, email: string) {
 
 const PDF = Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< >>\n%%EOF\n");
 
+// Menu « Catégorie » (kit « Coory Pages » 05, D-120) : le bouton, puis le choix (« Contrat, 2 documents »).
+async function chooseCategory(page: Page, name: string) {
+  await page.getByRole("button", { name: /^Catégorie :/ }).click();
+  await page.getByRole("option", { name: new RegExp(`^${name}, \\d+ documents?$`) }).click();
+  await expect(page.getByRole("button", { name: `Catégorie : ${name}` })).toBeVisible();
+}
+
 test("un document s'importe, se retrouve, se renomme et se supprime ; il reste privé", async ({
   page,
   browser,
@@ -45,13 +52,13 @@ test("un document s'importe, se retrouve, se renomme et se supprime ; il reste p
   await expect(page.getByText("Document importé.")).toBeVisible();
   await expect(sheet).toBeHidden();
 
-  // Recherche et filtre en direct.
-  const row = page.getByRole("listitem").filter({ hasText: `Contrat ${stamp}` });
+  // Recherche et filtre en direct (une ligne du tableau, ou de la liste sur téléphone).
+  const row = page.getByRole("row").filter({ hasText: `Contrat ${stamp}` });
   await page.getByRole("searchbox", { name: "Rechercher un document" }).fill(stamp);
   await expect(row).toBeVisible();
-  await page.getByRole("button", { name: "Facture", exact: true }).click();
+  await chooseCategory(page, "Facture");
   await expect(row).toHaveCount(0);
-  await page.getByRole("button", { name: "Contrat", exact: true }).click();
+  await chooseCategory(page, "Contrat");
   await expect(row).toBeVisible();
 
   // Aperçu : le fichier est servi par l'app, au coach de l'organisation seulement.
@@ -76,8 +83,8 @@ test("un document s'importe, se retrouve, se renomme et se supprime ; il reste p
   await edit.getByText("Bilan", { exact: true }).click();
   await edit.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByText("Document enregistré.")).toBeVisible();
-  await page.getByRole("button", { name: "Tous", exact: true }).click();
-  const renamed = page.getByRole("listitem").filter({ hasText: `Bilan ${stamp}` });
+  await chooseCategory(page, "Toutes");
+  const renamed = page.getByRole("row").filter({ hasText: `Bilan ${stamp}` });
   await expect(renamed).toContainText("Bilan");
 
   // Supprimer (menu « ••• », confirmation) : le fichier ne se sert plus.
@@ -121,9 +128,8 @@ test("le coach gère ses catégories : ajouter, ranger, renommer, supprimer", as
   await sheet.getByText(category, { exact: true }).click();
   await sheet.getByRole("button", { name: "Importer", exact: true }).click();
   await expect(sheet).toBeHidden();
-  await page.getByRole("button", { name: category, exact: true }).click();
-  const list = page.getByRole("region", { name: category });
-  await expect(list.getByText(`certif-${stamp}`)).toBeVisible();
+  await chooseCategory(page, category);
+  await expect(page.getByRole("row").filter({ hasText: `certif-${stamp}` })).toBeVisible();
 
   // Renommer, puis supprimer : le document reste, « sans catégorie ».
   await page.getByRole("button", { name: "Gérer les catégories" }).click();
@@ -145,11 +151,8 @@ test("le coach gère ses catégories : ajouter, ranger, renommer, supprimer", as
     .click();
   await expect(manager.getByLabel(`Nom de la catégorie ${category} bis`)).toHaveCount(0);
   await manager.getByRole("button", { name: "Fermer" }).click();
-  await page.getByRole("button", { name: "Sans catégorie", exact: true }).click();
-  const row = page
-    .getByRole("region", { name: "Sans catégorie" })
-    .getByRole("listitem")
-    .filter({ hasText: `certif-${stamp}` });
+  await chooseCategory(page, "Sans catégorie");
+  const row = page.getByRole("row").filter({ hasText: `certif-${stamp}` });
   await expect(row).toBeVisible();
 
   // Rangement : le document de test est supprimé.
@@ -179,4 +182,39 @@ test("l'onglet Documents de la fiche montre les documents du sportif et importe 
   await expect(page.getByRole("combobox", { name: "Filtrer par sportif" })).toHaveValue(
     "da000000-0000-4000-8000-000000000001",
   );
+});
+
+// Kit « Coory Pages » 05 (D-120) : le tableau se trie par « Ajouté le » (le plus récent d'abord, par
+// défaut) ou par catégorie (A→Z, puis Z→A) ; le menu « Catégorie » filtre. Lecture seule (coach A).
+test("le tableau des documents se trie, et le menu « Catégorie » le filtre", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name === "telephone", "Le tri est celui du tableau de l'ordinateur.");
+  await login(page, "coach-a@example.test");
+  await page.goto("/coach/documents");
+  const byCategory = page.getByRole("columnheader", { name: "Catégorie" });
+  const byDate = page.getByRole("columnheader", { name: "Ajouté le" });
+  await expect(byDate).toHaveAttribute("aria-sort", "descending");
+  await expect(byCategory).toHaveAttribute("aria-sort", "none");
+
+  // Catégorie de chaque ligne (2e cellule), sans les documents « Sans catégorie » (toujours à la fin).
+  const categories = async () =>
+    (await page.getByRole("row").locator("[role=cell]:nth-child(2)").allInnerTexts())
+      .map((text) => text.trim())
+      .filter((text) => text !== "Sans catégorie");
+  const ordered = (values: string[], sign: 1 | -1) =>
+    values.every((value, i) => i === 0 || sign * values[i - 1].localeCompare(value, "fr") <= 0);
+
+  await byCategory.getByRole("button").click();
+  await expect(byCategory).toHaveAttribute("aria-sort", "ascending");
+  await expect(byDate).toHaveAttribute("aria-sort", "none");
+  expect(ordered(await categories(), 1)).toBe(true);
+  await byCategory.getByRole("button").click();
+  await expect(byCategory).toHaveAttribute("aria-sort", "descending");
+  expect(ordered(await categories(), -1)).toBe(true);
+
+  // Filtre : seulement des contrats, dont celui de la démo.
+  await chooseCategory(page, "Contrat");
+  await expect(page.getByRole("row").filter({ hasText: "Contrat de coaching 2026" })).toBeVisible();
+  expect(new Set(await categories())).toEqual(new Set(["Contrat"]));
 });

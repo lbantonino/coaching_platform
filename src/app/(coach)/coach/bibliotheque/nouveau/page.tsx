@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { Card } from "@/components/ui/card";
 import { muscleGroupsOf } from "@/domain/exercises/library";
 import { equipmentInfo } from "@/domain/exercises/vocabulary";
 import { requireCoach } from "@/features/auth/guards";
@@ -49,23 +48,26 @@ async function NewExercise({ variant }: { variant: string }) {
         }
         title={origin ? "Créer ma variante" : "Créer un exercice"}
       />
+      {/* Le formulaire porte ses cartes (aperçu et champs, kit « Coory Pages » 08 / 11, D-121). */}
       <PageBody>
-        <Card className="lg:max-w-[760px]">
-          <ExerciseForm
-            mode="create"
-            action={createCoachExercise.bind(null, organizationId)}
-            cancelHref={origin ? `/coach/bibliotheque/${origin.key}` : "/coach/bibliotheque"}
-            variantOf={origin ? { id: origin.id, nameFr: origin.nameFr } : null}
-            initial={{
-              name: origin ? `${origin.nameFr} (ma variante)`.slice(0, 80) : "",
-              category: origin?.category ?? "strength",
-              muscleGroups: origin ? muscleGroupsOf(origin.primaryMuscles) : [],
-              equipment,
-              instructions: "",
-              videoUrl: "",
-            }}
-          />
-        </Card>
+        <ExerciseForm
+          mode="create"
+          action={createCoachExercise.bind(null, organizationId)}
+          cancelHref={origin ? `/coach/bibliotheque/${origin.key}` : "/coach/bibliotheque"}
+          variantOf={
+            origin
+              ? { id: origin.id, nameFr: origin.nameFr, href: `/coach/bibliotheque/${origin.key}` }
+              : null
+          }
+          initial={{
+            name: origin ? `${origin.nameFr} (ma variante)`.slice(0, 80) : "",
+            category: origin?.category ?? "strength",
+            muscleGroups: origin ? muscleGroupsOf(origin.primaryMuscles) : [],
+            equipment,
+            instructions: "",
+            videoUrl: "",
+          }}
+        />
       </PageBody>
     </>
   );

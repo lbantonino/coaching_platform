@@ -30,7 +30,10 @@ async function createAthleteAndOpenInvite(page: Page, name: string, email: strin
   // Le sportif enregistré, on arrive sur sa fiche (D-54) ; son invitation est à /inviter.
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await page.goto(`${page.url()}/inviter`);
-  await expect(page.getByRole("heading", { name: `Inviter ${name}` })).toBeVisible();
+  // « Inviter Prénom Nom » sur ordinateur, « Inviter Prénom » sur téléphone (kit « Coory Pages » 09).
+  await expect(
+    page.getByRole("heading", { name: new RegExp(`^Inviter ${name.split(" ")[0]}`) }),
+  ).toBeVisible();
 }
 
 async function generateLink(page: Page): Promise<string> {
@@ -62,10 +65,16 @@ test("le coach invite un sportif, qui crée son accès et arrive dans son espace
   const link = await generateLink(page);
   expect(link).toMatch(/\/invitation\/[A-Za-z0-9_-]{43}$/);
 
-  // Le bouton « Copier » copie réellement le lien.
+  // Le bouton « Copier » copie réellement le lien (toast, kit « Coory Pages » 09) ; WhatsApp, e-mail
+  // et SMS ouvrent l'app du coach avec le message prérempli et le lien.
   await page.getByRole("button", { name: "Copier le lien" }).click();
-  await expect(page.getByRole("button", { name: "Lien copié" })).toBeVisible();
+  await expect(page.getByText("Lien copié.")).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(link);
+  const whatsapp = await page.getByRole("link", { name: "WhatsApp" }).getAttribute("href");
+  expect(whatsapp).toMatch(/^https:\/\/wa\.me\/\?text=/);
+  expect(whatsapp).toContain(encodeURIComponent(link));
+  const mail = await page.getByRole("link", { name: "E-mail" }).getAttribute("href");
+  expect(mail?.startsWith(`mailto:${email}?subject=`)).toBe(true);
 
   // --- Sportif : autre navigateur, ouverture du lien ---
   const athlete = await newAthletePage(browser);
@@ -143,9 +152,15 @@ test("un lien révoqué par le coach n'est plus utilisable", async ({ page, brow
   const link = await generateLink(page);
 
   await page.reload();
-  await expect(page.getByText(/Un lien est en attente jusqu'au/)).toBeVisible();
+  await expect(page.getByText(/Un lien est valable jusqu'au/)).toBeVisible();
+  // Révoquer demande une confirmation (kit « Coory Pages » 09).
   await page.getByRole("button", { name: "Révoquer ce lien" }).click();
-  await expect(page.getByText(/Un lien est en attente/)).toHaveCount(0);
+  await page
+    .getByRole("dialog", { name: "Révoquer ce lien ?" })
+    .getByRole("button", { name: "Révoquer" })
+    .click();
+  await expect(page.getByText(/Un lien est valable/)).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Générer le lien d'invitation" })).toBeVisible();
 
   const athlete = await newAthletePage(browser);
   await athlete.goto(link);

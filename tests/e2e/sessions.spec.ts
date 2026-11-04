@@ -120,10 +120,26 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   await page.getByRole("link", { name: "Modifier", exact: true }).first().click();
   await expect(page.getByLabel(/^Prix pour toute la séance/)).toHaveValue("80");
   await page.getByLabel("Heure", { exact: true }).fill("19:30");
+  // Kit « Coory Pages », 06 / 12 (D-123) : le récapitulatif (ordinateur) et la ligne du prix suivent
+  // la saisie ; le prix par inscrit est un simple calcul (TVA de la démo : 21 %).
+  if (testInfo.project.name === "ordinateur") {
+    await expect(
+      page.getByRole("complementary", { name: "Récapitulatif de la séance" }),
+    ).toContainText("Chaque mercredi, 19:30");
+  }
+  const priceLine = page.locator("p[aria-live]").filter({ hasText: "par inscrit" });
+  await expect(priceLine).toHaveText(/80,00\s€ TTC pour la séance, soit 40,00\s€ par inscrit\./);
   await page
     .getByRole("group", { name: /Sportifs inscrits/ })
     .getByText("Thomas Peeters", { exact: true })
     .click();
+  await expect(priceLine).toHaveText(/soit 80,00\s€ par inscrit\./);
+  // Supprimer depuis « Modifier » demande toujours une confirmation ; « Annuler » ne supprime rien.
+  await page.getByRole("button", { name: "Supprimer la séance" }).click();
+  const confirmDelete = page.getByRole("dialog", { name: "Supprimer cette séance ?" });
+  await expect(confirmDelete).toContainText("toutes ses dates seront supprimées");
+  await confirmDelete.getByRole("button", { name: "Annuler" }).click();
+  await expect(confirmDelete).toBeHidden();
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(details).toContainText("19:30");
   await expect(page.getByText("1 inscrit", { exact: true })).toBeVisible();

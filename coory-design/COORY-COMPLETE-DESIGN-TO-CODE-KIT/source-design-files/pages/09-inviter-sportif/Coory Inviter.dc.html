@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#dcdbe3}*{box-sizing:border-box}a{color:#6a3ee0;text-decoration:none}a:hover{color:#8b5cf6}</style>
+</helmet>
+<div style="display:flex;gap:64px;align-items:flex-start;flex-wrap:wrap;padding:64px;width:1880px;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#17151d">
+<div data-screen-label="Note brief" style="flex:0 0 100%;max-width:1280px;padding:24px 28px;border-radius:18px;background:#fffaf0;box-shadow:inset 0 0 0 1px rgba(138,90,0,.18);display:flex;flex-direction:column;gap:14px">
+<span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.06em;color:#8a5a00">NOTE POUR LE BRIEF CLAUDE CODE · INVITER UN SPORTIF</span>
+<ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font:400 13.5px/1.5 'Plus Jakarta Sans';color:#4a4855">
+<li><strong style="color:#17151d">Header standard</strong> (fil d’Ariane « Sportifs · Prénom Nom ») au lieu de la card titre flottante au centre.</li>
+<li><strong style="color:#17151d">Card sportif</strong> en tête : avatar, nom, adresse e-mail utilisée pour l’accès + pastille d’état (Pas encore invité / Invitation en attente / Compte activé).</li>
+<li><strong style="color:#17151d">État « Lien généré » (nouveau)</strong> : le lien s’affiche une seule fois avec « Copier le lien » et des raccourcis WhatsApp / E-mail / SMS qui ouvrent l’app avec un message pré-rempli.</li>
+<li><strong style="color:#17151d">En attente</strong> : date d’expiration dans la pastille, « Générer un nouveau lien » en principal, « Révoquer ce lien » en rouge.</li>
+<li><strong style="color:#17151d">Compte activé</strong> : bouton « Voir la fiche » / « Envoyer un message » au lieu d’un simple texte.</li>
+<li><strong style="color:#17151d">Rappel en 3 points</strong> (valable 7 jours, usage unique, rien n’est envoyé automatiquement) au lieu du paragraphe.</li>
+</ul>
+<span style="font:400 12.5px 'Plus Jakarta Sans';color:#8a5a00">⚠️ À vérifier dans le code : les raccourcis WhatsApp/E-mail/SMS sont de simples liens (wa.me, mailto:, sms:) ; aucune logique d’envoi à créer.</span>
+</div>
+<div style="flex:0 0 100%;display:flex;align-items:center;gap:12px"><span style="font:600 14px 'Plus Jakarta Sans'">État affiché</span><div style="height:40px;padding:3px;border-radius:11px;background:#fff;display:flex;gap:2px;box-shadow:0 0 0 1px rgba(22,18,40,.08)"><sc-for list="{{ states }}" as="m" hint-placeholder-count="4"><button type="button" onClick="{{ m.on }}" style="cursor:pointer;border:0;padding:0 14px;border-radius:8px;white-space:nowrap;font:500 13px 'Plus Jakarta Sans';background:{{ m.bg }};color:{{ m.c }}">{{ m.l }}</button></sc-for></div></div>
+
+<div id="9a" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">9a</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">Desktop · 1280 · {{ st.label }}</span></div>
+<div data-screen-label="Inviter desktop" style="box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:1280px;height:800px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px">
+<aside style="width:236px;flex:none;border-radius:20px;background:#fff;padding:24px 14px 16px;display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 10px 24px"><svg viewBox="0 0 472 72" width="96" role="img" aria-label="Coory"><g fill="none" stroke="#17151d" stroke-width="16"><path d="M84 8H36A28 28 0 0 0 36 64H84"></path><path d="M320 72V8H352A18 18 0 0 1 352 44H320"></path><path d="M342 44L385 80"></path><path d="M394 -10L428 40L462 -10M428 40V80"></path></g><rect x="108" y="8" width="104" height="56" rx="28" fill="none" stroke="#17151d" stroke-width="16"></rect><rect x="184" y="8" width="104" height="56" rx="28" fill="none" stroke="#8b5cf6" stroke-width="16"></rect></svg><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="M9 3v18M15 10l-2 2 2 2"></path></svg></div>
+<sc-for list="{{ nav1 }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:9px;font:400 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ n.bg }};color:{{ n.c }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.l }}</span></sc-for>
+<div style="height:1px;background:rgba(22,18,40,.08);margin:10px 4px"></div>
+<sc-for list="{{ nav2 }}" as="n" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border-radius:9px;font:400 13.5px 'Plus Jakarta Sans';white-space:nowrap;color:#4a4855"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg><span style="flex:1">{{ n.l }}</span><sc-if value="{{ n.b }}"><span style="min-width:20px;height:20px;border-radius:10px;background:rgba(139,92,246,.12);color:#6a3ee0;font:500 11px/20px 'Plus Jakarta Sans';text-align:center">{{ n.b }}</span></sc-if></span></sc-for>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:10px;padding:8px"><span style="width:38px;height:38px;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans';box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6">GL</span><div style="display:flex;flex-direction:column"><span style="font:600 14px 'Plus Jakarta Sans'">Gianluca Lo Bianco</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Coach</span></div></div>
+</aside>
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px">
+<header style="border-radius:20px;background:#fff;padding:14px 18px 14px 22px;display:flex;align-items:center;gap:10px">
+<div style="flex:1;display:flex;flex-direction:column;gap:3px"><a href="#" style="display:flex;align-items:center;gap:6px;font:500 12px 'Plus Jakarta Sans';color:#64626e"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>Sportifs · {{ st.name }}</a><span style="font:600 15px 'Plus Jakarta Sans'">Inviter {{ st.name }}</span></div>
+<span style="height:32px;width:200px;padding:0 10px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);background:#f8f7fb;display:flex;align-items:center;font:400 12.5px 'Plus Jakarta Sans';color:#64626e">Rechercher dans Coory</span>
+<span style="height:32px;padding:0 12px;border-radius:9px;background:#8b5cf6;color:#fff;display:flex;align-items:center;font:500 12.5px 'Plus Jakarta Sans'">Assistant IA</span>
+</header>
+<div style="flex:1;display:flex;justify-content:center;padding-top:28px">
+<section style="width:560px;border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:26px;display:flex;flex-direction:column;gap:20px;align-self:flex-start">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:52px;height:52px;flex:none;border-radius:50%;background:{{ st.avBg }};color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px 'Plus Jakarta Sans'">{{ st.ini }}</span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font:600 17px 'Plus Jakarta Sans'">{{ st.name }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">{{ st.email }}</span></div><span style="height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;gap:6px;white-space:nowrap;font:500 12px 'Plus Jakarta Sans';background:{{ st.pBg }};color:{{ st.pC }}"><span style="width:6px;height:6px;border-radius:3px;background:currentColor"></span>{{ st.pill }}</span></div>
+<p style="margin:0;font:400 14px/1.55 'Plus Jakarta Sans';color:#4a4855;text-wrap:pretty">{{ st.text }}</p>
+<sc-if value="{{ st.isLink }}"><div style="display:flex;flex-direction:column;gap:10px"><div style="height:46px;padding:0 6px 0 14px;border-radius:12px;background:#f8f7fb;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:10px"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 13.5px 'Plus Jakarta Sans'">coory.app/invitation/7f3k-92xa-sophie</span><span style="height:34px;padding:0 12px;border-radius:9px;background:#17151d;color:#fff;display:flex;align-items:center;font:600 13px 'Plus Jakarta Sans'">Copier le lien</span></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ shares }}" as="s" hint-placeholder-count="3"><span style="height:40px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;justify-content:center;font:500 13px 'Plus Jakarta Sans'">{{ s }}</span></sc-for></div></div></sc-if>
+<sc-if value="{{ st.primary }}"><span style="height:46px;border-radius:12px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14.5px 'Plus Jakarta Sans'">{{ st.primary }}</span></sc-if>
+<sc-if value="{{ st.second }}"><span style="height:44px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;justify-content:center;font:500 14px 'Plus Jakarta Sans';color:{{ st.secC }}">{{ st.second }}</span></sc-if>
+<sc-if value="{{ st.showRules }}"><ul style="margin:0;padding:16px 0 0;list-style:none;border-top:1px solid rgba(22,18,40,.07);display:flex;flex-direction:column;gap:8px"><sc-for list="{{ rules }}" as="r" hint-placeholder-count="3"><li style="display:flex;gap:10px;align-items:center;font:400 13px 'Plus Jakarta Sans';color:#64626e"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.d }}"></path></svg>{{ r.l }}</li></sc-for></ul></sc-if>
+</section>
+</div>
+</main>
+</div>
+</div>
+
+<div id="9b" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">9b</span><span style="font:600 16px 'Plus Jakarta Sans';white-space:nowrap">Mobile · {{ st.label }}</span></div>
+<div data-screen-label="Inviter mobile" style="position:relative;width:390px;height:844px;border-radius:44px;background:#f3f2f7;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);overflow:hidden;display:flex;flex-direction:column">
+<div style="height:50px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0;font:600 15px 'Plus Jakarta Sans'"><span>9:41</span><span style="font:600 12px 'Plus Jakarta Sans'">5G ▮</span></div>
+<div style="flex:none;display:flex;align-items:center;gap:10px;padding:8px 16px 12px"><span aria-label="Retour" style="width:44px;height:44px;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg></span><div style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 16px 'Plus Jakarta Sans'">Inviter {{ st.first }}</span></div></div>
+<div style="flex:1;padding:0 12px;display:flex;flex-direction:column;gap:12px">
+<div style="border-radius:22px;background:#fff;padding:18px 16px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:48px;height:48px;flex:none;border-radius:50%;background:{{ st.avBg }};color:#fff;display:flex;align-items:center;justify-content:center;font:600 15px 'Plus Jakarta Sans'">{{ st.ini }}</span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 16px 'Plus Jakarta Sans'">{{ st.name }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ st.email }}</span></div></div>
+<span style="align-self:flex-start;height:28px;padding:0 11px;border-radius:14px;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';background:{{ st.pBg }};color:{{ st.pC }}"><span style="width:6px;height:6px;border-radius:3px;background:currentColor"></span>{{ st.pill }}</span>
+<p style="margin:0;font:400 14.5px/1.55 'Plus Jakarta Sans';color:#4a4855;text-wrap:pretty">{{ st.text }}</p>
+<sc-if value="{{ st.isLink }}"><div style="display:flex;flex-direction:column;gap:10px"><div style="height:48px;padding:0 14px;border-radius:12px;background:#f8f7fb;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;font:400 14px 'Plus Jakarta Sans';overflow:hidden;white-space:nowrap">coory.app/invitation/7f3k-92xa…</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ shares }}" as="s" hint-placeholder-count="3"><span style="height:44px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;justify-content:center;font:500 13.5px 'Plus Jakarta Sans'">{{ s }}</span></sc-for></div></div></sc-if>
+<sc-if value="{{ st.second }}"><span style="height:44px;display:flex;align-items:center;justify-content:center;font:500 14.5px 'Plus Jakarta Sans';color:{{ st.secC }}">{{ st.second }}</span></sc-if>
+</div>
+<sc-if value="{{ st.showRules }}"><ul style="margin:0;padding:4px 8px;list-style:none;display:flex;flex-direction:column;gap:8px"><sc-for list="{{ rules }}" as="r" hint-placeholder-count="3"><li style="display:flex;gap:10px;align-items:center;font:400 13px 'Plus Jakarta Sans';color:#64626e"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{ r.d }}"></path></svg>{{ r.l }}</li></sc-for></ul></sc-if>
+</div>
+<sc-if value="{{ st.mPrimary }}"><div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 30px"><span style="height:54px;border-radius:15px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px 'Plus Jakarta Sans';box-shadow:0 12px 28px -10px rgba(22,18,40,.45)">{{ st.mPrimary }}</span></div></sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const NAV1 = [['Tableau de bord','M3 10.5 12 3l9 7.5V21H3z'],['Agenda','M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'],['Sportifs','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'],['Programmes','M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5'],['Comptabilité','M5 2h14v20H5zM8 6h8M8 10h2M14 10h2M8 14h2M14 14h2'],['Bibliothèque','M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z']];
+const NAV2 = [['Assistant IA','M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z',0],['Messages','M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',3],['Tâches','M3 6l2 2 3-3M3 13l2 2 3-3M12 7h9M12 14h9M12 20h9',0],['Documents','M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',0],['Notifications','M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',9]];
+const ST = {
+  none: { label: 'Pas encore invité', name: 'Sophie Lambert', ini: 'SL', avBg: '#8b5cf6', email: 'sophie.lambert@example.test', pill: 'Pas encore invitée', pBg: '#f1f0f5', pC: '#64626e', text: 'Génère un lien personnel et envoie-le toi-même. Sophie l’ouvrira pour créer son accès avec son adresse e-mail.', primary: 'Générer le lien d’invitation', mPrimary: 'Générer le lien d’invitation', showRules: true },
+  link: { label: 'Lien généré', name: 'Sophie Lambert', ini: 'SL', avBg: '#8b5cf6', email: 'sophie.lambert@example.test', pill: 'Lien prêt', pBg: '#ede6ff', pC: '#5b30d6', text: 'Copie le lien maintenant : pour ta sécurité, il ne sera plus affiché ensuite.', isLink: true, mPrimary: 'Copier le lien', showRules: true },
+  wait: { label: 'Invitation en attente', name: 'Lucas Janssens', ini: 'LJ', avBg: '#26CBB8', email: 'lucas.janssens@example.test', pill: 'En attente · jusqu’au 10 nov.', pBg: '#fff3d6', pC: '#9a5b0a', text: 'Un lien est valable jusqu’au 10 novembre 2026 à 14:32. Il ne peut pas être réaffiché : génère un nouveau lien si Lucas l’a perdu.', primary: 'Générer un nouveau lien', mPrimary: 'Générer un nouveau lien', second: 'Révoquer ce lien', secC: '#c0213d', showRules: true },
+  done: { label: 'Compte déjà activé', name: 'Thomas Peeters', ini: 'TP', avBg: '#FEC14F', email: 'thomas.peeters@example.test', pill: 'Compte activé', pBg: '#e3f6f1', pC: '#11867a', text: 'Thomas a déjà activé son compte. Il se connecte avec son adresse e-mail : aucune invitation à envoyer.', primary: 'Voir la fiche', mPrimary: 'Voir la fiche', second: 'Envoyer un message', secC: '#17151d' }
+};
+class Component extends DCLogic {
+  state = { s: 'none' };
+  renderVals() {
+    const st = Object.assign({}, ST[this.state.s]); st.first = st.name.split(' ')[0];
+    return {
+      states: Object.keys(ST).map(k => ({ l: ST[k].label, on: () => this.setState({ s: k }), bg: this.state.s === k ? '#17151d' : 'transparent', c: this.state.s === k ? '#fff' : '#64626e' })),
+      st, shares: ['WhatsApp', 'E-mail', 'SMS'],
+      rules: [['M12 8v4l3 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'Valable 7 jours'], ['M20 6 9 17l-5-5', 'Utilisable une seule fois'], ['M18 6 6 18M6 6l12 12', 'Rien n’est envoyé automatiquement']].map(([d, l]) => ({ d, l })),
+      nav1: NAV1.map(n => ({ l: n[0], d: n[1], bg: n[0] === 'Sportifs' ? 'rgba(139,92,246,.1)' : 'transparent', c: n[0] === 'Sportifs' ? '#6a3ee0' : '#4a4855' })),
+      nav2: NAV2.map(n => ({ l: n[0], d: n[1], b: n[2] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

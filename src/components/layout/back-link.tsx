@@ -19,10 +19,12 @@ const here = () => window.location.pathname + window.location.search;
 
 // Titre de la page affichée : son h1 visible. Next garde la page quittée cachée dans le DOM
 // (display: none), d'où le filtre ; le titre masqué visuellement sur téléphone (sr-only) compte.
+// innerText : seul le texte affiché (« Inviter Sophie » sur téléphone, « Inviter Sophie Lambert »
+// sur ordinateur, D-119), pas les deux versions d'un titre qui change selon l'écran.
 function visibleTitle() {
   const titles = document.querySelectorAll<HTMLElement>("main h1");
   const title = Array.from(titles).find((h1) => h1.checkVisibility?.() ?? true);
-  return title?.textContent?.trim() || null;
+  return title?.innerText?.trim() || null;
 }
 
 // Monté une fois dans la coquille : note la page précédente à chaque changement de page, et le titre
@@ -82,9 +84,11 @@ function previousPage() {
 }
 
 // Retour dans la barre du haut du téléphone, entre ☰ et les outils (D-117) : aussi pour les retours
-// propres à une page (« ← Conversations » de Messages, « ← Paramètres »).
+// propres à une page (« ← Conversations » de Messages, « ← Paramètres »). Violet, 16 px (kit
+// « Coory Pages », décision d'Antonino du 04/11, D-119) ; flèche de 18 px (barBackIcon).
 export const barBackClass =
-  "inline-flex min-h-11 min-w-0 items-center gap-2 pl-0.5 text-[15px] font-medium whitespace-nowrap text-muted transition-colors duration-150 active:text-text";
+  "inline-flex min-h-11 min-w-0 items-center gap-1.5 pl-0.5 text-[16px] leading-[normal] font-medium whitespace-nowrap text-violet-text transition-opacity duration-150 active:opacity-70";
+export const barBackIcon = { size: 18, strokeWidth: 2 } as const;
 
 const noSubscription = () => () => {};
 const previousTitle = () => {
@@ -103,7 +107,9 @@ export function BackLink({
   href: string;
   label: string;
   // « bar » : dans la barre du haut du téléphone, entre ☰ et les outils (fiche sportif).
-  variant?: "text" | "bar";
+  // « crumb » : au-dessus du titre de l'en-tête sur ordinateur (kit « Coory Pages » SH-02 : 12 px,
+  // flèche de 12 px, D-119).
+  variant?: "text" | "bar" | "crumb";
 }) {
   const router = useRouter();
   // Libellé : le titre de la page précédente, lu dans le navigateur (le serveur rend le libellé
@@ -126,10 +132,20 @@ export function BackLink({
       className={
         variant === "bar"
           ? barBackClass
-          : "inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
+          : variant === "crumb"
+            ? "inline-flex items-center gap-1.5 self-start text-[12px] leading-[normal] font-medium text-muted transition-colors duration-150 hover:text-text"
+            : "inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
       }
     >
-      <ArrowLeft aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+      <ArrowLeft
+        aria-hidden
+        {...(variant === "bar"
+          ? barBackIcon
+          : variant === "crumb"
+            ? { size: 12, strokeWidth: 2 }
+            : { size: 16, strokeWidth: 1.8 })}
+        className="shrink-0"
+      />
       <span className={variant === "bar" ? "truncate" : ""}>{shown}</span>
     </Link>
   );

@@ -1,0 +1,386 @@
+# 02 · Assistant IA — mesures extraites du fichier source
+
+> **Valeurs EXACTES** lues dans les styles inline de `source-design-files/pages/02-assistant-ia/Coory Assistant IA.dc.html` (aucune estimation). Les valeurs entre `{{ }}` sont dynamiques (calculées dans `logic.js`).
+> Arborescence : un niveau d’indentation = un niveau DOM. `sc-for` = liste répétée (`list` = source, `as` = variable), `sc-if` = bloc conditionnel (`value`).
+> Police partout : **Plus Jakarta Sans**. Le cadre de l’artboard (box-shadow externe, border-radius 18/44 px) est un artefact de présentation : ne pas le reproduire dans l’app.
+> Les `span` sans handler sont des boutons/champs statiques dans la maquette : dans l’app ce sont des `button`/`input` réels.
+
+## Artboard « Assistant dialogue desktop »
+
+- **artboard** — `position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:1280px;height:820px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;align-items:stretch`
+  - **aside** — `width:236px; flex:none; min-height:740px; border-radius:20px; background:#fff; padding:24px 14px 16px; display:flex; flex-direction:column; gap:2px; position:sticky; top:14px`
+    - **div** — `display:flex; align-items:center; justify-content:space-between; padding:4px 10px 24px`
+      - **svg** 96× viewBox=0 0 472 72 stroke= fill= sw=
+      - **svg** 17×17 viewBox=0 0 24 24 stroke=#64626e fill=none sw=1.8
+    - **sc-for** [list={{ nav1Dash }} as=n]
+      - **span** « {{ n.l }} » — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ n.bg }}; color:{{ n.c }}`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+    - **div** — `height:1px; background:rgba(22,18,40,.08); margin:10px 4px`
+    - **sc-for** [list={{ nav2Dash }} as=n]
+      - **span** — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ n.bg }}; color:{{ n.c }}`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+        - **span** « {{ n.l }} » — `flex:1`
+        - **sc-if** [value={{ n.b }}]
+          - **span** « {{ n.b }} » — `min-width:20px; height:20px; border-radius:10px; background:rgba(139,92,246,.12); color:#6a3ee0; font:500 11px/20px 'Plus Jakarta Sans'; text-align:center`
+    - **div** — `flex:1`
+    - **div** — `display:flex; align-items:center; gap:10px; padding:8px`
+      - **span** « GL » — `position:relative; width:38px; height:38px; border-radius:50%; background:#2a2733; color:#fff; display:flex; align-items:center; justify-content:center; font:600 12px 'Plus Jakarta Sans'; box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6`
+        - **span** — `position:absolute; right:-2px; bottom:-2px; width:10px; height:10px; border-radius:50%; background:#15803d; box-shadow:0 0 0 2px #fff`
+      - **div** — `flex:1; min-width:0; display:flex; flex-direction:column`
+        - **span** « Gianluca Lo Bianco » — `font:600 14px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden`
+        - **span** « Coach » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+  - **main** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:16px`
+    - **header** — `border-radius:20px; background:#fff; padding:16px 18px 16px 22px; display:flex; align-items:center; gap:10px`
+      - **span** « Tableau de bord » — `flex:1; display:flex; align-items:center; gap:10px; font:600 15px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **span** — `color:#6a3ee0; display:flex`
+          - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+      - **span** — `height:32px; width:200px; padding:0 6px 0 10px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); background:#f8f7fb; display:flex; align-items:center; gap:7px; font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+        - **span** « Rechercher dans Coory » — `flex:1; white-space:nowrap`
+        - **span** « ⌘K » — `font:500 10px 'Plus Jakarta Sans'; padding:2px 5px; border-radius:5px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.14)`
+      - **button** [onClick={{ toggleDlgD }} aria-expanded={{ dlgDExp }}] « Assistant IA » — `border:0; height:32px; padding:0 12px; border-radius:9px; background:#8b5cf6; color:#fff; display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap; position:relative; z-index:{{ btnZ }}; box-shadow:{{ btnShD }}`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:32px; height:32px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; justify-content:center`
+        - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 9 » — `position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%; background:#8b5cf6; color:#fff; font:600 9.5px/16px 'Plus Jakarta Sans'; text-align:center`
+    - **div** — `display:flex; flex-direction:column; gap:4px; padding:8px 4px 0`
+      - **span** « Mercredi 4 novembre » — `font:500 13.5px 'Plus Jakarta Sans'; color:#64626e`
+      - **span** « Bonjour Gianluca » — `font:700 26px 'Plus Jakarta Sans'; letter-spacing:-.025em`
+    - **div** — `display:grid; grid-template-columns:repeat(4,1fr); gap:12px`
+      - **sc-for** [list={{ kpis }} as=k]
+        - **div** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:18px; display:flex; flex-direction:column; gap:8px`
+          - **span** « {{ k.l }} » — `font:500 13px 'Plus Jakarta Sans'; color:#64626e`
+          - **span** « {{ k.v }} » — `font:600 24px 'Plus Jakarta Sans'; letter-spacing:-.02em`
+    - **div** — `display:grid; grid-template-columns:1.6fr 1fr; gap:12px; flex:1`
+      - **div** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:20px; display:flex; flex-direction:column; gap:12px`
+        - **span** « Aujourd’hui » — `font:600 16px 'Plus Jakarta Sans'`
+        - **sc-for** [list={{ today }} as=t]
+          - **div** — `display:flex; align-items:center; gap:12px; min-height:52px; padding:0 14px; border-radius:12px; background:{{ t.bg }}`
+            - **span** « {{ t.h }} » — `font:600 13px 'Plus Jakarta Sans'; width:44px`
+            - **span** « {{ t.n }} » — `flex:1; font:600 14px 'Plus Jakarta Sans'`
+            - **span** « {{ t.s }} » — `font:400 13px 'Plus Jakarta Sans'; color:#4a4855`
+      - **div** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:20px; display:flex; flex-direction:column; gap:12px`
+        - **span** « Tâches » — `font:600 16px 'Plus Jakarta Sans'`
+        - **sc-for** [list={{ tasks }} as=t]
+          - **div** — `display:flex; align-items:center; gap:12px; min-height:44px; border-top:1px solid rgba(22,18,40,.06)`
+            - **span** — `width:20px; height:20px; border-radius:50%; box-shadow:inset 0 0 0 1.5px rgba(22,18,40,.22)`
+            - **span** « {{ t }} » — `font:500 14px 'Plus Jakarta Sans'`
+  - **sc-if** [value={{ dlgDOpen }}]
+    - **div** [onClick={{ closeD }}] — `position:absolute; inset:0; z-index:10; background:rgba(14,12,22,.48); backdrop-filter:blur(2px)`
+    - **div** [aria-label=Assistant IA role=dialog] — `position:absolute; left:170px; right:170px; top:92px; z-index:11; max-height:660px; border-radius:26px; background:#fff; box-shadow:0 40px 80px -24px rgba(14,12,22,.55),0 0 0 1px rgba(22,18,40,.06),0 0 70px -16px rgba(139,92,246,.45); padding:18px 20px 20px; display:flex; flex-direction:column; gap:16px`
+      - **div** — `display:flex; align-items:center; gap:10px`
+        - **span** — `flex:none; width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 5px 14px -4px rgba(124,58,237,.55), inset 0 -2px 6px rgba(76,29,149,.35)`
+        - **span** « Assistant IA » — `flex:1; font:600 15px 'Plus Jakarta Sans'`
+        - **a** [href=#1c] « Plein écran » — `flex:none; white-space:nowrap; display:flex; align-items:center; gap:6px; min-height:36px; padding:0 10px; border-radius:9px; font:500 13px 'Plus Jakarta Sans'; color:#4a4855`
+          - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+        - **button** [aria-label=Fermer onClick={{ closeD }}] — `border:0; width:34px; height:34px; border-radius:10px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+          - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+      - **sc-if** [value={{ c_dlgD.hasMsgs }}]
+        - **div** — `max-height:330px; overflow:auto; display:flex; flex-direction:column; gap:16px; padding:4px 2px`
+          - **sc-for** [list={{ c_dlgD.msgs }} as=g]
+            - **div** — `display:flex; flex-direction:column; gap:10px`
+              - **sc-if** [value={{ g.isUser }}]
+                - **div** « {{ g.text }} » — `align-self:flex-end; max-width:82%; padding:11px 15px; border-radius:16px 16px 4px 16px; background:#17151d; color:#fff; font:500 14.5px/1.45 'Plus Jakarta Sans'`
+              - **sc-if** [value={{ g.isAi }}]
+                - **div** — `display:flex; gap:10px; align-items:flex-start`
+                  - **span** — `flex:none; width:26px; height:26px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 5px 16px -4px rgba(124,58,237,.55), inset 0 -3px 7px rgba(76,29,149,.35)`
+                  - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:10px`
+                    - **span** « {{ g.text }} » — `font:400 14.5px/1.55 'Plus Jakarta Sans'; color:#17151d`
+                    - **div** — `border-radius:14px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.08); display:flex; flex-direction:column; overflow:hidden`
+                      - **span** « ACTIONS PROPOSÉES » — `padding:10px 14px; font:600 12px 'Plus Jakarta Sans'; letter-spacing:.04em; color:#8b8996; background:#faf9fc`
+                      - **sc-for** [list={{ g.actions }} as=a]
+                        - **button** [role=checkbox onClick={{ a.toggle }} aria-checked={{ a.ck }}] — `border:0; border-top:1px solid rgba(22,18,40,.06); background:#fff; text-align:left; min-height:46px; padding:10px 14px; display:flex; align-items:center; gap:12px; font:500 14px/1.4 'Plus Jakarta Sans'; color:{{ a.tc }}`
+                          - **span** « {{ a.mark }} » — `flex:none; width:20px; height:20px; border-radius:6px; box-shadow:inset 0 0 0 1.5px {{ a.bd }}; background:{{ a.bg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+                          - **span** « {{ a.l }} » — `flex:1`
+                      - **div** — `border-top:1px solid rgba(22,18,40,.06); padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:#faf9fc`
+                        - **span** « {{ g.note }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+                        - **sc-if** [value={{ g.canValidate }}]
+                          - **button** [onClick={{ g.validate }}] « {{ g.btn }} » — `flex:none; border:0; height:34px; padding:0 14px; border-radius:9px; background:#8b5cf6; color:#fff; font:600 13px 'Plus Jakarta Sans'; white-space:nowrap`
+      - **sc-if** [value={{ c_dlgD.empty }}]
+        - **div** — `display:flex; flex-direction:column; gap:4px; padding:2px 2px 0`
+          - **span** « Que veux-tu faire, Gianluca ? » — `font:600 22px 'Plus Jakarta Sans'; letter-spacing:-.02em`
+          - **span** « Je prépare, tu valides. Rien n’est modifié sans ton accord. » — `font:400 14px 'Plus Jakarta Sans'; color:#64626e`
+      - **div** — `border-radius:18px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.10),0 18px 40px -18px rgba(124,58,237,.45); padding:14px 14px 12px 16px; display:flex; flex-direction:column; gap:12px`
+        - **textarea** [aria-label=Message à l’assistant placeholder=Demande à ton assistant… value={{ c_dlgD.draft }} onChange={{ c_dlgD.setDraft }}] — `border:0; background:transparent; font:400 15px/1.5 'Plus Jakarta Sans'; color:#17151d; padding:0; min-height:48px`
+        - **div** — `display:flex; align-items:center; gap:8px`
+          - **button** [aria-label=Joindre un fichier] — `flex:none; width:36px; height:36px; border:0; border-radius:18px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+            - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+          - **sc-for** [list={{ ctxChips }} as=c]
+            - **button** [onClick={{ c.pick }} aria-pressed={{ c.sel }}] « {{ c.l }} » — `flex:none; border:0; height:36px; padding:0 12px; border-radius:18px; display:flex; align-items:center; gap:6px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ c.bg }}; color:{{ c.c }}; box-shadow:inset 0 0 0 1px {{ c.bd }}`
+              - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+          - **div** — `flex:1`
+          - **button** [aria-label=Dicter] — `flex:none; width:36px; height:36px; border:0; border-radius:18px; background:transparent; color:#4a4855; display:flex; align-items:center; justify-content:center`
+            - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+          - **button** [aria-label=Envoyer onClick={{ c_dlgD.send }}] — `flex:none; width:36px; height:36px; border:0; border-radius:18px; background:{{ c_dlgD.sendBg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+            - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+      - **sc-if** [value={{ c_dlgD.empty }}]
+        - **div** — `display:flex; gap:8px; flex-wrap:wrap; justify-content:center`
+          - **sc-for** [list={{ c_dlgD.sugg }} as=s]
+            - **button** [onClick={{ s.pick }}] « {{ s.l }} » — `flex:none; border:0; height:34px; padding:0 14px; border-radius:17px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.10); display:flex; align-items:center; gap:7px; font:500 13px 'Plus Jakarta Sans'; color:#17151d; white-space:nowrap` — états: `style-hover: background:#f5f2fe`
+              - **svg** 14×14 viewBox=0 0 24 24 stroke=#6a3ee0 fill=none sw=1.9
+      - **span** « Entrée pour envoyer · Échap pour fermer » — `text-align:center; font:400 12px 'Plus Jakarta Sans'; color:#8b8996`
+
+## Artboard « Assistant dialogue mobile »
+
+- **artboard** — `position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:390px;height:844px;background:#f3f2f7;border-radius:36px`
+  - **div** — `display:flex; align-items:center; gap:10px; padding:10px 12px 0`
+    - **span** — `width:44px; height:44px; flex:none; border-radius:14px; background:#fff; display:flex; align-items:center; justify-content:center`
+      - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+    - **span** « Tableau de bord » — `flex:1; display:flex; align-items:center; gap:9px; font:500 16px 'Plus Jakarta Sans'; letter-spacing:-.01em; white-space:nowrap`
+      - **span** — `color:#6a3ee0; display:flex`
+        - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+    - **span** — `display:flex; gap:4px; padding:4px; border-radius:16px; background:#fff`
+      - **button** [aria-label=Assistant IA onClick={{ toggleDlgM }} aria-expanded={{ dlgMExp }}] — `border:0; width:40px; height:40px; border-radius:12px; background:#8b5cf6; position:relative; z-index:{{ btnZM }}; box-shadow:{{ btnShM }}; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:40px; height:40px; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 9 » — `position:absolute; top:4px; right:4px; width:15px; height:15px; border-radius:50%; background:#8b5cf6; color:#fff; font:600 9px/15px 'Plus Jakarta Sans'; text-align:center`
+  - **div** — `padding:18px 14px; display:flex; flex-direction:column; gap:12px`
+    - **div** — `display:flex; flex-direction:column; gap:2px; padding:0 4px`
+      - **span** « Mercredi 4 novembre » — `font:500 13px 'Plus Jakarta Sans'; color:#64626e`
+      - **span** « Bonjour Gianluca » — `font:700 24px 'Plus Jakarta Sans'; letter-spacing:-.025em`
+    - **div** — `display:grid; grid-template-columns:1fr 1fr; gap:10px`
+      - **sc-for** [list={{ kpis }} as=k]
+        - **div** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:16px; display:flex; flex-direction:column; gap:6px`
+          - **span** « {{ k.l }} » — `font:500 12.5px 'Plus Jakarta Sans'; color:#64626e`
+          - **span** « {{ k.v }} » — `font:600 20px 'Plus Jakarta Sans'`
+    - **div** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); padding:16px; display:flex; flex-direction:column; gap:10px`
+      - **span** « Aujourd’hui » — `font:600 15px 'Plus Jakarta Sans'`
+      - **sc-for** [list={{ today }} as=t]
+        - **div** — `display:flex; align-items:center; gap:12px; min-height:50px; padding:0 12px; border-radius:12px; background:{{ t.bg }}`
+          - **span** « {{ t.h }} » — `font:600 13px 'Plus Jakarta Sans'; width:44px`
+          - **span** « {{ t.n }} » — `flex:1; font:600 14px 'Plus Jakarta Sans'`
+  - **sc-if** [value={{ dlgMOpen }}]
+    - **div** [onClick={{ closeM }}] — `position:absolute; inset:0; z-index:10; background:rgba(14,12,22,.42); backdrop-filter:blur(6px)`
+    - **div** [aria-label=Assistant IA role=dialog] — `position:absolute; left:10px; right:10px; top:64px; z-index:11; max-height:740px; border-radius:30px; background:#fff; box-shadow:0 30px 70px -20px rgba(14,12,22,.55),0 0 0 1px rgba(22,18,40,.06),0 0 60px -14px rgba(139,92,246,.45); padding:18px; display:flex; flex-direction:column; gap:16px; color:#17151d`
+      - **span** — `position:absolute; top:-7px; right:64px; width:16px; height:16px; border-radius:3px; background:#fff; transform:rotate(45deg); box-shadow:-1px -1px 0 0 rgba(22,18,40,.06)`
+      - **div** — `display:flex; align-items:center; gap:12px`
+        - **span** — `flex:none; width:30px; height:30px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 0 24px 2px rgba(139,92,246,.55)`
+        - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:1px`
+          - **span** « Coory IA » — `font:600 15px 'Plus Jakarta Sans'`
+          - **span** « Je prépare, tu valides. » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **a** [aria-label=Plein écran href=#1c] — `flex:none; width:40px; height:40px; border-radius:12px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+          - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+        - **button** [aria-label=Fermer onClick={{ closeM }}] — `flex:none; width:40px; height:40px; border:0; border-radius:12px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+          - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+      - **sc-if** [value={{ greetM }}]
+        - **span** « Que veux-tu faire, Gianluca ? » — `padding:6px 2px 2px; font:600 26px/1.15 'Plus Jakarta Sans'; letter-spacing:-.025em`
+      - **sc-if** [value={{ c_dlgM.hasMsgs }}]
+        - **div** — `max-height:360px; overflow:auto; border-radius:20px; background:#f8f7fb; color:#17151d; padding:16px 14px; display:flex; flex-direction:column; gap:16px`
+          - **sc-for** [list={{ c_dlgM.msgs }} as=g]
+            - **div** — `display:flex; flex-direction:column; gap:10px`
+              - **sc-if** [value={{ g.isUser }}]
+                - **div** « {{ g.text }} » — `align-self:flex-end; max-width:82%; padding:11px 15px; border-radius:16px 16px 4px 16px; background:#17151d; color:#fff; font:500 15px/1.45 'Plus Jakarta Sans'`
+              - **sc-if** [value={{ g.isAi }}]
+                - **div** — `display:flex; gap:10px; align-items:flex-start`
+                  - **span** — `flex:none; width:26px; height:26px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 5px 16px -4px rgba(124,58,237,.55), inset 0 -3px 7px rgba(76,29,149,.35)`
+                  - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:10px`
+                    - **span** « {{ g.text }} » — `font:400 15px/1.55 'Plus Jakarta Sans'; color:#17151d`
+                    - **div** — `border-radius:14px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.08); display:flex; flex-direction:column; overflow:hidden`
+                      - **span** « ACTIONS PROPOSÉES » — `padding:10px 14px; font:600 12px 'Plus Jakarta Sans'; letter-spacing:.04em; color:#8b8996; background:#faf9fc`
+                      - **sc-for** [list={{ g.actions }} as=a]
+                        - **button** [role=checkbox onClick={{ a.toggle }} aria-checked={{ a.ck }}] — `border:0; border-top:1px solid rgba(22,18,40,.06); background:#fff; text-align:left; min-height:46px; padding:10px 14px; display:flex; align-items:center; gap:12px; font:500 14.5px/1.4 'Plus Jakarta Sans'; color:{{ a.tc }}`
+                          - **span** « {{ a.mark }} » — `flex:none; width:20px; height:20px; border-radius:6px; box-shadow:inset 0 0 0 1.5px {{ a.bd }}; background:{{ a.bg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+                          - **span** « {{ a.l }} » — `flex:1`
+                      - **div** — `border-top:1px solid rgba(22,18,40,.06); padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:#faf9fc`
+                        - **span** « {{ g.note }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+                        - **sc-if** [value={{ g.canValidate }}]
+                          - **button** [onClick={{ g.validate }}] « {{ g.btn }} » — `flex:none; border:0; height:34px; padding:0 14px; border-radius:9px; background:#8b5cf6; color:#fff; font:600 13px 'Plus Jakarta Sans'; white-space:nowrap`
+      - **sc-if** [value={{ plusMOpen }}]
+        - **div** [role=menu] — `display:flex; flex-direction:column; border-radius:20px; background:#f8f7fb; padding:4px`
+          - **sc-for** [list={{ plusItems }} as=p]
+            - **button** [role=menuitem onClick={{ p.pick }}] — `border:0; background:transparent; min-height:50px; padding:0 12px; border-radius:14px; display:flex; align-items:center; gap:12px; text-align:left; white-space:nowrap; font:500 15px 'Plus Jakarta Sans'; color:#17151d; border-top:{{ p.sepD }}` — états: `style-hover: background:#f1edfc`
+              - **span** — `flex:none; width:32px; height:32px; border-radius:10px; background:{{ p.bgD }}; color:{{ p.cD }}; display:flex; align-items:center; justify-content:center`
+                - **svg** 15×15 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+              - **span** « {{ p.l }} » — `flex:1`
+              - **svg** 14×14 viewBox=0 0 24 24 stroke=#b4b2bd fill=none sw=2
+      - **div** — `border-radius:22px; background:#fbfafd; box-shadow:inset 0 0 0 1.5px rgba(139,92,246,.45),0 0 0 4px rgba(139,92,246,.10); padding:14px 12px 12px 16px; display:flex; flex-direction:column; gap:12px`
+        - **textarea** [aria-label=Message à l’assistant placeholder=Demande à Coory… value={{ c_dlgM.draft }} onChange={{ c_dlgM.setDraft }}] — `border:0; background:transparent; font:400 16px/1.5 'Plus Jakarta Sans'; color:#17151d; padding:0; min-height:48px`
+        - **div** — `display:flex; align-items:center; gap:8px`
+          - **button** [aria-label=Plus d’options onClick={{ togglePlusM }} aria-expanded={{ plusMExp }}] — `flex:none; width:40px; height:40px; border:0; border-radius:20px; background:{{ plusMBgD }}; color:{{ plusMCD }}; display:flex; align-items:center; justify-content:center`
+            - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+          - **div** — `flex:1`
+          - **button** [aria-label=Dicter] — `flex:none; width:40px; height:40px; border:0; border-radius:20px; background:transparent; color:#4a4855; display:flex; align-items:center; justify-content:center`
+            - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+          - **button** [aria-label=Envoyer onClick={{ c_dlgM.send }}] — `flex:none; width:40px; height:40px; border:0; border-radius:20px; background:{{ c_dlgM.sendBgD }}; color:#fff; display:flex; align-items:center; justify-content:center`
+            - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+
+## Artboard « Assistant page desktop »
+
+- **artboard** — `box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:1280px;height:820px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;align-items:stretch`
+  - **aside** — `width:236px; flex:none; min-height:740px; border-radius:20px; background:#fff; padding:24px 14px 16px; display:flex; flex-direction:column; gap:2px; position:sticky; top:14px`
+    - **div** — `display:flex; align-items:center; justify-content:space-between; padding:4px 10px 24px`
+      - **svg** 96× viewBox=0 0 472 72 stroke= fill= sw=
+      - **svg** 17×17 viewBox=0 0 24 24 stroke=#64626e fill=none sw=1.8
+    - **sc-for** [list={{ nav1 }} as=n]
+      - **span** « {{ n.l }} » — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ n.bg }}; color:{{ n.c }}`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+    - **div** — `height:1px; background:rgba(22,18,40,.08); margin:10px 4px`
+    - **sc-for** [list={{ nav2 }} as=n]
+      - **span** — `display:flex; align-items:center; gap:10px; height:34px; padding:0 12px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ n.bg }}; color:{{ n.c }}`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.7
+        - **span** « {{ n.l }} » — `flex:1`
+        - **sc-if** [value={{ n.b }}]
+          - **span** « {{ n.b }} » — `min-width:20px; height:20px; border-radius:10px; background:rgba(139,92,246,.12); color:#6a3ee0; font:500 11px/20px 'Plus Jakarta Sans'; text-align:center`
+    - **div** — `flex:1`
+    - **div** — `display:flex; align-items:center; gap:10px; padding:8px`
+      - **span** « GL » — `position:relative; width:38px; height:38px; border-radius:50%; background:#2a2733; color:#fff; display:flex; align-items:center; justify-content:center; font:600 12px 'Plus Jakarta Sans'; box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6`
+        - **span** — `position:absolute; right:-2px; bottom:-2px; width:10px; height:10px; border-radius:50%; background:#15803d; box-shadow:0 0 0 2px #fff`
+      - **div** — `flex:1; min-width:0; display:flex; flex-direction:column`
+        - **span** « Gianluca Lo Bianco » — `font:600 14px 'Plus Jakarta Sans'; white-space:nowrap; overflow:hidden`
+        - **span** « Coach » — `font:400 12px 'Plus Jakarta Sans'; color:#64626e`
+  - **main** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:16px`
+    - **header** — `border-radius:20px; background:#fff; padding:16px 18px 16px 22px; display:flex; align-items:center; gap:10px`
+      - **span** « Assistant IA » — `flex:1; display:flex; align-items:center; gap:10px; font:600 15px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **span** — `color:#6a3ee0; display:flex`
+          - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+      - **span** — `height:32px; width:200px; padding:0 6px 0 10px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); background:#f8f7fb; display:flex; align-items:center; gap:7px; font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+        - **span** « Rechercher dans Coory » — `flex:1; white-space:nowrap`
+        - **span** « ⌘K » — `font:500 10px 'Plus Jakarta Sans'; padding:2px 5px; border-radius:5px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.14)`
+      - **span** « Assistant IA » — `height:32px; padding:0 12px; border-radius:9px; background:#8b5cf6; color:#fff; display:flex; align-items:center; gap:6px; font:500 12.5px 'Plus Jakarta Sans'; white-space:nowrap`
+        - **svg** 13×13 viewBox=0 0 24 24 stroke= fill=#fff sw=
+      - **span** — `position:relative; width:32px; height:32px; border-radius:9px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; justify-content:center`
+        - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+        - **span** « 9 » — `position:absolute; top:-6px; right:-6px; width:16px; height:16px; border-radius:50%; background:#8b5cf6; color:#fff; font:600 9.5px/16px 'Plus Jakarta Sans'; text-align:center`
+    - **section** — `flex:1; min-height:0; border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.05); display:flex; overflow:hidden`
+      - **div** — `width:250px; flex:none; border-right:1px solid rgba(22,18,40,.06); background:#fbfafd; padding:18px 12px; display:flex; flex-direction:column; gap:16px`
+        - **button** [onClick={{ newChatD }}] « Nouvelle conversation » — `border:0; height:40px; border-radius:11px; background:#17151d; color:#fff; display:flex; align-items:center; justify-content:center; gap:7px; font:600 13.5px 'Plus Jakarta Sans'`
+          - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+        - **sc-for** [list={{ history }} as=h]
+          - **div** — `display:flex; flex-direction:column; gap:2px`
+            - **span** « {{ h.g }} » — `font:600 12px 'Plus Jakarta Sans'; letter-spacing:.04em; color:#8b8996; padding:0 10px 4px`
+            - **sc-for** [list={{ h.items }} as=i]
+              - **span** « {{ i.l }} » — `display:block; padding:8px 10px; border-radius:9px; font:400 13.5px 'Plus Jakarta Sans'; color:#2c2a35; white-space:nowrap; overflow:hidden; background:{{ i.bg }}`
+      - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; padding:0 40px 28px`
+        - **sc-if** [value={{ c_pageD.empty }}]
+          - **div** — `flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; max-width:720px; width:100%; margin:0 auto`
+            - **span** — `flex:none; width:84px; height:84px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 17px 50px -14px rgba(124,58,237,.55), inset 0 -8px 21px rgba(76,29,149,.35)`
+            - **div** — `display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center`
+              - **span** « Bonjour Gianluca. Comment puis-je t’aider ? » — `display:block; font:700 32px/1.2 'Plus Jakarta Sans'; letter-spacing:-.03em; white-space:nowrap`
+                - **br**
+              - **span** « Je prépare tes programmes, ton agenda et ton admin. Tu valides. » — `font:400 15px 'Plus Jakarta Sans'; color:#64626e`
+            - **div** — `width:100%`
+              - **div** — `border-radius:20px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.10),0 18px 40px -18px rgba(124,58,237,.45); padding:16px 16px 14px 18px; display:flex; flex-direction:column; gap:16px`
+                - **textarea** [aria-label=Message à l’assistant placeholder=Demande à ton assistant… value={{ c_pageD.draft }} onChange={{ c_pageD.setDraft }}] — `border:0; background:transparent; font:400 15.5px/1.5 'Plus Jakarta Sans'; color:#17151d; padding:0; min-height:72px`
+                - **div** — `display:flex; align-items:center; gap:8px`
+                  - **button** [aria-label=Joindre un fichier] — `flex:none; width:38px; height:38px; border:0; border-radius:19px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+                    - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+                  - **sc-for** [list={{ ctxChips }} as=c]
+                    - **button** [onClick={{ c.pick }} aria-pressed={{ c.sel }}] « {{ c.l }} » — `flex:none; border:0; height:38px; padding:0 12px; border-radius:19px; display:flex; align-items:center; gap:6px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ c.bg }}; color:{{ c.c }}; box-shadow:inset 0 0 0 1px {{ c.bd }}`
+                      - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+                  - **div** — `flex:1`
+                  - **button** [aria-label=Dicter] — `flex:none; width:38px; height:38px; border:0; border-radius:19px; background:transparent; color:#4a4855; display:flex; align-items:center; justify-content:center`
+                    - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+                  - **button** [aria-label=Envoyer onClick={{ c_pageD.send }}] — `flex:none; width:38px; height:38px; border:0; border-radius:19px; background:{{ c_pageD.sendBg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+                    - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+            - **div** — `display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; width:100%`
+              - **sc-for** [list={{ pageCards }} as=p]
+                - **button** [onClick={{ p.pickD }}] — `border:0; text-align:left; padding:18px; border-radius:18px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.07); display:flex; flex-direction:column; gap:10px` — états: `style-hover: box-shadow:inset 0 0 0 1.5px #8b5cf6`
+                  - **span** — `flex:none; width:36px; height:36px; border-radius:11px; background:#f1edfc; color:#6a3ee0; display:flex; align-items:center; justify-content:center`
+                    - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+                  - **span** — `display:flex; flex-direction:column; gap:3px; min-width:0`
+                    - **span** « {{ p.t }} » — `font:600 15px 'Plus Jakarta Sans'; color:#17151d`
+                    - **span** « {{ p.s }} » — `font:400 13px/1.45 'Plus Jakarta Sans'; color:#64626e`
+        - **sc-if** [value={{ c_pageD.hasMsgs }}]
+          - **div** — `flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:18px; padding:28px 0 16px; max-width:720px; width:100%; margin:0 auto`
+            - **sc-for** [list={{ c_pageD.msgs }} as=g]
+              - **div** — `display:flex; flex-direction:column; gap:10px`
+                - **sc-if** [value={{ g.isUser }}]
+                  - **div** « {{ g.text }} » — `align-self:flex-end; max-width:82%; padding:11px 15px; border-radius:16px 16px 4px 16px; background:#17151d; color:#fff; font:500 14.5px/1.45 'Plus Jakarta Sans'`
+                - **sc-if** [value={{ g.isAi }}]
+                  - **div** — `display:flex; gap:10px; align-items:flex-start`
+                    - **span** — `flex:none; width:26px; height:26px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 5px 16px -4px rgba(124,58,237,.55), inset 0 -3px 7px rgba(76,29,149,.35)`
+                    - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:10px`
+                      - **span** « {{ g.text }} » — `font:400 14.5px/1.55 'Plus Jakarta Sans'; color:#17151d`
+                      - **div** — `border-radius:14px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.08); display:flex; flex-direction:column; overflow:hidden`
+                        - **span** « ACTIONS PROPOSÉES » — `padding:10px 14px; font:600 12px 'Plus Jakarta Sans'; letter-spacing:.04em; color:#8b8996; background:#faf9fc`
+                        - **sc-for** [list={{ g.actions }} as=a]
+                          - **button** [role=checkbox onClick={{ a.toggle }} aria-checked={{ a.ck }}] — `border:0; border-top:1px solid rgba(22,18,40,.06); background:#fff; text-align:left; min-height:46px; padding:10px 14px; display:flex; align-items:center; gap:12px; font:500 14px/1.4 'Plus Jakarta Sans'; color:{{ a.tc }}`
+                            - **span** « {{ a.mark }} » — `flex:none; width:20px; height:20px; border-radius:6px; box-shadow:inset 0 0 0 1.5px {{ a.bd }}; background:{{ a.bg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+                            - **span** « {{ a.l }} » — `flex:1`
+                        - **div** — `border-top:1px solid rgba(22,18,40,.06); padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:#faf9fc`
+                          - **span** « {{ g.note }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+                          - **sc-if** [value={{ g.canValidate }}]
+                            - **button** [onClick={{ g.validate }}] « {{ g.btn }} » — `flex:none; border:0; height:34px; padding:0 14px; border-radius:9px; background:#8b5cf6; color:#fff; font:600 13px 'Plus Jakarta Sans'; white-space:nowrap`
+          - **div** — `max-width:720px; width:100%; margin:0 auto`
+            - **div** — `border-radius:18px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.10),0 1px 2px rgba(22,18,40,.04); padding:12px 14px 12px 16px; display:flex; flex-direction:column; gap:10px`
+              - **textarea** [aria-label=Message à l’assistant placeholder=Répondre… value={{ c_pageD.draft }} onChange={{ c_pageD.setDraft }}] — `border:0; background:transparent; font:400 15px/1.5 'Plus Jakarta Sans'; color:#17151d; padding:0; min-height:24px`
+              - **div** — `display:flex; align-items:center; gap:8px`
+                - **button** [aria-label=Joindre un fichier] — `flex:none; width:36px; height:36px; border:0; border-radius:18px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+                  - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+                - **sc-for** [list={{ ctxChips }} as=c]
+                  - **button** [onClick={{ c.pick }} aria-pressed={{ c.sel }}] « {{ c.l }} » — `flex:none; border:0; height:36px; padding:0 12px; border-radius:18px; display:flex; align-items:center; gap:6px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ c.bg }}; color:{{ c.c }}; box-shadow:inset 0 0 0 1px {{ c.bd }}`
+                    - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+                - **div** — `flex:1`
+                - **button** [aria-label=Dicter] — `flex:none; width:36px; height:36px; border:0; border-radius:18px; background:transparent; color:#4a4855; display:flex; align-items:center; justify-content:center`
+                  - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+                - **button** [aria-label=Envoyer onClick={{ c_pageD.send }}] — `flex:none; width:36px; height:36px; border:0; border-radius:18px; background:{{ c_pageD.sendBg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+                  - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+
+## Artboard « Assistant page mobile »
+
+- **artboard** — `position:relative;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:390px;height:844px;background:#f3f2f7;border-radius:36px;display:flex;flex-direction:column`
+  - **div** — `display:flex; align-items:center; gap:10px; padding:10px 12px 0`
+    - **span** — `width:44px; height:44px; flex:none; border-radius:14px; background:#fff; display:flex; align-items:center; justify-content:center`
+      - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+    - **span** « Assistant IA » — `flex:1; display:flex; align-items:center; gap:9px; font:500 16px 'Plus Jakarta Sans'; white-space:nowrap`
+      - **span** — `color:#6a3ee0; display:flex`
+        - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+    - **span** — `display:flex; gap:4px; padding:4px; border-radius:16px; background:#fff`
+      - **button** [aria-label=Historique] — `border:0; width:40px; height:40px; border-radius:12px; background:transparent; color:#17151d; display:flex; align-items:center; justify-content:center`
+        - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+      - **button** [aria-label=Nouvelle conversation onClick={{ newChatM }}] — `border:0; width:40px; height:40px; border-radius:12px; background:#17151d; color:#fff; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+  - **div** — `flex:1; min-height:0; overflow:auto; padding:0 18px`
+    - **sc-if** [value={{ c_pageM.empty }}]
+      - **div** — `display:flex; flex-direction:column; align-items:center; gap:22px; padding:40px 0 20px`
+        - **span** — `flex:none; width:72px; height:72px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 14px 43px -12px rgba(124,58,237,.55), inset 0 -7px 18px rgba(76,29,149,.35)`
+        - **div** — `display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center`
+          - **span** « Bonjour Gianluca. Comment puis-je t’aider ? » — `display:block; font:700 26px/1.25 'Plus Jakarta Sans'; letter-spacing:-.03em; white-space:nowrap`
+            - **br**
+          - **span** « Je prépare, tu valides. » — `font:400 14.5px/1.45 'Plus Jakarta Sans'; color:#64626e`
+        - **div** — `display:grid; grid-template-columns:1fr; gap:12px; width:100%`
+          - **sc-for** [list={{ pageCards }} as=p]
+            - **button** [onClick={{ p.pickM }}] — `border:0; text-align:left; padding:16px; border-radius:18px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.07); display:flex; align-items:center; gap:14px` — états: `style-hover: box-shadow:inset 0 0 0 1.5px #8b5cf6`
+              - **span** — `flex:none; width:36px; height:36px; border-radius:11px; background:#f1edfc; color:#6a3ee0; display:flex; align-items:center; justify-content:center`
+                - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+              - **span** — `display:flex; flex-direction:column; gap:3px; min-width:0`
+                - **span** « {{ p.t }} » — `font:600 15px 'Plus Jakarta Sans'; color:#17151d`
+                - **span** « {{ p.s }} » — `font:400 13px/1.45 'Plus Jakarta Sans'; color:#64626e`
+    - **sc-if** [value={{ c_pageM.hasMsgs }}]
+      - **div** — `display:flex; flex-direction:column; gap:18px; padding:20px 0`
+        - **sc-for** [list={{ c_pageM.msgs }} as=g]
+          - **div** — `display:flex; flex-direction:column; gap:10px`
+            - **sc-if** [value={{ g.isUser }}]
+              - **div** « {{ g.text }} » — `align-self:flex-end; max-width:82%; padding:11px 15px; border-radius:16px 16px 4px 16px; background:#17151d; color:#fff; font:500 15px/1.45 'Plus Jakarta Sans'`
+            - **sc-if** [value={{ g.isAi }}]
+              - **div** — `display:flex; gap:10px; align-items:flex-start`
+                - **span** — `flex:none; width:26px; height:26px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #ffffff 0%, #e9ddff 18%, #a78bfa 45%, #7c3aed 72%, #4c1d95 100%); box-shadow:0 5px 16px -4px rgba(124,58,237,.55), inset 0 -3px 7px rgba(76,29,149,.35)`
+                - **div** — `flex:1; min-width:0; display:flex; flex-direction:column; gap:10px`
+                  - **span** « {{ g.text }} » — `font:400 15px/1.55 'Plus Jakarta Sans'; color:#17151d`
+                  - **div** — `border-radius:14px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.08); display:flex; flex-direction:column; overflow:hidden`
+                    - **span** « ACTIONS PROPOSÉES » — `padding:10px 14px; font:600 12px 'Plus Jakarta Sans'; letter-spacing:.04em; color:#8b8996; background:#faf9fc`
+                    - **sc-for** [list={{ g.actions }} as=a]
+                      - **button** [role=checkbox onClick={{ a.toggle }} aria-checked={{ a.ck }}] — `border:0; border-top:1px solid rgba(22,18,40,.06); background:#fff; text-align:left; min-height:46px; padding:10px 14px; display:flex; align-items:center; gap:12px; font:500 14.5px/1.4 'Plus Jakarta Sans'; color:{{ a.tc }}`
+                        - **span** « {{ a.mark }} » — `flex:none; width:20px; height:20px; border-radius:6px; box-shadow:inset 0 0 0 1.5px {{ a.bd }}; background:{{ a.bg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+                        - **span** « {{ a.l }} » — `flex:1`
+                    - **div** — `border-top:1px solid rgba(22,18,40,.06); padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; background:#faf9fc`
+                      - **span** « {{ g.note }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+                      - **sc-if** [value={{ g.canValidate }}]
+                        - **button** [onClick={{ g.validate }}] « {{ g.btn }} » — `flex:none; border:0; height:34px; padding:0 14px; border-radius:9px; background:#8b5cf6; color:#fff; font:600 13px 'Plus Jakarta Sans'; white-space:nowrap`
+  - **div** — `padding:10px 14px 24px; background:#f3f2f7`
+    - **div** — `border-radius:22px; background:#fff; box-shadow:inset 0 0 0 1px rgba(22,18,40,.10),0 18px 40px -18px rgba(124,58,237,.45); padding:14px 12px 12px 16px; display:flex; flex-direction:column; gap:12px`
+      - **textarea** [aria-label=Message à l’assistant placeholder=Demande à ton assistant… value={{ c_pageM.draft }} onChange={{ c_pageM.setDraft }}] — `border:0; background:transparent; font:400 16px/1.5 'Plus Jakarta Sans'; color:#17151d; padding:0; min-height:26px`
+      - **div** — `display:flex; align-items:center; gap:8px`
+        - **button** [aria-label=Joindre un fichier] — `flex:none; width:40px; height:40px; border:0; border-radius:20px; background:#f3f2f7; color:#4a4855; display:flex; align-items:center; justify-content:center`
+          - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+        - **sc-for** [list={{ ctxChips }} as=c]
+          - **button** [onClick={{ c.pick }} aria-pressed={{ c.sel }}] « {{ c.l }} » — `flex:none; border:0; height:40px; padding:0 12px; border-radius:20px; display:flex; align-items:center; gap:6px; font:500 13px 'Plus Jakarta Sans'; white-space:nowrap; background:{{ c.bg }}; color:{{ c.c }}; box-shadow:inset 0 0 0 1px {{ c.bd }}`
+            - **svg** 14×14 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+        - **div** — `flex:1`
+        - **button** [aria-label=Dicter] — `flex:none; width:40px; height:40px; border:0; border-radius:20px; background:transparent; color:#4a4855; display:flex; align-items:center; justify-content:center`
+          - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.9
+        - **button** [aria-label=Envoyer onClick={{ c_pageM.send }}] — `flex:none; width:40px; height:40px; border:0; border-radius:20px; background:{{ c_pageM.sendBg }}; color:#fff; display:flex; align-items:center; justify-content:center`
+          - **svg** 17×17 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2.2
+

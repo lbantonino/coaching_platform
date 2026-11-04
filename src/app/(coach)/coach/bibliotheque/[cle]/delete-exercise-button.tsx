@@ -8,14 +8,20 @@ import { buttonClass } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 
-// Supprimer un exercice de l'organisation (D-76), après confirmation. Les programmes publiés garderont
-// leur propre copie de l'exercice (docs/08) : la suppression ne les touchera pas.
+// Supprimer un exercice de l'organisation (D-76), TOUJOURS après confirmation. Les programmes publiés
+// garderont leur propre copie de l'exercice (docs/08) : la suppression ne les touchera pas.
+// Trois habits, la même action (kit « Coory Pages », page 11, D-121) :
+// - "button" : le bouton « Supprimer » de la fiche de l'exercice ;
+// - "link" : « Supprimer l'exercice », lien rouge sous les boutons de l'aperçu (Modifier, ordinateur) ;
+// - "icon" : la corbeille rouge de 44 px à droite du titre (Modifier, téléphone).
 export function DeleteExerciseButton({
   name,
   remove,
+  variant = "button",
 }: {
   name: string;
   remove: () => Promise<{ ok: boolean }>;
+  variant?: "button" | "link" | "icon";
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -36,14 +42,33 @@ export function DeleteExerciseButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={buttonClass({ variant: "outline" })}
-      >
-        <Trash2 aria-hidden size={16} strokeWidth={1.8} />
-        Supprimer
-      </button>
+      {variant === "icon" ? (
+        <button
+          type="button"
+          aria-label="Supprimer l'exercice"
+          onClick={() => setOpen(true)}
+          className="grid size-11 shrink-0 place-items-center rounded-[13px] bg-surface text-status-danger transition-[scale,background-color] duration-150 active:scale-95 active:bg-surface-2"
+        >
+          <Trash2 aria-hidden size={18} strokeWidth={1.8} />
+        </button>
+      ) : variant === "link" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-[4px] text-[13px] leading-[normal] font-medium text-status-danger underline-offset-4 hover:underline"
+        >
+          Supprimer l&apos;exercice
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={buttonClass({ variant: "outline" })}
+        >
+          <Trash2 aria-hidden size={16} strokeWidth={1.8} />
+          Supprimer
+        </button>
+      )}
       <ConfirmDialog
         open={open}
         onClose={() => setOpen(false)}

@@ -9,6 +9,12 @@ import { hashInvitationToken } from "./token";
 export type InviteTarget = {
   athleteId: string;
   displayName: string;
+  // Page « Inviter » (kit « Coory Pages », D-119) : prénom (« Inviter Sophie » sur téléphone, texte
+  // prérempli des messages), photo, sexe (« invitée » / « invité ») et téléphone (WhatsApp, SMS).
+  firstName: string;
+  photoPath: string | null;
+  sex: "female" | "male" | null;
+  phone: string | null;
   email: string | null;
   hasAccount: boolean;
   pendingInvite: { expiresAt: string; expired: boolean } | null;
@@ -26,7 +32,7 @@ export async function getInviteTarget(
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
-      "id, first_name, display_name, email, athlete_user_id, athlete_invites ( status, expires_at )",
+      "id, first_name, display_name, email, phone, sex, photo_path, athlete_user_id, athlete_invites ( status, expires_at )",
     )
     .eq("id", athleteId)
     .eq("organization_id", organizationId)
@@ -39,6 +45,10 @@ export async function getInviteTarget(
   return {
     athleteId: data.id,
     displayName: data.display_name ?? data.first_name,
+    firstName: data.first_name,
+    photoPath: data.photo_path,
+    sex: data.sex === "female" || data.sex === "male" ? data.sex : null,
+    phone: data.phone,
     email: data.email,
     hasAccount: data.athlete_user_id !== null,
     pendingInvite: pending

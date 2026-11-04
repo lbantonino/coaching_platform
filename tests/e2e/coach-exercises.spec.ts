@@ -73,8 +73,20 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
   );
   await expect(page.getByText("Bascule doucement vers l'avant.")).toBeVisible();
 
-  // Modifier : le nouveau nom s'affiche.
+  // Modifier (kit « Coory Pages », page 11, D-121) : la photo et le lien vidéo enregistrés sont
+  // réaffichés ; « Supprimer l'exercice » demande toujours une confirmation (« Annuler » ne supprime
+  // rien) ; le nouveau nom s'affiche.
   await page.getByRole("link", { name: "Modifier" }).click();
+  await expect(page.getByText("Photo actuelle")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Aperçu de la photo" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Lien vidéo" })).toHaveValue(
+    "https://www.instagram.com/reel/abc123/",
+  );
+  await page.getByRole("button", { name: "Supprimer l'exercice" }).click();
+  const confirmDelete = page.getByRole("dialog", { name: `Supprimer « ${name} » ?` });
+  await expect(confirmDelete).toBeVisible();
+  await confirmDelete.getByRole("button", { name: "Annuler" }).click();
+  await expect(confirmDelete).toBeHidden();
   await page.getByRole("textbox", { name: "Nom de l'exercice" }).fill(`${name} bis`);
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByRole("heading", { level: 1, name: `${name} bis` })).toBeVisible();
@@ -115,7 +127,16 @@ test("« Créer ma variante » pré-remplit le formulaire depuis un exercice du 
   await page.goto("/coach/bibliotheque/squat");
   await page.getByRole("link", { name: "Créer ma variante" }).click();
   await expect(page).toHaveURL(/\/coach\/bibliotheque\/nouveau\?variante=squat$/);
-  await expect(page.getByText("Variante de « Back squat ».")).toBeVisible();
+  // Bandeau de variante (kit « Coory Pages », page 08, D-122) : le nom de l'original et un lien
+  // vers sa fiche ; le bouton principal devient « Enregistrer ma variante ».
+  await expect(
+    page.getByText(/Variante de « Back squat »/).filter({ visible: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Voir l'original" })).toHaveAttribute(
+    "href",
+    "/coach/bibliotheque/squat",
+  );
+  await expect(page.getByRole("button", { name: "Enregistrer ma variante" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Nom de l'exercice" })).toHaveValue(
     "Back squat (ma variante)",
   );

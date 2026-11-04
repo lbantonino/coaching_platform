@@ -1,0 +1,161 @@
+# 13 · Paramètres — mesures extraites du fichier source
+
+> **Valeurs EXACTES** lues dans les styles inline de `source-design-files/pages/13-parametres/Coory Parametres.dc.html` (aucune estimation). Les valeurs entre `{{ }}` sont dynamiques (calculées dans `logic.js`).
+> Arborescence : un niveau d’indentation = un niveau DOM. `sc-for` = liste répétée (`list` = source, `as` = variable), `sc-if` = bloc conditionnel (`value`).
+> Police partout : **Plus Jakarta Sans**. Le cadre de l’artboard (box-shadow externe, border-radius 18/44 px) est un artefact de présentation : ne pas le reproduire dans l’app.
+> Les `span` sans handler sont des boutons/champs statiques dans la maquette : dans l’app ce sont des `button`/`input` réels.
+
+## Artboard « Paramètres desktop »
+
+- **artboard** — `position:relative;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);width:1280px;height:800px;background:#f3f2f7;border-radius:18px;overflow:hidden;padding:14px;display:flex;gap:20px`
+  - **div** — `width:236px; border-radius:20px; background:#fff`
+  - **div** — `flex:1; display:flex; flex-direction:column; gap:16px`
+    - **div** — `height:64px; border-radius:20px; background:#fff`
+    - **div** — `flex:1; display:grid; grid-template-columns:2fr 1fr; gap:16px`
+      - **div** — `border-radius:20px; background:#fff`
+      - **div** — `border-radius:20px; background:#fff`
+  - **div** — `position:absolute; inset:0; background:rgba(23,21,29,.42); display:flex; align-items:center; justify-content:center`
+    - **div** [aria-label=Paramètres role=dialog] — `width:1000px; height:690px; border-radius:24px; background:#fff; box-shadow:0 30px 80px -20px rgba(22,18,40,.5); display:flex; overflow:hidden`
+      - **nav** — `width:260px; flex:none; background:#f8f7fb; padding:24px 14px; display:flex; flex-direction:column; gap:4px; border-right:1px solid rgba(22,18,40,.06)`
+        - **span** « Paramètres » — `padding:0 10px 16px; font:700 20px 'Plus Jakarta Sans'; letter-spacing:-.01em`
+        - **sc-for** [list={{ tabs }} as=t]
+          - **button** [onClick={{ t.on }}] — `border:0; text-align:left; padding:10px 12px; border-radius:12px; display:flex; align-items:center; gap:12px; background:{{ t.bg }}; box-shadow:{{ t.sh }}`
+            - **span** — `width:32px; height:32px; flex:none; border-radius:9px; display:flex; align-items:center; justify-content:center; background:{{ t.ibg }}; color:{{ t.ic }}`
+              - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+            - **span** — `display:flex; flex-direction:column; gap:1px`
+              - **span** « {{ t.l }} » — `font:600 13.5px 'Plus Jakarta Sans'; color:#17151d`
+              - **span** « {{ t.s }} » — `font:400 11.5px 'Plus Jakarta Sans'; color:#8b8996`
+      - **div** — `flex:1; min-width:0; display:flex; flex-direction:column`
+        - **div** — `flex:none; padding:22px 24px 16px 28px; display:flex; align-items:flex-start; gap:12px; border-bottom:1px solid rgba(22,18,40,.06)`
+          - **div** — `flex:1; display:flex; flex-direction:column; gap:3px`
+            - **span** « {{ cur.l }} » — `font:700 20px 'Plus Jakarta Sans'; letter-spacing:-.01em`
+            - **span** « {{ cur.sub }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+          - **span** [aria-label=Fermer] — `width:36px; height:36px; border-radius:10px; background:#f3f2f7; display:flex; align-items:center; justify-content:center`
+            - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+        - **div** — `flex:1; min-height:0; overflow-y:auto; padding:20px 28px 24px; display:flex; flex-direction:column; gap:14px`
+          - **sc-for** [list={{ cards }} as=c]
+            - **section** — `border-radius:16px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.08); padding:20px; display:flex; flex-direction:column; gap:16px`
+              - **div** — `display:flex; flex-direction:column; gap:4px`
+                - **span** « {{ c.t }} » — `font:600 15px 'Plus Jakarta Sans'`
+                - **sc-if** [value={{ c.d }}]
+                  - **span** « {{ c.d }} » — `font:400 12.5px/1.5 'Plus Jakarta Sans'; color:#64626e`
+              - **sc-for** [list={{ c.items }} as=it]
+                - **sc-if** [value={{ it.isFields }}]
+                  - **div** — `display:grid; grid-template-columns:{{ it.cols }}; gap:14px 16px`
+                    - **sc-for** [list={{ it.fields }} as=f]
+                      - **div** — `display:flex; flex-direction:column; gap:7px`
+                        - **span** « {{ f.l }} » — `font:600 13px 'Plus Jakarta Sans'`
+                          - **span** « {{ f.opt }} » — `color:#8b8996`
+                        - **sc-if** [value={{ f.box }}]
+                          - **span** — `height:44px; padding:0 14px; border-radius:11px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; gap:8px; font:400 14px 'Plus Jakarta Sans'; color:{{ f.vc }}`
+                            - **span** « {{ f.v }} » — `flex:1`
+                            - **span** « {{ f.suf }} » — `color:#8b8996`
+                            - **sc-if** [value={{ f.caret }}]
+                              - **svg** 14×14 viewBox=0 0 24 24 stroke=#64626e fill=none sw=2
+                        - **sc-if** [value={{ f.plain }}]
+                          - **span** « {{ f.v }} » — `height:44px; display:flex; align-items:center; font:600 14px 'Plus Jakarta Sans'`
+                        - **sc-if** [value={{ f.help }}]
+                          - **span** « {{ f.help }} » — `font:400 12px/1.45 'Plus Jakarta Sans'; color:#8b8996`
+                - **sc-if** [value={{ it.isSeg }}]
+                  - **div** — `display:flex; flex-direction:column; gap:7px`
+                    - **sc-if** [value={{ it.l }}]
+                      - **span** « {{ it.l }} » — `font:600 13px 'Plus Jakarta Sans'`
+                    - **div** — `align-self:flex-start; height:42px; padding:3px; border-radius:11px; background:#f1f0f5; display:flex; gap:2px`
+                      - **sc-for** [list={{ it.opts }} as=o]
+                        - **button** [onClick={{ o.on }}] « {{ o.l }} » — `border:0; padding:0 18px; border-radius:8px; font:500 13px 'Plus Jakarta Sans'; background:{{ o.bg }}; color:{{ o.c }}; box-shadow:{{ o.sh }}`
+                - **sc-if** [value={{ it.isToggles }}]
+                  - **div** — `display:flex; flex-direction:column`
+                    - **sc-for** [list={{ it.rows }} as=r]
+                      - **button** [role=switch onClick={{ r.on }} aria-checked={{ r.aria }}] — `border:0; background:none; text-align:left; padding:12px 0; border-top:{{ r.bt }}; display:flex; align-items:center; gap:14px`
+                        - **span** — `flex:1; display:flex; flex-direction:column; gap:2px`
+                          - **span** « {{ r.l }} » — `font:600 13.5px 'Plus Jakarta Sans'; color:#17151d`
+                          - **span** « {{ r.d }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#64626e`
+                        - **span** — `width:40px; height:24px; flex:none; border-radius:12px; padding:3px; display:flex; background:{{ r.bg }}; justify-content:{{ r.j }}`
+                          - **span** — `width:18px; height:18px; border-radius:9px; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.2)`
+                - **sc-if** [value={{ it.isBtns }}]
+                  - **div** — `display:flex; flex-wrap:wrap; gap:10px`
+                    - **sc-for** [list={{ it.btns }} as=b]
+                      - **span** « {{ b.l }} » — `height:40px; padding:0 16px; border-radius:11px; display:flex; align-items:center; gap:8px; font:600 13.5px 'Plus Jakarta Sans'; background:{{ b.bg }}; color:{{ b.c }}; box-shadow:{{ b.sh }}`
+                - **sc-if** [value={{ it.isNote }}]
+                  - **span** « {{ it.l }} » — `padding:10px 12px; border-radius:10px; background:#fff8ea; font:400 12.5px/1.45 'Plus Jakarta Sans'; color:#8a5a00`
+        - **sc-if** [value={{ cur.save }}]
+          - **div** — `flex:none; padding:14px 28px; border-top:1px solid rgba(22,18,40,.06); display:flex; align-items:center; gap:10px`
+            - **span** « Les changements s’appliquent dès l’enregistrement. » — `flex:1; font:400 12.5px 'Plus Jakarta Sans'; color:#8b8996`
+            - **span** « Annuler » — `height:40px; padding:0 16px; border-radius:11px; box-shadow:inset 0 0 0 1px rgba(22,18,40,.14); display:flex; align-items:center; font:500 13.5px 'Plus Jakarta Sans'`
+            - **span** « Enregistrer » — `height:40px; padding:0 18px; border-radius:11px; background:#17151d; color:#fff; display:flex; align-items:center; font:600 13.5px 'Plus Jakarta Sans'`
+
+## Artboard « Paramètres mobile »
+
+- **artboard** — `position:relative;width:390px;height:844px;border-radius:44px;background:#f3f2f7;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);overflow:hidden;display:flex;flex-direction:column`
+  - **div** — `height:50px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:6px 30px 0; font:600 15px 'Plus Jakarta Sans'`
+    - **span** « 9:41 »
+    - **span** « 5G ▮ » — `font:600 12px 'Plus Jakarta Sans'`
+  - **div** — `flex:none; display:flex; align-items:center; gap:10px; padding:8px 16px 10px`
+    - **span** [aria-label=Fermer] — `width:44px; height:44px; border-radius:13px; background:#fff; display:flex; align-items:center; justify-content:center`
+      - **svg** 18×18 viewBox=0 0 24 24 stroke=currentColor fill=none sw=2
+    - **span** « Paramètres » — `font:700 20px 'Plus Jakarta Sans'`
+  - **div** — `flex:none; position:relative; z-index:5; padding:0 16px 12px`
+    - **button** [onClick={{ toggleM }} aria-expanded={{ mAria }}] — `border:0; width:100%; height:56px; padding:0 14px; border-radius:15px; background:#fff; display:flex; align-items:center; gap:12px; text-align:left`
+      - **span** — `width:34px; height:34px; flex:none; border-radius:10px; background:#ede6ff; color:#6a3ee0; display:flex; align-items:center; justify-content:center`
+        - **svg** 16×16 viewBox=0 0 24 24 stroke=currentColor fill=none sw=1.8
+      - **span** — `flex:1; display:flex; flex-direction:column; gap:1px`
+        - **span** « {{ cur.l }} » — `font:600 15px 'Plus Jakarta Sans'; color:#17151d`
+        - **span** « {{ cur.s }} » — `font:400 12.5px 'Plus Jakarta Sans'; color:#8b8996`
+      - **svg** 16×16 viewBox=0 0 24 24 stroke=#64626e fill=none sw=2
+    - **sc-if** [value={{ mOpen }}]
+      - **div** — `position:absolute; left:16px; right:16px; top:62px; border-radius:16px; background:#fff; box-shadow:0 18px 40px -12px rgba(22,18,40,.35),0 0 0 1px rgba(22,18,40,.06); padding:6px; display:flex; flex-direction:column`
+        - **sc-for** [list={{ tabs }} as=t]
+          - **button** [onClick={{ t.mon }}] — `border:0; min-height:48px; padding:0 12px; border-radius:11px; display:flex; align-items:center; gap:12px; text-align:left; background:{{ t.bg }}`
+            - **svg** 16×16 viewBox=0 0 24 24 stroke={{ t.ic }} fill=none sw=1.8
+            - **span** « {{ t.l }} » — `flex:1; font:500 14.5px 'Plus Jakarta Sans'; color:#17151d`
+            - **span** « {{ t.check }} » — `font:700 13px 'Plus Jakarta Sans'; color:#6a3ee0`
+  - **div** — `flex:1; min-height:0; overflow-y:auto; padding:0 12px 110px; display:flex; flex-direction:column; gap:12px`
+    - **span** « {{ cur.sub }} » — `padding:0 6px; font:400 13.5px 'Plus Jakarta Sans'; color:#64626e`
+    - **sc-for** [list={{ cards }} as=c]
+      - **section** — `border-radius:22px; background:#fff; padding:18px 16px; display:flex; flex-direction:column; gap:14px`
+        - **div** — `display:flex; flex-direction:column; gap:4px`
+          - **span** « {{ c.t }} » — `font:600 16px 'Plus Jakarta Sans'`
+          - **sc-if** [value={{ c.d }}]
+            - **span** « {{ c.d }} » — `font:400 13px/1.5 'Plus Jakarta Sans'; color:#64626e`
+        - **sc-for** [list={{ c.items }} as=it]
+          - **sc-if** [value={{ it.isFields }}]
+            - **div** — `display:flex; flex-direction:column; gap:14px`
+              - **sc-for** [list={{ it.fields }} as=f]
+                - **sc-if** [value={{ f.l }}]
+                  - **div** — `display:flex; flex-direction:column; gap:7px`
+                    - **span** « {{ f.l }} » — `font:600 14px 'Plus Jakarta Sans'`
+                      - **span** « {{ f.opt }} » — `color:#8b8996`
+                    - **sc-if** [value={{ f.box }}]
+                      - **span** — `height:48px; padding:0 14px; border-radius:12px; background:#f8f7fb; box-shadow:inset 0 0 0 1px rgba(22,18,40,.12); display:flex; align-items:center; gap:8px; font:400 16px 'Plus Jakarta Sans'; color:{{ f.vc }}`
+                        - **span** « {{ f.v }} » — `flex:1`
+                        - **span** « {{ f.suf }} » — `color:#8b8996`
+                    - **sc-if** [value={{ f.plain }}]
+                      - **span** « {{ f.v }} » — `font:600 15px 'Plus Jakarta Sans'`
+                    - **sc-if** [value={{ f.help }}]
+                      - **span** « {{ f.help }} » — `font:400 13px/1.45 'Plus Jakarta Sans'; color:#8b8996`
+          - **sc-if** [value={{ it.isSeg }}]
+            - **div** — `display:flex; flex-direction:column; gap:7px`
+              - **sc-if** [value={{ it.l }}]
+                - **span** « {{ it.l }} » — `font:600 14px 'Plus Jakarta Sans'`
+              - **div** — `height:46px; padding:3px; border-radius:12px; background:#f1f0f5; display:flex; gap:2px`
+                - **sc-for** [list={{ it.opts }} as=o]
+                  - **button** [onClick={{ o.on }}] « {{ o.l }} » — `border:0; flex:1; border-radius:9px; font:500 14px 'Plus Jakarta Sans'; background:{{ o.bg }}; color:{{ o.c }}; box-shadow:{{ o.sh }}`
+          - **sc-if** [value={{ it.isToggles }}]
+            - **div** — `display:flex; flex-direction:column`
+              - **sc-for** [list={{ it.rows }} as=r]
+                - **button** [role=switch onClick={{ r.on }} aria-checked={{ r.aria }}] — `border:0; background:none; text-align:left; padding:12px 0; min-height:56px; border-top:{{ r.bt }}; display:flex; align-items:center; gap:12px`
+                  - **span** — `flex:1; display:flex; flex-direction:column; gap:2px`
+                    - **span** « {{ r.l }} » — `font:600 14.5px 'Plus Jakarta Sans'; color:#17151d`
+                    - **span** « {{ r.d }} » — `font:400 13px 'Plus Jakarta Sans'; color:#64626e`
+                  - **span** — `width:46px; height:28px; flex:none; border-radius:14px; padding:3px; display:flex; background:{{ r.bg }}; justify-content:{{ r.j }}`
+                    - **span** — `width:22px; height:22px; border-radius:11px; background:#fff`
+          - **sc-if** [value={{ it.isBtns }}]
+            - **div** — `display:flex; flex-direction:column; gap:10px`
+              - **sc-for** [list={{ it.btns }} as=b]
+                - **span** « {{ b.l }} » — `height:48px; border-radius:13px; display:flex; align-items:center; justify-content:center; font:600 15px 'Plus Jakarta Sans'; background:{{ b.bg }}; color:{{ b.c }}; box-shadow:{{ b.sh }}`
+          - **sc-if** [value={{ it.isNote }}]
+            - **span** « {{ it.l }} » — `padding:10px 12px; border-radius:10px; background:#fff8ea; font:400 13px/1.45 'Plus Jakarta Sans'; color:#8a5a00`
+  - **sc-if** [value={{ cur.save }}]
+    - **div** — `position:absolute; left:0; right:0; bottom:0; padding:12px 16px 30px; background:linear-gradient(rgba(243,242,247,0),#f3f2f7 30%)`
+      - **span** « Enregistrer » — `height:54px; border-radius:15px; background:#17151d; color:#fff; display:flex; align-items:center; justify-content:center; font:600 16px 'Plus Jakarta Sans'; box-shadow:0 12px 28px -10px rgba(22,18,40,.45)`
+

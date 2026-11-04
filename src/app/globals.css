@@ -72,6 +72,15 @@
   --color-dlg-warn: var(--dlg-warn);
   --color-dlg-warn-tile: var(--dlg-warn-tile);
   --color-dlg-muted-tile: var(--dlg-muted-tile);
+  --color-status-neutral: var(--status-neutral);
+  --color-status-neutral-soft: var(--status-neutral-soft);
+  --color-status-accent: var(--status-accent);
+  --color-status-accent-soft: var(--status-accent-soft);
+  --color-status-warn: var(--status-warn);
+  --color-status-warn-soft: var(--status-warn-soft);
+  --color-status-ok: var(--status-ok);
+  --color-status-ok-soft: var(--status-ok-soft);
+  --color-status-danger: var(--status-danger);
   --color-dlg-run: var(--dlg-run);
   --color-dlg-run-tile: var(--dlg-run-tile);
   --color-dlg-strength: var(--dlg-strength);
@@ -348,14 +357,14 @@ select:not([multiple]) {
   --top-bar: 58px;
   --under-bar: var(--bg);
 }
-/* Bouton flottant « + » du téléphone (D-117, celui de l'Agenda : 56 px, à 20 px du bas plus la zone du
- * geste) : la page garde assez de place en bas pour que sa fin passe au-dessus de lui (20 px d'écart),
- * au lieu des 28 px habituels (D-101). Chaque page a son <main> : Next garde la page quittée cachée
- * dans le document, son bouton ne doit pas agrandir le bas de la suivante. L'Agenda n'a pas de
- * PageBody : sa grille passe dessous. */
+/* Bouton flottant « + » (60 px à 28 px du bas) ou barre fixe d'actions (54 px) du téléphone (kit
+ * « Coory Pages » : zone défilante à 110 px du bas, D-117 puis D-119) : la fin de la page passe
+ * au-dessus d'eux, au lieu des 28 px habituels (D-101). Chaque page a son <main> : Next garde la page
+ * quittée cachée dans le document, son bouton ne doit pas agrandir le bas de la suivante. L'Agenda
+ * n'a pas de PageBody : sa grille passe dessous. */
 @media (max-width: 1023.98px) {
-  main:has([data-phone-fab]) [data-page-body] {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  main:has([data-phone-fab], [data-mobile-actionbar]) [data-page-body] {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
   }
 }
 /* Page Agenda sur ordinateur (D-78) : le bouton ☰ de la barre masque le panneau de l'agenda. */

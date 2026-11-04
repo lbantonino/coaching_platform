@@ -51,19 +51,25 @@ export function PageHeader({
     // Ordinateur (maquette v6, D-77) : l'en-tête est une carte de 64 px (titre 15 px, outils à droite),
     // à 20 px du menu et 14 px du bord droit (maquette « Sportifs », 03/11/2026).
     <header
-      className={`flex flex-wrap items-center gap-x-4 ${back ? (visibleTitle ? "gap-y-3 max-lg:pt-1.5" : "gap-y-0") : ""} px-3.5 pt-0 pb-1 lg:mt-3.5 lg:mr-3.5 lg:ml-5 lg:min-h-16 lg:flex-nowrap lg:rounded-[20px] lg:bg-surface lg:py-3 lg:pr-[18px] lg:pl-[22px] lg:inset-ring lg:inset-ring-line`}
+      className={`flex flex-wrap items-center gap-x-4 ${back ? (visibleTitle ? "gap-y-3 max-lg:pt-1.5" : "gap-y-0") : ""} px-3.5 pt-0 pb-1 lg:mt-3.5 lg:mr-3.5 lg:ml-5 lg:min-h-16 lg:flex-nowrap lg:rounded-[20px] lg:bg-surface ${back && visibleTitle ? "lg:py-3.5" : "lg:py-3"} lg:pr-[18px] lg:pl-[22px] lg:inset-ring lg:inset-ring-line`}
     >
       {/* Page de détail (avec retour) : le lien de retour au-dessus, puis la ligne du titre, dont la
           phrase (pastilles d'une fiche sportif…) peut passer à la ligne. */}
       <div
-        className={`flex min-w-0 flex-[1_1_auto] flex-col gap-1.5 ${back ? "lg:gap-0.5" : "lg:flex-row lg:items-center lg:gap-2.5"}`}
+        className={`flex min-w-0 flex-[1_1_auto] flex-col gap-1.5 ${back ? (visibleTitle ? "lg:gap-[3px]" : "lg:gap-0.5") : "lg:flex-row lg:items-center lg:gap-2.5"}`}
       >
         {/* Retour « là où j'étais » (29/10/2026), voir back-link.tsx : dans l'en-tête sur ordinateur,
-            dans la barre du haut sur téléphone (D-117). */}
+            dans la barre du haut sur téléphone (D-117). Au-dessus d'un titre visible, c'est le fil
+            d'Ariane du kit « Coory Pages » (12 px, D-119) ; seul (fiche sportif, page séance), il
+            garde sa taille. */}
         {back ? (
           <>
-            <span className="max-lg:hidden">
-              <BackLink href={back.href} label={back.label} />
+            <span className="flex max-lg:hidden">
+              <BackLink
+                href={back.href}
+                label={back.label}
+                variant={visibleTitle ? "crumb" : "text"}
+              />
             </span>
             <MobileBarTitle>
               <BackLink href={back.href} label={back.label} variant="bar" />
@@ -124,19 +130,24 @@ export function PageHeader({
 // Page avec un bouton flottant « + » (téléphone, D-117) : plus de place en bas (globals.css).
 // `fill` (tableau de bord, D-78) : sur ordinateur, le corps prend toute la hauteur restante de l'écran
 // (la page ne défile pas) ; son bas s'aligne sur celui du menu (14 px du bord).
+// `grow` (Documents, kit « Coory Pages » 05, D-120) : sur téléphone comme sur ordinateur, le corps prend
+// AU MOINS la hauteur restante (sa carte descend jusqu'en bas, comme la maquette) et grandit avec son
+// contenu (la page défile).
 export function PageBody({
   grid = false,
   fill = false,
+  grow = false,
   children,
 }: {
   grid?: boolean;
   fill?: boolean;
+  grow?: boolean;
   children: ReactNode;
 }) {
   return (
     <div
       data-page-body=""
-      className={`px-3.5 pt-3.5 pb-7 lg:pt-4 lg:pr-3.5 lg:pl-5 lg:pb-3.5 ${fill ? "lg:min-h-0 lg:flex-1" : ""} ${
+      className={`px-3.5 pt-3.5 pb-7 lg:pt-4 lg:pr-3.5 lg:pl-5 lg:pb-3.5 ${fill ? "lg:min-h-0 lg:flex-1" : ""} ${grow ? "flex-1" : ""} ${
         // Téléphone (26/10) : plus d'air entre les sections d'une page en grille (tableau de bord…).
         grid
           ? "grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-4"

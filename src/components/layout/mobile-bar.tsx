@@ -108,13 +108,14 @@ export function MobileBarTool({ children }: { children: ReactNode }) {
   return <InSlot id={TOOL_SLOT}>{children}</InSlot>;
 }
 
-// Bouton flottant « + » du téléphone (D-117) : l'action principale de création d'une page, en bas à
-// droite, au-dessus de la zone du geste de l'iPhone. C'est celui de l'Agenda (03/11, comme Google
-// Agenda), repris tel quel par le tableau de bord, les Sportifs et la fiche d'un sportif. Le bouton
-// porte `data-phone-fab` : le corps de la page (PageBody) garde alors assez de place en bas pour
-// que la fin de la page passe au-dessus de lui (globals.css). Icône : Plus 24, trait 2,2.
+// Bouton flottant « + » du téléphone (D-117, valeurs du kit « Coory Pages » SH-08 depuis D-119) :
+// l'action principale de création d'une page, 60 × 60, rayon 18, à 20 px du bord et 28 px du bas
+// (plus la zone du geste de l'iPhone). Un seul composant : Agenda, tableau de bord, Sportifs, fiche
+// d'un sportif, Bibliothèque… Le bouton porte `data-phone-fab` : le corps de la page (PageBody)
+// garde alors assez de place en bas pour que la fin de la page passe au-dessus (globals.css).
+// Icône : Plus 24, trait 2,2 (elle tourne de 45° quand le bouton ouvre un petit menu : rotate-45).
 export const phoneFabClass =
-  "fixed right-4 bottom-[calc(20px+env(safe-area-inset-bottom))] z-30 grid size-14 place-items-center rounded-2xl bg-cta text-on-cta shadow-[0_8px_24px_rgba(0,0,0,0.22)] transition-transform duration-150 ease-out active:scale-95 lg:hidden";
+  "fixed right-5 bottom-[calc(28px+env(safe-area-inset-bottom))] z-30 grid size-[60px] place-items-center rounded-[18px] bg-cta text-on-cta shadow-[0_12px_28px_-8px_rgba(22,18,40,0.5)] transition-transform duration-150 ease-out active:scale-95 lg:hidden [&>svg]:transition-transform [&>svg]:duration-200";
 
 // Barre du bas du sportif (téléphone) : 5 onglets de 52 px, icône 22, libellé 11/500, onglet actif
 // en rouge texte. La séance du jour reste à 2 actions maximum.

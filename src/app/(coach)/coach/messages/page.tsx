@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { EmptyState } from "@/components/ui/empty-state";
-import { barBackClass } from "@/components/layout/back-link";
+import { barBackClass, barBackIcon } from "@/components/layout/back-link";
 import { MobileBarTitle } from "@/components/layout/mobile-bar";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
@@ -180,7 +180,7 @@ async function Messages({
                     href={unreadOnly ? "/coach/messages?filtre=non-lus" : "/coach/messages"}
                     className={barBackClass}
                   >
-                    <ArrowLeft aria-hidden size={16} strokeWidth={1.8} className="shrink-0" />
+                    <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />
                     <span className="truncate">Conversations</span>
                   </Link>
                 </MobileBarTitle>

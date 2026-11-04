@@ -14,3 +14,5 @@ blob-report/
 resources/
 # Documentation, dont les modèles de code du kit du logo : gardés tels que fournis
 docs/
+# Kits de design fournis (maquettes HTML, scripts de présentation) : gardés tels que fournis
+coory-design/
