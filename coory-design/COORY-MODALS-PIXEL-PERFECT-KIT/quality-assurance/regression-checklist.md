@@ -18,3 +18,6 @@ Vérifié sur la coque partagée (menu « Créer », formulaire « Nouvelle tâc
 
 ### Phase C : confirmations 11, 12, 18, 20, 25, 29, 31, 35 (04/11/2026)
 - [x] textes : « ses documents restent » corrigé pour les catégories de dépenses (défaut réel, signalé)
+
+### Phase I : validation globale (04/11/2026)
+- [x] suite Playwright complète (voir SUIVI, D-116) ; échec instable de l'invitation résolu (le menu du compte se ferme au moment de « Se déconnecter »)

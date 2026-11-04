@@ -3,7 +3,7 @@
 const { chromium, devices } = require("@playwright/test");
 const path = require("path");
 const OUT = process.argv[2];
-const ONLY = (process.argv[3] || "36,30,17,05,22,09,11,12,18,20,25,29,31,35,07,08,14,15,06,13,01").split(",");
+const ONLY = (process.argv[3] || "36,30,17,05,22,09,11,12,18,20,25,29,31,35,07,08,14,15,06,13,01,24,03,19,21,02,04,10,27,34,26,28,16,32,23,33").split(",");
 const APP = "http://localhost:3000";
 const KIT = "http://127.0.0.1:8766/Coory%20Boites.dc.html";
 
@@ -31,6 +31,22 @@ const measure = (box) => {
       items.push({ y: r.top - r0.top, line: `poignée ${rel(r)} ${cs.backgroundColor}` });
     } else if (el.tagName === "svg" && r.width < 30) {
       items.push({ y: r.top - r0.top, line: `icône ${rel(r)} trait ${el.getAttribute("stroke-width")} ${cs.color}` });
+    }
+    // Formulaires (phase E) : champs, pastilles, segments, zone de dépôt, boutons : tout rectangle
+    // arrondi qui a un fond, un filet ou un anneau (même s'il contient du texte).
+    {
+      const bg = cs.backgroundColor !== "rgba(0, 0, 0, 0)";
+      const line = parseFloat(cs.borderTopWidth) > 0 || cs.boxShadow !== "none";
+      const square38 = Math.round(r.width) === 38 && Math.round(r.height) === 38;
+      if (el.tagName !== "svg" && !square38 && (bg || line) && parseFloat(cs.borderTopLeftRadius) > 0 && r.height < 200 && r.height > 20) {
+        items.push({ y: r.top - r0.top + 0.001, line: `boîte ${rel(r)} r${cs.borderTopLeftRadius} fond ${cs.backgroundColor}` });
+      }
+    }
+    // Valeur ou indication d'un champ de saisie (l'app n'a pas de nœud texte pour elles).
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && r.width > 30 && el.type !== "radio" && el.type !== "file") {
+      const value = el.tagName === "SELECT" ? el.options[el.selectedIndex]?.text : el.value || el.placeholder;
+      const top = el.tagName === "TEXTAREA" ? r.top + parseFloat(cs.borderTopWidth) + parseFloat(cs.paddingTop) : r.top + (r.height - 19) / 2;
+      items.push({ y: top - r0.top, line: `texte « ${String(value).slice(0, 34)} » x${(r.left + parseFloat(cs.borderLeftWidth) + parseFloat(cs.paddingLeft) - r0.left).toFixed(1)} y${(top - r0.top).toFixed(1)} (champ) ${cs.fontSize} ${cs.fontWeight}` });
     }
   }
   items.sort((a, b) => a.y - b.y);
@@ -185,6 +201,108 @@ Object.assign(openers, {
   },
 });
 
+// Formulaires simples (phase E).
+Object.assign(openers, {
+  "03": async (p) => {
+    await openers["01"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Tâche/ }).click();
+    await p.getByRole("dialog", { name: "Nouvelle tâche" }).waitFor();
+    await p.getByRole("dialog", { name: "Nouvelle tâche" }).getByLabel("Tâche").waitFor();
+  },
+  "19": async (p) => {
+    await p.goto(`${APP}/coach/taches`);
+    await p.getByRole("button", { name: /Préparer le bloc 2/ }).first().click();
+    await p.getByRole("dialog", { name: "Modifier la tâche" }).getByLabel("Tâche").waitFor();
+  },
+  "24": async (p) => {
+    await openers["22"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Modifier/ }).click();
+    await p.getByRole("dialog", { name: "Modifier le document" }).waitFor();
+  },
+  "21": async (p) => {
+    await p.goto(`${APP}/coach/documents`);
+    await p.getByRole("button", { name: "Importer un fichier" }).filter({ visible: true }).first().click();
+    await p.getByRole("dialog", { name: "Importer un fichier" }).waitFor();
+  },
+});
+
+// Formulaires riches (phase F).
+Object.assign(openers, {
+  "02": async (p) => {
+    await openers["01"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Séance/ }).click();
+    await p.getByRole("dialog", { name: "Nouvelle séance" }).getByLabel("Titre").waitFor();
+  },
+  "04": async (p) => {
+    await openers["01"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Paiement reçu/ }).click();
+    await p.getByRole("dialog", { name: "Nouveau paiement" }).getByLabel("Sportif").waitFor();
+  },
+  "10": async (p) => {
+    await openers["09"](p);
+    await p.locator("dialog[open]").getByRole("button", { name: /^Modifier/ }).click();
+    await p.getByRole("dialog", { name: "Modifier l'objectif" }).waitFor();
+  },
+  "27": async (p) => {
+    await p.goto(`${APP}/coach/comptabilite`);
+    await p.getByRole("button", { name: "Nouvelle dépense" }).filter({ visible: true }).first().click();
+    await p.getByRole("dialog", { name: "Nouvelle dépense" }).waitFor();
+  },
+  "34": async (p) => {
+    await p.goto(`${APP}/coach/profil?onglet=argent`);
+    await p.getByRole("button", { name: "Changer de devise" }).filter({ visible: true }).first().click();
+    await p.getByRole("dialog", { name: "Changer de devise" }).waitFor();
+    await p.waitForTimeout(800);
+  },
+  "26": async (p) => {
+    await p.goto(`${APP}/coach/documents`);
+    await p.getByRole("button", { name: "Gérer les catégories" }).filter({ visible: true }).first().click();
+    await p.getByRole("dialog", { name: "Gérer les catégories" }).waitFor();
+  },
+  "28": async (p) => {
+    await openers["27"](p);
+    await p.getByRole("button", { name: "Gérer les catégories" }).click();
+    await p.getByRole("dialog", { name: "Catégories de dépenses" }).waitFor();
+  },
+});
+
+// Cas à part (phase G) : vue de l'agenda, menu du compte.
+Object.assign(openers, {
+  "16": async (p) => {
+    await p.goto(`${APP}/coach`);
+    const org = await p.evaluate(() => document.querySelector('a[href*="/coach/o/"]')?.getAttribute("href")?.split("/")[3]);
+    await p.goto(`${APP}/coach/o/${org}/agenda`);
+    await p.waitForTimeout(800);
+    await p.getByRole("button", { name: /^Vue : / }).filter({ visible: true }).first().click();
+  },
+  "32": async (p) => {
+    await p.goto(`${APP}/coach`);
+    await p.waitForTimeout(600);
+    if (phone(p)) {
+      await p.getByRole("button", { name: "Ouvrir le menu" }).click();
+      await p.getByRole("dialog", { name: "Menu" }).getByRole("button", { name: /^Menu du compte/ }).click();
+    } else {
+      await p.getByRole("button", { name: /^Menu du compte/ }).filter({ visible: true }).first().click();
+    }
+  },
+});
+
+// Grands panneaux (phase H).
+Object.assign(openers, {
+  "23": async (p) => {
+    await p.goto(`${APP}/coach/documents`);
+    await p.getByRole("button", { name: /^Facture FAC-2026-014/ }).first().click();
+    await p.getByRole("dialog", { name: "Facture FAC-2026-014" }).waitFor();
+    await p.waitForTimeout(1200);
+  },
+  "33": async (p) => {
+    await openers["32"](p);
+    await p.getByRole("button", { name: "Paramètres", exact: true }).click();
+    await p.getByRole("dialog", { name: "Paramètres" }).waitFor();
+    await p.waitForTimeout(1500);
+  },
+});
+
 async function goFiche(p, query) {
   await p.goto(`${APP}/coach`);
   const org = await p.evaluate(() => document.querySelector('a[href*="/coach/o/"]')?.getAttribute("href")?.split("/")[3]);
@@ -199,13 +317,17 @@ async function goFiche(p, query) {
   const kitPage = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
   await kitPage.goto(KIT);
   await kitPage.waitForTimeout(2500);
+  // La maquette charge sa police en ligne : sans elle, les largeurs changent (mesure fausse).
+  const fontOk = await kitPage.evaluate(async () => { await document.fonts.ready; return document.fonts.check("600 14px 'Plus Jakarta Sans'"); });
+  if (!fontOk) throw new Error("Police de la maquette non chargée : relancer la mesure");
   for (const mobile of [false, true]) {
     const c = await browser.newContext(
       mobile
         ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true }
         : { viewport: { width: 1200, height: 780 }, deviceScaleFactor: 2 },
     );
-    await c.addInitScript(() => { try { localStorage.setItem("coory-theme", "light"); } catch {} });
+    // THEME=dark : captures en sombre (la maquette n'existe qu'en clair : la mesure reste celle du clair).
+    await c.addInitScript((t) => { try { localStorage.setItem("coory-theme", t); } catch {} }, process.env.THEME || "light");
     const p = await c.newPage();
     await p.goto(`${APP}/login`);
     await p.getByLabel("Adresse e-mail").fill("coach-a@example.test");
@@ -218,10 +340,8 @@ async function goFiche(p, query) {
         const measure = eval(measureSrc);
         const root = document.querySelector(`[data-shot="${shot}"]`);
         if (!root) return null;
-        const box = [...root.querySelectorAll("div")].find((d) => {
-          const cs = getComputedStyle(d);
-          return mobile ? cs.borderTopLeftRadius === "28px" && cs.borderBottomLeftRadius === "0px" : cs.borderRadius === "24px" && d.getBoundingClientRect().width > 300;
-        });
+        // La boîte de la planche porte role="dialog" (fenêtres, feuilles et menus ancrés).
+        const box = root.querySelector('[role="dialog"]');
         return box ? measure(box) : null;
       }, { shot, measureSrc: `(${measure.toString()})`, mobile });
       let app = null;
@@ -232,7 +352,9 @@ async function goFiche(p, query) {
         await dialog.waitFor();
         await p.waitForTimeout(700);
         app = await dialog.evaluate((d, src) => eval(src)(d), `(${measure.toString()})`);
-        await p.screenshot({ path: path.join(OUT, `${shot}.png`) });
+        const pos = await dialog.evaluate((d) => { const r = d.getBoundingClientRect(); return `écran x${r.left.toFixed(0)} y${r.top.toFixed(0)} bas ${(innerHeight - r.bottom).toFixed(0)}`; });
+        app.size += ` (${pos})`;
+        await p.screenshot({ path: path.join(OUT, `${shot}${process.env.THEME === "dark" ? "-sombre" : ""}.png`) });
         for (let k = 0; k < 3 && (await p.locator("dialog[open]").count()) > 0; k++) {
           await p.keyboard.press("Escape");
           await p.waitForTimeout(350);
@@ -241,10 +363,15 @@ async function goFiche(p, query) {
         app = { size: "—", items: [`(${error.message.split("\n")[0]})`] };
       }
       console.log(`\n===== ${shot}  kit ${kit?.size}  |  app ${app.size}`);
-      const rows = Math.max(kit?.items.length ?? 0, app.items.length);
-      for (let i = 0; i < rows; i++) {
-        console.log(`K ${kit?.items[i] ?? ""}`);
-        console.log(`A ${app.items[i] ?? ""}`);
+      // Comparaison par catégorie (texte, carré38, boîte, icône, filet, poignée), dans l'ordre vertical.
+      const cats = ["texte", "carré38", "boîte", "icône", "filet", "poignée", "("];
+      for (const cat of cats) {
+        const k = (kit?.items ?? []).filter((l) => l.startsWith(cat));
+        const a = app.items.filter((l) => l.startsWith(cat));
+        for (let i = 0; i < Math.max(k.length, a.length); i++) {
+          console.log(`K ${k[i] ?? ""}`);
+          console.log(`A ${a[i] ?? ""}`);
+        }
       }
     }
     await c.close();

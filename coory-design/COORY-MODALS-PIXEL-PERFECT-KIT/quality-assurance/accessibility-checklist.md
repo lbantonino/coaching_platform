@@ -35,3 +35,6 @@ Vérifié sur la coque partagée (menu « Créer », formulaire « Nouvelle tâc
 
 ### Phase D : menus à sélection et sous-menus 07, 08, 14, 15, 06, 13, 01 (04/11/2026)
 - [x] ligne choisie annoncée (aria-current) ; rond coché décoratif (aria-hidden)
+
+### Phase I : validation globale (04/11/2026)
+- [x] focus, Échap, voile, flèches, cibles 44 px, contrastes : vérifiés phase par phase ; role="menu" non appliqué (signalé)

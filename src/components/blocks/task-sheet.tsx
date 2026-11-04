@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -8,6 +8,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useState,
   useTransition,
   type ReactNode,
@@ -15,14 +16,22 @@ import {
 
 import { buttonClass } from "@/components/ui/button";
 import {
-  checkboxChipClass,
-  errorTextClass,
-  inputClass,
-  labelClass,
-  textareaClass,
-} from "@/components/ui/form-styles";
-import { ConfirmDialog, Sheet } from "@/components/ui/overlay";
-import { segmentedGroupClass, segmentedItemClass } from "@/components/ui/segmented";
+  DlgChips,
+  DlgDate,
+  DlgField,
+  DlgFieldset,
+  DlgSegmented,
+  DlgSelect,
+} from "@/components/ui/dialog-fields";
+import {
+  dlgDestructiveLinkClass,
+  dlgErrorClass,
+  dlgFormGridClass,
+  dlgInputClass,
+  dlgPrimaryButtonClass,
+  dlgTextareaClass,
+} from "@/components/ui/dialog-styles";
+import { ConfirmDialog, DialogBody, DialogFooter, Sheet } from "@/components/ui/overlay";
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { Quoted } from "@/components/ui/quoted";
@@ -103,11 +112,14 @@ export function TaskSheetProvider({
         onClose={close}
         title={task ? "Modifier la tâche" : "Nouvelle tâche"}
         subtitle={task ? undefined : "Ce que tu dois faire, et pour quand."}
+        bare
       >
         {open && athletes === null ? (
-          <p className="flex items-center gap-2 text-[14px] text-muted">
-            <Spinner /> Chargement…
-          </p>
+          <DialogBody>
+            <p className="flex items-center gap-2 text-[14px] text-muted">
+              <Spinner /> Chargement…
+            </p>
+          </DialogBody>
         ) : open && athletes ? (
           <TaskForm
             key={opening}
@@ -139,6 +151,7 @@ function TaskForm({
   onDone: () => void;
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
+  const formId = useId();
   const [confirming, setConfirming] = useState(false);
   const [deleting, startDelete] = useTransition();
   const router = useRouter();
@@ -178,66 +191,42 @@ function TaskForm({
 
   return (
     <>
-      <form key={state.attempt} action={formAction} className="flex flex-col gap-5" noValidate>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="task-title" className={labelClass}>
-            Tâche
-          </label>
-          <input
-            id="task-title"
-            name="title"
-            required
-            maxLength={TASK_TITLE_MAX}
-            autoComplete="off"
-            defaultValue={values.title}
-            placeholder="Ex. : Relancer Sophie pour la facture"
-            className={inputClass}
-          />
-        </div>
+      {/* Kit (03, 19) : grille de 12 colonnes dans le corps qui défile ; les boutons sont dans le pied
+          fixe, reliés au formulaire par son id. */}
+      <DialogBody>
+        <form
+          id={formId}
+          key={state.attempt}
+          action={formAction}
+          className={dlgFormGridClass}
+          noValidate
+        >
+          <DlgField label="Tâche" htmlFor="task-title">
+            <input
+              id="task-title"
+              name="title"
+              required
+              maxLength={TASK_TITLE_MAX}
+              autoComplete="off"
+              defaultValue={values.title}
+              placeholder="Ex. : Relancer Sophie pour la facture"
+              className={dlgInputClass}
+            />
+          </DlgField>
 
-        <fieldset className="flex flex-col gap-1.5">
-          <legend className={`${labelClass} mb-1.5`}>
-            Associée à <span className="font-normal text-muted">(facultatif)</span>
-          </legend>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: "", label: "Rien" },
-              ...TASK_CATEGORIES.map((value) => ({
-                value,
-                label: taskCategoryLabels[value],
-              })),
-            ].map((option) => (
-              <label key={option.value || "none"} className={checkboxChipClass}>
-                <input
-                  type="radio"
-                  name="category"
-                  value={option.value}
-                  defaultChecked={values.category === option.value}
-                  className="sr-only"
-                />
-                <Check
-                  aria-hidden
-                  size={14}
-                  strokeWidth={2.4}
-                  className="hidden group-has-checked:block"
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+          <DlgFieldset legend="Associée à" optional>
+            <DlgChips
+              name="category"
+              defaultValue={values.category}
+              options={[
+                { value: "", label: "Rien" },
+                ...TASK_CATEGORIES.map((value) => ({ value, label: taskCategoryLabels[value] })),
+              ]}
+            />
+          </DlgFieldset>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="task-athlete" className={labelClass}>
-              Sportif <span className="font-normal text-muted">(facultatif)</span>
-            </label>
-            <select
-              id="task-athlete"
-              name="athleteId"
-              defaultValue={values.athleteId}
-              className={inputClass}
-            >
+          <DlgField label="Sportif" htmlFor="task-athlete" optional half>
+            <DlgSelect id="task-athlete" name="athleteId" defaultValue={values.athleteId}>
               <option value="">Aucun</option>
               {!known && values.athleteId ? (
                 <option value={values.athleteId}>Sportif archivé</option>
@@ -247,85 +236,62 @@ function TaskForm({
                   {athlete.name}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="task-due" className={labelClass}>
-              Échéance <span className="font-normal text-muted">(facultatif)</span>
-            </label>
-            <input
-              id="task-due"
-              name="dueOn"
-              type="date"
-              defaultValue={values.dueOn}
-              className={inputClass}
-            />
-          </div>
-        </div>
+            </DlgSelect>
+          </DlgField>
+          <DlgField label="Échéance" htmlFor="task-due" optional half>
+            <DlgDate id="task-due" name="dueOn" defaultValue={values.dueOn} />
+          </DlgField>
 
-        <fieldset className="flex flex-col gap-1.5">
-          <legend className={`${labelClass} mb-1.5`}>Priorité</legend>
-          <div className={segmentedGroupClass}>
-            {(
-              [
+          <DlgFieldset legend="Priorité">
+            <DlgSegmented
+              name="priority"
+              fit
+              defaultValue={values.priority}
+              options={[
                 { value: "normal", label: "Normale" },
                 { value: "high", label: "Haute" },
-              ] as const
-            ).map((option) => (
-              <label
-                key={option.value}
-                className="flex-1 cursor-pointer rounded-[9px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent sm:flex-none"
-              >
-                <input
-                  type="radio"
-                  name="priority"
-                  value={option.value}
-                  defaultChecked={values.priority === option.value}
-                  className="peer sr-only"
-                />
-                <span className={segmentedItemClass}>{option.label}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+              ]}
+            />
+          </DlgFieldset>
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="task-notes" className={labelClass}>
-            Note <span className="font-normal text-muted">(facultatif)</span>
-          </label>
-          <textarea
-            id="task-notes"
-            name="notes"
-            maxLength={TASK_NOTES_MAX}
-            defaultValue={values.notes}
-            placeholder="Ex. : la facture est dans Documents"
-            className={textareaClass}
-          />
-        </div>
+          <DlgField label="Note" htmlFor="task-notes" optional>
+            <textarea
+              id="task-notes"
+              name="notes"
+              maxLength={TASK_NOTES_MAX}
+              defaultValue={values.notes}
+              placeholder="Ex. : la facture est dans Documents"
+              className={dlgTextareaClass}
+            />
+          </DlgField>
 
-        <div className="flex flex-col gap-3">
           {state.error ? (
-            <p role="alert" className={errorTextClass}>
+            <p role="alert" className={dlgErrorClass}>
               {state.error}
             </p>
           ) : null}
-          <div className="flex flex-wrap gap-2.5 [&>*]:flex-1 sm:[&>*]:flex-none">
-            <button type="submit" disabled={pending} className={buttonClass()}>
-              {pending ? "Enregistrement…" : task ? "Enregistrer" : "Ajouter la tâche"}
+        </form>
+      </DialogBody>
+      <DialogFooter
+        onCancel={onDone}
+        destructive={
+          task ? (
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className={dlgDestructiveLinkClass}
+            >
+              <Trash2 aria-hidden size={16} strokeWidth={1.9} />
+              Supprimer
             </button>
-            {task ? (
-              <button
-                type="button"
-                onClick={() => setConfirming(true)}
-                className={buttonClass({ variant: "outline" })}
-              >
-                <Trash2 aria-hidden size={15} strokeWidth={1.8} />
-                Supprimer
-              </button>
-            ) : null}
-          </div>
-        </div>
-      </form>
+          ) : null
+        }
+        primary={
+          <button type="submit" form={formId} disabled={pending} className={dlgPrimaryButtonClass}>
+            {pending ? "Enregistrement…" : task ? "Enregistrer" : "Ajouter la tâche"}
+          </button>
+        }
+      />
       {task ? (
         <ConfirmDialog
           open={confirming}

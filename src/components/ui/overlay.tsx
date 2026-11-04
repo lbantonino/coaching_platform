@@ -53,19 +53,29 @@ const WIDTHS = {
 } as const;
 export type OverlaySize = keyof typeof WIDTHS;
 
+// Menu ancré (kit, 16 et 32) : sur ordinateur, collé à son bouton au lieu d'être centré (rayon 18) ;
+// sur téléphone, feuille du bas comme les autres. `x` / `y` en px depuis le bord gauche et le haut
+// (side "top") ou le bas (side "bottom") de l'écran.
+export type MenuAnchor = { x: number; y: number; side: "top" | "bottom"; width: number };
+
 function Overlay({
   open,
   onClose,
   labelledBy,
+  label,
   describedBy,
   size = "menu",
   tall = false,
+  anchor,
   children,
 }: {
   open: boolean;
   onClose: () => void;
-  labelledBy: string;
+  labelledBy?: string;
+  // Nom de la boîte quand elle n'a pas de titre visible (menu du compte).
+  label?: string;
   describedBy?: string;
+  anchor?: MenuAnchor | null;
   size?: OverlaySize;
   // Feuille haute sur téléphone (Nouvelle séance, 03/11) : ouverte à sa hauteur maximale, son contenu
   // défile entre l'en-tête et le pied, fixes.
@@ -340,7 +350,17 @@ function Overlay({
     <dialog
       ref={ref}
       aria-labelledby={labelledBy}
+      aria-label={labelledBy ? undefined : label}
       aria-describedby={describedBy}
+      style={
+        anchor
+          ? ({
+              "--ax": `${anchor.x}px`,
+              "--ay": `${anchor.y}px`,
+              "--aw": `${anchor.width}px`,
+            } as React.CSSProperties)
+          : undefined
+      }
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -359,8 +379,14 @@ function Overlay({
       onPointerCancel={onPointerEnd}
       // La fenêtre ne défile pas : en-tête et pied restent fixes, seul le corps défile (kit). En bas
       // du téléphone, la zone du geste d'accueil est laissée libre (safe-area).
-      className={`m-0 mt-auto max-h-[calc(100%-44px)] w-full max-w-none overflow-hidden rounded-t-[28px] bg-dlg p-0 pb-[env(safe-area-inset-bottom)] text-text shadow-[var(--dlg-shadow)] backdrop:bg-[var(--dlg-scrim)] open:flex open:flex-col md:m-auto md:max-h-[min(720px,calc(100vh-48px))] md:rounded-[24px] md:pb-0 ${
-        WIDTHS[size]
+      className={`m-0 mt-auto max-h-[calc(100%-44px)] w-full max-w-none overflow-hidden rounded-t-[28px] bg-dlg p-0 pb-[env(safe-area-inset-bottom)] text-text shadow-[var(--dlg-shadow)] backdrop:bg-[var(--dlg-scrim)] open:flex open:flex-col md:max-h-[min(720px,calc(100vh-48px))] md:pb-0 ${
+        anchor
+          ? `md:m-0 md:w-[var(--aw)] md:rounded-[18px] md:left-[var(--ax)] md:right-auto ${
+              anchor.side === "top"
+                ? "md:top-[var(--ay)] md:bottom-auto md:origin-top"
+                : "md:top-auto md:bottom-[var(--ay)] md:origin-bottom-left"
+            }`
+          : `md:m-auto md:rounded-[24px] ${WIDTHS[size]}`
       } ${tall || size === "preview" || size === "settings" ? "max-md:h-[calc(100%-44px)]" : ""}`}
     >
       {rendered ? (
@@ -381,6 +407,8 @@ function Overlay({
 }
 
 // Boutons ronds de l'en-tête (retour, fermer) : 38 px gris clair, zone tactile élargie à 44 px.
+// Exporté pour les panneaux qui posent leur propre en-tête (Paramètres, aperçu).
+export { HeaderButton as DialogIconButton };
 function HeaderButton({
   label,
   onClick,
@@ -453,33 +481,49 @@ export function DialogHeader({
 const bodyClass =
   "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 pt-2.5 pb-[22px] md:px-6";
 
-// Pied fixe (kit, shared-components/modal-footer) : filet en haut ; sur ordinateur, à droite,
-// « Annuler » puis l'action principale (une action destructrice éventuelle à gauche) ; sur
-// téléphone, l'action principale seule, pleine largeur.
+// Corps qui défile d'un formulaire qui pose lui-même son pied (Sheet `bare`) : le formulaire et ses
+// boutons vivent dans le même composant, le pied reste hors de la zone qui défile.
+export function DialogBody({ children }: { children: ReactNode }) {
+  return (
+    <div data-dialog-body className={bodyClass}>
+      {children}
+    </div>
+  );
+}
+
+// Pied fixe (kit, shared-components/modal-footer) : filet en haut ; à droite, « Annuler » (ordinateur
+// seulement) puis l'action principale (pleine largeur sur téléphone) ; une action destructrice
+// éventuelle à gauche (dlgDestructiveLinkClass), sur ordinateur comme sur téléphone. `primary` : le
+// bouton principal (souvent type="submit" form={id} : le formulaire est dans le corps).
 export function DialogFooter({
   primary,
   onCancel,
   destructive,
+  start = false,
 }: {
   primary: ReactNode;
   onCancel?: () => void;
   destructive?: ReactNode;
+  // Bouton seul à gauche (kit, 26 et 28 : « Terminé »).
+  start?: boolean;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-2.5 border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:px-6 md:py-3.5 max-md:[&>[data-primary]]:flex-1">
-      {destructive ? <div className="max-md:hidden">{destructive}</div> : null}
+    <div
+      className={`flex shrink-0 items-center ${start ? "justify-start" : "justify-end"} gap-2.5 border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:px-6 md:py-3.5 max-md:[&>[data-primary]]:flex-1`}
+    >
+      {destructive}
       {onCancel ? (
         <button
           type="button"
           onClick={onCancel}
-          className={`${dlgSecondaryButtonClass} ml-auto max-md:hidden`}
+          className={`${dlgSecondaryButtonClass} max-md:hidden`}
         >
           Annuler
         </button>
       ) : null}
-      <div data-primary className={`flex ${onCancel ? "" : "md:ml-auto"} [&>*]:flex-1`}>
+      <span data-primary className="flex [&>*]:flex-1">
         {primary}
-      </div>
+      </span>
     </div>
   );
 }
@@ -495,6 +539,7 @@ export function Sheet({
   footer,
   tall = false,
   size = "form",
+  bare = false,
   children,
 }: {
   open: boolean;
@@ -503,6 +548,8 @@ export function Sheet({
   title: string;
   subtitle?: string;
   footer?: ReactNode;
+  // Le contenu pose lui-même son corps (DialogBody) et son pied (DialogFooter).
+  bare?: boolean;
   // Sur téléphone, ouverte à sa hauteur maximale (Nouvelle séance) même si le contenu est court.
   tall?: boolean;
   size?: OverlaySize;
@@ -527,9 +574,13 @@ export function Sheet({
         onClose={onClose}
         onBack={onBack}
       />
-      <div data-dialog-body className={`${bodyClass} flex flex-col gap-4`}>
-        {children}
-      </div>
+      {bare ? (
+        children
+      ) : (
+        <div data-dialog-body className={`${bodyClass} flex flex-col gap-4`}>
+          {children}
+        </div>
+      )}
       {footer ? (
         <div className="flex shrink-0 gap-2.5 border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:px-6 md:py-3.5 [&>*]:flex-1">
           {footer}
@@ -546,15 +597,25 @@ export function PanelDialog({
   onClose,
   title,
   size = "settings",
+  bare = false,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   size?: "settings" | "preview";
+  // Le contenu pose lui-même son en-tête et ses zones (kit, 23 et 33) ; `title` nomme la boîte.
+  bare?: boolean;
   children: ReactNode;
 }) {
   const titleId = useId();
+  if (bare) {
+    return (
+      <Overlay open={open} onClose={onClose} label={title} size={size}>
+        {children}
+      </Overlay>
+    );
+  }
   return (
     <Overlay open={open} onClose={onClose} labelledBy={titleId} size={size}>
       <DialogHeader titleId={titleId} title={title} onClose={onClose} />
@@ -573,6 +634,7 @@ const toneTiles = {
   strength: "bg-dlg-strength-tile text-dlg-strength",
   hyrox: "bg-dlg-hyrox-tile text-dlg-hyrox",
   hybrid: "bg-dlg-hybrid-tile text-dlg-hybrid",
+  accent: "bg-dlg-accent-tone text-dlg-accent",
 } as const;
 
 export type ActionMenuItem = {
@@ -595,6 +657,126 @@ export type ActionMenuItem = {
   // Filet avant la ligne (posé tout seul avant une action destructrice qui n'est pas la seule).
   separatorBefore?: boolean;
 };
+
+// Briques des menus (kit, famille « menu ») pour les menus faits à la main (vue de l'agenda, compte).
+// Ligne : 62 px sur téléphone, 58 sur ordinateur (50 dans un menu ancré), rayon 14, écart 14.
+export function menuRowClass({
+  selected = false,
+  anchored = false,
+}: { selected?: boolean; anchored?: boolean } = {}) {
+  return `flex min-h-[62px] w-full items-center gap-3.5 rounded-[14px] px-3 py-2 text-left transition-[background-color] duration-150 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-dlg-accent ${
+    anchored ? "md:min-h-[50px]" : "md:min-h-[58px]"
+  } ${selected ? "bg-dlg-accent-soft" : "hover:bg-dlg-field"}`;
+}
+
+// Tuile d'icône 38 (rayon 11), grise ou teintée.
+export function MenuTile({
+  icon: Icon,
+  tone,
+  destructive = false,
+}: {
+  icon: LucideIcon;
+  tone?: keyof typeof toneTiles;
+  destructive?: boolean;
+}) {
+  return (
+    <span
+      aria-hidden
+      className={`grid size-[38px] shrink-0 place-items-center rounded-[11px] ${
+        destructive
+          ? "bg-dlg-danger-soft text-dlg-danger-ink"
+          : tone
+            ? toneTiles[tone]
+            : "bg-dlg-tile text-text"
+      }`}
+    >
+      <Icon size={19} strokeWidth={1.8} />
+    </span>
+  );
+}
+
+// Choix en cours : rond violet de 24 px, coche blanche.
+export function MenuSelectedMark() {
+  return (
+    <span
+      aria-hidden
+      className="grid size-6 shrink-0 place-items-center rounded-full bg-dlg-accent text-white"
+    >
+      <Check size={13} strokeWidth={3} />
+    </span>
+  );
+}
+
+// Titre de section (« VUE », « THÈME ») : 11,5 / 600, espacé, gris clair.
+export function MenuSectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <span className="px-3 pt-3.5 pb-1.5 text-[11.5px] leading-[normal] font-semibold tracking-[0.08em] text-dlg-faint">
+      {children}
+    </span>
+  );
+}
+
+// Filet entre deux groupes de lignes : 1 px, marge 6 / 12.
+export function MenuSeparator() {
+  return <span role="separator" className="mx-3 my-1.5 h-px shrink-0 bg-dlg-divider" />;
+}
+
+// Raccourci clavier à droite d'une ligne (« J », « S ») : pastille grise.
+export function MenuShortcut({ children }: { children: ReactNode }) {
+  return (
+    <kbd
+      aria-hidden
+      className="shrink-0 rounded-[7px] bg-dlg-tile px-2 py-[3px] font-sans text-[12.5px] leading-[normal] font-semibold whitespace-nowrap text-muted"
+    >
+      {children}
+    </kbd>
+  );
+}
+
+// Menu fait à la main dans la coque : en-tête facultatif (`title` ; caché sur ordinateur quand le
+// menu est ancré, comme le kit), puis la liste (marges du kit : 4 10 20 sur téléphone ; 8 dans un menu
+// ancré, 4 12 14 sinon).
+export function MenuDialog({
+  open,
+  onClose,
+  title,
+  label,
+  anchor,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  // Nom de la boîte sans titre visible.
+  label?: string;
+  anchor?: MenuAnchor | null;
+  children: ReactNode;
+}) {
+  const titleId = useId();
+  return (
+    <Overlay
+      open={open}
+      onClose={onClose}
+      labelledBy={title ? titleId : undefined}
+      label={label}
+      size="menu"
+      anchor={anchor}
+    >
+      {title ? (
+        <div className={anchor ? "md:hidden" : undefined}>
+          <DialogHeader titleId={titleId} title={title} onClose={onClose} />
+        </div>
+      ) : null}
+      <div
+        className={`flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-2.5 pt-1 pb-5 ${
+          anchor ? "md:p-2" : "md:px-3 md:pb-3.5"
+        }`}
+      >
+        {children}
+      </div>
+    </Overlay>
+  );
+}
 
 // Flèches ↑ / ↓ (et Début / Fin) d'une ligne à l'autre du menu ; Entrée choisit (kit, interactions).
 function moveFocus(event: React.KeyboardEvent<HTMLUListElement>) {

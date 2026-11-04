@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Check,
   Download,
   Eye,
   FileSpreadsheet,
@@ -14,27 +13,37 @@ import {
   Tags,
   Trash2,
   Upload,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useState, useTransition, type FormEvent } from "react";
+import { useActionState, useEffect, useId, useState, useTransition, type FormEvent } from "react";
 
 import { categoryDotClass, tileClassFor } from "@/components/blocks/category-color";
 import { PageBody, PageHeader } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { chipActiveClass, chipClass, chipIdleClass } from "@/components/ui/chip";
-import {
-  checkboxChipClass,
-  errorTextClass,
-  hintClass,
-  inputClass,
-  labelClass,
-} from "@/components/ui/form-styles";
+import { inputClass } from "@/components/ui/form-styles";
 import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
-import { ActionMenu, ConfirmDialog, PanelDialog, Sheet } from "@/components/ui/overlay";
+import { DlgChips, DlgField, DlgFieldset, DlgSelect } from "@/components/ui/dialog-fields";
+import {
+  dlgDropZoneClass,
+  dlgErrorClass,
+  dlgFormGridClass,
+  dlgInputClass,
+  dlgPrimaryButtonClass,
+} from "@/components/ui/dialog-styles";
+import {
+  ActionMenu,
+  ConfirmDialog,
+  DialogBody,
+  DialogFooter,
+  DialogIconButton,
+  PanelDialog,
+  Sheet,
+} from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import { Quoted } from "@/components/ui/quoted";
 import {
@@ -403,11 +412,14 @@ export function DocumentsView({
         open={previewed !== null}
         onClose={() => setPreviewed(null)}
         title={previewed?.name ?? "Aperçu"}
+        size="preview"
+        bare
       >
         {previewed ? (
           <Preview
             document={previewed}
             orgBase={orgBase}
+            onClose={() => setPreviewed(null)}
             onEdit={() => setEditing(previewed)}
             onDelete={() => setDeleting(previewed)}
           />
@@ -418,10 +430,12 @@ export function DocumentsView({
         open={importing}
         onClose={() => setImporting(false)}
         title="Importer un fichier"
-        subtitle="PDF, image, Word ou Excel, 10 Mo maximum. Stocké en privé."
+        subtitle="10 Mo maximum. Stocké en privé."
+        bare
       >
         {importing ? (
           <UploadForm
+            onCancel={() => setImporting(false)}
             action={upload}
             athletes={athletes}
             categories={categories}
@@ -435,9 +449,15 @@ export function DocumentsView({
         ) : null}
       </Sheet>
 
-      <Sheet open={editing !== null} onClose={() => setEditing(null)} title="Modifier le document">
+      <Sheet
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        title="Modifier le document"
+        bare
+      >
         {editing ? (
           <EditForm
+            onCancel={() => setEditing(null)}
             key={editing.id}
             document={editing}
             athletes={athletes}
@@ -458,9 +478,16 @@ export function DocumentsView({
         onClose={() => setManaging(false)}
         title="Gérer les catégories"
         subtitle="Supprimer une catégorie ne supprime pas ses documents : ils deviennent « sans catégorie »."
+
+        bare
       >
         {managing ? (
-          <CategoryManager categories={categories} actions={categoryActions} items="documents" />
+          <CategoryManager
+            categories={categories}
+            actions={categoryActions}
+            items="documents"
+            onDone={() => setManaging(false)}
+          />
         ) : null}
       </Sheet>
 
@@ -483,97 +510,211 @@ export function DocumentsView({
   );
 }
 
+// Aperçu d'un document (kit, boîte 23). Ordinateur : en-tête (tuile du fichier, nom, catégorie et
+// détails, Télécharger / Modifier / Supprimer, fermer), puis le vrai rendu dans une zone grise (le
+// PDF dans le lecteur du navigateur, l'image telle quelle). Téléphone : nom et détails, une carte avec
+// la vignette et « Ouvrir le PDF » (la visionneuse du téléphone est plus lisible qu'un cadre), trois
+// actions en tuiles, la date de modification.
 function Preview({
   document,
   orgBase,
   onEdit,
   onDelete,
+  onClose,
 }: {
   document: CoachDocument;
   orgBase: string;
   onEdit: () => void;
   onDelete: () => void;
+  onClose: () => void;
 }) {
   const url = fileUrl(document.id);
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[14px] text-muted">
-        <Badge>{categoryLabel(document)}</Badge>
-        {document.athleteId && document.athleteName ? (
-          <Link
-            href={`${orgBase}/sportifs/${document.athleteId}`}
-            className="text-text underline-offset-4 hover:underline"
-          >
-            {document.athleteName}
-          </Link>
-        ) : null}
-        <span>
-          {kindLabels[document.kind]} · {formatBytes(document.sizeBytes)}
-        </span>
-        <span>Modifié le {shortDay(document.updatedAt)}</span>
-      </div>
+  const Icon = kindIcons[document.kind];
+  const athlete =
+    document.athleteId && document.athleteName ? (
+      <Link
+        href={`${orgBase}/sportifs/${document.athleteId}`}
+        className="underline-offset-4 hover:text-text hover:underline"
+      >
+        {document.athleteName}
+      </Link>
+    ) : null;
+  const chip = (
+    <span className="rounded-[7px] bg-dlg-accent-tile px-[9px] py-[3px] font-semibold text-dlg-accent-ink">
+      {categoryLabel(document)}
+    </span>
+  );
+  const sep = <span aria-hidden> · </span>;
+  const close = (
+    <DialogIconButton label="Fermer" onClick={onClose}>
+      <X aria-hidden size={17} strokeWidth={2} />
+    </DialogIconButton>
+  );
+  const action =
+    "inline-flex h-10 items-center gap-2 rounded-[11px] border border-dlg-border px-3.5 text-[14px] leading-[normal] font-semibold whitespace-nowrap transition-[background-color] duration-150";
+  const tile =
+    "flex h-[72px] flex-col items-center justify-center gap-[7px] rounded-[14px] border border-dlg-border text-[13px] leading-[normal] font-semibold transition-[background-color] duration-150";
 
-      {/* Téléphone : le PDF s'ouvre dans la visionneuse du téléphone, plus lisible qu'un cadre. */}
-      {document.kind === "pdf" ? (
-        <div className="flex flex-col items-center gap-4 rounded-card border border-line bg-surface px-4 py-6 text-center md:hidden">
+  return (
+    <>
+      {/* Ordinateur */}
+      <div className="hidden min-h-0 flex-1 flex-col md:flex">
+        <div className="flex shrink-0 items-center gap-3.5 px-6 py-[22px]">
           <span
             aria-hidden
-            className={`inline-flex size-16 items-center justify-center rounded-[18px] ${tileClassFor(document.categoryColor)}`}
+            className="grid size-11 shrink-0 place-items-center rounded-[12px] bg-dlg-drop-tile text-dlg-accent"
           >
-            <FileText size={28} strokeWidth={1.7} />
+            <Icon size={21} strokeWidth={1.8} />
           </span>
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener"
-            className={buttonClass({ variant: "inverse", className: "w-full" })}
-          >
-            <Eye aria-hidden size={15} strokeWidth={1.8} />
-            Ouvrir le PDF
+          <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
+            <h2 className="truncate text-[20px] leading-[normal] font-bold tracking-[-0.02em]">
+              {document.name}
+            </h2>
+            <p className="flex min-w-0 items-center gap-2 text-[13.5px] leading-[normal] text-muted">
+              {chip}
+              <span className="truncate">
+                {athlete}
+                {athlete ? sep : null}
+                {kindLabels[document.kind]} · {formatBytes(document.sizeBytes)} · modifié le{" "}
+                {shortDay(document.updatedAt)}
+              </span>
+            </p>
+          </div>
+          <a href={downloadUrl(document.id)} className={`${action} text-text hover:bg-dlg-tile`}>
+            <Download aria-hidden size={16} strokeWidth={1.9} />
+            Télécharger
           </a>
+          <button
+            type="button"
+            onClick={onEdit}
+            className={`${action} text-text hover:bg-dlg-tile`}
+          >
+            <Pencil aria-hidden size={16} strokeWidth={1.9} />
+            Modifier
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            className={`${action} text-dlg-danger-ink hover:bg-dlg-danger-soft`}
+          >
+            <Trash2 aria-hidden size={16} strokeWidth={1.9} />
+            Supprimer
+          </button>
+          <span className="[&>button]:size-10">{close}</span>
         </div>
-      ) : null}
-
-      <div className="flex flex-wrap gap-2.5 [&>*]:flex-1 sm:[&>*]:flex-none">
-        <a href={downloadUrl(document.id)} className={buttonClass({ variant: "outline" })}>
-          <Download aria-hidden size={15} strokeWidth={1.8} />
-          Télécharger
-        </a>
-        <button type="button" onClick={onEdit} className={buttonClass({ variant: "outline" })}>
-          <Pencil aria-hidden size={15} strokeWidth={1.8} />
-          Modifier
-        </button>
-        <button type="button" onClick={onDelete} className={buttonClass({ variant: "outline" })}>
-          <Trash2 aria-hidden size={15} strokeWidth={1.8} />
-          Supprimer
-        </button>
+        <div className="mx-6 mb-6 flex min-h-0 flex-1 justify-center overflow-hidden rounded-[18px] bg-dlg-tile p-7">
+          {document.kind === "image" ? (
+            // eslint-disable-next-line @next/next/no-img-element -- fichier privé servi par l'app
+            <img
+              src={url}
+              alt={document.name}
+              className="max-h-full max-w-full rounded-[6px] object-contain shadow-[0_10px_30px_-12px_rgba(23,21,29,0.25)]"
+            />
+          ) : document.kind === "pdf" ? (
+            <iframe
+              src={url}
+              title={`Aperçu : ${document.name}`}
+              className="h-full w-full rounded-[6px] bg-white shadow-[0_10px_30px_-12px_rgba(23,21,29,0.25)]"
+            />
+          ) : (
+            <p className="self-center text-[14px] text-muted">
+              Pas d&apos;aperçu pour un fichier {kindLabels[document.kind]} : télécharge-le pour
+              l&apos;ouvrir.
+            </p>
+          )}
+        </div>
       </div>
 
-      {document.kind === "image" ? (
-        // eslint-disable-next-line @next/next/no-img-element -- fichier privé servi par l'app
-        <img
-          src={url}
-          alt={document.name}
-          className="max-h-[64vh] w-full rounded-card border border-line bg-surface object-contain"
-        />
-      ) : document.kind === "pdf" ? (
-        <iframe
-          src={url}
-          title={`Aperçu : ${document.name}`}
-          className="h-[64vh] w-full rounded-card border border-line bg-surface max-md:hidden"
-        />
-      ) : (
-        <p className="rounded-card border border-dashed border-line-2 p-4 text-[14px] text-muted">
-          Pas d&apos;aperçu pour un fichier {kindLabels[document.kind]} : télécharge-le pour
-          l&apos;ouvrir.
-        </p>
-      )}
-    </div>
+      {/* Téléphone */}
+      <div className="flex min-h-0 flex-1 flex-col md:hidden">
+        <div className="flex shrink-0 items-start gap-3 px-5 pt-3 pb-1.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h2 className="text-[21px] leading-[normal] font-bold tracking-[-0.02em] break-words">
+              {document.name}
+            </h2>
+            <p className="flex flex-wrap items-center gap-2 text-[13.5px] leading-[normal] text-muted">
+              {chip}
+              <span>
+                {athlete}
+                {athlete ? sep : null}
+                {kindLabels[document.kind]} · {formatBytes(document.sizeBytes)}
+              </span>
+            </p>
+          </div>
+          {close}
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 pt-3.5 pb-6">
+          <div className="flex flex-col items-center gap-4 rounded-[20px] bg-dlg-tile p-6">
+            {document.kind === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element -- fichier privé servi par l'app
+              <img
+                src={url}
+                alt={document.name}
+                className="max-h-[50vh] w-full rounded-[5px] object-contain"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="grid h-[170px] w-[132px] place-items-center rounded-[5px] bg-white shadow-[0_10px_24px_-12px_rgba(23,21,29,0.3)]"
+              >
+                <span
+                  className={`grid size-12 place-items-center rounded-[14px] ${tileClassFor(document.categoryColor)}`}
+                >
+                  <Icon size={22} strokeWidth={1.7} />
+                </span>
+              </span>
+            )}
+            {document.kind === "pdf" ? (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener"
+                className="flex h-[50px] w-full items-center justify-center gap-[9px] rounded-[13px] bg-cta text-[15px] leading-[normal] font-semibold text-on-cta"
+              >
+                <Eye aria-hidden size={17} strokeWidth={1.9} />
+                Ouvrir le PDF
+              </a>
+            ) : document.kind === "image" ? null : (
+              <p className="text-center text-[13px] text-muted">
+                Pas d&apos;aperçu pour un fichier {kindLabels[document.kind]} : télécharge-le pour
+                l&apos;ouvrir.
+              </p>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <a href={downloadUrl(document.id)} className={`${tile} text-text active:bg-dlg-tile`}>
+              <Download aria-hidden size={19} strokeWidth={1.8} />
+              Télécharger
+            </a>
+            <button
+              type="button"
+              onClick={onEdit}
+              className={`${tile} text-text active:bg-dlg-tile`}
+            >
+              <Pencil aria-hidden size={19} strokeWidth={1.8} />
+              Modifier
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              className={`${tile} text-dlg-danger-ink active:bg-dlg-danger-soft`}
+            >
+              <Trash2 aria-hidden size={19} strokeWidth={1.8} />
+              Supprimer
+            </button>
+          </div>
+          <p className="text-center text-[13px] leading-[normal] text-dlg-faint">
+            Modifié le {shortDay(document.updatedAt)}
+          </p>
+        </div>
+      </div>
+    </>
   );
 }
 
 // Pastilles de catégorie (cases radio), partagées par l'import et la modification : les catégories
 // du coach (D-67), plus « Aucune ».
+// Catégorie (kit, 21 et 24) : pastilles, « Aucune » à la fin.
 function CategoryChoice({
   categories,
   value,
@@ -583,35 +724,18 @@ function CategoryChoice({
   value: string;
   onChange?: (value: string) => void;
 }) {
+  const options = [
+    ...categories.map((item) => ({ value: item.id, label: item.name })),
+    { value: "", label: "Aucune" },
+  ];
   return (
-    <fieldset className="flex flex-col gap-1.5">
-      <legend className={`${labelClass} mb-1.5`}>Catégorie</legend>
-      <div className="flex flex-wrap gap-2">
-        {[
-          ...categories.map((item) => ({ key: item.id, label: item.name })),
-          { key: "", label: "Aucune" },
-        ].map(({ key, label }) => (
-          <label key={key || "aucune"} className={checkboxChipClass}>
-            <input
-              type="radio"
-              name="categoryId"
-              value={key}
-              checked={onChange ? value === key : undefined}
-              defaultChecked={onChange ? undefined : value === key}
-              onChange={onChange ? () => onChange(key) : undefined}
-              className="sr-only"
-            />
-            <Check
-              aria-hidden
-              size={14}
-              strokeWidth={2.4}
-              className="hidden group-has-checked:block"
-            />
-            {label}
-          </label>
-        ))}
-      </div>
-    </fieldset>
+    <DlgFieldset legend="Catégorie">
+      {onChange ? (
+        <DlgChips name="categoryId" options={options} value={value} onChange={onChange} />
+      ) : (
+        <DlgChips name="categoryId" options={options} defaultValue={value} />
+      )}
+    </DlgFieldset>
   );
 }
 
@@ -627,17 +751,13 @@ function AthleteSelect({
   onChange?: (value: string) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className={labelClass}>
-        Sportif <span className="font-normal text-muted">(facultatif)</span>
-      </label>
-      <select
+    <DlgField label="Sportif" htmlFor={id} optional>
+      <DlgSelect
         id={id}
         name="athleteId"
         value={onChange ? value : undefined}
         defaultValue={onChange ? undefined : value}
         onChange={onChange ? (event) => onChange(event.target.value) : undefined}
-        className={inputClass}
       >
         <option value="">Aucun</option>
         {value && !athletes.some((athlete) => athlete.id === value) ? (
@@ -648,8 +768,8 @@ function AthleteSelect({
             {athlete.name}
           </option>
         ))}
-      </select>
-    </div>
+      </DlgSelect>
+    </DlgField>
   );
 }
 
@@ -663,6 +783,7 @@ function UploadForm({
   categories,
   initialAthleteId,
   onSaved,
+  onCancel,
 }: {
   action: UploadAction;
   athletes: Athlete[];
@@ -670,8 +791,10 @@ function UploadForm({
   // Sportif déjà choisi (filtre de la page, ou onglet Documents de sa fiche).
   initialAthleteId: string;
   onSaved: () => void;
+  onCancel: () => void;
 }) {
   const [state, run, pending] = useActionState(action, initial);
+  const formId = useId();
   const [, startTransition] = useTransition();
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
@@ -709,70 +832,82 @@ function UploadForm({
 
   const error = localError ?? state.error;
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5" noValidate>
-      <div className="flex flex-col gap-1.5">
-        <span className={labelClass}>Fichier</span>
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            id="document-file"
-            type="file"
-            accept={DOCUMENT_ACCEPT}
-            aria-label="Fichier à importer"
-            onChange={(event) => choose(event.currentTarget.files?.[0] ?? null)}
-            className="peer sr-only"
+    <>
+      <DialogBody>
+        <form id={formId} onSubmit={submit} className={dlgFormGridClass} noValidate>
+          {/* Kit (21) : zone de dépôt. Le vrai champ fichier, invisible, la recouvre : un clic ouvre le
+              choix du fichier, un fichier glissé dessus est pris par le navigateur. */}
+          <DlgField label="Fichier">
+            <div className={dlgDropZoneClass}>
+              <span
+                aria-hidden
+                className="grid size-[46px] shrink-0 place-items-center rounded-[13px] bg-dlg-drop-tile text-dlg-accent"
+              >
+                <Upload size={21} strokeWidth={1.8} />
+              </span>
+              <span className="flex min-w-0 flex-col gap-[3px]">
+                <span className="text-[15px] leading-[normal] font-semibold break-all">
+                  {file ? (
+                    file.name
+                  ) : (
+                    <>
+                      Glisse un fichier ici ou <span className="text-dlg-accent">choisis-le</span>
+                    </>
+                  )}
+                </span>
+                <span className="text-[13px] leading-[normal] text-muted">
+                  {file
+                    ? `${formatBytes(file.size)} · touche pour changer de fichier`
+                    : "PDF, JPEG, PNG, WebP, Word ou Excel"}
+                </span>
+              </span>
+              <input
+                id="document-file"
+                type="file"
+                accept={DOCUMENT_ACCEPT}
+                aria-label="Fichier à importer"
+                onChange={(event) => choose(event.currentTarget.files?.[0] ?? null)}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              />
+            </div>
+          </DlgField>
+
+          <DlgField label="Nom" htmlFor="document-name">
+            <input
+              id="document-name"
+              value={name}
+              maxLength={DOCUMENT_NAME_MAX}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Ex. : Bilan de rentrée"
+              autoComplete="off"
+              className={dlgInputClass}
+            />
+          </DlgField>
+
+          <CategoryChoice categories={categories} value={categoryId} onChange={setCategoryId} />
+          <AthleteSelect
+            id="document-athlete"
+            athletes={athletes}
+            value={athleteId}
+            onChange={setAthleteId}
           />
-          <label
-            htmlFor="document-file"
-            aria-hidden
-            className={`${buttonClass({ variant: "outline" })} cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-bg`}
-          >
-            <Upload aria-hidden size={15} strokeWidth={1.8} />
-            {file ? "Changer de fichier" : "Choisir un fichier"}
-          </label>
-          {file ? (
-            <span className="min-w-0 text-[14px] break-all">
-              {file.name} <span className="text-muted">· {formatBytes(file.size)}</span>
-            </span>
-          ) : (
-            <span className={hintClass}>PDF, JPEG, PNG, WebP, Word ou Excel.</span>
-          )}
-        </div>
-      </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="document-name" className={labelClass}>
-          Nom
-        </label>
-        <input
-          id="document-name"
-          value={name}
-          maxLength={DOCUMENT_NAME_MAX}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Ex. : Bilan de rentrée"
-          autoComplete="off"
-          className={inputClass}
-        />
-      </div>
-
-      <CategoryChoice categories={categories} value={categoryId} onChange={setCategoryId} />
-      <AthleteSelect
-        id="document-athlete"
-        athletes={athletes}
-        value={athleteId}
-        onChange={setAthleteId}
+          {error ? (
+            <p role="alert" className={dlgErrorClass}>
+              {error}
+            </p>
+          ) : null}
+        </form>
+      </DialogBody>
+      <DialogFooter
+        onCancel={onCancel}
+        primary={
+          <button type="submit" form={formId} disabled={pending} className={dlgPrimaryButtonClass}>
+            {pending ? "Envoi…" : "Importer"}
+          </button>
+        }
       />
-
-      <div className="flex flex-col gap-3">
-        {error ? (
-          <p role="alert" className={errorTextClass}>
-            {error}
-          </p>
-        ) : null}
-        <button type="submit" disabled={pending} className={buttonClass({ className: "sm:w-fit" })}>
-          {pending ? "Envoi…" : "Importer"}
-        </button>
-      </div>
-    </form>
+    </>
   );
 }
 
@@ -782,14 +917,17 @@ function EditForm({
   categories,
   action,
   onSaved,
+  onCancel,
 }: {
   document: CoachDocument;
   athletes: Athlete[];
   categories: DocumentCategory[];
   action: UploadAction;
   onSaved: () => void;
+  onCancel: () => void;
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
+  const formId = useId();
   useEffect(() => {
     if (state.saved) onSaved();
   }, [state, onSaved]);
@@ -799,32 +937,42 @@ function EditForm({
     athleteId: document.athleteId ?? "",
   };
   return (
-    <form key={state.attempt} action={formAction} className="flex flex-col gap-5" noValidate>
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="document-edit-name" className={labelClass}>
-          Nom
-        </label>
-        <input
-          id="document-edit-name"
-          name="name"
-          defaultValue={values.name}
-          maxLength={DOCUMENT_NAME_MAX}
-          autoComplete="off"
-          className={inputClass}
-        />
-      </div>
-      <CategoryChoice categories={categories} value={values.categoryId} />
-      <AthleteSelect id="document-edit-athlete" athletes={athletes} value={values.athleteId} />
-      <div className="flex flex-col gap-3">
-        {state.error ? (
-          <p role="alert" className={errorTextClass}>
-            {state.error}
-          </p>
-        ) : null}
-        <button type="submit" disabled={pending} className={buttonClass({ className: "sm:w-fit" })}>
-          {pending ? "Enregistrement…" : "Enregistrer"}
-        </button>
-      </div>
-    </form>
+    <>
+      <DialogBody>
+        <form
+          id={formId}
+          key={state.attempt}
+          action={formAction}
+          className={dlgFormGridClass}
+          noValidate
+        >
+          <DlgField label="Nom" htmlFor="document-edit-name">
+            <input
+              id="document-edit-name"
+              name="name"
+              defaultValue={values.name}
+              maxLength={DOCUMENT_NAME_MAX}
+              autoComplete="off"
+              className={dlgInputClass}
+            />
+          </DlgField>
+          <CategoryChoice categories={categories} value={values.categoryId} />
+          <AthleteSelect id="document-edit-athlete" athletes={athletes} value={values.athleteId} />
+          {state.error ? (
+            <p role="alert" className={dlgErrorClass}>
+              {state.error}
+            </p>
+          ) : null}
+        </form>
+      </DialogBody>
+      <DialogFooter
+        onCancel={onCancel}
+        primary={
+          <button type="submit" form={formId} disabled={pending} className={dlgPrimaryButtonClass}>
+            {pending ? "Enregistrement…" : "Enregistrer"}
+          </button>
+        }
+      />
+    </>
   );
 }

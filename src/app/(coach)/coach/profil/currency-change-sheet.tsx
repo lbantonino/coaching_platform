@@ -2,11 +2,17 @@
 
 import { ArrowRightLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 
 import { buttonClass } from "@/components/ui/button";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
-import { Sheet } from "@/components/ui/overlay";
+import { DlgField, DlgHint, DlgSelect } from "@/components/ui/dialog-fields";
+import {
+  dlgErrorClass,
+  dlgFormGridClass,
+  dlgInputClass,
+  dlgPrimaryButtonClass,
+} from "@/components/ui/dialog-styles";
+import { DialogBody, DialogFooter, Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import {
   CURRENCIES,
@@ -52,9 +58,11 @@ export function CurrencyChangeButton({
         onClose={() => setOpen(false)}
         title="Changer de devise"
         subtitle="Pour un déménagement : le passé reste dans sa devise, le futur est converti."
+        bare
       >
         {open ? (
           <CurrencyChangeForm
+            onCancel={() => setOpen(false)}
             organizationId={organizationId}
             currency={currency}
             onDone={() => {
@@ -72,11 +80,14 @@ function CurrencyChangeForm({
   organizationId,
   currency,
   onDone,
+  onCancel,
 }: {
   organizationId: string;
   currency: Currency;
   onDone: () => void;
+  onCancel: () => void;
 }) {
+  const formId = useId();
   const choices = CURRENCIES.filter((code) => code !== currency);
   const [target, setTarget] = useState<Currency>(choices[0]);
   const [rate, setRate] = useState("");
@@ -99,111 +110,120 @@ function CurrencyChangeForm({
   const parsed = parseExchangeRate(rate);
   const example = parsed === null ? null : Math.round(10_000 * parsed);
 
+  // Kit (boîte 34) : devise et taux côte à côte, deux cartes (ce qui sera converti, en violet pâle ;
+  // ce qui reste, en gris), aides, bouton « Passer en … » grisé tant que le taux est vide.
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        startTransition(async () => {
-          const result = await changeOrganizationCurrency(organizationId, target, rate);
-          setError(result.error);
-          if (!result.ok) return;
-          toast(`Devise changée : ${currencyLabel(target)}.`);
-          router.refresh();
-          onDone();
-        });
-      }}
-      className="flex flex-col gap-5"
-      noValidate
-    >
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="currency-target" className={labelClass}>
-          Nouvelle devise
-        </label>
-        <select
-          id="currency-target"
-          value={target}
-          onChange={(event) => setTarget(event.target.value as Currency)}
-          className={inputClass}
+    <>
+      <DialogBody>
+        <form
+          id={formId}
+          onSubmit={(event) => {
+            event.preventDefault();
+            startTransition(async () => {
+              const result = await changeOrganizationCurrency(organizationId, target, rate);
+              setError(result.error);
+              if (!result.ok) return;
+              toast(`Devise changée : ${currencyLabel(target)}.`);
+              router.refresh();
+              onDone();
+            });
+          }}
+          className={dlgFormGridClass}
+          noValidate
         >
-          {choices.map((code) => (
-            <option key={code} value={code}>
-              {currencyLabel(code)}
-            </option>
-          ))}
-        </select>
-      </div>
+          <DlgField label="Nouvelle devise" htmlFor="currency-target" half>
+            <DlgSelect
+              id="currency-target"
+              value={target}
+              onChange={(event) => setTarget(event.target.value as Currency)}
+            >
+              {choices.map((code) => (
+                <option key={code} value={code}>
+                  {currencyLabel(code)}
+                </option>
+              ))}
+            </DlgSelect>
+          </DlgField>
+          <DlgField label={`Taux : 1 ${currency} = … ${target}`} htmlFor="currency-rate" half>
+            <input
+              id="currency-rate"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="Ex. : 0,94"
+              value={rate}
+              onChange={(event) => setRate(event.target.value)}
+              aria-describedby="currency-rate-hint"
+              className={dlgInputClass}
+            />
+          </DlgField>
+          <DlgHint id="currency-rate-hint" live>
+            {example === null
+              ? "Le taux du jour, celui de ta banque par exemple."
+              : `${formatMoney(10_000, currency)} deviendront ${formatMoney(example, target)}.`}
+          </DlgHint>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="currency-rate" className={labelClass}>
-          Taux : 1 {currency} = … {target}
-        </label>
-        <input
-          id="currency-rate"
-          inputMode="decimal"
-          autoComplete="off"
-          placeholder="Ex. : 0,94"
-          value={rate}
-          onChange={(event) => setRate(event.target.value)}
-          aria-describedby="currency-rate-hint"
-          className={`${inputClass} font-mono`}
-        />
-        <p id="currency-rate-hint" className={hintClass}>
-          {example === null
-            ? "Le taux du jour, celui de ta banque par exemple."
-            : `${formatMoney(10_000, currency)} deviendront ${formatMoney(example, target)}.`}
-        </p>
-      </div>
+          <div className="col-span-2 grid gap-2.5 md:col-span-12 md:grid-cols-2">
+            <section
+              aria-label="Sera converti"
+              className="flex flex-col gap-2 rounded-[16px] bg-dlg-accent-soft p-4"
+            >
+              <h3 className="text-[14px] leading-[normal] font-bold text-dlg-accent-ink">
+                Sera converti en {target}
+              </h3>
+              <p className="text-[14px] leading-[1.5] text-dlg-ink-2">
+                {preview ? (
+                  <>
+                    {plural(
+                      preview.sessions,
+                      "séance à venir avec prix",
+                      "séances à venir avec prix",
+                    )}
+                    <br />
+                    Ton prix par défaut des séances
+                  </>
+                ) : (
+                  "Calcul…"
+                )}
+              </p>
+            </section>
+            <section
+              aria-label="Reste en"
+              className="flex flex-col gap-2 rounded-[16px] bg-dlg-field p-4"
+            >
+              <h3 className="text-[14px] leading-[normal] font-bold text-text">
+                Reste en {currency}
+              </h3>
+              <p className="text-[14px] leading-[1.5] text-dlg-ink-2">
+                {preview ? plural(preview.payments, "paiement reçu", "paiements reçus") : "Calcul…"}
+              </p>
+            </section>
+          </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <section
-          aria-label="Sera converti"
-          className="flex flex-col gap-1.5 rounded-card border border-line p-4 text-[14px]"
-        >
-          <h3 className="font-semibold">Sera converti en {target}</h3>
-          {preview ? (
-            <ul className="flex flex-col gap-1 text-muted">
-              <li>
-                {plural(preview.sessions, "séance à venir avec prix", "séances à venir avec prix")}
-              </li>
-              <li>Ton prix par défaut des séances</li>
-            </ul>
-          ) : (
-            <p className="text-muted">Calcul…</p>
-          )}
-        </section>
-        <section
-          aria-label="Reste en"
-          className="flex flex-col gap-1.5 rounded-card border border-line p-4 text-[14px]"
-        >
-          <h3 className="font-semibold">Reste en {currency}</h3>
-          {preview ? (
-            <ul className="flex flex-col gap-1 text-muted">
-              <li>{plural(preview.payments, "paiement reçu", "paiements reçus")}</li>
-            </ul>
-          ) : (
-            <p className="text-muted">Calcul…</p>
-          )}
-        </section>
-      </div>
+          <DlgHint>
+            Les totaux qui mélangent les deux devises s&apos;affichent « ≈ », convertis avec ce
+            taux.
+          </DlgHint>
 
-      <p className="text-[13px] text-muted">
-        Les totaux qui mélangent les deux devises s&apos;affichent « ≈ », convertis avec ce taux.
-      </p>
-
-      <div className="flex flex-wrap items-center gap-4">
-        <button
-          type="submit"
-          disabled={pending || parsed === null}
-          className={buttonClass({ variant: "primary", size: "md" })}
-        >
-          {pending ? "Changement…" : `Passer en ${target}`}
-        </button>
-        {error ? (
-          <p role="alert" className={errorTextClass}>
-            {error}
-          </p>
-        ) : null}
-      </div>
-    </form>
+          {error ? (
+            <p role="alert" className={dlgErrorClass}>
+              {error}
+            </p>
+          ) : null}
+        </form>
+      </DialogBody>
+      <DialogFooter
+        onCancel={onCancel}
+        primary={
+          <button
+            type="submit"
+            form={formId}
+            disabled={pending || parsed === null}
+            className={dlgPrimaryButtonClass}
+          >
+            {pending ? "Changement…" : `Passer en ${target}`}
+          </button>
+        }
+      />
+    </>
   );
 }

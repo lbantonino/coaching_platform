@@ -39,3 +39,19 @@ Vérifié sur la coque partagée (menu « Créer », formulaire « Nouvelle tâc
 
 ### Phase D : menus à sélection et sous-menus 07, 08, 14, 15, 06, 13, 01 (04/11/2026)
 - [x] 0 px d'écart sur les 7 boîtes, ordinateur et téléphone ; tuiles teintées (statuts et disciplines) identiques au mélange 16 % du kit ; icônes Running et Hybride du kit
+
+### Phase E : formulaires simples 24, 03, 19, 21 (04/11/2026)
+- [x] 0 px d'écart sur les 4 boîtes, ordinateur et téléphone ; tailles des boutons et des champs conformes
+
+### Phase F : formulaires riches 02, 04, 10, 27, 34, 26, 28 (04/11/2026)
+- [x] 0 px d'écart sur 26, 27, 28, 34, 10 (ordinateur et téléphone), 04 téléphone ; 02 et 04 ordinateur : écarts expliqués (champs en plus dans le code, carte mal dessinée dans la maquette)
+
+### Phase G : cas à part 16, 32 (04/11/2026)
+- [x] 0 px d'écart (16 et 32, ordinateur et téléphone) ; menus ancrés de rayon 18 (MenuDialog + anchor)
+
+### Phase H : grands panneaux 23, 33 (04/11/2026)
+- [x] 0 px d'écart (23 hors contenu réel du fichier, 33), ordinateur et téléphone
+
+### Phase I : validation globale (04/11/2026)
+- [x] 36 boîtes mesurées en une passe (72 vues) : 69 à 0 px, 3 écarts voulus (voir QA-REPORT.md)
+- [x] thème sombre : 10 boîtes (une par famille), ordinateur et téléphone

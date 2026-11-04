@@ -15,7 +15,8 @@ type Props = {
   remove: () => Promise<void>;
   // « fiche » : la carte de l'onglet Profil de la fiche sportif (le titre « Photo de profil » est
   // dans le composant, id « photo-title »). « app » : Paramètres > Profil du coach.
-  look?: "app" | "fiche";
+  // « dialog » : la fenêtre des Paramètres (kit des boîtes, 33).
+  look?: "app" | "fiche" | "dialog";
   // Fond des initiales (couleur de la discipline sur la fiche).
   colorClass?: string;
 };
@@ -33,6 +34,7 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
   const form = useRef<HTMLFormElement>(null);
   const inputId = useId();
   const fiche = look === "fiche";
+  const dialog = look === "dialog";
 
   // Le champ fichier (caché) et son bouton, partagés par les deux habillages.
   const picker = (
@@ -54,19 +56,31 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
         htmlFor={inputId}
         aria-hidden
         className={`${
-          fiche
-            ? buttonClass({
-                variant: "primary",
-                size: "sm",
-                className: "h-10! gap-[7px]! rounded-[10px]! text-[13.5px]! font-medium!",
-              })
-            : buttonClass({ variant: "inverse", size: "sm" })
+          dialog
+            ? "inline-flex h-10 items-center gap-2 rounded-[11px] bg-cta px-3.5 text-[14px] leading-[normal] font-semibold whitespace-nowrap text-on-cta transition-[background-color] duration-150 hover:bg-cta-hover"
+            : fiche
+              ? buttonClass({
+                  variant: "primary",
+                  size: "sm",
+                  className: "h-10! gap-[7px]! rounded-[10px]! text-[13.5px]! font-medium!",
+                })
+              : buttonClass({ variant: "inverse", size: "sm" })
         } cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-bg ${
           pending ? "pointer-events-none opacity-60" : ""
         }`}
       >
-        {fiche ? null : <Camera aria-hidden size={14} strokeWidth={1.8} />}
-        {pending ? "Envoi…" : photoPath ? "Changer la photo" : "Ajouter la photo"}
+        {fiche ? null : (
+          <Camera aria-hidden size={dialog ? 16 : 14} strokeWidth={dialog ? 1.9 : 1.8} />
+        )}
+        {pending
+          ? "Envoi…"
+          : dialog
+            ? photoPath
+              ? "Changer"
+              : "Ajouter"
+            : photoPath
+              ? "Changer la photo"
+              : "Ajouter la photo"}
       </label>
     </form>
   );
@@ -79,6 +93,44 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
       Photo enregistrée.
     </p>
   ) : null;
+
+  if (dialog) {
+    // Paramètres (kit, boîte 33) : carte gris clair (rayon 18, marge 18) : photo de 72 px cerclée de
+    // violet, titre et consigne, « Changer » noir et « Retirer » en rouge.
+    return (
+      <section
+        aria-labelledby="photo-dialog-title"
+        className="flex flex-wrap items-center gap-[18px] rounded-[18px] bg-dlg-nav p-[18px]"
+      >
+        <span className="inline-flex shrink-0 rounded-full ring-[3px] ring-dlg outline-[1.5px] outline-offset-[3px] outline-violet outline">
+          <Avatar name={name} size="photo" photoPath={photoPath} />
+        </span>
+        <div className="flex min-w-0 flex-[1_1_180px] flex-col gap-1">
+          <h4 id="photo-dialog-title" className="text-[16px] leading-[normal] font-bold">
+            Photo de profil
+          </h4>
+          <p className="text-[13px] leading-[normal] text-pretty text-muted">
+            JPEG, PNG ou WebP, 2 Mo maximum. Stockée en privé.
+          </p>
+          {message}
+        </div>
+        <div className="flex items-center gap-[18px]">
+          {picker}
+          {photoPath ? (
+            <form action={remove}>
+              <button
+                type="submit"
+                aria-label="Retirer la photo"
+                className="inline-flex h-10 items-center rounded-[11px] px-3 text-[14px] leading-[normal] font-semibold text-dlg-danger-ink transition-[background-color] duration-150 hover:bg-dlg-danger-soft"
+              >
+                Retirer
+              </button>
+            </form>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
 
   if (fiche) {
     // Fiche sportif (maquette « Sportifs » du 03/11/2026) : photo de 64 px avec sa pastille appareil
