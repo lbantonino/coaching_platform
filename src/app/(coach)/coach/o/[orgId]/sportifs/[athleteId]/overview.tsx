@@ -630,18 +630,6 @@ function NotesSection({ notes, editHref }: { notes: AthleteNotes; editHref: stri
       ) : (
         <p className="text-[13.5px] text-muted">Aucune note libre.</p>
       )}
-      {/* Note visible par le sportif : absente de la maquette, gardée quand elle existe. */}
-      {notes.athlete ? (
-        <div className="flex flex-col gap-2 rounded-[14px] bg-surface-2 p-4">
-          <span className="w-fit rounded-xl bg-violet-soft px-[9px] py-0.5 text-[12px] font-medium text-violet-text">
-            Visible par le sportif
-          </span>
-          <p className="text-[14px] leading-[1.55] whitespace-pre-line">{notes.athlete.body}</p>
-          <p className="text-[12.5px] text-faint">
-            Mis à jour le {formatDateTime(notes.athlete.updatedAt)}
-          </p>
-        </div>
-      ) : null}
     </Section>
   );
 }

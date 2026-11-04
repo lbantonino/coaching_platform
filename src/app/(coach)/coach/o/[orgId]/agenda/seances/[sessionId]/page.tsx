@@ -347,7 +347,10 @@ async function SessionDetail({
           </span>
         }
       />
-      <div className="flex flex-col gap-3 px-3.5 pt-1 pb-[120px] leading-[normal] lg:flex-1 lg:gap-4 lg:pr-3.5 lg:pl-5 lg:pt-4 lg:pb-3">
+      {/* Bas de page (demande d'Antonino du 04/11) : téléphone, la dernière carte s'arrête à 12 px (l'écart
+          entre deux cartes) au-dessus de la barre fixe « Écrire / Modifier » (75 px + zone du geste) ;
+          ordinateur, au niveau du bas du menu de gauche (14 px). */}
+      <div className="flex flex-col gap-3 px-3.5 pt-1 pb-[calc(87px+env(safe-area-inset-bottom))] leading-[normal] lg:flex-1 lg:gap-4 lg:pr-3.5 lg:pl-5 lg:pt-4 lg:pb-3.5">
         {enrolFailed ? (
           <p
             role="alert"

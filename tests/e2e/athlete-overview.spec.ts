@@ -168,3 +168,30 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(page).toHaveURL(/vue=jour&date=2026-12-20/);
   await expect(agenda.getByText("Rien de prévu pour Julien ce jour-là.")).toBeVisible();
 });
+
+test("l'onglet Historique montre 6 événements, puis tout l'historique, puis se réduit", async ({
+  page,
+}) => {
+  // Maquette « Sportifs », page 2k : « Voir tout l'historique (n) » / « Réduire ». Lecture seule.
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+
+  await page.goto(`/coach/o/${ORG_A}/sportifs/${INES}?onglet=historique`);
+  const history = page.getByRole("list", { name: "Historique de la fiche" });
+  await expect(history.getByRole("listitem")).toHaveCount(6);
+
+  const more = page.getByRole("button", { name: /^Voir tout l’historique \(\d+\)$/ });
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  const total = Number((await more.textContent())?.match(/\((\d+)\)/)?.[1]);
+  expect(total).toBeGreaterThan(6);
+  await more.click();
+  await expect(history.getByRole("listitem")).toHaveCount(total);
+
+  const less = page.getByRole("button", { name: "Réduire" });
+  await expect(less).toHaveAttribute("aria-expanded", "true");
+  await less.click();
+  await expect(history.getByRole("listitem")).toHaveCount(6);
+});

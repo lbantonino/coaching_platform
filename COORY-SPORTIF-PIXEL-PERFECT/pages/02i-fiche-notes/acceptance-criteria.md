@@ -15,3 +15,10 @@
 ## Fonctionnel
 - [ ] Interactions de `interactions.md` opérationnelles avec les données réelles.
 - [ ] Fonctionnalités existantes conservées ; nouvelles intégrées et testées.
+
+## Vérification (Claude Code, 4/11/2026)
+Écarts VOULUS par Antonino (4/11) : carte « Message au sportif » retirée ; « Notes libres » en haut,
+pleine largeur ; « Blessures et points d'attention » en dessous, étirée jusqu'au bas du menu sur
+ordinateur. Mesures `getBoundingClientRect` maquette / app à l'intérieur des cartes : 0 px (Blessures
+ordinateur et téléphone, Notes libres téléphone). Parcours vérifiés par Playwright (notes.spec,
+availability.spec). Détail : `SUIVI_IMPLEMENTATION.md` (D-99).

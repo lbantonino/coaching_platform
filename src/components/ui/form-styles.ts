@@ -62,7 +62,8 @@ export const ficheGridClass =
 
 // Pastille cochable de la fiche : 38 px, arrondie, « ✓ » devant le libellé quand elle est cochée,
 // fond et texte violets avec un anneau violet. Même principe que checkboxChipClass (vraie case sr-only).
-// Le « ✓ » est un pseudo-élément : le texte du libellé reste le nom du lieu, seul (resserré d'1 px par
-// caractère : le « ✓ » de la police servie est 2 px plus large que celui de la maquette).
+// Le « ✓ » est un pseudo-élément : le texte du libellé reste le nom du lieu ou du jour, seul (resserré
+// de 0,75 px par caractère : le « ✓ » de la police servie est 1,5 px plus large que celui de la
+// maquette ; mesuré sur les jours de la page 2h).
 export const ficheChipClass =
-  "has-checked:before:whitespace-pre has-checked:before:tracking-[-1px] has-checked:before:content-['✓_'] group inline-flex h-[38px] cursor-pointer items-center rounded-full px-3.5 text-[13.5px] font-medium whitespace-nowrap text-text-2 inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-selected has-checked:text-violet-text has-checked:inset-ring-violet/35 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-violet";
+  "has-checked:before:whitespace-pre has-checked:before:tracking-[-0.75px] has-checked:before:content-['✓_'] group inline-flex h-[38px] cursor-pointer items-center rounded-full px-3.5 text-[13.5px] font-medium whitespace-nowrap text-text-2 inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-selected has-checked:text-violet-text has-checked:inset-ring-violet/35 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-violet";

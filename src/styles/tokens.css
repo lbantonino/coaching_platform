@@ -94,6 +94,8 @@
   --ok: #34d399;
   --ok-soft: rgba(52, 211, 153, 0.1);
   --ok-line: rgba(52, 211, 153, 0.3);
+  /* Texte sur fond --ok-soft (bandeau « Accord en cours », onglet Notes, 04/11/2026). */
+  --ok-text: #6ee7b7;
   --warn: #fbbf24;
   --warn-soft: rgba(251, 191, 36, 0.1);
   --warn-dot: #fbbf24;
@@ -220,6 +222,7 @@
   --ok: #15803d;
   --ok-soft: rgba(21, 128, 61, 0.08);
   --ok-line: rgba(21, 128, 61, 0.3);
+  --ok-text: #14532d;
   --warn: #a86410;
   --warn-soft: rgba(234, 179, 8, 0.14);
   /* Points de statut (puces de 6 à 7 px, sans texte) : « En pause » et « Archivé ». */

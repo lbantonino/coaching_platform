@@ -163,6 +163,7 @@ function WeekCard({
   basePath,
   coachItems,
   agendaPath,
+  last,
 }: {
   week: ProgramWeek;
   current: boolean;
@@ -170,6 +171,8 @@ function WeekCard({
   basePath: string;
   coachItems: AgendaItem[];
   agendaPath: string;
+  // Dernière semaine de la vue « Toutes » : sur ordinateur, elle descend jusqu'au bas du menu.
+  last: boolean;
 }) {
   const count = week.sessions.length;
   // Séances du programme faites avec le coach : leur rendez-vous de la semaine (jour et heure).
@@ -201,7 +204,7 @@ function WeekCard({
       aria-labelledby={titleId}
       className={`flex min-w-0 flex-col gap-3.5 rounded-[20px] bg-surface p-[18px] ${
         current ? "inset-ring-[1.5px] inset-ring-violet/55" : "inset-ring inset-ring-line-soft"
-      }`}
+      } ${last ? "lg:flex-1" : ""}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-0.5">
@@ -343,8 +346,13 @@ export function ProgramWeeksSection({
     { key: "toutes", label: "Toutes les semaines", href: `${agendaHref}&vue=toutes` },
   ];
 
+  const shownWeeks = view === "semaine" ? [shown] : weeks;
+
   return (
-    <div className="flex flex-col gap-3">
+    // Ordinateur, vue « Toutes les semaines » : la colonne prend la hauteur restante et la dernière
+    // semaine s'étire jusqu'au bas du menu de gauche (demande d'Antonino du 04/11). Vue Semaine : une
+    // seule carte, à sa taille naturelle (étirée, elle était presque vide).
+    <div className={`flex flex-col gap-3 ${view === "toutes" ? "lg:flex-1" : ""}`}>
       {/* Le programme et sa règle. */}
       <section
         aria-labelledby="program-weeks-title"
@@ -434,9 +442,10 @@ export function ProgramWeeksSection({
         </div>
       ) : null}
 
-      {(view === "semaine" ? [shown] : weeks).map((week) => (
+      {shownWeeks.map((week, index) => (
         <WeekCard
           key={week.index}
+          last={view === "toutes" && index === shownWeeks.length - 1}
           week={week}
           current={week.index === current?.index}
           today={today}

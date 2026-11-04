@@ -32,6 +32,193 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Sportifs au pixel près, page 2k : fiche · Historique (D-104) — fin de la fiche sportif
+```
+Date : 2026-11-04
+Demande d'Antonino : « tu peux lancer directement l'onglet historique » (après le correctif iPhone).
+history-section.tsx (client) : carte pleine largeur, étirée jusqu'au bas du menu sur ordinateur
+  (maquette : flex 1), titre et sous-titre (bloc flex 1 1 280 px), bouton « Voir tout l'historique
+  (n) ⌄ » / « Réduire ⌃ » (34 px, contour, chevron qui pivote, aria-expanded + aria-controls),
+  6 événements par défaut ; le bouton n'existe que s'il y en a plus de 6 ; téléphone : il passe sous
+  le titre. État vide (défensif) : « Rien pour l'instant… ». La frise (activity-timeline.tsx) était
+  déjà au dessin de la maquette (fait pour 2a).
+Dates de la frise en abrégé, comme la maquette (« 3 nov. 2026 ») : formatDayShort (lib/format) ; la
+  vue d'ensemble, qui partage la frise, en profite.
+Écarts mesurés (maquette → app) : ordinateur et téléphone 0 px (carte 996 × 486 / 362 × 696,
+  premier événement 63,4 et 100,3 px, titre et date au même endroit) ; écarts dus aux données : le
+  compteur (32 événements chez Inès, 16 dans la maquette : bouton 3 px plus large) et un dernier
+  événement avec détail (carte 0,4 px plus haute que le menu à 1280 × 768).
+Déplié : 32 événements, bas de page aligné (menu sur ordinateur, 28 px sur téléphone).
+Tests : athlete-overview.spec + « l'onglet Historique montre 6 événements, puis tout, puis se
+  réduit » (ordinateur et téléphone) ; notes, repères, objectifs 19 réussis ; Vitest 268/268.
+```
+
+### iPhone : menu ☰ inerte et notifications hors écran (D-103)
+```
+Date : 2026-11-04
+Signalé par Antonino sur son iPhone 17 Pro Max : ☰ « bloqué », boîte des notifications ouverte en
+  dehors de l'écran (on n'en voyait que le coin bas gauche).
+Cause : le Mac était sur le partage de connexion de l'iPhone (IP 172.20.10.9) ; allowedDevOrigins
+  n'autorisait que 192.168.*.* : Next bloquait le JavaScript de la page (« Blocked cross-origin
+  request … from 172.20.10.9 » dans le journal). Le popover natif de la cloche s'ouvre sans
+  JavaScript, mais c'est le JavaScript qui le place sous la cloche : d'où la boîte hors de l'écran ;
+  le menu ☰ dépend entièrement du JavaScript.
+Correctif : allowedDevOrigins ["192.168.*.*", "172.20.10.*"] (next.config.ts), serveur relancé.
+  Vérifié : origine 172.20.10.9 acceptée (une origine inconnue reste refusée, 403) ; page activée
+  depuis l'adresse réseau ; en émulation iPhone 17 Pro Max (440 × 956), ☰ plein écran et boîte des
+  notifications dans l'écran (14 px des bords, sous la barre).
+Trouvé en route : le serveur de dev s'était mis à recharger les pages en boucle (« [Fast Refresh]
+  rebuilding » puis rechargement complet, recompilations continues), même sur localhost ; réglé
+  par un redémarrage à neuf (rm -rf .next/dev) : 1 seul chargement, plus aucune recompilation.
+Limite : pas de test sur le vrai iPhone ni dans WebKit (non installé) ; Chromium en émulation.
+```
+
+### Sportifs au pixel près, page 2j : fiche · Documents (D-102)
+```
+Date : 2026-11-04
+Demande d'Antonino : passer à l'onglet Documents (après la revue du bas de page sur téléphone).
+Une carte pleine largeur (sortie de la colonne max-w-3xl) : titre 17/600, « Contrats, bilans,
+  factures… liés à … », « Importer un document » (38 px, contour, icône 14) et « Voir dans
+  Documents » (lien violet, une seule ligne ; il n'apparaît que s'il y a des documents, comme avant),
+  lignes de document (fond surface-2, rayon 14, marge 12 : tuile 40, nom 600/14, « 744 o · date »
+  12,5 gris, badge de catégorie 24 px). Ordinateur : carte étirée jusqu'au bas du menu, comme la
+  maquette (« espace vide sous la liste accepté ») ; téléphone : hauteur du contenu.
+Gardé : couleur de catégorie sur la tuile (D-68, demande d'Antonino ; la maquette la dessine
+  blanche), lien vers chaque document, import par la page Documents avec le sportif choisi, état
+  vide « Aucun document lié à ce sportif pour l'instant. ».
+Écarts mesurés (maquette → app) : ordinateur 0 px partout (section 996 × 486, bas = bas du menu) ;
+  téléphone 0 px, sauf la date de la démo (« 4 novembre » a 0,26 px de plus que « 3 novembre »)
+  qui passe à la ligne : la coupure se fait entre la taille et la date (whitespace-nowrap).
+Vérifié : avec et sans document (sportifs 2, 4, 5, 6), clair et sombre.
+Tests : documents.spec + vue d'ensemble 11 réussis + 1 ignoré ; Vitest 268/268. db:reset après.
+```
+
+### Bas de page sur téléphone (D-101)
+```
+Date : 2026-11-04
+Demande d'Antonino : sur téléphone, en fin de défilement, la dernière carte montait trop haut
+  (trop de fond gris dessous) ; la ramener à l'espacement entre deux cartes, sur toutes les pages.
+Cause : PageBody gardait 120 px sous le contenu (place prévue pour la barre du sportif, alors que
+  cette barre est dans le flux, sticky, et ne recouvre rien). Correction : 16 px (24 px pour une
+  page en grille, l'écart de ses cartes). Page séance (barre fixe Écrire / Modifier de 75 px) :
+  87 px + zone du geste, soit 12 px (son écart entre cartes) au-dessus de la barre ; ordinateur
+  lg:pb-3.5 (au lieu de 12 px), aligné sur le menu.
+Revue au navigateur, 390 × 844, en fin de défilement (bas du dernier bloc → bas de l'écran ou haut
+  de la barre du bas) :
+  - coach : tableau de bord 16, sportifs 16, nouveau sportif 16 (sous la barre collée), comptabilité
+    24, bibliothèque 16, nouvel exercice 16, fiche exercice 24, documents 16, notifications 24, séance
+    12 (au-dessus de la barre), modifier la séance 16, page d'une séance du programme 16 ;
+  - fiche : vue d'ensemble, profil, agenda (semaine et toutes), objectifs, repères, disponibilités,
+    notes, historique : 16 ;
+  - agenda coach : grille horaire qui remplit l'écran (rien à régler ; le bouton + flottant garde sa
+    marge) ;
+  - pages qui ne défilent pas (contenu plus court que l'écran) : messages, tâches, recherche, profil
+    coach, programmes, assistant, onglets Programme et Documents, inviter ; espace sportif (11 pages,
+    barre du bas en place) et portail admin (9 pages) : aucune ne défile.
+Tests : suite Playwright complète 173 réussis, 17 ignorés, 0 échec.
+Retour d'Antonino (même jour) : dans l'extension Chrome « Mobile View » (cadre d'iPhone aux coins
+  arrondis, rayon ≈ 55 px), la dernière carte paraissait collée : à 16 px du bas, l'arrondi de
+  l'écran rentre de 16 px sur le côté et mord sur les angles de la carte (posée à 14 px du bord).
+  Marge basse portée à 28 px sur toutes les pages (pb-7, la marge basse de la maquette « Sportifs »,
+  16 / 14 / 28) : l'arrondi ne rentre plus que de 7 px. Mesuré : 28 px sous la dernière carte
+  (tableau de bord, fiche, Notes, Repères, sportifs, comptabilité). Documents au téléphone : la
+  carte garde la hauteur de son contenu (son choix, le fond gris dessous est normal).
+```
+
+### Bas de page aligné sur le menu, ordinateur (D-100)
+```
+Date : 2026-11-04
+Demande d'Antonino : en fin de défilement, la dernière carte (Records personnels, Ajouter un
+  objectif, Historique récent, Informations, dernière semaine de l'agenda…) montait 42 px plus haut
+  que le bas du menu de gauche. Vérifier chaque page et corriger.
+Cause : PageBody gardait 56 px sous le contenu sur ordinateur (lg:pb-14), le menu s'arrête à 14 px
+  du bord. Correction unique : lg:pb-3.5 pour toutes les pages (téléphone inchangé : 120 px).
+Agenda d'un sportif avec programme : la dernière semaine affichée s'étire en plus jusqu'au bas du
+  menu quand la page ne défile pas (vue Semaine, ou peu de semaines), comme Disponibilités et Notes
+  (stretchTab dans page.tsx, prop last de WeekCard).
+Vérifié au navigateur, 1280×768, en fin de défilement (bas du dernier bloc − bas du menu) : 0 px
+  sur liste des sportifs, nouveau sportif, comptabilité, bibliothèque, notifications, profil coach,
+  et sur la fiche : vue d'ensemble, profil, agenda (Toutes), objectifs, repères, disponibilités,
+  notes, historique. Agenda vue Semaine : 0 px à 1280×768, 1440×900, 1920×1080.
+Pages qui ne défilent pas (contenu plus court que l'écran, rien à aligner en fin de défilement) :
+  tableau de bord et agenda (déjà calés sur le menu), messages, tâches, recherche, documents ;
+  fiche : Programme (laissé tel quel) et Documents (prochaine page, 2j).
+Tests : vue d'ensemble, notes, objectifs, repères 19 réussis + 1 ignoré. db:reset fait après.
+Retour d'Antonino (même jour) : vue « Semaine » (une seule semaine) NON étirée, elle garde sa taille
+  naturelle (étirée, trop de blanc) ; seule la vue « Toutes les semaines » étire sa dernière semaine.
+  Mesuré : Semaine 230 px de haut à 1280×768 et 1920×1080 (fond gris dessous) ; Toutes : bas de la
+  semaine 12 = bas du menu (754 / 1066).
+```
+
+### Sportifs au pixel près, page 2i : fiche · Notes (D-99)
+```
+Date : 2026-11-04
+Demande d'Antonino : passer à l'onglet Notes (ordinateur et téléphone), avec trois écarts voulus
+  par rapport à sa maquette : (1) carte « Message au sportif » retirée (les sportifs n'installeront
+  pas tous l'app) ; (2) « Notes libres » en haut, pleine largeur ; (3) « Blessures et points
+  d'attention » en dessous, qui descend jusqu'au bas du menu de gauche sur ordinateur.
+Message au sportif : carte retirée de l'onglet Notes, bloc « Visible par le sportif » retiré de la
+  vue d'ensemble, carte « Message de ton coach » retirée de l'espace sportif (sinon un ancien message
+  y restait sans pouvoir être modifié) ; requête getOwnCoachMessages supprimée (plus utilisée).
+  Rien d'effacé en base : table athlete_notes, visibilité « athlete », RLS, action saveNote et
+  libellé d'historique « Message au sportif mis à jour » inchangés (retour possible).
+Notes libres : carte (titre 17/600, sous-titre = description du champ), textarea fiche (nommé par
+  le titre), « Enregistrer » noir (nom accessible « Enregistrer : notes libres »), « Mise à jour le
+  18 sept. 2026 à 19:00 » à droite (en dessous sur téléphone) : formatDateTimeShort (lib/format).
+Blessures : carte (role group gardé), bandeau vert (jeton --ok-text ajouté : #14532d clair,
+  #6ee7b7 sombre ; texte court « … · donné, noté par le coach (…) » via consentGrantDetail, testé),
+  champ fiche (HealthConstraintsField look="fiche", étiquette invisible), « Enregistrer les
+  blessures » et « Retirer l'accord » (38 px, contour) sur la même rangée : le bouton
+  d'enregistrement est relié à son formulaire par l'attribut form (pas de formulaire imbriqué),
+  aide « Retirer l'accord à la demande du sportif… », « Historique de l'accord (n) » en accordéon
+  commun. Sans accord : texte, case, « Comment ? » (champ fiche), « Enregistrer l'accord ».
+Ordinateur : PageBody « fill » et fiche lg:flex-1 sur Notes comme sur Disponibilités ; la carte
+  Blessures en lg:flex-1, son champ prend la hauteur libre (flex-auto, poignée utilisable).
+Écarts mesurés (maquette → app), à l'intérieur des cartes : Blessures 0 px partout (ordinateur
+  996 × 415,25, téléphone 362 × 558,75) ; Notes libres 0 px au téléphone (362 × 308) ; à
+  l'ordinateur la carte fait toute la largeur (sous-titre sur une ligne). « Retirer l'accord » 0,4 px
+  plus étroit (apostrophe droite). Bas de la carte Blessures = bas du menu à 1280×768, 1440×900,
+  1920×1080, 3440×1440, 1024×700 (en fin de défilement quand l'écran est trop bas).
+Dev : serveur relancé (rm -rf .next/dev) pour générer la couleur du nouveau jeton (vérifiée).
+Tests : Vitest 268/268 (consentGrantDetail) ; notes.spec réécrit (plus de message, espace sportif
+  sans « Message de ton coach ») ; notes, disponibilités, nouveau sportif, vue d'ensemble, espace
+  sportif 16 réussis + 2 ignorés. db:reset fait après.
+```
+
+### Sportifs au pixel près, page 2h : fiche · Disponibilités (D-98)
+```
+Date : 2026-11-04
+Demande d'Antonino : « on peut commencer l'onglet disponibilités ? » (après les réglages de 2g).
+Carte « Disponibilités » pleine largeur (sortie de la colonne max-w-3xl) : rayon 20, marge 22,
+  titre 17/600 et sous-titre gris, comme les cartes de 2f et 2g.
+AvailabilityFields reçoit l'option look (comme les groupes du Profil) : « fiche » = une grille
+  auto-fill de 240 px (les deux nombres dans les premières colonnes, jours et contraintes sur toute
+  la largeur), champs de 46 px sans police mono, pastilles des jours ficheChipClass (« ✓ » en CSS).
+  La page « Nouveau sportif » garde l'habillage « app » (inchangé).
+Bouton « Enregistrer les disponibilités » : noir (action principale), 44 px, rayon 12.
+Pastilles : resserrement du « ✓ » ramené de -1 px à -0,75 px par caractère (écart 0,5 px par
+  pastille cochée, 2,7 px cumulés sur la ligne) ; vérifié aussi sur les lieux du Profil (2b) :
+  128,4 / 170,4 px contre 128,5 / 170,4 px dans la maquette.
+Rien de retiré : séances, durée (bornes 1-14 et 10-300 par pas de 5), jours, contraintes (500
+  caractères, exemple en placeholder), message « Disponibilités enregistrées. », erreur, saisie
+  conservée après une erreur ; blessures toujours dans Notes (D-56).
+Écarts mesurés (maquette → app) : section 996 × 452,75 (ordinateur) et 362 × 672,25 (téléphone)
+  identiques ; tous les blocs à 0 px ; pastilles à 0,2 px près.
+Responsive : 360, 430 sans débordement ; 1440 à 3440 (carte jusqu'à 1600 px, champs de 246 px,
+  comme le Profil). Clair et sombre vérifiés au navigateur.
+Tests : Vitest 267/267 ; disponibilités, vue d'ensemble, nouveau sportif, profil 18 réussis
+  + 2 ignorés (ordinateur et téléphone). db:reset fait après.
+Retour d'Antonino (même jour, ordinateur seulement) : carte trop courte. Elle descend maintenant
+  jusqu'au bas du menu de gauche : PageBody « fill » sur cet onglet (14 px du bord, comme le menu),
+  fiche, carte et formulaire en lg:flex-1, grille en rangées auto / auto / 1fr : la hauteur libre va
+  aux contraintes d'organisation (textarea lg:flex-auto, la poignée de redimensionnement reste
+  utilisable et fait grandir la carte). Pas de blanc sous le bouton, aligné sur le nom du coach.
+  Mesuré : bas de carte = bas du menu à 1280×768, 1440×900, 1920×1080, 3440×1440 ; centre du
+  bouton à 0,5 px du centre du compte ; écran trop bas (1024×700, 1280×600) : la page défile et
+  les deux bas s'alignent en fin de défilement. Téléphone inchangé (362 × 672,25 px).
+  Tests : disponibilités, nouveau sportif, vue d'ensemble 12 réussis + 2 ignorés.
+```
+
 ### Sportifs au pixel près, page 2g : fiche · Repères (D-97)
 ```
 Date : 2026-11-03

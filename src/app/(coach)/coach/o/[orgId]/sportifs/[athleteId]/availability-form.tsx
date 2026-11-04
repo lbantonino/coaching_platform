@@ -36,14 +36,24 @@ export function AvailabilityForm({ organizationId, athleteId, values }: Props) {
 
   return (
     // Reconstruit après chaque réponse : la saisie renvoyée (ou enregistrée) s'affiche partout.
-    <form key={state.attempt} action={formAction} className="flex flex-col gap-5" noValidate>
-      <AvailabilityFields values={shown} />
+    // Ordinateur : le formulaire remplit la carte (étirée jusqu'au bas du menu), le bouton reste en bas.
+    <form
+      key={state.attempt}
+      action={formAction}
+      className="flex flex-col gap-4 lg:flex-1"
+      noValidate
+    >
+      <AvailabilityFields values={shown} look="fiche" />
 
       <div className="flex flex-wrap items-center gap-4">
         <button
           type="submit"
           disabled={pending}
-          className={buttonClass({ variant: "inverse", size: "md" })}
+          className={buttonClass({
+            variant: "primary",
+            size: "md",
+            className: "self-start rounded-[12px]! text-[14px]! font-medium!",
+          })}
         >
           {pending ? "Enregistrement…" : "Enregistrer les disponibilités"}
         </button>
@@ -52,7 +62,7 @@ export function AvailabilityForm({ organizationId, athleteId, values }: Props) {
             {state.error}
           </p>
         ) : state.saved ? (
-          <p role="status" className="text-small text-ok">
+          <p role="status" className="text-[13px] font-medium text-ok">
             Disponibilités enregistrées.
           </p>
         ) : null}

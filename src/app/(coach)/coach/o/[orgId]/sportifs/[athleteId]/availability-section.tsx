@@ -2,8 +2,8 @@ import type { AthleteDetail } from "@/features/athletes/queries";
 
 import { AvailabilityForm } from "./availability-form";
 
-// Section « Disponibilités » de la fiche (P2-02 partie 3) : séances par semaine, durée maximale,
-// jours, contraintes d'organisation. Les blessures et points d'attention (donnée de santé, avec
+// Section « Disponibilités » de la fiche (P2-02 partie 3), d'après la maquette « Sportifs » du
+// 03/11/2026 (page 2h) : séances par semaine, durée maximale, jours, contraintes d'organisation. Les blessures et points d'attention (donnée de santé, avec
 // l'accord du sportif) sont dans l'onglet Notes (D-56, health-notes-block.tsx).
 export function AvailabilitySection({
   organizationId,
@@ -15,13 +15,16 @@ export function AvailabilitySection({
   return (
     <section
       aria-labelledby="availability-title"
-      className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
+      className="flex min-w-0 flex-col gap-4 rounded-[20px] bg-surface p-[22px] inset-ring inset-ring-line-soft lg:flex-1"
     >
       <div className="flex flex-col gap-1">
-        <h2 id="availability-title" className="text-title font-medium">
+        <h2
+          id="availability-title"
+          className="text-[17px] leading-[21.5px] font-semibold tracking-[-0.01em]"
+        >
           Disponibilités
         </h2>
-        <p className="text-small text-muted">
+        <p className="text-[13.5px] leading-[1.5] text-pretty text-muted">
           Le temps dont le sportif dispose. Ce sont des repères pour construire son programme, pas
           une prescription.
         </p>

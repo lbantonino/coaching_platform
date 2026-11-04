@@ -12,7 +12,7 @@ async function login(page: Page, email: string) {
   await page.getByRole("button", { name: "Se connecter" }).click();
 }
 
-test("le coach écrit une note privée et un message, visibles dans la vue d'ensemble et l'historique", async ({
+test("le coach écrit une note libre, visible dans la vue d'ensemble et l'historique", async ({
   page,
 }, testInfo) => {
   const name = `Notes ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -28,18 +28,17 @@ test("le coach écrit une note privée et un message, visibles dans la vue d'ens
   await page.getByRole("textbox", { name: "Notes libres" }).fill("Très investie, progresse bien.");
   await page.getByRole("button", { name: "Enregistrer : notes libres" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Note enregistrée." })).toBeVisible();
-  await page.getByLabel("Message au sportif").fill("Semaine facile, reste en endurance.");
-  await page.getByRole("button", { name: "Enregistrer : message au sportif" }).click();
-  await expect(page.getByText(/Mis à jour le/)).toBeVisible();
+  await expect(page.getByText(/^Mise à jour le /)).toBeVisible();
+  // La carte « Message au sportif » a été retirée (choix d'Antonino du 04/11).
+  await expect(page.getByText("Message au sportif")).toHaveCount(0);
 
-  // Vue d'ensemble : les deux notes, la seconde marquée « Visible par le sportif ».
+  // Vue d'ensemble : la note libre.
   await openAthleteTab(page, "Vue d'ensemble");
   const notes = page.getByRole("region", { name: "Notes du coach" });
   await expect(notes).toContainText("Très investie, progresse bien.");
-  await expect(notes).toContainText("Visible par le sportif");
-  await expect(notes).toContainText("Semaine facile, reste en endurance.");
+  await expect(notes).not.toContainText("Visible par le sportif");
   const recent = page.getByRole("region", { name: "Historique récent" });
-  await expect(recent).toContainText("Message au sportif mis à jour");
+  await expect(recent).toContainText("Notes libres mises à jour");
 
   // Historique complet : du plus récent à la création de la fiche.
   await page.getByRole("link", { name: "Voir tout : Historique récent" }).click();
@@ -55,11 +54,12 @@ test("le coach écrit une note privée et un message, visibles dans la vue d'ens
   await expect(notes).toContainText("Aucune note libre.");
 });
 
-test("le sportif lit le message de son coach dans son espace", async ({ page }) => {
-  // Lecture seule du seed : Thomas Peeters a un message visible (et aucune note privée ne lui est montrée,
-  // ce que garantissent les tests SQL de 09_notes).
+test("l'espace du sportif n'affiche plus de message du coach", async ({ page }) => {
+  // Le seed garde un message « visible par le sportif » pour Thomas Peeters (données dormantes depuis
+  // le retrait de la carte, 04/11) : il ne doit plus apparaître.
   await login(page, "thomas.peeters@example.test");
   await expect(page).toHaveURL(/\/app$/);
-  const message = page.getByRole("region", { name: "Message de ton coach" });
-  await expect(message).toContainText("Semaine de reprise");
+  await expect(page.getByRole("main")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Message de ton coach" })).toHaveCount(0);
+  await expect(page.getByText(/garde l.endurance vraiment facile/)).toHaveCount(0);
 });

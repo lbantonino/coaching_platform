@@ -108,7 +108,7 @@ test("le sportif donne son accord depuis son espace, voit ce que le coach note, 
   await coach.goto(`/coach/o/${ORG_A}/sportifs/${THOMAS_PROFILE}?onglet=notes`);
   const health = coach.getByRole("group", { name: "Blessures et points d'attention" });
   await expect(
-    health.getByRole("status").filter({ hasText: "Accord donné par le sportif depuis son espace" }),
+    health.getByRole("status").filter({ hasText: "· donné par le sportif depuis son espace" }),
   ).toBeVisible();
   await health
     .getByRole("textbox", { name: "Blessures et points d'attention" })

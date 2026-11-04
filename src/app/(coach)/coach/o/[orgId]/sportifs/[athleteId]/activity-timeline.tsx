@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import type { ActivityEvent, ActivityKind } from "@/features/activity/build";
-import { formatDay } from "@/lib/format";
+import { formatDayShort } from "@/lib/format";
 
 const icons: Record<ActivityKind, LucideIcon> = {
   profile: UserPlus,
@@ -56,7 +56,7 @@ export function ActivityTimeline({ events, label }: { events: ActivityEvent[]; l
                   dateTime={event.at}
                   className="text-[12.5px] leading-[normal] whitespace-nowrap text-faint"
                 >
-                  {formatDay(event.at)}
+                  {formatDayShort(event.at)}
                 </time>
               </div>
               {event.detail ? (

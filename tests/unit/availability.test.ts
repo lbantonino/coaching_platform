@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { availabilitySchema } from "@/features/athletes/schemas";
-import { consentErrorMessage, consentEventLabel } from "@/features/consents/schemas";
+import {
+  consentErrorMessage,
+  consentEventLabel,
+  consentGrantDetail,
+} from "@/features/consents/schemas";
 
 const base = {
   sessionsPerWeek: "",
@@ -70,6 +74,13 @@ describe("journal des accords", () => {
       "Accord donné, noté par le coach (formulaire signé)",
     );
     expect(consentEventLabel("withdrawn", "coach", null)).toBe("Accord retiré, noté par le coach");
+  });
+
+  it("résume l'accord en cours sans répéter « Accord » (bandeau de la fiche)", () => {
+    expect(consentGrantDetail("coach", "signed_form")).toBe(
+      "donné, noté par le coach (formulaire signé)",
+    );
+    expect(consentGrantDetail("athlete", null)).toBe("donné par le sportif depuis son espace");
   });
 
   it("traduit les codes d'erreur des fonctions SQL", () => {

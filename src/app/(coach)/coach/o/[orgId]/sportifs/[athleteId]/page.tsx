@@ -31,9 +31,9 @@ import {
 import { AthleteEditForm } from "./athlete-edit-form";
 import { ProgramWeeksSection, type ProgramView } from "./program-weeks";
 import { AthleteDocuments } from "./athlete-documents";
-import { ActivityTimeline } from "./activity-timeline";
 import { AthleteHeader, AthleteIdentity } from "./athlete-header";
 import { AvailabilitySection } from "./availability-section";
+import { HistorySection } from "./history-section";
 import { GoalsSection } from "./goals-section";
 import { NotesSection } from "./notes-section";
 import { AthleteOverview } from "./overview";
@@ -198,14 +198,30 @@ async function AthleteSection({
     tab === "agenda" || tab === "programme"
       ? await getAthleteProgram(organizationId, athlete.id)
       : null;
+  // Ordinateur (demandes d'Antonino du 04/11) : sur ces onglets, la dernière carte descend jusqu'au
+  // bas du menu de gauche même quand la page ne défile pas. Agenda : seulement « Toutes les
+  // semaines » (la dernière semaine) ; la vue Semaine garde sa taille naturelle (trop de blanc sinon).
+  const stretchTab =
+    tab === "disponibilites" ||
+    tab === "notes" ||
+    tab === "documents" ||
+    tab === "historique" ||
+    (tab === "agenda" && program !== null && programView === "toutes");
 
   return (
     <>
       <AthleteHeader athlete={athlete} organizationId={organizationId} listPath={listPath} />
-      <PageBody>
+      {/* Disponibilités, Notes, Agenda (demandes d'Antonino du 04/11, ordinateur seulement) : la
+          dernière carte descend jusqu'au bas du menu de gauche (corps « fill ») ; elle grandit
+          au-delà si besoin. */}
+      <PageBody fill={stretchTab}>
         {/* La fiche : 1600 px au plus, centrée (maquette « Sportifs » : très grands écrans) ; téléphone :
             16 px sous la barre, comme la maquette. */}
-        <div className="mx-auto flex w-full max-w-[1600px] min-w-0 flex-col gap-3.5 max-lg:-mt-0.5">
+        <div
+          className={`mx-auto flex w-full max-w-[1600px] min-w-0 flex-col gap-3.5 max-lg:-mt-0.5 ${
+            stretchTab ? "lg:flex-1" : ""
+          }`}
+        >
           <AthleteIdentity
             athlete={athlete}
             organizationId={organizationId}
@@ -313,6 +329,20 @@ async function AthleteSection({
                 today={today}
               />
             </div>
+          ) : tab === "documents" ? (
+            // Onglet Documents (maquette « Sportifs », page 2j) : une carte pleine largeur, étirée
+            // jusqu'au bas du menu sur ordinateur.
+            <AthleteDocuments
+              organizationId={organizationId}
+              athleteId={athlete.id}
+              athleteName={athlete.displayName}
+            />
+          ) : tab === "notes" ? (
+            // Onglet Notes (maquette « Sportifs », page 2i) : pleine largeur, deux cartes empilées.
+            <NotesSection organizationId={organizationId} athlete={athlete} />
+          ) : tab === "disponibilites" ? (
+            // Onglet Disponibilités (maquette « Sportifs », page 2h) : pleine largeur, une carte.
+            <AvailabilitySection organizationId={organizationId} athlete={athlete} />
           ) : tab === "objectifs" ? (
             // Onglet Objectifs (maquette « Sportifs », page 2f) : pleine largeur, deux cartes.
             <GoalsSection organizationId={organizationId} athleteId={athlete.id} today={today} />
@@ -369,41 +399,9 @@ async function AthleteSection({
               />
             </div>
           ) : (
-            // Les onglets de saisie gardent une largeur de lecture confortable.
-            <div className="flex w-full max-w-3xl flex-col gap-6">
-              {tab === "disponibilites" ? (
-                <AvailabilitySection organizationId={organizationId} athlete={athlete} />
-              ) : null}
-              {tab === "notes" ? (
-                <NotesSection organizationId={organizationId} athlete={athlete} />
-              ) : null}
-              {tab === "documents" ? (
-                <AthleteDocuments
-                  organizationId={organizationId}
-                  athleteId={athlete.id}
-                  athleteName={athlete.displayName}
-                />
-              ) : null}
-              {tab === "historique" ? (
-                <section
-                  aria-labelledby="history-title"
-                  className="flex flex-col gap-5 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-                >
-                  <div className="flex flex-col gap-1">
-                    <h2 id="history-title" className="text-title font-medium">
-                      Historique
-                    </h2>
-                    <p className="text-small text-muted">
-                      Tout ce qui s&apos;est passé sur cette fiche, du plus récent au plus ancien.
-                    </p>
-                  </div>
-                  <ActivityTimeline
-                    events={await listAthleteActivity(organizationId, athlete)}
-                    label="Historique de la fiche"
-                  />
-                </section>
-              ) : null}
-            </div>
+            // Onglet Historique (maquette « Sportifs », page 2k) : une carte pleine largeur, étirée
+            // jusqu'au bas du menu sur ordinateur ; 6 événements, puis « Voir tout l'historique ».
+            <HistorySection events={await listAthleteActivity(organizationId, athlete)} />
           )}
         </div>
       </PageBody>

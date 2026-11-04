@@ -30,6 +30,12 @@ export function consentEventLabel(
     : `${what}, noté par le coach`;
 }
 
+// Bandeau « Accord en cours depuis le … » de la fiche (maquette « Sportifs » 2i) : comment l'accord a
+// été donné, sans répéter le mot « Accord » (« donné, noté par le coach (formulaire signé) »).
+export function consentGrantDetail(source: ConsentSource, proof: CoachProof | null): string {
+  return consentEventLabel("granted", source, proof).replace(/^Accord donné/, "donné");
+}
+
 // Codes d'erreur renvoyés par les fonctions SQL grant_health_consent / withdraw_health_consent.
 export function consentErrorMessage(code: string | undefined): string {
   if (code === "preuve_invalide") return "Indique comment le sportif a donné son accord.";

@@ -400,53 +400,61 @@ export function SportProfileFields({
 // d'attention ont leur propre champ (HealthConstraintsField) : il n'existe qu'avec un accord.
 export function AvailabilityFields({
   values,
+  look = "app",
 }: {
   values: Pick<
     AvailabilityFormValues,
     "sessionsPerWeek" | "maxSessionMinutes" | "availableDays" | "scheduleConstraints"
   >;
+  look?: FieldLook;
 }) {
-  return (
+  const s = looks(look);
+  const fiche = look === "fiche";
+  // Fiche (maquette « Sportifs », page 2h) : une seule grille, les deux nombres dans les premières
+  // colonnes, puis les jours et les contraintes sur toute la largeur. App : deux blocs empilés.
+  const numberClass = fiche ? s.input : `${s.input} font-mono`;
+  const numbers = (
     <>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="sessionsPerWeek" className={labelClass}>
-            Séances par semaine
-          </label>
-          <input
-            id="sessionsPerWeek"
-            name="sessionsPerWeek"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={14}
-            defaultValue={values.sessionsPerWeek}
-            className={`${inputClass} font-mono`}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="maxSessionMinutes" className={labelClass}>
-            Durée maximale d&apos;une séance (min)
-          </label>
-          <input
-            id="maxSessionMinutes"
-            name="maxSessionMinutes"
-            type="number"
-            inputMode="numeric"
-            min={10}
-            max={300}
-            step={5}
-            defaultValue={values.maxSessionMinutes}
-            className={`${inputClass} font-mono`}
-          />
-        </div>
+      <div className={s.field}>
+        <label htmlFor="sessionsPerWeek" className={s.label}>
+          Séances par semaine
+        </label>
+        <input
+          id="sessionsPerWeek"
+          name="sessionsPerWeek"
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={14}
+          defaultValue={values.sessionsPerWeek}
+          className={numberClass}
+        />
       </div>
-
-      <fieldset className="flex flex-col gap-2">
-        <legend className={`${labelClass} mb-2`}>Jours disponibles</legend>
+      <div className={s.field}>
+        <label htmlFor="maxSessionMinutes" className={s.label}>
+          Durée maximale d&apos;une séance (min)
+        </label>
+        <input
+          id="maxSessionMinutes"
+          name="maxSessionMinutes"
+          type="number"
+          inputMode="numeric"
+          min={10}
+          max={300}
+          step={5}
+          defaultValue={values.maxSessionMinutes}
+          className={numberClass}
+        />
+      </div>
+    </>
+  );
+  const rest = (
+    <>
+      <fieldset className={`flex min-w-0 flex-col gap-2 ${fiche ? "col-span-full" : ""}`}>
+        <legend className={`${s.label} mb-2`}>Jours disponibles</legend>
         <div className="flex flex-wrap gap-2">
           {WEEK_DAYS.map((day) => (
-            <label key={day} className={checkboxChipClass}>
+            <label key={day} className={s.chip}>
               <input
                 type="checkbox"
                 name="availableDays"
@@ -454,20 +462,27 @@ export function AvailabilityFields({
                 defaultChecked={values.availableDays.includes(day)}
                 className="sr-only"
               />
-              <Check
-                aria-hidden
-                size={14}
-                strokeWidth={2}
-                className="hidden group-has-checked:block"
-              />
-              {weekDayLabels[day]}
+              {fiche ? (
+                // Fiche : le « ✓ » est dessiné par la pastille (ficheChipClass), le libellé reste seul.
+                weekDayLabels[day]
+              ) : (
+                <>
+                  <Check
+                    aria-hidden
+                    size={14}
+                    strokeWidth={2}
+                    className="hidden group-has-checked:block"
+                  />
+                  {weekDayLabels[day]}
+                </>
+              )}
             </label>
           ))}
         </div>
       </fieldset>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="scheduleConstraints" className={labelClass}>
+      <div className={`${s.field} ${fiche ? "col-span-full" : ""}`}>
+        <label htmlFor="scheduleConstraints" className={s.label}>
           Contraintes d&apos;organisation
         </label>
         <textarea
@@ -477,16 +492,64 @@ export function AvailabilityFields({
           maxLength={500}
           placeholder="Ex. : déplacements le jeudi ; séances avant 8 h en semaine"
           defaultValue={values.scheduleConstraints}
-          className={textareaClass}
+          // flex-auto (et non flex-1) : la poignée de redimensionnement reste utilisable, la carte
+          // grandit alors au-delà du menu.
+          className={fiche ? `${s.textarea} lg:flex-auto` : s.textarea}
         />
       </div>
+    </>
+  );
+
+  // Fiche, ordinateur (demande d'Antonino du 04/11) : quand la carte est étirée jusqu'au bas du menu,
+  // la grille prend la hauteur libre et la donne aux contraintes (3e rangée, 1fr), pour qu'il n'y ait
+  // pas de blanc sous le bouton. Sans hauteur libre, rien ne change.
+  return fiche ? (
+    <div className={`${s.grid} lg:flex-1 lg:grid-rows-[auto_auto_1fr]`}>
+      {numbers}
+      {rest}
+    </div>
+  ) : (
+    <>
+      <div className={s.grid}>{numbers}</div>
+      {rest}
     </>
   );
 }
 
 // Blessures et points d'attention (D-56, ancien « contraintes physiques ») : donnée de santé, sans
 // diagnostic, et seulement avec l'accord du sportif.
-export function HealthConstraintsField({ value }: { value: string }) {
+//
+// Fiche (onglet Notes, maquette « Sportifs » 2i) : le champ seul, nommé par une étiquette invisible ;
+// le titre et le sous-titre de la carte (id « health-hint ») le décrivent. `className` : étirement
+// de la zone sur ordinateur.
+export function HealthConstraintsField({
+  value,
+  look = "app",
+  className = "",
+}: {
+  value: string;
+  look?: FieldLook;
+  className?: string;
+}) {
+  if (look === "fiche") {
+    return (
+      <>
+        <label htmlFor="healthConstraints" className="sr-only">
+          Blessures et points d&apos;attention
+        </label>
+        <textarea
+          id="healthConstraints"
+          name="healthConstraints"
+          rows={2}
+          maxLength={1000}
+          aria-describedby="health-hint"
+          placeholder="Ex. : entorse de la cheville droite en septembre, éviter les sauts ; dos sensible en soulevé de terre"
+          defaultValue={value}
+          className={`${ficheTextareaClass} ${className}`}
+        />
+      </>
+    );
+  }
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor="healthConstraints" className={labelClass}>
