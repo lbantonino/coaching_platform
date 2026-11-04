@@ -7,8 +7,9 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // Développement sur un vrai téléphone (même Wi-Fi, http://<IP du Mac>:3000) : Next 16 bloque le
   // JavaScript des pages ouvertes depuis une autre adresse que localhost, et les boutons (œil du mot
-  // de passe…) ne répondent plus. Le joker couvre tout le réseau de la maison, même si l'IP change.
-  allowedDevOrigins: ["192.168.*.*"],
+  // de passe, menu ☰…) ne répondent plus. Les jokers couvrent le réseau de la maison (192.168…) et
+  // le partage de connexion de l'iPhone (172.20.10…, Mac en 172.20.10.9 le 04/11), même si l'IP change.
+  allowedDevOrigins: ["192.168.*.*", "172.20.10.*"],
   partialPrefetching: true,
   experimental: {
     // Photos de profil jusqu'à 2 Mo (D-28), documents jusqu'à 10 Mo (D-60) : 1 Mo par défaut pour une

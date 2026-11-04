@@ -118,10 +118,15 @@ export function PageHeader({
   );
 }
 
-// Corps de page : une colonne sur téléphone (marges 14, de la place en bas pour la barre du sportif
-// et les messages), sur ordinateur 20 px à gauche (après le menu) et 14 px à droite (03/11/2026). `grid` : grille de 12 colonnes (prompt §5.2).
+// Corps de page : une colonne sur téléphone (marges 14), sur ordinateur 20 px à gauche (après le menu)
+// et 14 px à droite (03/11/2026). `grid` : grille de 12 colonnes (prompt §5.2).
+// Bas de page (demandes d'Antonino du 04/11) : en fin de défilement, la dernière carte s'arrête
+// - sur téléphone, à 28 px du bas (la marge basse de la maquette « Sportifs », 16 / 14 / 28) : la
+//   carte respire, même dans un cadre d'iPhone aux coins arrondis (à 16 px, l'arrondi de l'écran
+//   mordait sur ses angles) ; la barre du sportif est dans le flux (sticky), elle ne recouvre rien ;
+// - sur ordinateur, au niveau du bas du menu de gauche (14 px, la marge du menu).
 // `fill` (tableau de bord, D-78) : sur ordinateur, le corps prend toute la hauteur restante de l'écran
-// (la page ne défile pas) ; son bas s'aligne sur celui du menu (12 px du bord).
+// (la page ne défile pas) ; son bas s'aligne sur celui du menu (14 px du bord).
 export function PageBody({
   grid = false,
   fill = false,
@@ -133,7 +138,7 @@ export function PageBody({
 }) {
   return (
     <div
-      className={`px-3.5 pt-3.5 pb-[120px] lg:pt-4 lg:pr-3.5 lg:pl-5 ${fill ? "lg:min-h-0 lg:flex-1 lg:pb-3.5" : "lg:pb-14"} ${
+      className={`px-3.5 pt-3.5 pb-7 lg:pt-4 lg:pr-3.5 lg:pl-5 lg:pb-3.5 ${fill ? "lg:min-h-0 lg:flex-1" : ""} ${
         // Téléphone (26/10) : plus d'air entre les sections d'une page en grille (tableau de bord…).
         grid
           ? "grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-4"

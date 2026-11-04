@@ -9,6 +9,24 @@ export function formatDateTime(isoDate: string): string {
   return dateTimeFormatter.format(new Date(isoDate));
 }
 
+// Date et heure en abrégé (« 18 sept. 2026 à 19:00 »), fuseau de Bruxelles : métadonnées discrètes
+// (« Mise à jour le … » des notes libres, maquette « Sportifs » 2i).
+const shortDateFormatter = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "Europe/Brussels",
+});
+const shortTimeFormatter = new Intl.DateTimeFormat("fr-BE", {
+  timeStyle: "short",
+  timeZone: "Europe/Brussels",
+});
+
+export function formatDateTimeShort(isoDate: string): string {
+  const date = new Date(isoDate);
+  return `${shortDateFormatter.format(date)} à ${shortTimeFormatter.format(date)}`;
+}
+
 // Date seule (« 15 octobre 2026 ») à partir d'une date SQL AAAA-MM-JJ, sans décalage de fuseau.
 const dateFormatter = new Intl.DateTimeFormat("fr-BE", { dateStyle: "long", timeZone: "UTC" });
 
@@ -37,6 +55,19 @@ const dayFormatter = new Intl.DateTimeFormat("fr-BE", {
 
 export function formatDay(isoTimestamp: string): string {
   return dayFormatter.format(new Date(isoTimestamp));
+}
+
+// Jour en abrégé (« 3 nov. 2026 »), fuseau de Bruxelles, à partir d'un horodatage : dates de la frise
+// de l'historique (maquette « Sportifs », pages 2a et 2k).
+const shortDayFormatter = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "Europe/Brussels",
+});
+
+export function formatDayShort(isoTimestamp: string): string {
+  return shortDayFormatter.format(new Date(isoTimestamp));
 }
 
 // Heure actuelle à Bruxelles (« 14:05 »). À appeler uniquement dans du code exécuté à la requête.
