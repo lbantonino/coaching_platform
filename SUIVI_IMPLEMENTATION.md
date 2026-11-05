@@ -32,6 +32,31 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Tests de bout en bout fiables (D-133)
+```
+Date : 2026-11-05
+Méthode : traces Playwright gardées (--output à part), course de stress des fichiers instables
+  (--repeat-each=4), lecture des journaux d'action dans trace.zip.
+Cause 1 (agenda-interactive) : le clic sur le créneau vide « Mercredi 3 mars » était intercepté
+  29 s par « Série … 10:00-11:00 » (série hebdomadaire sans fin d'un autre test du fichier).
+  -> la série du test « une séance hebdomadaire déplacée » passe à 08:00.
+Cause 2 (athlete-overview, sessions, references, agenda téléphone) : le test entier dépassait 30 s
+  ou une navigation 5 s quand toute la suite tourne (8 cœurs : base, serveur de test, 4 navigateurs,
+  serveur de dev). -> playwright.config.ts : timeout 60 s, expect 10 s.
+Cause 3 (design.spec, thème) : /coach/profil redirigé depuis un bloc Suspense (D-127) : page vide
+  sous charge. -> src/proxy.ts : redirection HTTP 307 vers /coach?parametres=<rubrique>.
+Vérifié : stress 140/140, Paramètres x4 128/128, suite complète 188 réussis / 0 échec.
+```
+
+### Documents de démonstration (D-134)
+```
+Date : 2026-11-05
+scripts/seed-photos.mjs : 6 documents de plus pour l'organisation A (10 au total), rangés dans les
+  catégories existantes, chez Thomas, Inès, Lucas, Nadia, Julien et Emma (pas chez Sophie : son
+  onglet Documents est testé), created_at de J-12 à J-52 (7e colonne facultative du tableau).
+Résultat : « Documents de démonstration : 11 chargés. » ; page Documents : 7 lignes + « Voir plus (3) ».
+```
+
 ### Kit « Coory Pages », page 02 Assistant IA (D-132)
 ```
 Date : 2026-11-05

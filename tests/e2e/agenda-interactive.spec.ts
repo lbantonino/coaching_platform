@@ -189,11 +189,13 @@ test("une séance hebdomadaire déplacée : seulement cette date, ou toute la s�
   await page.setViewportSize({ width: 1440, height: 1100 });
   await loginAsCoachA(page);
   await page.goto(`${AGENDA}?date=2027-02-03`);
+  // 08:00 : une série chaque mercredi, sans fin, occuperait aussi les créneaux des autres tests du
+  // fichier (mercredis 3 et 10 mars à 10:00), qui tournent en même temps.
   const block = await createFromSlot(page, {
     title,
     date: "2027-02-03",
     dayLabel: "Mercredi 3 février",
-    hour: 10,
+    hour: 8,
     weekly: true,
   });
   const inDay = (date: string) => column(page, date).getByRole("link", { name: new RegExp(title) });

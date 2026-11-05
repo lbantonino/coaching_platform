@@ -138,6 +138,63 @@ const documents = [
     "da000000-0000-4000-8000-000000000004",
     COACH_A,
   ],
+  // Six de plus (demande d'Antonino du 05/11, tâche 5) : au-delà de 7 lignes, la page Documents
+  // montre « Voir plus » (kit « Coory Pages » 05). Datés des semaines passées (dernier nombre, en
+  // jours) : le tri par date a du sens et les documents des tests (plus récents) restent en tête.
+  [
+    "d0c00000-0000-4000-8000-0000000000a5",
+    ORG_A,
+    "Questionnaire de santé",
+    "bilan",
+    "da000000-0000-4000-8000-000000000003",
+    COACH_A,
+    12,
+  ],
+  [
+    "d0c00000-0000-4000-8000-0000000000a6",
+    ORG_A,
+    "Plan nutrition, semaine type",
+    "programme",
+    "da000000-0000-4000-8000-000000000004",
+    COACH_A,
+    18,
+  ],
+  [
+    "d0c00000-0000-4000-8000-0000000000a7",
+    ORG_A,
+    "Contrat small group Hyrox",
+    "contrat",
+    "da000000-0000-4000-8000-000000000005",
+    COACH_A,
+    25,
+  ],
+  [
+    "d0c00000-0000-4000-8000-0000000000a8",
+    ORG_A,
+    "Bilan VMA de septembre",
+    "bilan",
+    "da000000-0000-4000-8000-000000000002",
+    COACH_A,
+    33,
+  ],
+  [
+    "d0c00000-0000-4000-8000-0000000000a9",
+    ORG_A,
+    "Facture FAC-2026-009",
+    "facture",
+    "da000000-0000-4000-8000-000000000006",
+    COACH_A,
+    41,
+  ],
+  [
+    "d0c00000-0000-4000-8000-0000000000aa",
+    ORG_A,
+    "Fiche d'inscription au club",
+    "autre",
+    "da000000-0000-4000-8000-000000000011",
+    COACH_A,
+    52,
+  ],
   // Organisation B : invisible pour le coach A (isolation).
   ["d0c00000-0000-4000-8000-0000000000b1", ORG_B, "Règlement de la salle", "autre", null, COACH_B],
 ];
@@ -153,7 +210,7 @@ const { data: categories, error: categoriesError } = await supabase
   .from("document_categories")
   .select("id, organization_id, name");
 if (categoriesError) throw new Error(`Catégories : ${categoriesError.message}`);
-for (const [id, org, name, category, athleteId, createdBy] of documents) {
+for (const [id, org, name, category, athleteId, createdBy, daysAgo] of documents) {
   const categoryId =
     categories.find((item) => item.organization_id === org && item.name === labels[category])?.id ??
     null;
@@ -173,6 +230,7 @@ for (const [id, org, name, category, athleteId, createdBy] of documents) {
     mime_type: "application/pdf",
     size_bytes: bytes.length,
     created_by: createdBy,
+    ...(daysAgo ? { created_at: new Date(Date.now() - daysAgo * 86_400_000).toISOString() } : {}),
   });
   if (error) throw new Error(`${name} : ${error.message}`);
 }
