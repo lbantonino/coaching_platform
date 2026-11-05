@@ -7,7 +7,13 @@ import { z } from "zod";
 import { EmptyState } from "@/components/ui/empty-state";
 import { barBackClass, barBackIcon } from "@/components/layout/back-link";
 import { MobileBarTitle } from "@/components/layout/mobile-bar";
-import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
+import {
+  PageBody,
+  PageHeader,
+  PageLoading,
+  pageMainClass,
+  phoneScreenMainClass,
+} from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireCoach } from "@/features/auth/guards";
@@ -34,7 +40,7 @@ export const metadata: Metadata = {
 // lus » de la cloche y mène.
 export default function MessagesPage({ searchParams }: PageProps<"/coach/messages">) {
   return (
-    <main className={pageMainClass}>
+    <main className={`${pageMainClass} ${phoneScreenMainClass}`}>
       <Suspense fallback={<PageLoading />}>
         {searchParams.then((query) => (
           <Messages
@@ -106,8 +112,12 @@ async function Messages({
         subtitle="Conversations 1:1 avec tes sportifs."
         actions={<NewMessage variant="header" loadAthletes={loadAthletes} />}
       />
-      <PageBody fill>
-        <div className="grid min-h-0 gap-4 lg:flex-1 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[400px_minmax(0,1fr)]">
+      {/* Téléphone, fil ouvert (demande d'Antonino du 05/11, D-138) : la carte de la conversation
+          occupe tout l'écran, les messages défilent dedans, la saisie reste en bas de la carte. */}
+      <PageBody fill screen={Boolean(requested)}>
+        <div
+          className={`grid min-h-0 gap-4 lg:flex-1 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[400px_minmax(0,1fr)] ${requested ? "max-lg:flex-1 max-lg:grid-rows-[minmax(0,1fr)]" : ""}`}
+        >
           {/* Liste : « Conversations », recherche, filtres, lignes. */}
           <section
             aria-labelledby="conversations-title"
@@ -173,7 +183,7 @@ async function Messages({
           {/* Le fil. */}
           <section
             aria-labelledby="thread-title"
-            className={`${card} lg:min-h-0 ${requested ? "" : "max-lg:hidden"}`}
+            className={`${card} min-h-0 ${requested ? "" : "max-lg:hidden"}`}
           >
             {athlete ? (
               <>
@@ -220,7 +230,7 @@ async function Messages({
                     messages et saisie centrés sur 860 px, la barre de défilement reste au bord. */}
                 <ol
                   aria-label={`Messages avec ${athlete.displayName}`}
-                  className="flex min-h-[40vh] flex-1 flex-col-reverse gap-4 overflow-y-auto overscroll-contain px-4 py-5 lg:min-h-0 lg:px-[max(30px,calc((100%-860px)/2))]"
+                  className="flex min-h-0 flex-auto flex-col-reverse gap-4 overflow-y-auto overscroll-contain px-4 py-5 lg:px-[max(30px,calc((100%-860px)/2))]"
                 >
                   {thread.length === 0 ? (
                     <li className="text-[14px] text-muted">

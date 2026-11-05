@@ -14,7 +14,9 @@ import { ActionMenu } from "@/components/ui/overlay";
 // Bouton « + Créer » du tableau de bord (prompt Claude Design §7.2) : menu « ••• » en feuille du bas
 // sur téléphone, fenêtre centrée sur ordinateur. Séance ouvre la fenêtre « Nouvelle séance » sans
 // quitter la page (D-35), comme Tâche (D-59) et Paiement reçu ; Sportif ouvre sa page de création ;
-// Programme la page de son module (D-32). Plus de Facture (D-90).
+// Programme la page de son module (D-32). Plus de Facture (D-90). Icônes en couleur (demande
+// d'Antonino du 05/11, comme Nouveau paiement / Nouvelle dépense de la Comptabilité) : teintes du kit
+// des boîtes, jamais le rouge (réservé aux suppressions) ; Paiement reçu en violet, comme en Comptabilité.
 export function CreateMenu({ orgBase }: { orgBase: string }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -56,6 +58,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
             label: "Séance",
             description: "Individuelle ou collective, dans l'agenda",
             icon: CalendarPlus,
+            tone: "running",
             chevron: true,
             onSelect: () => openNewSession?.(),
           },
@@ -63,6 +66,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
             label: "Programme",
             description: "Plusieurs semaines pour un sportif",
             icon: FilePlus,
+            tone: "hybrid",
             chevron: true,
             onSelect: go("/coach/programmes"),
           },
@@ -70,6 +74,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
             label: "Tâche",
             description: "Un rappel pour toi",
             icon: ClipboardList,
+            tone: "warn",
             chevron: true,
             onSelect: () => openTask?.(),
           },
@@ -77,6 +82,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
             label: "Sportif",
             description: "Une nouvelle fiche",
             icon: UserPlus,
+            tone: "ok",
             chevron: true,
             onSelect: go(`${orgBase}/sportifs/nouveau`),
           },
@@ -84,6 +90,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
             label: "Paiement reçu",
             description: "L'argent reçu d'un sportif",
             icon: Coins,
+            tone: "accent",
             chevron: true,
             onSelect: () => openNewPayment?.(),
           },

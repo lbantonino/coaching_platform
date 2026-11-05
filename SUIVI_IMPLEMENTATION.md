@@ -85,6 +85,30 @@ Grand écran : tasks-view (max-w-[1370px]), messages/page + composer (px max(30p
 viewport-fit=cover : reporté à la séance iPhone.
 ```
 
+### Boîtes invisibles sur iPhone + menu « Créer » en couleur (D-137)
+```
+Date : 2026-11-05
+Symptôme (iPhone, iOS 26.6.2, Safari) : fond assombri, feuille invisible (menu du compte, « + » du
+  tableau de bord et de la Comptabilité, Importer, Nouveau message) ; Nouvelle séance OK.
+Preuve : alerte de diagnostic temporaire (serveur de dev seulement, retirée) : h=0, mt=796px,
+  transform none, aucune erreur. Après correctif : h=435.
+Cause : colonne flex à hauteur intrinsèque + enfants flex-1 (base 0 %) -> 0 px dans WebKit.
+Correctif : flex-auto (overlay.tsx x5, assistant.tsx, documents-view.tsx x2).
+Couleurs : create-menu.tsx et fiche-create-menu.tsx, propriété tone d'ActionMenu.
+```
+
+### viewport-fit=cover + conversation plein écran sur téléphone (D-138)
+```
+Date : 2026-11-05
+layout.tsx : viewport.viewportFit = "cover" (meta : width=device-width, initial-scale=1, viewport-fit=cover).
+page-header.tsx : PageBody screen (max-lg:min-h-0 max-lg:flex-1, data-phone-screen) + phoneScreenMainClass.
+messages/page.tsx : main + phoneScreenMainClass ; PageBody screen si un fil est demandé ; grille
+  max-lg:flex-1 grid-rows-[minmax(0,1fr)] ; fil min-h-0 flex-auto.
+Mesures (Chromium) : 390x844 et 390x667, page = écran, carte jusqu'à 28 px du bas, saisie en bas ;
+  30x plus de messages : la carte ne bouge pas, le fil défile, ouvert sur le plus récent ; 1280 inchangé.
+iPhone d'Antonino (iOS 26.6.2) : bords, « + », boîtes, ☰, conversation et clavier : OK.
+```
+
 ### Kit « Coory Pages », page 02 Assistant IA (D-132)
 ```
 Date : 2026-11-05

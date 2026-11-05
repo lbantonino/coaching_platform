@@ -397,7 +397,7 @@ export function Overlay({
       } ${tall || size === "preview" ? "max-md:h-[calc(100%-44px)]" : ""}`}
     >
       {rendered ? (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-auto flex-col">
           {/* Poignée du téléphone (40 × 5) ; on attrape aussi l'en-tête, juste dessous. Pas pour les
               Paramètres, en plein écran. */}
           {size === "settings" || size === "assistant" ? null : (
@@ -488,8 +488,11 @@ export function DialogHeader({
 }
 
 // Corps qui défile entre l'en-tête et le pied ; arrivé en bout, le défilement ne passe pas à la page.
+// `flex-auto` (et non `flex-1`) dans toute la colonne d'une fenêtre : sa hauteur suit son contenu, et
+// Safari (iOS 26) écrase à 0 une colonne dont les parties partent de 0 (`flex-1` = base 0 %) ; Chrome
+// mesurait le contenu. Constaté sur le vrai iPhone d'Antonino le 05/11 (fond sombre, feuille de 0 px).
 const bodyClass =
-  "min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-5 pt-2.5 pb-[22px] md:px-6";
+  "min-h-0 flex-auto overflow-x-hidden overflow-y-auto overscroll-contain px-5 pt-2.5 pb-[22px] md:px-6";
 
 // Corps qui défile d'un formulaire qui pose lui-même son pied (Sheet `bare`) : le formulaire et ses
 // boutons vivent dans le même composant, le pied reste hors de la zone qui défile.
@@ -778,7 +781,7 @@ export function MenuDialog({
         </div>
       ) : null}
       <div
-        className={`flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-2.5 pt-1 pb-5 ${
+        className={`flex min-h-0 flex-auto flex-col gap-0.5 overflow-y-auto overscroll-contain px-2.5 pt-1 pb-5 ${
           anchor ? "md:p-2" : "md:px-3 md:pb-3.5"
         }`}
       >
@@ -846,7 +849,7 @@ export function ActionMenu({
       />
       <ul
         onKeyDown={moveFocus}
-        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain px-2.5 pt-1 pb-5 md:px-3 md:pb-3.5"
+        className="flex min-h-0 flex-auto flex-col gap-0.5 overflow-y-auto overscroll-contain px-2.5 pt-1 pb-5 md:px-3 md:pb-3.5"
       >
         {items.map((item, index) => (
           <Fragment key={item.label}>
@@ -951,7 +954,7 @@ export function ConfirmDialog({
     >
       <div
         data-sheet-grab
-        className="flex min-h-0 flex-1 touch-none flex-col overflow-y-auto overscroll-contain px-5 pt-3.5 pb-[26px] md:p-7"
+        className="flex min-h-0 flex-auto touch-none flex-col overflow-y-auto overscroll-contain px-5 pt-3.5 pb-[26px] md:p-7"
       >
         <span
           aria-hidden

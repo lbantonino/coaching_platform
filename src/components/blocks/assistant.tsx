@@ -175,7 +175,7 @@ function AssistantDialog() {
       labelledBy={titleId}
       size="assistant"
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pt-4 pb-5 md:gap-5 md:px-6 md:pt-5 md:pb-5">
+      <div className="flex min-h-0 flex-auto flex-col gap-4 px-4 pt-4 pb-5 md:gap-5 md:px-6 md:pt-5 md:pb-5">
         <div className="flex items-center gap-2.5">
           <AssistantOrb size={26} />
           <h2 id={titleId} className="flex-1 text-[15px] leading-[normal] font-semibold">

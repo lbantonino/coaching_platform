@@ -137,21 +137,27 @@ export function PageHeader({
 // `grow` (Documents, kit « Coory Pages » 05, D-120) : sur téléphone comme sur ordinateur, le corps prend
 // AU MOINS la hauteur restante (sa carte descend jusqu'en bas, comme la maquette) et grandit avec son
 // contenu (la page défile).
+// `screen` (fil de Messages, D-138) : sur téléphone, le corps fait EXACTEMENT la hauteur restante de
+// l'écran (la page ne défile pas, c'est la carte qui défile à l'intérieur) ; le <main> de la page doit
+// alors porter `phoneScreenMainClass`.
 export function PageBody({
   grid = false,
   fill = false,
   grow = false,
+  screen = false,
   children,
 }: {
   grid?: boolean;
   fill?: boolean;
   grow?: boolean;
+  screen?: boolean;
   children: ReactNode;
 }) {
   return (
     <div
       data-page-body=""
-      className={`px-3.5 pt-3.5 pb-7 lg:pt-4 lg:pr-3.5 lg:pl-5 lg:pb-3.5 ${fill ? "lg:min-h-0 lg:flex-1" : ""} ${grow ? "flex-1" : ""} ${
+      data-phone-screen={screen ? "" : undefined}
+      className={`px-3.5 pt-3.5 pb-7 lg:pt-4 lg:pr-3.5 lg:pl-5 lg:pb-3.5 ${fill ? "lg:min-h-0 lg:flex-1" : ""} ${grow ? "flex-1" : ""} ${screen ? "max-lg:min-h-0 max-lg:flex-1" : ""} ${
         // Téléphone (26/10) : plus d'air entre les sections d'une page en grille (tableau de bord…).
         grid
           ? "grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-4"
@@ -165,6 +171,10 @@ export function PageBody({
 
 // Conteneur d'une page des espaces : l'en-tête et le corps s'y suivent.
 export const pageMainClass = "flex w-full min-w-0 flex-1 flex-col";
+// Téléphone : le <main> prend exactement la hauteur de l'écran sous la barre du haut quand son corps
+// est en mode `screen` (comme l'Agenda) ; sinon rien ne change.
+export const phoneScreenMainClass =
+  "max-lg:has-[[data-phone-screen]]:h-[calc(100dvh-var(--top-bar)-env(safe-area-inset-top))] max-lg:has-[[data-phone-screen]]:flex-none";
 
 // Chargement d'une page entière (repli de <Suspense>), aux marges de l'en-tête.
 export function PageLoading({ label }: { label?: string }) {
