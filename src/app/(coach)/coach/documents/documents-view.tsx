@@ -1013,7 +1013,7 @@ function Preview({
       </div>
 
       {/* Téléphone */}
-      <div className="flex min-h-0 flex-1 flex-col md:hidden">
+      <div className="flex min-h-0 flex-auto flex-col md:hidden">
         <div className="flex shrink-0 items-start gap-3 px-5 pt-3 pb-1.5">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h2 className="text-[21px] leading-[normal] font-bold tracking-[-0.02em] break-words">
@@ -1030,7 +1030,7 @@ function Preview({
           </div>
           {close}
         </div>
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-5 pt-3.5 pb-6">
+        <div className="flex min-h-0 flex-auto flex-col gap-3 overflow-y-auto overscroll-contain px-5 pt-3.5 pb-6">
           <div className="flex flex-col items-center gap-4 rounded-[20px] bg-dlg-tile p-6">
             {document.kind === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element -- fichier privé servi par l'app

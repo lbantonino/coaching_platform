@@ -62,6 +62,7 @@ export function FicheCreateMenu({
             label: "Programme",
             description: "Plusieurs semaines d'entraînement",
             icon: FilePlus,
+            tone: "hybrid",
             chevron: true,
             onSelect: () => router.push("/coach/programmes"),
           },
@@ -69,6 +70,7 @@ export function FicheCreateMenu({
             label: "Séance",
             description: "Une séance dans l'agenda",
             icon: CalendarPlus,
+            tone: "running",
             chevron: true,
             onSelect: () =>
               openNewSession?.({

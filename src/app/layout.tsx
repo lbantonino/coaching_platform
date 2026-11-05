@@ -61,6 +61,9 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "#f3f2f7" },
   ],
   colorScheme: "dark light",
+  // La page va jusqu'aux bords de l'iPhone (encoche, barre d'accueil) : sans « cover », les
+  // `env(safe-area-inset-*)` du code valent 0 (validation H du kit, décision d'Antonino, D-138).
+  viewportFit: "cover",
 };
 
 // suppressHydrationWarning sur <html> : themeInitScript y pose data-theme ("dark" ou "light") avant React,
