@@ -145,3 +145,23 @@ export async function setAgendaFilter(
 }
 
 export { isPhone };
+
+// Paramètres (kit « Coory Pages », page 13, D-127) : plus de page, une fenêtre. L'ancienne adresse
+// /coach/profil?onglet=… ouvre la fenêtre à cette rubrique par-dessus le tableau de bord.
+export async function openSettings(page: Page, section: string) {
+  await page.goto(`/coach/profil?onglet=${section}`);
+  const dialog = page.getByRole("dialog", { name: "Paramètres" });
+  await expect(dialog).toBeVisible();
+  await expect(page).toHaveURL(/\/coach$/);
+  return dialog;
+}
+
+// Change de rubrique dans la fenêtre : la colonne sur ordinateur, le menu déroulant sur téléphone.
+export async function chooseSettingsSection(page: Page, name: string) {
+  const dialog = page.getByRole("dialog", { name: "Paramètres" });
+  if (isPhone(page)) await dialog.locator("button[aria-expanded]").click();
+  await dialog
+    .getByRole("navigation", { name: "Sections des paramètres" })
+    .getByRole("button", { name: new RegExp(`^${name}`) })
+    .click();
+}

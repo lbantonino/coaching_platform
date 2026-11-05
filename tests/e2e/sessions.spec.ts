@@ -142,7 +142,11 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   await expect(confirmDelete).toBeHidden();
   await page.getByRole("button", { name: "Enregistrer" }).click();
   await expect(details).toContainText("19:30");
-  await expect(page.getByText("1 inscrit", { exact: true })).toBeVisible();
+  // Dans la carte de la séance : la page « Modifier » quittée reste cachée dans le DOM (Next), avec
+  // son récapitulatif « 1 inscrit ».
+  await expect(
+    page.getByRole("region", { name: "Cette séance" }).getByText("1 inscrit", { exact: true }),
+  ).toBeVisible();
 
   // Suppression par le menu « ••• », après confirmation : retour à l'agenda, la séance n'y est plus.
   await deleteOpenSession(page, title);
@@ -288,6 +292,9 @@ test("une date de séance se marque payée, compte dans la comptabilité, puis s
 
   // Comptabilité : le paiement de cette date, en virement (le mode de la séance).
   await page.goto("/coach/comptabilite");
+  // Les 5 derniers paiements s'affichent ; les autres derrière « Voir les N paiements » (D-130).
+  const more = page.getByRole("button", { name: /^Voir les \d+ paiements$/ });
+  if ((await more.count()) > 0) await more.click();
   const payment = page
     .getByRole("list", { name: "Liste des paiements" })
     .getByRole("listitem")

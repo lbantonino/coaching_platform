@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+import { useAssistant } from "@/components/blocks/assistant";
 import { CountBadge } from "@/components/ui/count-badge";
 
 import { notificationsHref } from "./navigation";
@@ -17,9 +18,13 @@ import { useShell } from "./shell-context";
 // Coach : la recherche ouvre la page Recherche globale (D-62) avec la saisie.
 // Sportif et admin : la recherche ouvre la page Recherche de l'espace. ⌘K / Ctrl K y mène aussi.
 // `compact` (barre de l'Agenda, D-78) : sous 1536 px, la recherche devient une loupe (⌘K marche
-// toujours) pour laisser la place au choix de la vue et à « Nouvelle séance ».
-export function HeaderTools({ compact = false }: { compact?: boolean }) {
+// toujours) pour laisser la place au choix de la vue et à « Nouvelle séance ». `compact="xl"` (page
+// avec retour et boutons, D-124) : la loupe seulement sous 1280 px, pour que le chemin
+// « ← Bibliothèque · Back squat » reste lisible sur une seule ligne.
+export function HeaderTools({ compact = false }: { compact?: boolean | "xl" }) {
   const { space, orgBase } = useShell();
+  const icon = compact === "xl" ? "xl:hidden" : "2xl:hidden";
+  const field = compact === "xl" ? "hidden xl:contents" : "hidden 2xl:contents";
   return (
     <div className="hidden items-center gap-2.5 lg:flex">
       {compact && space === "coach" ? (
@@ -27,13 +32,13 @@ export function HeaderTools({ compact = false }: { compact?: boolean }) {
           href="/coach/recherche"
           aria-label="Rechercher dans Coory"
           title="Rechercher (⌘K)"
-          className={`${headerIcon} 2xl:hidden`}
+          className={`${headerIcon} ${icon}`}
         >
           <Search aria-hidden size={15} strokeWidth={1.8} />
         </Link>
       ) : null}
       {space === "coach" && orgBase ? (
-        <span className={compact ? "hidden 2xl:contents" : "contents"}>
+        <span className={compact ? field : "contents"}>
           <CoachSearch />
         </span>
       ) : (
@@ -55,20 +60,41 @@ const phoneIcon =
 // Assistant IA (coach) : dans l'en-tête des pages sur ordinateur (avec son nom), et dans la barre du haut
 // sur téléphone (demande d'Antonino du 29/10/2026 : « super important »). En violet (D-77) pour qu'on
 // comprenne qu'il s'ouvre : translucide en sombre, plein en clair.
+// Kit « Coory Pages », 02 (D-132) : il ouvre la boîte de l'assistant par-dessus la page (et la ferme) ;
+// sans la boîte (hors espace coach), il mène à la page de l'assistant.
 export function AssistantButton({ withLabel = false }: { withLabel?: boolean }) {
-  return (
-    <Link
-      href="/coach/assistant"
-      aria-label={withLabel ? undefined : "Assistant IA"}
-      className={`inline-flex shrink-0 items-center justify-center bg-ai-bg text-ai-text inset-ring inset-ring-ai-border transition-[filter] duration-150 hover:brightness-110 ${
-        withLabel
-          ? "h-8 gap-1.5 rounded-[9px] px-3 text-[12.5px] font-medium"
-          : "size-10 rounded-xl"
-      }`}
-    >
+  const assistant = useAssistant();
+  const className = `inline-flex shrink-0 items-center justify-center bg-ai-bg text-ai-text inset-ring inset-ring-ai-border transition-[filter] duration-150 hover:brightness-110 ${
+    withLabel ? "h-8 gap-1.5 rounded-[9px] px-3 text-[12.5px] font-medium" : "size-10 rounded-xl"
+  }`;
+  const content = (
+    <>
       <Sparkles aria-hidden size={withLabel ? 13 : 16} strokeWidth={1.8} className="fill-current" />
       {withLabel ? "Assistant IA" : null}
-    </Link>
+    </>
+  );
+  if (!assistant) {
+    return (
+      <Link
+        href="/coach/assistant"
+        aria-label={withLabel ? undefined : "Assistant IA"}
+        className={className}
+      >
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <button
+      type="button"
+      aria-label={withLabel ? undefined : "Assistant IA"}
+      aria-expanded={assistant.open}
+      aria-haspopup="dialog"
+      onClick={() => (assistant.open ? assistant.closeDialog() : assistant.openDialog())}
+      className={className}
+    >
+      {content}
+    </button>
   );
 }
 

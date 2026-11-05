@@ -1,23 +1,18 @@
-import { Coins, Flag, ListChecks, MessageSquare, UserPen, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense, type ReactNode } from "react";
-
-import { MarkAllRead, NotificationRow } from "./notification-row";
+import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { Avatar } from "@/components/ui/avatar";
-import { Badge, StatusBadge } from "@/components/ui/badge";
-import { Card, CardEmpty } from "@/components/ui/card";
-import { CountBadge } from "@/components/ui/count-badge";
 import { formatMoney } from "@/domain/billing/money";
 import { requireCoach } from "@/features/auth/guards";
 import { getCoachProfile } from "@/features/coach/profile";
 import { NOTIFICATION_KINDS, notificationKindLabels } from "@/features/coach/settings";
 import {
-  dismissNotification,
-  restoreNotification,
+  deleteNotifications,
+  dismissNotifications,
+  restoreNotifications,
   setNotificationsRead,
+  undeleteNotifications,
 } from "@/features/notifications/actions";
 import { unpaidSub } from "@/features/notifications/preview";
 import { COMPETITION_NOTICE_DAYS, getNotifications } from "@/features/notifications/queries";
@@ -29,19 +24,19 @@ import {
   todayIsoInBrussels,
 } from "@/lib/format";
 
+import { NotificationsView, type NotificationSection } from "./notifications-view";
+
 export const metadata: Metadata = {
   title: "Notifications",
 };
 
-// Page Notifications (demande d'Antonino, 24/10, D-37) : ce qui demande l'attention du coach, en
-// sections : compétitions des sportifs dans les 7 jours (rappels, 26/10 : elles ne sont plus dans
-// l'agenda du coach), messages non lus, tâches du jour ou en retard, séances à encaisser (D-90),
-// fiches à compléter.
-// Tout est calculé à partir des vraies données ; chaque ligne mène là où on s'en occupe, et une ligne
-// disparaît d'elle-même une fois la chose faite (message lu, tâche cochée, séance payée, fiche
-// complétée). Les retours de séance des sportifs s'ajouteront en P6.
-// 4e (D-61) : chaque ligne se marque lue (en l'ouvrant, ou par « ••• ») ou se masque ; « Tout marquer
-// comme lu » en rouge. La cloche ne compte que ce qui n'est ni lu ni masqué.
+// Page Notifications (demande d'Antonino, 24/10, D-37 ; refaite au kit « Coory Pages », page 03,
+// D-128) : ce qui demande l'attention du coach, en sections : messages non lus, tâches du jour ou en
+// retard, fiches à compléter, séances à encaisser (D-90), compétitions des sportifs dans les 7 jours.
+// Tout est calculé à partir des vraies données ; chaque ligne mène là où on s'en occupe (et la marque
+// lue), et disparaît d'elle-même une fois la chose faite. Le coach peut aussi la marquer lue / non
+// lue, la masquer (onglet « Masquées », réversible) ou la supprimer (décision 11 : cachée pour de bon),
+// ligne par ligne (menu « ··· ») ou par sélection ; « Annuler » pendant 5 secondes.
 export default function NotificationsPage() {
   return (
     <main className={pageMainClass}>
@@ -63,244 +58,155 @@ async function NotificationList() {
   ]);
   // Catégories gardées dans Paramètres > Préférences (D-57) : les autres ne s'affichent pas ici.
   const { notify } = profile.preferences;
-  const competitions = notify.competitions ? all.competitions : [];
-  const messages = notify.messages ? all.messages : [];
-  const tasks = notify.tasks ? all.tasks : [];
-  const unpaid = notify.unpaid ? all.unpaid : [];
-  const profiles = notify.profiles ? all.profiles : [];
   const hidden = NOTIFICATION_KINDS.filter((kind) => !notify[kind]);
-  const unreadOf = (items: { read: boolean }[]) => items.filter((item) => !item.read).length;
-  const unreadKeys = [...competitions, ...messages, ...tasks, ...unpaid, ...profiles]
-    .filter((item) => !item.read)
-    .map((item) => item.key);
-  const total = unreadKeys.length;
-  const actions = {
-    setRead: setNotificationsRead.bind(null, organizationId),
-    dismiss: dismissNotification.bind(null, organizationId),
-    restore: restoreNotification.bind(null, organizationId),
-  };
-  // Une ligne par clé ET par état : quand la page se recalcule (ex. « Tout marquer comme lu »), la
-  // ligne repart de l'état enregistré.
-  const rowKey = (item: { key: string; read: boolean }) => `${item.key}:${item.read}`;
+  const sportifs = `/coach/o/${organizationId}/sportifs`;
+
+  // Les sections, dans l'ordre du kit (ordinateur : gauche puis droite ; téléphone : voir la vue).
+  const sections: NotificationSection[] = [];
+  if (notify.messages) {
+    sections.push({
+      id: "messages",
+      title: "Messages non lus",
+      link: { href: "/coach/messages", label: "Ouvrir" },
+      items: all.messages.map((conversation) => ({
+        key: conversation.key,
+        read: conversation.read,
+        dismissed: conversation.dismissed,
+        href: `/coach/messages?sportif=${conversation.athlete.id}`,
+        title: conversation.athlete.name,
+        sub: conversation.lastBody,
+        person: {
+          name: conversation.athlete.name,
+          photoPath: conversation.athlete.photoPath,
+          sex: conversation.athlete.sex,
+        },
+        tags: [
+          {
+            label: `${conversation.unread} non lu${conversation.unread > 1 ? "s" : ""}`,
+            tone: "warn",
+          },
+        ],
+        right: { text: messageTime(conversation.lastAt, today) },
+        menuSubtitle: `Message · ${messageTime(conversation.lastAt, today)} · ${
+          conversation.unread
+        } non lu${conversation.unread > 1 ? "s" : ""}`,
+      })),
+    });
+  }
+  if (notify.tasks) {
+    sections.push({
+      id: "tasks",
+      title: "Tâches du jour ou en retard",
+      link: { href: "/coach/taches", label: "Tâches" },
+      items: all.tasks.map((task) => {
+        const due = dueLabel(task.dueOn, today) === "En retard" ? "En retard" : "Aujourd'hui";
+        return {
+          key: task.key,
+          read: task.read,
+          dismissed: task.dismissed,
+          href: "/coach/taches?onglet=aujourdhui",
+          title: task.title,
+          sub: task.athleteName ?? "",
+          tags: [
+            ...(task.priority === "high" ? [{ label: "Haute", tone: "warn" as const }] : []),
+            { label: due, tone: due === "En retard" ? ("warn" as const) : ("neutral" as const) },
+          ],
+          menuSubtitle: `Tâche · ${due}`,
+        };
+      }),
+    });
+  }
+  if (notify.profiles) {
+    sections.push({
+      id: "profiles",
+      title: "Fiches à compléter",
+      link: { href: sportifs, label: "Sportifs" },
+      items: all.profiles.map((athlete) => ({
+        key: athlete.key,
+        read: athlete.read,
+        dismissed: athlete.dismissed,
+        href: `${sportifs}/${athlete.id}?onglet=profil`,
+        title: athlete.name,
+        sub: `Manque : ${athlete.missing.join(", ")}`,
+        person: { name: athlete.name, photoPath: athlete.photoPath, sex: athlete.sex },
+        menuSubtitle: "Fiche à compléter",
+      })),
+    });
+  }
+  // Séances à encaisser (D-90, à la place des factures en retard) : chacune ouvre sa séance, sur la
+  // bonne date, où elle se marque payée.
+  if (notify.unpaid) {
+    sections.push({
+      id: "unpaid",
+      title: "Séances à encaisser",
+      link: { href: "/coach/comptabilite", label: "Comptabilité" },
+      items: all.unpaid.map((date) => ({
+        key: date.key,
+        read: date.read,
+        dismissed: date.dismissed,
+        href: date.sessionHref,
+        title: date.athleteName ?? date.title,
+        sub: unpaidSub(date, today),
+        person: date.athleteName
+          ? { name: date.athleteName, photoPath: null, sex: null }
+          : undefined,
+        right: { text: formatMoney(date.amountCents, date.currency), strong: true },
+        menuSubtitle: `Séance à encaisser · ${formatMoney(date.amountCents, date.currency)}`,
+      })),
+    });
+  }
+  if (notify.competitions) {
+    sections.push({
+      id: "competitions",
+      title: `Compétitions dans les ${COMPETITION_NOTICE_DAYS} jours`,
+      items: all.competitions.map((competition) => {
+        const gap = daysBetween(today, competition.date);
+        const when = gap === 0 ? "Jour J" : `J-${gap}`;
+        return {
+          key: competition.key,
+          read: competition.read,
+          dismissed: competition.dismissed,
+          href: `${sportifs}/${competition.athleteId}?onglet=objectifs`,
+          title: `${competition.title} · ${competition.athleteName}`,
+          sub: competition.detail || "Compétition",
+          // Le jour en étiquette (ordinateur), « J-3 » à droite (aussi sur téléphone).
+          tags: [{ label: dayShortLabel(competition.date, today), tone: "neutral" }],
+          right: { text: when },
+          menuSubtitle: `Compétition · ${when}`,
+        };
+      }),
+    });
+  }
 
   return (
     <>
-      <PageHeader
-        title="Notifications"
-        subtitle={total > 0 ? `${total} à voir` : "Tout est à jour."}
-        actions={<MarkAllRead keys={unreadKeys} setRead={actions.setRead} />}
-      />
-      <PageBody grid>
+      <PageHeader title="Notifications" />
+      <PageBody>
         {hidden.length > 0 ? (
-          <p className="text-small text-muted lg:col-span-12">
+          <p className="px-1.5 text-[13px] leading-[1.45] text-muted">
             Masqué :{" "}
             {hidden.map((kind) => notificationKindLabels[kind].label.toLowerCase()).join(", ")}.{" "}
             <Link
-              href="/coach/profil?onglet=preferences"
+              // La fenêtre des Paramètres s'ouvre par-dessus cette page (D-127).
+              href="/coach/notifications?parametres=preferences"
+              scroll={false}
               className="font-medium text-text underline underline-offset-4"
             >
               Changer dans Paramètres
             </Link>
           </p>
         ) : null}
-        {notify.competitions ? (
-          <Section
-            id="notif-competitions"
-            title={`Compétitions dans les ${COMPETITION_NOTICE_DAYS} jours`}
-            count={unreadOf(competitions)}
-            icon={Flag}
-          >
-            {competitions.map((competition) => {
-              const gap = daysBetween(today, competition.date);
-              return (
-                <NotificationRow
-                  key={rowKey(competition)}
-                  notificationKey={competition.key}
-                  read={competition.read}
-                  actions={actions}
-                  href={`/coach/o/${organizationId}/sportifs/${competition.athleteId}?onglet=objectifs`}
-                  leading={
-                    <span className="flex w-[84px] shrink-0 flex-col font-mono text-[12px] leading-tight tabular">
-                      <span className="text-accent-text">
-                        {dayShortLabel(competition.date, today)}
-                      </span>
-                      <span className="text-[13px] font-medium">
-                        {gap === 0 ? "Jour J" : `J-${gap}`}
-                      </span>
-                    </span>
-                  }
-                  title={`${competition.title} · ${competition.athleteName}`}
-                  sub={competition.detail || "Compétition"}
-                  menuSubtitle={`Compétition · ${gap === 0 ? "Jour J" : `J-${gap}`}`}
-                />
-              );
-            })}
-          </Section>
-        ) : null}
-
-        {notify.messages ? (
-          <Section
-            id="notif-messages"
-            title="Messages non lus"
-            count={unreadOf(messages)}
-            icon={MessageSquare}
-          >
-            {messages.map((conversation) => (
-              <NotificationRow
-                key={rowKey(conversation)}
-                notificationKey={conversation.key}
-                read={conversation.read}
-                actions={actions}
-                href={`/coach/messages?sportif=${conversation.athlete.id}`}
-                leading={
-                  <Avatar
-                    name={conversation.athlete.name}
-                    photoPath={conversation.athlete.photoPath}
-                    sex={conversation.athlete.sex}
-                  />
-                }
-                title={conversation.athlete.name}
-                sub={conversation.lastBody}
-                menuSubtitle={`Message · ${messageTime(conversation.lastAt, today)} · ${
-                  conversation.unread
-                } non lu${conversation.unread > 1 ? "s" : ""}`}
-                trailing={
-                  <span className="flex flex-col items-end gap-1">
-                    <span className="font-mono text-[11px] text-muted tabular">
-                      {messageTime(conversation.lastAt, today)}
-                    </span>
-                    <Badge tone="live">
-                      {conversation.unread} non lu{conversation.unread > 1 ? "s" : ""}
-                    </Badge>
-                  </span>
-                }
-              />
-            ))}
-          </Section>
-        ) : null}
-
-        {notify.tasks ? (
-          <Section
-            id="notif-tasks"
-            title="Tâches du jour ou en retard"
-            count={unreadOf(tasks)}
-            icon={ListChecks}
-          >
-            {tasks.map((task) => (
-              <NotificationRow
-                key={rowKey(task)}
-                notificationKey={task.key}
-                read={task.read}
-                actions={actions}
-                href="/coach/taches?onglet=aujourdhui"
-                title={task.title}
-                sub={task.athleteName ?? undefined}
-                menuSubtitle={`Tâche · ${
-                  dueLabel(task.dueOn, today) === "En retard" ? "En retard" : "Aujourd'hui"
-                }`}
-                trailing={
-                  <>
-                    {task.priority === "high" ? <StatusBadge label="Haute" /> : null}
-                    <StatusBadge
-                      label={
-                        dueLabel(task.dueOn, today) === "En retard" ? "En retard" : "Aujourd'hui"
-                      }
-                    />
-                  </>
-                }
-              />
-            ))}
-          </Section>
-        ) : null}
-
-        {/* Séances à encaisser (D-90, à la place des factures en retard) : chacune ouvre sa séance,
-            sur la bonne date, où elle se marque payée. */}
-        {notify.unpaid ? (
-          <Section
-            id="notif-unpaid"
-            title="Séances à encaisser"
-            count={unreadOf(unpaid)}
-            icon={Coins}
-          >
-            {unpaid.map((date) => (
-              <NotificationRow
-                key={rowKey(date)}
-                notificationKey={date.key}
-                read={date.read}
-                actions={actions}
-                href={date.sessionHref}
-                title={date.athleteName ?? date.title}
-                sub={unpaidSub(date, today)}
-                menuSubtitle={`Séance à encaisser · ${formatMoney(date.amountCents, date.currency)}`}
-                trailing={
-                  <span className="text-[15px] font-semibold tabular">
-                    {formatMoney(date.amountCents, date.currency)}
-                  </span>
-                }
-              />
-            ))}
-          </Section>
-        ) : null}
-
-        {notify.profiles ? (
-          <Section
-            id="notif-profiles"
-            title="Fiches à compléter"
-            count={unreadOf(profiles)}
-            icon={UserPen}
-          >
-            {profiles.map((profile) => (
-              <NotificationRow
-                key={rowKey(profile)}
-                notificationKey={profile.key}
-                read={profile.read}
-                actions={actions}
-                href={`/coach/o/${organizationId}/sportifs/${profile.id}?onglet=profil`}
-                leading={
-                  <Avatar name={profile.name} photoPath={profile.photoPath} sex={profile.sex} />
-                }
-                title={profile.name}
-                sub={`Manque : ${profile.missing.join(", ")}`}
-                menuSubtitle="Fiche à compléter"
-              />
-            ))}
-          </Section>
-        ) : null}
+        <NotificationsView
+          sections={sections}
+          actions={{
+            setRead: setNotificationsRead.bind(null, organizationId),
+            dismiss: dismissNotifications.bind(null, organizationId),
+            restore: restoreNotifications.bind(null, organizationId),
+            remove: deleteNotifications.bind(null, organizationId),
+            undelete: undeleteNotifications.bind(null, organizationId),
+          }}
+        />
       </PageBody>
     </>
-  );
-}
-
-// Une section : son titre et son nombre (pastille rouge), ses lignes, ou « Rien à signaler ».
-function Section({
-  id,
-  title,
-  count,
-  icon,
-  children,
-}: {
-  id: string;
-  title: string;
-  count: number;
-  icon: LucideIcon;
-  children: ReactNode[];
-}) {
-  return (
-    <Card
-      id={id}
-      title={
-        <span className="inline-flex items-center gap-2">
-          {title}
-          <CountBadge count={count} />
-        </span>
-      }
-      className="lg:col-span-6"
-    >
-      {children.length === 0 ? (
-        <CardEmpty icon={icon}>Rien à signaler.</CardEmpty>
-      ) : (
-        <div className="flex flex-col">{children}</div>
-      )}
-    </Card>
   );
 }

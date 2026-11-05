@@ -575,6 +575,24 @@ values
   ('7b000000-0000-4000-8000-0000000000b1', '0b000000-0000-4000-8000-0000000000b1',
    'Préparer le renfo du lundi', 'normal', current_date + 1, null, null, null, 'b0000000-0000-4000-8000-00000000000b');
 
+-- Listes de tâches du coach A (kit « Coory Pages », page 01, D-129 ; décision 8 : la démo a les 4
+-- listes de la maquette, un vrai coach part sans aucune). Les deux tâches ci-dessus y sont rangées.
+insert into public.coach_task_lists (id, organization_id, name, color, position, created_by)
+values
+  ('71000000-0000-4000-8000-0000000000a1', '0a000000-0000-4000-8000-0000000000a1',
+   'Programmes', 'indigo', 0, 'a0000000-0000-4000-8000-00000000000a'),
+  ('71000000-0000-4000-8000-0000000000a2', '0a000000-0000-4000-8000-0000000000a1',
+   'Facturation', 'amber', 1, 'a0000000-0000-4000-8000-00000000000a'),
+  ('71000000-0000-4000-8000-0000000000a3', '0a000000-0000-4000-8000-0000000000a1',
+   'Fiches sportifs', 'teal', 2, 'a0000000-0000-4000-8000-00000000000a'),
+  ('71000000-0000-4000-8000-0000000000a4', '0a000000-0000-4000-8000-0000000000a1',
+   'Bibliothèque', 'rose', 3, 'a0000000-0000-4000-8000-00000000000a');
+
+update public.coach_tasks set list_id = '71000000-0000-4000-8000-0000000000a1'
+  where id = '7a000000-0000-4000-8000-0000000000a1';
+update public.coach_tasks set list_id = '71000000-0000-4000-8000-0000000000a2'
+  where id = '7a000000-0000-4000-8000-0000000000a2';
+
 -- Messages des sportifs (4a, D-35), inventés : trois non lus pour le coach A, et une ancienne réponse du
 -- coach. Inès et Nadia n'ont pas encore de compte : en vrai, seul un sportif connecté écrira (P7) ; ici,
 -- c'est la démo de la carte Messages. Heures relatives au reset.

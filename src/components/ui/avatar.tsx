@@ -26,6 +26,8 @@ const boxes = {
   // « Modifier la séance » (kit « Coory Pages », 06 / 12) : le sportif (42) et la pile des inscrits (34).
   who: "size-[42px] text-[13px]",
   stack: "size-[34px] text-[11px]",
+  // Ligne de la page Notifications (kit « Coory Pages », 03) : 40 px sur téléphone, 38 sur ordinateur.
+  notif: "size-10 text-[12.5px] lg:size-[38px] lg:text-[12px]",
   xl: "size-16 text-[21px]",
 } as const;
 

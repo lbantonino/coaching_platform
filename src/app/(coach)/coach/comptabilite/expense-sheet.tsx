@@ -64,12 +64,24 @@ export function NewExpenseButton({
 }) {
   const [open, setOpen] = useState(false);
   const [managing, setManaging] = useState(false);
+  // Téléphone (kit « Coory Pages », 04, D-130) : le menu du bouton flottant ouvre cette fenêtre.
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener("coory:new-expense", show);
+    return () => window.removeEventListener("coory:new-expense", show);
+  }, []);
   return (
     <>
+      {/* En-tête, ordinateur : 32 px, filet (kit) ; sur téléphone, le bouton flottant le remplace. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={buttonClass({ variant: "outline", size: "md" })}
+        className={buttonClass({
+          variant: "outline",
+          size: "md",
+          className:
+            "max-lg:hidden lg:h-8! lg:gap-1.5! lg:rounded-[9px]! lg:px-3! lg:text-[12.5px]! lg:[&>svg]:size-3.5",
+        })}
       >
         <Minus aria-hidden size={16} strokeWidth={2} />
         Nouvelle dépense

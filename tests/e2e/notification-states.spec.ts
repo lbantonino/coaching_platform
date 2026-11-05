@@ -35,12 +35,12 @@ test("une notification se marque lue, non lue, et se masque avec « Annuler »",
   await expect(sarah).toContainText("Non lue");
 
   await menu.click();
-  await sheet.getByRole("button", { name: "Marquer comme lue" }).click();
+  await sheet.getByRole("button", { name: "Marquer comme lu", exact: true }).click();
   await expect(sarah).not.toContainText("Non lue");
   await expect.poll(() => bellCount(page)).toBe(before - 1);
 
   await menu.click();
-  await sheet.getByRole("button", { name: "Marquer comme non lue" }).click();
+  await sheet.getByRole("button", { name: "Marquer comme non lu" }).click();
   await expect(sarah).toContainText("Non lue");
   await expect.poll(() => bellCount(page)).toBe(before);
 
@@ -59,25 +59,23 @@ test("« Tout marquer comme lu » vide la cloche ; une tâche reportée revient 
 }) => {
   test.skip(isPhone(page), "État propre au coach B : un seul projet.");
   const title = `Notif ${Date.now()}`;
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(
-    new Date(),
-  );
   await login(page, "coach-b@example.test");
-  // Une tâche du jour pour le coach B : elle devient une notification.
-  await page.goto("/coach/taches");
-  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
-  const sheet = page.getByRole("dialog", { name: "Nouvelle tâche" });
-  await sheet.getByRole("textbox", { name: "Tâche" }).fill(title);
-  await sheet.getByLabel(/^Échéance/).fill(today);
-  await sheet.getByRole("button", { name: "Ajouter la tâche" }).click();
-  await expect(page.getByText("Tâche ajoutée.")).toBeVisible();
+  // Une tâche du jour pour le coach B : elle devient une notification. Ajout rapide dans la vue
+  // « Aujourd'hui » (kit « Coory Pages », 01, D-129) : échéance aujourd'hui.
+  await page.goto("/coach/taches?vue=aujourdhui");
+  const quick = page.getByRole("textbox", { name: "Nouvelle tâche" }).filter({ visible: true });
+  await quick.fill(title);
+  await quick.press("Enter");
+  await expect(
+    page.getByRole("listitem").filter({ hasText: title }).filter({ visible: true }),
+  ).toContainText("Aujourd'hui");
 
   await page.goto("/coach/notifications");
   const row = page.getByRole("link", { name: new RegExp(title) });
   await expect(row).toContainText("Non lue");
   await page.getByRole("button", { name: "Tout marquer comme lu" }).click();
   await expect(page.getByText("Tout est marqué comme lu.")).toBeVisible();
-  await expect(page.getByText("Tout est à jour.")).toBeAttached();
+  await expect(page.getByText("Tout est lu", { exact: true })).toBeVisible();
   await expect(row).not.toContainText("Non lue");
   await expect.poll(() => bellCount(page)).toBe(0);
   // Le message de Sarah redevient non lu (le test précédent en a besoin à la prochaine exécution).
@@ -87,7 +85,7 @@ test("« Tout marquer comme lu » vide la cloche ; une tâche reportée revient 
     .click();
   await page
     .getByRole("dialog", { name: /^Sarah/ })
-    .getByRole("button", { name: "Marquer comme non lue" })
+    .getByRole("button", { name: "Marquer comme non lu" })
     .click();
   await expect.poll(() => bellCount(page)).toBe(1);
 
@@ -107,4 +105,54 @@ test("« Tout marquer comme lu » vide la cloche ; une tâche reportée revient 
     .getByRole("button", { name: "Supprimer" })
     .click();
   await expect(page.getByText("Tâche supprimée.")).toBeVisible();
+});
+
+// Kit « Coory Pages », page 03 (D-128) : onglet « Masquées » (réversible), « Supprimer » (cachée pour
+// de bon, « Annuler » 5 s) et la sélection avec ses actions groupées.
+test("Masquées, Supprimer avec « Annuler », et masquer par la sélection", async ({ page }) => {
+  test.skip(isPhone(page), "État propre au coach B : un seul projet.");
+  await login(page, "coach-b@example.test");
+  await page.goto("/coach/notifications");
+  const before = await bellCount(page);
+  const messages = page.getByRole("region", { name: /Messages non lus/ });
+  const sarah = page.getByRole("link", { name: /Sarah/ });
+  const menu = page.getByRole("button", { name: /^Plus d'actions : Sarah/ });
+  const sheet = page.getByRole("dialog", { name: /^Sarah/ });
+  const tab = (name: string) =>
+    page.getByRole("group", { name: "Filtrer les notifications" }).getByRole("button", {
+      name: new RegExp(`^${name}`),
+    });
+
+  // Masquer : la ligne passe dans « Masquées », d'où elle revient (« Afficher à nouveau »).
+  await menu.click();
+  await sheet.getByRole("button", { name: "Masquer" }).click();
+  await expect(messages.getByRole("link", { name: /Sarah/ })).toHaveCount(0);
+  await tab("Masquées").click();
+  await expect(sarah).toBeVisible();
+  await menu.click();
+  await sheet.getByRole("button", { name: "Afficher à nouveau" }).click();
+  await expect(sarah).toHaveCount(0);
+  await tab("Toutes").click();
+  await expect(sarah).toBeVisible();
+  await expect.poll(() => bellCount(page)).toBe(before);
+
+  // Supprimer : nulle part, même pas dans « Masquées » ; « Annuler » la fait revenir.
+  await menu.click();
+  await sheet.getByRole("button", { name: "Supprimer" }).click();
+  await expect(sarah).toHaveCount(0);
+  await expect.poll(() => bellCount(page)).toBe(before - 1);
+  await page.getByRole("button", { name: "Annuler" }).click();
+  await expect(sarah).toBeVisible();
+  await expect.poll(() => bellCount(page)).toBe(before);
+
+  // Sélection : la case de Sarah, puis « Masquer » dans la barre ; « Annuler » rétablit.
+  await page.getByRole("button", { name: "Sélectionner", exact: true }).click();
+  await page.getByRole("checkbox", { name: /Sarah/ }).click();
+  await expect(page.getByText("1 sélectionnée")).toBeVisible();
+  await page.getByRole("button", { name: "Masquer", exact: true }).click();
+  await expect(page.getByRole("link", { name: /Sarah/ })).toHaveCount(0);
+  await expect(page.getByText("Notification masquée.")).toBeVisible();
+  await page.getByRole("button", { name: "Annuler" }).click();
+  await expect(sarah).toBeVisible();
+  await expect.poll(() => bellCount(page)).toBe(before);
 });

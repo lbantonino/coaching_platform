@@ -32,6 +32,189 @@
 - Date : 2026-10-23
 - Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
 
+### Kit « Coory Pages », page 02 Assistant IA (D-132)
+```
+Date : 2026-11-05
+Décision 15 : tout le design ; sans fournisseur, état honnête, jamais de fausse réponse.
+components/blocks/assistant.tsx (nouveau) : AssistantProvider (état partagé boîte / page :
+  messages, brouillon, sportif ; send = demande + NOT_CONNECTED), AssistantDialog (Overlay taille
+  « assistant »), AssistantComposer (Entrée, pilule Sportif + MenuDialog des sportifs), AssistantThread,
+  AssistantOrb, SHORTCUTS, ProposedActions (prête, non affichée tant que rien n'est branché).
+layout coach : AssistantProvider autour de la coquille (prénom, listSessionAthletes).
+header-tools : AssistantButton = bouton (ouvre / ferme la boîte), lien si pas de boîte.
+overlay.tsx : Overlay exporté, taille « assistant » (92 px sous le haut, 940 px ; téléphone 64 px,
+  10 px des bords, rayon 30, sans poignée).
+coach/assistant/page.tsx + assistant-view.tsx (nouveaux) ; [module] : « assistant » construit.
+Tests : assistant.spec (boîte, Envoyer grisé, Entrée, réponse honnête, Plein écran, Nouvelle
+  conversation, raccourci).
+```
+
+### Kit « Coory Pages », page 07 Messages (D-131)
+```
+Date : 2026-11-05
+Décisions 12 (pas de groupes) et 13 (pas de pièces jointes) appliquées : ni filtres Sportifs /
+  Groupes, ni « Nouveau groupe », ni trombone.
+messages/page.tsx : deux cartes (PageBody fill), fil groupé par jour, en-tête avec Planifier / menu.
+messages-ui.tsx (nouveau) : NewMessage (en-tête / « + » / bouton flottant ; feuille avec recherche,
+  listSessionAthletes), PlanButton (useOpenNewSession({ athleteId })), ThreadMenu (fiche, agenda),
+  ConversationList (recherche locale, filtres passés en propriété, lignes du kit).
+composer.tsx : Entrée envoie / Maj + Entrée, Envoyer grisé si vide, champ qui grandit
+  (field-sizing), collé en bas sur téléphone.
+Tests : messages.spec (nouveau : recherche, Nouveau message, Envoyer grisé, Planifier),
+  notifications.spec (aria-current="page" des filtres).
+```
+
+### Kit « Coory Pages », page 04 Comptabilité (D-130)
+```
+Date : 2026-11-05
+comptabilite/page.tsx : nouvelle mise en page (calculs inchangés) ; héro = période choisie
+  (selected) + cette semaine ; MoveRow (lignes du kit) ; tableau marqué data-empty.
+accounting-widgets.tsx (nouveau) : ShareCard (anneau / barre, aria-pressed), ShowMore (5 lignes,
+  aria-expanded, liste nommée), LedgerCard (repliable, mois sans activité), AccountingFab (menu
+  « Ajouter » : useOpenNewPayment ; dépense par l'événement « coory:new-expense »).
+bar-chart.tsx : axe gradué (niceMax), violet / --list-amber, pâli hors période, `tiny` (téléphone).
+donut-chart.tsx : 180 px centré, lignes à filet, vue « bars ».
+expense-sheet.tsx : bouton 32 px (ordinateur), écoute « coory:new-expense ». new-payment-sheet :
+  NewPaymentButton({ className }). more-menu : DeleteMoreMenu `plain` (« ••• » sans cadre).
+Tests : accounting.spec (openNew : en-tête ou bouton flottant ; « Voir les N paiements » ; anneau /
+  barre ; tableau à déplier ; navigation « Période »), sessions.spec (« Voir les N paiements »).
+```
+
+### Kit « Coory Pages », page 01 Tâches (D-129)
+```
+Date : 2026-11-05
+Décisions 8, 9, 10 (04/11) appliquées.
+Migration 20261105130000_listes_de_taches.sql : coach_task_lists (name 1-40, color dans 6 valeurs,
+  position, unique (id, organization_id), RLS membres) ; coach_tasks.list_id + FK composée
+  ON DELETE SET NULL (list_id) ; grant update (list_id). Seed : 4 listes du coach A, 2 tâches rangées.
+  Types régénérés.
+domain/tasks/lists.ts : LIST_COLORS, nextListColor, listNameSchema (tests unitaires) ;
+  task-form.ts : listId remplace category (TASK_CATEGORIES supprimées).
+features/tasks : queries (list jointe, listTaskLists), actions (listInOrg, quickAddTask,
+  createTaskList, updateTaskList, deleteTaskList, loadTaskLists) ; search : listId.
+task-sheet.tsx : « Associée à » = les listes (cachée sans liste), preset de liste ; layout : loadLists.
+tokens.css / globals.css : --list-<couleur> (pastille) et --list-<couleur>-text (titre lisible, foncé
+  en clair, clair en sombre).
+taches/page.tsx + tasks-view.tsx (nouveau) : deux colonnes, tuiles, listes et leur menu, ajout rapide,
+  deux écrans sur téléphone, bouton flottant, événement « coory:quick-add-task » (en-tête / bouton
+  flottant), ?ajout=1 pour arriver le curseur dans l'ajout rapide.
+Tests : tasks.spec réécrit (liste créée, ajout rapide, Associée à, cocher + Annuler, liste supprimée,
+  tâche gardée sans liste), agenda.spec (tuiles « Vues des tâches », ?vue=terminees),
+  notification-states.spec (tâche du jour par l'ajout rapide « Aujourd'hui »).
+```
+
+### Kit « Coory Pages », page 03 Notifications (D-128)
+```
+Date : 2026-11-05
+Décision 11 (04/11) : Supprimer = cachée pour de bon, 5 s pour Annuler, nouvelle colonne.
+Migration 20261105120000_notifications_supprimees.sql : deleted_at + contrainte
+  coach_notification_states_check (lue OU masquée OU supprimée). Types régénérés (db:types).
+domain/notifications/keys.ts : NotificationState.deleted ; countUnread ignore les supprimées
+  (test unitaire ajouté).
+features/notifications/queries.ts : les masquées sont renvoyées (dismissed) pour l'onglet
+  « Masquées » ; les supprimées non. preview.ts : l'aperçu de la cloche ignore les masquées.
+features/notifications/actions.ts : setState / clearState (une ligne sans état disparaît) ;
+  setNotificationsRead, dismissNotifications, restoreNotifications, deleteNotifications,
+  undeleteNotifications, toutes en lot (500 clés au plus, revérifiées).
+notifications/page.tsx : calcule les sections (données sérialisables) ; notifications-view.tsx
+  (nouveau) : onglets, sélection, menu ancré (MenuDialog + MenuRow), « Annuler », états locaux
+  puis router.refresh ; deux colonnes dès 1 100 px avec « display: contents » + order en dessous.
+  notification-row.tsx supprimé. Avatar : taille « notif » (40 / 38).
+Tests : notification-states.spec (libellés « Marquer comme lu / non lu », « Tout est lu », nouveau
+  test Masquées / Supprimer / sélection) ; notifications.spec (« J-3 » sur la ligne).
+```
+
+### Kit « Coory Pages », page 13 Paramètres (D-127)
+```
+Date : 2026-11-05
+Décisions appliquées (04/11) : 5 (pas de page, fenêtre par-dessus le tableau de bord), 6 (menu
+  déroulant des rubriques sur téléphone), 7 (un seul Enregistrer par rubrique, thème immédiat).
+profil/page.tsx : redirige vers /coach?parametres=<rubrique> (Suspense + redirect).
+profil/settings-dialog.tsx : SettingsFromUrl (useSearchParams, dans Suspense) ouvre la fenêtre puis
+  retire « parametres » de l'adresse (router.replace).
+profil/settings-dialog-panel.tsx : réécrit (colonne 260 px du kit ; téléphone : « × Paramètres » +
+  SectionPicker, menu sous le bouton, ✓, Échap / toucher à côté le referment).
+profil/settings-sections.tsx (nouveau) : PreferencesSection, MoneySection, SecuritySection,
+  DataSection, SaveFooter (pied ordinateur + barre téléphone), SectionBody, SettingsCard, SwitchRow
+  (vraie case sur le dessin), moneySummary. Formulaires « vides » reliés par l'attribut form (même
+  principe que ProfileDialogSection) ; cloche : setNotificationPreference pour les interrupteurs
+  changés, puis requestSubmit ; pays : setOrganizationCountry s'il a changé, puis la TVA.
+profil/settings-forms.tsx : réduit à ProfileDialogSection (contenu inchangé ; carte blanche sur
+  téléphone). settings-panel.tsx supprimé. sections.ts : `short` (ligne du menu).
+components/ui/overlay.tsx : taille « settings » 1 000 × 690 ; plein écran sur téléphone, fond des
+  pages, sans poignée. theme-choice.tsx : look "kit". vat-rate-input.tsx et currency-change-sheet.tsx :
+  className. notifications/page.tsx : lien « ?parametres=preferences » sur place.
+Vérifié : 1 280 px et 390 px pour les 5 rubriques et le menu ouvert, comparés aux captures du kit.
+Tests : settings.spec réécrit (fenêtre, menu déroulant + Échap, un seul Enregistrer, TVA, « Afficher »),
+  design.spec et photos.spec (openSettings) ; helpers openSettings / chooseSettingsSection.
+```
+
+### Kit « Coory Pages », page 10 Nouveau sportif (D-126)
+```
+Date : 2026-11-05
+Lancée à la demande d'Antonino (« peux-tu lancer la page suivante ? la 7e page ») ; champs : option
+  (a) recommandée appliquée par défaut (habillage du kit sur cette page, fiche sportif inchangée).
+components/ui/form-styles.ts : kitInputClass / kitTextareaClass (+ versions « Base » sans fond),
+  kitLabelClass, kitOptionalClass, kitHintClass, kitPillClass ; menu resté sur son choix vide en gris.
+components/ui/segmented.tsx : look "kit" (44 px, 3 segments égaux sur téléphone ; 40 px au contenu
+  sur ordinateur ; option choisie blanche avec ombre).
+sportifs/athlete-fields.tsx : FieldLook "kit" (une grille de 2 colonnes dès 900 px, « facultatif »
+  sans parenthèses) ; HealthConstraintsField et CoachNoteField en "kit" ; aide de l'e-mail
+  « Elle servira… » (féminin).
+sportifs/nouveau/new-athlete-form.tsx : réécrit. 6 cartes numérotées (pastille 26 px), plafond
+  1 120 px ; encadré d'accord avec interrupteur (la vraie case couvre le dessin) ; retrait avec
+  saisie = ConfirmDialog « Retirer l'accord ? » ; bouton grisé sans prénom (saisie suivie par
+  onChange du formulaire) ; pied ordinateur grille minmax(0,1fr) 280 px ; MobileActionBar
+  Annuler / Enregistrer (« le sportif » lu seulement sous 360 px) ; erreur du serveur amenée au
+  centre de l'écran. page.tsx : cancelHref = liste des sportifs.
+Vérifié : 1 280 px (cartes 996 px, champs 466 × 46, pilules 34, segments 40, bouton 280 × 46, comme
+  layout-measurements.md) ; 390 px (champs 48 px en 16 px, pilules 40, segments 44, barre fixe) ;
+  320 à 3 440 px sans débordement ; thème sombre.
+Tests : new-athlete.spec (interrupteur, confirmation Annuler / Retirer, bouton grisé avec espaces
+  seuls), athletes.spec (bouton grisé au lieu du message « Le prénom est obligatoire. »).
+```
+
+### Barre du téléphone : nom de la page caché après une page quittée (D-125)
+```
+Date : 2026-11-05
+Signalé par Antonino sur son iPhone : titre de la barre absent à l'arrivée sur une page, ou après un
+  défilement, jusqu'au rechargement ; boîtes de dialogue invisibles (Supprimer l'exercice, compte,
+  Paramètres).
+Cause du titre (reproduite dans Chrome, pas propre à l'iPhone) : Next garde la page quittée cachée
+  (display: none) ; son contenu posé dans la barre (MobileBarTitle : retour, mois de l'Agenda) restait
+  dans la zone, et `[&:has([data-bar-title]>*)>p]:hidden` cachait le nom de la page suivante.
+Correction (components/layout/mobile-bar.tsx) : compteur des MobileBarTitle actifs (useEffect, démonté
+  quand la page est cachée) + useSyncExternalStore dans MobileTopBar ; plus de « :has ».
+Tests : design.spec.ts « le nom de la page revient dans la barre après l'Agenda ou une page de détail »
+  (échoue sans la correction, passe avec) ; suite téléphone 88 réussis, 1 échec (search.spec : le test
+  tapait dans la recherche du menu ☰ encore inerte) → attente de l'ouverture du menu, 6/6 sur 3 passages.
+Boîtes de dialogue : NON reproduit dans Chrome (format téléphone, navigation par liens) : toutes
+  s'ouvrent. À vérifier dans Safari (WebKit) : en attente des informations d'Antonino.
+```
+
+### En-tête : le chemin sur une ligne pour toutes les pages avec retour (D-124)
+```
+Date : 2026-11-05
+Demande d'Antonino (règle permanente, écrite dans CLAUDE.md, même si une maquette dit l'inverse) :
+  ordinateur « [icône] ← Page précédente · Page en cours » sur une ligne, carte d'en-tête à 64 px ;
+  téléphone : retour dans la barre (inchangé), titre de la page à 20 px sous la barre.
+components/layout/page-header.tsx : une seule ligne sur ordinateur (icône, BackLink "path", « · »,
+  h1 15 px coupé par « … », titleAside) ; plus de fil d'Ariane 12 px (D-119) ; phrase sous le titre
+  réservée au téléphone ; `visibleTitle={false}` : chemin complet sur ordinateur, rien sous la barre
+  sur téléphone ; ligne mesurée (« @container ») : lien de retour ≤ 40 cqi ; max-lg:pt-5.
+components/layout/back-link.tsx : variantes "bar" et "path" (15 px, gris, coupé) ; « crumb » et
+  « text » retirées.
+components/layout/header-tools.tsx : compact="xl" (loupe sous 1 280 px) pour une page avec retour
+  et boutons.
+bibliotheque/[cle] : pastilles sur la ligne si la place le permet (@min-[36rem]), boutons de l'en-tête
+  en 32 px sur ordinateur (page, DeleteExerciseButton, FavoriteButton).
+Vérifié : 9 pages avec retour à 1280 et 1024 px (64 px, une ligne, titres entiers) et sur 393 px
+  (titre à 20 px de la barre) ; fiche exercice à 1024 / 1280 / 1440 / 1920 px.
+Tests : types, lint, format OK ; Vitest 264/264 ; Playwright 178 réussis, 18 ignorés, 2 échecs
+  (coach-exercises : « Mon exercice » trouvé deux fois, pastille en double sur ordinateur) → test
+  ciblé sur la pastille affichée, coach-exercises + library 8/8. Base nettoyée, TVA A à 0 %.
+```
+
 ### Kit « Coory Pages » : pages 06 et 12 Modifier la séance (D-123)
 ```
 Date : 2026-11-04

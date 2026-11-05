@@ -102,14 +102,15 @@ const previousTitle = () => {
 export function BackLink({
   href,
   label,
-  variant = "text",
+  variant = "path",
 }: {
   href: string;
   label: string;
-  // « bar » : dans la barre du haut du téléphone, entre ☰ et les outils (fiche sportif).
-  // « crumb » : au-dessus du titre de l'en-tête sur ordinateur (kit « Coory Pages » SH-02 : 12 px,
-  // flèche de 12 px, D-119).
-  variant?: "text" | "bar" | "crumb";
+  // « bar » : dans la barre du haut du téléphone, entre ☰ et les outils.
+  // « path » : le début du chemin de l'en-tête sur ordinateur, sur la même ligne que la page en cours
+  // (« ← Bibliothèque · Créer un exercice », règle d'Antonino du 05/11/2026, D-124) : 15 px comme le
+  // titre, en gris, le nom coupé par « … » s'il est trop long.
+  variant?: "bar" | "path";
 }) {
   const router = useRouter();
   // Libellé : le titre de la page précédente, lu dans le navigateur (le serveur rend le libellé
@@ -132,21 +133,15 @@ export function BackLink({
       className={
         variant === "bar"
           ? barBackClass
-          : variant === "crumb"
-            ? "inline-flex items-center gap-1.5 self-start text-[12px] leading-[normal] font-medium text-muted transition-colors duration-150 hover:text-text"
-            : "inline-flex min-h-9 items-center gap-1.5 self-start text-[14px] text-muted transition-colors duration-150 hover:text-text"
+          : "inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-[4px] text-[15px] leading-[normal] font-medium whitespace-nowrap text-muted transition-colors duration-150 hover:text-text"
       }
     >
       <ArrowLeft
         aria-hidden
-        {...(variant === "bar"
-          ? barBackIcon
-          : variant === "crumb"
-            ? { size: 12, strokeWidth: 2 }
-            : { size: 16, strokeWidth: 1.8 })}
+        {...(variant === "bar" ? barBackIcon : { size: 15, strokeWidth: 2 })}
         className="shrink-0"
       />
-      <span className={variant === "bar" ? "truncate" : ""}>{shown}</span>
+      <span className="min-w-0 truncate">{shown}</span>
     </Link>
   );
 }

@@ -89,9 +89,11 @@ test("une compétition d'un sportif dans les 7 jours devient un rappel dans les 
   // Rappel dans les notifications (J-3), qui mène à ses objectifs ; jamais dans l'agenda du coach.
   await page.goto("/coach/notifications");
   const reminders = page.getByRole("region", { name: "Compétitions dans les 7 jours" });
-  const row = reminders.getByRole("link", { name: new RegExp(`${competition} · ${name}`) });
-  await expect(row).toContainText("J-3");
-  await row.click();
+  // La ligne (kit « Coory Pages », 03) : le lien, puis le jour et « J-3 » à droite.
+  await expect(reminders.getByRole("listitem").filter({ hasText: competition })).toContainText(
+    "J-3",
+  );
+  await reminders.getByRole("link", { name: new RegExp(`${competition} · ${name}`) }).click();
   await expect(page).toHaveURL(/onglet=objectifs/);
 });
 
@@ -153,7 +155,7 @@ test("Messages : le filtre « Non lues » ne garde que les conversations à lire
   const filters = page.getByRole("navigation", { name: "Filtrer les conversations" });
   await expect(filters.getByRole("link", { name: /^Non lues/ })).toHaveAttribute(
     "aria-current",
-    "true",
+    "page",
   );
   // Chaque conversation affichée a des messages non lus.
   const rows = page.getByRole("region", { name: "Conversations" }).getByRole("listitem");

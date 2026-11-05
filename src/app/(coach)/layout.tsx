@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { MoneyProvider } from "@/components/blocks/money-context";
 import { NewPaymentSheet } from "@/components/blocks/new-payment-sheet";
 import { NewSessionSheet } from "@/components/blocks/new-session-sheet";
+import { AssistantProvider } from "@/components/blocks/assistant";
 import { TaskSheetProvider } from "@/components/blocks/task-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
@@ -14,7 +15,7 @@ import { loadNotificationPreview, setNotificationsRead } from "@/features/notifi
 import { countNotifications } from "@/features/notifications/queries";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createSession, listSessionAthletes } from "@/features/sessions/actions";
-import { createTask, deleteTask, updateTask } from "@/features/tasks/actions";
+import { createTask, deleteTask, loadTaskLists, updateTask } from "@/features/tasks/actions";
 
 import { SettingsDialogProvider } from "./coach/profil/settings-dialog";
 
@@ -49,65 +50,73 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
       }}
     >
       <SettingsDialogProvider load={loadSettings}>
-        <AppShell
-          value={{
-            space: "coach",
-            orgBase: first ? `/coach/o/${first.organizationId}` : null,
-            unreadMessages: counts?.messages ?? 0,
-            // Cloche : seulement les catégories gardées dans Paramètres > Préférences (D-57).
-            notificationCount: counts
-              ? enabledTotal(counts, (profile?.preferences ?? DEFAULT_PREFERENCES).notify)
-              : 0,
-            notifications: first
-              ? {
-                  load: loadNotificationPreview.bind(null, first.organizationId),
-                  setRead: setNotificationsRead.bind(null, first.organizationId),
-                }
-              : undefined,
-            user: profile
-              ? {
-                  name: profile.displayName,
-                  role: "Coach",
-                  photoPath: profile.photoPath,
-                  sex: null,
-                  settingsHref: "/coach/profil",
-                }
-              : null,
-          }}
+        {/* Assistant IA (kit « Coory Pages », 02, D-132) : sa boîte, ouverte par le bouton de
+            l'en-tête ou de la barre ; sa conversation est partagée avec la page /coach/assistant. */}
+        <AssistantProvider
+          firstName={profile?.firstName ?? ""}
+          loadAthletes={first ? listSessionAthletes.bind(null, first.organizationId) : undefined}
         >
-          {/* Les fenêtres « Nouvelle séance » (D-35), « Nouveau paiement » (D-36) et « Tâche » (D-59), les mêmes sur toutes
+          <AppShell
+            value={{
+              space: "coach",
+              orgBase: first ? `/coach/o/${first.organizationId}` : null,
+              unreadMessages: counts?.messages ?? 0,
+              // Cloche : seulement les catégories gardées dans Paramètres > Préférences (D-57).
+              notificationCount: counts
+                ? enabledTotal(counts, (profile?.preferences ?? DEFAULT_PREFERENCES).notify)
+                : 0,
+              notifications: first
+                ? {
+                    load: loadNotificationPreview.bind(null, first.organizationId),
+                    setRead: setNotificationsRead.bind(null, first.organizationId),
+                  }
+                : undefined,
+              user: profile
+                ? {
+                    name: profile.displayName,
+                    role: "Coach",
+                    photoPath: profile.photoPath,
+                    sex: null,
+                    settingsHref: "/coach/profil",
+                  }
+                : null,
+            }}
+          >
+            {/* Les fenêtres « Nouvelle séance » (D-35), « Nouveau paiement » (D-36) et « Tâche » (D-59), les mêmes sur toutes
           les pages coach. Les actions revérifient elles-mêmes l'accès à l'organisation. */}
-          {first ? (
-            <NewSessionSheet
-              action={createSession.bind(null, first.organizationId)}
-              loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
-              defaults={{
-                durationMinutes: (profile?.preferences ?? DEFAULT_PREFERENCES)
-                  .defaultSessionMinutes,
-                location: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultLocation,
-                priceCents: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultPriceCents,
-                paymentMethod: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultPaymentMethod,
-              }}
-            >
-              <NewPaymentSheet
-                action={createPayment.bind(null, first.organizationId)}
+            {first ? (
+              <NewSessionSheet
+                action={createSession.bind(null, first.organizationId)}
                 loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
+                defaults={{
+                  durationMinutes: (profile?.preferences ?? DEFAULT_PREFERENCES)
+                    .defaultSessionMinutes,
+                  location: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultLocation,
+                  priceCents: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultPriceCents,
+                  paymentMethod: (profile?.preferences ?? DEFAULT_PREFERENCES).defaultPaymentMethod,
+                }}
               >
-                {/* Fenêtre « Nouvelle tâche / Modifier la tâche » (D-59). */}
-                <TaskSheetProvider
-                  create={createTask.bind(null, first.organizationId)}
-                  update={updateTask.bind(null, first.organizationId)}
-                  remove={deleteTask.bind(null, first.organizationId)}
+                <NewPaymentSheet
+                  action={createPayment.bind(null, first.organizationId)}
                   loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
                 >
-                  {children}
-                </TaskSheetProvider>
-              </NewPaymentSheet>
-            </NewSessionSheet>
-          ) : (
-            children
-          )}
-        </AppShell>
+                  {/* Fenêtre « Nouvelle tâche / Modifier la tâche » (D-59). */}
+                  <TaskSheetProvider
+                    create={createTask.bind(null, first.organizationId)}
+                    update={updateTask.bind(null, first.organizationId)}
+                    remove={deleteTask.bind(null, first.organizationId)}
+                    loadAthletes={listSessionAthletes.bind(null, first.organizationId)}
+                    loadLists={loadTaskLists.bind(null, first.organizationId)}
+                  >
+                    {children}
+                  </TaskSheetProvider>
+                </NewPaymentSheet>
+              </NewSessionSheet>
+            ) : (
+              children
+            )}
+          </AppShell>
+        </AssistantProvider>
       </SettingsDialogProvider>
     </MoneyProvider>
   );

@@ -38,6 +38,23 @@ describe("clés des notifications", () => {
     ).toBe(1);
   });
 
+  it("ne compte pas une notification supprimée (D-128), même jamais lue", () => {
+    const states = stateMap([
+      {
+        key: "task:a:2026-10-28",
+        read_at: null,
+        dismissed_at: null,
+        deleted_at: "2026-11-05T10:00:00Z",
+      },
+    ]);
+    expect(states.get("task:a:2026-10-28")).toEqual({
+      read: false,
+      dismissed: false,
+      deleted: true,
+    });
+    expect(countUnread(["task:a:2026-10-28", "task:b:2026-10-28"], states)).toBe(1);
+  });
+
   it("retient le dernier message non lu de chaque sportif", () => {
     const latest = latestUnreadByAthlete([
       { id: "m3", athlete_id: "ines" },

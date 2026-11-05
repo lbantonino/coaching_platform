@@ -829,6 +829,7 @@ export type Database = {
       };
       coach_notification_states: {
         Row: {
+          deleted_at: string | null;
           dismissed_at: string | null;
           key: string;
           organization_id: string;
@@ -838,6 +839,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          deleted_at?: string | null;
           dismissed_at?: string | null;
           key: string;
           organization_id: string;
@@ -846,6 +848,7 @@ export type Database = {
           user_id?: string;
         };
         Update: {
+          deleted_at?: string | null;
           dismissed_at?: string | null;
           key?: string;
           organization_id?: string;
@@ -1100,6 +1103,48 @@ export type Database = {
           },
         ];
       };
+      coach_task_lists: {
+        Row: {
+          color: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          organization_id: string;
+          position: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          color: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          organization_id: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          organization_id?: string;
+          position?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "coach_task_lists_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       coach_tasks: {
         Row: {
           athlete_id: string | null;
@@ -1110,6 +1155,7 @@ export type Database = {
           done_by: string | null;
           due_on: string | null;
           id: string;
+          list_id: string | null;
           notes: string | null;
           organization_id: string;
           priority: string;
@@ -1126,6 +1172,7 @@ export type Database = {
           done_by?: string | null;
           due_on?: string | null;
           id?: string;
+          list_id?: string | null;
           notes?: string | null;
           organization_id: string;
           priority?: string;
@@ -1141,6 +1188,7 @@ export type Database = {
           done_by?: string | null;
           due_on?: string | null;
           id?: string;
+          list_id?: string | null;
           notes?: string | null;
           organization_id?: string;
           priority?: string;
@@ -1153,6 +1201,13 @@ export type Database = {
             columns: ["athlete_id", "organization_id"];
             isOneToOne: false;
             referencedRelation: "athlete_profiles";
+            referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "coach_tasks_list_fkey";
+            columns: ["list_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "coach_task_lists";
             referencedColumns: ["id", "organization_id"];
           },
           {

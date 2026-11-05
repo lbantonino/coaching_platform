@@ -34,6 +34,35 @@ export const errorTextClass = "text-[13px] font-medium text-alert";
 export const checkboxChipClass =
   "group inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-pill border border-line-2 px-3.5 text-[14px] font-medium whitespace-nowrap text-text transition-colors duration-150 not-has-checked:hover:bg-surface has-checked:border-transparent has-checked:bg-selected has-checked:text-text has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent";
 
+// Champs du kit « Coory Pages » (page 10 Nouveau sportif, D-126 ; mêmes valeurs que 08 / 11).
+// Téléphone d'abord : 48 px en 16 px (en dessous, l'iPhone agrandit la page) ; ordinateur : 46 px en
+// 14 px. Filet intérieur, anneau violet au focus, rouge en erreur. Le fond est ajouté à part (gris
+// pâle dans une carte, blanc dans un encadré gris) : deux classes de fond sur un même champ se
+// contrediraient. Menu déroulant resté sur son choix vide (« Non précisé ») : gris comme un exemple,
+// ses options gardent la couleur du texte.
+const kitFieldBase =
+  "w-full rounded-[12px] text-[16px] text-text inset-ring inset-ring-line-2 outline-none placeholder:text-faint transition-shadow duration-150 focus:inset-ring-[1.5px] focus:inset-ring-violet aria-[invalid=true]:inset-ring-alert has-[option[value='']:checked]:text-faint [&_option]:text-text lg:text-[14px]";
+
+export const kitInputBaseClass = `${kitFieldBase} h-12 px-3.5 lg:h-[46px]`;
+export const kitInputClass = `${kitInputBaseClass} bg-surface-2`;
+
+export const kitTextareaBaseClass = `${kitFieldBase} block resize-y px-3.5 py-3 leading-[1.5]`;
+export const kitTextareaClass = `${kitTextareaBaseClass} min-h-[88px] bg-surface-2 lg:min-h-[84px]`;
+
+export const kitLabelClass =
+  "text-[14px] leading-[normal] font-semibold text-text lg:text-[13.5px]";
+
+// « facultatif » après le libellé, sans parenthèses (kit).
+export const kitOptionalClass = "font-normal text-faint";
+
+export const kitHintClass = "text-[13px] leading-[1.45] text-faint lg:text-[12px]";
+
+// Pilule cochable (lieux, jours) : 40 px sur téléphone, 34 px sur ordinateur ; cochée = fond et texte
+// violets, « ✓ » devant (icône Check « hidden group-has-checked:block »). La vraie case reste dans la
+// page (sr-only) pour le clavier et les lecteurs d'écran.
+export const kitPillClass =
+  "group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-[15px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-status-accent-soft has-checked:text-status-accent has-checked:inset-ring-transparent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:h-[34px] lg:px-3.5 lg:text-[13px]";
+
 // Champs de la fiche sportif (maquette « Sportifs » du 03/11/2026, § Champs) : 46 px, rayon 12,
 // filet intérieur (il ne prend pas de place), texte 15 px sur ordinateur et 16 px sur téléphone (en
 // dessous, iOS zoome). Focus : anneau violet, la proposition de la maquette. Non modifiable : grisé

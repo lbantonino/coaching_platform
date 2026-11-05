@@ -11,6 +11,7 @@ import { requireCoach } from "@/features/auth/guards";
 // Les pages construites (profil, sportifs, agenda) ont leur propre dossier et passent avant.
 // Modules qui ont maintenant leur propre page (D-35) : leur dossier passe avant celui-ci.
 const BUILT = new Set([
+  "assistant",
   "taches",
   "messages",
   "comptabilite",

@@ -1,16 +1,19 @@
 import "server-only";
 
-import type { TaskCategory } from "@/domain/tasks/task-form";
+import type { ListColor } from "@/domain/tasks/lists";
 import { createClient } from "@/lib/supabase/server";
 
 export type TaskPriority = "high" | "normal";
+
+// Liste du coach (kit « Coory Pages », 01, D-129).
+export type TaskList = { id: string; name: string; color: ListColor };
 
 export type CoachTask = {
   id: string;
   title: string;
   priority: TaskPriority;
   dueOn: string | null;
-  category: TaskCategory | null;
+  list: TaskList | null;
   notes: string | null;
   athleteId: string | null;
   athleteName: string | null;
@@ -23,14 +26,14 @@ type Row = {
   title: string;
   priority: string;
   due_on: string | null;
-  category: string | null;
   notes: string | null;
   done_at: string | null;
   athlete: { id: string; first_name: string; display_name: string | null } | null;
+  list: { id: string; name: string; color: string } | null;
 };
 
 const SELECT =
-  "id, title, priority, due_on, category, notes, done_at, athlete:athlete_profiles ( id, first_name, display_name )";
+  "id, title, priority, due_on, notes, done_at, athlete:athlete_profiles ( id, first_name, display_name ), list:coach_task_lists ( id, name, color )";
 
 const toTask = (row: Row): CoachTask => ({
   id: row.id,
@@ -38,8 +41,8 @@ const toTask = (row: Row): CoachTask => ({
   // La contrainte CHECK en base garantit cette liste fermée.
   priority: row.priority as TaskPriority,
   dueOn: row.due_on,
-  // Listes fermées garanties par les contraintes CHECK en base.
-  category: row.category as TaskCategory | null,
+  // Couleur : liste fermée garantie par la contrainte CHECK en base.
+  list: row.list ? { ...row.list, color: row.list.color as ListColor } : null,
   notes: row.notes,
   athleteId: row.athlete?.id ?? null,
   athleteName: row.athlete ? (row.athlete.display_name ?? row.athlete.first_name) : null,
@@ -95,4 +98,17 @@ export async function listTasks(
     open: ((open.data ?? []) as unknown as Row[]).map(toTask),
     done: ((done.data ?? []) as unknown as Row[]).map(toTask),
   };
+}
+
+// Listes du coach, dans leur ordre (puis de création). Aucune au départ (décision 8).
+export async function listTaskLists(organizationId: string): Promise<TaskList[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("coach_task_lists")
+    .select("id, name, color")
+    .eq("organization_id", organizationId)
+    .order("position")
+    .order("created_at");
+  if (error) throw new Error("Lecture des listes impossible.");
+  return (data ?? []).map((row) => ({ ...row, color: row.color as ListColor }));
 }

@@ -1,37 +1,26 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
-import type { SettingsSection } from "@/components/blocks/settings-context";
-import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { requireCoach } from "@/features/auth/guards";
-import { getSettingsData } from "@/features/coach/settings-data";
+import { PageLoading } from "@/components/layout/page-header";
 
 import { SECTIONS } from "./sections";
-import { SettingsPanel } from "./settings-panel";
 
 export const metadata: Metadata = {
   title: "Paramètres",
 };
 
-// Page complète des Paramètres : par un lien partagé ou au rechargement (?onglet=). Depuis le menu
-// du compte, la même chose s'ouvre en grande fenêtre par-dessus la page en cours (D-58).
+// Plus de page Paramètres (décision 5 d'Antonino, kit « Coory Pages », page 13, D-127) : un lien
+// /coach/profil?onglet=… (partagé, ancien favori) ouvre la FENÊTRE des Paramètres par-dessus le
+// tableau de bord, à la bonne rubrique (?parametres=…, lu par SettingsDialogProvider). L'export
+// /coach/profil/export reste une adresse à part.
 export default function CoachSettingsPage({ searchParams }: PageProps<"/coach/profil">) {
   return (
-    <main className={pageMainClass}>
-      <PageHeader title="Paramètres" subtitle="Ton compte, tes préférences et tes structures." />
-      <PageBody>
-        <Suspense fallback={<PageLoading />}>
-          {searchParams.then((query) => (
-            <Settings section={SECTIONS.find((item) => item.key === query.onglet)?.key ?? null} />
-          ))}
-        </Suspense>
-      </PageBody>
-    </main>
+    <Suspense fallback={<PageLoading />}>
+      {searchParams.then(({ onglet }) => {
+        const section = SECTIONS.find((item) => item.key === onglet)?.key ?? "profil";
+        redirect(`/coach?parametres=${section}`);
+      })}
+    </Suspense>
   );
-}
-
-async function Settings({ section }: { section: SettingsSection | null }) {
-  const { user, memberships } = await requireCoach();
-  const data = await getSettingsData(user, memberships[0]);
-  return <SettingsPanel data={data} section={section} />;
 }

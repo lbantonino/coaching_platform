@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { isPhone } from "./helpers";
+import { chooseSettingsSection, isPhone, openSettings } from "./helpers";
 
 // Paramètres (D-57). Coach de démo B : le compte A est celui qu'Antonino regarde. Les deux projets
 // tournent en parallèle sur la même base : chaque test qui écrit ne tourne que sur UN projet, et
@@ -26,21 +26,15 @@ test("le menu du compte ouvre les Paramètres en fenêtre, par-dessus la page en
     .click();
   await page.getByRole("button", { name: "Paramètres", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Paramètres" });
-  const sections = dialog.getByRole("navigation", { name: "Sections des paramètres" });
-  await expect(sections).toBeVisible();
+  await expect(dialog).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Menu" })).toBeHidden();
 
-  // On change de section sans changer d'adresse.
-  await sections.getByRole("button", { name: /^Sécurité/ }).click();
-  await expect(dialog.getByRole("heading", { name: "Sécurité" })).toBeVisible();
+  // On change de rubrique sans changer d'adresse (colonne ; menu déroulant sur téléphone).
+  await chooseSettingsSection(page, "Sécurité");
+  await expect(dialog.getByRole("heading", { name: "Sécurité" })).toBeAttached();
   await expect(dialog.getByRole("region", { name: "Adresse e-mail" })).toContainText(
     "coach-b@example.test",
   );
-  if (isPhone(page)) {
-    // Téléphone : un retour vers le sommaire.
-    await dialog.getByRole("button", { name: "Paramètres", exact: true }).click();
-    await expect(sections.getByRole("button", { name: /^Données/ })).toBeVisible();
-  }
   expect(page.url()).toBe(here);
 
   // Échap referme la fenêtre : on est toujours sur la même page.
@@ -48,7 +42,7 @@ test("le menu du compte ouvre les Paramètres en fenêtre, par-dessus la page en
   await expect(dialog).toBeHidden();
   expect(page.url()).toBe(here);
 
-  // « Mon profil » ouvre directement la section Profil.
+  // « Mon profil » ouvre directement la rubrique Profil.
   if (isPhone(page)) await page.getByRole("button", { name: "Ouvrir le menu" }).click();
   await page
     .getByRole("button", { name: /^Menu du compte/ })
@@ -59,22 +53,36 @@ test("le menu du compte ouvre les Paramètres en fenêtre, par-dessus la page en
   await expect(dialog.getByRole("textbox", { name: "Prénom" })).not.toHaveValue("");
 });
 
-test("téléphone : un sommaire façon Réglages, puis chaque section avec un retour", async ({
+test("téléphone : un menu déroulant des rubriques, Échap referme le menu d'abord", async ({
   page,
 }) => {
-  test.skip(!isPhone(page), "Sommaire propre au téléphone.");
+  test.skip(!isPhone(page), "Menu déroulant propre au téléphone.");
   await loginAsCoachB(page);
-  await page.goto("/coach/profil");
-  const sections = page.getByRole("navigation", { name: "Sections des paramètres" });
+  // L'ancienne adresse ouvre la fenêtre par-dessus le tableau de bord (décision 5).
+  const dialog = await openSettings(page, "profil");
+  const picker = dialog.locator("button[aria-expanded]");
+  await expect(picker).toContainText("Profil");
+  await expect(picker).toHaveAttribute("aria-expanded", "false");
+  await picker.click();
+  const sections = dialog.getByRole("navigation", { name: "Sections des paramètres" });
   for (const name of ["Profil", "Préférences", "Pays, devise et TVA", "Sécurité", "Données"]) {
-    await expect(sections.getByRole("link", { name: new RegExp(`^${name}`) })).toBeVisible();
+    await expect(sections.getByRole("button", { name, exact: true })).toBeVisible();
   }
-  await sections.getByRole("link", { name: /^Sécurité/ }).click();
-  await expect(page).toHaveURL(/onglet=securite/);
-  await expect(page.getByRole("heading", { name: "Sécurité", level: 2 })).toBeVisible();
-  await page.getByRole("link", { name: "Paramètres", exact: true }).click();
-  await expect(page).toHaveURL(/\/coach\/profil$/);
-  await expect(sections.getByRole("link", { name: /^Données/ })).toBeVisible();
+  await expect(sections.getByRole("button", { name: "Profil", exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  // Échap : le menu se referme, la fenêtre reste.
+  await page.keyboard.press("Escape");
+  await expect(sections).toBeHidden();
+  await expect(dialog).toBeVisible();
+  await chooseSettingsSection(page, "Données");
+  await expect(sections).toBeHidden();
+  await expect(picker).toContainText("Données");
+  await expect(dialog.getByRole("link", { name: "Télécharger mes données" })).toBeVisible();
+  // La croix referme la fenêtre.
+  await dialog.getByRole("button", { name: "Fermer" }).filter({ visible: true }).click();
+  await expect(dialog).toBeHidden();
 });
 
 test("les préférences préremplissent une nouvelle séance, et la cloche se règle", async ({
@@ -82,15 +90,18 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
 }) => {
   test.skip(isPhone(page), "Écrit les préférences du coach B : un seul projet.");
   await loginAsCoachB(page);
-  await page.goto("/coach/profil?onglet=preferences");
-  const defaults = page.getByRole("region", { name: "Valeurs par défaut" });
-  await defaults.getByLabel("Durée (min)").fill("45");
+  // Un seul « Enregistrer » pour toute la rubrique (décision 7).
+  let dialog = await openSettings(page, "preferences");
+  const defaults = dialog.getByRole("region", { name: "Valeurs par défaut" });
+  const agenda = dialog.getByRole("region", { name: "Heures de l'agenda" });
+  const save = dialog.getByRole("button", { name: "Enregistrer", exact: true });
+  await defaults.getByLabel("Durée", { exact: true }).fill("45");
   await defaults.getByLabel(/^Lieu/).fill("Box de test");
   await defaults.getByLabel(/^Prix/).fill("70");
   await defaults.getByText("Espèces", { exact: true }).click();
-  await defaults.getByLabel("À partir de").selectOption("7");
-  await defaults.getByRole("button", { name: "Enregistrer les préférences" }).click();
-  await expect(defaults.getByRole("status")).toContainText("Préférences enregistrées.");
+  await agenda.getByLabel("À partir de").selectOption("7");
+  await save.click();
+  await expect(page.getByText("Préférences enregistrées.")).toBeVisible();
 
   // La fenêtre « Nouvelle séance » reprend ces valeurs (espèces : TVA comprise).
   await page.goto("/coach");
@@ -104,62 +115,74 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   await expect(sheet.getByLabel("TVA comprise dans le prix")).toBeChecked();
   await sheet.getByRole("button", { name: "Fermer" }).click();
 
-  // Cloche : décocher « Fiches à compléter » la retire de la page Notifications.
-  await page.goto("/coach/profil?onglet=preferences");
-  const bell = page.getByRole("region", { name: "Notifications" });
-  const profiles = bell.getByRole("switch", { name: "Fiches à compléter" });
-  await profiles.uncheck({ force: true });
-  await expect(page.getByText("Masqué de la cloche.")).toBeVisible();
+  // Cloche : couper « Fiches à compléter » (puis Enregistrer) la retire de la page Notifications.
+  dialog = await openSettings(page, "preferences");
+  const bell = dialog.getByRole("region", { name: "Notifications" });
+  await bell.getByRole("switch", { name: "Fiches à compléter" }).uncheck();
+  await save.click();
+  await expect(page.getByText("Préférences enregistrées.")).toBeVisible();
   await page.goto("/coach/notifications");
   await expect(page.getByText(/Masqué : fiches à compléter/)).toBeVisible();
 
+  // « Changer dans Paramètres » ouvre la fenêtre sur Préférences, par-dessus la page Notifications.
+  await page.getByRole("link", { name: "Changer dans Paramètres" }).click();
+  await expect(dialog).toBeVisible();
+  await expect(page).toHaveURL(/\/coach\/notifications$/);
+
   // Remise en place.
-  await page.goto("/coach/profil?onglet=preferences");
-  await bell.getByRole("switch", { name: "Fiches à compléter" }).check({ force: true });
-  await expect(page.getByText("Affiché dans la cloche.")).toBeVisible();
-  await defaults.getByLabel("Durée (min)").fill("60");
+  await bell.getByRole("switch", { name: "Fiches à compléter" }).check();
+  await defaults.getByLabel("Durée", { exact: true }).fill("60");
   await defaults.getByLabel(/^Lieu/).fill("");
   await defaults.getByLabel(/^Prix/).fill("");
   await defaults.getByText("Virement", { exact: true }).click();
-  await defaults.getByLabel("À partir de").selectOption("6");
-  await defaults.getByRole("button", { name: "Enregistrer les préférences" }).click();
-  await expect(defaults.getByRole("status")).toContainText("Préférences enregistrées.");
+  await agenda.getByLabel("À partir de").selectOption("6");
+  await save.click();
+  await expect(page.getByText("Préférences enregistrées.")).toBeVisible();
 });
 
 // TVA (D-90) : un seul taux, réglé par le propriétaire. Organisation B (sans TVA), remise à 0 ensuite.
 test("le propriétaire règle son taux de TVA, puis l'enlève", async ({ page }) => {
   test.skip(!isPhone(page), "Écrit la TVA de l'organisation B : un seul projet.");
   await loginAsCoachB(page);
-  await page.goto("/coach/profil?onglet=argent");
-  const vat = page.getByRole("region", { name: "TVA" });
+  let dialog = await openSettings(page, "argent");
+  const vat = dialog.getByRole("region", { name: "TVA" });
+  const save = dialog.getByRole("button", { name: "Enregistrer", exact: true });
   const toggle = vat.getByRole("switch", { name: "Je facture la TVA" });
   await expect(toggle).not.toBeChecked();
   await expect(vat.getByLabel("Taux de TVA")).toHaveCount(0);
 
-  await toggle.check({ force: true });
-  await vat.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(vat.getByRole("alert")).toContainText("Indique ton taux de TVA");
+  await toggle.check();
+  await save.click();
+  await expect(dialog.getByRole("alert")).toContainText("Indique ton taux de TVA");
   await vat.getByLabel("Taux de TVA").fill("8,1");
-  await vat.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(vat.getByRole("status")).toContainText("TVA enregistrée.");
-  await page.reload();
-  await expect(vat.getByRole("switch", { name: "Je facture la TVA" })).toBeChecked();
+  await save.click();
+  await expect(page.getByText("Pays et TVA enregistrés.")).toBeVisible();
+  // Le menu des rubriques résume : « Belgique · EUR · 8,1 % ».
+  await expect(dialog.locator("button[aria-expanded]")).toContainText("8,1 %");
+  dialog = await openSettings(page, "argent");
+  await expect(toggle).toBeChecked();
   await expect(vat.getByLabel("Taux de TVA")).toHaveValue("8,1");
 
-  await vat.getByRole("switch", { name: "Je facture la TVA" }).uncheck({ force: true });
-  await vat.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(vat.getByRole("status")).toContainText("TVA enregistrée.");
-  await page.reload();
-  await expect(vat.getByRole("switch", { name: "Je facture la TVA" })).not.toBeChecked();
+  await toggle.uncheck();
+  await save.click();
+  await expect(page.getByText("Pays et TVA enregistrés.")).toBeVisible();
+  dialog = await openSettings(page, "argent");
+  await expect(toggle).not.toBeChecked();
 });
 
 test("sécurité : le mot de passe actuel est vérifié, et les données s'exportent", async ({
   page,
 }) => {
   await loginAsCoachB(page);
-  await page.goto("/coach/profil?onglet=securite");
-  const password = page.getByRole("region", { name: "Mot de passe" });
-  await password.getByLabel("Mot de passe actuel").fill("pas-le-bon-mot-de-passe");
+  const dialog = await openSettings(page, "securite");
+  const password = dialog.getByRole("region", { name: "Mot de passe" });
+  const current = password.getByLabel("Mot de passe actuel", { exact: true });
+  await current.fill("pas-le-bon-mot-de-passe");
+  // « Afficher » montre ce qu'on a tapé (kit), « Masquer » le recache.
+  await password.getByRole("button", { name: "Afficher le mot de passe actuel" }).click();
+  await expect(current).toHaveAttribute("type", "text");
+  await password.getByRole("button", { name: "Masquer le mot de passe actuel" }).click();
+  await expect(current).toHaveAttribute("type", "password");
   await password.getByLabel("Nouveau mot de passe").fill("nouveau-mot-de-passe-1");
   await password.getByLabel("Confirmer le nouveau").fill("nouveau-mot-de-passe-1");
   await password.getByRole("button", { name: "Changer le mot de passe" }).click();

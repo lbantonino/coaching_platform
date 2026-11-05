@@ -78,7 +78,8 @@ export function AccountMenu() {
     closeMenu();
     openSettings?.(section);
   };
-  // Coach : la fenêtre des Paramètres (ci-dessus) ; à défaut, la page (onglet Profil, sommaire).
+  // Coach : la fenêtre des Paramètres (ci-dessus) ; à défaut, son adresse (/coach/profil ouvre la
+  // fenêtre par-dessus le tableau de bord, D-127).
   // Sportif : sa page profil, et sa section Thème.
   const settings = user.settingsHref
     ? user.settingsHref.startsWith("/coach")

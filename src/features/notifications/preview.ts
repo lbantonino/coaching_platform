@@ -68,20 +68,24 @@ export function buildPreview(
   today: string,
 ): NotificationPreview {
   const sportifs = `/coach/o/${organizationId}/sportifs`;
-  const section = <T extends { read: boolean }>(
+  // Les masquées ne sont pas dans l'aperçu (elles restent dans l'onglet « Masquées » de la page).
+  const section = <T extends { read: boolean; dismissed: boolean }>(
     kind: PreviewKind,
     title: string,
-    items: T[],
+    all: T[],
     toItem: (item: T) => PreviewItem,
     more: PreviewSection["more"],
-  ): PreviewSection => ({
-    kind,
-    title,
-    unread: items.filter((item) => !item.read).length,
-    total: items.length,
-    items: firstUnread(items).slice(0, PREVIEW_ITEMS).map(toItem),
-    more,
-  });
+  ): PreviewSection => {
+    const items = all.filter((item) => !item.dismissed);
+    return {
+      kind,
+      title,
+      unread: items.filter((item) => !item.read).length,
+      total: items.length,
+      items: firstUnread(items).slice(0, PREVIEW_ITEMS).map(toItem),
+      more,
+    };
+  };
   const sections: PreviewSection[] = [];
   if (notify.messages) {
     sections.push(

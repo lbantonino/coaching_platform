@@ -49,12 +49,12 @@ test("le coach crée une fiche complète d'un coup, accord santé compris, et la
   await page.getByText("Lundi", { exact: true }).click();
   await page.getByText("Jeudi", { exact: true }).click();
 
-  // Notes : les blessures n'existent qu'avec l'accord coché ; les notes libres, toujours.
+  // Notes : les blessures n'existent qu'avec l'accord (interrupteur) ; les notes libres, toujours.
   const consent = page.getByRole("group", { name: "Blessures et points d'attention" });
   await expect(page.getByRole("textbox", { name: "Blessures et points d'attention" })).toHaveCount(
     0,
   );
-  await consent.getByLabel(/m'a donné son accord explicite/).check();
+  await consent.getByRole("switch", { name: /accord explicite/i }).check();
   await consent.getByLabel("Comment ?").selectOption({ label: "Formulaire signé" });
   await consent
     .getByRole("textbox", { name: "Blessures et points d'attention" })
@@ -97,14 +97,31 @@ test("sans accord coché, aucune blessure ne peut être enregistrée", async ({ 
   await login(page);
   await page.goto(`/coach/o/${ORG_A}/sportifs/nouveau`);
   await fillAthleteName(page, name);
-  // L'accord coché puis décoché : le champ disparaît avec sa saisie.
+  // L'accord mis puis retiré : avec une saisie, le retrait demande confirmation (kit, page 10) ;
+  // « Annuler » garde tout, « Retirer l'accord » efface le champ et sa saisie.
   const consent = page.getByRole("group", { name: "Blessures et points d'attention" });
-  await consent.getByLabel(/m'a donné son accord explicite/).check();
+  const toggle = consent.getByRole("switch", { name: /accord explicite/i });
+  await toggle.check();
   await consent.getByRole("textbox", { name: "Blessures et points d'attention" }).fill("Genou");
-  await consent.getByLabel(/m'a donné son accord explicite/).uncheck();
+  await toggle.click();
+  const confirm = page.getByRole("dialog", { name: "Retirer l'accord ?" });
+  await confirm.getByRole("button", { name: "Annuler" }).click();
+  await expect(toggle).toBeChecked();
+  await expect(
+    consent.getByRole("textbox", { name: "Blessures et points d'attention" }),
+  ).toHaveValue("Genou");
+  await toggle.click();
+  await confirm.getByRole("button", { name: "Retirer l'accord" }).click();
+  await expect(toggle).not.toBeChecked();
   await expect(page.getByRole("textbox", { name: "Blessures et points d'attention" })).toHaveCount(
     0,
   );
+  // Remis : le champ revient vide.
+  await toggle.check();
+  await expect(
+    consent.getByRole("textbox", { name: "Blessures et points d'attention" }),
+  ).toHaveValue("");
+  await toggle.uncheck();
   await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
   await openAthleteTab(page, "Notes");
@@ -113,4 +130,19 @@ test("sans accord coché, aucune blessure ne peut être enregistrée", async ({ 
     health.getByRole("textbox", { name: "Blessures et points d'attention" }),
   ).toHaveCount(0);
   await expect(health.getByRole("button", { name: "Enregistrer l'accord" })).toBeVisible();
+});
+
+test("« Enregistrer le sportif » reste grisé tant que le prénom est vide", async ({ page }) => {
+  await login(page);
+  await page.goto(`/coach/o/${ORG_A}/sportifs/nouveau`);
+  const save = page.getByRole("button", { name: "Enregistrer le sportif" });
+  await expect(save).toBeDisabled();
+  // Des espaces seuls ne comptent pas.
+  const firstName = page.getByRole("textbox", { name: /^Prénom/ });
+  await firstName.fill("   ");
+  await expect(save).toBeDisabled();
+  await firstName.fill("Noa");
+  await expect(save).toBeEnabled();
+  await firstName.fill("");
+  await expect(save).toBeDisabled();
 });

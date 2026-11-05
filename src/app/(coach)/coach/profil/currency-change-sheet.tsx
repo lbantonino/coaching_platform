@@ -37,19 +37,18 @@ export function CurrencyChangeButton({
   organizationId,
   currency,
   onChanged,
+  className = buttonClass({ variant: "outline", size: "md" }),
 }: {
   organizationId: string;
   currency: Currency;
   onChanged?: () => void;
+  // Habillage du bouton (Paramètres du kit « Coory Pages », page 13).
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={buttonClass({ variant: "outline", size: "md" })}
-      >
+      <button type="button" onClick={() => setOpen(true)} className={className}>
         <ArrowRightLeft aria-hidden size={15} strokeWidth={1.8} />
         Changer de devise
       </button>

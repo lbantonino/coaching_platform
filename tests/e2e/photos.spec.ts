@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { fillAthleteName, goToCoachSection, openAthleteTab } from "./helpers";
+import { fillAthleteName, goToCoachSection, openAthleteTab, openSettings } from "./helpers";
 
 // Photos de profil (D-28) : envoi et retrait sur la fiche d'un sportif, contrôle du format,
 // accès refusé à un autre coach, profil du coach (Paramètres).
@@ -61,14 +61,14 @@ test("le coach ajoute puis retire la photo d'un sportif ; un autre coach ne peut
 test("le coach renseigne son identité et son entreprise dans Paramètres", async ({ page }) => {
   // Coach de démo B : le profil du coach A est celui qu'Antonino utilise pour regarder l'app.
   await login(page, "coach-b@example.test");
-  await page.goto("/coach/profil?onglet=profil");
-  await expect(page.getByRole("heading", { name: "Paramètres", level: 1 })).toBeVisible();
-  await page.getByRole("textbox", { name: /^Prénom/ }).fill("Marco");
-  await page.getByLabel(/^Entreprise/).fill("Bianchi Performance");
-  await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("Profil enregistré.");
-  await page.reload();
-  await expect(page.getByLabel(/^Entreprise/)).toHaveValue("Bianchi Performance");
+  // Paramètres en fenêtre (D-127) : l'ancienne adresse l'ouvre sur la rubrique Profil.
+  const dialog = await openSettings(page, "profil");
+  await dialog.getByRole("textbox", { name: /^Prénom/ }).fill("Marco");
+  await dialog.getByLabel(/^Entreprise/).fill("Bianchi Performance");
+  await dialog.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await expect(dialog.getByRole("status")).toContainText("Profil enregistré.");
+  await openSettings(page, "profil");
+  await expect(dialog.getByLabel(/^Entreprise/)).toHaveValue("Bianchi Performance");
   await page.goto("/coach");
   // Le prénom apparaît sur la carte du compte (menu de gauche, ou menu hamburger sur téléphone).
   await expect(page.getByLabel(/^Menu du compte : Marco/).first()).toBeAttached();

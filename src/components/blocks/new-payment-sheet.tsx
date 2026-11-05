@@ -331,10 +331,15 @@ function PaymentFields({
 }
 
 // Bouton rouge « Nouveau paiement » (page Comptabilité).
-export function NewPaymentButton() {
+export function NewPaymentButton({ className }: { className?: string } = {}) {
   const open = useOpenNewPayment();
   return (
-    <button type="button" disabled={!open} onClick={() => open?.()} className={buttonClass()}>
+    <button
+      type="button"
+      disabled={!open}
+      onClick={() => open?.()}
+      className={buttonClass({ className })}
+    >
       <Plus aria-hidden size={16} strokeWidth={2} />
       Nouveau paiement
     </button>

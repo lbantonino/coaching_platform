@@ -3,16 +3,8 @@ import { z } from "zod";
 // Formulaire d'une tâche (4e, D-59) : création et modification, les mêmes règles que la base
 // (migration 20261028150000). Prompt Claude Design §7 `/coach/taches` : tâche, « associée à »,
 // priorité Haute / Normale, échéance ; plus le sportif concerné et une note, facultatifs.
-export const TASK_CATEGORIES = ["programme", "facturation", "paiement", "suivi", "agenda"] as const;
-export type TaskCategory = (typeof TASK_CATEGORIES)[number];
-
-export const taskCategoryLabels: Record<TaskCategory, string> = {
-  programme: "Programme",
-  facturation: "Facturation",
-  paiement: "Paiement",
-  suivi: "Suivi",
-  agenda: "Agenda",
-};
+// « Associée à » : une des listes du coach (kit « Coory Pages », 01, D-129, décision 8), à la place
+// des 5 catégories fixes (la colonne `category` reste en base, inutilisée).
 
 export const TASK_TITLE_MAX = 140;
 export const TASK_NOTES_MAX = 1000;
@@ -22,7 +14,7 @@ export type TaskFormValues = {
   title: string;
   priority: string;
   dueOn: string;
-  category: string;
+  listId: string;
   athleteId: string;
   notes: string;
 };
@@ -31,7 +23,7 @@ export type TaskInput = {
   title: string;
   priority: "high" | "normal";
   dueOn: string | null;
-  category: TaskCategory | null;
+  listId: string | null;
   athleteId: string | null;
   notes: string | null;
 };
@@ -51,7 +43,7 @@ const schema = z.object({
       .date({ error: "Date d'échéance invalide." })
       .refine((day) => day >= "2000-01-01", { error: "Date d'échéance invalide." }),
   ]),
-  category: z.union([z.literal(""), z.enum(TASK_CATEGORIES, { error: "Choix invalide." })]),
+  listId: z.union([z.literal(""), z.uuid({ error: "Liste invalide." })]),
   athleteId: z.union([z.literal(""), z.uuid({ error: "Sportif invalide." })]),
   notes: z
     .string()
@@ -64,7 +56,7 @@ export function readTaskForm(formData: FormData): TaskFormValues {
     title: field("title"),
     priority: field("priority") || "normal",
     dueOn: field("dueOn"),
-    category: field("category"),
+    listId: field("listId"),
     athleteId: field("athleteId"),
     notes: field("notes"),
   };
@@ -83,7 +75,7 @@ export function parseTaskForm(
       title: data.title,
       priority: data.priority,
       dueOn: empty(data.dueOn) ? null : data.dueOn,
-      category: data.category === "" ? null : data.category,
+      listId: data.listId === "" ? null : data.listId,
       athleteId: data.athleteId === "" ? null : data.athleteId,
       notes: notes === "" ? null : notes,
     },

@@ -58,7 +58,7 @@ export function FavoriteButton({
       type="button"
       aria-pressed={optimistic}
       onClick={toggle}
-      className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-line-2 px-4 text-[14px] font-medium text-text transition-colors duration-150 hover:bg-surface"
+      className="inline-flex h-11 items-center justify-center gap-2 rounded-control border border-line-2 px-4 text-[14px] font-medium text-text transition-colors duration-150 hover:bg-surface lg:h-8 lg:gap-1.5 lg:rounded-[9px] lg:px-3 lg:text-[12.5px] lg:[&_svg]:size-3.5"
     >
       {star}
       Favori
