@@ -1,12 +1,30 @@
 "use client";
 
 import { ShieldCheck } from "lucide-react";
-import { useActionState, useState } from "react";
+import Link from "next/link";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 
-import { buttonClass } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { FieldCheck } from "@/components/ui/field-check";
-import { errorTextClass, hintClass, inputClass, labelClass } from "@/components/ui/form-styles";
+import {
+  kitHintClass,
+  kitInputBaseClass,
+  kitInputClass,
+  kitLabelClass,
+  kitOptionalClass,
+} from "@/components/ui/form-styles";
+import {
+  MobileActionBar,
+  mobileActionPrimaryClass,
+  mobileActionSecondaryClass,
+} from "@/components/ui/mobile-action-bar";
+import { ConfirmDialog } from "@/components/ui/overlay";
 import { Segmented } from "@/components/ui/segmented";
 import { DISCIPLINES, disciplineLabels } from "@/domain/training/discipline";
 import { createAthlete, type NewAthleteState } from "@/features/athletes/actions";
@@ -21,15 +39,16 @@ import {
   ContactFields,
   HealthConstraintsField,
   IdentityFields,
-  Part,
   SportProfileFields,
 } from "../athlete-fields";
 
-// Page « Nouveau sportif » (D-54, prompt Claude Design §7.2) : la fiche complète en une fois.
-// Téléphone (mobile first) : les sections s'empilent ; le bouton rouge reste collé en bas. Ordinateur :
-// le formulaire sur 8 colonnes, la colonne de droite (rappel des données de santé + bouton) collée en
-// haut pendant le défilement. Seul le prénom est obligatoire. Section Notes (D-56) : blessures avec
-// l'accord du sportif, et notes libres.
+// Page « Nouveau sportif » (D-54, refaite au kit « Coory Pages », page 10, D-126) : la fiche complète
+// en une fois, en six cartes numérotées empilées sur toute la largeur (plafond 1 120 px) ; les champs
+// sur deux colonnes à partir de 900 px. Seul le prénom est obligatoire : « Enregistrer le sportif »
+// reste grisé tant qu'il est vide (le serveur le revérifie). Ordinateur : sous les cartes, le rappel
+// « Données de santé » à gauche, le bouton à droite. Téléphone : barre fixe « Annuler / Enregistrer
+// le sportif ». Notes (D-56) : les blessures n'existent qu'avec l'accord du sportif (interrupteur),
+// puis des notes libres, privées au coach.
 const emptyValues: NewAthleteFormInput = {
   firstName: "",
   lastName: "",
@@ -58,9 +77,14 @@ const emptyValues: NewAthleteFormInput = {
 
 const initialState: NewAthleteState = { error: null, attempt: 0, values: null };
 
-const sectionClass = "rounded-card border border-line bg-surface p-[18px] md:p-[22px]";
-
-export function NewAthleteForm({ organizationId }: { organizationId: string }) {
+export function NewAthleteForm({
+  organizationId,
+  cancelHref,
+}: {
+  organizationId: string;
+  // « Annuler » (barre du téléphone) : l'écran précédent, la liste des sportifs.
+  cancelHref: string;
+}) {
   // L'organisation est liée à l'action ; l'action la revérifie de toute façon côté serveur.
   const [state, formAction, pending] = useActionState(
     createAthlete.bind(null, organizationId),
@@ -74,7 +98,30 @@ export function NewAthleteForm({ organizationId }: { organizationId: string }) {
       pending={pending}
       error={state.error}
       values={state.values ?? emptyValues}
+      cancelHref={cancelHref}
     />
+  );
+}
+
+// Carte numérotée du kit : pastille violette de 26 px, titre 16 px demi-gras.
+function Section({ n, title, children }: { n: number; title: string; children: ReactNode }) {
+  const id = `new-athlete-section-${n}`;
+  return (
+    <section
+      aria-labelledby={id}
+      className="flex min-w-0 flex-col gap-4 rounded-[22px] bg-surface px-4 py-[18px] lg:gap-[18px] lg:rounded-[20px] lg:px-6 lg:pt-[22px] lg:pb-6 lg:inset-ring lg:inset-ring-line"
+    >
+      <h2 id={id} className="flex items-center gap-2.5 text-[16px] leading-[normal] font-semibold">
+        <span
+          aria-hidden
+          className="grid size-[26px] shrink-0 place-items-center rounded-[8px] bg-dlg-accent-soft text-[12px] font-semibold text-violet-text"
+        >
+          {n}
+        </span>
+        {title}
+      </h2>
+      {children}
+    </section>
   );
 }
 
@@ -83,251 +130,308 @@ function NewAthleteFields({
   pending,
   error,
   values: v,
+  cancelHref,
 }: {
   formAction: (formData: FormData) => void;
   pending: boolean;
   error: string | null;
   values: NewAthleteFormInput;
+  cancelHref: string;
 }) {
+  const [hasFirstName, setHasFirstName] = useState(v.firstName.trim() !== "");
   const [consent, setConsent] = useState(v.healthConsent);
+  // Blessures déjà écrites : retirer l'accord les efface, après confirmation (kit, interactions).
+  const [healthDefault, setHealthDefault] = useState(v.healthConstraints);
+  const [hasHealthText, setHasHealthText] = useState(v.healthConstraints.trim() !== "");
+  const [confirmWithdraw, setConfirmWithdraw] = useState(false);
+
+  // Erreur renvoyée par le serveur : amenée au milieu de l'écran (sur téléphone, le bouton est dans la
+  // barre fixe, loin de la fin du formulaire).
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ block: "center" });
+  }, [error]);
+
+  // Saisie suivie au niveau du formulaire : les champs partagés restent non contrôlés.
+  const track = (event: ChangeEvent<HTMLFormElement>) => {
+    const field = event.target as unknown as HTMLInputElement | HTMLTextAreaElement;
+    if (field.name === "firstName") setHasFirstName(field.value.trim() !== "");
+    if (field.name === "healthConstraints") setHasHealthText(field.value.trim() !== "");
+  };
+
+  const withdrawConsent = () => {
+    setConsent(false);
+    setHealthDefault("");
+    setHasHealthText(false);
+    setConfirmWithdraw(false);
+  };
+
+  const submitLabel = pending ? "Enregistrement…" : "Enregistrer le sportif";
+  const disabled = pending || !hasFirstName;
 
   return (
     <form
       action={formAction}
       noValidate
-      className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12 lg:gap-4"
+      onChange={track}
+      className="flex w-full max-w-[1120px] flex-col gap-3 lg:gap-3.5"
     >
-      <div className="flex min-w-0 flex-col gap-6 lg:col-span-8 lg:gap-4">
-        <section className={sectionClass}>
-          <div className="flex flex-col gap-7">
-            <Part title="Identité">
-              <IdentityFields values={v} optionalLastName />
-            </Part>
-            <Part title="Contact">
-              <ContactFields values={v} optional />
-            </Part>
-          </div>
-        </section>
+      <Section n={1} title="Identité">
+        <IdentityFields values={v} optionalLastName look="kit" />
+      </Section>
 
-        <section className={sectionClass}>
-          <Part title="Profil sportif">
-            <SportProfileFields
-              values={v}
-              besideLevel={
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="programType" className={labelClass}>
-                    Type de programme
+      <Section n={2} title="Contact">
+        <ContactFields values={v} optional look="kit" />
+      </Section>
+
+      <Section n={3} title="Profil sportif">
+        <SportProfileFields
+          values={v}
+          look="kit"
+          besideLevel={
+            <div className="flex min-w-0 flex-col gap-2">
+              <label htmlFor="programType" className={kitLabelClass}>
+                Type de programme
+              </label>
+              <select
+                id="programType"
+                name="programType"
+                defaultValue={v.programType}
+                className={kitInputClass}
+              >
+                <option value="">Non précisé</option>
+                {DISCIPLINES.map((discipline) => (
+                  <option key={discipline} value={discipline}>
+                    {disciplineLabels[discipline]}
+                  </option>
+                ))}
+              </select>
+            </div>
+          }
+        />
+        <Segmented
+          name="status"
+          legend="Statut"
+          look="kit"
+          defaultValue={(v.status || "active") as AthleteStatus}
+          options={[
+            { value: "active", label: "Actif" },
+            { value: "paused", label: "En pause" },
+            { value: "archived", label: "Archivé" },
+          ]}
+        />
+      </Section>
+
+      <Section n={4} title="Objectif principal">
+        <div className="grid gap-4 min-[56.25rem]:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-2">
+            <label htmlFor="goalType" className={kitLabelClass}>
+              Type d&apos;objectif <span className={kitOptionalClass}>facultatif</span>
+            </label>
+            <select
+              id="goalType"
+              name="goalType"
+              defaultValue={v.goalType}
+              className={kitInputClass}
+            >
+              <option value="">Pas encore défini</option>
+              {goalTypeGroups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.types.map((type) => (
+                    <option key={type} value={type}>
+                      {goalTypeLabels[type]}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+            <label htmlFor="goalDate" className={kitLabelClass}>
+              Date visée <span className={kitOptionalClass}>facultatif</span>
+            </label>
+            <input
+              id="goalDate"
+              name="goalDate"
+              type="date"
+              defaultValue={v.goalDate}
+              className={kitInputClass}
+            />
+            <FieldCheck htmlFor="goalDate" rule="future-date" />
+          </div>
+          <div className="col-span-full flex min-w-0 flex-col gap-2">
+            <label htmlFor="competitionName" className={kitLabelClass}>
+              Prochaine compétition <span className={kitOptionalClass}>facultatif</span>
+            </label>
+            <input
+              id="competitionName"
+              name="competitionName"
+              autoComplete="off"
+              maxLength={120}
+              placeholder="Ex. : Hyrox Bruxelles"
+              defaultValue={v.competitionName}
+              aria-describedby="competition-hint"
+              className={kitInputClass}
+            />
+            <p id="competition-hint" className={kitHintClass}>
+              Avec un nom, l&apos;objectif devient une compétition : indique alors sa date.
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      <Section n={5} title="Disponibilités">
+        <AvailabilityFields values={v} look="kit" />
+      </Section>
+
+      <Section n={6} title="Notes">
+        {/* Blessures (D-20, D-56) : donnée de santé, seulement avec l'accord explicite du sportif. Sans
+            accord, le champ n'existe pas (rien ne peut partir au serveur). */}
+        <fieldset className="flex min-w-0 flex-col gap-2">
+          <legend className={`${kitLabelClass} mb-2`}>Blessures et points d&apos;attention</legend>
+          <div className="flex flex-col gap-3 rounded-[14px] bg-surface-2 p-3.5">
+            {/* Toute la ligne est l'interrupteur ; -my-2 / py-2 : 44 px à toucher sans grandir l'encadré. */}
+            <label className="-my-2 flex cursor-pointer items-center gap-3 rounded-[10px] py-2 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent">
+              <span className="min-w-0 flex-1 text-[14px] leading-[1.45] text-text-2 lg:text-[13.5px]">
+                <span className="lg:hidden">Accord explicite du sportif</span>
+                <span className="max-lg:hidden">
+                  Le sportif m&apos;a donné son accord explicite pour noter ses blessures et points
+                  d&apos;attention.
+                </span>
+              </span>
+              {/* La vraie case, invisible, couvre le dessin de l'interrupteur : le doigt la touche là
+                  où il la voit ; le clavier et les lecteurs d'écran l'utilisent comme une case. */}
+              <span
+                className={`relative flex h-7 w-12 shrink-0 rounded-full p-[3px] transition-colors duration-200 lg:h-[26px] lg:w-11 ${
+                  consent ? "bg-violet" : "bg-dlg-check-line"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  role="switch"
+                  name="healthConsent"
+                  checked={consent}
+                  onChange={(event) => {
+                    if (event.target.checked) setConsent(true);
+                    else if (hasHealthText) setConfirmWithdraw(true);
+                    else withdrawConsent();
+                  }}
+                  className="absolute inset-0 m-0 size-full cursor-pointer appearance-none rounded-full opacity-0"
+                />
+                <span
+                  aria-hidden
+                  className={`pointer-events-none size-[22px] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.2)] transition-transform duration-200 ease-out motion-reduce:transition-none lg:size-5 ${
+                    consent ? "translate-x-5 lg:translate-x-[18px]" : ""
+                  }`}
+                />
+              </span>
+            </label>
+            {consent ? (
+              <>
+                <div className="flex min-w-0 flex-col gap-2 min-[56.25rem]:w-[calc(50%-8px)]">
+                  <label htmlFor="consentProof" className={kitLabelClass}>
+                    Comment ?
                   </label>
                   <select
-                    id="programType"
-                    name="programType"
-                    defaultValue={v.programType}
-                    className={inputClass}
+                    id="consentProof"
+                    name="consentProof"
+                    defaultValue={v.consentProof}
+                    className={`${kitInputBaseClass} bg-field`}
                   >
-                    <option value="">Non précisé</option>
-                    {DISCIPLINES.map((discipline) => (
-                      <option key={discipline} value={discipline}>
-                        {disciplineLabels[discipline]}
+                    <option value="" disabled>
+                      Choisir…
+                    </option>
+                    {COACH_PROOFS.map((proof) => (
+                      <option key={proof} value={proof}>
+                        {coachProofLabels[proof]}
                       </option>
                     ))}
                   </select>
                 </div>
-              }
-            />
-            <Segmented
-              name="status"
-              legend="Statut"
-              defaultValue={(v.status || "active") as AthleteStatus}
-              options={[
-                { value: "active", label: "Actif" },
-                { value: "paused", label: "En pause" },
-                { value: "archived", label: "Archivé" },
-              ]}
-            />
-          </Part>
-        </section>
-
-        <section className={sectionClass}>
-          <Part title="Objectif principal">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="goalType" className={labelClass}>
-                  Type d&apos;objectif <span className="font-normal text-muted">(facultatif)</span>
-                </label>
-                <select
-                  id="goalType"
-                  name="goalType"
-                  defaultValue={v.goalType}
-                  className={inputClass}
-                >
-                  <option value="">Pas encore défini</option>
-                  {goalTypeGroups.map((group) => (
-                    <optgroup key={group.label} label={group.label}>
-                      {group.types.map((type) => (
-                        <option key={type} value={type}>
-                          {goalTypeLabels[type]}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="goalDate" className={labelClass}>
-                  Date visée <span className="font-normal text-muted">(facultatif)</span>
-                </label>
-                <input
-                  id="goalDate"
-                  name="goalDate"
-                  type="date"
-                  defaultValue={v.goalDate}
-                  className={`${inputClass} font-mono`}
-                />
-                <FieldCheck htmlFor="goalDate" rule="future-date" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="competitionName" className={labelClass}>
-                Prochaine compétition <span className="font-normal text-muted">(facultatif)</span>
-              </label>
-              <input
-                id="competitionName"
-                name="competitionName"
-                autoComplete="off"
-                maxLength={120}
-                placeholder="Ex. : Hyrox Bruxelles"
-                defaultValue={v.competitionName}
-                aria-describedby="competition-hint"
-                className={inputClass}
-              />
-              <p id="competition-hint" className={hintClass}>
-                Avec un nom, l&apos;objectif devient une compétition : indique alors sa date.
-              </p>
-            </div>
-          </Part>
-        </section>
-
-        <section className={sectionClass}>
-          <Part title="Disponibilités">
-            <AvailabilityFields values={v} />
-          </Part>
-        </section>
-
-        {/* Notes (D-56, demande d'Antonino) : les blessures, avec l'accord du sportif (donnée de
-            santé, journalisée), puis des notes libres, privées au coach. */}
-        <section aria-labelledby="new-athlete-notes" className={sectionClass}>
-          <div className="flex flex-col gap-7">
-            <fieldset className="flex flex-col gap-4">
-              <legend
-                id="new-athlete-notes"
-                className="mb-4 font-mono text-data tracking-wide text-muted uppercase"
-              >
-                Notes
-              </legend>
-              <div
-                role="group"
-                aria-labelledby="health-block-title"
-                className="flex flex-col gap-3 rounded-[14px] border border-line p-4"
-              >
-                <h3 id="health-block-title" className="text-small font-medium">
-                  Blessures et points d&apos;attention
-                </h3>
-                <label className="flex cursor-pointer items-start gap-2.5 text-small">
-                  <input
-                    type="checkbox"
-                    name="healthConsent"
-                    checked={consent}
-                    onChange={(event) => setConsent(event.target.checked)}
-                    className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
-                  />
-                  Le sportif m&apos;a donné son accord explicite pour que je note ses blessures et
-                  points d&apos;attention.
-                </label>
-                {consent ? (
-                  <>
-                    <div className="flex flex-col gap-1.5 md:w-1/2">
-                      <label htmlFor="consentProof" className={labelClass}>
-                        Comment ?
-                      </label>
-                      <select
-                        id="consentProof"
-                        name="consentProof"
-                        defaultValue={v.consentProof}
-                        className={inputClass}
-                      >
-                        <option value="" disabled>
-                          Choisir…
-                        </option>
-                        {COACH_PROOFS.map((proof) => (
-                          <option key={proof} value={proof}>
-                            {coachProofLabels[proof]}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <HealthConstraintsField value={v.healthConstraints} />
-                  </>
-                ) : (
-                  <p className={hintClass}>
-                    Donnée de santé : coche l&apos;accord pour les noter. Sans accord, tu pourras le
-                    faire plus tard depuis sa fiche.
-                  </p>
-                )}
-              </div>
-              <CoachNoteField value={v.coachNote} />
-            </fieldset>
+                <HealthConstraintsField value={healthDefault} look="kit" />
+              </>
+            ) : null}
           </div>
-        </section>
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-6 lg:col-span-4">
-        {/* Données de santé (D-20, D-56) : rappel, le choix se fait dans la section Notes. */}
-        <Card id="health-info-title" title="Données de santé">
-          <p className="flex items-start gap-2 text-small text-muted">
-            <ShieldCheck
-              aria-hidden
-              size={16}
-              strokeWidth={1.8}
-              className="mt-0.5 shrink-0 text-ok"
-            />
-            Les blessures ne se notent qu&apos;avec l&apos;accord explicite du sportif (section
-            Notes). Il peut le retirer à tout moment : ce qui a été noté est alors effacé.
+          <p id="health-hint" className={kitHintClass}>
+            {consent
+              ? "Ce qui change l'entraînement : blessures, douleurs, zones à ménager. Pas de diagnostic ni de traitement."
+              : "Sans accord, tu pourras le faire plus tard depuis sa fiche."}
           </p>
-        </Card>
+        </fieldset>
+        <CoachNoteField value={v.coachNote} look="kit" />
+      </Section>
 
-        {/* Ordinateur : le bouton sous la carte, collé en haut avec elle. */}
-        <div className="flex flex-col gap-3 max-lg:hidden">
-          <SubmitArea pending={pending} error={error} />
-        </div>
-      </div>
-
-      {/* Téléphone (audit apple-design du 28/10) : le bouton reste visible tout le long du formulaire,
-          dans une barre translucide collée en bas ; le contenu défile dessous. */}
-      <div className="material sticky bottom-0 z-20 -mx-3.5 flex flex-col gap-2 border-t px-3.5 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] lg:hidden">
-        <SubmitArea pending={pending} error={error} />
-      </div>
-    </form>
-  );
-}
-
-function SubmitArea({ pending, error }: { pending: boolean; error: string | null }) {
-  return (
-    <>
       {error ? (
-        <p role="alert" className={errorTextClass}>
+        <p
+          ref={errorRef}
+          role="alert"
+          className="rounded-[14px] bg-surface px-4 py-3 text-[13px] leading-[1.45] font-medium text-alert"
+        >
           {error}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className={buttonClass({ variant: "primary", size: "lg", className: "w-full" })}
+
+      {/* Pied de page : le rappel « Données de santé » (D-20, D-56) ; sur ordinateur, le bouton et la
+          règle du prénom à sa droite (colonne de 280 px). */}
+      <div className="grid gap-x-4 gap-y-2 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center">
+        <div className="flex flex-col gap-2 rounded-[22px] bg-surface px-[18px] py-4 lg:row-span-2 lg:rounded-[20px]">
+          <h2 className="flex items-center gap-2 text-[14px] leading-[normal] font-semibold">
+            <ShieldCheck
+              aria-hidden
+              size={15}
+              strokeWidth={2}
+              className="shrink-0 text-status-ok"
+            />
+            Données de santé
+          </h2>
+          <p className="text-[13px] leading-[1.5] text-muted lg:text-[12.5px]">
+            Les blessures ne se notent qu&apos;avec l&apos;accord explicite du sportif. Il peut le
+            retirer à tout moment : ce qui a été noté est alors effacé.
+          </p>
+        </div>
+        <button
+          type="submit"
+          disabled={disabled}
+          aria-describedby="new-athlete-required"
+          className="inline-flex h-[46px] w-full items-center justify-center rounded-[12px] bg-cta px-5 text-[14.5px] leading-[normal] font-semibold text-on-cta transition-[scale,opacity] duration-150 not-disabled:active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 max-lg:hidden"
+        >
+          {submitLabel}
+        </button>
+        <p
+          id="new-athlete-required"
+          className="text-center text-[12px] leading-[normal] text-faint max-lg:hidden"
+        >
+          Seul le prénom est obligatoire.
+        </p>
+      </div>
+
+      {/* Téléphone : barre fixe (kit) ; « Annuler » revient à la liste. */}
+      <MobileActionBar>
+        <Link href={cancelHref} className={mobileActionSecondaryClass}>
+          Annuler
+        </Link>
+        <button type="submit" disabled={disabled} className={mobileActionPrimaryClass}>
+          {pending ? (
+            "Enregistrement…"
+          ) : (
+            // Un seul bloc de texte (le bouton est en flex : deux enfants seraient espacés). Sous 360 px,
+            // « le sportif » n'est lu que par les lecteurs d'écran : « Annuler » garde sa place.
+            <span>
+              Enregistrer<span className="max-[359px]:sr-only"> le sportif</span>
+            </span>
+          )}
+        </button>
+      </MobileActionBar>
+
+      <ConfirmDialog
+        open={confirmWithdraw}
+        onClose={() => setConfirmWithdraw(false)}
+        onConfirm={withdrawConsent}
+        title="Retirer l'accord ?"
+        confirmLabel="Retirer l'accord"
       >
-        {pending ? "Enregistrement…" : "Enregistrer le sportif"}
-      </button>
-      <p className={`${hintClass} max-lg:hidden`}>
-        Seul le prénom est obligatoire : le reste se complète plus tard.
-      </p>
-    </>
+        Ce que tu as noté sur ses blessures et points d&apos;attention sera effacé.
+      </ConfirmDialog>
+    </form>
   );
 }

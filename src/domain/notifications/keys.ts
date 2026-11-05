@@ -18,25 +18,35 @@ export function isNotificationKey(key: unknown): key is string {
   return typeof key === "string" && NOTIFICATION_KEY.test(key);
 }
 
-export type NotificationState = { read: boolean; dismissed: boolean };
+// `deleted` (kit « Coory Pages », page 03, D-128) : supprimée par le coach, plus visible nulle part.
+export type NotificationState = { read: boolean; dismissed: boolean; deleted: boolean };
 
 // À partir des lignes lues en base : l'état de chaque clé (absente = non lue, visible).
 export function stateMap(
-  rows: { key: string; read_at: string | null; dismissed_at: string | null }[],
+  rows: {
+    key: string;
+    read_at: string | null;
+    dismissed_at: string | null;
+    deleted_at?: string | null;
+  }[],
 ): Map<string, NotificationState> {
   return new Map(
     rows.map((row) => [
       row.key,
-      { read: row.read_at !== null, dismissed: row.dismissed_at !== null },
+      {
+        read: row.read_at !== null,
+        dismissed: row.dismissed_at !== null,
+        deleted: (row.deleted_at ?? null) !== null,
+      },
     ]),
   );
 }
 
-// Compte ce qui attend vraiment : ni lu, ni masqué.
+// Compte ce qui attend vraiment : ni lu, ni masqué, ni supprimé.
 export function countUnread(keys: string[], states: Map<string, NotificationState>): number {
   return keys.filter((key) => {
     const state = states.get(key);
-    return !state?.read && !state?.dismissed;
+    return !state?.read && !state?.dismissed && !state?.deleted;
   }).length;
 }
 

@@ -16,20 +16,24 @@ export type DonutSegment = {
   share: number;
 };
 
-const SIZE = 200;
+const SIZE = 180;
 const STROKE = 22;
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const GAP = 3;
 
+// Kit « Coory Pages », page 04 (D-130) : anneau de 180 px centré (ou, `view="bars"`, le total et une
+// barre de proportion), puis une ligne par mode : point, nom, part, montant, séparées d'un filet.
 export function DonutChart({
   segments,
   total,
   caption,
+  view = "pie",
 }: {
   segments: DonutSegment[];
   total: string;
   caption: string;
+  view?: "pie" | "bars";
 }) {
   const [active, setActive] = useState<string | null>(null);
   const sum = segments.reduce((acc, segment) => acc + segment.cents, 0);
@@ -46,57 +50,76 @@ export function DonutChart({
   }));
 
   return (
-    <figure className="flex flex-col items-center gap-6 md:flex-row md:items-center md:gap-10">
-      <div className="relative size-[200px] shrink-0">
-        <svg
-          viewBox={`0 0 ${SIZE} ${SIZE}`}
-          className="size-full -rotate-90"
-          aria-hidden
-          onMouseLeave={() => setActive(null)}
-        >
-          <circle
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={RADIUS}
-            fill="none"
-            stroke="var(--chip)"
-            strokeWidth={STROKE}
-          />
-          {arcs.map((arc) => (
+    <figure className="flex flex-col gap-[18px]">
+      {view === "pie" ? (
+        <div className="relative size-[180px] shrink-0 self-center">
+          <svg
+            viewBox={`0 0 ${SIZE} ${SIZE}`}
+            className="size-full -rotate-90"
+            aria-hidden
+            onMouseLeave={() => setActive(null)}
+          >
             <circle
-              key={arc.key}
               cx={SIZE / 2}
               cy={SIZE / 2}
               r={RADIUS}
               fill="none"
-              stroke={arc.color}
-              strokeWidth={active === arc.key ? STROKE + 6 : STROKE}
-              strokeDasharray={`${arc.dash} ${CIRCUMFERENCE - arc.dash}`}
-              strokeDashoffset={arc.offset}
-              onMouseEnter={() => setActive(arc.key)}
-              className="cursor-default transition-[stroke-width,opacity] duration-150"
-              style={{ opacity: active && active !== arc.key ? 0.35 : 1 }}
+              stroke="var(--track)"
+              strokeWidth={STROKE}
             />
-          ))}
-        </svg>
-        <div
-          aria-live="polite"
-          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-8 text-center"
-        >
-          <span className="text-[12px] font-medium text-muted">
-            {focused ? `${focused.label} · ${focused.share} %` : "Total reçu"}
-          </span>
-          <span className="font-display text-[22px] leading-tight font-semibold tabular">
-            {focused ? focused.amount : total}
-          </span>
+            {arcs.map((arc) => (
+              <circle
+                key={arc.key}
+                cx={SIZE / 2}
+                cy={SIZE / 2}
+                r={RADIUS}
+                fill="none"
+                stroke={arc.color}
+                strokeWidth={active === arc.key ? STROKE + 6 : STROKE}
+                strokeDasharray={`${arc.dash} ${CIRCUMFERENCE - arc.dash}`}
+                strokeDashoffset={arc.offset}
+                onMouseEnter={() => setActive(arc.key)}
+                className="cursor-default transition-[stroke-width,opacity] duration-150"
+                style={{ opacity: active && active !== arc.key ? 0.35 : 1 }}
+              />
+            ))}
+          </svg>
+          <div
+            aria-live="polite"
+            className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 px-7 text-center"
+          >
+            <span className="text-[12.5px] leading-[normal] font-medium text-muted">
+              {focused ? `${focused.label} · ${focused.share} %` : "Total reçu"}
+            </span>
+            <span className="text-[20px] leading-none font-semibold tracking-[-0.02em] whitespace-nowrap tabular">
+              {focused ? focused.amount : total}
+            </span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[13px] leading-[normal] font-medium text-muted">Total reçu</span>
+            <span className="text-[26px] leading-none font-semibold tracking-[-0.025em] tabular">
+              {total}
+            </span>
+          </div>
+          <div aria-hidden className="flex h-2.5 gap-0.5 overflow-hidden rounded-[6px] bg-track">
+            {shown.map((segment) => (
+              <span
+                key={segment.key}
+                style={{ width: `${(segment.cents / sum) * 100}%`, background: segment.color }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
-      <figcaption className="flex w-full min-w-0 flex-col gap-1 md:max-w-[460px]">
+      <figcaption className="flex w-full min-w-0 flex-col">
         <span className="sr-only">{caption}</span>
         <ul className="flex flex-col">
           {segments.map((segment) => (
-            <li key={segment.key}>
+            <li key={segment.key} className="border-t border-line">
               <button
                 type="button"
                 disabled={segment.cents === 0}
@@ -104,23 +127,23 @@ export function DonutChart({
                 onMouseLeave={() => setActive(null)}
                 onFocus={() => setActive(segment.cents > 0 ? segment.key : null)}
                 onBlur={() => setActive(null)}
-                className={`flex min-h-11 w-full items-center gap-3 rounded-[10px] px-2 text-left transition-colors duration-150 disabled:cursor-default ${
-                  active === segment.key ? "bg-selected-hover" : ""
+                className={`flex min-h-10 w-full items-center gap-2.5 rounded-[8px] py-[9px] text-left text-[14px] leading-[normal] font-medium transition-colors duration-150 disabled:cursor-default ${
+                  active === segment.key ? "bg-surface-2" : ""
                 }`}
               >
                 <span
                   aria-hidden
-                  className="size-3 shrink-0 rounded-full"
-                  style={{ background: segment.cents > 0 ? segment.color : "var(--chip)" }}
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ background: segment.cents > 0 ? segment.color : "var(--track)" }}
                 />
-                <span
-                  className={`flex-1 truncate text-[15px] font-medium ${segment.cents === 0 ? "text-muted" : ""}`}
-                >
+                <span className={`flex-1 truncate ${segment.cents === 0 ? "text-muted" : ""}`}>
                   {segment.label}
                 </span>
-                <span className="font-mono text-[13px] text-muted tabular">{segment.share} %</span>
+                <span className="w-11 text-right text-[13px] font-normal text-muted tabular">
+                  {segment.share} %
+                </span>
                 <span
-                  className={`w-[104px] text-right text-[15px] font-semibold tabular ${segment.cents === 0 ? "text-muted" : ""}`}
+                  className={`w-[100px] text-right font-semibold tabular ${segment.cents === 0 ? "text-muted" : ""}`}
                 >
                   {segment.amount}
                 </span>

@@ -172,11 +172,12 @@ test("une tâche cochée quitte la carte du tableau de bord et passe dans « Ter
 
   // Elle est dans « Terminées », cochée ; la rouvrir la remet à faire.
   await page.goto("/coach/taches");
+  // Vues de la page Tâches (kit « Coory Pages », 01, D-129) : des tuiles.
   await page
-    .getByRole("navigation", { name: "Onglets des tâches" })
-    .getByRole("link", { name: "Terminées" })
+    .getByRole("navigation", { name: "Vues des tâches" })
+    .getByRole("link", { name: /Terminées/ })
     .click();
-  await expect(page).toHaveURL(/onglet=terminees/);
+  await expect(page).toHaveURL(/vue=terminees/);
   await expect(checkbox).toHaveAttribute("aria-checked", "true");
   await checkbox.click();
   await expect(page.getByText("Tâche rouverte.")).toBeVisible();

@@ -63,7 +63,12 @@ export function DeleteExerciseButton({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className={buttonClass({ variant: "outline" })}
+          // Fiche de l'exercice : 32 px dans l'en-tête sur ordinateur (D-124).
+          className={buttonClass({
+            variant: "outline",
+            className:
+              "lg:h-8! lg:gap-1.5! lg:rounded-[9px]! lg:px-3! lg:text-[12.5px]! lg:[&>svg]:size-3.5",
+          })}
         >
           <Trash2 aria-hidden size={16} strokeWidth={1.8} />
           Supprimer

@@ -54,9 +54,36 @@ export function ThemeChoice({
   name?: string;
   compact?: boolean;
   // « dialog » : segments du kit des boîtes (menu du compte, boîte 32).
-  look?: "page" | "dialog";
+  // « kit » : Paramètres › Préférences (kit « Coory Pages », page 13, D-127) : trois segments de texte,
+  // égaux sur téléphone (46 px), à la largeur du contenu sur ordinateur (42 px).
+  look?: "page" | "dialog" | "kit";
 }) {
   const preference = useSyncExternalStore(subscribe, readPreference, (): ThemePreference => "dark");
+  if (look === "kit") {
+    return (
+      <fieldset className="min-w-0">
+        <legend className="sr-only">Thème</legend>
+        <div className="flex h-[46px] gap-0.5 rounded-[12px] bg-dlg-segment p-[3px] md:inline-flex md:h-[42px] md:rounded-[11px]">
+          {options.map(({ value, label }) => (
+            <label
+              key={value}
+              className="flex flex-1 cursor-pointer items-center justify-center rounded-[9px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-muted transition-[color,background-color,box-shadow] duration-150 hover:text-text has-checked:bg-dlg-segment-active has-checked:text-text has-checked:shadow-[0_1px_3px_rgba(22,18,40,0.12)] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent md:flex-none md:rounded-[8px] md:px-[18px] md:text-[13px]"
+            >
+              <input
+                type="radio"
+                name={name}
+                value={value}
+                checked={preference === value}
+                onChange={() => applyThemePreference(value)}
+                className="sr-only"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
   if (look === "dialog") {
     return (
       <fieldset className="mx-3 mb-1.5 min-w-0">

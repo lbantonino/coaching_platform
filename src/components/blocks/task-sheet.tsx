@@ -35,14 +35,7 @@ import { ConfirmDialog, DialogBody, DialogFooter, Sheet } from "@/components/ui/
 import { Spinner } from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/toast";
 import { Quoted } from "@/components/ui/quoted";
-import {
-  TASK_CATEGORIES,
-  TASK_NOTES_MAX,
-  TASK_TITLE_MAX,
-  taskCategoryLabels,
-  type TaskCategory,
-  type TaskFormValues,
-} from "@/domain/tasks/task-form";
+import { TASK_NOTES_MAX, TASK_TITLE_MAX, type TaskFormValues } from "@/domain/tasks/task-form";
 import type { TaskFormState } from "@/features/tasks/actions";
 
 // Fenêtre « Nouvelle tâche » / « Modifier la tâche » (4e, D-59), la même sur toutes les pages coach :
@@ -54,12 +47,14 @@ export type EditableTask = {
   title: string;
   priority: "high" | "normal";
   dueOn: string | null;
-  category: TaskCategory | null;
+  listId: string | null;
   athleteId: string | null;
   notes: string | null;
 };
 
 type Athlete = { id: string; name: string };
+// Liste du coach (kit « Coory Pages », 01, D-129) : « Associée à » propose ses listes.
+type TaskListOption = { id: string; name: string };
 type CreateAction = (previous: TaskFormState, formData: FormData) => Promise<TaskFormState>;
 type UpdateAction = (
   taskId: string,
@@ -67,8 +62,10 @@ type UpdateAction = (
   formData: FormData,
 ) => Promise<TaskFormState>;
 
-// Ouvre la fenêtre : sans argument pour une nouvelle tâche, avec la tâche pour la modifier.
-const OpenContext = createContext<((task?: EditableTask) => void) | null>(null);
+// Ouvre la fenêtre : sans argument pour une nouvelle tâche, avec la tâche pour la modifier ; `preset`
+// préremplit une nouvelle tâche (ex. la liste ouverte sur la page Tâches).
+type OpenTask = (task?: EditableTask, preset?: { listId?: string }) => void;
+const OpenContext = createContext<OpenTask | null>(null);
 
 export function useOpenTaskSheet() {
   return useContext(OpenContext);
@@ -79,28 +76,36 @@ export function TaskSheetProvider({
   update,
   remove,
   loadAthletes,
+  loadLists,
   children,
 }: {
   create: CreateAction;
   update: UpdateAction;
   remove: (taskId: string) => Promise<{ ok: boolean }>;
   loadAthletes: () => Promise<Athlete[]>;
+  loadLists: () => Promise<TaskListOption[]>;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState<EditableTask | null>(null);
-  const [athletes, setAthletes] = useState<Athlete[] | null>(null);
+  const [preset, setPreset] = useState<{ listId?: string }>({});
+  const [options, setOptions] = useState<{ athletes: Athlete[]; lists: TaskListOption[] } | null>(
+    null,
+  );
   // Une clé par ouverture : le formulaire repart de la tâche ouverte, jamais de la précédente.
   const [opening, setOpening] = useState(0);
-  const openSheet = useCallback(
-    (next?: EditableTask) => {
+  const openSheet = useCallback<OpenTask>(
+    (next, wanted) => {
       setTask(next ?? null);
+      setPreset(wanted ?? {});
       setOpening((value) => value + 1);
-      setAthletes(null);
+      setOptions(null);
       setOpen(true);
-      loadAthletes().then(setAthletes, () => setAthletes([]));
+      Promise.all([loadAthletes().catch(() => []), loadLists().catch(() => [])]).then(
+        ([athletes, lists]) => setOptions({ athletes, lists }),
+      );
     },
-    [loadAthletes],
+    [loadAthletes, loadLists],
   );
   const close = useCallback(() => setOpen(false), []);
 
@@ -114,17 +119,19 @@ export function TaskSheetProvider({
         subtitle={task ? undefined : "Ce que tu dois faire, et pour quand."}
         bare
       >
-        {open && athletes === null ? (
+        {open && options === null ? (
           <DialogBody>
             <p className="flex items-center gap-2 text-[14px] text-muted">
               <Spinner /> Chargement…
             </p>
           </DialogBody>
-        ) : open && athletes ? (
+        ) : open && options ? (
           <TaskForm
             key={opening}
             task={task}
-            athletes={athletes}
+            preset={preset}
+            athletes={options.athletes}
+            lists={options.lists}
             action={task ? update.bind(null, task.id) : create}
             remove={remove}
             onDone={close}
@@ -139,13 +146,17 @@ const initial: TaskFormState = { error: null, attempt: 0, values: null, saved: f
 
 function TaskForm({
   task,
+  preset,
   athletes,
+  lists,
   action,
   remove,
   onDone,
 }: {
   task: EditableTask | null;
+  preset: { listId?: string };
   athletes: Athlete[];
+  lists: TaskListOption[];
   action: CreateAction;
   remove: (taskId: string) => Promise<{ ok: boolean }>;
   onDone: () => void;
@@ -167,7 +178,7 @@ function TaskForm({
     title: task?.title ?? "",
     priority: task?.priority ?? "normal",
     dueOn: task?.dueOn ?? "",
-    category: task?.category ?? "",
+    listId: task?.listId ?? preset.listId ?? "",
     athleteId: task?.athleteId ?? "",
     notes: task?.notes ?? "",
   };
@@ -214,16 +225,19 @@ function TaskForm({
             />
           </DlgField>
 
-          <DlgFieldset legend="Associée à" optional>
-            <DlgChips
-              name="category"
-              defaultValue={values.category}
-              options={[
-                { value: "", label: "Rien" },
-                ...TASK_CATEGORIES.map((value) => ({ value, label: taskCategoryLabels[value] })),
-              ]}
-            />
-          </DlgFieldset>
+          {/* « Associée à » : une des listes du coach (décision 8) ; sans liste, rien à choisir. */}
+          {lists.length > 0 ? (
+            <DlgFieldset legend="Associée à" optional>
+              <DlgChips
+                name="listId"
+                defaultValue={values.listId}
+                options={[
+                  { value: "", label: "Rien" },
+                  ...lists.map((list) => ({ value: list.id, label: list.name })),
+                ]}
+              />
+            </DlgFieldset>
+          ) : null}
 
           <DlgField label="Sportif" htmlFor="task-athlete" optional half>
             <DlgSelect id="task-athlete" name="athleteId" defaultValue={values.athleteId}>

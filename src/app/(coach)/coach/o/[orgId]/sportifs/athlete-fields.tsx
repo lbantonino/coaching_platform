@@ -12,6 +12,13 @@ import {
   ficheTextareaClass,
   hintClass,
   inputClass,
+  kitHintClass,
+  kitInputClass,
+  kitLabelClass,
+  kitOptionalClass,
+  kitPillClass,
+  kitTextareaBaseClass,
+  kitTextareaClass,
   textareaClass,
   labelClass,
 } from "@/components/ui/form-styles";
@@ -39,11 +46,26 @@ import {
 // et Disponibilités de la fiche : mêmes libellés, mêmes limites, une seule source. Chaque groupe ne
 // contient que des champs ; le formulaire qui les entoure (et son action) reste à la page.
 
-// Habillage des champs : celui de l'app (page « Nouveau sportif ») ou celui de la fiche (maquette
-// « Sportifs » du 03/11/2026 : champs de 46 px, sur-titres en capitales, grille de colonnes de 240 px).
-export type FieldLook = "app" | "fiche";
+// Habillage des champs : celui de l'app, celui de la fiche (maquette « Sportifs » du 03/11/2026 :
+// champs de 46 px, sur-titres en capitales, grille de colonnes de 240 px) ou celui du kit « Coory
+// Pages » (page 10 « Nouveau sportif », D-126 : champs gris pâle de 48 / 46 px, pilules violettes,
+// deux colonnes à partir de 900 px, « facultatif » sans parenthèses).
+export type FieldLook = "app" | "fiche" | "kit";
 
 function looks(look: FieldLook) {
+  if (look === "kit") {
+    return {
+      input: kitInputClass,
+      textarea: kitTextareaClass,
+      label: kitLabelClass,
+      hint: kitHintClass,
+      chip: kitPillClass,
+      grid: "grid gap-4 min-[56.25rem]:grid-cols-2",
+      field: "flex min-w-0 flex-col gap-2",
+      optional: kitOptionalClass,
+      optionalText: "facultatif",
+    };
+  }
   return look === "fiche"
     ? {
         input: ficheInputClass,
@@ -54,6 +76,7 @@ function looks(look: FieldLook) {
         grid: ficheGridClass,
         field: "flex min-w-0 flex-col gap-2",
         optional: "font-normal text-faint",
+        optionalText: "(facultatif)",
       }
     : {
         input: inputClass,
@@ -64,6 +87,7 @@ function looks(look: FieldLook) {
         grid: "grid gap-4 md:grid-cols-2",
         field: "flex flex-col gap-1.5",
         optional: "font-normal text-muted",
+        optionalText: "(facultatif)",
       };
 }
 
@@ -125,7 +149,7 @@ export function IdentityFields({
       <div className={s.field}>
         <label htmlFor="lastName" className={s.label}>
           Nom de famille
-          {optionalLastName ? <span className={s.optional}> (facultatif)</span> : null}
+          {optionalLastName ? <span className={s.optional}> {s.optionalText}</span> : null}
         </label>
         <input
           id="lastName"
@@ -139,7 +163,7 @@ export function IdentityFields({
       </div>
       <div className={s.field}>
         <label htmlFor="sex" className={s.label}>
-          Sexe <span className={s.optional}>(facultatif)</span>
+          Sexe <span className={s.optional}>{s.optionalText}</span>
         </label>
         <select id="sex" name="sex" defaultValue={values.sex} className={s.input}>
           <option value="">Non renseigné</option>
@@ -168,7 +192,7 @@ export function ContactFields({
   look?: FieldLook;
 }) {
   const s = looks(look);
-  const facultatif = optional ? <span className={s.optional}> (facultatif)</span> : null;
+  const facultatif = optional ? <span className={s.optional}> {s.optionalText}</span> : null;
   return (
     <div className={s.grid}>
       <div className={s.field}>
@@ -193,7 +217,7 @@ export function ContactFields({
           </p>
         ) : optional ? (
           <p id="email-invite-hint" className={s.hint}>
-            Il servira à l&apos;inviter dans son espace sportif.
+            Elle servira à l&apos;inviter dans son espace sportif.
           </p>
         ) : null}
       </div>
@@ -410,9 +434,11 @@ export function AvailabilityFields({
 }) {
   const s = looks(look);
   const fiche = look === "fiche";
-  // Fiche (maquette « Sportifs », page 2h) : une seule grille, les deux nombres dans les premières
-  // colonnes, puis les jours et les contraintes sur toute la largeur. App : deux blocs empilés.
-  const numberClass = fiche ? s.input : `${s.input} font-mono`;
+  // Fiche (maquette « Sportifs », page 2h) et kit (page 10) : une seule grille, les deux nombres dans
+  // les premières colonnes, puis les jours et les contraintes sur toute la largeur. App : deux blocs
+  // empilés.
+  const oneGrid = look !== "app";
+  const numberClass = look === "app" ? `${s.input} font-mono` : s.input;
   const numbers = (
     <>
       <div className={s.field}>
@@ -450,7 +476,7 @@ export function AvailabilityFields({
   );
   const rest = (
     <>
-      <fieldset className={`flex min-w-0 flex-col gap-2 ${fiche ? "col-span-full" : ""}`}>
+      <fieldset className={`flex min-w-0 flex-col gap-2 ${oneGrid ? "col-span-full" : ""}`}>
         <legend className={`${s.label} mb-2`}>Jours disponibles</legend>
         <div className="flex flex-wrap gap-2">
           {WEEK_DAYS.map((day) => (
@@ -481,7 +507,7 @@ export function AvailabilityFields({
         </div>
       </fieldset>
 
-      <div className={`${s.field} ${fiche ? "col-span-full" : ""}`}>
+      <div className={`${s.field} ${oneGrid ? "col-span-full" : ""}`}>
         <label htmlFor="scheduleConstraints" className={s.label}>
           Contraintes d&apos;organisation
         </label>
@@ -508,6 +534,11 @@ export function AvailabilityFields({
       {numbers}
       {rest}
     </div>
+  ) : oneGrid ? (
+    <div className={s.grid}>
+      {numbers}
+      {rest}
+    </div>
   ) : (
     <>
       <div className={s.grid}>{numbers}</div>
@@ -522,6 +553,8 @@ export function AvailabilityFields({
 // Fiche (onglet Notes, maquette « Sportifs » 2i) : le champ seul, nommé par une étiquette invisible ;
 // le titre et le sous-titre de la carte (id « health-hint ») le décrivent. `className` : étirement
 // de la zone sur ordinateur.
+// Kit (page 10, D-126) : le champ seul, blanc, dans l'encadré gris de l'accord ; le titre de
+// l'encadré et l'aide dessous (id « health-hint ») sont dans la page.
 export function HealthConstraintsField({
   value,
   look = "app",
@@ -531,6 +564,25 @@ export function HealthConstraintsField({
   look?: FieldLook;
   className?: string;
 }) {
+  if (look === "kit") {
+    return (
+      <>
+        <label htmlFor="healthConstraints" className="sr-only">
+          Blessures et points d&apos;attention
+        </label>
+        <textarea
+          id="healthConstraints"
+          name="healthConstraints"
+          rows={2}
+          maxLength={1000}
+          aria-describedby="health-hint"
+          placeholder="Ex. : douleur genou droit en descente"
+          defaultValue={value}
+          className={`${kitTextareaBaseClass} min-h-[72px] bg-field ${className}`}
+        />
+      </>
+    );
+  }
   if (look === "fiche") {
     return (
       <>
@@ -574,7 +626,37 @@ export function HealthConstraintsField({
 }
 
 // Notes libres (D-56) : la note privée du coach, tout ce qui n'est pas de la santé.
-export function CoachNoteField({ value, id = "coachNote" }: { value: string; id?: string }) {
+export function CoachNoteField({
+  value,
+  id = "coachNote",
+  look = "app",
+}: {
+  value: string;
+  id?: string;
+  look?: "app" | "kit";
+}) {
+  if (look === "kit") {
+    return (
+      <div className="flex min-w-0 flex-col gap-2">
+        <label htmlFor={id} className={kitLabelClass}>
+          Notes libres <span className={kitOptionalClass}>facultatif</span>
+        </label>
+        <textarea
+          id={id}
+          name="coachNote"
+          rows={2}
+          maxLength={2000}
+          aria-describedby={`${id}-hint`}
+          placeholder="Ex. : très motivée, préfère les séances du matin ; vient en vélo"
+          defaultValue={value}
+          className={kitTextareaClass}
+        />
+        <p id={`${id}-hint`} className={kitHintClass}>
+          Visible seulement par les coachs. Pas de blessures ici.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className={labelClass}>

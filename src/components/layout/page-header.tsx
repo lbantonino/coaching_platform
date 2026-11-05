@@ -9,17 +9,23 @@ import { HeaderTools } from "./header-tools";
 import { PageIcon } from "./page-icon";
 
 // En-tête de page (prompt Claude Design §5.2), le même pour toutes les pages depuis le 29/10/2026
-// (demande d'Antonino : « comme le tableau de bord, tout aligné »). Ordinateur : UNE ligne alignée sur
-// le logo du menu : retour éventuel, icône de la page (celle du menu), titre de 26 px, puis à droite la
-// recherche, l'assistant, la cloche et les actions. Pas de phrase sous le titre, ni sur ordinateur ni
-// sur téléphone (demandes d'Antonino du 29/10/2026) : elle reste pour les lecteurs d'écran. Seule
-// exception : une page de détail (pastilles d'une fiche sportif).
-// Téléphone : la barre du haut écrit déjà le nom de la page, le titre reste pour les lecteurs
-// d'écran. Une page de détail (avec retour) met son retour DANS la barre, à la place du nom de la page
-// (« ☰  ← Tableau de bord  IA cloche », D-117, comme la fiche sportif depuis le 03/11), et garde son
-// titre dans le contenu (« Nouveau sportif », « Modifier la séance »…) : plus de ligne de retour sous
-// la barre, plus de titre en double. Les actions passent dessous, en pleine largeur. Sans retour ni
-// action visible, l'en-tête ne prend aucune place : le contenu commence juste sous les cartes ☰ et
+// (demande d'Antonino : « comme le tableau de bord, tout aligné »). Ordinateur : UNE carte de 64 px,
+// UNE ligne : icône de la page (celle du menu), titre de 15 px, puis à droite la recherche,
+// l'assistant, la cloche et les actions. Pas de phrase sous le titre (demandes d'Antonino du
+// 29/10/2026) : elle reste pour les lecteurs d'écran.
+//
+// Page « à l'intérieur » d'une autre (avec retour), RÈGLE d'Antonino du 05/11/2026 (D-124), valable
+// pour toutes les pages, même si une maquette dessine autre chose :
+// - ordinateur : le chemin sur la même ligne, la carte garde sa hauteur de base :
+//   « [icône] ← Bibliothèque · Créer un exercice ». « ← Bibliothèque » ramène là où j'étais
+//   (back-link.tsx) ; le point dit qu'on est descendu d'un niveau ; le titre est celui de la page en
+//   cours. Rien en dessous (la phrase éventuelle reste pour les lecteurs d'écran) ;
+// - téléphone : le retour est dans la barre du haut (« ☰  ← Bibliothèque  IA cloche », D-117) ; le
+//   titre de la page (et son bouton à droite, ex. la corbeille) en tête du contenu, à 20 px sous la
+//   barre pour respirer. `visibleTitle={false}` (fiche sportif, page d'une séance) : la page écrit son
+//   grand titre dans son contenu ; sur téléphone l'en-tête ne garde que le retour de la barre.
+// Les actions passent dessous sur téléphone, en pleine largeur. Sans retour ni action visible,
+// l'en-tête ne prend aucune place sur téléphone : le contenu commence juste sous les cartes ☰ et
 // outils.
 export function PageHeader({
   title,
@@ -32,7 +38,8 @@ export function PageHeader({
   visibleTitle = true,
 }: {
   title: ReactNode;
-  // À côté du titre (ex. repère ♀ / ♂ d'un sportif)
+  // À côté du titre, sur la même ligne (ex. corbeille d'une page Modifier sur téléphone, pastilles
+  // d'une fiche exercice sur ordinateur).
   titleAside?: ReactNode;
   subtitle?: ReactNode;
   back?: { href: string; label: string };
@@ -43,77 +50,74 @@ export function PageHeader({
   inline?: boolean;
   // Icône imposée ; sinon celle de la page dans le menu.
   icon?: LucideIcon;
-  // false : seul le lien de retour se voit, la page écrit son titre dans son contenu (page d'une
-  // séance, 03/11 : l'en-tête reste celui de base) ; il reste pour les lecteurs d'écran.
+  // false : sur téléphone, seul le retour de la barre se voit et la page écrit son grand titre dans
+  // son contenu ; sur ordinateur, le chemin reste complet (« ← Sportifs · Chloé Martin »).
   visibleTitle?: boolean;
 }) {
+  const Icon = icon;
   return (
     // Ordinateur (maquette v6, D-77) : l'en-tête est une carte de 64 px (titre 15 px, outils à droite),
     // à 20 px du menu et 14 px du bord droit (maquette « Sportifs », 03/11/2026).
     <header
-      className={`flex flex-wrap items-center gap-x-4 ${back ? (visibleTitle ? "gap-y-3 max-lg:pt-1.5" : "gap-y-0") : ""} px-3.5 pt-0 pb-1 lg:mt-3.5 lg:mr-3.5 lg:ml-5 lg:min-h-16 lg:flex-nowrap lg:rounded-[20px] lg:bg-surface ${back && visibleTitle ? "lg:py-3.5" : "lg:py-3"} lg:pr-[18px] lg:pl-[22px] lg:inset-ring lg:inset-ring-line`}
+      className={`flex flex-wrap items-center gap-x-4 ${back ? (visibleTitle ? "gap-y-3 max-lg:pt-5" : "gap-y-0") : ""} px-3.5 pt-0 pb-1 lg:mt-3.5 lg:mr-3.5 lg:ml-5 lg:min-h-16 lg:flex-nowrap lg:rounded-[20px] lg:bg-surface lg:py-3 lg:pr-[18px] lg:pl-[22px] lg:inset-ring lg:inset-ring-line`}
     >
-      {/* Page de détail (avec retour) : le lien de retour au-dessus, puis la ligne du titre, dont la
-          phrase (pastilles d'une fiche sportif…) peut passer à la ligne. */}
+      {/* Retour « là où j'étais » (29/10/2026), voir back-link.tsx : dans la barre du haut sur
+          téléphone (D-117). */}
+      {back ? (
+        <MobileBarTitle>
+          <BackLink href={back.href} label={back.label} variant="bar" />
+        </MobileBarTitle>
+      ) : null}
       <div
-        className={`flex min-w-0 flex-[1_1_auto] flex-col gap-1.5 ${back ? (visibleTitle ? "lg:gap-[3px]" : "lg:gap-0.5") : "lg:flex-row lg:items-center lg:gap-2.5"}`}
+        className={`@container flex min-w-0 flex-[1_1_auto] flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-2.5 ${
+          back ? (visibleTitle ? "" : "max-lg:sr-only") : "max-lg:sr-only"
+        }`}
       >
-        {/* Retour « là où j'étais » (29/10/2026), voir back-link.tsx : dans l'en-tête sur ordinateur,
-            dans la barre du haut sur téléphone (D-117). Au-dessus d'un titre visible, c'est le fil
-            d'Ariane du kit « Coory Pages » (12 px, D-119) ; seul (fiche sportif, page séance), il
-            garde sa taille. */}
-        {back ? (
-          <>
-            <span className="flex max-lg:hidden">
-              <BackLink
-                href={back.href}
-                label={back.label}
-                variant={visibleTitle ? "crumb" : "text"}
-              />
-            </span>
-            <MobileBarTitle>
-              <BackLink href={back.href} label={back.label} variant="bar" />
-            </MobileBarTitle>
-          </>
-        ) : null}
-        <div
-          className={`flex min-w-0 flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-2.5 ${back ? "lg:flex-wrap" : "lg:contents"} ${visibleTitle ? "" : "sr-only"}`}
-        >
-          <div
-            className={`flex min-w-0 items-center gap-3 lg:shrink-0 lg:gap-2.5 ${back ? "" : "max-lg:sr-only"}`}
-          >
-            {/* Icône imposée par la page : dessinée ici (une fonction ne passe pas au navigateur). */}
-            {icon ? (
-              (() => {
-                const Icon = icon;
-                return (
-                  <Icon
-                    aria-hidden
-                    size={17}
-                    strokeWidth={1.8}
-                    className="hidden shrink-0 text-violet-text lg:block"
-                  />
-                );
-              })()
-            ) : (
-              <PageIcon size={17} />
-            )}
-            <h1 className="min-w-0 font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] break-words lg:text-[15px] lg:tracking-tight lg:whitespace-nowrap">
-              {title}
-            </h1>
-            {titleAside}
-          </div>
-          {subtitle ? (
-            <div
-              className={`min-w-0 text-[14px] leading-[1.45] text-muted ${back ? "" : "sr-only"}`}
-            >
-              {subtitle}
-            </div>
+        <div className="flex min-w-0 items-center gap-3 lg:flex-1 lg:gap-2.5">
+          {/* Icône imposée par la page : dessinée ici (une fonction ne passe pas au navigateur). */}
+          {Icon ? (
+            <Icon
+              aria-hidden
+              size={17}
+              strokeWidth={1.8}
+              className="hidden shrink-0 text-violet-text lg:block"
+            />
+          ) : (
+            <PageIcon size={17} />
+          )}
+          {/* Ordinateur : « ← page précédente · », sur la ligne du titre (D-124). */}
+          {back ? (
+            <>
+              <span className="flex max-w-[40cqi] min-w-0 shrink max-lg:hidden">
+                <BackLink href={back.href} label={back.label} variant="path" />
+              </span>
+              <span aria-hidden className="shrink-0 text-[15px] text-faint max-lg:hidden">
+                ·
+              </span>
+            </>
           ) : null}
+          <h1 className="min-w-0 font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] break-words lg:truncate lg:text-[15px] lg:tracking-tight">
+            {title}
+          </h1>
+          {/* La place de la ligne se mesure (requête de conteneur, « @container ») : un complément
+              (pastilles d'une fiche exercice) ne s'affiche que s'il reste assez de place pour le chemin. */}
+          {titleAside}
         </div>
+        {/* Phrase sous le titre : sur téléphone pour une page avec retour (pastilles d'une fiche
+            exercice, rappel de Nouveau sportif) ; jamais sur ordinateur (une seule ligne). */}
+        {subtitle ? (
+          <div
+            className={`min-w-0 text-[14px] leading-[1.45] text-muted ${
+              back && visibleTitle ? "lg:sr-only" : "sr-only"
+            }`}
+          >
+            {subtitle}
+          </div>
+        ) : null}
       </div>
       <div className="flex flex-[1_1_100%] flex-wrap items-center gap-2 lg:flex-none lg:gap-2.5 [&>*]:flex-[1_1_auto] lg:[&>*]:flex-none">
-        {tools ? <HeaderTools /> : null}
+        {/* Page avec retour ET boutons : sous 1 280 px, la recherche devient une loupe (D-124). */}
+        {tools ? <HeaderTools compact={back && actions ? "xl" : false} /> : null}
         {actions}
       </div>
     </header>

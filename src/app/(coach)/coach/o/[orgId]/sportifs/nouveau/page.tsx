@@ -34,7 +34,7 @@ async function NewAthleteSection({ orgId }: { orgId: string }) {
         subtitle="Seul le prénom est obligatoire. Tout se modifie ensuite depuis sa fiche."
       />
       <PageBody>
-        <NewAthleteForm organizationId={membership.organizationId} />
+        <NewAthleteForm organizationId={membership.organizationId} cancelHref={listPath} />
       </PageBody>
     </>
   );

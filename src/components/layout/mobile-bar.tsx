@@ -26,10 +26,27 @@ import { useShell } from "./shell-context";
 const TITLE_SLOT = "mobile-bar-title";
 const TOOL_SLOT = "mobile-bar-tool";
 
+// Pages qui posent EN CE MOMENT quelque chose à la place du nom de la page (MobileBarTitle). Next garde
+// la page quittée cachée dans le DOM : ce qu'elle avait posé dans la barre y reste (masqué), mais ses
+// effets sont démontés. On compte donc les effets actifs, pas le contenu de la barre (05/11 : le nom
+// « Tableau de bord » restait caché après une page de détail ou l'Agenda, jusqu'au rechargement).
+let barTitleCount = 0;
+const barTitleListeners = new Set<() => void>();
+const notifyBarTitle = () => barTitleListeners.forEach((listener) => listener());
+const subscribeBarTitle = (listener: () => void) => {
+  barTitleListeners.add(listener);
+  return () => {
+    barTitleListeners.delete(listener);
+  };
+};
+const hasBarTitle = () => barTitleCount > 0;
+const noBarTitle = () => false;
+
 export function MobileTopBar() {
   const { space } = useShell();
   const pathname = usePathname();
   const atTop = useAtTop();
+  const replaced = useSyncExternalStore(subscribeBarTitle, hasBarTitle, noBarTitle);
   if (space === "athlete") {
     return (
       <header className="sticky top-3 z-30 mx-3 mt-3 flex h-16 items-center gap-2 rounded-[20px] border border-line bg-panel pr-2 pl-4 lg:hidden">
@@ -49,13 +66,15 @@ export function MobileTopBar() {
       {/* Le nom de la page s'efface dès qu'on descend dans la page et revient tout en haut (02/11) ;
           les boutons, eux, restent. Une page peut le remplacer (MobileBarTitle : le mois de l'Agenda),
           avec moins de marge pour que « Septembre ▾ » tienne entier sur un écran de 390 px. */}
-      <div className="flex min-w-0 flex-1 items-center pr-2.5 pl-3.5 [&:has([data-bar-title]>*)]:pr-0 [&:has([data-bar-title]>*)]:pl-2 [&:has([data-bar-title]>*)>p]:hidden">
+      <div
+        className={`flex min-w-0 flex-1 items-center ${replaced ? "pr-0 pl-2" : "pr-2.5 pl-3.5"}`}
+      >
         <span id={TITLE_SLOT} data-bar-title="" className="contents" />
         <p
           aria-hidden
           className={`flex min-w-0 items-center gap-[9px] text-[16px] font-medium tracking-[-0.01em] transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none ${
-            atTop ? "" : "pointer-events-none -translate-y-1 opacity-0"
-          }`}
+            replaced ? "hidden" : ""
+          } ${atTop ? "" : "pointer-events-none -translate-y-1 opacity-0"}`}
         >
           <PageIcon className="shrink-0 text-violet-text" />
           <span className="truncate">{pageTitle(space, pathname)}</span>
@@ -101,6 +120,14 @@ function InSlot({ id, children }: { id: string; children: ReactNode }) {
 }
 // À la place du nom de la page (Agenda : « Novembre ▾ » ; page de détail : son retour).
 export function MobileBarTitle({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    barTitleCount += 1;
+    notifyBarTitle();
+    return () => {
+      barTitleCount -= 1;
+      notifyBarTitle();
+    };
+  }, []);
   return <InSlot id={TITLE_SLOT}>{children}</InSlot>;
 }
 // Dans la carte de droite, avant l'assistant IA (Agenda : l'icône de la vue).

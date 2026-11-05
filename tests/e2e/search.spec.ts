@@ -19,6 +19,16 @@ test("la recherche trouve sportifs, documents et tâches en direct, sans fuite",
   // Téléphone : depuis le menu hamburger ; ordinateur : depuis le haut de page.
   if (isPhone(page)) {
     await page.getByRole("button", { name: "Ouvrir le menu" }).click();
+    // Le menu fermé est inerte (on ne peut rien y taper) : attendre qu'il soit vraiment ouvert,
+    // sinon la saisie se perd et la recherche part vide (test instable jusqu'au 05/11).
+    await expect(page.getByRole("dialog", { name: "Menu" })).toBeVisible();
+    await expect
+      .poll(() =>
+        page
+          .getByRole("searchbox", { name: "Rechercher dans Coory" })
+          .evaluate((field) => field.closest("[inert]") === null),
+      )
+      .toBe(true);
     await page.getByRole("searchbox", { name: "Rechercher dans Coory" }).fill("sophie");
     await page.getByRole("searchbox", { name: "Rechercher dans Coory" }).press("Enter");
   } else {

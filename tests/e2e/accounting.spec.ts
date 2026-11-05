@@ -13,6 +13,20 @@ async function loginAsCoachA(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
+// « Nouveau paiement » / « Nouvelle dépense » de la page : boutons de l'en-tête sur ordinateur ; sur
+// téléphone, le bouton flottant « + » et son menu (kit « Coory Pages », 04, D-130).
+async function openNew(page: Page, name: "Nouveau paiement" | "Nouvelle dépense") {
+  if (isPhone(page)) {
+    await page.getByRole("button", { name: "Nouveau paiement ou nouvelle dépense" }).click();
+    await page
+      .getByRole("dialog", { name: "Ajouter" })
+      .getByRole("button", { name: new RegExp(`^${name}`) })
+      .click();
+    return;
+  }
+  await page.getByRole("button", { name, exact: true }).click();
+}
+
 test("le coach note un paiement reçu en espèces et le retrouve dans sa comptabilité", async ({
   page,
 }, testInfo) => {
@@ -45,6 +59,9 @@ test("le coach note un paiement reçu en espèces et le retrouve dans sa comptab
   await expect(dialog).toBeHidden();
 
   await page.goto("/coach/comptabilite");
+  // Les 5 derniers paiements s'affichent ; les autres derrière « Voir les N paiements » (D-130).
+  const more = page.getByRole("button", { name: /^Voir les \d+ paiements$/ });
+  if ((await more.count()) > 0) await more.click();
   const payments = page.getByRole("list", { name: "Liste des paiements" });
   const row = payments.getByRole("listitem").filter({ hasText: label });
   await expect(row).toContainText("Espèces");
@@ -79,7 +96,7 @@ test("le montant reçu est obligatoire, et la saisie est gardée après l'erreur
 }) => {
   await loginAsCoachA(page);
   await page.goto("/coach/comptabilite");
-  await page.getByRole("button", { name: "Nouveau paiement" }).click();
+  await openNew(page, "Nouveau paiement");
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Thomas Peeters" });
   await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("abc");
@@ -96,12 +113,26 @@ test("le tableau de comptabilité montre l'argent reçu par mode et par période
   await loginAsCoachA(page);
   await page.goto("/coach/comptabilite");
   // Mois par défaut : le graphique montre le mois en cours, les modes sont écrits avec leur montant.
-  const share = page.getByRole("region", { name: /^Répartition · / });
+  const share = page.getByRole("region", { name: "Reçu par mode de paiement" });
   await expect(share.getByRole("figure")).toContainText("Total reçu");
   await expect(share.getByRole("button", { name: /^Virement/ })).toBeVisible();
+  // Kit « Coory Pages », 04 (D-130) : anneau ou barre.
+  await share.getByRole("button", { name: "Graphique en barre" }).click();
+  await expect(share.getByRole("button", { name: "Graphique en barre" })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(share.getByRole("figure")).toContainText("Total reçu");
+  // Le tableau est replié ; ses mois sans activité sont cachés derrière un lien.
+  const ledger = page.getByRole("button", { name: /Tableau de comptabilité/ });
+  await expect(ledger).toHaveAttribute("aria-expanded", "false");
+  await ledger.click();
+  await expect(ledger).toHaveAttribute("aria-expanded", "true");
   const table = page.getByRole("table", { name: /par mois$/ });
   await expect(table.getByRole("columnheader", { name: /Espèces/ })).toBeVisible();
   await expect(table.getByRole("rowheader", { name: "Total" })).toBeVisible();
+  const showEmpty = page.getByRole("button", { name: /^Afficher les \d+ mois sans activité$/ });
+  if ((await showEmpty.count()) > 0) await showEmpty.click();
   await expect(table.getByRole("row")).toHaveCount(14);
 
   // Une autre période : la ligne choisie s'affiche dans le graphique.
@@ -110,18 +141,27 @@ test("le tableau de comptabilité montre l'argent reçu par mode et par période
   await expect(previous).toHaveAttribute("aria-current", "true");
   await expect(page).toHaveURL(/periode=/);
 
-  // Par année et par semaine.
+  // Par année et par semaine (le tableau est rouvert s'il s'est replié).
+  const openLedger = async () => {
+    if ((await ledger.getAttribute("aria-expanded")) === "false") await ledger.click();
+  };
   await page
-    .getByRole("navigation", { name: "Période du tableau" })
+    .getByRole("navigation", { name: "Période" })
     .getByRole("link", { name: "Année" })
     .click();
+  await expect(page).toHaveURL(/vue=annee/);
+  await openLedger();
   await expect(page.getByRole("table", { name: /par année$/ })).toBeVisible();
   await page
-    .getByRole("navigation", { name: "Période du tableau" })
+    .getByRole("navigation", { name: "Période" })
     .getByRole("link", { name: "Semaine" })
     .click();
+  await expect(page).toHaveURL(/vue=semaine/);
+  await openLedger();
   await expect(page.getByRole("table", { name: /par semaine$/ })).toBeVisible();
-  await expect(page.getByRole("region", { name: /^Répartition · Semaine du / })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Reçu par mode de paiement" })).toContainText(
+    "Semaine du",
+  );
 });
 
 test("une dépense mensuelle compte chaque mois, s'arrête, puis se supprime", async ({
@@ -130,7 +170,7 @@ test("une dépense mensuelle compte chaque mois, s'arrête, puis se supprime", a
   const label = `Loyer test ${testInfo.project.name} ${Date.now().toString(36)}`;
   await loginAsCoachA(page);
   await page.goto("/coach/comptabilite?liste=depenses");
-  await page.getByRole("button", { name: "Nouvelle dépense" }).click();
+  await openNew(page, "Nouvelle dépense");
   const sheet = page.getByRole("dialog", { name: "Nouvelle dépense" });
   await sheet.getByLabel("Description").fill(label);
   await sheet.getByLabel("Catégorie", { exact: true }).selectOption({ label: "Loyer et salle" });
@@ -204,7 +244,7 @@ test("« Appliquer la TVA » décochée : un paiement et une dépense sans TVA",
   await loginAsCoachA(page);
   await page.goto("/coach/comptabilite");
 
-  await page.getByRole("button", { name: "Nouveau paiement" }).filter({ visible: true }).click();
+  await openNew(page, "Nouveau paiement");
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Sophie Lambert" });
   await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("80");
@@ -223,7 +263,7 @@ test("« Appliquer la TVA » décochée : un paiement et une dépense sans TVA",
   await expect(row).not.toContainText("HTVA");
 
   // Dépense : même case, la TVA récupérable disparaît.
-  await page.getByRole("button", { name: "Nouvelle dépense" }).filter({ visible: true }).click();
+  await openNew(page, "Nouvelle dépense");
   const expense = page.getByRole("dialog", { name: "Nouvelle dépense" });
   await expense.getByLabel(/^Montant payé \(TVAC/).fill("50");
   await expect(expense.getByText(/de TVA récupérable/)).toBeVisible();
@@ -255,7 +295,7 @@ test("un coach sans TVA ne voit ni taux ni « TVAC » dans ses paiements et dép
   await expect(page).toHaveURL(/\/coach$/);
   await page.goto("/coach/comptabilite");
 
-  await page.getByRole("button", { name: "Nouveau paiement" }).filter({ visible: true }).click();
+  await openNew(page, "Nouveau paiement");
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await expect(dialog.getByLabel(/^Montant reçu \(EUR\)$/)).toBeVisible();
   await expect(dialog.getByLabel("Taux de TVA")).toHaveCount(0);
@@ -263,7 +303,7 @@ test("un coach sans TVA ne voit ni taux ni « TVAC » dans ses paiements et dép
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
 
-  await page.getByRole("button", { name: "Nouvelle dépense" }).filter({ visible: true }).click();
+  await openNew(page, "Nouvelle dépense");
   const expense = page.getByRole("dialog", { name: "Nouvelle dépense" });
   await expect(expense.getByLabel(/^Montant payé \(EUR\)$/)).toBeVisible();
   await expect(expense.getByLabel("Taux de TVA")).toHaveCount(0);

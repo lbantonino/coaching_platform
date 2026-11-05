@@ -81,6 +81,18 @@
   --color-status-ok: var(--status-ok);
   --color-status-ok-soft: var(--status-ok-soft);
   --color-status-danger: var(--status-danger);
+  --color-list-indigo: var(--list-indigo);
+  --color-list-indigo-text: var(--list-indigo-text);
+  --color-list-amber: var(--list-amber);
+  --color-list-amber-text: var(--list-amber-text);
+  --color-list-teal: var(--list-teal);
+  --color-list-teal-text: var(--list-teal-text);
+  --color-list-rose: var(--list-rose);
+  --color-list-rose-text: var(--list-rose-text);
+  --color-list-violet: var(--list-violet);
+  --color-list-violet-text: var(--list-violet-text);
+  --color-list-ink: var(--list-ink);
+  --color-list-ink-text: var(--list-ink-text);
   --color-dlg-run: var(--dlg-run);
   --color-dlg-run-tile: var(--dlg-run-tile);
   --color-dlg-strength: var(--dlg-strength);

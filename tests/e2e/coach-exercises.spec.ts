@@ -63,7 +63,11 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
   await expect(page).toHaveURL(/\/coach\/bibliotheque\/[0-9a-f-]{36}$/);
   const sheetUrl = page.url();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
-  await expect(page.getByText("Mon exercice", { exact: true })).toBeVisible();
+  // La pastille : sous le titre (téléphone) ou sur la ligne du chemin (ordinateur, s'il y a la
+  // place), D-124 : seule celle affichée compte.
+  await expect(
+    page.getByText("Mon exercice", { exact: true }).filter({ visible: true }).first(),
+  ).toBeVisible();
   const photo = page.getByRole("img", { name: `Illustration : ${name}` });
   await expect(photo).toBeVisible();
   await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1);

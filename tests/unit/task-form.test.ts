@@ -6,7 +6,7 @@ const base: TaskFormValues = {
   title: "Relancer Sophie",
   priority: "normal",
   dueOn: "",
-  category: "",
+  listId: "",
   athleteId: "",
   notes: "",
 };
@@ -19,19 +19,19 @@ describe("formulaire d'une tâche", () => {
         title: "Relancer Sophie",
         priority: "normal",
         dueOn: null,
-        category: null,
+        listId: null,
         athleteId: null,
         notes: null,
       },
     });
   });
 
-  it("lit l'échéance, « associée à », le sportif et la note", () => {
+  it("lit l'échéance, la liste (« associée à »), le sportif et la note", () => {
     const parsed = parseTaskForm({
       ...base,
       priority: "high",
       dueOn: "2026-10-30",
-      category: "facturation",
+      listId: "71000000-0000-4000-8000-0000000000a2",
       athleteId: "da000000-0000-4000-8000-000000000001",
       notes: "  Facture d'octobre  ",
     });
@@ -41,7 +41,7 @@ describe("formulaire d'une tâche", () => {
         title: "Relancer Sophie",
         priority: "high",
         dueOn: "2026-10-30",
-        category: "facturation",
+        listId: "71000000-0000-4000-8000-0000000000a2",
         athleteId: "da000000-0000-4000-8000-000000000001",
         notes: "Facture d'octobre",
       },
@@ -56,8 +56,8 @@ describe("formulaire d'une tâche", () => {
     expect(parseTaskForm({ ...base, title: "a".repeat(141) }).ok).toBe(false);
   });
 
-  it("refuse une catégorie, une priorité, une date ou un sportif inventés", () => {
-    expect(parseTaskForm({ ...base, category: "courses" }).ok).toBe(false);
+  it("refuse une liste, une priorité, une date ou un sportif inventés", () => {
+    expect(parseTaskForm({ ...base, listId: "courses" }).ok).toBe(false);
     expect(parseTaskForm({ ...base, priority: "urgent" }).ok).toBe(false);
     expect(parseTaskForm({ ...base, dueOn: "30/10/2026" }).ok).toBe(false);
     expect(parseTaskForm({ ...base, athleteId: "pas-un-uuid" }).ok).toBe(false);

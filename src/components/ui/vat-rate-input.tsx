@@ -11,12 +11,17 @@ export function VatRateInput({
   value,
   onChange,
   describedBy,
+  className = `${inputClass} pr-10 font-mono`,
+  disabled = false,
 }: {
   id: string;
   name?: string;
   value: string;
   onChange: (value: string) => void;
   describedBy?: string;
+  // Habillage du champ (Paramètres du kit « Coory Pages », page 13) ; garder la place du « % ».
+  className?: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="relative">
@@ -29,7 +34,8 @@ export function VatRateInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-describedby={describedBy}
-        className={`${inputClass} pr-10 font-mono`}
+        disabled={disabled}
+        className={className}
       />
       <span
         aria-hidden

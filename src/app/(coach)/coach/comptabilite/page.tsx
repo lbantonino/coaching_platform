@@ -1,26 +1,11 @@
-import {
-  CalendarRange,
-  ChartColumn,
-  ChartPie,
-  Coins,
-  Receipt,
-  Scale,
-  Table2,
-  Wallet,
-} from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
 import { categoryDotClass } from "@/components/blocks/category-color";
-import { ListRow } from "@/components/blocks/list-row";
 import { DeleteMoreMenu } from "@/components/blocks/more-menu";
 import { NewPaymentButton } from "@/components/blocks/new-payment-sheet";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
-import { Card, CardEmpty, CardTitle } from "@/components/ui/card";
-import { FilterChips } from "@/components/ui/filter-chips";
-import { KpiCard, KpiGrid } from "@/components/ui/kpi-card";
-import { SegmentedNav } from "@/components/ui/segmented";
 import {
   ACCOUNTING_UNITS,
   accountingRows,
@@ -56,9 +41,9 @@ import { unpaidSub } from "@/features/notifications/preview";
 import { markSessionPaid } from "@/features/sessions/actions";
 import { dayShortLabel, todayIsoInBrussels } from "@/lib/format";
 
+import { AccountingFab, LedgerCard, ShareCard, ShowMore } from "./accounting-widgets";
 import { BarChart } from "./bar-chart";
 import { CollectList } from "./collect-list";
-import { DonutChart } from "./donut-chart";
 import { NewExpenseButton } from "./expense-sheet";
 
 export const metadata: Metadata = {
@@ -89,11 +74,12 @@ const unitLabels: Record<AccountingUnit, string> = {
 // Colonnes du tableau et parts du graphique : toujours dans cet ordre, chacune avec sa couleur de
 // graphique (validée par script, D-72).
 const METHOD_ORDER = ["transfer", "bancontact", "cash", "other"] as const;
+// Kit « Coory Pages », 04 (D-130) : violet, indigo, turquoise, gris (palette des listes).
 const methodColor: Record<(typeof METHOD_ORDER)[number], string> = {
-  transfer: "var(--chart-1)",
-  bancontact: "var(--chart-2)",
-  cash: "var(--chart-3)",
-  other: "var(--chart-4)",
+  transfer: "var(--list-violet)",
+  bancontact: "var(--list-indigo)",
+  cash: "var(--list-teal)",
+  other: "var(--dlg-check-line)",
 };
 
 export default function AccountingPage({ searchParams }: PageProps<"/coach/comptabilite">) {
@@ -169,7 +155,6 @@ async function Accounting({
   const rows = accountingRows(payments, unit, today, convert, expenses, basis);
   const selected = rows.find((row) => row.key === period) ?? rows[0];
   const sum = totalRow(rows);
-  const [month] = accountingRows(payments, "mois", today, convert, expenses, basis);
   const [week] = accountingRows(payments, "semaine", today, convert, expenses, basis);
   const gained = (row: { inclCents: number; exclCents: number }) =>
     vatSubject ? row.exclCents : row.inclCents;
@@ -212,7 +197,7 @@ async function Accounting({
   const shown = payments.filter(
     (p) => filter === "tous" || (filter === "banque") === isBankMethod(p.method),
   );
-  const head = "border-t border-line px-2.5 text-right";
+  const head = "border-b border-line px-2.5 text-right";
   // À encaisser (D-90) : total attendu, « ≈ » après un changement de devise (D-70).
   const toCollect = unpaid.reduce(
     (tally, date) => {
@@ -222,6 +207,25 @@ async function Accounting({
     },
     { cents: 0, byCurrency: {} as ByCurrency },
   );
+
+  const compact =
+    "lg:h-8! lg:gap-1.5! lg:rounded-[9px]! lg:px-3.5! lg:text-[12.5px]! lg:[&>svg]:size-3.5";
+  const periodName = periodLabel(selected.key, unit);
+  // Sous 1 100 px de large, les deux cartes du milieu passent l'une sous l'autre.
+  const card =
+    "flex min-w-0 flex-col rounded-[22px] bg-surface inset-ring inset-ring-line lg:rounded-[20px]";
+  const segmented = "flex gap-0.5 rounded-[12px] bg-dlg-tile p-1";
+  const segment = (active: boolean) =>
+    `flex h-8 items-center justify-center rounded-[9px] px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 lg:px-3.5 ${
+      active
+        ? "bg-surface text-text shadow-[0_1px_2px_rgba(22,18,40,0.10)]"
+        : "text-muted hover:text-text"
+    }`;
+  const listCount =
+    list === "depenses" ? expenses.length : list === "a-encaisser" ? unpaid.length : shown.length;
+  const noun = list === "depenses" ? "dépenses" : list === "a-encaisser" ? "séances" : "paiements";
+  const emptyRows = rows.filter((row) => row.count === 0 && spent(row) === 0).length;
+  const emptyUnit = unit === "semaine" ? "semaines" : unit === "annee" ? "années" : "mois";
 
   return (
     <>
@@ -242,79 +246,155 @@ async function Accounting({
               vatSubject={vatSubject}
               today={today}
             />
-            <NewPaymentButton />
+            <NewPaymentButton className={`max-lg:hidden ${compact}`} />
           </>
         }
       />
-      <PageBody grid>
-        <div className="lg:col-span-12">
-          <KpiGrid label="Chiffres de la comptabilité">
-            <KpiCard
-              color="ok"
-              icon={Coins}
-              value={approx(month.byCurrency, gained(month))}
-              label={`gagné ce mois-ci${basisLabel ? ` (${basisLabel})` : ""}`}
-              detail={`${plural(month.count, "paiement")} · ${money(month.inclCents)} reçus TVAC`}
-            />
-            <KpiCard
-              color="hyrox"
-              icon={Receipt}
-              value={money(spent(month))}
-              label={`dépensé ce mois-ci${basisLabel ? ` (${basisLabel})` : ""}`}
-              detail={
-                vatSubject
-                  ? `${money(month.spentVatCents)} de TVA récupérable`
-                  : `${money(month.spentInclCents)} payés`
+      <PageBody>
+        <div className="flex w-full max-w-[1600px] flex-col gap-3 lg:gap-4">
+          {/* La période (kit) : son nom à gauche, Semaine · Mois · Année à droite. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1 pt-1.5">
+            <h2 className="text-[22px] leading-[normal] font-bold tracking-[-0.02em] max-sm:sr-only">
+              {periodName}
+            </h2>
+            <nav aria-label="Période" className={`${segmented} max-sm:w-full`}>
+              {ACCOUNTING_UNITS.map((item) => (
+                <Link
+                  key={item}
+                  href={query({ vue: item })}
+                  scroll={false}
+                  aria-current={item === unit ? "page" : undefined}
+                  className={`${segment(item === unit)} max-sm:h-10 max-sm:flex-1`}
+                >
+                  {unitLabels[item]}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Carte héro : le résultat de la période, gagné, dépensé, et cette semaine. */}
+          <section
+            aria-label={`Résultat · ${periodName}`}
+            className={`${card} grid grid-cols-2 gap-2.5 px-4 py-5 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] lg:gap-0 lg:p-8`}
+          >
+            <div className="col-span-full flex flex-col gap-2.5 max-lg:pb-2 lg:col-span-1">
+              <span className="text-[13.5px] leading-[normal] font-medium text-muted">
+                Résultat · {periodName}
+              </span>
+              <span
+                className={`text-[32px] leading-none font-semibold tracking-[-0.03em] whitespace-nowrap tabular ${
+                  selected.resultCents < 0 ? "text-alert" : "text-text"
+                }`}
+              >
+                {signed(selected.resultCents)}
+              </span>
+              <span className="text-[13px] leading-[normal] text-muted">
+                {vatSubject ? "Gagné HTVA − dépensé HTVA" : "Gagné − dépensé"}
+              </span>
+            </div>
+            {[
+              {
+                label: `Gagné${basisLabel ? ` ${basisLabel}` : ""}`,
+                dot: "bg-violet",
+                value: approx(selected.byCurrency, gained(selected)),
+                lines: [
+                  plural(selected.count, "paiement"),
+                  vatSubject ? `${money(selected.inclCents)} TVAC` : null,
+                ],
+              },
+              {
+                label: `Dépensé${basisLabel ? ` ${basisLabel}` : ""}`,
+                dot: "bg-list-amber",
+                value: money(spent(selected)),
+                lines: vatSubject
+                  ? ["TVA récupérable", money(selected.spentVatCents)]
+                  : [`${money(selected.spentInclCents)} payés`],
+              },
+              {
+                label: `Gagné cette semaine`,
+                dot: "bg-faint",
+                value: approx(week.byCurrency, gained(week)),
+                lines: [plural(week.count, "paiement"), `Résultat ${signed(week.resultCents)}`],
+                wide: true,
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                // Téléphone (kit) : une tuile grise, le nom et le montant ; ordinateur : une colonne
+                // séparée d'un filet, avec ses deux lignes de détail.
+                className={`flex min-w-0 flex-col gap-2.5 max-lg:gap-1.5 max-lg:rounded-[14px] max-lg:bg-surface-2 max-lg:p-3.5 lg:border-l lg:border-line lg:px-7 lg:py-0.5 ${
+                  stat.wide ? "max-lg:col-span-full" : ""
+                }`}
+              >
+                <span className="flex items-center gap-[7px] text-[13px] leading-[normal] font-medium whitespace-nowrap text-text-2">
+                  <span aria-hidden className={`size-2 shrink-0 rounded-full ${stat.dot}`} />
+                  {stat.label}
+                </span>
+                <span className="text-[18px] leading-[1.2] font-semibold tracking-[-0.01em] whitespace-nowrap tabular">
+                  {stat.value}
+                </span>
+                <span className="flex flex-col gap-[3px] text-[13px] leading-[1.4] text-muted max-lg:hidden">
+                  {stat.lines.filter(Boolean).map((line) => (
+                    <span key={line} className="truncate">
+                      {line}
+                    </span>
+                  ))}
+                </span>
+              </div>
+            ))}
+          </section>
+
+          {/* Le graphique (1,6) et la répartition (1) ; l'un sous l'autre sous 1 100 px. */}
+          <div className="grid gap-3 lg:gap-4 min-[68.75rem]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            <section
+              aria-labelledby="bars-title"
+              className={`${card} gap-5 px-4 py-[18px] lg:px-[26px] lg:py-6`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="bars-title" className="text-[16px] leading-[normal] font-semibold">
+                  Gagné et dépensé
+                </h2>
+                <div className="flex gap-3.5 text-[12.5px] leading-[normal] font-medium text-text-2">
+                  <span className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span aria-hidden className="size-2 rounded-full bg-violet" />
+                    Gagné
+                  </span>
+                  <span className="flex items-center gap-1.5 whitespace-nowrap">
+                    <span aria-hidden className="size-2 rounded-full bg-list-amber" />
+                    Dépensé
+                  </span>
+                </div>
+              </div>
+              <BarChart
+                selected={selected.key}
+                groups={[...rows].reverse().map((row) => ({
+                  key: row.key,
+                  label: periodLabel(row.key, unit),
+                  short: barLabel(row.key, unit),
+                  tiny:
+                    unit === "mois"
+                      ? barLabel(row.key, unit).charAt(0).toUpperCase()
+                      : unit === "semaine"
+                        ? row.key.slice(8, 10)
+                        : `’${row.key.slice(2, 4)}`,
+                  href: query({ periode: row.key }),
+                  gained: gained(row),
+                  spent: spent(row),
+                  gainedText: money(gained(row)),
+                  spentText: money(spent(row)),
+                  resultText: signed(row.resultCents),
+                  negative: row.resultCents < 0,
+                }))}
+              />
+            </section>
+            <ShareCard
+              subtitle={
+                selected.count === 0
+                  ? `${periodName} · aucun paiement`
+                  : `${periodName} · montants TVA comprise`
               }
-            />
-            <KpiCard
-              color={month.resultCents < 0 ? "warn" : "run"}
-              icon={Scale}
-              value={signed(month.resultCents)}
-              label="résultat ce mois-ci"
-              detail={vatSubject ? "Gagné HTVA − dépensé HTVA" : "Gagné − dépensé"}
-            />
-            <KpiCard
-              color="strength"
-              icon={CalendarRange}
-              value={approx(week.byCurrency, gained(week))}
-              label={`gagné cette semaine${basisLabel ? ` (${basisLabel})` : ""}`}
-              detail={`${plural(week.count, "paiement")} · résultat ${signed(week.resultCents)}`}
-            />
-          </KpiGrid>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:col-span-12">
-          <h2 className="font-display text-[20px] font-semibold">Gagné, dépensé et résultat</h2>
-          <SegmentedNav
-            label="Période du tableau"
-            items={ACCOUNTING_UNITS.map((item) => ({
-              href: query({ vue: item }),
-              label: unitLabels[item],
-              active: item === unit,
-            }))}
-          />
-        </div>
-
-        {/* Rangée 1 : deux widgets à la même hauteur. */}
-        <Card
-          id="share-title"
-          className="lg:col-span-6"
-          title={
-            <CardTitle icon={ChartPie} color="var(--accent-text)">
-              Répartition · {periodLabel(selected.key, unit)}
-            </CardTitle>
-          }
-          subtitle={
-            selected.count === 0
-              ? "Aucun paiement sur cette période."
-              : `${plural(selected.count, "paiement")} · ${approx(selected.byCurrency, selected.exclCents)} HTVA · ${approx(selected.byCurrency, selected.vatCents)} de TVA`
-          }
-        >
-          <div className="flex flex-1 items-center">
-            <DonutChart
-              caption={`Répartition des paiements reçus par mode, ${periodLabel(selected.key, unit)}`}
               total={describeTotal(selected.inclCents, selected.byCurrency, currency).value}
+              caption={`Répartition des paiements reçus par mode, ${periodName}`}
               segments={METHOD_ORDER.map((method) => ({
                 key: method,
                 label: methodName(method),
@@ -325,281 +405,78 @@ async function Accounting({
               }))}
             />
           </div>
-        </Card>
 
-        <Card
-          id="bars-title"
-          className="lg:col-span-6"
-          title={
-            <CardTitle icon={ChartColumn} color="var(--run)">
-              Gagné et dépensé
-            </CardTitle>
-          }
-          subtitle={`Par ${unitLabels[unit].toLowerCase()} · clique une période pour la voir partout`}
-        >
-          <BarChart
-            selected={selected.key}
-            basisLabel={basisLabel}
-            groups={[...rows].reverse().map((row) => ({
-              key: row.key,
-              label: periodLabel(row.key, unit),
-              short: barLabel(row.key, unit),
-              href: query({ periode: row.key }),
-              gained: gained(row),
-              spent: spent(row),
-              gainedText: money(gained(row)),
-              spentText: money(spent(row)),
-              resultText: signed(row.resultCents),
-              negative: row.resultCents < 0,
-            }))}
-          />
-        </Card>
-
-        {/* Rangée 2 : le tableau décide de la hauteur ; la liste de droite la prend et défile. */}
-        <Card
-          id="ledger-title"
-          className="lg:col-span-8"
-          title={
-            <CardTitle icon={Table2} color="var(--strength)">
-              Tableau de comptabilité
-            </CardTitle>
-          }
-          subtitle={
-            vatSubject
-              ? "Reçu par mode de paiement (TVA comprise) ; gagné, dépensé et résultat HTVA."
-              : "Reçu par mode de paiement ; gagné, dépensé et résultat."
-          }
-        >
-          {/* Téléphone : le tableau défile de côté, la colonne « Période » reste en place. */}
-          <div className="-mx-[18px] overflow-x-auto px-[18px] [scrollbar-width:thin]">
-            <table className="w-full min-w-[640px] border-separate border-spacing-0 text-[13px] tabular">
-              <caption className="sr-only">
-                Gagné, dépensé et résultat par {unitLabels[unit].toLowerCase()}
-              </caption>
-              <thead>
-                <tr className="text-left text-[11.5px] font-semibold tracking-[0.04em] text-muted uppercase">
-                  <th scope="col" className="sticky left-0 z-10 bg-surface py-2.5 pr-3">
-                    Période
-                  </th>
-                  {methods.map((method) => (
-                    <th
-                      key={method}
-                      scope="col"
-                      className="px-2.5 py-2.5 text-right whitespace-nowrap"
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          aria-hidden
-                          className="size-2 rounded-full"
-                          style={{ background: methodColor[method] }}
-                        />
-                        {methodName(method)}
-                      </span>
-                    </th>
-                  ))}
-                  <th scope="col" className="px-2.5 py-2.5 text-right whitespace-nowrap">
-                    Gagné {basisLabel}
-                  </th>
-                  <th scope="col" className="px-2.5 py-2.5 text-right whitespace-nowrap">
-                    Dépensé {basisLabel}
-                  </th>
-                  <th scope="col" className="py-2.5 pl-3 text-right">
-                    Résultat
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const current = row.key === selected.key;
-                  const tone = current ? "bg-selected" : "bg-surface";
-                  // Colonne fixe : fond plein (le jaune posé sur la carte), pour cacher ce qui défile dessous.
-                  const stickyTone = current
-                    ? "[background:linear-gradient(var(--selected),var(--selected)),var(--surface)]"
-                    : "bg-surface";
-                  return (
-                    <tr key={row.key}>
-                      <th
-                        scope="row"
-                        className={`sticky left-0 z-10 border-t border-line p-0 text-left font-medium ${stickyTone}`}
-                      >
-                        <Link
-                          href={query({ periode: row.key })}
-                          scroll={false}
-                          aria-current={current ? "true" : undefined}
-                          className="flex min-h-11 items-center pr-3 pl-2 whitespace-nowrap underline-offset-4 hover:underline"
-                        >
-                          {periodLabel(row.key, unit, true)}
-                        </Link>
-                      </th>
-                      {methods.map((method) => (
-                        <td key={method} className={`${head} ${tone}`}>
-                          {cell(row.byMethod[method])}
-                        </td>
-                      ))}
-                      <td className={`${head} font-medium ${tone}`}>{cell(gained(row))}</td>
-                      <td className={`${head} ${tone}`}>{cell(spent(row))}</td>
-                      <td className={`border-t border-line pl-3 text-right font-semibold ${tone}`}>
-                        {resultCell(row.resultCents)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="font-semibold">
-                  <th
-                    scope="row"
-                    className="sticky left-0 z-10 border-t-2 border-line-2 bg-surface py-3 pr-3 pl-2 text-left"
-                  >
-                    Total
-                  </th>
-                  {methods.map((method) => (
-                    <td key={method} className="border-t-2 border-line-2 px-2.5 py-3 text-right">
-                      {cell(sum.byMethod[method])}
-                    </td>
-                  ))}
-                  <td className="border-t-2 border-line-2 px-2.5 py-3 text-right">
-                    {approx(sum.byCurrency, gained(sum))}
-                  </td>
-                  <td className="border-t-2 border-line-2 px-2.5 py-3 text-right">
-                    {cell(spent(sum))}
-                  </td>
-                  <td className="border-t-2 border-line-2 py-3 pl-3 text-right">
-                    {resultCell(sum.resultCents)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </Card>
-
-        {/* « À encaisser » (lien de la cloche) : sur téléphone, la liste passe en premier. */}
-        <div
-          className={`lg:relative lg:col-span-4 ${list === "a-encaisser" ? "max-lg:order-first" : ""}`}
-        >
-          <Card
-            id="list-title"
-            className="lg:absolute lg:inset-0"
-            title={
-              <CardTitle icon={Wallet} color="var(--ok)">
-                {list === "depenses"
-                  ? "Dépenses"
-                  : list === "a-encaisser"
-                    ? "À encaisser"
-                    : "Paiements reçus"}
-              </CardTitle>
-            }
-            subtitle={
-              list === "depenses"
-                ? `${plural(expenses.length, "dépense")} · les mensuelles comptent chaque mois`
-                : list === "a-encaisser"
-                  ? unpaid.length === 0
-                    ? `Séances passées des ${COLLECT_WEEKS} dernières semaines : tout est payé.`
-                    : `${plural(unpaid.length, "séance")} · ${describeTotal(toCollect.cents, toCollect.byCurrency, currency).value} attendus · ${COLLECT_WEEKS} dernières semaines`
-                  : `${plural(shown.length, "paiement")} · montants TVA comprise`
-            }
+          {/* Mouvements : Paiements · Dépenses · À encaisser (lien de la cloche), 5 lignes puis « Voir ». */}
+          <section
+            aria-labelledby="list-title"
+            className={`${card} gap-3.5 pt-[18px] pb-2 lg:pt-[22px] ${list === "a-encaisser" ? "max-lg:order-first" : ""}`}
           >
-            <SegmentedNav
-              label="Liste affichée"
-              items={[
-                {
-                  href: query({ liste: "paiements" }),
-                  label: "Paiements",
-                  active: list === "paiements",
-                },
-                {
-                  href: query({ liste: "depenses" }),
-                  label: "Dépenses",
-                  active: list === "depenses",
-                },
-                {
-                  href: query({ liste: "a-encaisser" }),
-                  // Sans compteur : trois onglets tiennent sur un téléphone de 390 px.
-                  label: "À encaisser",
-                  active: list === "a-encaisser",
-                },
-              ]}
-            />
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 lg:px-6">
+              <div className="flex min-w-0 flex-col gap-1">
+                <h2 id="list-title" className="text-[16px] leading-[normal] font-semibold">
+                  Mouvements
+                </h2>
+                <p className="text-[13px] leading-[1.4] text-muted">
+                  {list === "depenses"
+                    ? `${plural(expenses.length, "dépense")} · les mensuelles comptent chaque mois`
+                    : list === "a-encaisser"
+                      ? unpaid.length === 0
+                        ? `Séances passées des ${COLLECT_WEEKS} dernières semaines : tout est payé.`
+                        : `${plural(unpaid.length, "séance")} · ${describeTotal(toCollect.cents, toCollect.byCurrency, currency).value} attendus · ${COLLECT_WEEKS} dernières semaines`
+                      : `${plural(shown.length, "paiement")} · montants TVA comprise`}
+                </p>
+              </div>
+              <nav aria-label="Liste affichée" className={`${segmented} max-sm:w-full`}>
+                {(
+                  [
+                    ["paiements", "Paiements"],
+                    ["depenses", "Dépenses"],
+                    ["a-encaisser", "À encaisser"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <Link
+                    key={key}
+                    href={query({ liste: key })}
+                    scroll={false}
+                    aria-current={list === key ? "page" : undefined}
+                    className={`${segment(list === key)} max-sm:flex-1`}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
             {list === "paiements" ? (
-              <>
-                <FilterChips
-                  label="Filtrer les paiements"
-                  options={filters.map((item) => ({
-                    href: query({ mode: item.key }),
-                    label: item.label,
-                    active: item.key === filter,
-                  }))}
-                />
-                <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
-                  {shown.length === 0 ? (
-                    <CardEmpty icon={Coins}>
-                      Aucun paiement. Note l&apos;argent reçu avec « Nouveau paiement ».
-                    </CardEmpty>
-                  ) : (
-                    <ul aria-label="Liste des paiements" className="flex flex-col">
-                      {shown.map((payment) => {
-                        const { exclCents } = splitVat(payment.amountCents, payment.vatRate);
-                        return (
-                          <li key={payment.id}>
-                            <ListRow
-                              leading={
-                                <span className="w-12 shrink-0 font-mono text-[12px] font-medium tabular">
-                                  {day(payment.receivedOn)}
-                                </span>
-                              }
-                              title={payment.athleteName}
-                              // Le mode d'abord : la fin de la ligne est coupée si elle est longue.
-                              sub={[
-                                paymentMethodLabel(payment.method, country),
-                                payment.coversFrom && payment.coversTo
-                                  ? `Forfait du ${day(payment.coversFrom)} au ${day(payment.coversTo)}`
-                                  : null,
-                                // TVA (D-118) : comme les dépenses, rien chez un coach sans TVA ;
-                                // « Sans TVA » pour un paiement noté sans.
-                                payment.vatRate > 0
-                                  ? `${formatMoney(exclCents, payment.currency)} HTVA (TVA ${formatVatRate(payment.vatRate)})`
-                                  : vatSubject
-                                    ? "Sans TVA"
-                                    : null,
-                                payment.label ?? "Paiement",
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")}
-                              trailing={
-                                <>
-                                  <span className="text-[15px] font-semibold tabular">
-                                    {formatMoney(payment.amountCents, payment.currency)}
-                                  </span>
-                                  <DeleteMoreMenu
-                                    menuTitle={`Paiement de ${payment.athleteName}`}
-                                    menuSubtitle={[
-                                      day(payment.receivedOn),
-                                      formatMoney(payment.amountCents, payment.currency),
-                                      paymentMethodLabel(payment.method, country),
-                                    ].join(" · ")}
-                                    deleteDescription="Pour un paiement noté par erreur"
-                                    action={deletePayment.bind(null, organizationId, payment.id)}
-                                    confirmTitle="Supprimer ce paiement ?"
-                                    confirmText="À utiliser pour un paiement noté par erreur : il disparaît des chiffres."
-                                  />
-                                </>
-                              }
-                            />
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </div>
-              </>
-            ) : list === "a-encaisser" ? (
-              <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
-                {unpaid.length === 0 ? (
-                  <CardEmpty icon={Coins}>
-                    Aucune séance à encaisser. Les séances passées avec un prix apparaissent ici
-                    tant qu&apos;elles ne sont pas marquées payées.
-                  </CardEmpty>
-                ) : (
+              <nav
+                aria-label="Filtrer les paiements"
+                className="flex flex-wrap gap-1.5 px-4 lg:px-6"
+              >
+                {filters.map((item) => (
+                  <Link
+                    key={item.key}
+                    href={query({ mode: item.key })}
+                    scroll={false}
+                    aria-current={item.key === filter ? "page" : undefined}
+                    className={`flex h-9 items-center rounded-full px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap transition-colors duration-150 lg:h-8 ${
+                      item.key === filter
+                        ? "bg-cta text-on-cta"
+                        : "text-text inset-ring inset-ring-line-2 hover:bg-surface-2"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            ) : null}
+
+            {list === "a-encaisser" ? (
+              unpaid.length === 0 ? (
+                <p className="border-t border-line px-4 py-6 text-[14px] text-muted lg:px-6">
+                  Aucune séance à encaisser. Les séances passées avec un prix apparaissent ici tant
+                  qu&apos;elles ne sont pas marquées payées.
+                </p>
+              ) : (
+                <div className="px-2 lg:px-4">
                   <CollectList
                     mark={markSessionPaid.bind(null, organizationId)}
                     rows={unpaid.map((date) => ({
@@ -612,101 +489,283 @@ async function Accounting({
                       label: `${date.athleteName ?? date.title}, ${dayShortLabel(date.date, today).toLowerCase()} à ${date.startTime}`,
                     }))}
                   />
-                )}
-              </div>
+                </div>
+              )
+            ) : listCount === 0 ? (
+              <p className="border-t border-line px-4 py-6 text-[14px] text-muted lg:px-6">
+                {list === "depenses"
+                  ? "Aucune dépense. Note ce que tu paies (salle, matériel, assurance) avec « Nouvelle dépense »."
+                  : "Aucun paiement. Note l'argent reçu avec « Nouveau paiement »."}
+              </p>
             ) : (
-              <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
-                {expenses.length === 0 ? (
-                  <CardEmpty icon={Receipt}>
-                    Aucune dépense. Note ce que tu paies (salle, matériel, assurance) avec «
-                    Nouvelle dépense ».
-                  </CardEmpty>
-                ) : (
-                  <ul aria-label="Liste des dépenses" className="flex flex-col">
-                    {expenses.map((expense) => {
+              <ShowMore
+                label={`Voir les ${listCount} ${noun}`}
+                listLabel={list === "depenses" ? "Liste des dépenses" : "Liste des paiements"}
+              >
+                {list === "depenses"
+                  ? expenses.map((expense) => {
                       const running =
                         expense.repeatsMonthly &&
                         expense.spentOn <= today &&
                         (expense.endsOn === null || expense.endsOn > today);
                       return (
-                        <li key={expense.id}>
-                          <ListRow
-                            leading={
-                              <span className="w-12 shrink-0 font-mono text-[12px] font-medium tabular">
-                                {day(expense.spentOn)}
+                        <MoveRow
+                          key={expense.id}
+                          date={day(expense.spentOn)}
+                          title={expense.label}
+                          sub={
+                            <span className="inline-flex min-w-0 items-center gap-1.5">
+                              <span
+                                aria-hidden
+                                className={`size-2 shrink-0 rounded-full ${categoryDotClass[expense.categoryColor ?? "grey"]}`}
+                              />
+                              <span className="truncate">
+                                {[
+                                  expense.categoryName ?? "Sans catégorie",
+                                  expense.repeatsMonthly
+                                    ? expense.endsOn
+                                      ? `Chaque mois jusqu'au ${day(expense.endsOn)}`
+                                      : "Chaque mois"
+                                    : null,
+                                  vatSubject && expense.vatRate > 0
+                                    ? `TVA ${formatVatRate(expense.vatRate)}`
+                                    : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
                               </span>
-                            }
-                            title={expense.label}
-                            sub={
-                              <span className="inline-flex min-w-0 items-center gap-1.5">
-                                <span
-                                  aria-hidden
-                                  className={`size-2 shrink-0 rounded-full ${categoryDotClass[expense.categoryColor ?? "grey"]}`}
-                                />
-                                <span className="truncate">
-                                  {[
-                                    expense.categoryName ?? "Sans catégorie",
-                                    expense.repeatsMonthly
-                                      ? expense.endsOn
-                                        ? `Chaque mois jusqu'au ${day(expense.endsOn)}`
-                                        : "Chaque mois"
-                                      : null,
-                                    vatSubject && expense.vatRate > 0
-                                      ? `TVA ${formatVatRate(expense.vatRate)}`
-                                      : null,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </span>
-                              </span>
-                            }
-                            trailing={
-                              <>
-                                <span className="text-[15px] font-semibold tabular">
-                                  −{formatMoney(expense.amountCents, expense.currency)}
-                                </span>
-                                <DeleteMoreMenu
-                                  menuTitle={expense.label}
-                                  action={deleteExpense.bind(null, organizationId, expense.id)}
-                                  confirmTitle="Supprimer cette dépense ?"
-                                  confirmText={
-                                    expense.repeatsMonthly
-                                      ? "Elle disparaît de TOUS les mois. Pour une dépense qui prend fin (loyer arrêté), utilise plutôt « Arrêter » : le passé reste."
-                                      : "À utiliser pour une dépense notée par erreur : elle disparaît des chiffres."
-                                  }
-                                  stop={
-                                    running
-                                      ? {
-                                          label: "Arrêter (ne compte plus après aujourd'hui)",
-                                          action: stopExpense.bind(
-                                            null,
-                                            organizationId,
-                                            expense.id,
-                                            today,
-                                          ),
-                                        }
-                                      : undefined
-                                  }
-                                />
-                              </>
-                            }
-                          />
-                        </li>
+                            </span>
+                          }
+                          amount={`−${formatMoney(expense.amountCents, expense.currency)}`}
+                          menu={
+                            <DeleteMoreMenu
+                              plain
+                              menuTitle={expense.label}
+                              action={deleteExpense.bind(null, organizationId, expense.id)}
+                              confirmTitle="Supprimer cette dépense ?"
+                              confirmText={
+                                expense.repeatsMonthly
+                                  ? "Elle disparaît de TOUS les mois. Pour une dépense qui prend fin (loyer arrêté), utilise plutôt « Arrêter » : le passé reste."
+                                  : "À utiliser pour une dépense notée par erreur : elle disparaît des chiffres."
+                              }
+                              stop={
+                                running
+                                  ? {
+                                      label: "Arrêter (ne compte plus après aujourd'hui)",
+                                      action: stopExpense.bind(
+                                        null,
+                                        organizationId,
+                                        expense.id,
+                                        today,
+                                      ),
+                                    }
+                                  : undefined
+                              }
+                            />
+                          }
+                        />
+                      );
+                    })
+                  : shown.map((payment) => {
+                      const { exclCents } = splitVat(payment.amountCents, payment.vatRate);
+                      return (
+                        <MoveRow
+                          key={payment.id}
+                          date={day(payment.receivedOn)}
+                          title={payment.athleteName}
+                          // Le mode d'abord : la fin de la ligne est coupée si elle est longue.
+                          sub={[
+                            paymentMethodLabel(payment.method, country),
+                            payment.coversFrom && payment.coversTo
+                              ? `Forfait du ${day(payment.coversFrom)} au ${day(payment.coversTo)}`
+                              : null,
+                            // TVA (D-118) : rien chez un coach sans TVA ; « Sans TVA » pour un
+                            // paiement noté sans.
+                            payment.vatRate > 0
+                              ? `${formatMoney(exclCents, payment.currency)} HTVA (TVA ${formatVatRate(payment.vatRate)})`
+                              : vatSubject
+                                ? "Sans TVA"
+                                : null,
+                            payment.label ?? "Paiement",
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                          amount={formatMoney(payment.amountCents, payment.currency)}
+                          menu={
+                            <DeleteMoreMenu
+                              plain
+                              menuTitle={`Paiement de ${payment.athleteName}`}
+                              menuSubtitle={[
+                                day(payment.receivedOn),
+                                formatMoney(payment.amountCents, payment.currency),
+                                paymentMethodLabel(payment.method, country),
+                              ].join(" · ")}
+                              deleteDescription="Pour un paiement noté par erreur"
+                              action={deletePayment.bind(null, organizationId, payment.id)}
+                              confirmTitle="Supprimer ce paiement ?"
+                              confirmText="À utiliser pour un paiement noté par erreur : il disparaît des chiffres."
+                            />
+                          }
+                        />
                       );
                     })}
-                  </ul>
-                )}
-              </div>
+              </ShowMore>
             )}
-          </Card>
-        </div>
+          </section>
 
-        {/* D-90 : Coory ne fait ni factures ni déclarations, et ne suit les règles d'aucun pays. */}
-        <p className="text-caption text-muted lg:col-span-12">
-          Aperçu de ton activité, pas une comptabilité officielle : tes factures et tes déclarations
-          se font avec ton logiciel de facturation ou ton comptable.
-        </p>
+          <LedgerCard
+            subtitle={`${rows.length} ${emptyUnit} · reçu par mode, gagné, dépensé et résultat${basisLabel ? ` ${basisLabel}` : ""}`}
+            emptyCount={emptyRows}
+            emptyLabel={emptyUnit}
+          >
+            {/* Téléphone : le tableau défile de côté, la colonne « Période » reste en place. */}
+            <div className="-mx-4 overflow-x-auto px-4 [scrollbar-width:thin] lg:-mx-6 lg:px-6">
+              <table className="w-full min-w-[640px] border-separate border-spacing-0 text-[13.5px] tabular">
+                <caption className="sr-only">
+                  Gagné, dépensé et résultat par {unitLabels[unit].toLowerCase()}
+                </caption>
+                <thead>
+                  <tr className="text-left text-[11.5px] font-semibold tracking-[0.04em] text-faint uppercase">
+                    <th
+                      scope="col"
+                      className="sticky left-0 z-10 border-b border-line bg-surface py-3 pr-3"
+                    >
+                      Période
+                    </th>
+                    {methods.map((method) => (
+                      <th
+                        key={method}
+                        scope="col"
+                        className="border-b border-line px-2.5 py-3 text-right whitespace-nowrap"
+                      >
+                        {methodName(method)}
+                      </th>
+                    ))}
+                    <th
+                      scope="col"
+                      className="border-b border-line px-2.5 py-3 text-right whitespace-nowrap"
+                    >
+                      Gagné {basisLabel}
+                    </th>
+                    <th
+                      scope="col"
+                      className="border-b border-line px-2.5 py-3 text-right whitespace-nowrap"
+                    >
+                      Dépensé {basisLabel}
+                    </th>
+                    <th scope="col" className="border-b border-line py-3 pl-3 text-right">
+                      Résultat
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => {
+                    const current = row.key === selected.key;
+                    const tone = current ? "bg-status-accent-soft/60" : "bg-surface";
+                    // Colonne fixe : fond plein, pour cacher ce qui défile dessous.
+                    const stickyTone = current
+                      ? "[background:linear-gradient(color-mix(in_oklab,var(--status-accent-soft)_60%,transparent),color-mix(in_oklab,var(--status-accent-soft)_60%,transparent)),var(--surface)]"
+                      : "bg-surface";
+                    const empty = row.count === 0 && spent(row) === 0;
+                    return (
+                      <tr key={row.key} data-empty={empty && !current ? "" : undefined}>
+                        <th
+                          scope="row"
+                          className={`sticky left-0 z-10 border-b border-line p-0 text-left font-medium ${stickyTone}`}
+                        >
+                          <Link
+                            href={query({ periode: row.key })}
+                            scroll={false}
+                            aria-current={current ? "true" : undefined}
+                            className="flex min-h-11 items-center pr-3 whitespace-nowrap underline-offset-4 hover:underline"
+                          >
+                            {periodLabel(row.key, unit, true)}
+                          </Link>
+                        </th>
+                        {methods.map((method) => (
+                          <td key={method} className={`${head} ${tone}`}>
+                            {cell(row.byMethod[method])}
+                          </td>
+                        ))}
+                        <td className={`${head} ${tone}`}>{cell(gained(row))}</td>
+                        <td className={`${head} ${tone}`}>{cell(spent(row))}</td>
+                        <td className={`border-b border-line pl-3 text-right ${tone}`}>
+                          {resultCell(row.resultCents)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="font-bold">
+                    <th
+                      scope="row"
+                      className="sticky left-0 z-10 border-t-[1.5px] border-line-2 bg-surface py-3 pr-3 text-left"
+                    >
+                      Total
+                    </th>
+                    {methods.map((method) => (
+                      <td
+                        key={method}
+                        className="border-t-[1.5px] border-line-2 px-2.5 py-3 text-right"
+                      >
+                        {cell(sum.byMethod[method])}
+                      </td>
+                    ))}
+                    <td className="border-t-[1.5px] border-line-2 px-2.5 py-3 text-right">
+                      {approx(sum.byCurrency, gained(sum))}
+                    </td>
+                    <td className="border-t-[1.5px] border-line-2 px-2.5 py-3 text-right">
+                      {cell(spent(sum))}
+                    </td>
+                    <td className="border-t-[1.5px] border-line-2 py-3 pl-3 text-right">
+                      {resultCell(sum.resultCents)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </LedgerCard>
+
+          {/* D-90 : Coory ne fait ni factures ni déclarations, et ne suit les règles d'aucun pays. */}
+          <p className="px-1 text-[13px] leading-[1.5] text-muted">
+            Aperçu de ton activité, pas une comptabilité officielle : tes factures et tes
+            déclarations se font avec ton logiciel de facturation ou ton comptable.
+          </p>
+        </div>
+        <AccountingFab />
       </PageBody>
     </>
+  );
+}
+
+// Une ligne de « Mouvements » (kit) : date, nom et détail, montant, menu « ··· ».
+function MoveRow({
+  date,
+  title,
+  sub,
+  amount,
+  menu,
+}: {
+  date: string;
+  title: string;
+  sub: React.ReactNode;
+  amount: string;
+  menu: React.ReactNode;
+}) {
+  return (
+    <li className="flex min-h-[58px] items-center gap-3 border-t border-line px-4 py-2 lg:gap-4 lg:px-6">
+      <span className="w-12 shrink-0 text-[12.5px] leading-[normal] font-medium whitespace-nowrap text-muted tabular lg:w-14">
+        {date}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-[14.5px] leading-[normal] font-semibold">{title}</span>
+        <span className="truncate text-[12.5px] leading-[normal] text-muted">{sub}</span>
+      </span>
+      <span className="shrink-0 text-[14.5px] leading-[normal] font-semibold whitespace-nowrap tabular">
+        {amount}
+      </span>
+      {menu}
+    </li>
   );
 }

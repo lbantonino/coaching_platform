@@ -1,7 +1,6 @@
 "use server";
 
 import { searchPattern } from "@/domain/search/search";
-import type { TaskCategory } from "@/domain/tasks/task-form";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,7 +32,7 @@ export type SearchResults = {
     title: string;
     priority: "high" | "normal";
     dueOn: string | null;
-    category: TaskCategory | null;
+    listId: string | null;
     athleteId: string | null;
     notes: string | null;
     done: boolean;
@@ -85,7 +84,7 @@ export async function searchCoory(organizationId: string, query: string): Promis
       .limit(LIMIT),
     supabase
       .from("coach_tasks")
-      .select("id, title, priority, due_on, category, athlete_id, notes, done_at")
+      .select("id, title, priority, due_on, list_id, athlete_id, notes, done_at")
       .eq("organization_id", orgId)
       .or(`title.ilike.${pattern},notes.ilike.${pattern}`)
       // Les tâches à faire d'abord.
@@ -130,7 +129,7 @@ export async function searchCoory(organizationId: string, query: string): Promis
       // Listes fermées garanties par les contraintes CHECK en base.
       priority: row.priority as "high" | "normal",
       dueOn: row.due_on,
-      category: row.category as TaskCategory | null,
+      listId: row.list_id,
       athleteId: row.athlete_id,
       notes: row.notes,
       done: row.done_at !== null,

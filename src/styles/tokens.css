@@ -161,6 +161,20 @@
   --status-ok: #34d399;
   --status-ok-soft: rgba(52, 211, 153, 0.14);
   --status-danger: #fb7185;
+  /* Listes de tâches (kit « Coory Pages », 01, D-129) : pastille (fond) et titre de la liste (texte,
+     lisible sur la carte). Palette du kit : indigo, ambre, turquoise, rose, violet, encre. */
+  --list-indigo: #7776ff;
+  --list-amber: #fec14f;
+  --list-teal: #26cbb8;
+  --list-rose: #dd2d4a;
+  --list-violet: #8b5cf6;
+  --list-ink: #52525b;
+  --list-indigo-text: #a5a4ff;
+  --list-amber-text: #fcd34d;
+  --list-teal-text: #5eead4;
+  --list-rose-text: #fb7185;
+  --list-violet-text: #b9a3ff;
+  --list-ink-text: #e4e4e7;
   /* Disciplines (kit, programme d'un sportif) : tuile à 16 %, icône dans la couleur claire. */
   --dlg-run: #7776ff;
   --dlg-run-tile: color-mix(in srgb, #7776ff 16%, #1a1a1d);
@@ -335,6 +349,20 @@
   --status-ok: #11867a;
   --status-ok-soft: #e3f6f1;
   --status-danger: #c0213d;
+  /* Listes de tâches (kit « Coory Pages », 01, D-129). Texte : version foncée, ≥ 4,5:1 sur blanc
+     (l'ambre et le turquoise du kit seraient illisibles en titre). */
+  --list-indigo: #7776ff;
+  --list-amber: #fec14f;
+  --list-teal: #26cbb8;
+  --list-rose: #dd2d4a;
+  --list-violet: #8b5cf6;
+  --list-ink: #17151d;
+  --list-indigo-text: #4f4dd6;
+  --list-amber-text: #8a5a00;
+  --list-teal-text: #0f766e;
+  --list-rose-text: #be123c;
+  --list-violet-text: #6a3ee0;
+  --list-ink-text: #17151d;
   /* Disciplines (kit, programme d'un sportif) : tuile à 16 %, icône foncée lisible. */
   --dlg-run: #5a58e8;
   --dlg-run-tile: color-mix(in srgb, #7776ff 16%, #fff);

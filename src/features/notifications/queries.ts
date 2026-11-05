@@ -38,7 +38,7 @@ async function readStates(
 ): Promise<Map<string, NotificationState>> {
   const { data } = await supabase
     .from("coach_notification_states")
-    .select("key, read_at, dismissed_at")
+    .select("key, read_at, dismissed_at, deleted_at")
     .eq("organization_id", organizationId);
   return stateMap(data ?? []);
 }
@@ -137,9 +137,10 @@ export type IncompleteProfile = {
   missing: string[];
 };
 
-// Ce que chaque ligne sait d'elle-même : sa clé, et si le coach l'a déjà lue. Les masquées ne
-// sont pas renvoyées.
-export type NotificationMeta = { key: string; read: boolean };
+// Ce que chaque ligne sait d'elle-même : sa clé, si le coach l'a déjà lue, et s'il l'a masquée
+// (onglet « Masquées » de la page, kit « Coory Pages » 03, D-128). Les supprimées ne sont pas
+// renvoyées.
+export type NotificationMeta = { key: string; read: boolean; dismissed: boolean };
 
 export type Notifications = {
   competitions: (AgendaEvent & NotificationMeta)[];
@@ -167,12 +168,14 @@ export async function getNotifications(
     readStates(supabase, organizationId),
   ]);
   const until = addDays(today, COMPETITION_NOTICE_DAYS);
-  // Ajoute la clé et l'état ; retire ce que le coach a masqué.
+  // Ajoute la clé et l'état ; retire ce que le coach a supprimé.
   const withState = <T>(items: T[], keyOf: (item: T) => string): (T & NotificationMeta)[] =>
     items.flatMap((item) => {
       const key = keyOf(item);
       const state = states.get(key);
-      return state?.dismissed ? [] : [{ ...item, key, read: state?.read ?? false }];
+      return state?.deleted
+        ? []
+        : [{ ...item, key, read: state?.read ?? false, dismissed: state?.dismissed ?? false }];
     });
   return {
     // Même règle que le compte : compétition en cours (pas un simple objectif daté), sous 7 jours.

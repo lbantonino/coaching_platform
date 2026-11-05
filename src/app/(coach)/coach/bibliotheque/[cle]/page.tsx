@@ -65,20 +65,32 @@ async function Exercise({ exerciseKey }: { exerciseKey: string }) {
     codes.map((code) => dict[code]?.label ?? code).join(", ");
   const platform = sheet.videoUrl ? videoPlatform(sheet.videoUrl) : null;
 
+  // Boutons de l'en-tête : 44 px sur téléphone (le doigt), 32 px sur ordinateur, comme sur les autres
+  // pages : la carte de l'en-tête garde sa hauteur de base (D-124).
+  const headerButtonCompact =
+    "lg:h-8! lg:gap-1.5! lg:rounded-[9px]! lg:px-3! lg:text-[12.5px]! lg:[&>svg]:size-3.5";
+  const badges = (
+    <span className="flex flex-wrap gap-1.5">
+      {sheet.mine ? <Badge tone="moved">Mon exercice</Badge> : null}
+      <Badge tone={categoryTones[sheet.category]}>{exerciseCategoryLabels[sheet.category]}</Badge>
+      {sheet.hyroxStation ? <Badge tone="hyrox">Station {sheet.hyroxStation}</Badge> : null}
+      {sheet.difficulty ? <Badge>{difficultyLabels[sheet.difficulty]}</Badge> : null}
+      {sheet.unilateral ? <Badge>Un côté à la fois</Badge> : null}
+    </span>
+  );
+
   return (
     <>
       <PageHeader
         back={{ href: "/coach/bibliotheque", label: "Bibliothèque" }}
         title={sheet.nameFr}
-        subtitle={
-          <span className="flex flex-wrap gap-1.5">
-            {sheet.mine ? <Badge tone="moved">Mon exercice</Badge> : null}
-            <Badge tone={categoryTones[sheet.category]}>
-              {exerciseCategoryLabels[sheet.category]}
-            </Badge>
-            {sheet.hyroxStation ? <Badge tone="hyrox">Station {sheet.hyroxStation}</Badge> : null}
-            {sheet.difficulty ? <Badge>{difficultyLabels[sheet.difficulty]}</Badge> : null}
-            {sheet.unilateral ? <Badge>Un côté à la fois</Badge> : null}
+        // Pastilles : sous le titre sur téléphone ; sur ordinateur, sur la ligne du chemin quand elle a
+        // assez de place (36 rem), sinon le chemin passe d'abord (une seule ligne, D-124 ; copie
+        // visuelle, la phrase reste pour les lecteurs d'écran).
+        subtitle={badges}
+        titleAside={
+          <span aria-hidden className="hidden shrink-0 gap-1.5 lg:@min-[36rem]:flex">
+            {badges}
           </span>
         }
         actions={
@@ -93,7 +105,7 @@ async function Exercise({ exerciseKey }: { exerciseKey: string }) {
               <>
                 <Link
                   href={`/coach/bibliotheque/${sheet.id}/modifier`}
-                  className={buttonClass({ variant: "outline" })}
+                  className={buttonClass({ variant: "outline", className: headerButtonCompact })}
                 >
                   <Pencil aria-hidden size={16} strokeWidth={1.8} />
                   Modifier
@@ -106,7 +118,7 @@ async function Exercise({ exerciseKey }: { exerciseKey: string }) {
             ) : (
               <Link
                 href={`/coach/bibliotheque/nouveau?variante=${sheet.key}`}
-                className={buttonClass({ variant: "outline" })}
+                className={buttonClass({ variant: "outline", className: headerButtonCompact })}
               >
                 <Copy aria-hidden size={16} strokeWidth={1.8} />
                 Créer ma variante

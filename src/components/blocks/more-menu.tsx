@@ -28,6 +28,7 @@ export function DeleteMoreMenu({
   button,
   buttonClassName,
   compact = false,
+  plain = false,
 }: {
   menuTitle: string;
   menuSubtitle?: string;
@@ -42,6 +43,9 @@ export function DeleteMoreMenu({
   buttonClassName?: string;
   // En-tête d'ordinateur : « ••• » à la taille des outils de l'en-tête (32 px).
   compact?: boolean;
+  // Ligne de liste du kit « Coory Pages » (Comptabilité, D-130) : « ••• » sans cadre, 44 px sur
+  // téléphone, 36 sur ordinateur.
+  plain?: boolean;
 }) {
   const [menu, setMenu] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -66,7 +70,11 @@ export function DeleteMoreMenu({
           type="button"
           aria-label="Plus d'actions"
           onClick={() => setMenu(true)}
-          className={`${iconButtonClass()} ${compact ? "lg:size-8 lg:rounded-lg" : ""}`}
+          className={
+            plain
+              ? "grid size-11 shrink-0 place-items-center rounded-[10px] text-faint transition-colors duration-150 hover:bg-surface-2 hover:text-text lg:size-9"
+              : `${iconButtonClass()} ${compact ? "lg:size-8 lg:rounded-lg" : ""}`
+          }
         >
           <Ellipsis aria-hidden size={18} strokeWidth={1.8} />
         </button>

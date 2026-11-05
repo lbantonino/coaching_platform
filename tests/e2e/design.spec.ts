@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { goToCoachSection, openSettings } from "./helpers";
+
 // Identité visuelle Coory : logo définitif (04/11/2026, docs/design/coory-brand), icônes et thème.
 
 test("le logo Coory est annoncé par son nom, avec le favicon, l'icône iPhone et l'aperçu de partage du kit", async ({
@@ -97,6 +99,35 @@ test("sur téléphone, le menu hamburger couvre tout l'écran, contient le compt
   await expect(menu).toBeHidden();
 });
 
+// 05/11/2026 : Next garde la page quittée cachée dans le DOM. Ce qu'elle posait dans la barre du
+// téléphone (retour d'une page de détail, mois de l'Agenda) ne doit plus cacher le nom de la page
+// suivante : avant, « Tableau de bord » ou « Sportifs » restaient invisibles jusqu'au rechargement.
+test("sur téléphone, le nom de la page revient dans la barre après l'Agenda ou une page de détail", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "telephone", "Barre propre au téléphone");
+  await loginAsCoachA(page);
+  const barTitle = page.locator("header.sticky p[aria-hidden]");
+  await expect(barTitle).toHaveText("Tableau de bord");
+  await expect(barTitle).toBeVisible();
+  // L'Agenda met le mois à la place du nom ; Sportifs retrouve le sien.
+  await goToCoachSection(page, "Agenda");
+  await expect(page).toHaveURL(/\/agenda/);
+  await expect(barTitle).toBeHidden();
+  await goToCoachSection(page, "Sportifs");
+  await expect(page).toHaveURL(/\/sportifs$/);
+  await expect(barTitle).toHaveText("Sportifs");
+  await expect(barTitle).toBeVisible();
+  // Une fiche (retour « ← Sportifs » dans la barre), puis le tableau de bord par le menu.
+  await page.locator("a[href*='/sportifs/da0']").filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/\/sportifs\/da0/);
+  await expect(barTitle).toBeHidden();
+  await goToCoachSection(page, "Tableau de bord");
+  await expect(page).toHaveURL(/\/coach$/);
+  await expect(barTitle).toHaveText("Tableau de bord");
+  await expect(barTitle).toBeVisible();
+});
+
 test("le menu de gauche : Assistant IA puis Messages, Notifications ; le menu du compte mène aux Paramètres", async ({
   page,
 }, testInfo) => {
@@ -136,12 +167,14 @@ test("dans les Paramètres, le thème se choisit : clair, sombre ou celui de l'a
 }) => {
   const html = page.locator("html");
   await loginAsCoachA(page);
-  await page.goto("/coach/profil?onglet=preferences");
-  const theme = page.getByRole("region", { name: "Thème" });
+  // Paramètres en fenêtre (D-127) : l'ancienne adresse l'ouvre par-dessus le tableau de bord.
+  const dialog = await openSettings(page, "preferences");
+  const theme = dialog.getByRole("region", { name: "Thème" });
   await theme.getByText("Sombre", { exact: true }).click();
   await expect(html).toHaveAttribute("data-theme", "dark");
   await page.reload();
   await expect(html).toHaveAttribute("data-theme", "dark");
+  await openSettings(page, "preferences");
   // « Système » suit l'appareil (clair dans le navigateur de test, puis sombre quand il le devient).
   await theme.getByText("Système", { exact: true }).click();
   await expect(html).not.toHaveAttribute("data-theme", "dark");
@@ -150,8 +183,8 @@ test("dans les Paramètres, le thème se choisit : clair, sombre ou celui de l'a
   await page.emulateMedia({ colorScheme: "light" });
   await theme.getByText("Clair", { exact: true }).click();
   await expect(html).not.toHaveAttribute("data-theme", "dark");
-  await page.goto("/coach/profil?onglet=securite");
-  await expect(page.getByRole("region", { name: "Adresse e-mail" })).toContainText(
+  await openSettings(page, "securite");
+  await expect(dialog.getByRole("region", { name: "Adresse e-mail" })).toContainText(
     "coach-a@example.test",
   );
 });

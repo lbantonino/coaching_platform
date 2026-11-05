@@ -9,22 +9,24 @@ import { barBackClass, barBackIcon } from "@/components/layout/back-link";
 import { MobileBarTitle } from "@/components/layout/mobile-bar";
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { FilterChips } from "@/components/ui/filter-chips";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireCoach } from "@/features/auth/guards";
 import { getThread, listConversations } from "@/features/messages/queries";
+import { listSessionAthletes } from "@/features/sessions/actions";
 import { brusselsDayOf, dayShortLabel, messageTime, todayIsoInBrussels } from "@/lib/format";
 
 import { Composer } from "./composer";
 import { MarkThreadRead } from "./mark-read";
+import { ConversationList, NewMessage, PlanButton, ThreadMenu } from "./messages-ui";
 
 export const metadata: Metadata = {
   title: "Messages",
 };
 
-// Page Messages (prompt Claude Design §7 `/coach/messages`, D-35), côté coach : les conversations (une
-// par sportif) et le fil choisi, avec réponse. Ordinateur : liste 4 colonnes + fil 8 colonnes.
+// Page Messages (prompt Claude Design §7 `/coach/messages`, D-35 ; kit « Coory Pages », page 07, D-131),
+// côté coach : les conversations (une par sportif ; pas de groupes, décision 12) et le fil choisi,
+// avec réponse. Ordinateur : deux cartes (liste de 340 px, 400 dès 1 280 ; le fil) à la hauteur de
+// l'écran. « Nouveau message » (en-tête, « + » de la liste, bouton flottant) : choisir un sportif.
 // Téléphone : la liste, puis le fil en plein écran avec « ← Conversations ». ?sportif= ouvre un fil
 // (bouton « Répondre » du tableau de bord) et marque ses messages reçus comme lus. Filtre « Non lues »
 // (02/11, ?filtre=non-lus) : seulement les conversations qui attendent une lecture (le fil ouvert reste
@@ -85,185 +87,214 @@ async function Messages({
   const thread = athlete ? await getThread(organizationId, athlete.id) : [];
   const unreadInThread = conversations.find((c) => c.athlete.id === athlete?.id)?.unread ?? 0;
 
+  // Les messages du fil, regroupés par jour (« Aujourd'hui », « Hier », « Mar 20 »).
+  const days: { day: string; messages: typeof thread }[] = [];
+  for (const message of thread) {
+    const day = brusselsDayOf(message.createdAt);
+    const last = days.at(-1);
+    if (last && last.day === day) last.messages.push(message);
+    else days.push({ day, messages: [message] });
+  }
+  const card =
+    "flex min-w-0 flex-col overflow-hidden rounded-[22px] bg-surface inset-ring inset-ring-line lg:rounded-[20px]";
+  const loadAthletes = listSessionAthletes.bind(null, organizationId);
+
   return (
     <>
-      <PageHeader title="Messages" subtitle="Conversations 1:1 avec tes sportifs." />
-      <PageBody grid>
-        <section
-          aria-labelledby="conversations-title"
-          className={`flex min-w-0 flex-col gap-3 rounded-card border border-line bg-surface p-[18px] lg:col-span-4 lg:self-start ${
-            requested ? "max-lg:hidden" : ""
-          }`}
-        >
-          <h2 id="conversations-title" className="font-display text-block font-semibold">
-            Conversations
-          </h2>
-          {conversations.length > 0 ? (
-            <FilterChips
-              label="Filtrer les conversations"
-              size="sm"
-              options={[
-                { href: "/coach/messages", label: "Toutes", active: !unreadOnly },
-                {
-                  href: "/coach/messages?filtre=non-lus",
-                  label: `Non lues${unreadCount > 0 ? ` (${unreadCount})` : ""}`,
-                  active: unreadOnly,
-                },
-              ]}
-            />
-          ) : null}
-          {shown.length === 0 ? (
-            <p className="border-t border-line pt-3.5 text-[14px] text-muted">
-              {unreadOnly ? "Aucun message non lu." : "Aucune conversation pour l'instant."}
-            </p>
-          ) : (
-            <ul className="flex flex-col">
-              {shown.map((conversation) => {
-                const active = conversation.athlete.id === athlete?.id;
-                return (
-                  <li key={conversation.athlete.id}>
-                    <Link
-                      href={`/coach/messages?sportif=${conversation.athlete.id}${keep}`}
-                      scroll={false}
-                      aria-current={active ? "page" : undefined}
-                      className={`-mx-2 flex min-h-16 items-center gap-3 rounded-[12px] border-t border-line px-2 py-2.5 transition-colors duration-150 hover:bg-surface-2 ${
-                        active ? "lg:bg-surface-2" : ""
-                      }`}
-                    >
-                      <Avatar
-                        name={conversation.athlete.name}
-                        photoPath={conversation.athlete.photoPath}
-                        sex={conversation.athlete.sex}
-                      />
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="flex min-w-0 items-baseline gap-2">
-                          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold">
-                            {conversation.athlete.name}
-                          </span>
-                          <span className="shrink-0 font-mono text-[11px] text-muted tabular">
-                            {messageTime(conversation.lastAt, today)}
-                          </span>
-                        </span>
-                        <span className="flex min-w-0 items-center gap-2">
-                          <span className="min-w-0 flex-1 truncate text-[13px] text-muted">
-                            {conversation.lastFromCoach ? "Toi : " : ""}
-                            {conversation.lastBody}
-                          </span>
-                          {conversation.unread > 0 ? (
-                            <Badge tone="live">
-                              {conversation.unread} non lu{conversation.unread > 1 ? "s" : ""}
-                            </Badge>
-                          ) : null}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-
-        <section
-          aria-labelledby="thread-title"
-          className={`flex min-w-0 flex-col gap-3.5 rounded-card border border-line bg-surface p-[18px] lg:col-span-8 ${
-            requested ? "" : "max-lg:hidden"
-          }`}
-        >
-          {athlete ? (
-            <>
-              {/* Téléphone, fil ouvert : « ← Conversations » dans la barre du haut, à la place de
-                  « Messages » (D-117). Sur ordinateur, la liste reste à côté du fil. */}
-              {requested ? (
-                <MobileBarTitle>
-                  <Link
-                    href={unreadOnly ? "/coach/messages?filtre=non-lus" : "/coach/messages"}
-                    className={barBackClass}
-                  >
-                    <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />
-                    <span className="truncate">Conversations</span>
-                  </Link>
-                </MobileBarTitle>
-              ) : null}
-              <header className="flex items-center gap-3">
-                <Avatar
-                  name={athlete.displayName}
-                  photoPath={athlete.photoPath}
-                  sex={athlete.sex}
-                />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <h2 id="thread-title" className="truncate font-display text-block font-semibold">
-                    {athlete.displayName}
-                  </h2>
-                  <Link
-                    href={`/coach/o/${organizationId}/sportifs/${athlete.id}`}
-                    className="w-fit text-[13px] text-muted underline-offset-4 hover:text-text hover:underline"
-                  >
-                    Voir la fiche
-                  </Link>
-                </div>
-              </header>
-              {/* Le fil s'ouvre en bas, sur le dernier message (colonne inversée). */}
-              <ol
-                aria-label={`Messages avec ${athlete.displayName}`}
-                className="flex max-h-[55dvh] min-h-40 flex-col-reverse gap-3 overflow-y-auto border-t border-line pt-3.5"
+      <PageHeader
+        title="Messages"
+        subtitle="Conversations 1:1 avec tes sportifs."
+        actions={<NewMessage variant="header" loadAthletes={loadAthletes} />}
+      />
+      <PageBody fill>
+        <div className="grid min-h-0 gap-4 lg:flex-1 lg:grid-cols-[340px_minmax(0,1fr)] xl:grid-cols-[400px_minmax(0,1fr)]">
+          {/* Liste : « Conversations », recherche, filtres, lignes. */}
+          <section
+            aria-labelledby="conversations-title"
+            className={`${card} gap-4 pt-[18px] lg:min-h-0 lg:pt-6 ${requested ? "max-lg:hidden" : ""}`}
+          >
+            {/* Téléphone (kit) : la carte commence par la recherche ; le titre reste lu. */}
+            <div className="flex items-center justify-between gap-3 px-4 max-lg:sr-only lg:px-[30px]">
+              <h2
+                id="conversations-title"
+                className="text-[20px] leading-[normal] font-bold tracking-[-0.02em] lg:text-[22px]"
               >
-                {thread.length === 0 ? (
-                  <li className="text-[14px] text-muted">
-                    Aucun message pour l&apos;instant. Écris le premier ci-dessous.
-                  </li>
-                ) : (
-                  [...thread].reverse().map((message) => (
-                    <li
-                      key={message.id}
-                      className={`flex max-w-[85%] flex-col gap-1 lg:max-w-[70%] ${
-                        message.fromCoach ? "items-end self-end" : "items-start self-start"
-                      }`}
-                    >
-                      <span className="sr-only">
-                        {message.fromCoach ? "Toi" : athlete.displayName} :
-                      </span>
-                      <p
-                        className={`rounded-[18px] px-3.5 py-2.5 text-[15px] leading-normal whitespace-pre-line ${
-                          message.fromCoach
-                            ? "rounded-br-[6px] bg-inv text-on-inv"
-                            : "rounded-bl-[6px] bg-surface-2"
+                Conversations
+              </h2>
+              <NewMessage variant="plus" loadAthletes={loadAthletes} />
+            </div>
+            <ConversationList
+              filters={
+                conversations.length > 0 ? (
+                  <nav
+                    aria-label="Filtrer les conversations"
+                    className="flex gap-1.5 px-4 lg:px-[30px]"
+                  >
+                    {[
+                      { href: "/coach/messages", label: "Toutes", active: !unreadOnly },
+                      {
+                        href: "/coach/messages?filtre=non-lus",
+                        label: `Non lues${unreadCount > 0 ? ` (${unreadCount})` : ""}`,
+                        active: unreadOnly,
+                      },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        scroll={false}
+                        aria-current={item.active ? "page" : undefined}
+                        className={`flex h-9 items-center rounded-full px-3.5 text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors duration-150 ${
+                          item.active
+                            ? "bg-cta text-on-cta"
+                            : "text-text inset-ring inset-ring-line-2 hover:bg-surface-2"
                         }`}
                       >
-                        {message.body}
-                      </p>
-                      <span className="font-mono text-[11px] text-muted tabular">
-                        {stamp(message.createdAt, today)}
-                      </span>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </nav>
+                ) : null
+              }
+              empty={unreadOnly ? "Aucun message non lu." : "Aucune conversation pour l'instant."}
+              rows={shown.map((conversation) => ({
+                id: conversation.athlete.id,
+                name: conversation.athlete.name,
+                photoPath: conversation.athlete.photoPath,
+                sex: conversation.athlete.sex,
+                preview: `${conversation.lastFromCoach ? "Toi : " : ""}${conversation.lastBody}`,
+                time: messageTime(conversation.lastAt, today),
+                unread: conversation.unread,
+                href: `/coach/messages?sportif=${conversation.athlete.id}${keep}`,
+                active: conversation.athlete.id === athlete?.id,
+              }))}
+            />
+          </section>
+
+          {/* Le fil. */}
+          <section
+            aria-labelledby="thread-title"
+            className={`${card} lg:min-h-0 ${requested ? "" : "max-lg:hidden"}`}
+          >
+            {athlete ? (
+              <>
+                {/* Téléphone, fil ouvert : « ← Conversations » dans la barre du haut (D-117). */}
+                {requested ? (
+                  <MobileBarTitle>
+                    <Link
+                      href={unreadOnly ? "/coach/messages?filtre=non-lus" : "/coach/messages"}
+                      className={barBackClass}
+                    >
+                      <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />
+                      <span className="truncate">Conversations</span>
+                    </Link>
+                  </MobileBarTitle>
+                ) : null}
+                <header className="flex items-center gap-3 border-b border-line px-4 py-3.5 lg:gap-4 lg:px-[30px] lg:py-5">
+                  <Avatar
+                    name={athlete.displayName}
+                    photoPath={athlete.photoPath}
+                    sex={athlete.sex}
+                    size="lg"
+                  />
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <h2
+                      id="thread-title"
+                      className="truncate text-[17px] leading-[normal] font-semibold lg:text-[18px]"
+                    >
+                      {athlete.displayName}
+                    </h2>
+                    <Link
+                      href={`/coach/o/${organizationId}/sportifs/${athlete.id}`}
+                      className="w-fit text-[14px] leading-[normal] font-medium text-violet-text underline-offset-4 hover:underline"
+                    >
+                      Voir la fiche
+                    </Link>
+                  </div>
+                  {athlete.status === "archived" ? null : <PlanButton athleteId={athlete.id} />}
+                  <ThreadMenu
+                    name={athlete.displayName}
+                    href={`/coach/o/${organizationId}/sportifs/${athlete.id}`}
+                  />
+                </header>
+                {/* Le fil s'ouvre en bas, sur le dernier message (colonne inversée). */}
+                <ol
+                  aria-label={`Messages avec ${athlete.displayName}`}
+                  className="flex min-h-[40vh] flex-1 flex-col-reverse gap-4 overflow-y-auto overscroll-contain px-4 py-5 lg:min-h-0 lg:px-[30px]"
+                >
+                  {thread.length === 0 ? (
+                    <li className="text-[14px] text-muted">
+                      Aucun message pour l&apos;instant. Écris le premier ci-dessous.
                     </li>
-                  ))
+                  ) : (
+                    [...days].reverse().map((group) => (
+                      <li key={group.day} className="flex flex-col gap-4">
+                        <p className="flex items-center gap-4 text-[13px] leading-[normal] font-medium text-faint">
+                          <span aria-hidden className="h-px flex-1 bg-line" />
+                          {dayShortLabel(group.day, today)}
+                          <span aria-hidden className="h-px flex-1 bg-line" />
+                        </p>
+                        <ol className="flex flex-col gap-3">
+                          {group.messages.map((message) => (
+                            <li
+                              key={message.id}
+                              className={`flex max-w-[85%] flex-col gap-1.5 lg:max-w-[70%] ${
+                                message.fromCoach ? "items-end self-end" : "items-start self-start"
+                              }`}
+                            >
+                              <span className="sr-only">
+                                {message.fromCoach ? "Toi" : athlete.displayName} :
+                              </span>
+                              <p
+                                className={`rounded-[20px] px-[18px] py-3 text-[15.5px] leading-[1.45] whitespace-pre-line lg:text-[16px] ${
+                                  message.fromCoach
+                                    ? "rounded-br-[6px] bg-cta text-on-cta"
+                                    : "rounded-bl-[6px] bg-surface-2"
+                                }`}
+                              >
+                                {message.body}
+                              </p>
+                              <span className="px-1 text-[12px] leading-[normal] text-faint tabular">
+                                {stamp(message.createdAt, today)}
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      </li>
+                    ))
+                  )}
+                </ol>
+                {athlete.status === "archived" ? (
+                  <p className="border-t border-line px-4 py-3.5 text-[14px] text-muted lg:px-[30px]">
+                    Ce sportif est archivé : restaure sa fiche pour lui écrire.
+                  </p>
+                ) : (
+                  <Composer
+                    key={athlete.id}
+                    organizationId={organizationId}
+                    athleteId={athlete.id}
+                  />
                 )}
-              </ol>
-              {athlete.status === "archived" ? (
-                <p className="border-t border-line pt-3.5 text-[14px] text-muted">
-                  Ce sportif est archivé : restaure sa fiche pour lui écrire.
-                </p>
-              ) : (
-                <Composer key={athlete.id} organizationId={organizationId} athleteId={athlete.id} />
-              )}
-              {requested && unreadInThread > 0 ? (
-                <MarkThreadRead organizationId={organizationId} athleteId={athlete.id} />
-              ) : null}
-            </>
-          ) : requested ? (
-            <EmptyState icon={MessageSquare} title="Conversation introuvable">
-              Ce sportif n&apos;existe pas ou n&apos;appartient pas à ton organisation.
-            </EmptyState>
-          ) : unreadOnly && shown.length > 0 ? (
-            <EmptyState icon={MessageSquare} title="Choisis une conversation">
-              Les conversations qui ont des messages non lus sont dans la liste.
-            </EmptyState>
-          ) : (
-            <EmptyState icon={MessageSquare} title="Aucune conversation">
-              Les messages de tes sportifs apparaîtront ici.
-            </EmptyState>
-          )}
-        </section>
+                {requested && unreadInThread > 0 ? (
+                  <MarkThreadRead organizationId={organizationId} athleteId={athlete.id} />
+                ) : null}
+              </>
+            ) : requested ? (
+              <EmptyState icon={MessageSquare} title="Conversation introuvable">
+                Ce sportif n&apos;existe pas ou n&apos;appartient pas à ton organisation.
+              </EmptyState>
+            ) : unreadOnly && shown.length > 0 ? (
+              <EmptyState icon={MessageSquare} title="Choisis une conversation">
+                Les conversations qui ont des messages non lus sont dans la liste.
+              </EmptyState>
+            ) : (
+              <EmptyState icon={MessageSquare} title="Aucune conversation">
+                Les messages de tes sportifs apparaîtront ici.
+              </EmptyState>
+            )}
+          </section>
+        </div>
+        {/* Téléphone, liste : le bouton flottant « + » (nouveau message). */}
+        {requested ? null : <NewMessage variant="fab" loadAthletes={loadAthletes} />}
       </PageBody>
     </>
   );

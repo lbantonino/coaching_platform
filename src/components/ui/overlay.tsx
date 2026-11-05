@@ -49,7 +49,14 @@ const WIDTHS = {
   confirm: "md:max-w-[min(460px,calc(100vw-48px))]",
   form: "md:max-w-[min(600px,calc(100vw-48px))]",
   preview: "md:max-w-[min(980px,calc(100vw-48px))] md:h-[min(700px,calc(100vh-48px))]",
-  settings: "md:max-w-[min(1000px,calc(100vw-48px))] md:h-[min(700px,calc(100vh-48px))]",
+  // Paramètres (kit « Coory Pages », page 13, D-127) : 1 000 × 690 sur ordinateur ; plein écran sur
+  // téléphone, sur le fond des pages (cartes blanches), sans poignée : on referme par la croix.
+  settings:
+    "md:max-w-[min(1000px,calc(100vw-48px))] md:h-[min(690px,calc(100vh-48px))] max-md:mt-0 max-md:h-full max-md:max-h-full max-md:rounded-none max-md:bg-bg max-md:pb-0",
+  // Assistant IA (kit « Coory Pages », 02, D-132) : sous l'en-tête (92 px), 940 px de large, haut de
+  // 660 au plus ; téléphone : sous la barre du haut (64 px), 10 px des bords, rayon 30, sans poignée.
+  assistant:
+    "md:max-w-[min(940px,calc(100vw-48px))] md:mt-[92px] md:mb-auto md:max-h-[min(660px,calc(100vh-110px))] max-md:mt-16 max-md:mb-auto max-md:mx-2.5 max-md:w-[calc(100%-20px)] max-md:max-h-[calc(100%-80px)] max-md:rounded-[30px] max-md:pb-0",
 } as const;
 export type OverlaySize = keyof typeof WIDTHS;
 
@@ -58,7 +65,7 @@ export type OverlaySize = keyof typeof WIDTHS;
 // (side "top") ou le bas (side "bottom") de l'écran.
 export type MenuAnchor = { x: number; y: number; side: "top" | "bottom"; width: number };
 
-function Overlay({
+export function Overlay({
   open,
   onClose,
   labelledBy,
@@ -387,18 +394,21 @@ function Overlay({
                 : "md:top-auto md:bottom-[var(--ay)] md:origin-bottom-left"
             }`
           : `md:m-auto md:rounded-[24px] ${WIDTHS[size]}`
-      } ${tall || size === "preview" || size === "settings" ? "max-md:h-[calc(100%-44px)]" : ""}`}
+      } ${tall || size === "preview" ? "max-md:h-[calc(100%-44px)]" : ""}`}
     >
       {rendered ? (
         <div className="flex min-h-0 flex-1 flex-col">
-          {/* Poignée du téléphone (40 × 5) ; on attrape aussi l'en-tête, juste dessous. */}
-          <span
-            aria-hidden
-            data-sheet-grab
-            className="flex shrink-0 touch-none justify-center pt-2.5 pb-0.5 md:hidden"
-          >
-            <span className="h-[5px] w-10 rounded-[5px] bg-dlg-handle" />
-          </span>
+          {/* Poignée du téléphone (40 × 5) ; on attrape aussi l'en-tête, juste dessous. Pas pour les
+              Paramètres, en plein écran. */}
+          {size === "settings" || size === "assistant" ? null : (
+            <span
+              aria-hidden
+              data-sheet-grab
+              className="flex shrink-0 touch-none justify-center pt-2.5 pb-0.5 md:hidden"
+            >
+              <span className="h-[5px] w-10 rounded-[5px] bg-dlg-handle" />
+            </span>
+          )}
           {children}
         </div>
       ) : null}

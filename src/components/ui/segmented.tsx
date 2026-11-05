@@ -24,9 +24,39 @@ export function Segmented<T extends string>({
   defaultValue: T;
   // « track » : l'habillage de la fiche sportif (piste grise, option choisie en verre, largeur du
   // contenu même sur téléphone).
-  look?: "app" | "track";
+  // « kit » : kit « Coory Pages », page 10 (D-126) : téléphone, trois segments égaux de 44 px sur
+  // toute la largeur ; ordinateur, 40 px à la largeur du contenu ; option choisie blanche, ombre douce.
+  look?: "app" | "track" | "kit";
 }) {
   const track = look === "track";
+  if (look === "kit") {
+    return (
+      <fieldset className="flex min-w-0 flex-col">
+        <legend className="mb-2 text-[14px] leading-[normal] font-semibold text-text lg:text-[13.5px]">
+          {legend}
+        </legend>
+        <div className="grid h-11 auto-cols-fr grid-flow-col gap-0.5 rounded-[12px] bg-dlg-segment p-[3px] lg:inline-flex lg:h-10 lg:self-start lg:rounded-[11px]">
+          {options.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer rounded-[9px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent lg:rounded-[8px]"
+            >
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                defaultChecked={option.value === defaultValue}
+                className="peer sr-only"
+              />
+              <span className="flex flex-1 items-center justify-center rounded-[9px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-muted transition-[background-color,color,box-shadow] duration-150 hover:text-text peer-checked:bg-dlg-segment-active peer-checked:text-text peer-checked:shadow-[0_1px_2px_rgba(22,18,40,0.10)] lg:rounded-[8px] lg:px-4 lg:text-[13px]">
+                {option.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    );
+  }
   return (
     <fieldset className="flex min-w-0 flex-col gap-1.5">
       <legend

@@ -30,11 +30,8 @@ test("le coach ajoute un sportif depuis son espace et le retrouve dans la liste"
   await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Nouveau sportif" })).toBeVisible();
 
-  // Prénom manquant : erreur claire, rien n'est enregistré.
-  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
-  await expect(
-    page.getByRole("alert").filter({ hasText: "Le prénom est obligatoire." }),
-  ).toBeVisible();
+  // Prénom manquant : le bouton reste grisé (kit « Coory Pages », page 10), rien ne part.
+  await expect(page.getByRole("button", { name: "Enregistrer le sportif" })).toBeDisabled();
 
   await fillAthleteName(page, name);
   await page.getByLabel(/Adresse e-mail/).fill(email);

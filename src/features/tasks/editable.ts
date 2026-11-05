@@ -9,7 +9,7 @@ export function editableTask(task: CoachTask): EditableTask {
     title: task.title,
     priority: task.priority,
     dueOn: task.dueOn,
-    category: task.category,
+    listId: task.list?.id ?? null,
     athleteId: task.athleteId,
     notes: task.notes,
   };

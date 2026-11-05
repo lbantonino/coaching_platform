@@ -10,56 +10,83 @@ async function loginAsCoachB(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-test("une tâche se crée, se modifie et se supprime, avec « associée à »", async ({
+// Kit « Coory Pages », page 01 (D-129) : les listes du coach (décisions 8 et 9) et l'ajout rapide
+// (décision 10). Chaque projet crée SA liste et SA tâche, aux noms uniques, et les supprime.
+test("une liste se crée ; on y ajoute une tâche, la modifie, la coche, puis la liste se supprime", async ({
   page,
 }, testInfo) => {
-  const title = `Tâche ${testInfo.project.name}-${Date.now()}`;
+  const stamp = `${testInfo.project.name}-${Date.now()}`;
+  const listName = `Liste ${stamp}`.slice(0, 40);
+  const title = `Tâche ${stamp}`;
   await loginAsCoachB(page);
   await page.goto("/coach/taches");
-  await page.getByRole("button", { name: "Nouvelle tâche" }).click();
-  const sheet = page.getByRole("dialog", { name: "Nouvelle tâche" });
 
-  // Sans titre : refusée, rien n'est perdu.
-  await sheet.getByText("Paiement", { exact: true }).click();
-  await sheet.getByRole("button", { name: "Ajouter la tâche" }).click();
-  await expect(sheet.getByRole("alert")).toContainText("Donne un titre à la tâche.");
-  await expect(sheet.getByRole("radio", { name: "Paiement" })).toBeChecked();
+  // Nouvelle liste : saisie dans la ligne, Entrée la crée.
+  await page.getByRole("button", { name: "Nouvelle liste" }).filter({ visible: true }).click();
+  await page.getByRole("textbox", { name: "Nom de la liste" }).fill(listName);
+  await page.getByRole("textbox", { name: "Nom de la liste" }).press("Enter");
+  await expect(page.getByText(`Liste « ${listName} » créée.`)).toBeVisible();
+  await page
+    .getByRole("link", { name: new RegExp(listName) })
+    .filter({ visible: true })
+    .click();
+  await expect(page).toHaveURL(/vue=[0-9a-f-]{36}/);
+  await expect(
+    page.getByRole("heading", { name: listName }).filter({ visible: true }),
+  ).toBeVisible();
 
-  await sheet.getByRole("textbox", { name: "Tâche" }).fill(title);
-  await sheet.getByText("Haute", { exact: true }).click();
-  await sheet.getByLabel(/^Note/).fill("Vérifier le virement");
-  await sheet.getByRole("button", { name: "Ajouter la tâche" }).click();
-  await expect(page.getByText("Tâche ajoutée.")).toBeVisible();
-  await expect(sheet).toBeHidden();
+  // Ajout rapide : le titre seul, dans la liste ouverte.
+  const quick = page.getByRole("textbox", { name: "Nouvelle tâche" }).filter({ visible: true });
+  await quick.fill(title);
+  await quick.press("Enter");
+  const row = page.getByRole("listitem").filter({ hasText: title }).filter({ visible: true });
+  await expect(row).toBeVisible();
 
-  const row = page.getByRole("listitem").filter({ hasText: title });
-  // Seule l'urgence porte une étiquette (D-84) : la catégorie reste dans la tâche, pas sur la ligne.
-  await expect(row).toContainText("Haute");
-  await expect(row).not.toContainText("Paiement");
-
-  // Modifier : la fenêtre s'ouvre déjà remplie.
+  // Modifier : la fenêtre propose les listes du coach (« Associée à »), la sienne cochée.
   await row.getByRole("button", { name: title }).click();
   const edit = page.getByRole("dialog", { name: "Modifier la tâche" });
-  await expect(edit.getByRole("textbox", { name: "Tâche" })).toHaveValue(title);
-  await expect(edit.getByLabel(/^Note/)).toHaveValue("Vérifier le virement");
-  await expect(edit.getByRole("radio", { name: "Haute" })).toBeChecked();
-  await expect(edit.getByRole("radio", { name: "Paiement" })).toBeChecked();
-  await edit.getByRole("textbox", { name: "Tâche" }).fill(`${title} (modifiée)`);
-  await edit.getByText("Suivi", { exact: true }).click();
+  await expect(edit.getByRole("radio", { name: listName })).toBeChecked();
+  await edit.getByText("Haute", { exact: true }).click();
   await edit.getByRole("button", { name: "Enregistrer" }).click();
   await expect(page.getByText("Tâche enregistrée.")).toBeVisible();
-  const renamed = page.getByRole("listitem").filter({ hasText: `${title} (modifiée)` });
-  await expect(renamed).toBeVisible();
+  await expect(row).toContainText("Haute");
 
-  // Supprimer : confirmation d'abord ; « Annuler » ne supprime rien. La nouvelle catégorie est gardée.
-  await renamed.getByRole("button", { name: `${title} (modifiée)` }).click();
-  const again = page.getByRole("dialog", { name: "Modifier la tâche" });
-  await expect(again.getByRole("radio", { name: "Suivi" })).toBeChecked();
-  await again.getByRole("button", { name: "Supprimer" }).click();
-  const confirm = page.getByRole("dialog", { name: "Supprimer cette tâche ?" });
-  await confirm.getByRole("button", { name: "Supprimer" }).click();
+  // Cocher : la tâche passe dans « Terminées » ; « Annuler » la rend.
+  await row.getByRole("checkbox", { name: `Tâche faite : ${title}` }).click();
+  await expect(page.getByText("Tâche terminée.")).toBeVisible();
+  await expect(row).toHaveCount(0);
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await expect(row).toBeVisible();
+
+  // Supprimer la liste (confirmation) : la tâche reste, sans liste.
+  await page.goto("/coach/taches");
+  await page
+    .getByRole("button", { name: `Options de la liste ${listName}` })
+    .filter({ visible: true })
+    .click();
+  await page.getByRole("button", { name: "Supprimer la liste" }).click();
+  await page
+    .getByRole("dialog", { name: `Supprimer la liste « ${listName} » ?` })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await expect(page.getByText(/Ses tâches restent, sans liste\./)).toBeVisible();
+  await page.goto("/coach/taches?vue=toutes");
+  const kept = page.getByRole("listitem").filter({ hasText: title }).filter({ visible: true });
+  await expect(kept).toBeVisible();
+  await expect(kept).not.toContainText(listName);
+
+  // Remise en place : la tâche est supprimée (fenêtre, confirmation).
+  await kept.getByRole("button", { name: title }).click();
+  await page
+    .getByRole("dialog", { name: "Modifier la tâche" })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
+  await page
+    .getByRole("dialog", { name: "Supprimer cette tâche ?" })
+    .getByRole("button", { name: "Supprimer" })
+    .click();
   await expect(page.getByText("Tâche supprimée.")).toBeVisible();
-  await expect(renamed).toHaveCount(0);
+  await expect(kept).toHaveCount(0);
 });
 
 test("« Créer → Tâche » ouvre la fenêtre sans quitter le tableau de bord", async ({ page }) => {
@@ -69,6 +96,9 @@ test("« Créer → Tâche » ouvre la fenêtre sans quitter le tableau de bord"
   const sheet = page.getByRole("dialog", { name: "Nouvelle tâche" });
   await expect(sheet.getByRole("textbox", { name: "Tâche" })).toBeVisible();
   await expect(page).toHaveURL(/\/coach$/);
+  // Sans titre : refusée, la fenêtre reste ouverte.
+  await sheet.getByRole("button", { name: "Ajouter la tâche" }).click();
+  await expect(sheet.getByRole("alert")).toContainText("Donne un titre à la tâche.");
   await sheet.getByRole("button", { name: "Fermer" }).click();
   await expect(sheet).toBeHidden();
 });

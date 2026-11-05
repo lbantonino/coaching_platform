@@ -173,3 +173,4 @@
 | 13 | Pièces jointes | plus tard |
 | 14 | Texte de partage (09) | « Salut {prénom}, voici ton accès personnel à Coory pour suivre tes séances : {lien} (valable 7 jours, à usage unique). » |
 | 15 | Assistant IA | tout le design maintenant ; fournisseur, conversations enregistrées, actions et données plus tard ; état honnête « pas encore branché » |
+| 16 (05/11) | En-tête des pages avec retour | **remplace SH-02 / le fil d'Ariane du kit** : sur ordinateur, le chemin sur UNE ligne « [icône] ← Page précédente · Page en cours », carte d'en-tête à 64 px (jamais de titre sur une deuxième ligne) ; sur téléphone, retour dans la barre et titre à 20 px sous la barre. Vaut pour toutes les pages, même si une maquette montre « ← Titre » (D-124). |
