@@ -57,6 +57,34 @@ scripts/seed-photos.mjs : 6 documents de plus pour l'organisation A (10 au total
 Résultat : « Documents de démonstration : 11 chargés. » ; page Documents : 7 lignes + « Voir plus (3) ».
 ```
 
+### Validation globale H du kit (D-135)
+```
+Date : 2026-11-05
+Méthode : script Playwright (scratchpad qa-h.cjs) sur 16 écrans : débordements et largeur du contenu
+  à 9 largeurs, noms accessibles, contrastes calculés (sombre et clair, 1280 et 390), 45 Tab par
+  écran, 6 fenêtres (Échap, focus), mouvement réduit ; zones tactiles mesurées au doigt
+  (elementFromPoint autour du centre, pseudo-éléments compris) ; captures 320 / 390 / 1280 / 3440.
+Corrigé : zones tactiles (tasks-view, messages/page, accounting-widgets, assistant), sans changement
+  visuel (captures comparées au pixel : identiques sur téléphone, bruit de rendu ≤ 6/255 sur ordinateur).
+Ajouté : supabase/tests/database/34_listes_et_notifications_supprimees.test.sql (12 tests).
+Tests : lint, typecheck, format OK ; Vitest 268/268 ; base 455/455 ; Playwright 188 réussis / 0 échec.
+Ouvert : 3 teintes sous 4,5:1, pastilles 36 px, viewport-fit=cover (iPhone), plafonds PROPOSED.
+```
+
+### Décisions de la validation H (D-136)
+```
+Date : 2026-11-05
+Contrastes : tokens.css (--run-text, --strength-text, --female-text, --male-text, sombre et clair),
+  globals.css (@theme), category-color.ts, avatar.tsx ; compteurs bg-accent (messages-ui,
+  notifications-view, assistant « Valider ») ; nombre « Non lues » text-muted. Mesure : 0 sous 4,5:1.
+Zones tactiles : @utility tap-44 (globals.css, pointer: coarse) sur tasks-view, notifications-view,
+  comptabilite/page, messages/page, assistant, form-styles (kitPillClass), exercise-form,
+  session-form, segmented, theme-choice, settings-sections ; défileur des onglets Tâches -my-1 pt-1.
+  Captures 390 avant / après : identiques hors couleurs voulues.
+Grand écran : tasks-view (max-w-[1370px]), messages/page + composer (px max(30px, (100%-860px)/2)).
+viewport-fit=cover : reporté à la séance iPhone.
+```
+
 ### Kit « Coory Pages », page 02 Assistant IA (D-132)
 ```
 Date : 2026-11-05

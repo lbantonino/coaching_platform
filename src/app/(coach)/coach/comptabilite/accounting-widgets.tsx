@@ -55,7 +55,7 @@ export function ShareCard({
               aria-label={label}
               aria-pressed={view === value}
               onClick={() => setView(value)}
-              className={`grid h-[30px] w-[34px] place-items-center rounded-[8px] transition-[background-color,color,box-shadow] duration-150 ${
+              className={`relative grid h-[30px] w-[34px] place-items-center rounded-[8px] transition-[background-color,color,box-shadow] duration-150 after:absolute after:inset-x-0 after:-inset-y-[7px] ${
                 view === value
                   ? "bg-surface text-text shadow-[0_1px_2px_rgba(22,18,40,0.10)]"
                   : "text-muted hover:text-text"

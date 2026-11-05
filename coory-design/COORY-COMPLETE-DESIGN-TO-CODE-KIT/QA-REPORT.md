@@ -46,3 +46,20 @@
 ## Points encore à confirmer
 1. Panneau Historique mobile (proposition dans features/assistant-ai-chat-history.md).
 2. Modèles de données : groupes (07), inscrits (12), conversations IA (02), notifications masquées (03).
+
+## Validation globale H (5 nov. 2026, D-135)
+Les 13 pages sont implémentées (D-119 à D-132). Phase H menée sur 16 écrans (01 Tâches et sa liste, 02, 03, 04, 05, 06, 07 et son fil, 08 et la variante, 09, 10, 11, 12, 13 Préférences / Argent / Données), par un script Playwright puis une vérification à l'œil des cas douteux.
+
+| Contrôle | Résultat |
+|---|---|
+| Débordement horizontal, 1024 → 3440 et 320 → 430 (9 largeurs) | ✅ aucun |
+| Plafonds ultrawide | ✅ conformes à `design-system/responsive.md` ; plafonds des listes validés et appliqués (D-136) : 01 à 1 370 px, 03 à 1 400 px, fil 07 à 860 px |
+| Noms accessibles des contrôles | ✅ 0 manquant |
+| Clavier : Tab, focus visible, Échap, retour du focus | ✅ (6 fenêtres testées, ordinateur et téléphone) |
+| Mouvement réduit | ✅ 0,01 ms |
+| Zones tactiles à 390 px (mesure au doigt) | ✅ 4 corrigées, puis toutes les pastilles par `tap-44` (D-136), sans changement visuel ; exceptions : icônes du cadre protégé (40 px), barres et légende du graphique |
+| Contrastes (sombre et clair, 1280 et 390) | ✅ 0 texte sous 4,5:1 après les variantes « texte » du design system et le violet d'action des compteurs (D-136) |
+| Clavier ouvert, safe areas | ⏳ sur le vrai iPhone : `viewport-fit=cover` validé (D-136), à ajouter et essayer pendant la séance iPhone |
+| Non-régression | ✅ lint, types, format, Vitest, base (RLS) et Playwright verts ; cadre et routes inchangés hors décisions |
+
+Décisions d'Antonino (5 nov. 2026, D-136) : (1) contrastes corrigés ; (2) pastilles agrandies au toucher ; (3) `viewport-fit=cover` pendant la séance iPhone (seul point encore ouvert) ; (4) plafonds des listes appliqués.

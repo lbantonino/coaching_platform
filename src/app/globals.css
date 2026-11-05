@@ -165,6 +165,10 @@
   --color-female-soft: var(--female-soft);
   --color-male: var(--male);
   --color-male-soft: var(--male-soft);
+  --color-male-text: var(--male-text);
+  --color-female-text: var(--female-text);
+  --color-run-text: var(--run-text);
+  --color-strength-text: var(--strength-text);
 
   /* Une seule police, Plus Jakarta Sans (D-77). « font-mono » garde son nom mais écrit aussi en
      Plus Jakarta Sans, avec des chiffres alignés (voir .font-mono plus bas) : plus de police
@@ -258,6 +262,21 @@ body {
   @keyframes spin-fast {
     to {
       transform: rotate(360deg);
+    }
+  }
+}
+
+/* Zone tactile d'au moins 44 px de haut (validation H du kit « Coory Pages », D-135) : sur un écran
+   tactile, un calque invisible prolonge la pastille vers le haut et le bas, sans changer son dessin.
+   Seulement pour des commandes de moins de 44 px, en position normale, sans autre ::after. */
+@utility tap-44 {
+  position: relative;
+  @media (pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      inset-block: min(0px, calc((100% - 44px) / 2));
     }
   }
 }

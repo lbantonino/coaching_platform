@@ -35,9 +35,12 @@ const boxes = {
 const marks = {
   female: {
     symbol: "♀",
-    className: "text-female bg-[color-mix(in_srgb,var(--female)_22%,var(--bg))]",
+    className: "text-female-text bg-[color-mix(in_srgb,var(--female)_22%,var(--bg))]",
   },
-  male: { symbol: "♂", className: "text-male bg-[color-mix(in_srgb,var(--male)_22%,var(--bg))]" },
+  male: {
+    symbol: "♂",
+    className: "text-male-text bg-[color-mix(in_srgb,var(--male)_22%,var(--bg))]",
+  },
 } as const;
 
 export type AvatarSize = keyof typeof boxes;

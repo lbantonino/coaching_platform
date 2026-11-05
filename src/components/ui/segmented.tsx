@@ -39,7 +39,7 @@ export function Segmented<T extends string>({
           {options.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer rounded-[9px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent lg:rounded-[8px]"
+              className="tap-44 flex cursor-pointer rounded-[9px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent lg:rounded-[8px]"
             >
               <input
                 type="radio"

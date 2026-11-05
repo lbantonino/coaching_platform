@@ -178,7 +178,7 @@ const pickerClass =
 const fieldIconClass =
   "pointer-events-none absolute top-1/2 left-3.5 z-[1] -translate-y-1/2 text-muted max-lg:hidden";
 const pillClass =
-  "group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-3.5 text-[14px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-status-accent-soft has-checked:text-status-accent has-checked:inset-ring-transparent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:h-[34px] lg:text-[13px]";
+  "tap-44 group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-3.5 text-[14px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-status-accent-soft has-checked:text-status-accent has-checked:inset-ring-transparent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:h-[34px] lg:text-[13px]";
 
 // Une section : carte blanche sur téléphone ; sur ordinateur, une partie de la carte du formulaire,
 // séparée de la précédente par un filet.
@@ -729,7 +729,7 @@ function SessionFields({
                 ).map(([method, label]) => (
                   <label
                     key={method}
-                    className="flex cursor-pointer rounded-[9px] has-focus-visible:outline-2 has-focus-visible:outline-accent lg:rounded-[8px]"
+                    className="tap-44 flex cursor-pointer rounded-[9px] has-focus-visible:outline-2 has-focus-visible:outline-accent lg:rounded-[8px]"
                   >
                     <input
                       type="radio"

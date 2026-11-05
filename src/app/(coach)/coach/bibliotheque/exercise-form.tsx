@@ -92,7 +92,7 @@ const fieldClass =
   "w-full rounded-[12px] bg-surface-2 text-[16px] text-text inset-ring inset-ring-line-2 outline-none placeholder:text-faint transition-shadow duration-150 focus:inset-ring-[1.5px] focus:inset-ring-violet lg:text-[14px]";
 // Pilule cochable : la vraie case reste dans la page (sr-only) ; cochée = fond et texte violets, « ✓ ».
 const pillClass =
-  "group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-[15px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-status-accent-soft has-checked:text-status-accent has-checked:inset-ring-transparent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:h-[34px] lg:px-3.5 lg:text-[13px]";
+  "tap-44 group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-[15px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-status-accent-soft has-checked:text-status-accent has-checked:inset-ring-transparent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:h-[34px] lg:px-3.5 lg:text-[13px]";
 
 export function ExerciseForm({
   action,
@@ -527,7 +527,7 @@ export function ExerciseForm({
               <label
                 htmlFor={photoId}
                 aria-hidden
-                className="inline-flex h-10 cursor-pointer items-center rounded-[9px] bg-surface px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-[background-color,scale] duration-150 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent hover:bg-surface-2 active:scale-[0.97] lg:h-[34px]"
+                className="tap-44 inline-flex h-10 cursor-pointer items-center rounded-[9px] bg-surface px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-[background-color,scale] duration-150 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent hover:bg-surface-2 active:scale-[0.97] lg:h-[34px]"
               >
                 {shownPhoto ? "Remplacer" : "Parcourir"}
               </label>
@@ -535,7 +535,7 @@ export function ExerciseForm({
                 <button
                   type="button"
                   onClick={removePhoto}
-                  className="inline-flex h-10 items-center rounded-[9px] px-2 text-[13px] leading-[normal] font-medium whitespace-nowrap text-status-danger transition-[background-color,scale] duration-150 hover:bg-surface active:scale-[0.97] lg:h-[34px]"
+                  className="tap-44 inline-flex h-10 items-center rounded-[9px] px-2 text-[13px] leading-[normal] font-medium whitespace-nowrap text-status-danger transition-[background-color,scale] duration-150 hover:bg-surface active:scale-[0.97] lg:h-[34px]"
                 >
                   Retirer
                 </button>

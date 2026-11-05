@@ -61,7 +61,7 @@ export const kitHintClass = "text-[13px] leading-[1.45] text-faint lg:text-[12px
 // violets, « ✓ » devant (icône Check « hidden group-has-checked:block »). La vraie case reste dans la
 // page (sr-only) pour le clavier et les lecteurs d'écran.
 export const kitPillClass =
-  "group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-[15px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-status-accent-soft has-checked:text-status-accent has-checked:inset-ring-transparent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:h-[34px] lg:px-3.5 lg:text-[13px]";
+  "tap-44 group inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-full bg-surface px-[15px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-text inset-ring inset-ring-line-2 transition-colors duration-150 not-has-checked:hover:bg-surface-2 has-checked:bg-status-accent-soft has-checked:text-status-accent has-checked:inset-ring-transparent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:h-[34px] lg:px-3.5 lg:text-[13px]";
 
 // Champs de la fiche sportif (maquette « Sportifs » du 03/11/2026, § Champs) : 46 px, rayon 12,
 // filet intérieur (il ne prend pas de place), texte 15 px sur ordinateur et 16 px sur téléphone (en

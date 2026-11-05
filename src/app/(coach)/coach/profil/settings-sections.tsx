@@ -459,7 +459,7 @@ export function PreferencesSection({
               ).map(([value, label]) => (
                 <label
                   key={value}
-                  className="flex flex-1 cursor-pointer items-center justify-center rounded-[9px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-muted transition-[color,background-color,box-shadow] duration-150 hover:text-text has-checked:bg-dlg-segment-active has-checked:text-text has-checked:shadow-[0_1px_3px_rgba(22,18,40,0.12)] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent md:flex-none md:rounded-[8px] md:px-[18px] md:text-[13px]"
+                  className="tap-44 flex flex-1 cursor-pointer items-center justify-center rounded-[9px] text-[14px] leading-[normal] font-medium whitespace-nowrap text-muted transition-[color,background-color,box-shadow] duration-150 hover:text-text has-checked:bg-dlg-segment-active has-checked:text-text has-checked:shadow-[0_1px_3px_rgba(22,18,40,0.12)] has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent md:flex-none md:rounded-[8px] md:px-[18px] md:text-[13px]"
                 >
                   <input
                     type="radio"

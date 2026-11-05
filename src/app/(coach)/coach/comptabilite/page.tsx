@@ -216,7 +216,7 @@ async function Accounting({
     "flex min-w-0 flex-col rounded-[22px] bg-surface inset-ring inset-ring-line lg:rounded-[20px]";
   const segmented = "flex gap-0.5 rounded-[12px] bg-dlg-tile p-1";
   const segment = (active: boolean) =>
-    `flex h-8 items-center justify-center rounded-[9px] px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 lg:px-3.5 ${
+    `tap-44 flex h-8 items-center justify-center rounded-[9px] px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 lg:px-3.5 ${
       active
         ? "bg-surface text-text shadow-[0_1px_2px_rgba(22,18,40,0.10)]"
         : "text-muted hover:text-text"
@@ -457,7 +457,7 @@ async function Accounting({
                     href={query({ mode: item.key })}
                     scroll={false}
                     aria-current={item.key === filter ? "page" : undefined}
-                    className={`flex h-9 items-center rounded-full px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap transition-colors duration-150 lg:h-8 ${
+                    className={`tap-44 flex h-9 items-center rounded-full px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap transition-colors duration-150 lg:h-8 ${
                       item.key === filter
                         ? "bg-cta text-on-cta"
                         : "text-text inset-ring inset-ring-line-2 hover:bg-surface-2"
