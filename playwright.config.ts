@@ -9,6 +9,11 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  // Toute la pile tourne sur le Mac (base, serveur de test, 4 navigateurs, souvent le serveur de dev) :
+  // les délais par défaut (30 s par test, 5 s par vérification) étaient trop justes quand la suite
+  // complète tourne ; des tests corrects échouaient au hasard (tâche 3 du 05/11/2026).
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: `http://localhost:${PORT}`,

@@ -39,6 +39,15 @@ export async function proxy(request: NextRequest) {
   if (isSignedIn && (pathname === "/login" || pathname === "/inscription")) {
     return redirectWithCookies(request, response, "/espace");
   }
+  // Plus de page Paramètres (D-127) : /coach/profil?onglet=… ouvre la fenêtre par-dessus le tableau
+  // de bord. Redirection HTTP, AVANT la page : faite par la page elle-même (dans un bloc Suspense),
+  // elle partait au milieu du rendu et pouvait rester bloquée sur une page vide (tâche 3, 05/11).
+  // La rubrique est revérifiée par la fenêtre (rubrique inconnue -> Profil).
+  if (isSignedIn && pathname === "/coach/profil") {
+    const wanted = request.nextUrl.searchParams.get("onglet") ?? "";
+    const section = /^[a-z]{1,20}$/.test(wanted) ? wanted : "profil";
+    return redirectWithCookies(request, response, `/coach?parametres=${section}`);
+  }
 
   return response;
 }
