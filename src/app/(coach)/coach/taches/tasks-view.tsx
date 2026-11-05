@@ -255,7 +255,7 @@ export function TasksView({
             aria-label="Nouvelle tâche"
             placeholder="Nouvelle tâche"
             enterKeyHint="done"
-            className="min-w-0 flex-1 bg-transparent text-[16px] leading-[normal] font-medium text-text outline-none placeholder:font-normal placeholder:text-faint lg:text-[15px]"
+            className="-my-3.5 min-w-0 flex-1 bg-transparent py-3.5 text-[16px] leading-[normal] font-medium text-text outline-none placeholder:font-normal placeholder:text-faint lg:text-[15px]"
           />
         </li>
       ) : null}
@@ -272,9 +272,10 @@ export function TasksView({
   return (
     <>
       {/* ---------------- Ordinateur : la carte en deux colonnes ---------------- */}
+      {/* Grand écran (D-135) : la liste ne dépasse pas 1 100 px (270 + 1 100), le reste en fond. */}
       <section
         aria-label="Tâches"
-        className="flex min-h-[640px] flex-1 overflow-hidden rounded-[20px] bg-surface inset-ring inset-ring-line max-lg:hidden"
+        className="flex min-h-[640px] w-full max-w-[1370px] flex-1 overflow-hidden rounded-[20px] bg-surface inset-ring inset-ring-line max-lg:hidden"
       >
         <div className="flex w-[240px] shrink-0 flex-col gap-[18px] border-r border-line bg-surface-2/60 px-3.5 py-[18px] xl:w-[270px]">
           <SmartTiles current={shownView} count={count} />
@@ -343,7 +344,7 @@ export function TasksView({
           </div>
           <nav
             aria-label="Listes"
-            className="-mx-3.5 flex gap-1.5 overflow-x-auto overscroll-x-contain px-3.5 pb-0.5 [scrollbar-width:none]"
+            className="-mx-3.5 -my-1 flex gap-1.5 overflow-x-auto overscroll-x-contain px-3.5 pt-1 pb-1.5 [scrollbar-width:none]"
           >
             {[
               ...SMART.map((item) => ({ key: item.key, label: item.label, color: item.tile })),
@@ -356,7 +357,7 @@ export function TasksView({
                   href={href(item.key)}
                   scroll={false}
                   aria-current={active ? "page" : undefined}
-                  className={`flex h-9 shrink-0 items-center gap-[7px] rounded-full px-[13px] text-[13.5px] leading-[normal] font-medium whitespace-nowrap ${
+                  className={`tap-44 flex h-9 shrink-0 items-center gap-[7px] rounded-full px-[13px] text-[13.5px] leading-[normal] font-medium whitespace-nowrap ${
                     active ? "bg-cta text-on-cta" : "bg-surface text-text"
                   }`}
                 >

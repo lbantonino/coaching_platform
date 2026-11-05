@@ -376,7 +376,7 @@ export function NotificationsView({
                     type="button"
                     aria-pressed={active}
                     onClick={() => changeTab(item.value)}
-                    className={`flex min-w-0 items-center justify-center gap-1.5 rounded-[10px] px-1 text-[13px] max-[359px]:text-[12px] leading-[normal] font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 lg:rounded-[8px] lg:px-3 lg:text-[12.5px] ${
+                    className={`tap-44 flex min-w-0 items-center justify-center gap-1.5 rounded-[10px] px-1 text-[13px] max-[359px]:text-[12px] leading-[normal] font-medium whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 lg:rounded-[8px] lg:px-3 lg:text-[12.5px] ${
                       active
                         ? "bg-cta text-on-cta lg:bg-surface lg:text-text lg:shadow-[0_1px_2px_rgba(22,18,40,0.10)]"
                         : "text-muted hover:text-text"
@@ -385,7 +385,7 @@ export function NotificationsView({
                     {item.label}
                     {/* Le nombre : sur ordinateur (le téléphone n'a pas la place, kit). */}
                     {item.count ? (
-                      <span className="text-faint tabular max-lg:sr-only">{item.count}</span>
+                      <span className="text-muted tabular max-lg:sr-only">{item.count}</span>
                     ) : null}
                   </button>
                 );
@@ -649,7 +649,7 @@ function Section({
           {section.title}
         </h2>
         {unread > 0 ? (
-          <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-violet px-1.5 text-[11px] leading-none font-semibold text-white tabular">
+          <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-accent px-1.5 text-[11px] leading-none font-semibold text-white tabular">
             {unread}
             <span className="sr-only"> {plural(unread, "non lue", "non lues")}</span>
           </span>

@@ -38,7 +38,7 @@ export function Composer({
     <form
       ref={form}
       action={action}
-      className="flex flex-col gap-2 border-t border-line bg-surface px-4 pt-3.5 pb-[max(14px,env(safe-area-inset-bottom))] max-lg:sticky max-lg:bottom-0 max-lg:z-10 lg:px-[30px] lg:pb-4"
+      className="flex flex-col gap-2 border-t border-line bg-surface px-4 pt-3.5 pb-[max(14px,env(safe-area-inset-bottom))] max-lg:sticky max-lg:bottom-0 max-lg:z-10 lg:px-[max(30px,calc((100%-860px)/2))] lg:pb-4"
     >
       {state.error ? <FormAlert>{state.error}</FormAlert> : null}
       <div className="flex items-end gap-2.5">

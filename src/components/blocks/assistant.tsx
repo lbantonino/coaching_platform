@@ -224,7 +224,7 @@ function AssistantDialog() {
                 <button
                   type="button"
                   onClick={() => assistant.send(suggestion.label)}
-                  className="inline-flex h-9 items-center gap-2 rounded-full px-3.5 text-[13px] leading-[normal] font-medium text-text-2 inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2"
+                  className="tap-44 inline-flex h-9 items-center gap-2 rounded-full px-3.5 text-[13px] leading-[normal] font-medium text-text-2 inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2"
                 >
                   <suggestion.icon
                     aria-hidden
@@ -325,7 +325,7 @@ export function AssistantComposer({
             type="button"
             onClick={() => assistant.setAthlete(null)}
             aria-label={`Retirer le sportif : ${assistant.athlete.name}`}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
+            className="tap-44 inline-flex h-9 items-center gap-1.5 rounded-full bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
           >
             <UserRound aria-hidden size={14} strokeWidth={1.9} />
             {assistant.athlete.name}
@@ -345,7 +345,7 @@ export function AssistantComposer({
               setAthletes(null);
               assistant.loadAthletes().then(setAthletes, () => setAthletes([]));
             }}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] leading-[normal] font-medium text-text-2 inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2"
+            className="tap-44 inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] leading-[normal] font-medium text-text-2 inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2"
           >
             <UserRound aria-hidden size={14} strokeWidth={1.9} />
             Sportif
@@ -357,7 +357,7 @@ export function AssistantComposer({
           aria-label="Envoyer"
           disabled={empty}
           onClick={() => assistant.send(assistant.draft)}
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-violet text-white transition-[background-color,scale] duration-150 active:scale-95 disabled:bg-dlg-check-line"
+          className="relative grid size-9 shrink-0 place-items-center rounded-full bg-violet text-white transition-[background-color,scale] duration-150 after:absolute after:-inset-1 after:rounded-full active:scale-95 disabled:bg-dlg-check-line"
         >
           <ArrowUp aria-hidden size={17} strokeWidth={2.2} />
         </button>
@@ -437,7 +437,7 @@ export function ProposedActions({
           type="button"
           disabled={count === 0}
           onClick={() => onValidate([...checked])}
-          className="inline-flex h-9 items-center rounded-[10px] bg-violet px-3.5 text-[13px] leading-[normal] font-semibold text-white disabled:opacity-50"
+          className="inline-flex h-9 items-center rounded-[10px] bg-accent px-3.5 text-[13px] leading-[normal] font-semibold text-white disabled:opacity-50"
         >
           Valider {count} action{count > 1 ? "s" : ""}
         </button>

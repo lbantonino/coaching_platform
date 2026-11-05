@@ -143,7 +143,7 @@ async function Messages({
                         href={item.href}
                         scroll={false}
                         aria-current={item.active ? "page" : undefined}
-                        className={`flex h-9 items-center rounded-full px-3.5 text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors duration-150 ${
+                        className={`tap-44 flex h-9 items-center rounded-full px-3.5 text-[14px] leading-[normal] font-medium whitespace-nowrap transition-colors duration-150 ${
                           item.active
                             ? "bg-cta text-on-cta"
                             : "text-text inset-ring inset-ring-line-2 hover:bg-surface-2"
@@ -205,7 +205,7 @@ async function Messages({
                     </h2>
                     <Link
                       href={`/coach/o/${organizationId}/sportifs/${athlete.id}`}
-                      className="w-fit text-[14px] leading-[normal] font-medium text-violet-text underline-offset-4 hover:underline"
+                      className="-my-[13px] w-fit py-[13px] text-[14px] leading-[normal] font-medium text-violet-text underline-offset-4 hover:underline"
                     >
                       Voir la fiche
                     </Link>
@@ -216,10 +216,11 @@ async function Messages({
                     href={`/coach/o/${organizationId}/sportifs/${athlete.id}`}
                   />
                 </header>
-                {/* Le fil s'ouvre en bas, sur le dernier message (colonne inversée). */}
+                {/* Le fil s'ouvre en bas, sur le dernier message (colonne inversée). Grand écran (D-135) :
+                    messages et saisie centrés sur 860 px, la barre de défilement reste au bord. */}
                 <ol
                   aria-label={`Messages avec ${athlete.displayName}`}
-                  className="flex min-h-[40vh] flex-1 flex-col-reverse gap-4 overflow-y-auto overscroll-contain px-4 py-5 lg:min-h-0 lg:px-[30px]"
+                  className="flex min-h-[40vh] flex-1 flex-col-reverse gap-4 overflow-y-auto overscroll-contain px-4 py-5 lg:min-h-0 lg:px-[max(30px,calc((100%-860px)/2))]"
                 >
                   {thread.length === 0 ? (
                     <li className="text-[14px] text-muted">
