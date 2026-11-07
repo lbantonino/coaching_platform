@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { LEGAL } from "@/config/legal";
+
 import { LegalDocument } from "../legal-notice";
 
 export const metadata: Metadata = {
@@ -12,27 +14,32 @@ export default function LegalNoticePage() {
     <LegalDocument
       href="/mentions-legales"
       title="Mentions légales"
-      intro="Qui édite Coory, qui l'héberge et comment nous contacter."
+      intro="Qui édite Coory, qui l’héberge et comment nous contacter."
       sections={[
         {
           title: "Éditeur",
           body: (
             <p>
-              [Nom ou raison sociale de l&apos;éditeur, forme juridique, adresse du siège, numéro
-              d&apos;entreprise (BCE), numéro de TVA, adresse e-mail de contact].
+              {LEGAL.publisher}, personne physique. Coory est un projet personnel en phase de test,
+              sans société pour l’instant. Contact :{" "}
+              <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
+                {LEGAL.contactEmail}
+              </a>
+              .
             </p>
           ),
         },
         {
           title: "Responsable de la publication",
-          body: <p>[Nom de la personne responsable de la publication].</p>,
+          body: <p>{LEGAL.publisher}.</p>,
         },
         {
           title: "Hébergement",
           body: (
             <p>
-              [Nom, adresse et contact de l&apos;hébergeur de l&apos;application et de la base de
-              données].
+              Application : Vercel Inc. (vercel.com). Base de données et fichiers : Supabase
+              (supabase.com), serveurs dans l’Union européenne. [Adresses des hébergeurs et région à
+              confirmer à la mise en ligne.]
             </p>
           ),
         },
@@ -40,14 +47,20 @@ export default function LegalNoticePage() {
           title: "Propriété intellectuelle",
           body: (
             <p>
-              Le nom Coory, son logo et l&apos;interface de l&apos;application sont protégés. Les
-              contenus créés par les coachs (programmes, notes) restent leur propriété.
+              Le nom Coory, son logo et l’interface de l’application sont protégés. Les contenus
+              créés par les coachs (programmes, notes) restent leur propriété.
             </p>
           ),
         },
         {
           title: "Contact",
-          body: <p>[Adresse e-mail de contact].</p>,
+          body: (
+            <p>
+              <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
+                {LEGAL.contactEmail}
+              </a>
+            </p>
+          ),
         },
       ]}
     />

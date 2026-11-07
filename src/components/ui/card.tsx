@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 // Carte / bloc (prompt Claude Design §4 « Card / Block ») : fond surface, filet de 1 px, rayon 20,
 // marge intérieure 18, écart 14. En-tête : titre 18/600 en Space Grotesk, sous-titre 13 gris, lien
@@ -79,30 +79,5 @@ export function CardEmpty({ icon: Icon, children }: { icon: LucideIcon; children
       <Icon aria-hidden size={18} strokeWidth={1.7} className="mt-0.5 shrink-0" />
       <p>{children}</p>
     </div>
-  );
-}
-
-// Titre de carte avec son icône dans une pastille de couleur (29/10/2026 : « des petites couleurs sur
-// les titres », la carte elle-même reste neutre, sans contour de couleur) : icône et intitulé en
-// couleur. `color` : un jeton, ex. "var(--run)".
-export function CardTitle({
-  icon: Icon,
-  color,
-  children,
-}: {
-  icon: LucideIcon;
-  color: string;
-  children: ReactNode;
-}) {
-  return (
-    <span className="inline-flex items-center gap-2.5" style={{ "--c": color } as CSSProperties}>
-      <span
-        aria-hidden
-        className="inline-flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-[color-mix(in_srgb,var(--c)_16%,transparent)] text-[var(--c)]"
-      >
-        <Icon size={16} strokeWidth={1.9} />
-      </span>
-      <span className="text-[var(--c)]">{children}</span>
-    </span>
   );
 }

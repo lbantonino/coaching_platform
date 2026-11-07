@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { publicEnv } from "@/lib/env";
+import { REMEMBER_COOKIE, remembers, sessionCookieOptions } from "@/lib/supabase/session-cookies";
 
 // Proxy (ex-middleware, Next 16) : rafraîchit la session Supabase à chaque requête et fait une
 // redirection « optimiste ». Ce n'est PAS la protection des données : chaque page et chaque action
@@ -10,6 +11,8 @@ const PROTECTED_PREFIXES = ["/coach", "/admin", "/app", "/bienvenue"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
+  // « Se souvenir de moi » décoché : la session rafraîchie reste un cookie de navigateur.
+  const remember = remembers(request.cookies.get(REMEMBER_COOKIE)?.value);
 
   const supabase = createServerClient(publicEnv.supabaseUrl, publicEnv.supabasePublishableKey, {
     cookies: {
@@ -20,7 +23,7 @@ export async function proxy(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options),
+          response.cookies.set(name, value, sessionCookieOptions(options, remember)),
         );
         // En-têtes anti-cache : une réponse qui pose un cookie de session ne doit jamais être mise en cache.
         Object.entries(headers ?? {}).forEach(([key, value]) => response.headers.set(key, value));

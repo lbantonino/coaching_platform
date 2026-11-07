@@ -1,5 +1,3 @@
-import { buttonClass } from "./button";
-
 // Styles communs des formulaires (prompt Claude Design §4 « Input ») : champ de 50 px, rayon 12,
 // fond surface, contour line-2, contour rouge au focus et en erreur. Texte en 16 px partout : en
 // dessous, iOS zoome sur le champ quand on le touche.
@@ -8,8 +6,26 @@ const fieldBase =
 
 export const inputClass = `${fieldBase} h-[50px] px-4`;
 
-// Pages d'entrée (connexion, inscription, mot de passe, invitation) : champs de 52 px (prototype §7.1).
-export const entryInputClass = `${fieldBase} h-[52px] px-4`;
+// Pages d'accès sans icône (mot de passe oublié, nouveau mot de passe, invitation) : même habillage
+// que les champs de la connexion (maquette du 06/11/2026, D-139), sans la place de l'icône.
+export const entryInputClass =
+  "h-[50px] w-full rounded-[13px] bg-dlg-field px-4 text-[16px] text-text inset-ring inset-ring-line outline-none placeholder:text-faint transition-shadow duration-150 focus:inset-ring-[1.5px] focus:inset-ring-violet aria-[invalid=true]:inset-ring-alert disabled:opacity-60 read-only:text-muted lg:h-12 lg:rounded-[12px] lg:text-[14.5px]";
+
+// Champs à icône des pages d'entrée (maquettes d'Antonino du 06/11/2026, D-139) : téléphone 50 px
+// rayon 13 en 16 px (sinon l'iPhone agrandit la page), ordinateur rayon 12 en 14,5 px ; fond des
+// champs de fenêtre, filet intérieur, anneau violet de 1,5 px au focus, rouge en erreur. La place de
+// l'icône est réservée à gauche, celle de l'œil à droite pour un mot de passe. Une variante par
+// taille (jamais deux hauteurs dans la même classe : la CSS ne garantit pas laquelle gagne).
+const authFieldBase =
+  "h-[50px] w-full rounded-[13px] bg-dlg-field pl-[46px] text-[16px] text-text inset-ring inset-ring-line outline-none placeholder:text-faint transition-shadow duration-150 focus:inset-ring-[1.5px] focus:inset-ring-violet aria-[invalid=true]:inset-ring-alert disabled:opacity-60 lg:rounded-[12px] lg:text-[14.5px]";
+
+// Connexion (écran 01) : 48 px, icône à 44 px.
+export const authInputClass = `${authFieldBase} pr-4 lg:h-12 lg:pr-3.5 lg:pl-11`;
+export const authPasswordClass = `${authFieldBase} pr-[52px] lg:h-12 lg:pr-12 lg:pl-11`;
+
+// Inscription (écran 02) : 45 px, icône à 40 px.
+export const authInputCompactClass = `${authFieldBase} pr-4 lg:h-[45px] lg:pr-3 lg:pl-10`;
+export const authPasswordCompactClass = `${authFieldBase} pr-[52px] lg:h-[45px] lg:pr-[46px] lg:pl-10`;
 
 // Zone de texte : même habillage, hauteur libre (3 lignes par défaut).
 export const textareaClass = `${fieldBase} min-h-[96px] px-4 py-3 leading-normal`;
@@ -17,12 +33,6 @@ export const textareaClass = `${fieldBase} min-h-[96px] px-4 py-3 leading-normal
 export const labelClass = "text-[14px] font-medium text-text";
 
 export const hintClass = "text-[13px] text-muted";
-
-export const primaryButtonClass = buttonClass({
-  variant: "primary",
-  size: "lg",
-  className: "w-full",
-});
 
 // Message d'erreur : rouge d'alerte en TEXTE (--alert), lisible en sombre comme en clair (≥ 4,5:1).
 // Le composant FieldError (field.tsx) y ajoute l'icône « circle-alert ».

@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { libraryHeaderButtonClass } from "@/components/blocks/favorite-button";
 import { buttonClass } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
@@ -13,17 +14,25 @@ import { useToast } from "@/components/ui/toast";
 // Trois habits, la même action (kit « Coory Pages », page 11, D-121) :
 // - "button" : le bouton « Supprimer » de la fiche de l'exercice ;
 // - "link" : « Supprimer l'exercice », lien rouge sous les boutons de l'aperçu (Modifier, ordinateur) ;
-// - "icon" : la corbeille rouge de 44 px à droite du titre (Modifier, téléphone).
+// - "icon" : la corbeille rouge de 44 px à droite du titre (Modifier, téléphone) ;
+// - "header" : « Supprimer » de 32 px dans l'en-tête de la fiche (ordinateur, maquette D-142) ;
+// - "none" : seulement la confirmation, ouverte par la page (menu ⋮ de la fiche sur téléphone).
 export function DeleteExerciseButton({
   name,
   remove,
   variant = "button",
+  open: openProp,
+  onOpenChange,
 }: {
   name: string;
   remove: () => Promise<{ ok: boolean }>;
-  variant?: "button" | "link" | "icon";
+  variant?: "button" | "link" | "icon" | "header" | "none";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [openInner, setOpenInner] = useState(false);
+  const open = openProp ?? openInner;
+  const setOpen = onOpenChange ?? setOpenInner;
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const toast = useToast();
@@ -42,7 +51,12 @@ export function DeleteExerciseButton({
 
   return (
     <>
-      {variant === "icon" ? (
+      {variant === "none" ? null : variant === "header" ? (
+        <button type="button" onClick={() => setOpen(true)} className={libraryHeaderButtonClass}>
+          <Trash2 aria-hidden size={13} strokeWidth={2} />
+          Supprimer
+        </button>
+      ) : variant === "icon" ? (
         <button
           type="button"
           aria-label="Supprimer l'exercice"

@@ -12,6 +12,7 @@ import { SECTIONS } from "./sections";
 import { ProfileDialogSection } from "./settings-forms";
 import {
   DataSection,
+  LegalSection,
   MoneySection,
   moneySummary,
   PreferencesSection,
@@ -102,6 +103,7 @@ export function SettingsDialogPanel({
                         {menuHint(item.key, data)}
                       </span>
                     </span>
+                    {"isNew" in item && item.isNew ? <NewBadge /> : null}
                   </button>
                 </li>
               );
@@ -186,11 +188,22 @@ export function SettingsDialogPanel({
           />
         ) : shown === "securite" ? (
           <SecuritySection email={data.email} intro={intro} />
+        ) : shown === "legal" ? (
+          <LegalSection intro={intro} />
         ) : (
           <DataSection intro={intro} />
         )}
       </div>
     </div>
+  );
+}
+
+// Pastille « Nouveau » d'une rubrique ajoutée (onglet Légal, maquette du 06/11/2026).
+function NewBadge() {
+  return (
+    <span className="shrink-0 rounded-[6px] bg-accent px-[7px] py-[3px] text-[10.5px] leading-[normal] font-bold text-on-accent">
+      Nouveau
+    </span>
   );
 }
 

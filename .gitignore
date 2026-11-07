@@ -53,3 +53,6 @@ supabase/.temp
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Originaux des images RepDB (retéléchargés par scripts/catalog-images.mjs), D-142
+/resources/exercise-library/data/repdb-images/

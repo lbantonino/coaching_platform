@@ -207,6 +207,8 @@ export async function acceptInvitation(
     email: invitation.email,
     password: parsed.data.password,
     email_confirm: true,
+    // Compte créé par le serveur pour une invitation valide : pas de code d'accès (D-140).
+    app_metadata: { coory_invited: true },
   });
   if (createError) {
     const exists = createError.code === "email_exists" || createError.status === 422;

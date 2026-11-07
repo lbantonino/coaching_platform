@@ -41,9 +41,10 @@ test("le logo Coory est annoncé par son nom, avec le favicon, l'icône iPhone e
 test("le graphite (sombre) est le défaut, le clair se choisit et reste après rechargement", async ({
   page,
 }) => {
-  // Design system « Graphite & Or » (29/10/2026) : sombre par défaut.
+  // Design system « Graphite & Or » (29/10/2026) : sombre par défaut. Le bouton de thème des pages
+  // publiques est sur les pages légales (maquettes du 06/11/2026 : plus sur la connexion).
   const html = page.locator("html");
-  await page.goto("/login");
+  await page.goto("/conditions");
   await expect(html).toHaveAttribute("data-theme", "dark");
 
   await page.getByRole("button", { name: "Passer au thème clair" }).click();

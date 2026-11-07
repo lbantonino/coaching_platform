@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { CountBadge } from "@/components/ui/count-badge";
 import { navItemClass } from "@/components/ui/nav-item";
 
+import { useOnErrorPage } from "./error-page-flag";
 import { navFor, type NavEntry } from "./navigation";
 import { useShell } from "./shell-context";
 
@@ -14,6 +15,8 @@ import { useShell } from "./shell-context";
 
 function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
   const pathname = usePathname();
+  // Page d'erreur (D-147) : aucune page active dans le menu.
+  const onErrorPage = useOnErrorPage();
   const { space, unreadMessages = 0, notificationCount = 0 } = useShell();
   // Pastilles rouges du coach : messages non lus sur « Messages » (D-36), et le même total que la
   // cloche sur « Notifications » (D-37).
@@ -30,7 +33,7 @@ function NavList({ entries, large }: { entries: NavEntry[]; large: boolean }) {
   return (
     <ul className="flex flex-col gap-0.5">
       {entries.map(({ href, label, icon: Icon, match }) => {
-        const active = match(pathname);
+        const active = !onErrorPage && match(pathname);
         return (
           <li key={href}>
             <Link

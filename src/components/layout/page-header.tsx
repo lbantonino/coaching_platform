@@ -10,8 +10,8 @@ import { PageIcon } from "./page-icon";
 
 // En-tête de page (prompt Claude Design §5.2), le même pour toutes les pages depuis le 29/10/2026
 // (demande d'Antonino : « comme le tableau de bord, tout aligné »). Ordinateur : UNE carte de 64 px,
-// UNE ligne : icône de la page (celle du menu), titre de 15 px, puis à droite la recherche,
-// l'assistant, la cloche et les actions. Pas de phrase sous le titre (demandes d'Antonino du
+// UNE ligne : icône de la page (celle du menu), titre de 15 px, puis à droite l'assistant, la
+// cloche et les actions (plus de recherche globale depuis D-146). Pas de phrase sous le titre (demandes d'Antonino du
 // 29/10/2026) : elle reste pour les lecteurs d'écran.
 //
 // Page « à l'intérieur » d'une autre (avec retour), RÈGLE d'Antonino du 05/11/2026 (D-124), valable
@@ -36,6 +36,7 @@ export function PageHeader({
   tools = true,
   icon,
   visibleTitle = true,
+  quiet = false,
 }: {
   title: ReactNode;
   // À côté du titre, sur la même ligne (ex. corbeille d'une page Modifier sur téléphone, pastilles
@@ -53,6 +54,9 @@ export function PageHeader({
   // false : sur téléphone, seul le retour de la barre se voit et la page écrit son grand titre dans
   // son contenu ; sur ordinateur, le chemin reste complet (« ← Sportifs · Chloé Martin »).
   visibleTitle?: boolean;
+  // Pages d'erreur (D-147, maquette « Coory Erreurs ») : « Erreur » en gris, sans icône, et pas en
+  // titre de page (le h1 est celui de la carte d'erreur).
+  quiet?: boolean;
 }) {
   const Icon = icon;
   return (
@@ -75,7 +79,7 @@ export function PageHeader({
       >
         <div className="flex min-w-0 items-center gap-3 lg:flex-1 lg:gap-2.5">
           {/* Icône imposée par la page : dessinée ici (une fonction ne passe pas au navigateur). */}
-          {Icon ? (
+          {quiet ? null : Icon ? (
             <Icon
               aria-hidden
               size={17}
@@ -96,9 +100,15 @@ export function PageHeader({
               </span>
             </>
           ) : null}
-          <h1 className="min-w-0 font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] break-words lg:truncate lg:text-[15px] lg:tracking-tight">
-            {title}
-          </h1>
+          {quiet ? (
+            <p className="min-w-0 truncate text-[15px] leading-tight font-semibold tracking-tight text-muted">
+              {title}
+            </p>
+          ) : (
+            <h1 className="min-w-0 font-display text-[24px] leading-tight font-semibold tracking-[-0.03em] break-words lg:truncate lg:text-[15px] lg:tracking-tight">
+              {title}
+            </h1>
+          )}
           {/* La place de la ligne se mesure (requête de conteneur, « @container ») : un complément
               (pastilles d'une fiche exercice) ne s'affiche que s'il reste assez de place pour le chemin. */}
           {titleAside}
@@ -116,8 +126,7 @@ export function PageHeader({
         ) : null}
       </div>
       <div className="flex flex-[1_1_100%] flex-wrap items-center gap-2 lg:flex-none lg:gap-2.5 [&>*]:flex-[1_1_auto] lg:[&>*]:flex-none">
-        {/* Page avec retour ET boutons : sous 1 280 px, la recherche devient une loupe (D-124). */}
-        {tools ? <HeaderTools compact={back && actions ? "xl" : false} /> : null}
+        {tools ? <HeaderTools /> : null}
         {actions}
       </div>
     </header>

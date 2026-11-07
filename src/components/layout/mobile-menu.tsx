@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { ThemedCooryLogo } from "@/components/brand/themed-logo";
@@ -82,30 +82,6 @@ export function MobileMenuPanel() {
         <ThemedCooryLogo height={20} />
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-3.5 pt-2 pb-[max(16px,env(safe-area-inset-bottom))]">
-        {/* Coach (D-62) : la recherche globale, en tête du menu. Même cadre que les lignes du menu
-            (44 px, même rayon, loupe alignée sur leurs icônes) ; shrink-0 : le menu défile, la
-            recherche ne se tasse pas. */}
-        {space === "coach" ? (
-          <form
-            role="search"
-            action="/coach/recherche"
-            className="flex h-11 shrink-0 items-center gap-3 rounded-control border border-line bg-surface px-3 focus-within:border-violet-line"
-          >
-            <Search aria-hidden size={19} strokeWidth={1.8} className="shrink-0 text-muted" />
-            <label htmlFor="menu-search" className="sr-only">
-              Rechercher dans Coory
-            </label>
-            <input
-              id="menu-search"
-              name="q"
-              type="search"
-              enterKeyHint="search"
-              autoComplete="off"
-              placeholder="Rechercher dans Coory…"
-              className="h-full min-w-0 flex-1 bg-transparent text-[16px] text-text outline-none placeholder:text-muted"
-            />
-          </form>
-        ) : null}
         <SideNav large />
         <div className="mt-auto">
           <AccountMenu />

@@ -65,7 +65,7 @@ Source de vérité du **style** (voir `docs/design/README.md`) : les jetons `src
 
 ## En-tête des pages « à l'intérieur » d'une autre (règle d'Antonino du 05/11/2026, D-124)
 Toute page avec un retour (Créer / Modifier un exercice, Inviter, Nouveau sportif, Modifier la séance, fiche d'un sportif, page d'une séance…), **y compris les pages futures, même si une maquette dessine autre chose** :
-- **Ordinateur** : le chemin tient sur **une seule ligne** dans la carte d'en-tête, qui garde sa hauteur de base (64 px) : `[icône de la page] ← Page précédente · Page en cours` (ex. « ← Bibliothèque · Créer un exercice », « ← Coaching force · Modifier la séance »). « ← Page précédente » ramène là où on était ; jamais de titre ni de phrase sur une deuxième ligne. Les boutons de l'en-tête font 32 px sur ordinateur ; sous 1 280 px, la recherche devient une loupe sur ces pages pour que le chemin reste lisible.
+- **Ordinateur** : le chemin tient sur **une seule ligne** dans la carte d'en-tête, qui garde sa hauteur de base (64 px) : `[icône de la page] ← Page précédente · Page en cours` (ex. « ← Bibliothèque · Créer un exercice », « ← Coaching force · Modifier la séance »). « ← Page précédente » ramène là où on était ; jamais de titre ni de phrase sur une deuxième ligne. Les boutons de l'en-tête font 32 px sur ordinateur (plus de recherche globale dans l'en-tête depuis D-146).
 - **Téléphone** : le retour est dans la barre du haut (« ☰ ← Page précédente  IA cloche ») ; le titre de la page (et son bouton à droite, ex. la corbeille) est en tête du contenu, **à 20 px sous la barre** pour respirer.
 - Tout passe par `PageHeader` (`back`, `title`, `titleAside`, `visibleTitle`) : ne jamais recréer un en-tête à la main.
 

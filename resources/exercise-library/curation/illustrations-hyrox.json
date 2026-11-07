@@ -1,5 +1,6 @@
 {
-  "_lisez_moi": "Correspondance entre les fichiers déposés par Antonino dans illustrations/hyrox/ et les clés du catalogue (clé/pose). Statut d'origine : illustration_a_valider (manifest.json). Sled pull en marche arrière et Sled pull assis n'ont pas encore d'image.",
+  "_lisez_moi": "Correspondance entre les illustrations Hyrox et les clés du catalogue (clé/pose). Depuis le 06/11/2026 (D-142) : versions au fond lavande #EEE9FC de la maquette « Bibliothèque » (coory-design/COORY_LIBRARY_DESIGN_HANDOFF/04_ASSETS), copiées telles quelles dans illustrations/hyrox-lavande/ ; le Wall ball est wb-1.png (448 px, cible entière) ; le Sled push est l'image « Athlete Correctly Gripping Sled Handles » d'Antonino (06/11/2026, 1 254 px, réduite à 900 px dans l'app). Les originaux d'Antonino (fond transparent) restent dans illustrations/hyrox/. Sled pull en marche arrière et Sled pull assis n'ont pas d'image.",
+  "folder": "hyrox-lavande",
   "files": {
     "01-skierg.png": "ski-erg/main",
     "02-sled-push.png": "sled-push/main",
@@ -8,6 +9,6 @@
     "05-rameur.png": "rowing-machine/main",
     "06-farmer-carry.png": "kettlebell-farmers-walk/main",
     "07-sandbag-lunges.png": "sandbag-walking-lunge/main",
-    "08-wall-ball-avec-cible.png": "wall-ball/main"
+    "08-wall-ball.png": "wall-ball/main"
   }
 }

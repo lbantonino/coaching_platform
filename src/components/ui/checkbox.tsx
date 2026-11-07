@@ -41,19 +41,3 @@ export function Checkbox({
     </label>
   );
 }
-
-// Interrupteur 46 × 28 : fond « bar » → rouge, pastille blanche de 22 px, transition 200 ms.
-export function Toggle({ label, ...props }: NativeProps & { label: ReactNode }) {
-  return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px] text-muted">
-      <input type="checkbox" role="switch" {...props} className="peer sr-only" />
-      <span
-        aria-hidden
-        className="relative h-7 w-[46px] shrink-0 rounded-pill bg-bar transition-colors duration-200 ease-coory peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-checked:[&>span]:translate-x-[18px]"
-      >
-        <span className="absolute top-[3px] left-[3px] size-[22px] rounded-full bg-white transition-transform duration-200 ease-coory" />
-      </span>
-      <span className="min-w-0">{label}</span>
-    </label>
-  );
-}

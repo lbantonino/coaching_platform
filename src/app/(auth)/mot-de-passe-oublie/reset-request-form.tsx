@@ -46,7 +46,7 @@ export function ResetRequestForm() {
           type="email"
           autoComplete="email"
           inputMode="email"
-          placeholder="toi@exemple.com"
+          placeholder="ton@email.com"
           defaultValue={state.email}
           aria-invalid={state.fields.email ? true : undefined}
           aria-describedby={state.fields.email ? "email-error" : undefined}

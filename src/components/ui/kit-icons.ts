@@ -1,12 +1,4 @@
-import {
-  Archive,
-  CirclePause,
-  CirclePlay,
-  Dumbbell,
-  Zap,
-  createLucideIcon,
-  type LucideIcon,
-} from "lucide-react";
+import { Dumbbell, Zap, createLucideIcon, type LucideIcon } from "lucide-react";
 
 import type { Discipline } from "@/domain/training/discipline";
 
@@ -32,10 +24,3 @@ export const dialogDisciplineIcons: Record<Discipline, LucideIcon> = {
   hyrox: Zap,
   hybrid: HybridIcon,
 };
-
-// Statut d'un sportif dans les boîtes (07, 14) : Actif vert, En pause ambre, Archivé gris.
-export const dialogStatusIcons = {
-  active: CirclePlay,
-  paused: CirclePause,
-  archived: Archive,
-} as const;

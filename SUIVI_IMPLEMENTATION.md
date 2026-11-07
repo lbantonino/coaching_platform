@@ -8,7 +8,7 @@
 | P0 Bootstrap | **Fait** : P0-01 à P0-06 ; design system Coory rouge + logo + thème clair (22/10) | lint, typecheck, format, build, db:reset, test (Vitest 11/11), test:e2e 27/27, captures | Sessions du 19 et 20/10/2026 ; ADR docs/adr/0001 |
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
-| P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris ; D-76 : exercices du coach) ; Mobilité visible le 31/10 ; P3-02 à P3-06 à faire | db:test 434/434, test 278/278, test:e2e bibliothèque 8/8 (31/10) ; suite complète du 30/10 : 169 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Sessions du 30 et 31/10/2026 |
+| P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris ; D-76 : exercices du coach) ; Mobilité visible le 31/10 ; liste et fiche aux maquettes d'Antonino le 06/11 (D-142, fond lavande) ; P3-02 à P3-06 à faire | db:test 434/434, test 278/278, test:e2e bibliothèque 8/8 (31/10) ; suite complète du 30/10 : 169 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Sessions du 30 et 31/10/2026 |
 | P4 Éditeur multi-sports | À faire | Aucun | - |
 | P5 Publications/PDF | À faire | Aucun | - |
 | P6 Sportif/feedback | À faire | Aucun | - |
@@ -29,8 +29,26 @@
 | 7. Recette finale | À faire |
 
 ## Dernière session
-- Date : 2026-10-23
-- Objectif : étapes 1 à 3 du prompt Claude Design, puis étape 4a partie 1 (tableau de bord et agenda, retouchés en direct avec Antonino).
+- Date : 2026-11-07
+- Objectif : audit complet et nettoyage final du dossier.
+
+### Audit complet et nettoyage final du dossier (D-150)
+```
+Périmètre : dépôt complet, fichiers suivis et ignorés, imports TypeScript, exports, dépendances,
+ressources publiques, documentation, doublons et artefacts générés.
+Retirés : src/components/ui/chip.ts (ancien composant sans import ni référence), cache Next.js,
+rapports Playwright, cache TypeScript, cache Impeccable, fichiers .DS_Store, données temporaires
+Supabase et originaux RepDB retéléchargeables déjà exclus de Git.
+Conservés après vérification : spécifications produit, design system actif, seule maquette encore à
+implémenter, kit de marque source + copies publiques utiles aux e-mails/PDF/PWA, PDF historiques,
+catalogue d'exercices, metricInfo, difficultyLabels et @react-pdf/renderer.
+Résultat : dossier local de 2,2 Go à environ 918 Mo avant validation, dont environ 733 Mo de
+node_modules et 140 Mo d'historique Git nécessaires au travail local.
+Tests : graphe des 333 fichiers source, aucun autre fichier inaccessible ; liens Markdown valides ;
+ESLint, typecheck et Prettier OK ; Vitest 271/271 ; build Next.js 16 de production OK avec Webpack
+(63 pages). Turbopack non concluant dans le bac à sable car son transformateur CSS ne peut pas ouvrir
+de port local. Avertissement attendu : metadataBase sera renseigné quand le domaine public sera choisi.
+```
 
 ### Tests de bout en bout fiables (D-133)
 ```
@@ -107,6 +125,104 @@ messages/page.tsx : main + phoneScreenMainClass ; PageBody screen si un fil est 
 Mesures (Chromium) : 390x844 et 390x667, page = écran, carte jusqu'à 28 px du bas, saisie en bas ;
   30x plus de messages : la carte ne bouge pas, le fil défile, ouvert sur le plus récent ; 1280 inchangé.
 iPhone d'Antonino (iOS 26.6.2) : bords, « + », boîtes, ☰, conversation et clavier : OK.
+```
+
+### Authentification et pages légales, maquettes d'Antonino (D-139)
+```
+Date : 2026-11-06
+Source : coory-design/COORY_AUTH_DESIGN_HANDOFF (arbres source = valeurs exactes ; captures 1200x760 / 390x844).
+Routes inchangées : /login, /inscription, /bienvenue, /conditions, /confidentialite, /mentions-legales.
+Groupes : (auth) = connexion + pages d'accès (coquille photo EntryShell) ; (entree) = inscription +
+  bienvenue (coquille SplitShell posée par la page, panneau qui suit le formulaire).
+Nouveaux : components/layout/entry-visuals.tsx (panneaux), legal-shell.tsx, legal-toc.tsx,
+  legal-back-link.tsx, provisional-notice.tsx, social-buttons.tsx (déplacé) ; config/legal.ts ;
+  lib/use-wide-screen.ts ; lib/supabase/session-cookies.ts ; public/auth/ (4 images de la maquette).
+Jetons : --auth-* et --notice-* (clair = maquette, sombre = proposé) ; utilitaires auth-*-shadow.
+Logique : « Se souvenir de moi » (cookie coory-remember, server.ts + proxy.ts) ; inscription sans
+  téléphone / entreprise / confirmation ; TERMS_VERSION 2026-11-06-provisoire ; onglet Légal (SettingsSection "legal").
+QA : écarts mesurés <= 1 px (connexion, inscription, bienvenue) ; sombre vérifié ; Google masqué (non configuré).
+Puis, à la demande d'Antonino : moitiés égales sur ordinateur (formulaire centré 392 / 400 / 432 px, panneau
+  réduit par scale = min(1, largeur / 664, hauteur / 728) via conteneur CSS) ; vérifié à 1024, 1200, 1440, 1920.
+```
+
+### Nettoyage du dossier (D-149)
+```
+Analyse : script d'import (fichiers jamais importés, exports jamais utilisés), jetons CSS sans usage, public/ non cité.
+Retirés : voir D-149. Fichiers non suivis -> Corbeille (Coory-nettoyage-2026-11-06) ; suivis -> rm (récupérables par Git).
+Prettier appliqué aux 11 fichiers touchés le 06/11. Serveur de dev relancé (rm -rf .next/dev).
+Tests : npm run check OK (lint, typecheck, format, Vitest 271/271) ; e2e 187 passés / 19 ignorés.
+```
+
+### Pages d'erreur 404 et 500, maquettes d'Antonino (D-147) ; Sled push (D-148)
+```
+Nouveaux : components/blocks/error-state.tsx (ErrorState + StandaloneError), error-illustrations.tsx,
+  components/layout/error-page-flag.ts, lib/error-ref.ts (+ tests/unit/error-ref.test.ts),
+  app/(coach)/coach/not-found.tsx et error.tsx. Réécrits : app/not-found.tsx, app/error.tsx.
+Modifiés : page-header.tsx (option quiet), side-nav.tsx (aucun lien actif pendant une erreur).
+QA (version de production, pages de test temporaires supprimées) : 404 et 500 à 1280x800 et 390x844 contre
+  les captures ; corrigés : titre d'onglet hérité de la page d'origine, contour de focus à l'arrivée.
+Sled push : nouvelle image d'Antonino, réduite à 900 px (27 Ko) par catalog-images.mjs.
+Tests : lint OK ; Vitest 271/271 ; e2e 187 passés / 19 ignorés (+ 2 vérifications de la 404 dans library).
+```
+
+### Visuel 1c sur téléphone (D-145)
+```
+public/auth/entete-telephone-1c.png = 1c coupé (y 120 à 1050 sur 1050, fausse barre d'état retirée).
+entry-shell.tsx : PhotoHeader aspect 1170/930, object-cover, sans padding de zone sûre. Vérifié à 360, 390
+  et 430 px ; e2e auth, signup, design, password-reset, invitation : 48/48 (+4 ignorés) ; lint, typecheck OK.
+```
+
+### Carte 7a sur téléphone (D-144)
+```
+entry-shell.tsx : PhotoHeader = la 7a (next/image cover, cadrée en haut) dans 318 px, sous la zone de la barre
+  d'état (pt-[env(safe-area-inset-top)]) ; --auth-photo #121018. Vérifié à 360, 390 et 430 px ;
+  e2e auth, signup, design, password-reset, invitation : 48/48 (+4 ignorés) ; lint, typecheck OK.
+```
+
+### Cartes de droite 7a à 7d (D-143)
+```
+Images d'Antonino 7a / 7b / 7c / 7d (1328x1456, coins droits) -> public/auth/carte-{connexion-7a,inscription-7b,configuration-7c,sportif-7d}.png.
+entry-visuals.tsx : AuthCardImage({ card, choices }) : cadre arrondi 20 px, fondu entre les cartes empilées
+  (inscription Coach / Sportif) ; plus de liens transparents (rien n'est dessiné dans les images).
+AuthLegalLinks visibles sur ordinateur (EntryShell, inscription). Bienvenue : 7c coach, 7d sportif.
+Vérifié à 1280 (connexion, inscription coach et sportif) ; e2e auth, signup, design, password-reset,
+  invitation : 48/48 (+4 ignorés) ; lint, typecheck OK.
+```
+
+### Bibliothèque et fiche exercice, maquettes d'Antonino (D-142)
+```
+Date : 2026-11-06
+Source : coory-design/COORY_LIBRARY_DESIGN_HANDOFF (desktop.html / mobile.html = valeurs exactes ; captures 2×).
+Routes, actions, requêtes et données inchangées ; LIBRARY_PAGE_SIZE 30 -> 24.
+Nouveaux : components/blocks/library-icons.ts (tracés de la maquette), library-filter.tsx (menu / feuille),
+  instruction-timeline.tsx (frise) ; [cle]/exercise-actions.tsx (en-tête + menu ⋮) ; scripts/illustration-lavender.mjs.
+Réécrits : library-view.tsx, [cle]/page.tsx, exercise-image.tsx (ExerciseTag, CardIllustration, SheetFigure,
+  MissingIllustration), favorite-button.tsx (useFavorite partagé) ; overlay.tsx : taille "picker" ;
+  delete-exercise-button.tsx : variantes "header" et "none" (confirmation ouverte depuis le menu ⋮).
+Images : catalog-images.mjs recolore 1 192 images RepDB (cache resources/exercise-library/data/repdb-images/,
+  ignoré par Git) ; 8 Hyrox = illustrations/hyrox-lavande/ (maquette, WebP sans perte). Aucune image sans ciel bleu.
+Jetons : --illustration #eee9fc (2 thèmes), --lib-* (clair = maquette, sombre = proposé), --on-image, --on-image-ink.
+QA : captures Playwright 2× (1280 et 390×844) contre les 9 écrans : rangées, menu, feuille, figures au px près ;
+  corrigés en route : chevron qui pivotait, chiffres tabulaires, 2 px de la feuille, figures 3a étirées (302 -> 268).
+Tests : lint, typecheck, Vitest 272/272 ; e2e 190 passés / 20 ignorés (library et coach-exercises adaptés :
+  menu Catégorie, menu ⋮ du téléphone ; nom des cartes = nom de l'exercice d'abord, rubrique redite à la fin).
+```
+
+### Images des cartes de droite (D-141)
+```
+Images d'Antonino 6a / 6b / 6c (1328x1456, RGBA, coins transparents) -> public/auth/carte-*.png.
+entry-visuals.tsx : AuthCardImage (next/image object-contain dans un cadre aspect 664/728, largeur
+  min(100cqw, 100cqh*664/728)) + 3 liens légaux transparents sur 6a et 6b (positions en %).
+Liens mesurés à 1200 et 1440 : ils couvrent exactement les mots dessinés ; clic -> /confidentialite OK.
+Parcours (signup, auth, password-reset, invitation, design) : 48/48 (+4 ignorés) ; lint, typecheck OK.
+```
+
+### Code d'accès de l'inscription (D-140)
+```
+Migration 20261106120000_code_acces_inscription.sql ; config.toml [auth.hook.before_user_created].
+Essai direct de l'API (comme un attaquant) : sans code 403, faux code 403, bon code 200 ; code retiré
+  des métadonnées (insert et update).
+db:test 467/467 (dont 35_code_acces_inscription : 12) ; test (Vitest) 272/272 ; lint, typecheck OK.
 ```
 
 ### Kit « Coory Pages », page 02 Assistant IA (D-132)

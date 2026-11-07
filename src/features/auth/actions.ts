@@ -1,8 +1,10 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { REMEMBER_COOKIE } from "@/lib/supabase/session-cookies";
 
 import { fieldErrors } from "./field-errors";
 import { getHomePath } from "./guards";
@@ -28,7 +30,22 @@ export async function login(_previous: LoginState, formData: FormData): Promise<
     return { error: null, fields: fieldErrors(parsed.error), email: raw.email };
   }
 
-  const supabase = await createClient();
+  // « Se souvenir de moi » (D-139) : case décochée, la session sera effacée à la fermeture du
+  // navigateur. Le choix est retenu dans un cookie de navigateur, relu par le proxy à chaque visite.
+  const remember = formData.get("remember") === "on";
+  const cookieStore = await cookies();
+  if (remember) {
+    cookieStore.delete(REMEMBER_COOKIE);
+  } else {
+    cookieStore.set(REMEMBER_COOKIE, "0", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+  }
+
+  const supabase = await createClient({ remember });
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error || !data.user) {

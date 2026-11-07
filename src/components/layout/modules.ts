@@ -101,15 +101,7 @@ export const COACH_MODULES = {
     emptyText:
       "Tu seras prévenu ici d'un nouveau retour de séance, d'un message, d'une invitation acceptée ou d'une séance à encaisser.",
   },
-  recherche: {
-    label: "Recherche",
-    h1: "Rechercher dans Coory",
-    sub: "Sportifs, programmes, séances, documents.",
-    icon: Search,
-    emptyTitle: "La recherche globale arrive",
-    emptyText:
-      "Pour l'instant, la recherche du haut de page trouve tes sportifs. Elle cherchera aussi dans les programmes, les séances et les documents.",
-  },
+
   assistant: {
     label: "Assistant IA",
     h1: "Assistant IA",

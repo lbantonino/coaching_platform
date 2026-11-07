@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 // Sélecteur segmenté (« Jour · Semaine · Mois »).
 // Accessible : c'est un groupe de boutons radio natifs, utilisable au clavier et dans un formulaire.
 // Classes partagées avec le sélecteur contrôlé du calculateur de test.
@@ -100,46 +98,5 @@ export function Segmented<T extends string>({
         ))}
       </div>
     </fieldset>
-  );
-}
-
-// Variante en liens (la vue choisie est dans l'adresse) : même habillage, option active en noir.
-export function SegmentedNav({
-  label,
-  items,
-  size = "md",
-}: {
-  label: string;
-  items: { href: string; label: string; active: boolean }[];
-  // « sm » (barre de l'agenda, D-77) : 32 px, texte 12 px.
-  size?: "md" | "sm";
-}) {
-  return (
-    <nav
-      aria-label={label}
-      className={
-        size === "sm"
-          ? "inline-flex h-8 gap-0.5 rounded-lg border border-line-soft bg-surface-2 p-0.5"
-          : `${segmentedGroupClass} w-auto`
-      }
-    >
-      {items.map((item) => (
-        <Link
-          key={item.label}
-          href={item.href}
-          scroll={false}
-          aria-current={item.active ? "page" : undefined}
-          className={`flex items-center justify-center whitespace-nowrap transition-colors duration-150 ${
-            size === "sm" ? "rounded-md px-2.5 text-[12px]" : "h-9 rounded-[9px] px-3 text-[14px]"
-          } ${
-            item.active
-              ? "bg-selected font-medium text-violet-text"
-              : "font-medium text-muted hover:text-text"
-          }`}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </nav>
   );
 }

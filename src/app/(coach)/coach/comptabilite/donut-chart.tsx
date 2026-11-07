@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 // Graphique circulaire de la Comptabilité (D-72) : la part de chaque mode de paiement dans une
-// période. Anneau fin, 2 px d'écart entre les parts, couleurs de graphique validées (--chart-1 à 4),
+// période. Anneau fin, 2 px d'écart entre les parts, une couleur par mode (donnée par la page),
 // toujours dans le même ordre. Le total est au centre ; au survol d'une part (ou d'une ligne de la
 // légende, au clavier aussi), le centre affiche ce mode, son montant et sa part. Les montants sont
 // toujours écrits dans la légende : la couleur n'est jamais la seule information.
