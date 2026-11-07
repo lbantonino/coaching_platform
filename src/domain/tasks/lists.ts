@@ -33,7 +33,3 @@ export const listNameSchema = z
   .max(LIST_NAME_MAX, { error: `Nom trop long (${LIST_NAME_MAX} caractères maximum).` });
 
 export const listColorSchema = z.enum(LIST_COLORS, { error: "Couleur invalide." });
-
-export function isListColor(value: unknown): value is ListColor {
-  return listColorSchema.safeParse(value).success;
-}

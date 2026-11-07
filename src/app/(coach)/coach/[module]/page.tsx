@@ -17,7 +17,6 @@ const BUILT = new Set([
   "comptabilite",
   "notifications",
   "documents",
-  "recherche",
   "bibliotheque",
 ]);
 

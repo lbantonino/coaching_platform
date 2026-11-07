@@ -78,14 +78,23 @@
   --selected: rgba(139, 92, 246, 0.16);
   --selected-hover: rgba(255, 255, 255, 0.05);
 
-  /* Illustrations d'exercices (D-75) : tuile claire dans les deux thèmes. */
-  --illustration: #daf1fd;
-  --on-illustration: #4a4f57;
-  /* Graphiques (D-72). */
-  --chart-1: #3987e5;
-  --chart-2: #d95926;
-  --chart-3: #199e70;
-  --chart-4: #c98500;
+  /* Illustrations d'exercices (D-75) : tuile claire dans les deux thèmes ; fond lavande de la
+     maquette « Bibliothèque » (D-142), le même que celui peint dans les images. */
+  --illustration: #eee9fc;
+  /* Bibliothèque (maquette du 06/11/2026, D-142). Le sombre n'est pas dessiné : version PROPOSÉE,
+     dérivée des jetons sombres (violet doux, voiles blancs). Pastilles posées sur une illustration :
+     blanches dans les deux thèmes (la tuile reste claire). */
+  --lib-lavender: rgba(139, 92, 246, 0.16);
+  --lib-lavender-ink: #c4b5fd;
+  --lib-timeline: rgba(139, 92, 246, 0.3);
+  --lib-chip: rgba(255, 255, 255, 0.07);
+  --lib-body: #d4d4d8;
+  --lib-field-ring: rgba(255, 255, 255, 0.12);
+  --lib-dash: rgba(185, 163, 255, 0.35);
+  --lib-tag: rgba(255, 255, 255, 0.08);
+  --lib-menu-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 48px -18px rgba(0, 0, 0, 0.6);
+  --on-image: #ffffff;
+  --on-image-ink: #17151d;
 
   --ok: #34d399;
   --ok-soft: rgba(52, 211, 153, 0.1);
@@ -141,7 +150,6 @@
   --dlg-danger: #e11d48;
   --dlg-danger-ink: #fb7185;
   --dlg-danger-soft: rgba(251, 113, 133, 0.14);
-  --dlg-danger-line: rgba(251, 113, 133, 0.35);
   --dlg-disabled: #3f3f46;
   --dlg-handle: rgba(255, 255, 255, 0.2);
   --dlg-check-line: #52525b;
@@ -207,7 +215,6 @@
   --on-hybrid-fill: #18181b;
 
   /* Teintes héritées (icônes de chiffres clés), ramenées aux statuts. */
-  --amber: #fbbf24;
   --female: #f198bb;
   --female-soft: color-mix(in srgb, #f198bb 14%, transparent);
   --male: #66c3f6;
@@ -218,6 +225,18 @@
   --strength-text: #f26f85; /* 5,5:1 sur --strength-soft */
   --female-text: #f198bb;
   --male-text: #66c3f6;
+  /* Authentification (maquettes d'Antonino du 06/11/2026, D-139) : fond de l'en-tête du téléphone,
+     le même dans les deux thèmes, d'où sa seule déclaration ici. */
+  --auth-photo: #121018; /* fond du visuel 1c (en-tête du téléphone, D-145), pendant le chargement */
+  /* Teinte des ombres légères (onglet actif des pages légales) : violette en clair, noire en sombre.
+     S'emploie en rgb(var(--auth-shadow-rgb) / opacité). */
+  --auth-shadow-rgb: 0 0 0;
+  /* Bloc « Version provisoire » des pages légales (sombre : proposition). */
+  --notice: rgba(251, 191, 36, 0.1);
+  --notice-line: rgba(251, 191, 36, 0.28);
+  --notice-icon: #fbbf24;
+  --notice-text: #e9dcb2;
+  --notice-strong: #fff4d6;
   color-scheme: dark;
 }
 
@@ -271,12 +290,19 @@
   --selected: rgba(139, 92, 246, 0.1);
   --selected-hover: rgba(22, 18, 40, 0.04);
 
-  --illustration: #daf1fd;
-  --on-illustration: #4a4f57;
-  --chart-1: #2a78d6;
-  --chart-2: #eb6834;
-  --chart-3: #1baf7a;
-  --chart-4: #eda100;
+  --illustration: #eee9fc;
+  /* Bibliothèque : valeurs exactes de la maquette du 06/11/2026 (D-142). */
+  --lib-lavender: #f1edfc;
+  --lib-lavender-ink: #4b2bb0;
+  --lib-timeline: #e4ddfb;
+  --lib-chip: #f4f3f8;
+  --lib-body: #2c2a33;
+  --lib-field-ring: rgba(22, 18, 40, 0.12);
+  --lib-dash: rgba(106, 62, 224, 0.28);
+  --lib-tag: #ffffff;
+  --lib-menu-shadow: 0 0 0 1px rgba(22, 18, 40, 0.08), 0 24px 48px -18px rgba(20, 10, 50, 0.35);
+  --on-image: #ffffff;
+  --on-image-ink: #17151d;
 
   /* Vert, ambre, ♀ et ♂ : teintes de la maquette « Sportifs » (choix d'Antonino du 03/11/2026) ;
      au moins 4,5:1 sur une carte blanche, 4,2 à 4,5:1 sur le fond gris de la page. */
@@ -335,7 +361,6 @@
   --dlg-danger: #d1293f;
   --dlg-danger-ink: #c8243c;
   --dlg-danger-soft: #fdecef;
-  --dlg-danger-line: #f3cdd3;
   --dlg-disabled: #c9c7d1;
   --dlg-handle: #dcdae3;
   --dlg-check-line: #cfcdd8;
@@ -398,7 +423,6 @@
   --hybrid-soft: rgba(38, 203, 184, 0.14);
   --hybrid-fill: #26cbb8;
   --on-hybrid-fill: #18181b;
-  --amber: #8a4c00;
   --female: #c2266b;
   --female-soft: color-mix(in srgb, #c2266b 10%, transparent);
   --male: #2f6fbf;
@@ -407,5 +431,12 @@
   --strength-text: #b81d38;
   --female-text: #951b52; /* 5,3:1 sur la pastille ♀ */
   --male-text: #1f5091; /* 5,4:1 sur la pastille ♂ */
+  /* Authentification (maquettes du 06/11/2026, D-139), valeurs exactes de la maquette. */
+  --auth-shadow-rgb: 30 16 70;
+  --notice: #fbf3df;
+  --notice-line: rgba(185, 138, 31, 0.22);
+  --notice-icon: #a87a12;
+  --notice-text: #4f4212;
+  --notice-strong: #2e2608;
   color-scheme: light;
 }

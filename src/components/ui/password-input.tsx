@@ -13,17 +13,25 @@ export function PasswordInput({
   shown,
   onToggle,
   withToggle = true,
+  iconSize = 20,
   className = inputClass,
   ...props
 }: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   shown: boolean;
   onToggle: () => void;
   withToggle?: boolean;
+  // Pages d'entrée (maquettes du 06/11) : œil de 18 px.
+  iconSize?: number;
   className?: string;
 }) {
   return (
     <div className="relative">
-      <input {...props} type={shown ? "text" : "password"} className={`${className} pr-14`} />
+      <input
+        {...props}
+        type={shown ? "text" : "password"}
+        // Place de l'œil : sauf si la classe donnée la réserve déjà (champs des pages d'entrée).
+        className={/(^|\s)pr-/.test(className) ? className : `${className} pr-14`}
+      />
       {withToggle ? (
         <button
           type="button"
@@ -34,9 +42,9 @@ export function PasswordInput({
         >
           {/* Œil barré : caractères cachés ; œil ouvert : caractères visibles (demande d'Antonino). */}
           {shown ? (
-            <Eye aria-hidden size={20} strokeWidth={1.7} />
+            <Eye aria-hidden size={iconSize} strokeWidth={1.7} />
           ) : (
-            <EyeOff aria-hidden size={20} strokeWidth={1.7} />
+            <EyeOff aria-hidden size={iconSize} strokeWidth={1.7} />
           )}
         </button>
       ) : null}

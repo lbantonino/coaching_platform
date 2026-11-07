@@ -1,34 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { entryLinkClass, EntryTitle } from "@/components/layout/entry-ui";
+import { SocialButtons } from "@/components/layout/social-buttons";
 
-import { SocialButtons } from "../social-buttons";
-import { SignupForm } from "./signup-form";
+import { SignupView } from "./signup-form";
 
 export const metadata: Metadata = {
   title: "Créer un compte",
 };
 
-// Inscription libre (D-30, prompt Claude Design §7.1) : coach (crée son espace) ou sportif (rattaché
-// ensuite par son coach). Le sur-titre du panneau de marque suit le type de compte choisi.
+// Inscription (maquette d'Antonino du 06/11/2026, écran 02, D-139) : coach ou sportif, code d'accès
+// de la bêta privée (D-140). Les boutons Google / Facebook / Apple (composant serveur, seulement
+// s'ils sont configurés) sont passés à la vue, qui pose sa coquille : son panneau dépend du type de
+// compte choisi.
 export default function SignupPage() {
-  return (
-    <div className="flex flex-col gap-[22px]">
-      <EntryTitle
-        sub={
-          <>
-            Déjà un compte ?{" "}
-            <Link href="/login" className={entryLinkClass}>
-              Se connecter
-            </Link>
-          </>
-        }
-      >
-        Créer un compte
-      </EntryTitle>
-      <SignupForm />
-      <SocialButtons />
-    </div>
-  );
+  return <SignupView social={<SocialButtons />} />;
 }

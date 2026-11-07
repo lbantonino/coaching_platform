@@ -33,7 +33,17 @@
   --color-selected: var(--selected);
   --color-selected-hover: var(--selected-hover);
   --color-illustration: var(--illustration);
-  --color-on-illustration: var(--on-illustration);
+  /* Bibliothèque (D-142). */
+  --color-lib-lavender: var(--lib-lavender);
+  --color-lib-lavender-ink: var(--lib-lavender-ink);
+  --color-lib-timeline: var(--lib-timeline);
+  --color-lib-chip: var(--lib-chip);
+  --color-lib-body: var(--lib-body);
+  --color-lib-field-ring: var(--lib-field-ring);
+  --color-lib-dash: var(--lib-dash);
+  --color-lib-tag: var(--lib-tag);
+  --color-on-image: var(--on-image);
+  --color-on-image-ink: var(--on-image-ink);
   --color-on-inv: var(--on-inv);
   /* Boîtes de dialogue (kit « Coory Boites », 04/11/2026). */
   --color-dlg: var(--dlg);
@@ -63,7 +73,6 @@
   --color-dlg-danger: var(--dlg-danger);
   --color-dlg-danger-ink: var(--dlg-danger-ink);
   --color-dlg-danger-soft: var(--dlg-danger-soft);
-  --color-dlg-danger-line: var(--dlg-danger-line);
   --color-dlg-disabled: var(--dlg-disabled);
   --color-dlg-handle: var(--dlg-handle);
   --color-dlg-check-line: var(--dlg-check-line);
@@ -130,6 +139,13 @@
   --color-ai-border: var(--ai-border);
   --color-ai-text: var(--ai-text);
   --color-cta: var(--cta);
+  /* Authentification (D-139) */
+  --color-auth-photo: var(--auth-photo);
+  --color-notice: var(--notice);
+  --color-notice-line: var(--notice-line);
+  --color-notice-icon: var(--notice-icon);
+  --color-notice-text: var(--notice-text);
+  --color-notice-strong: var(--notice-strong);
   --color-cta-hover: var(--cta-hover);
   --color-on-cta: var(--on-cta);
   /* Graphite & Or (29/10/2026) : champs, avatars, filets doux, erreur. */
@@ -159,7 +175,6 @@
   --color-hybrid-fill: var(--hybrid-fill);
   --color-on-hybrid-fill: var(--on-hybrid-fill);
   /* Teintes des icônes de chiffres clés (D-24) */
-  --color-amber: var(--amber);
   /* Repère ♀ / ♂ (D-25) */
   --color-female: var(--female);
   --color-female-soft: var(--female-soft);
@@ -288,27 +303,6 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-}
-
-/* Matière translucide (audit apple-design du 28/10) : barres collées en haut ou en bas du téléphone,
-   le contenu défile dessous, flouté. Transparence réduite : fond plein ; contraste élevé : filet net. */
-.material {
-  /* Graphite & Or : aplat (§1.5), plus de flou translucide. */
-  background-color: var(--panel);
-  border-color: var(--line);
-}
-@media (prefers-reduced-transparency: reduce) {
-  .material {
-    background-color: var(--bg);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
-}
-@media (prefers-contrast: more) {
-  .material {
-    background-color: var(--bg);
-    border-color: var(--line-2);
   }
 }
 
@@ -461,4 +455,10 @@ select:not([multiple]) {
 [data-theme="light"] .brand-dark,
 :root:not([data-theme="light"]) .brand-light {
   display: none;
+}
+
+/* Carte image des pages d'entrée (D-141) : conteneur CSS, pour que l'image garde ses proportions et
+   tienne entière dans la moitié droite (largeur = min(100cqw, 100cqh × 664 / 728)). */
+@utility auth-stage {
+  container-type: size;
 }

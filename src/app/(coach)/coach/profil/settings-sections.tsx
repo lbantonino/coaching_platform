@@ -1,6 +1,7 @@
 "use client";
 
-import { Download, LogOut } from "lucide-react";
+import { ArrowUpRight, Download, FileText, Info, Lock, LogOut } from "lucide-react";
+import Link from "next/link";
 import {
   useActionState,
   useEffect,
@@ -12,6 +13,7 @@ import {
 } from "react";
 
 import { useMoney } from "@/components/blocks/money-context";
+import { ProvisionalNotice } from "@/components/layout/provisional-notice";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { FieldCheck } from "@/components/ui/field-check";
 import { mobileActionPrimaryClass } from "@/components/ui/mobile-action-bar";
@@ -19,6 +21,7 @@ import { ThemeChoice } from "@/components/ui/theme-choice";
 import { useToast } from "@/components/ui/toast";
 import { VatRateInput } from "@/components/ui/vat-rate-input";
 import { currencyLabel, currencySymbol } from "@/domain/billing/money";
+import { LEGAL } from "@/config/legal";
 import { COUNTRY_NAMES } from "@/domain/geo/country-names";
 import { logout } from "@/features/auth/actions";
 import {
@@ -873,6 +876,66 @@ export function DataSection({ intro }: { intro: string }) {
           garde-le en lieu sûr.
         </p>
       </SettingsCard>
+    </SectionBody>
+  );
+}
+
+// --- Légal (maquette du 06/11/2026, écran 07, D-139) ----------------------------------------------
+const legalDocuments = [
+  {
+    href: "/conditions",
+    title: "Conditions d’utilisation",
+    text: "Règles d’usage de Coory pour coachs et sportifs",
+    icon: FileText,
+  },
+  {
+    href: "/confidentialite",
+    title: "Politique de confidentialité",
+    text: "Données enregistrées, accès et droits RGPD",
+    icon: Lock,
+  },
+  {
+    href: "/mentions-legales",
+    title: "Mentions légales",
+    text: "Éditeur, hébergement et contact",
+    icon: Info,
+  },
+] as const;
+
+// Les trois documents, ouverts dans un nouvel onglet (flèche ↗) : la fenêtre reste ouverte derrière.
+export function LegalSection({ intro }: { intro: string }) {
+  return (
+    <SectionBody intro={intro}>
+      <ul className="flex flex-col gap-3">
+        {legalDocuments.map(({ href, title, text, icon: Icon }) => (
+          <li key={href}>
+            <Link
+              href={href}
+              target="_blank"
+              className="flex items-center gap-4 rounded-[16px] bg-dlg-field px-4 py-4 text-text transition-colors duration-150 hover:bg-dlg-accent-tile focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet md:px-5 md:py-[18px]"
+            >
+              <span
+                aria-hidden
+                className="flex size-11 shrink-0 items-center justify-center rounded-[13px] bg-dlg text-violet ring-1 ring-line-soft"
+              >
+                <Icon size={20} strokeWidth={1.8} />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                <span className="text-[15px] leading-[normal] font-bold md:text-[15.5px]">
+                  {title}
+                </span>
+                <span className="text-[13px] leading-[normal] text-muted">{text}</span>
+              </span>
+              <span className="text-[12.5px] font-medium whitespace-nowrap text-muted max-md:hidden">
+                Mis à jour le {LEGAL.updatedShort}
+              </span>
+              <ArrowUpRight aria-hidden size={18} strokeWidth={1.8} className="shrink-0" />
+              <span className="sr-only">(nouvel onglet)</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <ProvisionalNotice className="mt-1.5" />
     </SectionBody>
   );
 }

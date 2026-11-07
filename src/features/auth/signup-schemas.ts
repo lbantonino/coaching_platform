@@ -8,7 +8,8 @@ import { emailField, newPasswordField } from "./schemas";
 // Inscription libre (D-30) : règles PURES, testées par Vitest.
 
 // Version des conditions et de la politique de confidentialité acceptées (pages provisoires).
-export const TERMS_VERSION = "2026-10-23-provisoire";
+// Nouvelle version le 06/11/2026 (D-139) : éditeur, contact et hébergement complétés, code d'accès.
+export const TERMS_VERSION = "2026-11-06-provisoire";
 
 export const ACCOUNT_KINDS = ["coach", "athlete"] as const;
 export type AccountKind = (typeof ACCOUNT_KINDS)[number];
@@ -47,22 +48,26 @@ const terms = z.literal("on", {
   error: "Tu dois accepter les conditions pour continuer.",
 });
 
-export const signupSchema = z
-  .object({
-    kind: z.enum(ACCOUNT_KINDS, { error: "Indique si tu es coach ou sportif." }),
-    firstName: name("prénom"),
-    lastName: name("nom"),
-    email: emailField,
-    phone,
-    organizationName,
-    password: newPasswordField,
-    confirmation: z.string(),
-    terms,
-  })
-  .refine((values) => values.password === values.confirmation, {
-    error: "Les deux mots de passe ne correspondent pas.",
-    path: ["confirmation"],
-  });
+// Code d'accès de la bêta privée (D-140) : vérifié par Supabase (crochet « before user created »),
+// ici seulement « présent ». Majuscules et espaces des bords ignorés, comme en base.
+const accessCode = z
+  .string()
+  .trim()
+  .min(1, { error: "Indique ton code d'accès." })
+  .max(64, { error: "Code d'accès incorrect." })
+  .transform((value) => value.toUpperCase());
+
+// Inscription (maquette du 06/11/2026, D-139) : plus de téléphone, d'entreprise ni de confirmation
+// du mot de passe (décision d'Antonino) ; téléphone et entreprise se remplissent dans Paramètres.
+export const signupSchema = z.object({
+  kind: z.enum(ACCOUNT_KINDS, { error: "Indique si tu es coach ou sportif." }),
+  firstName: name("prénom"),
+  lastName: name("nom"),
+  email: emailField,
+  password: newPasswordField,
+  accessCode,
+  terms,
+});
 
 // Dernière étape (après confirmation de l'e-mail, ou après Google / Facebook / Apple).
 export const onboardingSchema = z.object({

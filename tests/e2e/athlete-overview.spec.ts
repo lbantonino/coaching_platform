@@ -36,24 +36,6 @@ test("la vue d'ensemble résume la fiche et « Modifier » ouvre le bon onglet",
   await expect(page.getByLabel("Séances par semaine")).toHaveValue("5");
 });
 
-test("la recherche du haut trouve un sportif, quel que soit son statut", async ({
-  page,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== "ordinateur", "Barre du haut affichée sur ordinateur");
-  await page.goto("/login");
-  await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
-  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
-  await page.getByRole("button", { name: "Se connecter" }).click();
-  await expect(page).toHaveURL(/\/coach$/);
-
-  // Kevin Mertens est archivé : la recherche du haut (page Recherche globale, D-62) couvre tous
-  // les statuts.
-  await page.getByRole("searchbox", { name: "Rechercher dans Coory" }).fill("mertens");
-  await page.getByRole("searchbox", { name: "Rechercher dans Coory" }).press("Enter");
-  await expect(page).toHaveURL(/\/coach\/recherche\?q=mertens$/);
-  await expect(page.getByRole("region", { name: /Sportifs/ })).toContainText("Kevin Mertens");
-});
-
 test("la fiche propose « Créer un programme », le menu « ••• » et les prochaines séances", async ({
   page,
 }, testInfo) => {

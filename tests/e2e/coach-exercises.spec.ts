@@ -11,6 +11,17 @@ async function login(page: Page, email: string) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
+// Actions de la fiche (maquette « Bibliothèque », D-142) : dans l'en-tête sur ordinateur, dans le
+// menu ⋮ de la barre du haut sur téléphone.
+async function sheetAction(page: Page, phone: boolean, name: string) {
+  if (phone) {
+    await page.getByRole("button", { name: "Plus d'actions" }).click();
+    await page.getByRole("button", { name: new RegExp(`^${name}`) }).click();
+  } else {
+    await page.getByRole(name === "Supprimer" ? "button" : "link", { name, exact: true }).click();
+  }
+}
+
 // Une vraie image PNG de 1 × 1 pixel (signature lue par le serveur).
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
@@ -63,11 +74,9 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
   await expect(page).toHaveURL(/\/coach\/bibliotheque\/[0-9a-f-]{36}$/);
   const sheetUrl = page.url();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
-  // La pastille : sous le titre (téléphone) ou sur la ligne du chemin (ordinateur, s'il y a la
-  // place), D-124 : seule celle affichée compte.
-  await expect(
-    page.getByText("Mon exercice", { exact: true }).filter({ visible: true }).first(),
-  ).toBeVisible();
+  // « Mon exercice » ouvre la ligne de détails, sous le nom (D-142).
+  const phone = testInfo.project.name === "telephone";
+  await expect(page.getByText(/^Mon exercice · /)).toBeVisible();
   const photo = page.getByRole("img", { name: `Illustration : ${name}` });
   await expect(photo).toBeVisible();
   await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1);
@@ -80,7 +89,7 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
   // Modifier (kit « Coory Pages », page 11, D-121) : la photo et le lien vidéo enregistrés sont
   // réaffichés ; « Supprimer l'exercice » demande toujours une confirmation (« Annuler » ne supprime
   // rien) ; le nouveau nom s'affiche.
-  await page.getByRole("link", { name: "Modifier" }).click();
+  await sheetAction(page, phone, "Modifier");
   await expect(page.getByText("Photo actuelle")).toBeVisible();
   await expect(page.getByRole("img", { name: "Aperçu de la photo" })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Lien vidéo" })).toHaveValue(
@@ -97,7 +106,9 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
 
   // Dans la bibliothèque : « Mes exercices », avec la rubrique Mobilité.
   await page.goto("/coach/bibliotheque?miens");
-  await expect(page.getByRole("button", { name: /^Mobilité/ })).toBeVisible();
+  await page.getByRole("button", { name: /^Mes exercices/ }).click();
+  await expect(page.getByRole("option", { name: /^Mobilité/ })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("link", { name: new RegExp(`^${name} bis`) })).toContainText(
     "Mon exercice",
   );
@@ -113,7 +124,7 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
 
   // Supprimer, après confirmation.
   await page.goto(sheetUrl.replace(/^https?:\/\/[^/]+/, ""));
-  await page.getByRole("button", { name: "Supprimer" }).click();
+  await sheetAction(page, phone, "Supprimer");
   await page
     .getByRole("dialog", { name: `Supprimer « ${name} bis » ?` })
     .getByRole("button", { name: "Supprimer" })
@@ -126,10 +137,10 @@ test("un coach crée son exercice avec photo et vidéo, le modifie et le supprim
 
 test("« Créer ma variante » pré-remplit le formulaire depuis un exercice du catalogue", async ({
   page,
-}) => {
+}, testInfo) => {
   await login(page, "coach-b@example.test");
   await page.goto("/coach/bibliotheque/squat");
-  await page.getByRole("link", { name: "Créer ma variante" }).click();
+  await sheetAction(page, testInfo.project.name === "telephone", "Créer ma variante");
   await expect(page).toHaveURL(/\/coach\/bibliotheque\/nouveau\?variante=squat$/);
   // Bandeau de variante (kit « Coory Pages », page 08, D-122) : le nom de l'original et un lien
   // vers sa fiche ; le bouton principal devient « Enregistrer ma variante ».

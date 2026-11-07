@@ -29,8 +29,6 @@ export const dlgLabelClass =
 
 export const dlgOptionalClass = "font-normal text-dlg-faint";
 
-export const dlgHintClass = "text-[13px] leading-[1.5] text-muted text-pretty";
-
 // Texte des champs : 15 px sur ordinateur comme le kit, 16 px sur téléphone (en dessous, Safari sur
 // iPhone agrandit la page quand on touche le champ).
 const dlgFieldBase =
@@ -42,10 +40,6 @@ export const dlgInputClass = `${dlgFieldBase} h-[50px] px-3.5 md:h-[46px]`;
 export const dlgSelectClass = `${dlgFieldBase} h-[50px] appearance-none pr-[41px] pl-3.5 md:h-[46px]`;
 
 export const dlgTextareaClass = `${dlgFieldBase} block min-h-[92px] resize-y px-3.5 py-[13px] leading-[1.5]!`;
-
-// Suffixe dans le champ (« min », « % », « kg »…) : 13 px 600 gris clair.
-export const dlgSuffixClass =
-  "pointer-events-none absolute top-1/2 right-3.5 -translate-y-1/2 text-[13px] font-semibold text-dlg-faint";
 
 // Contrôle segmenté : fond gris rayon 13, marge 4, options de 38 px ; l'option active est blanche avec
 // une ombre douce. Pleine largeur, colonnes égales ; DlgSegmented `fit` : à la largeur de son contenu
@@ -60,14 +54,6 @@ export const dlgSegmentOptionClass =
 // de 14 px (classe `group` : la coche s'affiche avec group-has-checked).
 export const dlgChipClass =
   "group inline-flex h-[38px] cursor-pointer items-center gap-[7px] rounded-[20px] border border-dlg-border bg-dlg px-3.5 text-[14px] leading-[normal] font-semibold whitespace-nowrap text-text transition-[color,background-color,border-color] duration-150 has-checked:border-dlg-chip-line has-checked:bg-dlg-accent-tile has-checked:text-dlg-accent-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-dlg-accent";
-
-// Case à cocher : 22 px, rayon 7, filet 1,5 ; cochée : violet plein, coche blanche.
-export const dlgCheckboxClass =
-  "peer grid size-[22px] shrink-0 cursor-pointer appearance-none place-items-center rounded-[7px] border-[1.5px] border-dlg-check-line bg-dlg transition-[color,background-color,border-color,box-shadow] duration-150 checked:border-dlg-accent checked:bg-dlg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dlg-accent";
-
-// Carte à cocher (case + texte) : marge 14, rayon 14, filet ; cochée : fond et filet violets doux.
-export const dlgCheckCardClass =
-  "relative flex cursor-pointer items-start gap-3 rounded-[14px] p-3.5 text-[15px] leading-[1.4] font-semibold text-text inset-ring inset-ring-dlg-field-line transition-[color,background-color,border-color,box-shadow] duration-150 has-checked:bg-dlg-accent-soft has-checked:inset-ring-dlg-accent-line";
 
 // Zone de dépôt d'un fichier (kit, 21) : marge 20, rayon 16, pointillés violets 1,5, fond violet très
 // pâle ; tuile 46 à gauche, texte à droite.

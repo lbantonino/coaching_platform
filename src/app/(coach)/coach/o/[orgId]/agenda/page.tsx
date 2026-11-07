@@ -530,7 +530,7 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
               todayHref={todayHref}
             />
             <div className="flex min-w-0 items-center justify-end gap-2">
-              <HeaderTools compact />
+              <HeaderTools />
               <NewSessionButton variant="header" date={shownView === "jour" ? date : undefined} />
             </div>
           </header>

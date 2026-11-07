@@ -58,7 +58,7 @@ export const emptyLibraryFilters: LibraryFilters = {
 };
 
 // Nombre de cartes affichées d'un coup : éviter des centaines de résultats sur un téléphone (docs/08).
-export const LIBRARY_PAGE_SIZE = 30;
+export const LIBRARY_PAGE_SIZE = 24;
 
 // Vignette : l'image principale, sinon celle du début du mouvement (RepDB n'a souvent que début et fin).
 export const thumbnailOf = (images: { main: string | null; start: string | null }) =>

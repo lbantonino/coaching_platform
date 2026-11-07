@@ -1,6 +1,5 @@
-import { EntryShell } from "@/components/layout/entry-shell";
-
-// Connexion et inscription : coquille des pages d'entrée (prompt Claude Design §5.1).
+// Inscription et bienvenue : chaque page pose sa propre coquille (SplitShell), car son panneau visuel
+// dépend de ce qui est choisi dans le formulaire (Coach / Sportif, pays et TVA). D-139.
 export default function EntryLayout({ children }: LayoutProps<"/">) {
-  return <EntryShell>{children}</EntryShell>;
+  return children;
 }

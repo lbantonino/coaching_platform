@@ -12,36 +12,16 @@ import { notificationsHref } from "./navigation";
 import { NotificationsPopover } from "./notifications-popover";
 import { useShell } from "./shell-context";
 
-// Outils à droite de l'en-tête de page sur ordinateur (maquette v6, D-77) : recherche « Rechercher dans
-// Coory… ⌘K », Assistant IA en violet (coach), cloche à pastille violette. Plus de bouton de thème
-// (D-78) : le thème se choisit dans les Paramètres.
-// Coach : la recherche ouvre la page Recherche globale (D-62) avec la saisie.
-// Sportif et admin : la recherche ouvre la page Recherche de l'espace. ⌘K / Ctrl K y mène aussi.
-// `compact` (barre de l'Agenda, D-78) : sous 1536 px, la recherche devient une loupe (⌘K marche
-// toujours) pour laisser la place au choix de la vue et à « Nouvelle séance ». `compact="xl"` (page
-// avec retour et boutons, D-124) : la loupe seulement sous 1280 px, pour que le chemin
-// « ← Bibliothèque · Back squat » reste lisible sur une seule ligne.
-export function HeaderTools({ compact = false }: { compact?: boolean | "xl" }) {
-  const { space, orgBase } = useShell();
-  const icon = compact === "xl" ? "xl:hidden" : "2xl:hidden";
-  const field = compact === "xl" ? "hidden xl:contents" : "hidden 2xl:contents";
+// Outils à droite de l'en-tête de page sur ordinateur (maquette v6, D-77) : Assistant IA en violet
+// (coach), cloche à pastille violette. Plus de bouton de thème (D-78) : le thème se choisit dans les
+// Paramètres. Plus de recherche globale côté coach (D-146, décision d'Antonino du 06/11/2026) :
+// chaque liste a sa propre recherche (Sportifs, Bibliothèque, Documents, Messages).
+// Sportif et admin : « Rechercher dans Coory… » ouvre la page Recherche de l'espace (⌘K aussi).
+export function HeaderTools() {
+  const { space } = useShell();
   return (
     <div className="hidden items-center gap-2.5 lg:flex">
-      {compact && space === "coach" ? (
-        <Link
-          href="/coach/recherche"
-          aria-label="Rechercher dans Coory"
-          title="Rechercher (⌘K)"
-          className={`${headerIcon} ${icon}`}
-        >
-          <Search aria-hidden size={15} strokeWidth={1.8} />
-        </Link>
-      ) : null}
-      {space === "coach" && orgBase ? (
-        <span className={compact ? field : "contents"}>
-          <CoachSearch />
-        </span>
-      ) : (
+      {space === "coach" ? null : (
         <SearchLink href={space === "athlete" ? "/app/recherche" : "/admin/recherche"} />
       )}
       {space === "coach" ? <AssistantButton withLabel /> : null}
@@ -152,38 +132,6 @@ function useCommandK(onTrigger: () => void) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-}
-
-// Formulaire GET vers la page Recherche (D-62) : le résultat est une vraie page, partageable, qui
-// marche aussi sans JavaScript. Sur la page Recherche elle-même, ⌘K revient à son grand champ.
-function CoachSearch() {
-  const input = useRef<HTMLInputElement>(null);
-  useCommandK(() => {
-    if (window.location.pathname !== "/coach/recherche") input.current?.focus();
-  });
-  return (
-    <form
-      role="search"
-      action="/coach/recherche"
-      className={`${searchBox} focus-within:inset-ring-muted`}
-    >
-      <label htmlFor="coach-search" className="sr-only">
-        Rechercher dans Coory
-      </label>
-      <Search aria-hidden size={13} strokeWidth={2} className="shrink-0" />
-      <input
-        ref={input}
-        id="coach-search"
-        name="q"
-        type="search"
-        autoComplete="off"
-        placeholder="Rechercher dans Coory"
-        // Sans la croix d'effacement de Chrome : elle prend la place du texte dans ce champ étroit.
-        className="h-full min-w-0 flex-1 bg-transparent text-text outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
-      />
-      <Kbd />
-    </form>
-  );
 }
 
 function SearchLink({ href }: { href: string }) {

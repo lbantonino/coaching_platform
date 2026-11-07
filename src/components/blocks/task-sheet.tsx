@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -14,7 +14,6 @@ import {
   type ReactNode,
 } from "react";
 
-import { buttonClass } from "@/components/ui/button";
 import {
   DlgChips,
   DlgDate,
@@ -319,16 +318,5 @@ function TaskForm({
         </ConfirmDialog>
       ) : null}
     </>
-  );
-}
-
-// Bouton rouge « Nouvelle tâche » (page Tâches).
-export function NewTaskButton() {
-  const open = useOpenTaskSheet();
-  return (
-    <button type="button" disabled={!open} onClick={() => open?.()} className={buttonClass()}>
-      <Plus aria-hidden size={16} strokeWidth={2} />
-      Nouvelle tâche
-    </button>
   );
 }

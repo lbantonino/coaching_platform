@@ -1,6 +1,6 @@
-import { LegalShell } from "@/components/layout/entry-shell";
+import { LegalShell } from "@/components/layout/legal-shell";
 
-// Pages légales : lecture longue de 720 px, sans panneau de marque (prompt Claude Design §5.1).
+// Pages légales : en-tête, document, pied (maquette d'Antonino du 06/11/2026, écrans 04 à 06, D-139).
 export default function LegalLayout({ children }: LayoutProps<"/">) {
   return <LegalShell>{children}</LegalShell>;
 }

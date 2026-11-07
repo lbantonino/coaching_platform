@@ -28,6 +28,15 @@ export type SignupValues = {
   organizationName: string;
 };
 
+// Saisie de l'inscription (D-139, D-140) : sans téléphone ni entreprise, avec le code d'accès.
+export type RegisterValues = {
+  kind: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  accessCode: string;
+};
+
 export type SignupState = {
   status: "idle" | "error";
   // Erreur générale, affichée en bandeau au-dessus du formulaire.
@@ -35,18 +44,17 @@ export type SignupState = {
   // Erreurs de saisie, une par champ, affichées sous chaque champ.
   fields: Record<string, string>;
   attempt: number;
-  values: SignupValues | null;
+  values: RegisterValues | null;
 };
 
 export async function signUp(previous: SignupState, formData: FormData): Promise<SignupState> {
   const field = (name: string) => String(formData.get(name) ?? "");
-  const values: SignupValues = {
+  const values: RegisterValues = {
     kind: field("kind"),
     firstName: field("firstName"),
     lastName: field("lastName"),
     email: field("email").trim(),
-    phone: field("phone"),
-    organizationName: field("organizationName"),
+    accessCode: field("accessCode"),
   };
   const fail = (message: string | null, fields: Record<string, string> = {}): SignupState => ({
     status: "error",
@@ -59,7 +67,6 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
   const parsed = signupSchema.safeParse({
     ...values,
     password: field("password"),
-    confirmation: field("confirmation"),
     terms: formData.get("terms") ?? undefined,
   });
   if (!parsed.success) {
@@ -83,14 +90,22 @@ export async function signUp(previous: SignupState, formData: FormData): Promise
         kind: data.kind,
         first_name: data.firstName,
         last_name: data.lastName,
-        phone: data.phone,
-        organization_name: data.organizationName,
         terms_version: TERMS_VERSION,
+        // Lu par le crochet Supabase, puis retiré du compte (migration 20261106120000, D-140).
+        access_code: data.accessCode,
       },
     },
   });
 
   if (error?.status === 429) return fail("Trop de demandes. Réessaie dans quelques minutes.");
+  // Refus du crochet « code d'accès » (bêta privée, D-140).
+  if (error?.status === 403) {
+    return fail(null, {
+      accessCode: error.message.includes("fermées")
+        ? "Les inscriptions sont fermées pour le moment."
+        : "Code d'accès incorrect. Demande-le à la personne qui t'a invité.",
+    });
+  }
   if (error?.code === "weak_password")
     return fail(null, { password: "Mot de passe trop faible : choisis-en un plus long." });
   if (error && error.code !== "user_already_exists") {

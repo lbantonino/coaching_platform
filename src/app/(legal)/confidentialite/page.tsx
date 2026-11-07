@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { LEGAL } from "@/config/legal";
+
 import { LegalDocument } from "../legal-notice";
 
 export const metadata: Metadata = {
@@ -17,10 +19,13 @@ export default function PrivacyPage() {
           title: "Responsable du traitement",
           body: (
             <p>
-              [Nom de l&apos;éditeur et adresse de contact pour la protection des données]. Pour les
-              données qu&apos;un coach saisit sur ses sportifs, le coach est responsable de
-              traitement et Coory agit comme sous-traitant [à confirmer avec un juriste, contrat de
-              sous-traitance à prévoir].
+              {LEGAL.publisher}, éditeur de Coory, pour les données des comptes (contact :{" "}
+              <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
+                {LEGAL.contactEmail}
+              </a>
+              ). Pour les données qu’un coach saisit sur ses sportifs, le coach est responsable de
+              traitement et Coory agit comme sous-traitant [à confirmer avec un juriste, clauses de
+              sous-traitance à ajouter aux conditions d’utilisation].
             </p>
           ),
         },
@@ -29,10 +34,10 @@ export default function PrivacyPage() {
           body: (
             <p>
               <strong>Compte</strong> : prénom, nom, adresse e-mail, téléphone (facultatif), photo
-              (facultative), date d&apos;acceptation des conditions. <strong>Suivi sportif</strong>,
+              (facultative), date d’acceptation des conditions. <strong>Suivi sportif</strong>,
               saisi par le coach : objectifs, disponibilités, repères et performances, notes.{" "}
-              <strong>Santé</strong> : contraintes physiques, seulement avec l&apos;accord exprès du
-              sportif (article 9 du RGPD), effacées s&apos;il retire cet accord.
+              <strong>Santé</strong> : contraintes physiques, seulement avec l’accord exprès du
+              sportif (article 9 du RGPD), effacées s’il retire cet accord.
             </p>
           ),
         },
@@ -51,8 +56,9 @@ export default function PrivacyPage() {
           body: (
             <p>
               Le coach et les personnes de son organisation ; le sportif pour ce qui le concerne.
-              Chaque espace de coach est séparé des autres. Hébergement : Supabase, [région de
-              l&apos;Union européenne à confirmer à la mise en ligne].
+              Chaque espace de coach est séparé des autres. Hébergement : Supabase (base de données
+              et fichiers) dans l’Union européenne [région à confirmer à la mise en ligne], et
+              Vercel (application) [à confirmer à la mise en ligne].
             </p>
           ),
         },
@@ -69,8 +75,12 @@ export default function PrivacyPage() {
           body: (
             <p>
               Accès, rectification, effacement, limitation, opposition, portabilité, retrait du
-              consentement à tout moment, et réclamation auprès de l&apos;Autorité de protection des
-              données (Belgique). Pour les exercer : [adresse de contact].
+              consentement à tout moment, et réclamation auprès de l’Autorité de protection des
+              données (Belgique). Pour les exercer :{" "}
+              <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
+                {LEGAL.contactEmail}
+              </a>
+              .
             </p>
           ),
         },

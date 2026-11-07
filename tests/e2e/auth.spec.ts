@@ -18,7 +18,7 @@ test("un visiteur non connecté est renvoyé vers la connexion", async ({ page }
   await page.goto("/coach");
   await expect(page).toHaveURL(/\/login$/);
   await expect(
-    page.getByRole("heading", { name: /^(Bon retour\.|Connexion)$/ }).filter({ visible: true }),
+    page.getByRole("heading", { name: /^Connexion\.?$/ }).filter({ visible: true }),
   ).toBeVisible();
 });
 

@@ -39,8 +39,11 @@ function applyTheme(theme: Theme) {
 export function ThemeToggle({
   size = "md",
   className,
+  iconSize,
 }: {
   size?: "sm" | "md";
+  // Taille de l'icône quand une classe remplace le bouton standard (pages légales : 17 px).
+  iconSize?: number;
   // Classe à la place du bouton icône standard (en-tête des pages, D-77).
   className?: string;
 }) {
@@ -56,7 +59,7 @@ export function ThemeToggle({
       title={label}
       className={className ?? iconButtonClass({ size })}
     >
-      <Icon aria-hidden size={className ? 15 : 18} strokeWidth={1.7} />
+      <Icon aria-hidden size={iconSize ?? (className ? 15 : 18)} strokeWidth={1.7} />
     </button>
   );
 }

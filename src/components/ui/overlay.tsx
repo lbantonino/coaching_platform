@@ -57,7 +57,13 @@ const WIDTHS = {
   // 660 au plus ; téléphone : sous la barre du haut (64 px), 10 px des bords, rayon 30, sans poignée.
   assistant:
     "md:max-w-[min(940px,calc(100vw-48px))] md:mt-[92px] md:mb-auto md:max-h-[min(660px,calc(100vh-110px))] max-md:mt-16 max-md:mb-auto max-md:mx-2.5 max-md:w-[calc(100%-20px)] max-md:max-h-[calc(100%-80px)] max-md:rounded-[30px] max-md:pb-0",
+  // Sélecteur d'un filtre (Bibliothèque, maquette 1a / 1c du 06/11/2026, D-142) : toujours ancré à son
+  // bouton sur ordinateur (256 px, rayon 14, sans voile) ; sur téléphone, feuille FLOTTANTE à 8 px des
+  // bords, rayon 30 (classes ci-dessous, ajoutées même quand le menu est ancré).
+  picker: "",
 } as const;
+const PICKER_PHONE =
+  "max-md:mx-2 max-md:mb-[calc(8px+env(safe-area-inset-bottom))] max-md:w-[calc(100%-16px)] max-md:rounded-[30px] max-md:pb-0 md:backdrop:bg-transparent";
 export type OverlaySize = keyof typeof WIDTHS;
 
 // Menu ancré (kit, 16 et 32) : sur ordinateur, collé à son bouton au lieu d'être centré (rayon 18) ;
@@ -386,9 +392,13 @@ export function Overlay({
       onPointerCancel={onPointerEnd}
       // La fenêtre ne défile pas : en-tête et pied restent fixes, seul le corps défile (kit). En bas
       // du téléphone, la zone du geste d'accueil est laissée libre (safe-area).
-      className={`m-0 mt-auto max-h-[calc(100%-44px)] w-full max-w-none overflow-hidden rounded-t-[28px] bg-dlg p-0 pb-[env(safe-area-inset-bottom)] text-text shadow-[var(--dlg-shadow)] backdrop:bg-[var(--dlg-scrim)] open:flex open:flex-col md:max-h-[min(720px,calc(100vh-48px))] md:pb-0 ${
+      className={`m-0 mt-auto max-h-[calc(100%-44px)] w-full max-w-none overflow-hidden rounded-t-[28px] bg-dlg p-0 pb-[env(safe-area-inset-bottom)] text-text ${
+        size === "picker"
+          ? `shadow-[var(--lib-menu-shadow)] ${PICKER_PHONE}`
+          : "shadow-[var(--dlg-shadow)]"
+      } backdrop:bg-[var(--dlg-scrim)] open:flex open:flex-col md:max-h-[min(720px,calc(100vh-48px))] md:pb-0 ${
         anchor
-          ? `md:m-0 md:w-[var(--aw)] md:rounded-[18px] md:left-[var(--ax)] md:right-auto ${
+          ? `md:m-0 md:w-[var(--aw)] ${size === "picker" ? "md:rounded-[14px]" : "md:rounded-[18px]"} md:left-[var(--ax)] md:right-auto ${
               anchor.side === "top"
                 ? "md:top-[var(--ay)] md:bottom-auto md:origin-top"
                 : "md:top-auto md:bottom-[var(--ay)] md:origin-bottom-left"
@@ -400,7 +410,16 @@ export function Overlay({
         <div className="flex min-h-0 flex-auto flex-col">
           {/* Poignée du téléphone (40 × 5) ; on attrape aussi l'en-tête, juste dessous. Pas pour les
               Paramètres, en plein écran. */}
-          {size === "settings" || size === "assistant" ? null : (
+          {size === "settings" || size === "assistant" ? null : size === "picker" ? (
+            // Poignée du sélecteur (maquette 1c) : 38 × 5, rayon 3, 10 px du haut et 10 px dessous.
+            <span
+              aria-hidden
+              data-sheet-grab
+              className="flex shrink-0 touch-none justify-center pt-2.5 pb-2.5 md:hidden"
+            >
+              <span className="h-[5px] w-[38px] rounded-[3px] bg-dlg-handle" />
+            </span>
+          ) : (
             <span
               aria-hidden
               data-sheet-grab

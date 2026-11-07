@@ -10,6 +10,9 @@
 --   - emails en domaine réservé : *@example.test ;
 --   - le seed doit pouvoir être rejoué à l'identique après chaque reset.
 --
+-- Code d'accès de l'inscription en local (bêta privée, D-140) : COORY-DEV-2026 (code de démo, jamais
+-- celui de la production, que seul Antonino choisit en ligne).
+--
 -- Comptes de connexion locaux (mot de passe de démo commun : demo-coach-local) :
 --   coach-a@example.test -> propriétaire de « Organisation Démo A »
 --   coach-b@example.test -> propriétaire de « Organisation Démo B »
@@ -1380,3 +1383,6 @@ values
   ('0a000000-0000-4000-8000-0000000000a1', 'f2000000-0000-4000-8000-000000000010', 's12-1', 12, 1, '{"title": "Coaching force", "discipline": "strength", "sessionType": "Force", "durationMinutes": 60, "objective": "Gagner en force sur les mouvements de base", "coachTips": "Garde 2 répétitions en réserve sur les séries lourdes.", "steps": [{"title": "Échauffement", "badge": "10 min", "short": "10 min échauffement", "lines": ["Montée en charge progressive"]}, {"title": "Bloc force", "badge": "3 × 5", "short": "3 × 5 squat, développé, rowing", "lines": ["Squat · 3 × 5 · RPE 7", "Développé couché · 3 × 5", "Rowing · 4 × 8"]}, {"title": "Retour au calme", "badge": "5 min", "short": "5 min retour au calme", "lines": ["Étirements doux"]}], "withCoach": {"sessionId": "ca000000-0000-4000-8000-000000000202"}}'::jsonb),
   ('0a000000-0000-4000-8000-0000000000a1', 'f2000000-0000-4000-8000-000000000010', 's12-2', 12, 2, '{"title": "Coaching force", "discipline": "strength", "sessionType": "Force", "durationMinutes": 60, "objective": "Gagner en force sur les mouvements de base", "coachTips": "Garde 2 répétitions en réserve sur les séries lourdes.", "steps": [{"title": "Échauffement", "badge": "10 min", "short": "10 min échauffement", "lines": ["Montée en charge progressive"]}, {"title": "Bloc force", "badge": "3 × 5", "short": "3 × 5 squat, développé, rowing", "lines": ["Squat · 3 × 5 · RPE 7", "Développé couché · 3 × 5", "Rowing · 4 × 8"]}, {"title": "Retour au calme", "badge": "5 min", "short": "5 min retour au calme", "lines": ["Étirements doux"]}], "withCoach": {"sessionId": "ca000000-0000-4000-8000-000000000214"}}'::jsonb),
   ('0a000000-0000-4000-8000-0000000000a1', 'f2000000-0000-4000-8000-000000000010', 's12-3', 12, 3, '{"title": "Full body autonome", "discipline": "strength", "sessionType": "Force", "durationMinutes": 50, "objective": "Entretenir la force", "coachTips": "Mêmes exercices qu''en coaching, charges un cran en dessous.", "steps": [{"title": "Échauffement", "badge": "10 min", "short": "10 min échauffement", "lines": ["Cardio léger et mobilité"]}, {"title": "Full body", "badge": "3 tours", "short": "3 tours full body", "lines": [], "repeat": {"times": 3, "lines": ["Goblet squat · 10", "Pompes · 10", "Rowing haltère · 10"]}}, {"title": "Retour au calme", "badge": "5 min", "short": "5 min retour au calme", "lines": ["Étirements doux"]}]}'::jsonb);
+
+-- Code d'accès de l'inscription en local (D-140) : voir l'en-tête.
+select private.set_signup_access_code('COORY-DEV-2026');
