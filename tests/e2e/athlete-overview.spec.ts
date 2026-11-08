@@ -127,10 +127,8 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(steps).toContainText("Échauffement");
   await expect(steps).toContainText("Répéter 5 fois");
   await expect(page.getByRole("heading", { name: "Conseil du coach" })).toBeVisible();
-  // Déroulé (maquette 2d) : 20 + 5 × (4 + 1:45) + 5 ≈ 54 min.
-  await expect(page.getByRole("region", { name: "Déroulé de la séance" })).toContainText(
-    "≈ 54 min",
-  );
+  // Plus de graphique « Déroulé de la séance » (D-152).
+  await expect(page.getByRole("region", { name: "Déroulé de la séance" })).toHaveCount(0);
   await expect(page.getByRole("main").getByText("À faire").first()).toBeVisible();
   // Retour : dans l'en-tête de page sur ordinateur, dans la barre du haut sur téléphone.
   await page

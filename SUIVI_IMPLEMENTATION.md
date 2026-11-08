@@ -29,7 +29,29 @@
 | 7. Recette finale | À faire |
 
 ## Dernière session
-- Date : 2026-11-07
+- Date : 2026-11-08
+- Objectif : étude des applis de référence pour les programmes (D-151, `docs/17_ETUDE_APPLIS_PROGRAMMES.md`, brief `coory-design/BRIEF_CLAUDE_DESIGN_PROGRAMMES.md`) ; retrait du graphique de la page d'une séance (D-152).
+
+### Plus de graphique sur la page d'une séance (D-152)
+```
+Demande d'Antonino : retirer les graphiques sous le détail des séances (Running, Musculation, Hyrox).
+Retirés : la section « Déroulé de la séance » (TimelinePart, SessionTimeline) de
+programme/[sessionId]/page.tsx ; sessionTimeline, stepMinutes, parseMinutes et la durée des lignes
+(Segment.minutes) de features/programs/session-display.ts ; le jeton --effort-easy (clair et sombre).
+Gardés : en-tête de la séance, étapes et bloc répété, récapitulatif, conseil du coach.
+Tests : typecheck, lint, Prettier OK ; Vitest 269/269 (3 tests du déroulé retirés, 1 test de stepRole
+ajouté) ; e2e athlete-overview adapté (la région « Déroulé de la séance » n'existe plus), non relancé.
+Vérifié au navigateur (1 440 px) : aucune des 5 séances de la semaine d'Inès n'a encore le graphique.
+```
+
+### Étude des applis de référence (D-151)
+```
+docs/17_ETUDE_APPLIS_PROGRAMMES.md : Garmin Connect, Campus Coach, Runna, Fréquence Running, RoxFit,
+Hevy, Hevy Coach, Alpha Progression, TrueCoach ; parcours du coach par discipline ; 5 questions.
+coory-design/BRIEF_CLAUDE_DESIGN_PROGRAMMES.md : 9 écrans à dessiner par Claude Design. Rien de codé.
+```
+
+## Session du 07/11/2026
 - Objectif : audit complet et nettoyage final du dossier.
 
 ### Audit complet et nettoyage final du dossier (D-150)
