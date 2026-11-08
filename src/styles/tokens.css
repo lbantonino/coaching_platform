@@ -116,8 +116,6 @@
   --goal-main: rgba(255, 192, 79, 0.1);
   --goal-main-line: rgba(255, 192, 79, 0.3);
   --goal-main-text: #d9cba8;
-  /* Déroulé d'une séance (page 2d) : allure facile (échauffement, retour au calme). */
-  --effort-easy: #3a3942;
   --alert: #fb7185;
   --alert-soft: rgba(251, 113, 133, 0.12);
   /* Boîtes de dialogue (kit « Coory Boites », 04/11/2026) : thème sombre accordé au thème de l'app. */
@@ -324,8 +322,6 @@
   --goal-main: #fdf0d2;
   --goal-main-line: rgba(214, 150, 30, 0.28);
   --goal-main-text: #5c5340;
-  /* Déroulé d'une séance : allure facile, gris violacé (maquette 2d). */
-  --effort-easy: #d8d7e2;
   --alert: #be123c;
   --alert-soft: rgba(190, 18, 60, 0.08);
   /* Boîtes de dialogue : valeurs exactes du kit « Coory Boites » (04/11/2026). */

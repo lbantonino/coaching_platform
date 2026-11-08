@@ -20,14 +20,7 @@ import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { getCoachProfile } from "@/features/coach/profile";
 import { getProgramSession } from "@/features/programs/queries";
-import {
-  parseSegment,
-  sessionTimeline,
-  stepLine,
-  stepRole,
-  type Timeline,
-  type TimelineStep,
-} from "@/features/programs/session-display";
+import { parseSegment, stepLine, stepRole } from "@/features/programs/session-display";
 import { formatDuration } from "@/features/sessions/schemas";
 
 export const metadata: Metadata = {
@@ -35,8 +28,9 @@ export const metadata: Metadata = {
 };
 
 // Détail d'une séance du programme d'un sportif (D-46), d'après la maquette « Sportifs » du
-// 03/11/2026 (page 2d). Ordinateur : la carte de la séance (en-tête, étapes, déroulé en bas) et, à
-// droite sur 300 px, le récapitulatif puis le conseil du coach ; le tout jusqu'au bas de l'écran.
+// 03/11/2026 (page 2d). Ordinateur : la carte de la séance (en-tête, étapes) et, à droite sur
+// 300 px, le récapitulatif puis le conseil du coach ; le tout jusqu'au bas de l'écran. Le graphique
+// « Déroulé de la séance » de la maquette a été retiré le 08/11/2026 (D-152, demande d'Antonino).
 // Téléphone : la séance, le récapitulatif, le conseil, l'un sous l'autre. Lecture de la version
 // PUBLIÉE, celle que le sportif suit. La validation par le sportif (« Je l'ai faite », ressenti,
 // commentaire) arrive avec son espace (tranche 3).
@@ -54,7 +48,7 @@ export default function ProgramSessionPage({
   );
 }
 
-// Couleur pleine de chaque discipline (numéro du bloc principal, efforts du déroulé).
+// Couleur pleine de chaque discipline (numéro du bloc principal, barres des efforts).
 const fillVar: Record<Discipline, string> = {
   running: "var(--run-fill)",
   strength: "var(--strength-fill)",
@@ -192,111 +186,6 @@ function Step({ step, index }: { step: ProgramSessionStep; index: number }) {
   );
 }
 
-// Un morceau du déroulé : sa largeur suit sa durée (au moins 6 sur ordinateur, 8 sur téléphone,
-// pour que sa légende tienne) ; échauffement en pente montante, retour au calme en pente
-// descendante, bloc répété en barres (efforts pleins, récupérations basses).
-function TimelinePart({ part, last }: { part: TimelineStep; last: boolean }) {
-  const { role, step, index } = part;
-  const title = `${index} · ${step.badge ?? formatDuration(Math.round(part.minutes))}`;
-  const aside = step.repeat
-    ? part.recovery
-      ? `Récup. ${part.recovery}`
-      : null
-    : last
-      ? null
-      : step.title;
-  return (
-    <div
-      style={{ "--f": part.minutes } as CSSProperties}
-      className={`flex min-w-0 [flex:max(var(--f),8)_1_0%] flex-col gap-1.5 lg:[flex:max(var(--f),6)_1_0%] ${
-        last ? "items-end" : ""
-      }`}
-    >
-      <div aria-hidden className="flex h-[22px] w-full items-end gap-0.5">
-        {role === "warmup" ? (
-          <span className="h-[60%] w-full rounded-[4px] bg-[var(--effort-easy)] [clip-path:polygon(0_45%,100%_0,100%_100%,0_100%)]" />
-        ) : role === "cooldown" ? (
-          <span className="h-[45%] w-full rounded-[4px] bg-[var(--effort-easy)] [clip-path:polygon(0_0,100%_50%,100%_100%,0_100%)]" />
-        ) : part.bars.length > 0 ? (
-          part.bars.map((bar, i) => (
-            <span
-              key={i}
-              style={{ flexGrow: bar.minutes }}
-              className={`basis-0 rounded-[3px] ${
-                bar.kind === "recovery"
-                  ? "h-[32%] bg-[color-mix(in_srgb,var(--fill)_40%,var(--surface))]"
-                  : "h-full bg-[var(--fill)]"
-              }`}
-            />
-          ))
-        ) : (
-          <span className="h-full w-full rounded-[3px] bg-[var(--fill)]" />
-        )}
-      </div>
-      {/* Légende : coupée par « … » si le morceau est trop étroit (jamais sur le morceau voisin). */}
-      <span className="flex max-w-full min-w-0 flex-col gap-px overflow-hidden text-[11.5px] leading-[1.35] whitespace-nowrap text-muted lg:flex-row lg:gap-1">
-        <b
-          className={`truncate font-semibold lg:shrink-0 ${role === "main" ? "text-[var(--fill-text)]" : "text-text"}`}
-        >
-          {title}
-        </b>
-        {aside ? <span className="min-w-0 truncate">{aside}</span> : null}
-      </span>
-    </div>
-  );
-}
-
-function SessionTimeline({ timeline }: { timeline: Timeline }) {
-  const legend = [
-    timeline.effort !== null
-      ? {
-          key: "effort",
-          label: timeline.effort ? `Effort · ${timeline.effort}` : "Effort",
-          className: "bg-[var(--fill)]",
-        }
-      : null,
-    timeline.recovery !== null
-      ? {
-          key: "recovery",
-          label: timeline.recovery ? `Récup · ${timeline.recovery}` : "Récup",
-          className: "bg-[color-mix(in_srgb,var(--fill)_40%,var(--surface))]",
-        }
-      : null,
-    timeline.easy
-      ? { key: "easy", label: "Allure facile", className: "bg-[var(--effort-easy)]" }
-      : null,
-  ].filter((item) => item !== null);
-  return (
-    <section
-      aria-label="Déroulé de la séance"
-      className="mt-auto flex flex-col gap-2.5 rounded-[14px] bg-[color-mix(in_srgb,var(--surface-2)_60%,var(--surface))] px-3.5 py-3 inset-ring inset-ring-line-soft"
-    >
-      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
-        <h2 className="text-[13px] leading-[16.5px] font-semibold whitespace-nowrap">
-          Déroulé de la séance
-        </h2>
-        <span className="text-[12px] leading-[15.5px] font-medium whitespace-nowrap text-muted">
-          ≈ {formatDuration(Math.round(timeline.totalMinutes))}
-        </span>
-        <span aria-hidden className="max-lg:hidden lg:flex-1" />
-        <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11.5px] leading-[14.5px] font-medium text-text-2 max-lg:basis-full">
-          {legend.map((item) => (
-            <li key={item.key} className="flex items-center gap-[5px] whitespace-nowrap">
-              <span aria-hidden className={`size-2 rounded-[2px] ${item.className}`} />
-              {item.label}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="flex gap-1">
-        {timeline.steps.map((part, i) => (
-          <TimelinePart key={part.index} part={part} last={i === timeline.steps.length - 1} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
 // Une ligne du récapitulatif : pictogramme dans un carré gris, intitulé, valeur.
 function RecapRow({
   icon: Icon,
@@ -342,7 +231,6 @@ async function SessionDetail({
   const { content } = session;
   const discipline = content.discipline;
   const athletePath = `/coach/o/${membership.organizationId}/sportifs/${athlete.id}`;
-  const timeline = sessionTimeline(content);
   // Les conseils sont signés par le coach qui a créé le programme (sinon le coach connecté).
   const coach = content.coachTips
     ? await getCoachProfile(
@@ -405,8 +293,6 @@ async function SessionDetail({
                 <Step key={`${i}-${step.title}`} step={step} index={i + 1} />
               ))}
             </ol>
-
-            {timeline ? <SessionTimeline timeline={timeline} /> : null}
           </article>
 
           {/* Récapitulatif et conseil du coach. */}
