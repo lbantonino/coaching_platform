@@ -195,7 +195,7 @@ Point de départ, déjà décidé pour Coory (docs 04 à 07, décisions d'Antoni
 ### Publier, puis envoyer
 
 - « Publier » vérifie que tout est rempli, fige une **version**, et le sportif la voit dans son espace (après le MVP).
-- Le **PDF** du programme et de l'agenda sort de cette version.
+- Le **PDF** du programme et de l'agenda sort de cette version. Pour commencer, le coach envoie **tous les PDF d'un coup** (décision d'Antonino du 09/11/2026).
 - Modifier ensuite crée un nouveau brouillon, puis une version 2 (doc 04).
 
 ---
@@ -209,6 +209,7 @@ Point de départ, déjà décidé pour Coory (docs 04 à 07, décisions d'Antoni
 | Dupliquer une séance ou une semaine | Progression automatique, décharge en un clic |
 | Allures proposées depuis les repères (VMA) | Plan de course Hyrox par parties (temps cible de chaque run et station) |
 | Onglet Programme de la fiche, publication, PDF | Espace sportif : saisie du réalisé, ressenti, envoi vers une montre |
+| Envoi de tous les PDF d'un coup | Envoi automatique semaine par semaine (option, tout à la fin) |
 | Zones de FC, % du max, charges officielles Hyrox, phases (réponses du 09/11, §7) | |
 | Modèles de programmes et de séances : ceux du coach et ceux de Coory (§7) | |
 
