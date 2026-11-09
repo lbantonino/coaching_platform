@@ -204,21 +204,28 @@ Point de départ, déjà décidé pour Coory (docs 04 à 07, décisions d'Antoni
 
 | Dans le MVP | Plus tard |
 | --- | --- |
-| Page Programmes, assistant de création, éditeur de programme | Modèles de semaine et de programme (Bibliothèque) |
+| Page Programmes, assistant de création, éditeur de programme | Modèles de semaine |
 | Éditeurs de séance Running, Musculation, Hyrox | Éditeur Hybride complet (mélange libre) |
 | Dupliquer une séance ou une semaine | Progression automatique, décharge en un clic |
 | Allures proposées depuis les repères (VMA) | Plan de course Hyrox par parties (temps cible de chaque run et station) |
 | Onglet Programme de la fiche, publication, PDF | Espace sportif : saisie du réalisé, ressenti, envoi vers une montre |
+| Zones de FC, % du max, charges officielles Hyrox, phases (réponses du 09/11, §7) | |
+| Modèles de programmes et de séances : ceux du coach et ceux de Coory (§7) | |
 
 ---
 
 ## 7. Questions à trancher avec Antonino (et Gianluca)
 
 1. **Cibles du Running** : allure en min/km et % de VMA suffisent-elles pour le MVP, ou faut-il aussi les zones de FC ?
+   **Réponse d'Antonino (09/11/2026) : les deux, indispensables.** Gianluca vise à l'allure pour les sportifs confirmés et en zones de FC pour les débutants qui n'ont pas encore d'allures. Les Repères ont déjà VMA, allures, FC max et FC repos.
 2. **Charge en musculation** : kg seulement, ou aussi % du 1RM (il faut alors un 1RM par exercice dans les Repères) ?
+   **Réponse (09/11) : les deux, indispensables.** En kg pour les confirmés, en % du max pour les débutants ; en %, l'app affiche les kg calculés si le max est connu (repère « Charge de référence »).
 3. **Charges Hyrox par catégorie** : Coory propose-t-il la charge de la catégorie du sportif (Open, Pro, Doubles, Homme ou Femme), à valider par le coach, ou le coach la saisit-il toujours lui-même ?
+   **Réponse (09/11) : les deux, indispensables.** Ses propres charges à l'entraînement, les charges officielles de la catégorie pour une vraie simulation. Les valeurs officielles seront à vérifier sur la source HYROX avant d'être codées.
 4. **Phases** du programme (base, spécifique, affûtage) : utiles dès le MVP, ou plus tard ?
+   **Réponse (09/11) : oui, dans la première version.**
 5. **Modèles de séance** fournis par Coory au départ (sortie longue, fractionné, Full Body, simulation Hyrox…) : lesquels Gianluca veut-il voir en premier ?
+   **Réponse (09/11) : les deux.** Le coach enregistre ses programmes et séances comme modèles (« Mes modèles »), et Coory fournit aussi quelques modèles de programmes et de séances (« Modèles Coory »). Leur contenu sera écrit avec Gianluca et validé par lui, jamais inventé par l'app.
 
 ---
 
