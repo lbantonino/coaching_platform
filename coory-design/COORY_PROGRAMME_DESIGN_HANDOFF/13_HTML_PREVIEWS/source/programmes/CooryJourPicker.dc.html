@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:{{ gap }};font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#17151d">
+<div style="display:flex;flex-direction:column;gap:3px"><span style="display:flex;align-items:center;gap:7px;font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896"><span style="width:7px;height:7px;border-radius:50%;background:#7776FF"></span>Séance 2 · Semaine 2</span><span style="font:700 19px/1.2 'Plus Jakarta Sans';letter-spacing:-.015em">Endurance rapide</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">Running · Fractionné · ≈ 45 min</span></div>
+
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 12.5px 'Plus Jakarta Sans';color:#4a4855">Jour de la séance</span>
+<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px"><sc-for list="{{ days }}" as="d" hint-placeholder-count="7"><span style="height:{{ dayH }};border-radius:11px;background:{{ d.bg }};color:{{ d.c }};box-shadow:{{ d.sh }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px"><span style="font:600 11px 'Plus Jakarta Sans';opacity:.85">{{ d.l }}</span><span style="font:700 16px 'Plus Jakarta Sans';text-decoration:{{ d.td }}">{{ d.n }}</span><span style="height:12px;font:600 9.5px 'Plus Jakarta Sans';color:{{ d.tc }};white-space:nowrap">{{ d.tag }}</span></span></sc-for></div>
+<div style="display:flex;flex-direction:column;gap:4px;font:400 12px/1.45 'Plus Jakarta Sans';color:#64626e"><span><strong style="font-weight:600;color:#17151d">Lun.</strong> Inès est indisponible (onglet Disponibilités).</span><sc-if value="{{ full }}"><span><strong style="font-weight:600;color:#17151d">S1, S3, S4</strong> = jour déjà pris par une autre séance. Possible, Coory te prévient.</span></sc-if></div>
+</div>
+
+<span style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:13px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12)"><span style="width:20px;height:20px;flex:none;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(22,18,40,.22)"></span><span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 13.5px 'Plus Jakarta Sans'">Sans jour</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Dans l’ordre, au choix d’Inès.</span></span></span>
+
+<sc-if value="{{ full }}"><div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 12.5px 'Plus Jakarta Sans';color:#4a4855">Heure <span style="font-weight:400;color:#8a8896">(facultatif)</span></span><span style="height:44px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font:500 15px 'Plus Jakarta Sans';color:#8a8896">Pas d’heure<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span></div></sc-if>
+
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 12.5px 'Plus Jakarta Sans';color:#4a4855">Appliquer ce jour à</span>
+<div style="display:flex;flex-direction:column;border-radius:13px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.10);overflow:hidden"><sc-for list="{{ scope }}" as="o" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:12px;min-height:{{ rowH }};padding:6px 14px;border-bottom:1px solid #f0eff4;background:{{ o.bg }}"><span style="width:20px;height:20px;flex:none;border-radius:50%;background:{{ o.dot }};box-shadow:{{ o.ring }};display:flex;align-items:center;justify-content:center"><span style="width:7px;height:7px;border-radius:50%;background:#fff"></span></span><span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 13.5px 'Plus Jakarta Sans'">{{ o.l }}</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">{{ o.s }}</span></span></span></sc-for></div></div>
+
+<span style="display:flex;align-items:center;gap:12px"><span style="flex:1;display:flex;flex-direction:column;gap:1px"><span style="font:600 13.5px 'Plus Jakarta Sans'">Inès peut déplacer la séance</span><span style="font:400 12px/1.4 'Plus Jakarta Sans';color:#64626e">Dans la même semaine. Tu reçois une notification.</span></span><span style="width:44px;height:26px;flex:none;border-radius:13px;background:#17151d;position:relative"><span style="position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff"></span></span></span>
+
+<div style="display:flex;gap:8px"><span style="flex:1;height:46px;border-radius:12px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14.5px 'Plus Jakarta Sans'">Valider</span><span style="height:46px;padding:0 16px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;font:600 14px 'Plus Jakarta Sans'">Annuler</span></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:340,&quot;height&quot;:760},&quot;compact&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const D = [['Lun', '2', 'off'], ['Mar', '3', 'S1'], ['Mer', '4', 'sel'], ['Jeu', '5', ''], ['Ven', '6', 'S3'], ['Sam', '7', 'S4'], ['Dim', '8', '']];
+    const radio = on => ({ dot: on ? '#17151d' : '#fff', ring: on ? 'none' : 'inset 0 0 0 1.5px rgba(22,18,40,.22)', bg: on ? '#faf9fd' : '#fff' });
+    const c = !!this.props.compact;
+    return {
+      gap: c ? '12px' : '16px', dayH: c ? '52px' : '62px', rowH: c ? '42px' : '48px', full: !c,
+      days: D.map(([l, n, k]) => ({ l, n,
+        bg: k === 'sel' ? '#17151d' : k === 'off' ? '#f6f5fa' : '#fff',
+        c: k === 'sel' ? '#fff' : k === 'off' ? '#b9b7c2' : '#17151d',
+        sh: k === 'sel' || k === 'off' ? 'none' : 'inset 0 0 0 1px rgba(22,18,40,.12)',
+        td: k === 'off' ? 'line-through' : 'none',
+        tag: k === 'off' ? 'indispo' : k === 'sel' ? 'S2' : k, tc: k === 'sel' ? '#fff' : k === 'off' ? '#b9b7c2' : '#6a3ee0' })),
+      scope: [['Cette semaine seulement', 'Semaine 2'], ['Toute la phase Base', 'Semaines 1 à 4', 1], ['Tout le programme', '12 semaines']].map(([l, s, on]) => Object.assign({ l, s }, radio(!!on)))
+    };
+  }
+}
+</script>
+</body>
+</html>

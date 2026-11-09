@@ -1,0 +1,502 @@
+[
+  {
+    "id": "PRG-01",
+    "page": "01 Page Programmes",
+    "variant": "Liste remplie",
+    "viewport": "Desktop 1280×820",
+    "boardId": "1a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "03_PROGRAMMES_PAGE/screenshots/PRG-01-1a-desktop-liste.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans (part a)"
+  },
+  {
+    "id": "PRG-02",
+    "page": "01 Page Programmes",
+    "variant": "Liste remplie",
+    "viewport": "Mobile 390×844",
+    "boardId": "1b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "03_PROGRAMMES_PAGE/screenshots/PRG-02-1b-mobile-liste.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans (part a)"
+  },
+  {
+    "id": "PRG-03",
+    "page": "01 Page Programmes",
+    "variant": "Aucun programme (empty state)",
+    "viewport": "Desktop 1280×820",
+    "boardId": "1c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "03_PROGRAMMES_PAGE/screenshots/PRG-03-1c-desktop-vide.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans (part a)"
+  },
+  {
+    "id": "PRG-04",
+    "page": "01 Page Programmes",
+    "variant": "Recherche sans résultat",
+    "viewport": "Mobile 390×844",
+    "boardId": "1d",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "03_PROGRAMMES_PAGE/screenshots/PRG-04-1d-mobile-sans-resultat.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans (part a)"
+  },
+  {
+    "id": "PRG-05",
+    "page": "01 Page Programmes",
+    "variant": "Onglet Modèles",
+    "viewport": "Desktop 1280×820",
+    "boardId": "1e",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "03_PROGRAMMES_PAGE/screenshots/PRG-05-1e-desktop-modeles.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans (part a)"
+  },
+  {
+    "id": "PRG-06",
+    "page": "01 Page Programmes",
+    "variant": "Onglet Modèles",
+    "viewport": "Mobile 390×844",
+    "boardId": "1f",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "03_PROGRAMMES_PAGE/screenshots/PRG-06-1f-mobile-modeles.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans (part a)"
+  },
+  {
+    "id": "WIZ-01",
+    "page": "02 Créer un programme",
+    "variant": "Assistant interactif (capturé à l’étape 3)",
+    "viewport": "Desktop 1280×820",
+    "boardId": "2a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "04_CREATE_WIZARD/screenshots/WIZ-01-2a-desktop-etape3.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans + CooryProgEtape"
+  },
+  {
+    "id": "WIZ-02",
+    "page": "02 Créer un programme",
+    "variant": "Étape 1 · Pour qui",
+    "viewport": "Mobile 390×844",
+    "boardId": "2c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "04_CREATE_WIZARD/screenshots/WIZ-02-2c-mobile-etape1.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans + CooryProgEtape"
+  },
+  {
+    "id": "WIZ-03",
+    "page": "02 Créer un programme",
+    "variant": "Étape 2 · Objectif + façon de viser",
+    "viewport": "Mobile 390×844",
+    "boardId": "2d",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "04_CREATE_WIZARD/screenshots/WIZ-03-2d-mobile-etape2.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans + CooryProgEtape"
+  },
+  {
+    "id": "WIZ-04",
+    "page": "02 Créer un programme",
+    "variant": "Étape 3 · Calendrier + phases",
+    "viewport": "Mobile 390×844",
+    "boardId": "2e",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "04_CREATE_WIZARD/screenshots/WIZ-04-2e-mobile-etape3.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans + CooryProgEtape"
+  },
+  {
+    "id": "WIZ-05",
+    "page": "02 Créer un programme",
+    "variant": "Étape 4 · Point de départ",
+    "viewport": "Mobile 390×844",
+    "boardId": "2f",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "04_CREATE_WIZARD/screenshots/WIZ-05-2f-mobile-etape4.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans + CooryProgEtape"
+  },
+  {
+    "id": "EDT-01",
+    "page": "03 Éditeur de programme",
+    "variant": "Brouillon d’un programme publié · menu ··· ouvert",
+    "viewport": "Desktop 1280×860",
+    "boardId": "1a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/EDT-01-1a-desktop-menu-ouvert.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Programmes"
+  },
+  {
+    "id": "EDT-02",
+    "page": "03 Éditeur de programme",
+    "variant": "Modèle Coory ouvert · lecture seule",
+    "viewport": "Desktop 1280×860",
+    "boardId": "1g",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/EDT-02-1g-desktop-modele-lecture-seule.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Programmes"
+  },
+  {
+    "id": "EDT-03",
+    "page": "03 Éditeur de programme",
+    "variant": "1. Les semaines (par phase)",
+    "viewport": "Mobile 390×844",
+    "boardId": "1b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/EDT-03-1b-mobile-semaines.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Programmes"
+  },
+  {
+    "id": "EDT-04",
+    "page": "03 Éditeur de programme",
+    "variant": "2. Une semaine",
+    "viewport": "Mobile 390×844",
+    "boardId": "1c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/EDT-04-1c-mobile-semaine.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Programmes"
+  },
+  {
+    "id": "EDT-05",
+    "page": "03 Éditeur de programme",
+    "variant": "3. Une séance",
+    "viewport": "Mobile 390×844",
+    "boardId": "1d",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/EDT-05-1d-mobile-seance.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Programmes"
+  },
+  {
+    "id": "FIX-01",
+    "page": "03b Fixer les jours",
+    "variant": "Passer en jours fixes · proposition",
+    "viewport": "Desktop 1280×860 (modale)",
+    "boardId": "Ja",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/FIX-01-Ja-desktop-proposition.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryJoursFixes + CooryJourPropose"
+  },
+  {
+    "id": "FIX-02",
+    "page": "03b Fixer les jours",
+    "variant": "Semaine en jours fixes · panneau jour",
+    "viewport": "Desktop 1280×860",
+    "boardId": "Jb",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/FIX-02-Jb-desktop-editeur-jours.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryJoursFixes + CooryJourPicker (compact)"
+  },
+  {
+    "id": "FIX-03",
+    "page": "03b Fixer les jours",
+    "variant": "Semaine en jours fixes",
+    "viewport": "Mobile 390×844",
+    "boardId": "Jc",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/FIX-03-Jc-mobile-semaine.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryJoursFixes"
+  },
+  {
+    "id": "FIX-04",
+    "page": "03b Fixer les jours",
+    "variant": "Proposition (feuille)",
+    "viewport": "Mobile 390×844",
+    "boardId": "Jd",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/FIX-04-Jd-mobile-proposition.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryJoursFixes + CooryJourPropose (mobile)"
+  },
+  {
+    "id": "FIX-05",
+    "page": "03b Fixer les jours",
+    "variant": "Choisir le jour (feuille)",
+    "viewport": "Mobile 390×844",
+    "boardId": "Je",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "05_PROGRAM_EDITOR/screenshots/FIX-05-Je-mobile-choisir-jour.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryJoursFixes + CooryJourPicker"
+  },
+  {
+    "id": "RUN-01",
+    "page": "04 Éditeur séance Running",
+    "variant": "Étape sélectionnée · cible allure · menu ··· ouvert",
+    "viewport": "Desktop 1280×900",
+    "boardId": "4a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "06_RUNNING_EDITOR/screenshots/RUN-01-4a-desktop.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Éditeurs Séance + CooryEditeurListe + CooryEditeurPanneau"
+  },
+  {
+    "id": "RUN-02",
+    "page": "04 Éditeur séance Running",
+    "variant": "Étapes",
+    "viewport": "Mobile 390×844",
+    "boardId": "4b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "06_RUNNING_EDITOR/screenshots/RUN-02-4b-mobile-etapes.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "RUN-03",
+    "page": "04 Éditeur séance Running",
+    "variant": "Modifier une étape · zone de FC",
+    "viewport": "Mobile 390×844 (feuille)",
+    "boardId": "4c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "06_RUNNING_EDITOR/screenshots/RUN-03-4c-mobile-zone-fc.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "MUS-01",
+    "page": "05 Éditeur séance Musculation",
+    "variant": "Exercice sélectionné · charge en kg",
+    "viewport": "Desktop 1280×1093",
+    "boardId": "5a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "07_STRENGTH_EDITOR/screenshots/MUS-01-5a-desktop.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "MUS-02",
+    "page": "05 Éditeur séance Musculation",
+    "variant": "Exercices",
+    "viewport": "Mobile 390×844",
+    "boardId": "5b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "07_STRENGTH_EDITOR/screenshots/MUS-02-5b-mobile-exercices.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "MUS-03",
+    "page": "05 Éditeur séance Musculation",
+    "variant": "Régler les séries · en % du max",
+    "viewport": "Mobile 390×844 (feuille)",
+    "boardId": "5c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "07_STRENGTH_EDITOR/screenshots/MUS-03-5c-mobile-pourcentage.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "HYR-01",
+    "page": "06 Éditeur séance Hyrox",
+    "variant": "Bloc circuit sélectionné · charges du coach",
+    "viewport": "Desktop 1280×1301",
+    "boardId": "6a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "08_HYROX_EDITOR/screenshots/HYR-01-6a-desktop.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "HYR-02",
+    "page": "06 Éditeur séance Hyrox",
+    "variant": "Blocs",
+    "viewport": "Mobile 390×844",
+    "boardId": "6b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "08_HYROX_EDITOR/screenshots/HYR-02-6b-mobile-blocs.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "HYR-03",
+    "page": "06 Éditeur séance Hyrox",
+    "variant": "Simulation de course · charges officielles",
+    "viewport": "Mobile 390×844 (feuille)",
+    "boardId": "6c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "08_HYROX_EDITOR/screenshots/HYR-03-6c-mobile-simulation.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "TAB-01",
+    "page": "07 Fiche sportif · onglet Programme",
+    "variant": "Avec programme",
+    "viewport": "Desktop 1280×801",
+    "boardId": "7a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "09_ATHLETE_PROGRAM_TAB/screenshots/TAB-01-7a-desktop.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Onglet Programme"
+  },
+  {
+    "id": "TAB-02",
+    "page": "07 Fiche sportif · onglet Programme",
+    "variant": "Avec programme",
+    "viewport": "Mobile 390×1098 (page longue)",
+    "boardId": "7b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "09_ATHLETE_PROGRAM_TAB/screenshots/TAB-02-7b-mobile.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Onglet Programme"
+  },
+  {
+    "id": "TAB-03",
+    "page": "07 Fiche sportif · onglet Programme",
+    "variant": "Vide",
+    "viewport": "Desktop 1280×800",
+    "boardId": "7c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "09_ATHLETE_PROGRAM_TAB/screenshots/TAB-03-7c-desktop-vide.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Onglet Programme"
+  },
+  {
+    "id": "TAB-04",
+    "page": "07 Fiche sportif · onglet Programme",
+    "variant": "Vide",
+    "viewport": "Mobile 390×844",
+    "boardId": "7d",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "09_ATHLETE_PROGRAM_TAB/screenshots/TAB-04-7d-mobile-vide.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Onglet Programme"
+  },
+  {
+    "id": "AGD-01",
+    "page": "2c Fiche sportif · Agenda",
+    "variant": "Dans l’ordre · séance 2 dépliée",
+    "viewport": "Desktop 1280×1173",
+    "boardId": "1a (section 2c)",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "10_ATHLETE_AGENDA/screenshots/AGD-01-1a-desktop-dans-l-ordre.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Agenda Séances"
+  },
+  {
+    "id": "AGD-02",
+    "page": "2c Fiche sportif · Agenda",
+    "variant": "Dans l’ordre · séance dépliée",
+    "viewport": "Mobile 390×1708 (page longue)",
+    "boardId": "1b (section 2c)",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "10_ATHLETE_AGENDA/screenshots/AGD-02-1b-mobile-dans-l-ordre.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Agenda Séances"
+  },
+  {
+    "id": "AGD-03",
+    "page": "2c Fiche sportif · Agenda",
+    "variant": "Jours fixes (option) · Musculation + Hyrox",
+    "viewport": "Desktop 1280×1347",
+    "boardId": "2a (section 2c)",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "10_ATHLETE_AGENDA/screenshots/AGD-03-2a-desktop-jours-fixes.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Agenda Séances"
+  },
+  {
+    "id": "AGD-04",
+    "page": "2c Fiche sportif · Agenda",
+    "variant": "Jours fixes (option)",
+    "viewport": "Mobile 390×1963 (page longue)",
+    "boardId": "2b (section 2c)",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "10_ATHLETE_AGENDA/screenshots/AGD-04-2b-mobile-jours-fixes.png",
+    "source": "13_HTML_PREVIEWS/source/ · Coory Agenda Séances"
+  },
+  {
+    "id": "PUB-01",
+    "page": "08 Publier",
+    "variant": "Confirmation + toast",
+    "viewport": "Desktop 1280×820",
+    "boardId": "8a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "11_PUBLISH/screenshots/PUB-01-8a-desktop.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgEcrans (part b) + CooryProgPublier"
+  },
+  {
+    "id": "PUB-02",
+    "page": "08 Publier",
+    "variant": "Feuille de confirmation",
+    "viewport": "Mobile 390×844",
+    "boardId": "8b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "11_PUBLISH/screenshots/PUB-02-8b-mobile.png",
+    "source": "13_HTML_PREVIEWS/source/ · idem"
+  },
+  {
+    "id": "PDF-01",
+    "page": "09 PDF 1 · Agenda du programme",
+    "variant": "Page semaine 2 (page 3/13)",
+    "viewport": "A4 620×877 CSS (capture 2×)",
+    "boardId": "9a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-01-agenda-semaine2.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=agenda"
+  },
+  {
+    "id": "PDF-09",
+    "page": "09 PDF 1 · Agenda du programme",
+    "variant": "Sommaire (page 1/13)",
+    "viewport": "A4 620×877 (2×)",
+    "boardId": "9a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-09-agenda-sommaire.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=agenda"
+  },
+  {
+    "id": "PDF-10",
+    "page": "09 PDF 1 · Agenda du programme",
+    "variant": "Semaine 7 · course (page 8/13)",
+    "viewport": "A4 620×877 (2×)",
+    "boardId": "9a",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-10-agenda-semaine7-course.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=agenda"
+  },
+  {
+    "id": "PDF-08",
+    "page": "09 PDF 2 · Fiches et repères",
+    "variant": "Sommaire (page 1/5)",
+    "viewport": "A4 620×877 (2×)",
+    "boardId": "9b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-08-fiches-sommaire.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=fiches"
+  },
+  {
+    "id": "PDF-02",
+    "page": "09 PDF 2 · Fiches et repères",
+    "variant": "Full Body A (page 2/5)",
+    "viewport": "A4 620×877 (2×)",
+    "boardId": "9b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-02-fiches-full-body-a.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=fiches"
+  },
+  {
+    "id": "PDF-05",
+    "page": "09 PDF 2 · Fiches et repères",
+    "variant": "Full Body B (page 3/5)",
+    "viewport": "A4 620×877 (2×)",
+    "boardId": "9b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-05-fiches-full-body-b.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=fiches"
+  },
+  {
+    "id": "PDF-06",
+    "page": "09 PDF 2 · Fiches et repères",
+    "variant": "Workload Hyrox (page 4/5)",
+    "viewport": "A4 620×877 (2×)",
+    "boardId": "9b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-06-fiches-workload-hyrox.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=fiches"
+  },
+  {
+    "id": "PDF-07",
+    "page": "09 PDF 2 · Fiches et repères",
+    "variant": "Allures (page 5/5)",
+    "viewport": "A4 620×877 (2×)",
+    "boardId": "9b",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-07-fiches-allures.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryPdfDoc doc=fiches"
+  },
+  {
+    "id": "PDF-03",
+    "page": "09 PDF sur téléphone",
+    "variant": "PDF 1 · sommaire dans un lecteur",
+    "viewport": "Mobile 390×844",
+    "boardId": "9c",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-03-9c-telephone-sommaire.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgPDF"
+  },
+  {
+    "id": "PDF-04",
+    "page": "09 PDF sur téléphone",
+    "variant": "PDF 2 · Workload Hyrox dans un lecteur",
+    "viewport": "Mobile 390×844",
+    "boardId": "9d",
+    "status": "FINALE — dernière version sur la planche au 9 nov. 2026",
+    "screenshot": "12_PDF_SYSTEM/screenshots/PDF-04-9d-telephone-workload.png",
+    "source": "13_HTML_PREVIEWS/source/ · CooryProgPDF"
+  }
+]

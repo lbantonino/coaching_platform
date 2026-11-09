@@ -1,0 +1,43 @@
+{
+  "_source": "EXACT",
+  "layout": {
+    "desktopFrame": {
+      "width": 1280,
+      "heights": [
+        820,
+        860
+      ],
+      "padding": 14,
+      "asideMainGap": 20
+    },
+    "aside": {
+      "width": 236,
+      "padding": "24px 14px 16px",
+      "navItemHeight": 36
+    },
+    "main": {
+      "gap": 12
+    },
+    "header": {
+      "height": 64,
+      "padding": "0 16px 0 20px",
+      "gap": 10
+    },
+    "editorGrid": "196px minmax(0,1fr) 304px / gap 12",
+    "sessionEditorGrid": "minmax(0,1fr) 340px / gap 12",
+    "programGrid": "repeat(3,minmax(0,1fr)) / gap 12",
+    "mobile": {
+      "frame": "390x844",
+      "contentPadding": "20px 14px 110-130px",
+      "contentGap": 12,
+      "fab": "60x60 radius 18 right 14 bottom 28",
+      "sheet": "inset 8, radius 30, poignee 38x5",
+      "bottomBar": "padding 12px 14px 30px, boutons 52"
+    },
+    "pdf": {
+      "page": "620x877 CSS = A4",
+      "padding": "28px 36px 18px",
+      "gap": 12
+    }
+  }
+}

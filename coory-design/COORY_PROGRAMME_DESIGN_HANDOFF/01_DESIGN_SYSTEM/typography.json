@@ -1,0 +1,154 @@
+{
+  "_source": "EXACT",
+  "family": "'Plus Jakarta Sans', system-ui, sans-serif",
+  "weights": [
+    400,
+    500,
+    600,
+    700,
+    800
+  ],
+  "styles": {
+    "mobile.pageTitle": {
+      "size": 24,
+      "weight": 700,
+      "lh": 1.15,
+      "ls": "-0.02em"
+    },
+    "desktop.wizardTitle": {
+      "size": 26,
+      "weight": 700,
+      "lh": 1.2,
+      "ls": "-0.025em"
+    },
+    "desktop.sessionTitle": {
+      "size": 26,
+      "weight": 700,
+      "lh": 1.15,
+      "ls": "-0.025em"
+    },
+    "desktop.programTitle": {
+      "size": 19,
+      "weight": 600,
+      "ls": "-0.015em"
+    },
+    "panel.title": {
+      "size": 19,
+      "weight": 700,
+      "lh": 1.2,
+      "ls": "-0.015em"
+    },
+    "panel.titleLarge": {
+      "size": 21,
+      "weight": 700,
+      "lh": 1.2,
+      "ls": "-0.02em"
+    },
+    "section.title": {
+      "size": 17,
+      "weight": 600
+    },
+    "card.title": {
+      "size": 16.5,
+      "weight": 600,
+      "lh": 1.25,
+      "ls": "-0.01em"
+    },
+    "card.titleMobile": {
+      "size": 16,
+      "weight": 600
+    },
+    "session.name": {
+      "size": 15,
+      "weight": 600
+    },
+    "body": {
+      "size": 14,
+      "weight": 400,
+      "lh": 1.5
+    },
+    "body.small": {
+      "size": 13.5,
+      "weight": 400,
+      "lh": 1.55
+    },
+    "meta": {
+      "size": 13,
+      "weight": 400,
+      "color": "#64626e"
+    },
+    "caption": {
+      "size": 12.5,
+      "weight": 400
+    },
+    "caption.small": {
+      "size": 12,
+      "weight": 400
+    },
+    "kicker": {
+      "size": 11.5,
+      "weight": 600,
+      "ls": "0.05em",
+      "transform": "uppercase",
+      "color": "#8a8896"
+    },
+    "phaseLabel": {
+      "size": 11,
+      "weight": 600,
+      "ls": "0.06em",
+      "transform": "uppercase"
+    },
+    "nav": {
+      "size": 13.5,
+      "weight": 500
+    },
+    "button.desktop": {
+      "size": 12.5,
+      "weight": 600,
+      "height": 32
+    },
+    "button.mobile": {
+      "size": "14-15",
+      "weight": 600,
+      "height": "44-52"
+    },
+    "input": {
+      "size": "15-16",
+      "weight": 500,
+      "height": "44-46",
+      "note": "16px mini sur mobile"
+    },
+    "pill": {
+      "size": "11.5-12.5",
+      "weight": "500-600",
+      "height": "22-26"
+    },
+    "pdf.h1": {
+      "size": 30,
+      "weight": 800,
+      "lh": 1,
+      "ls": "-0.03em"
+    },
+    "pdf.kicker": {
+      "size": 10,
+      "weight": 800,
+      "ls": "0.07em",
+      "transform": "uppercase"
+    },
+    "pdf.body": {
+      "size": "11-11.5",
+      "weight": "400-700",
+      "lh": 1.4
+    },
+    "pdf.tableHead": {
+      "size": 10,
+      "weight": 700,
+      "ls": "0.04em",
+      "transform": "uppercase"
+    },
+    "pdf.footer": {
+      "size": 10,
+      "weight": 400
+    }
+  }
+}

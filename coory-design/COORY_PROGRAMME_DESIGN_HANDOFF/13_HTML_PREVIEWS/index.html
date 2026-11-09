@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>COORY · Programmes · index des maquettes</title>
+<style>body{margin:0;font:15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;background:#f3f2f7;color:#17151d}main{max-width:1200px;margin:0 auto;padding:40px 24px}h1{font-size:30px;margin:0 0 6px}a{color:#6a3ee0}.g{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:24px}.c{background:#fff;border-radius:16px;padding:12px}.c img{width:100%;height:180px;object-fit:cover;object-position:top;border-radius:10px;background:#eee}.c b{display:block;margin-top:8px}.c span{color:#64626e;font-size:13px}</style></head>
+<body><main>
+<h1>COORY · Programmes</h1>
+<p>Planche complète et interactive : <a href="source/Coory%20Programmes%20Planche.dc.html">source/Coory Programmes Planche.dc.html</a> (ORIGINAL_SOURCE — à servir en local, ex. <code>npx serve .</code>). Inventaire : <a href="../SCREEN_INVENTORY.json">SCREEN_INVENTORY.json</a>.</p>
+<div class="g" id="g"></div>
+</main>
+<script>
+fetch('../SCREEN_INVENTORY.json').then(r=>r.json()).then(list=>{document.getElementById('g').innerHTML=list.map(s=>'<a class="c" href="../'+s.screenshot+'"><img loading="lazy" src="../'+s.screenshot+'" alt=""><b>'+s.id+' · '+s.page+'</b><span>'+s.variant+' · '+s.viewport+'</span></a>').join('')});
+</script>
+</body></html>

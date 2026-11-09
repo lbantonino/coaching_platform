@@ -1,10 +1,10 @@
 -- Tests des programmes, tranche 1 (D-46) : semaines et séances numérotées sans jour, publication figée,
--- lecture par les coachs de l'organisation seulement, aucune écriture depuis le navigateur.
+-- lecture par les coachs de l'organisation seulement, aucune écriture directe depuis le navigateur.
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(8);
+select plan(9);
 
 insert into auth.users (id, email) values
   ('11111111-1111-4111-8111-111111111111', 'test-coach-a@example.test'),
@@ -33,10 +33,16 @@ select throws_ok(
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', 'X', '2026-10-28', 4) $$,
   '23514', null, 'Un programme commence un lundi'
 );
+-- C-8 (09/11/2026) : plusieurs programmes publiés possibles, jamais sur des périodes qui se chevauchent.
 select throws_ok(
   $$ insert into public.programs (organization_id, athlete_id, title, start_date, weeks_count, status)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', 'Y', '2026-11-02', 4, 'published') $$,
-  '23505', null, 'Un seul programme publié à la fois par sportif'
+  '23P01', null, 'Deux programmes publiés d''un sportif ne se chevauchent pas'
+);
+select lives_ok(
+  $$ insert into public.programs (organization_id, athlete_id, title, start_date, weeks_count, status)
+     values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', 'À venir', '2027-01-18', 4, 'published') $$,
+  'Un programme « À venir » après celui en cours est accepté'
 );
 select throws_ok(
   $$ insert into public.publication_sessions (organization_id, publication_id, source_session_key, week_index, slot_index, session_json)
@@ -62,7 +68,7 @@ select throws_ok(
 select throws_ok(
   $$ insert into public.programs (organization_id, athlete_id, title, start_date, weeks_count)
      values ('aaaaaaaa-0000-4000-8000-000000000001', 'a1a1a1a1-0000-4000-8000-000000000001', 'W', '2026-11-02', 4) $$,
-  '42501', null, 'Pas encore de création depuis le navigateur (éditeur en tranche 2)'
+  '42501', null, 'Pas d''écriture directe depuis le navigateur : seulement par les fonctions contrôlées'
 );
 
 set local request.jwt.claims = '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}';

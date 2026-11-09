@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#dcdbe3}*{box-sizing:border-box}a{color:#6a3ee0;text-decoration:none}a:hover{color:#8b5cf6}</style>
+</helmet>
+<div style="display:flex;flex-direction:column;gap:110px;padding:64px;width:max-content;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#17151d">
+<sc-for list="{{ eds }}" as="x" hint-placeholder-count="3"><section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:10px"><span style="font:700 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ x.num }}</span><span style="font:700 18px 'Plus Jakarta Sans'">{{ x.h }}</span></div><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e;max-width:980px">{{ x.hsub }}</span></div>
+<div style="display:flex;gap:48px;align-items:flex-start">
+
+<div id="{{ x.idD }}" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ x.idD }}</span><span style="font:600 16px 'Plus Jakarta Sans'">Desktop · 1280</span></div>
+<div data-screen-label="{{ x.h }} · desktop" style="width:1280px;min-height:860px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28)">
+<aside style="width:236px;flex:none;border-radius:20px;background:#fff;padding:24px 14px 16px;display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 6px 22px 10px"><img src="assets/coory-logo-clair.svg" alt="Coory" style="height:17px;width:auto"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM9 4v16M15 10l-2 2 2 2"></path></svg></div>
+<sc-for list="{{ nav1 }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ n.bg }};color:{{ n.c }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.l }}</span></sc-for>
+<span style="height:1px;background:#ecebf1;margin:12px 8px"></span>
+<sc-for list="{{ nav2 }}" as="n" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;color:#4a4855"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg><span style="flex:1">{{ n.l }}</span><sc-if value="{{ n.b }}"><span style="min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:rgba(139,92,246,.12);color:#6a3ee0;font:600 11px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">{{ n.b }}</span></sc-if></span></sc-for>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:10px;padding:8px"><span style="width:38px;height:38px;flex:none;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans';box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6">JM</span><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 14px 'Plus Jakarta Sans'">Julien Mertens</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Coach</span></div></div>
+</aside>
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+<header style="height:64px;flex:none;border-radius:20px;background:#fff;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px">
+<span style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;font:500 15px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap;overflow:hidden"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>{{ x.prog }}<span style="color:#c9c7d1">·</span><span style="font-weight:600;color:#17151d">{{ x.crumb }}</span></span>
+<span style="font:500 12.5px 'Plus Jakarta Sans';color:#8a8896;white-space:nowrap">Enregistré</span>
+<span style="height:32px;padding:0 12px;border-radius:9px;background:#8b5cf6;color:#fff;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg>Assistant IA</span>
+<span style="width:32px;height:32px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span>
+<span style="height:32px;padding:0 14px;border-radius:9px;background:#17151d;color:#fff;display:flex;align-items:center;font:600 12.5px 'Plus Jakarta Sans';white-space:nowrap">Terminer</span>
+</header>
+<div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<section style="position:relative;z-index:2;border-radius:20px;background:#fff;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="display:flex;align-items:center;gap:7px;font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896"><span style="width:7px;height:7px;border-radius:50%;background:{{ x.c }}"></span>{{ x.kicker }}</span><span style="font:700 26px/1.15 'Plus Jakarta Sans';letter-spacing:-.025em">{{ x.title }}</span></div><span style="display:flex;gap:6px;flex:none"><span style="height:32px;padding:0 12px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap;flex:none">Renommer</span><span style="width:32px;height:32px;flex:none;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center;font:700 14px 'Plus Jakarta Sans';letter-spacing:1px">···</span></span></div>
+<sc-if value="{{ x.menu }}"><div style="position:absolute;right:22px;top:60px;width:250px;border-radius:14px;background:#fff;padding:6px;box-shadow:0 0 0 1px rgba(22,18,40,.08),0 18px 40px -12px rgba(22,18,40,.35);display:flex;flex-direction:column"><sc-for list="{{ menuS }}" as="m" hint-placeholder-count="3"><span style="display:flex;align-items:center;gap:10px;height:38px;padding:0 10px;border-radius:9px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ m.bg }};color:{{ m.c }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{ m.d }}"></path></svg>{{ m.l }}</span></sc-for></div></sc-if>
+<sc-if value="{{ x.hasChips }}"><div style="display:flex;align-items:center;gap:12px"><span style="font:600 12.5px 'Plus Jakarta Sans';color:#4a4855;white-space:nowrap">Type de séance</span><span style="width:240px"><span style="height:44px;padding:0 12px 0 14px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:space-between;gap:8px;font:500 14.5px 'Plus Jakarta Sans';white-space:nowrap">{{ x.chipVal }}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round" style="flex:none"><path d="M6 9l6 6 6-6"></path></svg></span></span></div></sc-if>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><sc-for list="{{ x.fields }}" as="f" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="font:600 12.5px 'Plus Jakarta Sans';color:#4a4855">{{ f.l }}</span><span style="min-height:44px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;padding:10px 14px;font:400 14px/1.45 'Plus Jakarta Sans';color:#4a4855">{{ f.v }}</span></div></sc-for></div>
+</section>
+<section style="border-radius:20px;background:#fff;padding:16px 20px;display:flex;align-items:center;gap:22px">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:baseline;gap:10px"><span style="font:600 14px 'Plus Jakarta Sans'">Aperçu en direct</span><span style="font:500 12.5px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ x.summary }}</span></div>
+
+<sc-if value="{{ x.hasSeg }}"><div style="height:30px;display:flex;gap:3px"><sc-for list="{{ x.segs }}" as="b" hint-placeholder-count="5"><span style="flex:{{ b.f }};border-radius:7px;background:{{ b.c }};color:{{ b.tc }};display:flex;align-items:center;padding:0 9px;font:600 11.5px 'Plus Jakarta Sans';white-space:nowrap;overflow:hidden">{{ b.l }}</span></sc-for></div></sc-if>
+</div>
+<div style="display:flex;gap:22px;flex:none"><sc-for list="{{ x.totals }}" as="t" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:2px"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">{{ t.l }}</span><span style="font:700 19px 'Plus Jakarta Sans';letter-spacing:-.01em;white-space:nowrap">{{ t.v }}</span></div></sc-for></div>
+</section>
+<section style="border-radius:20px;background:#fff;padding:18px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px"><span style="font:600 15px 'Plus Jakarta Sans'">{{ x.listTitle }}</span><span style="font:500 12.5px 'Plus Jakarta Sans';color:#8a8896">{{ x.listMeta }}</span></div>
+<dc-import name="programmes/CooryEditeurListe" items="{{ x.items }}" adds="{{ x.adds }}" hint-size="100%,420px"></dc-import>
+</section>
+</div>
+<section style="border-radius:20px;background:#fff;padding:20px;box-shadow:inset 0 0 0 1.5px rgba(139,92,246,.35)"><dc-import name="programmes/CooryEditeurPanneau" p="{{ x.panel }}" hint-size="100%,620px"></dc-import></section>
+</div>
+</main>
+</div>
+</div>
+
+<sc-for list="{{ x.phones }}" as="ph" hint-placeholder-count="2"><div id="{{ ph.id }}" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ ph.id }}</span><span style="font:600 16px 'Plus Jakarta Sans'">{{ ph.cap }}</span></div>
+<div data-screen-label="{{ ph.label }}" style="position:relative;width:390px;height:844px;background:#f3f2f7;border-radius:40px;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28)">
+<div style="display:flex;justify-content:space-between;padding:16px 28px 8px;font:600 14px 'Plus Jakarta Sans'"><span>9:41</span><span style="font-size:12px">●●● ▮</span></div>
+<header style="display:flex;align-items:center;gap:10px;padding:6px 14px 0">
+<span style="width:46px;height:46px;flex:none;border-radius:14px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span>
+<span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font:500 16px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Semaine 2</span>
+<span style="display:flex;gap:4px;padding:4px;border-radius:16px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18)"><span style="width:40px;height:40px;border-radius:12px;background:#8b5cf6;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg></span><span style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span>
+</header>
+<div style="padding:20px 14px 120px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-direction:column;gap:5px;padding:0 4px"><span style="display:flex;align-items:center;gap:7px;font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896"><span style="width:7px;height:7px;border-radius:50%;background:{{ x.c }}"></span>{{ x.kicker }}</span><span style="font:700 24px/1.15 'Plus Jakarta Sans';letter-spacing:-.02em">{{ x.title }}</span></div>
+<section style="border-radius:20px;background:#fff;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;gap:10px"><sc-for list="{{ x.totals }}" as="t" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:1px"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">{{ t.l }}</span><span style="font:700 17px 'Plus Jakarta Sans';white-space:nowrap">{{ t.v }}</span></div></sc-for></div>
+
+<sc-if value="{{ x.hasSeg }}"><div style="height:24px;display:flex;gap:2px"><sc-for list="{{ x.segs }}" as="b" hint-placeholder-count="5"><span style="flex:{{ b.f }};border-radius:6px;background:{{ b.c }}"></span></sc-for></div></sc-if>
+<span style="font:500 12.5px 'Plus Jakarta Sans';color:#4a4855">{{ x.summary }}</span>
+</section>
+<dc-import name="programmes/CooryEditeurListe" items="{{ x.items }}" adds="{{ x.adds }}" hint-size="100%,420px"></dc-import>
+</div>
+<sc-if value="{{ ph.sheet }}"><div style="position:absolute;inset:0;background:rgba(22,18,40,.34)"></div>
+<div style="position:absolute;left:8px;right:8px;bottom:8px;max-height:760px;overflow:auto;border-radius:30px;background:#fff;box-shadow:0 -10px 40px -10px rgba(22,18,40,.35);padding:10px 18px 18px;display:flex;flex-direction:column;gap:12px"><span style="align-self:center;flex:none;width:38px;height:5px;border-radius:3px;background:#dcdae3"></span><dc-import name="programmes/CooryEditeurPanneau" p="{{ x.mPanel }}" hint-size="100%,560px"></dc-import></div></sc-if>
+<sc-if value="{{ ph.fab }}"><span style="position:absolute;right:14px;bottom:28px;width:60px;height:60px;border-radius:18px;background:#17151d;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -12px rgba(22,18,40,.55)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></sc-if>
+</div>
+</div></sc-for>
+
+</div>
+</section></sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      nav1: NAV1.map(([l, d], i) => ({ l, d, bg: i === 3 ? 'rgba(139,92,246,.12)' : 'transparent', c: i === 3 ? '#17151d' : '#4a4855' })),
+      nav2: NAV2.map(([l, d, b]) => ({ l, d, b: b || '' })),
+      menuS: [['Enregistrer comme modèle', 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM16.5 13v7M13 16.5h7', 1], ['Dupliquer la séance', 'M8 8h12v12H8zM16 8V4H4v12h4'], ['Supprimer la séance', 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14', 2]].map(([l, d, k]) => ({ l, d, bg: k === 1 ? '#f1edfc' : 'transparent', c: k === 2 ? '#b51f39' : '#17151d' })),
+      eds: [RUN(), MUS(), HYR()].map(e => Object.assign(e, { phones: e.phones.map(p => Object.assign(p, { label: e.h + ' · ' + p.cap })) }))
+    };
+  }
+}
+const C = { run: '#7776FF', mus: '#DD2D4A', hyr: '#FEC14F' }, TC = { run: '#4f4ed6', mus: '#b51f39', hyr: '#8a6200' };
+const tint = (d, p) => 'color-mix(in srgb, ' + C[d] + ' ' + p + '%, #fff)';
+const EASY = '#dcdae3', REC = '#c9c7d1', SEL = 'inset 0 0 0 1.5px #8b5cf6, 0 8px 20px -12px rgba(139,92,246,.6)', BASE = 'inset 0 0 0 1px rgba(22,18,40,.08)';
+const ICON_REP = 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3', ICON_LINK = 'M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7', ICON_CLOCK = 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2';
+const leaf = (t, s, r, bar, o) => Object.assign({ leaf: true, group: false, t, s, r, bar: bar || EASY, thumb: false, noThumb: true, ring: BASE }, o || {});
+const ex = (t, s, r, o) => Object.assign(leaf(t, s, r || ''), { thumb: true, noThumb: false }, o || {});
+const grp = (d, label, meta, kids, o) => Object.assign({ leaf: false, group: true, label, meta, kids, icon: ICON_REP, stepper: '', linked: false, pad: '0px', tc: TC[d], bg: tint(d, 9), ring: 'none', addKid: 'Ajouter une étape' }, o || {});
+const opts = (list, on) => list.map(l => ({ l, bg: l === on ? '#fff' : '#f3f2f7', c: l === on ? '#17151d' : '#4a4855', sh: l === on ? 'inset 0 0 0 1.5px #17151d' : 'none' }));
+const chips = (list, on) => list.map(l => ({ l, bg: l === on ? '#17151d' : '#f3f2f7', c: l === on ? '#fff' : '#4a4855', sh: 'none' }));
+const sz = b => Object.assign(b, { hm: Math.round(b.h * .7) });
+function RUN() {
+  const bars = [{ f: 15, h: 16, c: EASY }];
+  for (let i = 0; i < 5; i++) { bars.push({ f: 2, h: 42, c: C.run }); if (i < 4) bars.push({ f: 2, h: 10, c: REC }); }
+  bars.push({ f: 10, h: 13, c: EASY });
+  const panel = { kicker: 'Bloc Répéter 5 fois · étape 1', title: 'Course rapide', sub: 'Le changement s’applique aux 5 répétitions.', isRun: true, isMus: false, isHyr: false, isSim: false,
+    types: [], typeVal: 'Course', meas: opts(['Durée', 'Distance', 'Libre'], 'Durée'),
+    measVal: '2:00', measUnit: 'min', aims: opts(['Allure', 'Zone de FC'], 'Allure'), aimPace: true, aimHr: false, tKind: 'Allure en min/km', tFrom: '5:00', tTo: '5:10', tUnit: 'min/km', hint: 'Calculée depuis la VMA d’Inès : 16 km/h (≈ 95 % VMA). Tu peux la modifier.', note: 'Relâché, foulée rapide', primary: 'Valider l’étape' };
+  const mPanel = Object.assign({}, panel, { sub: 'Sportive débutante : cible en zone de fréquence cardiaque.', aims: opts(['Allure', 'Zone de FC'], 'Zone de FC'), aimPace: false, aimHr: true, zones: chips(['Z1', 'Z2', 'Z3', 'Z4', 'Z5'], 'Z4'), zFrom: '161', zTo: '175', hint: 'Z4 · calculée depuis la FC max d’Inès : 192 bpm. Sans repère, écris la plage toi-même.' });
+  return { num: '04', h: 'Éditeur de séance Running', hsub: 'Chaque étape vise à l’allure (min/km ou % VMA, confirmés) ou à la zone de FC (Z1 à Z5 avec sa plage en bpm, débutants), proposées depuis les repères du sportif. Étapes verticales colorées par rôle : effort en couleur Running, récupération en gris, bloc « Répéter N fois » en encadré. Panneau à droite (desktop) ou feuille (mobile) pour modifier une étape. Aperçu en direct.',
+    idD: '4a', c: C.run, kicker: 'Running · Séance 2 · Semaine 2', title: 'Endurance rapide', prog: 'Prépa HYROX Gand', crumb: 'Séance 2', hasChips: true,
+    chips: [], chipVal: 'Fractionné',
+    fields: [{ l: 'Objectif', v: 'Tenir l’allure 10 km sur des efforts courts' }, { l: 'Conseil du coach', v: 'Garde les 2 min de trot vraiment lentes.' }],
+    hasBars: false, bars: bars.map(sz), hasSeg: false, segs: [], summary: '15 min + 5 × (2 min + 2 min) + 10 min',
+    totals: [{ l: 'Durée estimée', v: '≈ 45 min' }, { l: 'Distance', v: '≈ 8,4 km' }],
+    listTitle: 'Étapes', listMeta: '3 blocs · 12 étapes au total',
+    items: [leaf('Échauffement', '6:15 min/km · allure progressive', '15 min'),
+      grp('run', 'Répéter', 'fois · 20 min', [leaf('Course rapide', '5:00 – 5:10 min/km', '2 min', C.run, { ring: SEL }), leaf('Récupération', 'Trot · sans cible', '2 min', REC)], { stepper: '5', pad: '0px' }),
+      leaf('Retour au calme', '6:35 min/km', '10 min')],
+    adds: ['Ajouter une étape', 'Ajouter « Répéter »'], panel, mPanel, menu: true,
+    phones: [{ id: '4b', cap: 'Mobile · étapes', sheet: false, fab: true }, { id: '4c', cap: 'Mobile · modifier une étape · zone de FC', sheet: true, fab: false }] };
+}
+function MUS() {
+  const panel = { kicker: 'Exercice 1 · Réglage des séries', title: 'Bulgarian split squat', sub: 'Bibliothèque · Jambes · Haltères', isRun: false, isMus: true, isHyr: false, isSim: false,
+    quick: '3 séries de 8 à 10',
+    loadOpts: opts(['kg', '% du max'], 'kg'), loadCol: 'kg', isPct: false, maxLine: '',
+    sets: [['1', 'Échauff.', '12', '8', '—'], ['2', 'Normale', '8-10', '14', '2'], ['3', 'Normale', '8-10', '14', '2'], ['4', 'Normale', '8-10', '14', '1']].map(([n, type, reps, kg, eff]) => ({ n, type, reps, kg, sub: '', eff, tbg: type === 'Normale' ? '#f3f2f7' : tint('mus', 10), tc: type === 'Normale' ? '#17151d' : TC.mus })),
+    rest: '90 s', tempo: '3-1-1-0', cue: 'Genou avant au-dessus de la cheville, buste droit.', primary: 'Valider l’exercice' };
+  const mPanelM = Object.assign({}, panel, { loadOpts: opts(['kg', '% du max'], '% du max'), loadCol: '% max', isPct: true, maxLine: 'Max de Lucas : 20 kg par haltère (repère du 12 oct.). Les kg sont calculés.',
+    sets: panel.sets.map((r, i) => Object.assign({}, r, { kg: i ? '70 %' : '40 %', sub: i ? '≈ 14 kg' : '≈ 8 kg' })) });
+  return { num: '05', h: 'Éditeur de séance Musculation', hsub: 'Charge en kg (confirmés) ou en % du max (débutants), au choix pour chaque exercice ; en %, les kg calculés s’affichent à côté. Exercices dans l’ordre avec vignette grise, résumé des séries. Supersets reliés par un lien visible, EMOM en bloc. Le réglage des séries se fait ligne par ligne, avec une saisie rapide qui remplit tout.',
+    idD: '5a', c: C.mus, kicker: 'Musculation · Séance 1 · Semaine 2', title: 'Full Body A', prog: 'Force bloc 1', crumb: 'Full Body A', hasChips: false, chips: [],
+    fields: [{ l: 'Échauffement', v: 'Mobilité hanches et épaules, 2 tours de 10 squats à vide' }, { l: 'Retour au calme', v: 'Étirements fessiers et dos, 5 min' }],
+    hasBars: false, bars: [], hasSeg: false, summary: '6 exercices · 16 séries · superset et EMOM',
+    segs: [{ f: 4, l: 'Split squat', c: tint('mus', 22), tc: TC.mus }, { f: 3, l: 'Tirage', c: tint('mus', 14), tc: TC.mus }, { f: 4, l: 'Superset', c: tint('mus', 22), tc: TC.mus }, { f: 3, l: 'Leg curl', c: tint('mus', 14), tc: TC.mus }, { f: 2, l: 'EMOM', c: tint('mus', 22), tc: TC.mus }],
+    totals: [{ l: 'Séries', v: '16' }, { l: 'Durée estimée', v: '≈ 60 min' }],
+    listTitle: 'Exercices', listMeta: 'Glisse pour changer l’ordre',
+    items: [ex('Bulgarian split squat', '3 × 8-10 · 14 kg · RIR 2 · repos 90 s', '', { ring: SEL }), ex('Tirage vertical', '3 × 10-12 · RIR 2 · repos 75 s'),
+      grp('mus', 'Superset', '3 tours · repos 90 s', [ex('Pompes', '10 répétitions · RIR 1'), ex('Tirage bûcheron unilatéral', '10 / bras · 16 kg')], { icon: ICON_LINK, linked: true, pad: '24px', addKid: 'Relier un exercice' }),
+      ex('Leg curl assis', 'Pyramide 20-15-10-8 · repos 60 s'),
+      grp('mus', 'EMOM', '6 min · 20 s / 40 s', [ex('Pompes', '20 s · technique propre')], { icon: ICON_CLOCK, addKid: 'Ajouter un exercice' })],
+    adds: ['Ajouter un exercice', 'Créer un superset'], panel, mPanel: mPanelM,
+    phones: [{ id: '5b', cap: 'Mobile · exercices', sheet: false, fab: true }, { id: '5c', cap: 'Mobile · régler les séries · en % du max', sheet: true, fab: false }] };
+}
+function HYR() {
+  const panel = { kicker: 'Bloc 2', title: 'Circuit · 5 tours', sub: 'Run 600 m + sled push 25 m + transition', isRun: false, isMus: false, isHyr: true, isSim: false,
+    formats: [], formatVal: 'Circuit',
+    loads: opts(['Du coach', 'Officielles'], 'Du coach'), loadHint: 'Officielles = catégorie d’Inès (Open Femme).',
+    fields: [{ l: 'Tours', v: '5', u: '' }, { l: 'Repos entre tours', v: '1:00', u: 'min' }, { l: 'Temps cible', v: '25:00', u: 'min' }, { l: 'Limite de temps', v: '30:00', u: 'min' }], primary: 'Valider le bloc' };
+  const ST = [['SkiErg', '1 000 m · 2:10 /500 m', '4:20', 1], ['Sled push', '50 m · 102 kg', '3:00'], ['Sled pull', '50 m · 78 kg', '4:10'], ['Burpee broad jumps', '80 m', '4:30'], ['Rameur', '1 000 m · 2:15 /500 m', '4:30', 1], ['Farmers carry', '200 m · 2 × 16 kg', '2:00'], ['Sandbag lunges', '100 m · 10 kg', '4:40'], ['Wall balls', '100 répétitions · 4 kg', '6:00']];
+  const runT = ['5:05', '5:10', '5:15', '5:15', '5:10', '5:20', '5:25', '5:15'];
+  const rows = [];
+  ST.forEach((s, i) => { rows.push({ l: 'Run ' + (i + 1), s: '1 km', t: runT[i], c: C.run, bg: '#fff', fw: '500' }); rows.push({ l: s[0], s: s[1], t: s[2], c: s[3] ? '#8a8896' : C.hyr, bg: '#faf9fc', fw: '600' }); });
+  const mPanel = { kicker: 'Modèle · Simulation de course', title: 'Temps cible par partie', sub: 'Ordre officiel HYROX. Corrige chaque ligne.', isRun: false, isMus: false, isHyr: false, isSim: true, simLoads: opts(['Officielles', 'Mes charges'], 'Officielles'), rows: rows.slice(0, 10), total: '1:18:20', primary: 'Insérer la simulation' };
+  return { num: '06', h: 'Éditeur de séance Hyrox', hsub: 'Charge d’une station : celle du coach (entraînement) ou la charge officielle de la catégorie du sportif (simulation ; un seul choix remplit toutes les stations). Blocs avec un format (circuit, for time, AMRAP, EMOM, intervalles, simulation), étapes Run / Station (pastille jaune) / Ergomètre en min/500 m / Transition. La simulation de course pose les 8 runs et 8 stations avec un temps cible par partie.',
+    idD: '6a', c: C.hyr, kicker: 'Hyrox · Séance 4 · Semaine 2', title: 'Circuit Hyrox', prog: 'Prépa HYROX Gand', crumb: 'Séance 4', hasChips: true,
+    chips: [], chipVal: 'Circuit',
+    fields: [{ l: 'Objectif', v: 'Enchaîner course et sled sans perte d’allure' }, { l: 'Conseil du coach', v: 'Transitions rapides : c’est là que se gagne le temps.' }],
+    hasBars: false, bars: [], hasSeg: false, summary: 'Échauffement · 5 tours · AMRAP 25 min',
+    segs: [{ f: 6, l: 'Run 1 km', c: tint('run', 18), tc: TC.run }, { f: 25, l: 'Circuit · 5 tours', c: tint('hyr', 34), tc: TC.hyr }, { f: 25, l: 'AMRAP 25 min', c: tint('hyr', 22), tc: TC.hyr }],
+    totals: [{ l: 'Durée estimée', v: '≈ 58 min' }, { l: 'Limite', v: '60 min' }],
+    listTitle: 'Blocs', listMeta: '3 blocs · 7 étapes',
+    items: [grp('run', 'Échauffement', 'Run', [leaf('Run', '1 000 m · 6:00 min/km', '≈ 6 min', C.run)]),
+      grp('hyr', 'Circuit', 'tours · repos 1 min', [leaf('Run', '600 m · 5:45 min/km', '≈ 3:30', C.run), ex('Sled push', '25 m · 102 kg · station', '', { bar: C.hyr }), leaf('Transition', 'Retour à la ligne de départ', '30 s', REC)], { stepper: '5', ring: SEL }),
+      grp('hyr', 'AMRAP 25 min', 'cible 4 tours', [ex('Burpee broad jumps', '12 répétitions'), ex('Sandbag lunges', '40 m · 10 kg'), ex('Wall balls', '15 répétitions · 6 kg')], { icon: ICON_CLOCK })],
+    adds: ['Ajouter un bloc', 'Simulation de course'], panel, mPanel,
+    phones: [{ id: '6b', cap: 'Mobile · blocs', sheet: false, fab: true }, { id: '6c', cap: 'Mobile · simulation de course', sheet: true, fab: false }] };
+}
+const NAV1 = [['Tableau de bord', 'M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['Agenda', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18'], ['Sportifs', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'], ['Programmes', 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5'], ['Comptabilité', 'M5 3h14v18H5zM9 7h6M9 11h1M14 11h1M9 15h1M14 15h1'], ['Bibliothèque', 'M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z']];
+const NAV2 = [['Assistant IA', 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z'], ['Messages', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', '3'], ['Tâches', 'M3 5l2 2 3-3M3 12l2 2 3-3M3 19l2 2 3-3M11 6h10M11 13h10M11 20h10'], ['Documents', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'], ['Notifications', 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0', '9']];
+</script>
+</body>
+</html>

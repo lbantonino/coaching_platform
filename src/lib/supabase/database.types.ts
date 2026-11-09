@@ -642,6 +642,7 @@ export type Database = {
           coach_note: string | null;
           created_at: string;
           created_by: string | null;
+          exercise_id: string | null;
           exercise_label: string | null;
           id: string;
           kind: string;
@@ -660,6 +661,7 @@ export type Database = {
           coach_note?: string | null;
           created_at?: string;
           created_by?: string | null;
+          exercise_id?: string | null;
           exercise_label?: string | null;
           id?: string;
           kind: string;
@@ -677,6 +679,7 @@ export type Database = {
           coach_note?: string | null;
           created_at?: string;
           created_by?: string | null;
+          exercise_id?: string | null;
           exercise_label?: string | null;
           id?: string;
           kind?: string;
@@ -695,6 +698,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "athlete_profiles";
             referencedColumns: ["id", "organization_id"];
+          },
+          {
+            foreignKeyName: "athlete_reference_metrics_exercise_id_fkey";
+            columns: ["exercise_id"];
+            isOneToOne: false;
+            referencedRelation: "exercises";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1687,6 +1697,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      program_drafts: {
+        Row: {
+          draft_json: NonNullable<Json>;
+          organization_id: string;
+          program_id: string;
+          revision: number;
+          schema_version: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          draft_json: NonNullable<Json>;
+          organization_id: string;
+          program_id: string;
+          revision?: number;
+          schema_version?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          draft_json?: NonNullable<Json>;
+          organization_id?: string;
+          program_id?: string;
+          revision?: number;
+          schema_version?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "program_drafts_program_id_organization_id_fkey";
+            columns: ["program_id", "organization_id"];
+            isOneToOne: false;
+            referencedRelation: "programs";
+            referencedColumns: ["id", "organization_id"];
+          },
+        ];
+      };
       program_publications: {
         Row: {
           id: string;
@@ -1697,6 +1746,7 @@ export type Database = {
           published_by: string | null;
           schema_version: number;
           snapshot_json: NonNullable<Json>;
+          source_revision: number | null;
         };
         ComputedFields: never;
         Insert: {
@@ -1708,6 +1758,7 @@ export type Database = {
           published_by?: string | null;
           schema_version?: number;
           snapshot_json: NonNullable<Json>;
+          source_revision?: number | null;
         };
         Update: {
           id?: string;
@@ -1718,6 +1769,7 @@ export type Database = {
           published_by?: string | null;
           schema_version?: number;
           snapshot_json?: NonNullable<Json>;
+          source_revision?: number | null;
         };
         Relationships: [
           {
@@ -1729,15 +1781,78 @@ export type Database = {
           },
         ];
       };
+      program_templates: {
+        Row: {
+          archived_at: string | null;
+          content_json: NonNullable<Json>;
+          created_at: string;
+          created_by: string | null;
+          discipline: string;
+          id: string;
+          organization_id: string | null;
+          origin: string;
+          schema_version: number;
+          sessions_per_week: number;
+          title: string;
+          updated_at: string;
+          version: number;
+          weeks_count: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          content_json: NonNullable<Json>;
+          created_at?: string;
+          created_by?: string | null;
+          discipline: string;
+          id?: string;
+          organization_id?: string | null;
+          origin: string;
+          schema_version?: number;
+          sessions_per_week: number;
+          title: string;
+          updated_at?: string;
+          version?: number;
+          weeks_count: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          content_json?: NonNullable<Json>;
+          created_at?: string;
+          created_by?: string | null;
+          discipline?: string;
+          id?: string;
+          organization_id?: string | null;
+          origin?: string;
+          schema_version?: number;
+          sessions_per_week?: number;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+          weeks_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "program_templates_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       programs: {
         Row: {
           active_publication_id: string | null;
           athlete_id: string;
           created_at: string;
           created_by: string | null;
+          discipline: string | null;
           goal: string | null;
           id: string;
           organization_id: string;
+          source_template_id: string | null;
+          source_template_version: number | null;
           start_date: string;
           status: string;
           title: string;
@@ -1750,9 +1865,12 @@ export type Database = {
           athlete_id: string;
           created_at?: string;
           created_by?: string | null;
+          discipline?: string | null;
           goal?: string | null;
           id?: string;
           organization_id: string;
+          source_template_id?: string | null;
+          source_template_version?: number | null;
           start_date: string;
           status?: string;
           title: string;
@@ -1764,9 +1882,12 @@ export type Database = {
           athlete_id?: string;
           created_at?: string;
           created_by?: string | null;
+          discipline?: string | null;
           goal?: string | null;
           id?: string;
           organization_id?: string;
+          source_template_id?: string | null;
+          source_template_version?: number | null;
           start_date?: string;
           status?: string;
           title?: string;
@@ -1795,6 +1916,13 @@ export type Database = {
             referencedRelation: "organizations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "programs_source_template_id_fkey";
+            columns: ["source_template_id"];
+            isOneToOne: false;
+            referencedRelation: "program_templates";
+            referencedColumns: ["id"];
+          },
         ];
       };
       publication_sessions: {
@@ -1802,6 +1930,7 @@ export type Database = {
           id: string;
           organization_id: string;
           planned_date: string | null;
+          planned_time: string | null;
           publication_id: string;
           session_json: NonNullable<Json>;
           slot_index: number;
@@ -1813,6 +1942,7 @@ export type Database = {
           id?: string;
           organization_id: string;
           planned_date?: string | null;
+          planned_time?: string | null;
           publication_id: string;
           session_json: NonNullable<Json>;
           slot_index: number;
@@ -1823,6 +1953,7 @@ export type Database = {
           id?: string;
           organization_id?: string;
           planned_date?: string | null;
+          planned_time?: string | null;
           publication_id?: string;
           session_json?: NonNullable<Json>;
           slot_index?: number;
@@ -1839,6 +1970,63 @@ export type Database = {
           },
         ];
       };
+      session_templates: {
+        Row: {
+          archived_at: string | null;
+          content_json: NonNullable<Json>;
+          created_at: string;
+          created_by: string | null;
+          discipline: string;
+          id: string;
+          organization_id: string | null;
+          origin: string;
+          schema_version: number;
+          session_type: string;
+          title: string;
+          updated_at: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          content_json: NonNullable<Json>;
+          created_at?: string;
+          created_by?: string | null;
+          discipline: string;
+          id?: string;
+          organization_id?: string | null;
+          origin: string;
+          schema_version?: number;
+          session_type: string;
+          title: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Update: {
+          archived_at?: string | null;
+          content_json?: NonNullable<Json>;
+          created_at?: string;
+          created_by?: string | null;
+          discipline?: string;
+          id?: string;
+          organization_id?: string | null;
+          origin?: string;
+          schema_version?: number;
+          session_type?: string;
+          title?: string;
+          updated_at?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "session_templates_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1848,6 +2036,8 @@ export type Database = {
         Args: { p_adult_confirmed: boolean; p_token_hash: string };
         Returns: string;
       };
+      archive_program: { Args: { p_program_id: string }; Returns: undefined };
+      before_user_created_access_code: { Args: { event: Json }; Returns: Json };
       change_organization_currency: {
         Args: { p_currency: string; p_organization_id: string; p_rate: number };
         Returns: Json;
@@ -1863,6 +2053,20 @@ export type Database = {
           p_phone: string;
           p_terms_version: string;
           p_vat_rate?: number;
+        };
+        Returns: string;
+      };
+      create_program: {
+        Args: {
+          p_athlete_id: string;
+          p_discipline: string;
+          p_draft: Json;
+          p_organization_id: string;
+          p_source_template_id?: string;
+          p_source_template_version?: number;
+          p_start_date: string;
+          p_title: string;
+          p_weeks_count: number;
         };
         Returns: string;
       };
@@ -1889,6 +2093,31 @@ export type Database = {
       move_session_series: {
         Args: { p_session_id: string; p_shift_days: number; p_start_time: string };
         Returns: undefined;
+      };
+      publish_program: {
+        Args: {
+          p_discipline: string;
+          p_expected_revision: number;
+          p_program_id: string;
+          p_sessions: Json;
+          p_snapshot: Json;
+          p_start_date: string;
+          p_title: string;
+          p_weeks_count: number;
+        };
+        Returns: number;
+      };
+      save_program_draft: {
+        Args: {
+          p_discipline: string;
+          p_draft: Json;
+          p_expected_revision: number;
+          p_program_id: string;
+          p_start_date: string;
+          p_title: string;
+          p_weeks_count: number;
+        };
+        Returns: number;
       };
       withdraw_health_consent: { Args: { p_athlete_id: string }; Returns: undefined };
     };

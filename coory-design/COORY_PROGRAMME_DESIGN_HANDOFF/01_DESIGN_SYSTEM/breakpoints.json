@@ -1,0 +1,12 @@
+{
+  "_source": "1280 et 390 = EXACT ; breakpoints = PROPOSED",
+  "reference": {
+    "desktop": 1280,
+    "mobile": 390
+  },
+  "proposed": {
+    "mobile": "0-767",
+    "tablet": "768-1199 (non dessine)",
+    "desktop": "1200+"
+  }
+}
