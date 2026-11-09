@@ -14,16 +14,18 @@ Ce qui existe déjà et que tu ne redessines pas : le menu de gauche, l'en-tête
 
 - Un **programme** appartient à **un sportif** : un titre, une discipline principale (Running, Musculation ou Hyrox ; « Hybride » plus tard), une date de début, un nombre de semaines (souvent 8 à 16), un objectif facultatif (ex. une course et sa date).
 - Un programme est fait de **semaines**. Chaque semaine contient des **séances numérotées** : Séance 1, Séance 2, Séance 3…
+- Les semaines se regroupent en **phases** nommées (ex. Base, Spécifique, Affûtage), et une semaine peut être marquée « allégée ». **Les phases font partie de la première version.**
 - **Une séance n'a pas d'heure.** Par défaut, elle n'a pas non plus de jour : le sportif les fait dans l'ordre, quand il veut dans la semaine. En option, un coach peut fixer un jour à chaque séance (lundi, mercredi…).
 - Une séance peut être faite **avec le coach** : elle correspond alors à un rendez-vous de l'agenda, qui a une date et une heure.
 - Une séance est **structurée**, jamais un grand texte. Elle est faite de **blocs** qui contiennent des **étapes**, avec des répétitions. Il y a un seul modèle, mais **l'éditeur s'adapte à la discipline** :
-  - **Running** : des étapes (échauffement, course, récupération, repos, retour au calme) avec une durée ou une distance, et une cible (allure en min/km, % de VMA, zone de fréquence cardiaque, effort ressenti), et des blocs « Répéter N fois » (ex. 5 × [2 min vite + 2 min trot]) ;
-  - **Musculation** : des exercices choisis dans la Bibliothèque, des séries (type : échauffement, normale, dégressive, échec ; répétitions fixes ou en fourchette ; charge en kg ; effort cible RIR ou RPE), un repos, un tempo, des supersets et des circuits ;
-  - **Hyrox** : des blocs avec un format (circuit à tours, for time, AMRAP, EMOM, intervalles, simulation de course), des étapes de course (distance, allure), des stations (les 8 stations Hyrox de la Bibliothèque : distance, répétitions, charge), des ergomètres (allure en min/500 m), des repos et transitions, un temps cible ou une limite de temps.
+  - **Running** : des étapes (échauffement, course, récupération, repos, retour au calme) avec une durée ou une distance et une cible, et des blocs « Répéter N fois » (ex. 5 × [2 min vite + 2 min trot]). **Deux façons de viser, toutes deux indispensables** : à l'**allure** (min/km ou % de VMA) pour les sportifs confirmés, à la **zone de fréquence cardiaque** (Z1 à Z5, avec sa plage en bpm) pour les débutants qui n'ont pas encore d'allures. L'effort ressenti reste possible ;
+  - **Musculation** : des exercices choisis dans la Bibliothèque, des séries (type : échauffement, normale, dégressive, échec ; répétitions fixes ou en fourchette ; charge **en kg** pour les confirmés **ou en % du max (1RM)** pour les débutants, les deux indispensables ; effort cible RIR ou RPE), un repos, un tempo, des supersets et des circuits ;
+  - **Hyrox** : des blocs avec un format (circuit à tours, for time, AMRAP, EMOM, intervalles, simulation de course), des étapes de course (distance, allure), des stations (les 8 stations Hyrox de la Bibliothèque : distance, répétitions, charge ; la charge est **celle du coach** pour l'entraînement, ou **la charge officielle de la catégorie** du sportif pour une vraie simulation, les deux indispensables), des ergomètres (allure en min/500 m), des repos et transitions, un temps cible ou une limite de temps.
 - Le programme est d'abord un **brouillon**. « Publier » fige une **version**, que le sportif verra (dans son espace, plus tard) et dont on tire les **PDF**. Modifier un programme publié crée un nouveau brouillon, puis une version 2.
+- **Modèles de programmes et de séances**, deux sources dans la première version : « Mes modèles » (le coach enregistre un programme ou une séance comme modèle) et les « Modèles Coory » fournis par l'app. Utiliser un modèle crée une copie ; modifier la copie ne change jamais le modèle ; un modèle Coory se duplique dans « Mes modèles » pour être adapté.
 - Le coach **garde toujours la main** : l'app propose (modèles, allures calculées depuis les repères du sportif), le coach corrige et décide.
 
-Étude de référence (Garmin Connect, Campus Coach, Runna, Fréquence Running, RoxFit, Hevy, Hevy Coach, Alpha Progression, TrueCoach) : ce qu'on reprend est résumé ici ; le détail est dans `docs/17_ETUDE_APPLIS_PROGRAMMES.md` du projet.
+Ce que Coory reprend des applis de référence (Garmin Connect, Campus Coach, Runna, Fréquence Running, RoxFit, Hevy, Hevy Coach, Alpha Progression, TrueCoach), **l'idée, jamais leur look** :
 
 - La séance « étapes + Répéter » de Garmin.
 - Les allures pré-remplies depuis une référence du sportif (Runna).
@@ -80,6 +82,7 @@ Pour chaque écran : **ordinateur (1 280 px) et téléphone (390 px)**, téléph
   - la progression des séances faites (ex. 9 / 48) ;
   - le statut (Brouillon, Publié v2) ;
   - l'objectif s'il y en a un (« HYROX Gand · 13 déc. »).
+- **Deux onglets** : « Programmes » et « Modèles ». Dans « Modèles » : filtres (Coory ou Mes modèles, discipline, programme ou séance) ; carte de modèle (nom, discipline, nombre de semaines ou durée, séances par semaine, badge « Coory ») ; état vide de « Mes modèles » qui explique comment en créer un.
 - **Action principale** « Créer un programme » : bouton noir dans l'en-tête sur ordinateur, bouton flottant « + » sur téléphone.
 - **États** : la liste remplie, la liste vide (aucun programme : une invitation claire à en créer un), une recherche ou un filtre sans résultat.
 
@@ -88,16 +91,16 @@ Pour chaque écran : **ordinateur (1 280 px) et téléphone (390 px)**, téléph
 On y arrive depuis la page Programmes ou depuis la fiche d'un sportif ; dans ce cas, le sportif est déjà choisi.
 
 1. **Pour qui** : choisir le sportif (liste avec recherche), titre du programme.
-2. **Objectif** : discipline principale (Running, Musculation, Hyrox), objectif facultatif (course, date, catégorie Hyrox), note.
-3. **Calendrier** : date de début, nombre de semaines, séances par semaine (de 1 à 7, le plus souvent 2 à 5), et le choix « Dans l'ordre, sans jour » (par défaut) ou « Un jour fixe par séance » (choisir les jours).
-4. **Point de départ** : partir de zéro, ou copier un programme précédent du sportif. Puis un **aperçu** (12 semaines × 4 séances) et le bouton « Créer le brouillon ».
+2. **Objectif** : discipline principale (Running, Musculation, Hyrox), objectif facultatif (course, date, catégorie Hyrox), note ; et la **façon de viser par défaut** : allure ou zones de FC (Running), kg ou % du max (Musculation), pré-choisie d'après les repères du sportif et modifiable ensuite, séance par séance et étape par étape.
+3. **Calendrier** : date de début, nombre de semaines, séances par semaine (de 1 à 7, le plus souvent 2 à 5), et le choix « Dans l'ordre, sans jour » (par défaut) ou « Un jour fixe par séance » (choisir les jours) ; puis les **phases** (nom et semaines de chacune), qu'on peut aussi poser plus tard dans l'éditeur.
+4. **Point de départ** : partir de zéro, copier un programme précédent du sportif, ou **partir d'un modèle** (Mes modèles ou Modèles Coory). Puis un **aperçu** (12 semaines × 4 séances) et le bouton « Créer le brouillon ».
 
 À proposer : une page avec ses étapes sur ordinateur (chemin « ← Programmes · Nouveau programme »), plein écran sur téléphone (étapes en haut, boutons « Retour » et « Continuer » en bas).
 
 ### 03 · Éditeur de programme (le programme d'un sportif)
 
-- **En-tête** : sportif, titre, période, statut (Brouillon, Publié v1), et les actions **Aperçu**, **Publier**, **PDF** (et ••• : renommer, dupliquer, archiver, supprimer).
-- **Ordinateur** : les semaines à gauche (Semaine 1 à 12, phases facultatives comme « Base », « Spécifique », « Affûtage », pastille « allégée »), les séances de la semaine choisie au centre, la séance ouverte à droite (résumé ou éditeur).
+- **En-tête** : sportif, titre, période, statut (Brouillon, Publié v1), et les actions **Aperçu**, **Publier**, **PDF** (et ••• : renommer, dupliquer, enregistrer comme modèle, archiver, supprimer).
+- **Ordinateur** : les semaines à gauche (Semaine 1 à 12, regroupées sous leurs phases « Base », « Spécifique », « Affûtage », pastille « allégée »), les séances de la semaine choisie au centre, la séance ouverte à droite (résumé ou éditeur).
 - **Téléphone** : une pile.
   - D'abord la liste des semaines : chaque semaine en carte, avec ses séances numérotées en résumé.
   - Puis une semaine et ses séances.
@@ -109,9 +112,10 @@ On y arrive depuis la page Programmes ou depuis la fiche d'un sportif ; dans ce 
   - le jour s'il y en a un ;
   - « Avec le coach » si c'est un rendez-vous.
 - **Gestes** :
-  - ajouter une séance ;
+  - ajouter une séance, vide ou **depuis un modèle de séance** (feuille sur téléphone, panneau sur ordinateur) ;
   - dupliquer une séance ou **une semaine vers d'autres semaines** (feuille ou menu pour choisir les semaines) ;
   - changer l'ordre (boutons monter et descendre ; glisser-déposer en plus sur ordinateur) ;
+  - créer, renommer ou supprimer une phase, et changer ses semaines ;
   - marquer une semaine « allégée » ;
   - supprimer, avec confirmation.
 - **États** : programme vide juste créé (des semaines avec des séances « À remplir »), programme rempli, brouillon d'un programme déjà publié (« Modifications non publiées »).
@@ -123,24 +127,27 @@ On y arrive depuis la page Programmes ou depuis la fiche d'un sportif ; dans ce 
   - **effort** en couleur de la discipline ;
   - **récupération** en gris ;
   - **bloc « Répéter N fois »** en encadré, avec ses étapes dedans.
-- **Chaque étape** : type, mesure (durée **ou** distance **ou** « libre »), cible (plage d'allure « 5:00 – 5:10 min/km », % de VMA, zone de FC, effort ressenti, ou aucune), note.
+- **Chaque étape** : type, mesure (durée **ou** distance **ou** « libre »), cible (plage d'allure « 5:00 – 5:10 min/km », % de VMA, **zone de FC « Z2 · 128-142 bpm »**, effort ressenti, ou aucune), note. Le choix entre allure et zone de FC doit être simple et visible, pas caché dans un menu.
 - **Modifier une étape** : feuille sur téléphone, panneau à droite sur ordinateur, avec de grands champs et le bon clavier.
-- **Pré-rempli** : échauffement et retour au calme déjà posés ; les allures sont proposées à partir des repères du sportif (« Calculée depuis ta VMA : 16 km/h »), toujours modifiables.
+- **Pré-rempli** : échauffement et retour au calme déjà posés ; les allures et les zones de FC sont proposées à partir des repères du sportif (« Calculée depuis la VMA d'Inès : 16 km/h », « Calculée depuis la FC max de Noah : 192 bpm »), toujours modifiables. Sans repère, le coach écrit la valeur lui-même.
 - **Résumé calculé en direct** : « 5 × (2 min + 2 min) », la durée et la distance totales estimées, en texte. **Pas de graphique** (voir la règle « Pas de graphiques » plus haut).
-- **Exemple** : « Endurance rapide » = 15 min d'échauffement à 6:15 min/km, puis 5 × (2 min à 5:00 min/km + 2 min de trot), puis 10 min de retour au calme.
+- **Exemples** :
+  - à l'allure (Inès, confirmée) : « Endurance rapide » = 15 min d'échauffement à 6:15 min/km, puis 5 × (2 min à 5:00 min/km + 2 min de trot), puis 10 min de retour au calme ;
+  - en zones de FC (Noah, débutant) : « Footing progressif » = 10 min en zone 1, puis 4 × (3 min en zone 3 + 2 min en zone 1), puis 10 min en zone 2.
 
 ### 05 · Éditeur de séance Musculation
 
 - **En-tête** : titre (« Full Body A »), échauffement et retour au calme en texte libre, conseil du coach.
 - **Liste des exercices** dans l'ordre : vignette (**bloc gris**, pas d'image RepDB), nom, résumé « 3 × 8-10 · 14 kg · RIR 2 · repos 90 s ».
 - **Ajouter un exercice** : feuille sur téléphone, panneau sur ordinateur ; recherche dans la Bibliothèque (français ou anglais), filtres Catégorie, Muscles et Matériel, favoris, « Mes exercices ».
-- **Régler les séries** d'un exercice : une ligne par série (type, répétitions fixes ou en fourchette, charge en kg, RIR ou RPE). Une saisie rapide « 3 séries de 8 à 10 » remplit tout d'un coup, puis on ajuste une ligne. Repos, tempo (« 3-1-1-0 ») et consigne de l'exercice.
+- **Régler les séries** d'un exercice : une ligne par série (type, répétitions fixes ou en fourchette, charge **en kg ou en % du max**, RIR ou RPE). En %, l'app écrit à côté les kg calculés quand le max du sportif est connu (« 70 % · ≈ 56 kg »). Le choix entre kg et % se fait par exercice. Une saisie rapide « 3 séries de 8 à 10 » remplit tout d'un coup, puis on ajuste une ligne. Repos, tempo (« 3-1-1-0 ») et consigne de l'exercice.
 - **Supersets et circuits** : relier deux exercices ou plus (un lien visible entre les cartes), avec un nombre de tours et un repos en fin de tour. Formats EMOM et AMRAP (ex. « EMOM 6 min : 20 s de pompes, 40 s de repos »).
 - **Exemple** :
   - Bulgarian split squat 3 × 8-10 à 14 kg, RIR 2 ;
   - Tirage vertical 3 × 10-12 ;
   - superset Pompes + Tirage bûcheron unilatéral ;
   - Leg curl assis en pyramide 20-15-10-8 ;
+  - pour un débutant : Squat goblet 3 × 10 à 60 % du max ;
   - EMOM pompes 6 min.
 
 ### 06 · Éditeur de séance Hyrox
@@ -148,11 +155,11 @@ On y arrive depuis la page Programmes ou depuis la fiche d'un sportif ; dans ce 
 - **Blocs avec un format** : Circuit (N tours), For time, AMRAP (durée), EMOM, Intervalles, **Simulation de course**. Chaque bloc a son nombre de tours, sa limite de temps (time cap), son temps cible et son repos entre tours.
 - **Étapes d'un bloc** :
   - **Run** : distance et allure en min/km ;
-  - **Station** : une des 8 stations de la Bibliothèque, avec distance, répétitions et charge ; pastille Hyrox jaune ;
+  - **Station** : une des 8 stations de la Bibliothèque, avec distance, répétitions et charge ; la charge est **libre** (celle du coach) ou **officielle** (celle de la catégorie du sportif, remplie par l'app) ; pastille Hyrox jaune ;
   - **Ergomètre** : SkiErg ou rameur, distance et allure en **min/500 m**, jamais confondue avec l'allure de course ;
   - **Repos** ou **transition** ;
   - **exercice de force**.
-- **Simulation de course** : modèle prêt avec les 8 runs de 1 km et les 8 stations dans l'ordre officiel. Un **temps cible pour chaque partie**, puis le total. Le coach corrige chaque ligne.
+- **Simulation de course** : modèle prêt avec les 8 runs de 1 km et les 8 stations dans l'ordre officiel. Un **temps cible pour chaque partie**, puis le total. Un choix « Charges officielles · Open Femme » (la catégorie du sportif) ou « Mes charges » remplit toutes les stations d'un coup. Le coach corrige chaque ligne. Dans la maquette, les charges sont fictives : l'app mettra les valeurs officielles.
 - **Exemple** :
   - échauffement : run 1 000 m ;
   - 5 tours de run 600 m à 5:45 min/km + 25 m de sled push ;
@@ -180,6 +187,13 @@ Captures de l'état actuel, à redessiner : `08-onglet-programme/` (avec et sans
   - les boutons « Annuler » et « Publier ».
 - Après publication, un message court « Programme publié (version 2) ».
 
+### 10 · Modèle ouvert (l'écran 03 en mode modèle, pas un nouvel écran)
+
+- Le même éditeur que l'écran 03, sans sportif ni dates : Semaine 1 à N, phases et séances. Chemin « ← Modèles · Prépa Hyrox ».
+- Une séance s'enregistre aussi comme modèle depuis les éditeurs de séance (04 à 06).
+- Un modèle Coory s'ouvre en lecture seule, avec « Dupliquer dans Mes modèles ».
+- Exemples de Modèles Coory : programmes « Premier 10 km · 8 semaines », « Prépa Hyrox · 12 semaines », « Force débutant · 8 semaines » ; séances « Sortie longue », « Fractionné 30/30 », « Endurance en zone 2 », « Full Body A », « Simulation Hyrox complète ».
+
 ### 09 · Les PDF (A4 portrait)
 
 - **Programme** : en-tête (logo Coory, sportif, titre, période, objectif), puis semaine par semaine. Chaque séance numérotée a son type, sa durée, ses blocs et étapes **en entier** (allures, séries, charges, repos, conseils). Pied de page avec la version et la date.
@@ -192,7 +206,8 @@ Captures de l'état actuel, à redessiner : `08-onglet-programme/` (avec et sans
   - Programme : « Prépa HYROX Gand ».
   - Objectif : HYROX Gand, 13 déc. 2026, catégorie Open Femme.
   - 12 semaines dès le 26 oct., 4 séances par semaine : Sortie longue, Endurance rapide, Race pace, Circuit Hyrox.
-- **Sportif** : Lucas Janssens, programme « Force bloc 1 » en Musculation, 8 semaines, 3 séances (Full Body A, B, C).
+- **Sportif** : Lucas Janssens, programme « Force bloc 1 » en Musculation, 8 semaines, 3 séances (Full Body A, B, C), charges en kg.
+- **Sportif débutant** : Noah Dubois, programme « Premier 10 km », 8 semaines, 3 séances, cibles en zones de FC (FC max 192 bpm) et renforcement en % du max.
 - **Sportive** : Sophie Lambert, programme « Renforcement bloc 1 » en Musculation, publié, version 1.
 - **Coach** : Julien Mertens.
 
@@ -209,4 +224,4 @@ Le même format que tes livraisons précédentes de Coory (Bibliothèque, pages 
 - **statut de chaque valeur** : EXACT (dans le code de la maquette), MEASURED, ESTIMATED, ou PROPOSED (non dessiné, à valider) ;
 - les **états** : vide, rempli, erreur de saisie, et aussi survol et focus si tu les dessines.
 
-Ordre de priorité si tu dois découper : 04, 05 et 06 (les éditeurs de séance, le plus important), puis 03, 07, 02 et 01, et enfin 08 et 09.
+Ordre de priorité si tu dois découper : 04, 05 et 06 (les éditeurs de séance, le plus important), puis 03, 07, 02 et 01, puis 10, et enfin 08 et 09.
