@@ -9,7 +9,7 @@
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris ; D-76 : exercices du coach) ; Mobilité visible le 31/10 ; liste et fiche aux maquettes d'Antonino le 06/11 (D-142, fond lavande) ; P3-02 à P3-06 à faire | db:test 434/434, test 278/278, test:e2e bibliothèque 8/8 (31/10) ; suite complète du 30/10 : 169 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Sessions du 30 et 31/10/2026 |
-| P4 Éditeur multi-sports | À faire | Aucun | - |
+| P4 Éditeur multi-sports | **En cours** : données et règles de l'éditeur faites le 09/11 (D-155 : brouillons avec révision, modèles Coory et Mes modèles, publication par fonction SQL, schéma de séance v2, jours fixes, façons de viser, charges officielles Hyrox) ; **écrans à venir** (phase 3 des maquettes « Programmes ») | db:test 503/503, Vitest 332/332, test:e2e 186 passés / 19 ignorés (1 échec intermittent sans lien, voir session du 09/11) | Session du 09/11/2026 ; `coory-design/PHASE2_ARCHITECTURE.md` |
 | P5 Publications/PDF | À faire | Aucun | - |
 | P6 Sportif/feedback | À faire | Aucun | - |
 | P7 Communication | À faire | Aucun | - |
@@ -29,8 +29,40 @@
 | 7. Recette finale | À faire |
 
 ## Dernière session
-- Date : 2026-11-08
-- Objectif : étude des applis de référence pour les programmes (D-151, `docs/17_ETUDE_APPLIS_PROGRAMMES.md`, brief `coory-design/BRIEF_CLAUDE_DESIGN_PROGRAMMES.md`) ; retrait du graphique de la page d'une séance (D-152).
+- Date : 2026-11-09
+- Objectif : intégration des maquettes « Programmes » (`coory-design/COORY_PROGRAMME_DESIGN_HANDOFF/`), phase 1 (audit, `coory-design/AUDIT_REPORT.md`) puis phase 2 (architecture, D-155, `coory-design/PHASE2_ARCHITECTURE.md`), validées par Antonino.
+
+### Architecture des programmes : données et règles de l'éditeur (D-155)
+```
+Migrations (additives, retour arrière en commentaire) :
+  20261109120000_modeles_de_programmes.sql  program_templates, session_templates (vide = Coory, lecture
+                                            seule ; version qui monte d'elle-même ; on archive, on ne supprime pas)
+  20261109120100_programmes_editables.sql   programs.discipline / source_template_*, program_drafts (révision),
+                                            program_publications.source_revision, publication_sessions.planned_time,
+                                            C-8 : contrainte d'exclusion (btree_gist) à la place de l'index unique,
+                                            fonctions create_program, save_program_draft, publish_program,
+                                            archive_program (security definer, codes CY409 / CY410 / 23P01 / P0002)
+  20261109120200_repere_lie_a_exercice.sql  athlete_reference_metrics.exercise_id (C-11)
+Domaine (src/domain/training/) : session-v2.ts, program-plan.ts, session-view.ts, aims.ts (OPEN-21, OPEN-22),
+  hyrox-official.ts (règlement 26/27), scheduling.ts, program-publication.ts, program-upgrade.ts,
+  program-status.ts ; program-session.ts lit la v1 ET la v2.
+Serveur (src/features/programs/) : actions.ts (créer, enregistrer, publier, archiver, dupliquer, modèles),
+  drafts.ts, templates.ts, schemas.ts ; queries.ts : un sportif peut avoir un programme en cours et un à
+  venir (le plus pertinent est montré), liste de la page Programmes, tris stables.
+Seed : programmes v1 GARDÉS (repris sans perte à la 1re ouverture de l'éditeur) ; ajout v2 : Inès « Prépa
+  HYROX · bloc 2 » À VENIR publié, Nadia « Force · bloc 2 » brouillon, 3 modèles Coory de DÉMONSTRATION +
+  4 modèles de séances, repères reliés. Documents produits par les règles de l'app, relus par
+  tests/unit/seed-programmes.test.ts.
+Tests : typecheck, lint, Prettier OK ; db:test 503/503 (20_programmes adapté à C-8 ; 36, 37, 38 nouveaux) ;
+  Vitest 332/332 (63 nouveaux) ; essai réel contre la base locale (jointures, conflit de révision,
+  publication idempotente, chevauchement refusé, programme introuvable) ; test:e2e : 1er passage 186 passés,
+  19 ignorés, 1 échec RÉEL (carte « Programmes en cours », corrigé, voir l'incident) ; 2e passage 186 passés,
+  19 ignorés, 1 échec INTERMITTENT sans lien : library.spec.ts (favori retiré puis page rechargée trop tôt),
+  code de la Bibliothèque non modifié, le test passe 2 fois sur 2 seul ; à fiabiliser plus tard.
+Incident : la carte « Programmes en cours » du tableau de bord départageait au hasard les programmes qui
+  commencent le même jour (le nouveau bloc 2 d'Inès a changé l'ordre) ; tri rendu stable (date, création, id).
+Aucun écran modifié dans cette phase. Captures après : coory-design/AUDIT_APRES/ (mêmes écrans qu'avant).
+```
 
 ### Plus de graphique sur la page d'une séance (D-152)
 ```

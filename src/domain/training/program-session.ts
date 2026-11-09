@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 import { DISCIPLINES } from "./discipline";
+import { publishedSessionSchema, type PublishedSession, type SessionDraft } from "./session-v2";
+import { sessionSteps } from "./session-view";
 
 // Contenu d'une séance de programme (D-46) : un objet STRUCTURÉ, pas un grand champ de texte libre
 // (CLAUDE.md). Il est figé dans la publication (publication_sessions.session_json) et relu ici à
@@ -43,7 +45,59 @@ export const programSessionSchema = z.object({
 export type ProgramSessionContent = z.infer<typeof programSessionSchema>;
 export type ProgramSessionStep = z.infer<typeof stepSchema>;
 
+// Tranche 2 (D-155, 09/11/2026) : les séances publiées depuis l'éditeur sont au schéma v2, STRUCTURÉ
+// (session-v2.ts). Les écrans lisent toujours cette forme v1 « à afficher » : une séance v2 y est
+// traduite en lignes (session-view.ts). Les publications v1 déjà figées ne sont jamais réécrites.
+export function sessionToDisplay(session: PublishedSession): ProgramSessionContent {
+  return {
+    title: session.title,
+    discipline: session.content.discipline,
+    sessionType: session.sessionType,
+    durationMinutes: session.durationMinutes,
+    ...(session.objective ? { objective: session.objective } : {}),
+    ...(session.coachTip ? { coachTips: session.coachTip } : {}),
+    steps: sessionSteps(session),
+    ...(session.withCoach ? { withCoach: { sessionId: session.withCoach.coachSessionId } } : {}),
+  };
+}
+
+// Contenu d'une séance publiée, v1 ou v2 ; null s'il est mal formé (écarté plutôt qu'affiché de travers).
 export function parseProgramSession(value: unknown): ProgramSessionContent | null {
+  if (typeof value === "object" && value !== null && "schemaVersion" in value) {
+    const parsed = publishedSessionSchema.safeParse(value);
+    if (!parsed.success) return null;
+    const display = programSessionSchema.safeParse(sessionToDisplay(parsed.data));
+    return display.success ? display.data : null;
+  }
   const parsed = programSessionSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
+}
+
+// Une séance v1 reprise SANS PERTE au schéma v2 : chaque étape devient un bloc texte (titre, pastille,
+// lignes, répétition). Sert à créer le brouillon d'un programme publié avant l'éditeur. Une séance
+// sans discipline (cas théorique) devient « hybrid », la seule forme qui n'accepte que du texte.
+export function upgradeV1Session(
+  session: ProgramSessionContent,
+  key: string,
+  withCoach?: { coachSessionId: string; date: string; time?: string },
+): SessionDraft {
+  const items = session.steps.map((step, i) => ({
+    id: `t${i + 1}`,
+    kind: "text" as const,
+    title: step.title,
+    ...(step.badge ? { badge: step.badge } : {}),
+    lines: step.lines,
+    ...(step.repeat ? { repeat: step.repeat } : {}),
+  }));
+  return {
+    key,
+    title: session.title,
+    sessionType: session.sessionType,
+    durationMinutes: session.durationMinutes,
+    ...(session.objective ? { objective: session.objective } : {}),
+    ...(session.coachTips ? { coachTip: session.coachTips } : {}),
+    content: { discipline: session.discipline ?? "hybrid", items },
+    athleteCanMove: false,
+    ...(withCoach ? { withCoach } : {}),
+  };
 }

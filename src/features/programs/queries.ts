@@ -3,7 +3,13 @@ import "server-only";
 import { z } from "zod";
 
 import { parseProgramSession, type ProgramSessionContent } from "@/domain/training/program-session";
+import {
+  pickCurrentProgram,
+  programListStatus,
+  type ProgramListStatus,
+} from "@/domain/training/program-status";
 import { addDays } from "@/features/agenda/items";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 // Programme publié d'un sportif (D-46, tranche 1) : ce que le sportif suit, lu depuis la publication
@@ -46,22 +52,32 @@ const snapshotSchema = z.object({
 });
 
 // Programme publié du sportif, dans une organisation DÉJÀ vérifiée (requireOrgAccess) ; null s'il n'y
-// en a pas. Les séances illisibles (contenu mal formé) sont écartées plutôt qu'affichées de travers.
+// en a pas. Depuis C-8 (09/11/2026), un sportif peut en avoir un « En cours » et un « À venir » : on
+// montre celui en cours, sinon le prochain. Les séances illisibles (contenu mal formé) sont écartées
+// plutôt qu'affichées de travers ; la v1 (texte) et la v2 (structurée) se lisent toutes les deux.
 export async function getAthleteProgram(
   organizationId: string,
   athleteId: string,
+  today: string = todayIsoInBrussels(),
 ): Promise<AthleteProgram | null> {
   const supabase = await createClient();
-  const { data: program, error } = await supabase
+  const { data: programs, error } = await supabase
     .from("programs")
     .select(
       "id, title, goal, start_date, weeks_count, created_by, active_publication_id, program_publications!programs_active_publication_fkey ( id, number, published_at, snapshot_json )",
     )
     .eq("organization_id", organizationId)
     .eq("athlete_id", athleteId)
-    .eq("status", "published")
-    .maybeSingle();
+    .eq("status", "published");
   if (error) throw new Error("Lecture du programme impossible.");
+  const program = pickCurrentProgram(
+    (programs ?? []).map((row) => ({
+      ...row,
+      startDate: row.start_date,
+      weeksCount: row.weeks_count,
+    })),
+    today,
+  );
   const publication = program?.program_publications;
   if (!program || !publication) return null;
 
@@ -143,8 +159,11 @@ export type ActiveProgram = {
 };
 
 // Programmes publiés de l'organisation (DÉJÀ vérifiée), pour la carte « Programmes en cours » du
-// tableau de bord ; sportifs archivés exclus.
-export async function listActivePrograms(organizationId: string): Promise<ActiveProgram[]> {
+// tableau de bord ; sportifs archivés exclus. Un seul par sportif : celui en cours, sinon le prochain.
+export async function listActivePrograms(
+  organizationId: string,
+  today: string = todayIsoInBrussels(),
+): Promise<ActiveProgram[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("programs")
@@ -154,22 +173,142 @@ export async function listActivePrograms(organizationId: string): Promise<Active
     .eq("organization_id", organizationId)
     .eq("status", "published")
     .neq("athlete_profiles.status", "archived")
-    .order("start_date", { ascending: false });
+    // Ordre STABLE (09/11/2026) : à date de début égale, le premier créé d'abord. Sans départage, la
+    // base rendait les égalités dans un ordre quelconque, et la carte changeait d'un affichage à
+    // l'autre (les programmes de démo commencent tous le même lundi).
+    .order("start_date", { ascending: false })
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
   if (error) throw new Error("Lecture des programmes impossible.");
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    athleteId: row.athlete_id,
-    // display_name est calculé par la base : jamais vide, le repli ne sert qu'au typage.
-    athleteName: row.athlete_profiles.display_name ?? row.athlete_profiles.first_name,
-    photoPath: row.athlete_profiles.photo_path,
-    startDate: row.start_date,
-    weeksCount: row.weeks_count,
-  }));
+  const byAthlete = new Map<string, typeof data>();
+  for (const row of data ?? [])
+    byAthlete.set(row.athlete_id, [...(byAthlete.get(row.athlete_id) ?? []), row]);
+  const shown = new Set(
+    [...byAthlete.values()].flatMap((rows) => {
+      const picked = pickCurrentProgram(
+        rows.map((row) => ({ id: row.id, startDate: row.start_date, weeksCount: row.weeks_count })),
+        today,
+      );
+      return picked ? [picked.id] : [];
+    }),
+  );
+  return (data ?? [])
+    .filter((row) => shown.has(row.id))
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      athleteId: row.athlete_id,
+      // display_name est calculé par la base : jamais vide, le repli ne sert qu'au typage.
+      athleteName: row.athlete_profiles.display_name ?? row.athlete_profiles.first_name,
+      photoPath: row.athlete_profiles.photo_path,
+      startDate: row.start_date,
+      weeksCount: row.weeks_count,
+    }));
 }
 
 // Semaine en cours d'un programme (1 à n), bornée : avant le début, 1 ; après la fin, n.
 export function currentWeekIndex(startDate: string, weeksCount: number, today: string): number {
   const days = Math.floor((Date.parse(today) - Date.parse(startDate)) / 86_400_000);
   return Math.min(Math.max(Math.floor(days / 7) + 1, 1), weeksCount);
+}
+
+// ---------------------------------------------------------------------------
+// Page Programmes, onglet Programmes (01) : tous les programmes de l'organisation (DÉJÀ vérifiée).
+// ---------------------------------------------------------------------------
+export type ProgramListItem = {
+  id: string;
+  title: string;
+  discipline: "running" | "strength" | "hyrox" | "hybrid" | null;
+  athleteId: string;
+  athleteName: string;
+  photoPath: string | null;
+  startDate: string;
+  weeksCount: number;
+  status: ProgramListStatus;
+  publicationNumber: number | null;
+  // Le brouillon est plus récent que la version publiée.
+  hasUnpublishedChanges: boolean;
+  // Semaine en cours (1 à N) d'un programme en cours.
+  currentWeek: number | null;
+  updatedAt: string;
+};
+
+export type ProgramListFilters = {
+  status?: ProgramListStatus | "all";
+  discipline?: "running" | "strength" | "hyrox" | "hybrid";
+  athleteId?: string;
+  search?: string;
+};
+
+const normalize = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+export async function listPrograms(
+  organizationId: string,
+  filters: ProgramListFilters = {},
+  today: string = todayIsoInBrussels(),
+): Promise<ProgramListItem[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from("programs")
+    .select(
+      "id, title, discipline, athlete_id, start_date, weeks_count, status, updated_at, athlete_profiles!inner ( first_name, display_name, photo_path ), program_drafts ( revision ), program_publications!programs_active_publication_fkey ( number, source_revision )",
+    )
+    .eq("organization_id", organizationId)
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: true });
+  if (filters.athleteId && z.uuid().safeParse(filters.athleteId).success) {
+    query = query.eq("athlete_id", filters.athleteId);
+  }
+  if (filters.discipline) query = query.eq("discipline", filters.discipline);
+  const { data, error } = await query;
+  if (error) throw new Error("Lecture des programmes impossible.");
+
+  const search = filters.search ? normalize(filters.search.trim()) : "";
+  return (data ?? [])
+    .map((row) => {
+      const status = programListStatus(
+        {
+          status: row.status as "draft" | "published" | "archived",
+          startDate: row.start_date,
+          weeksCount: row.weeks_count,
+        },
+        today,
+      );
+      const publication = row.program_publications;
+      const draft = Array.isArray(row.program_drafts)
+        ? (row.program_drafts[0] ?? null)
+        : row.program_drafts;
+      const athleteName = row.athlete_profiles.display_name ?? row.athlete_profiles.first_name;
+      return {
+        id: row.id,
+        title: row.title,
+        discipline: row.discipline as ProgramListItem["discipline"],
+        athleteId: row.athlete_id,
+        athleteName,
+        photoPath: row.athlete_profiles.photo_path,
+        startDate: row.start_date,
+        weeksCount: row.weeks_count,
+        status,
+        publicationNumber: publication?.number ?? null,
+        hasUnpublishedChanges:
+          publication !== null && draft !== null && publication.source_revision !== draft.revision,
+        currentWeek:
+          status === "current" ? currentWeekIndex(row.start_date, row.weeks_count, today) : null,
+        updatedAt: row.updated_at,
+      };
+    })
+    .filter((item) =>
+      filters.status && filters.status !== "all"
+        ? item.status === filters.status
+        : item.status !== "archived",
+    )
+    .filter((item) =>
+      search
+        ? normalize(item.title).includes(search) || normalize(item.athleteName).includes(search)
+        : true,
+    );
 }

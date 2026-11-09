@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</helmet>
+<div style="display:flex;flex-direction:column;gap:110px;padding:64px;width:max-content;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#17151d">
+<sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2"><section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:10px"><span style="font:700 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ sec.num }}</span><span style="font:700 18px 'Plus Jakarta Sans'">{{ sec.h }}</span></div><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e;max-width:980px">{{ sec.sub }}</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;max-width:2400px">
+<sc-for list="{{ sec.frames }}" as="f" hint-placeholder-count="2"><div id="{{ f.id }}" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ f.id }}</span><span style="font:600 16px 'Plus Jakarta Sans'">{{ f.cap }}</span></div>
+
+<sc-if value="{{ f.pdf }}"><div data-screen-label="{{ f.label }}" style="width:620px;height:877px;background:#fff;box-shadow:0 0 0 1px rgba(22,18,40,.12),0 24px 60px -24px rgba(22,18,40,.28);padding:34px 40px 22px;display:flex;flex-direction:column;gap:14px;color:#17151d;overflow:hidden">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px"><img src="assets/coory-logo-clair.svg" alt="Coory" style="height:16px;width:auto;margin-top:3px"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right"><span style="font:600 12px 'Plus Jakarta Sans'">Prépa HYROX Gand</span><span style="font:400 11px 'Plus Jakarta Sans';color:#64626e">{{ f.pdfTag }}</span></div></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-bottom:14px;border-bottom:1.5px solid #17151d"><span style="font:600 11px 'Plus Jakarta Sans';letter-spacing:.06em;text-transform:uppercase;color:#64626e">{{ f.pdfKicker }}</span><span style="font:700 26px/1.15 'Plus Jakarta Sans';letter-spacing:-.02em">{{ f.pdfTitle }}</span><span style="font:400 12px 'Plus Jakarta Sans';color:#4a4855">Inès Ben Ali · 26 oct. → 17 janv. 2026 · 12 semaines · Objectif : HYROX Gand, 13 déc., Open Femme</span></div>
+<sc-if value="{{ f.pdfProg }}"><div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ pdfSes }}" as="s" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:5px;padding:9px 12px;border-radius:10px;border:1px solid #dcdae3">
+<div style="display:flex;align-items:baseline;gap:8px"><span style="flex:none;white-space:nowrap;font:700 10.5px 'Plus Jakarta Sans';letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:4px;border:1px solid #17151d">S{{ s.n }} · {{ s.kind }}</span><span style="flex:1;font:700 14px 'Plus Jakarta Sans'">{{ s.name }}</span><span style="font:600 11.5px 'Plus Jakarta Sans'">{{ s.dur }}</span></div>
+<sc-for list="{{ s.lines }}" as="l" hint-placeholder-count="3"><div style="display:flex;gap:8px;font:400 11.5px/1.45 'Plus Jakarta Sans'"><span style="width:14px;flex:none;font-weight:700">{{ l.n }}</span><span style="flex:1"><strong style="font-weight:600">{{ l.t }}</strong> — {{ l.s }}</span><span style="font-weight:600;white-space:nowrap">{{ l.d }}</span></div></sc-for>
+<sc-if value="{{ s.hasBars }}"><div style="height:16px;display:flex;align-items:flex-end;gap:1.5px;margin-left:22px"><sc-for list="{{ s.bars }}" as="b" hint-placeholder-count="6"><span style="flex:{{ b.f }};height:{{ b.h }}px;background:{{ b.c }};border-radius:1.5px"></span></sc-for></div></sc-if>
+<sc-if value="{{ s.tip }}"><span style="font:400 italic 11px/1.4 'Plus Jakarta Sans';color:#4a4855;margin-left:22px">Conseil : {{ s.tip }}</span></sc-if>
+</div></sc-for></div></sc-if>
+<sc-if value="{{ f.pdfCal }}"><div style="display:flex;flex-direction:column;border:1px solid #dcdae3;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:92px minmax(0,1fr) 150px;background:#f3f2f7;font:700 10.5px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase"><span style="padding:8px 10px">Semaine</span><span style="padding:8px 10px">Séances (dans l’ordre)</span><span style="padding:8px 10px">Avec le coach</span></div>
+<sc-for list="{{ pdfWeeks }}" as="w" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:92px minmax(0,1fr) 150px;border-top:1px solid #e6e4ec;font:400 11px/1.45 'Plus Jakarta Sans'"><span style="padding:8px 10px;display:flex;flex-direction:column"><strong style="font-weight:700;font-size:11.5px">{{ w.l }}</strong><span style="color:#64626e">{{ w.d }}</span></span><span style="padding:8px 10px">{{ w.s }}</span><span style="padding:8px 10px;font-weight:{{ w.fw }}">{{ w.c }}</span></div></sc-for>
+</div>
+<span style="font:400 11px/1.5 'Plus Jakarta Sans';color:#4a4855">Séances sans jour fixe : Inès les fait dans l’ordre, au jour de son choix. ★ = compétition.</span></sc-if>
+<div style="flex:1"></div>
+<div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid #dcdae3;font:400 10.5px 'Plus Jakarta Sans';color:#64626e"><span>Coory · Version 1 · généré le 8 nov. 2026</span><span>{{ f.pdfPage }}</span></div>
+</div></sc-if>
+
+<sc-if value="{{ f.d }}" hint-placeholder-val="{{ true }}"><div data-screen-label="{{ f.label }}" style="position:relative;width:1280px;height:820px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28)">
+<aside style="width:236px;flex:none;border-radius:20px;background:#fff;padding:24px 14px 16px;display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 6px 22px 10px"><img src="assets/coory-logo-clair.svg" alt="Coory" style="height:17px;width:auto"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM9 4v16M15 10l-2 2 2 2"></path></svg></div>
+<sc-for list="{{ nav1 }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ n.bg }};color:{{ n.c }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.l }}</span></sc-for>
+<span style="height:1px;background:#ecebf1;margin:12px 8px"></span>
+<sc-for list="{{ nav2 }}" as="n" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;color:#4a4855"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg><span style="flex:1">{{ n.l }}</span><sc-if value="{{ n.b }}"><span style="min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:rgba(139,92,246,.12);color:#6a3ee0;font:600 11px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">{{ n.b }}</span></sc-if></span></sc-for>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:10px;padding:8px"><span style="width:38px;height:38px;flex:none;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans';box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6">JM</span><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 14px 'Plus Jakarta Sans'">Julien Mertens</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Coach</span></div></div>
+</aside>
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+<header style="height:64px;flex:none;border-radius:20px;background:#fff;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px">
+<span style="flex:1;display:flex;align-items:center;gap:9px;font:500 15px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"></path></svg><sc-if value="{{ f.crumb }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Programmes<span style="color:#c9c7d1">·</span></sc-if><span style="font-weight:600;color:#17151d">{{ f.title }}</span><sc-if value="{{ f.tabs }}"><span style="display:flex;padding:3px;border-radius:11px;background:#f3f2f7"><sc-for list="{{ f.tabs }}" as="t" hint-placeholder-count="2"><span style="height:34px;padding:0 14px;border-radius:9px;display:flex;align-items:center;font:600 14px 'Plus Jakarta Sans';background:{{ t.bg }};color:{{ t.c }};box-shadow:{{ t.sh }}">{{ t.l }}</span></sc-for></span></sc-if></span>
+<span style="height:32px;padding:0 12px;border-radius:9px;background:#8b5cf6;color:#fff;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg>Assistant IA</span>
+<span style="width:32px;height:32px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span>
+<sc-if value="{{ f.act }}"><span style="height:32px;padding:0 14px;border-radius:9px;background:#17151d;color:#fff;display:flex;align-items:center;gap:6px;font:600 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>{{ f.act }}</span></sc-if>
+</header>
+
+<sc-if value="{{ f.list }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<div style="display:flex;padding:4px;border-radius:12px;background:#e8e7ee"><sc-for list="{{ statusTabs }}" as="t" hint-placeholder-count="5"><span style="height:32px;padding:0 12px;border-radius:9px;display:flex;align-items:center;gap:6px;font:500 13px 'Plus Jakarta Sans';white-space:nowrap;background:{{ t.bg }};color:{{ t.c }};box-shadow:{{ t.sh }}">{{ t.l }}<span style="font:500 12px 'Plus Jakarta Sans';color:#8a8896">{{ t.n }}</span></span></sc-for></div>
+<div style="display:flex;gap:8px"><sc-for list="{{ filters }}" as="t" hint-placeholder-count="2"><span style="height:40px;padding:0 12px 0 14px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:8px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap">{{ t }}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span></sc-for><span style="width:220px;height:40px;padding:0 12px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:8px;font:400 13.5px 'Plus Jakarta Sans';color:#8a8896"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3"></path></svg>Rechercher un programme</span></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px"><sc-for list="{{ progs }}" as="p" hint-placeholder-count="6"><div style="border-radius:20px;background:#fff;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;flex:none;border-radius:50%;background:{{ p.av }};display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans';color:#2a2733">{{ p.ini }}</span><span style="flex:1;min-width:0;font:500 13.5px 'Plus Jakarta Sans';color:#4a4855;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.who }}</span><span style="height:24px;padding:0 9px;border-radius:12px;display:flex;align-items:center;font:600 11.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ p.stBg }};color:{{ p.stC }};box-shadow:{{ p.stSh }}">{{ p.st }}</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 16.5px/1.25 'Plus Jakarta Sans';letter-spacing:-.01em">{{ p.t }}</span><span style="display:flex;align-items:center;gap:7px;font:400 12.5px 'Plus Jakarta Sans';color:#64626e"><span style="width:7px;height:7px;border-radius:50%;background:{{ p.c }}"></span>{{ p.kind }} · {{ p.per }}</span></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:500 12.5px 'Plus Jakarta Sans'"><span>{{ p.wk }}</span><span style="color:#64626e">{{ p.done }} / {{ p.tot }} séances</span></div><div style="height:6px;border-radius:3px;background:#ecebf1;overflow:hidden"><div style="width:{{ p.pct }};height:100%;border-radius:3px;background:#8b5cf6"></div></div></div>
+<sc-if value="{{ p.obj }}"><span style="display:flex;align-items:center;gap:7px;padding-top:10px;border-top:1px solid #f0eff4;font:500 12.5px 'Plus Jakarta Sans';color:#4a4855"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4M4 4h13l-2 4 2 4H4"></path></svg>{{ p.obj }}</span></sc-if>
+</div></sc-for></div></sc-if>
+<sc-if value="{{ f.models }}"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<div style="display:flex;padding:4px;border-radius:12px;background:#e8e7ee"><sc-for list="{{ srcTabs }}" as="t" hint-placeholder-count="3"><span style="height:32px;padding:0 12px;border-radius:9px;display:flex;align-items:center;gap:6px;font:500 13px 'Plus Jakarta Sans';white-space:nowrap;background:{{ t.bg }};color:{{ t.c }};box-shadow:{{ t.sh }}">{{ t.l }}<span style="font:500 12px 'Plus Jakarta Sans';color:#8a8896">{{ t.n }}</span></span></sc-for></div>
+<div style="display:flex;gap:8px"><sc-for list="{{ mFilters }}" as="t" hint-placeholder-count="2"><span style="height:40px;padding:0 12px 0 14px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:8px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap">{{ t }}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span></sc-for><span style="width:220px;height:40px;padding:0 12px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:8px;font:400 13.5px 'Plus Jakarta Sans';color:#8a8896"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3"></path></svg>Rechercher un modèle</span></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px"><sc-for list="{{ models }}" as="p" hint-placeholder-count="9"><div style="border-radius:20px;background:#fff;padding:16px 18px;display:flex;flex-direction:column;gap:9px;min-width:0">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896">{{ p.type }}</span><span style="height:24px;padding:0 9px;border-radius:12px;display:flex;align-items:center;font:600 11.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ p.bBg }};color:{{ p.bC }}">{{ p.badge }}</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 16.5px/1.25 'Plus Jakarta Sans';letter-spacing:-.01em">{{ p.t }}</span><span style="display:flex;align-items:center;gap:7px;font:400 12.5px 'Plus Jakarta Sans';color:#64626e"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:{{ p.c }}"></span>{{ p.kind }} · {{ p.det }}</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:9px;border-top:1px solid #f0eff4"><span style="font:500 12.5px 'Plus Jakarta Sans';color:#4a4855">{{ p.foot }}</span><span style="height:30px;padding:0 12px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;font:600 12.5px 'Plus Jakarta Sans'">Utiliser</span></div>
+</div></sc-for></div></sc-if>
+
+<sc-if value="{{ f.empty }}"><section style="flex:1;border-radius:20px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px">
+<span style="width:68px;height:68px;border-radius:21px;background:#f1edfc;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 12v6M9 15h6"></path></svg></span>
+<span style="margin-top:22px;font:700 26px/1.2 'Plus Jakarta Sans';letter-spacing:-.025em">Ton premier programme</span>
+<span style="margin-top:10px;max-width:470px;font:400 15px/1.6 'Plus Jakarta Sans';color:#64626e;text-wrap:pretty">Choisis un sportif, sa discipline et la durée. Coory prépare les semaines et les séances, tu les remplis puis tu publies.</span>
+<div style="margin-top:28px;display:flex;gap:10px"><span style="height:46px;padding:0 18px;border-radius:12px;background:#17151d;color:#fff;display:flex;align-items:center;gap:8px;font:600 14.5px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Créer un programme</span><span style="height:46px;padding:0 16px;border-radius:12px;background:#8b5cf6;color:#fff;display:flex;align-items:center;gap:8px;font:600 14.5px 'Plus Jakarta Sans'"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg>Le préparer avec l’Assistant IA</span></div>
+</section></sc-if>
+
+<sc-if value="{{ f.wiz }}"><section style="flex:1;min-height:0;border-radius:20px;background:#fff;display:flex;overflow:hidden">
+<div style="width:250px;flex:none;padding:24px 18px;border-right:1px solid #f0eff4;display:flex;flex-direction:column;gap:4px">
+<span style="padding:0 8px 14px;font:600 17px 'Plus Jakarta Sans'">Nouveau programme</span>
+<sc-for list="{{ wSteps }}" as="w" hint-placeholder-count="4"><button type="button" onClick="{{ w.go }}" style="cursor:pointer;border:0;text-align:left;display:flex;align-items:center;gap:12px;min-height:56px;padding:0 10px;border-radius:12px;background:{{ w.bg }};font-family:'Plus Jakarta Sans'"><span style="width:28px;height:28px;flex:none;border-radius:50%;background:{{ w.dot }};color:{{ w.dotC }};box-shadow:{{ w.ring }};display:flex;align-items:center;justify-content:center;font:700 12.5px 'Plus Jakarta Sans'">{{ w.mark }}</span><span style="display:flex;flex-direction:column;gap:1px"><span style="font:600 14px 'Plus Jakarta Sans';color:#17151d">{{ w.l }}</span><span style="font:400 12px 'Plus Jakarta Sans';color:#8a8896">{{ w.s }}</span></span></button></sc-for>
+</div>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column">
+<div style="flex:1;min-height:0;padding:28px 36px;overflow:hidden"><div style="max-width:620px;display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font:600 12px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896">Étape {{ st.n }} sur 4</span><span style="font:700 26px/1.2 'Plus Jakarta Sans';letter-spacing:-.025em">{{ st.h }}</span></div>
+<dc-import name="programmes/CooryProgEtape" st="{{ st }}" hint-size="100%,420px"></dc-import>
+</div></div>
+<div style="flex:none;display:flex;justify-content:space-between;padding:16px 36px;border-top:1px solid #f0eff4"><span style="height:44px;padding:0 18px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;font:600 14px 'Plus Jakarta Sans';color:{{ st.backC }}">Retour</span><button type="button" onClick="{{ wNext }}" style="cursor:pointer;border:0;height:44px;padding:0 20px;border-radius:12px;background:#17151d;color:#fff;display:flex;align-items:center;gap:8px;font:600 14px 'Plus Jakarta Sans'">{{ st.cta }}<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></div>
+</div>
+</section></sc-if>
+
+<sc-if value="{{ f.pub }}"><section style="flex:1;border-radius:20px;background:#fff;padding:20px;display:flex;flex-direction:column;gap:10px"><sc-for list="{{ ghost }}" as="g" hint-placeholder-count="5"><span style="height:{{ g }};border-radius:14px;background:#f3f2f7"></span></sc-for></section></sc-if>
+</main>
+
+<sc-if value="{{ f.pub }}"><div style="position:absolute;inset:0;background:rgba(22,18,40,.32);display:flex;align-items:center;justify-content:center">
+<div style="width:480px;border-radius:22px;background:#fff;padding:26px;box-shadow:0 30px 80px -20px rgba(22,18,40,.5)"><dc-import name="programmes/CooryProgPublier" hint-size="100%,420px"></dc-import></div>
+</div>
+<div style="position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;height:46px;padding:0 16px 0 12px;border-radius:14px;background:#17151d;color:#fff;font:500 14px 'Plus Jakarta Sans';box-shadow:0 18px 40px -14px rgba(22,18,40,.6)"><span style="width:22px;height:22px;border-radius:50%;background:#1f9d55;display:flex;align-items:center;justify-content:center;font:700 12px 'Plus Jakarta Sans'">✓</span>Programme publié (version 2)<span style="margin-left:10px;color:#b9a3ff;font-weight:600">Voir</span></div></sc-if>
+</div></sc-if>
+
+<sc-if value="{{ f.m }}"><div data-screen-label="{{ f.label }}" style="position:relative;width:390px;height:844px;background:#f3f2f7;border-radius:40px;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28)">
+<div style="display:flex;justify-content:space-between;padding:16px 28px 8px;font:600 14px 'Plus Jakarta Sans'"><span>9:41</span><span style="font-size:12px">●●● ▮</span></div>
+<header style="display:flex;align-items:center;gap:10px;padding:6px 14px 0">
+<span style="width:46px;height:46px;flex:none;border-radius:14px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span>
+<span style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;font:{{ f.hw }} 16px 'Plus Jakarta Sans';color:{{ f.hc }};white-space:nowrap"><sc-if value="{{ f.crumb }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></sc-if>{{ f.mTitle }}</span>
+<span style="display:flex;gap:4px;padding:4px;border-radius:16px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18)"><span style="width:40px;height:40px;border-radius:12px;background:#8b5cf6;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg></span><span style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span>
+</header>
+<div style="padding:20px 14px 130px;display:flex;flex-direction:column;gap:12px">
+
+<sc-if value="{{ f.mt }}"><div style="display:flex;padding:4px;border-radius:13px;background:#e8e7ee"><sc-for list="{{ f.mt }}" as="t" hint-placeholder-count="2"><span style="flex:1;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font:600 14px 'Plus Jakarta Sans';background:{{ t.bg }};color:{{ t.c }};box-shadow:{{ t.sh }}">{{ t.l }}</span></sc-for></div></sc-if>
+<sc-if value="{{ f.models }}"><div style="display:flex;gap:6px"><sc-for list="{{ srcTabs }}" as="t" hint-placeholder-count="3"><span style="height:36px;padding:0 13px;border-radius:18px;display:flex;align-items:center;gap:6px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ t.mbg }};color:{{ t.mc }}">{{ t.l }}<span style="font:500 12px 'Plus Jakarta Sans';opacity:.65">{{ t.n }}</span></span></sc-for></div>
+<sc-for list="{{ modelsM }}" as="p" hint-placeholder-count="4"><div style="border-radius:20px;background:#fff;padding:16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896">{{ p.type }}</span><span style="height:24px;padding:0 9px;border-radius:12px;display:flex;align-items:center;font:600 11.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ p.bBg }};color:{{ p.bC }}">{{ p.badge }}</span></div>
+<span style="font:600 16px 'Plus Jakarta Sans'">{{ p.t }}</span><span style="display:flex;align-items:center;gap:7px;font:400 12.5px 'Plus Jakarta Sans';color:#64626e"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:{{ p.c }}"></span>{{ p.kind }} · {{ p.det }}</span>
+</div></sc-for></sc-if>
+<sc-if value="{{ f.list }}"><div style="display:flex;gap:8px"><span style="flex:1;height:44px;padding:0 12px 0 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:space-between;font:500 14px 'Plus Jakarta Sans'"><span>Statut : <strong style="font-weight:600">{{ f.stat }}</strong></span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span><span style="height:44px;padding:0 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:7px;font:500 14px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>Filtres</span></div>
+<span style="height:44px;padding:0 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px {{ f.srchRing }};display:flex;align-items:center;gap:8px;font:400 16px 'Plus Jakarta Sans';color:{{ f.srchC }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8a8896" stroke-width="2" stroke-linecap="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3"></path></svg>{{ f.srch }}</span>
+<sc-if value="{{ f.hasProgs }}"><sc-for list="{{ progsM }}" as="p" hint-placeholder-count="4"><div style="border-radius:20px;background:#fff;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;flex:none;border-radius:50%;background:{{ p.av }};display:flex;align-items:center;justify-content:center;font:600 11.5px 'Plus Jakarta Sans';color:#2a2733">{{ p.ini }}</span><span style="flex:1;min-width:0;font:500 13.5px 'Plus Jakarta Sans';color:#4a4855">{{ p.who }}</span><span style="height:24px;padding:0 9px;border-radius:12px;display:flex;align-items:center;font:600 11.5px 'Plus Jakarta Sans';background:{{ p.stBg }};color:{{ p.stC }};box-shadow:{{ p.stSh }}">{{ p.st }}</span></div>
+<div style="display:flex;flex-direction:column;gap:3px"><span style="font:600 16px 'Plus Jakarta Sans'">{{ p.t }}</span><span style="display:flex;align-items:center;gap:7px;font:400 12.5px 'Plus Jakarta Sans';color:#64626e"><span style="width:7px;height:7px;border-radius:50%;background:{{ p.c }}"></span>{{ p.kind }} · {{ p.per }}</span></div>
+<div style="display:flex;justify-content:space-between;font:500 12.5px 'Plus Jakarta Sans'"><span>{{ p.wk }}</span><span style="color:#64626e">{{ p.done }} / {{ p.tot }}</span></div><div style="height:6px;border-radius:3px;background:#ecebf1;overflow:hidden"><div style="width:{{ p.pct }};height:100%;background:#8b5cf6"></div></div>
+<sc-if value="{{ p.obj }}"><span style="font:500 12.5px 'Plus Jakarta Sans';color:#4a4855">⚑ {{ p.obj }}</span></sc-if>
+</div></sc-for></sc-if>
+<sc-if value="{{ f.none }}"><section style="border-radius:22px;background:#fff;padding:36px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px"><span style="width:52px;height:52px;border-radius:16px;background:#f3f2f7;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3"></path></svg></span><span style="margin-top:8px;font:700 19px 'Plus Jakarta Sans'">Aucun programme trouvé</span><span style="font:400 14px/1.55 'Plus Jakarta Sans';color:#64626e">Rien ne correspond à « marathon » dans les brouillons.</span><span style="margin-top:10px;height:44px;padding:0 16px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;font:600 14px 'Plus Jakarta Sans'">Effacer la recherche et les filtres</span></section></sc-if>
+</sc-if>
+
+<sc-if value="{{ f.wiz }}"><div style="display:flex;flex-direction:column;gap:8px;padding:0 4px"><div style="display:flex;gap:4px"><sc-for list="{{ f.bar }}" as="b" hint-placeholder-count="4"><span style="flex:1;height:5px;border-radius:3px;background:{{ b }}"></span></sc-for></div><span style="font:600 12px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896">Étape {{ f.st.n }} sur 4 · {{ f.st.l }}</span><span style="font:700 24px/1.2 'Plus Jakarta Sans';letter-spacing:-.02em">{{ f.st.h }}</span></div>
+<section style="border-radius:22px;background:#fff;padding:18px"><dc-import name="programmes/CooryProgEtape" st="{{ f.st }}" mobile="{{ true }}" hint-size="100%,460px"></dc-import></section></sc-if>
+
+<sc-if value="{{ f.pub }}"><sc-for list="{{ ghost }}" as="g" hint-placeholder-count="5"><span style="height:{{ g }};border-radius:18px;background:#fff"></span></sc-for></sc-if>
+</div>
+
+<sc-if value="{{ f.wiz }}"><div style="position:absolute;left:0;right:0;bottom:0;padding:12px 14px 30px;background:linear-gradient(rgba(243,242,247,0),#f3f2f7 30%);display:flex;gap:8px"><span style="width:110px;height:52px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center;font:600 15px 'Plus Jakarta Sans';color:{{ f.st.backC }}">Retour</span><span style="flex:1;height:52px;border-radius:14px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 15px 'Plus Jakarta Sans'">{{ f.st.cta }}</span></div></sc-if>
+<sc-if value="{{ f.fab }}"><span style="position:absolute;right:14px;bottom:28px;width:60px;height:60px;border-radius:18px;background:#17151d;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -12px rgba(22,18,40,.55)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span></sc-if>
+<sc-if value="{{ f.pub }}"><div style="position:absolute;inset:0;background:rgba(22,18,40,.34)"></div><div style="position:absolute;left:8px;right:8px;bottom:8px;border-radius:30px;background:#fff;padding:10px 20px 22px;display:flex;flex-direction:column;gap:14px"><span style="align-self:center;flex:none;width:38px;height:5px;border-radius:3px;background:#dcdae3"></span><dc-import name="programmes/CooryProgPublier" mobile="{{ true }}" hint-size="100%,440px"></dc-import></div></sc-if>
+</div></sc-if>
+
+</div></sc-for>
+</div>
+</section></sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;part&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;default&quot;:&quot;a&quot;,&quot;tsType&quot;:&quot;'a' | 'b'&quot;}}">
+class Component extends DCLogic {
+  state = { step: 2 };
+  renderVals() {
+    const part = this.props.part || 'a';
+    const si = this.state.step;
+    const st = STEP(si);
+    const wSteps = STEPS.map((s, i) => ({ l: s[0], s: s[1], mark: i < si ? '✓' : String(i + 1), bg: i === si ? '#f1edfc' : 'transparent',
+      dot: i < si ? '#17151d' : i === si ? '#8b5cf6' : '#fff', dotC: i <= si ? '#fff' : '#64626e', ring: i > si ? 'inset 0 0 0 1.5px rgba(22,18,40,.16)' : 'none', go: () => this.setState({ step: i }) }));
+    const D = (o) => Object.assign({ d: true, m: false, pdf: false, list: false, models: false, tabs: false, empty: false, wiz: false, pub: false, crumb: false, act: '' }, o);
+    const M = (o) => Object.assign({ d: false, m: true, pdf: false, list: false, models: false, mt: false, wiz: false, pub: false, crumb: false, fab: false, hasProgs: false, none: false, hw: '600', hc: '#17151d', srch: 'Rechercher un programme', srchC: '#8a8896', srchRing: 'rgba(22,18,40,.12)', stat: 'Tous' }, o);
+    const P = (o) => Object.assign({ d: false, m: false, pdf: true }, o);
+    const mw = n => M({ id: '2' + 'cdef'[n], cap: 'Mobile · étape ' + (n + 1), label: 'Nouveau programme mobile · étape ' + (n + 1), wiz: true, crumb: true, hw: '500', hc: '#64626e', mTitle: 'Programmes', st: STEP(n), bar: [0, 1, 2, 3].map(i => i <= n ? '#8b5cf6' : '#dcdae3') });
+    const A = [
+      { num: '01', h: 'Page Programmes', sub: 'Deux onglets : « Programmes » (tous les programmes de tous les sportifs) et « Modèles » (filtre Coory / Mes modèles, badge « Coory » sur les modèles fournis par l’app). Filtres par statut, discipline et sportif. « Créer un programme » : bouton noir dans l’en-tête (desktop), bouton flottant « + » (mobile). États : liste remplie, liste vide, recherche sans résultat.', frames: [
+        D({ id: '1a', cap: 'Desktop · liste remplie', label: 'Programmes desktop · liste', list: true, tabs: TABS(0), title: '', act: 'Créer un programme' }),
+        M({ id: '1b', cap: 'Mobile · liste remplie', label: 'Programmes mobile · liste', list: true, mt: TABS(0, 1), hasProgs: true, mTitle: 'Programmes', fab: true }),
+        D({ id: '1c', cap: 'Desktop · aucun programme', label: 'Programmes desktop · vide', empty: true, tabs: TABS(0), title: '', act: 'Créer un programme' }),
+        M({ id: '1d', cap: 'Mobile · recherche sans résultat', label: 'Programmes mobile · sans résultat', list: true, none: true, mTitle: 'Programmes', fab: true, srch: 'marathon', srchC: '#17151d', srchRing: '#8b5cf6', stat: 'Brouillons', mt: TABS(0, 1) }),
+        D({ id: '1e', cap: 'Desktop · onglet Modèles', label: 'Modèles desktop', models: true, tabs: TABS(1), title: '', act: 'Nouveau modèle' }),
+        M({ id: '1f', cap: 'Mobile · onglet Modèles', label: 'Modèles mobile', models: true, mt: TABS(1, 1), mTitle: 'Programmes' })] },
+      { num: '02', h: 'Créer un programme · assistant en 4 étapes', sub: 'Desktop : page avec ses étapes à gauche (clique une étape ou « Continuer »). Mobile : plein écran, progression en haut, « Retour » et « Continuer » en bas. Depuis la fiche d’un sportif, l’étape 1 arrive avec le sportif déjà choisi.', frames: [
+        D({ id: '2a', cap: 'Desktop · interactif', label: 'Nouveau programme desktop', wiz: true, crumb: true, title: 'Nouveau programme' }), mw(0), mw(1), mw(2), mw(3)] }
+    ];
+    const B = [
+      { num: '08', h: 'Publier', sub: 'Fenêtre de confirmation : résumé, avertissements (bloquants ou non), version créée. Après publication, un message court.', frames: [
+        D({ id: '8a', cap: 'Desktop · confirmation + message', label: 'Publier desktop', pub: true, crumb: true, title: 'Prépa HYROX Gand' }),
+        M({ id: '8b', cap: 'Mobile · feuille de confirmation', label: 'Publier mobile', pub: true, crumb: true, hw: '500', hc: '#64626e', mTitle: 'Programmes' })] }
+    ];
+    const SRC = [['Tous', '9'], ['Coory', '5'], ['Mes modèles', '4']];
+    const tabsN = [['Tous', '6'], ['En cours', '4'], ['Brouillons', '1'], ['À venir', '1'], ['Terminés', '3']];
+    return {
+      sections: part === 'b' ? B : A, st, wSteps,
+      wNext: () => this.setState(s => ({ step: Math.min(3, s.step + 1) })),
+      nav1: NAV1.map(([l, d], i) => ({ l, d, bg: i === 3 ? 'rgba(139,92,246,.12)' : 'transparent', c: i === 3 ? '#17151d' : '#4a4855' })),
+      nav2: NAV2.map(([l, d, b]) => ({ l, d, b: b || '' })),
+      statusTabs: tabsN.map(([l, n], i) => ({ l, n, bg: i === 0 ? '#fff' : 'transparent', c: i === 0 ? '#17151d' : '#64626e', sh: i === 0 ? '0 1px 2px rgba(22,18,40,.10)' : 'none' })),
+      filters: ['Toutes les disciplines', 'Tous les sportifs'],
+      srcTabs: SRC.map(([l, n], i) => ({ l, n, bg: i === 0 ? '#fff' : 'transparent', c: i === 0 ? '#17151d' : '#64626e', sh: i === 0 ? '0 1px 2px rgba(22,18,40,.10)' : 'none', mbg: i === 0 ? '#17151d' : '#fff', mc: i === 0 ? '#fff' : '#4a4855' })),
+      mFilters: ['Programmes et séances', 'Toutes les disciplines'], models: MODELS, modelsM: MODELS.slice(0, 5),
+      progs: PROGS, progsM: PROGS.slice(0, 4), ghost: ['96px', '54px', '180px', '180px', '120px'],
+      pdfSes: PDF_SES, pdfWeeks: PDF_WEEKS
+    };
+  }
+}
+function TABS(on, mob) { return ['Programmes', 'Modèles'].map((l, i) => ({ l, bg: i === on ? '#fff' : 'transparent', c: i === on ? '#17151d' : '#64626e', sh: i === on ? '0 1px 2px rgba(22,18,40,.10)' : 'none' })); }
+const STEPS = [['Pour qui', 'Sportif et titre'], ['Objectif', 'Discipline et course'], ['Calendrier', 'Début, durée, séances'], ['Point de départ', 'Zéro ou copie + aperçu']];
+function STEP(i) {
+  return { n: i + 1, l: STEPS[i][0], h: ['Pour qui est ce programme ?', 'Quel est l’objectif ?', 'Comment s’organise-t-il ?', 'D’où pars-tu ?'][i], s1: i === 0, s2: i === 1, s3: i === 2, s4: i === 3,
+    cta: i === 3 ? 'Créer le brouillon' : 'Continuer', backC: i === 0 ? '#c9c7d1' : '#17151d' };
+}
+const DC = { run: ['#7776FF', 'Running'], mus: ['#DD2D4A', 'Musculation'], hyr: ['#FEC14F', 'Hyrox'] };
+const MODELS = [
+  ['Programme', 'Prépa Hyrox · 12 semaines', 'hyr', '12 sem. · 4 séances / sem.', 1, 'Base · Spécifique · Affûtage'],
+  ['Programme', 'Premier 10 km · 8 semaines', 'run', '8 sem. · 3 séances / sem.', 1, 'Débutant · zones de FC'],
+  ['Séance', 'Sortie longue', 'run', '60 min · zone 2', 1, 'Fourni par Coory'],
+  ['Séance', 'Full Body A', 'mus', '6 exercices · % du max', 1, 'Fourni par Coory'],
+  ['Séance', 'Simulation Hyrox', 'hyr', '8 runs + 8 stations', 1, 'Charges officielles'],
+  ['Programme', 'Prépa semi · 12 semaines', 'run', '12 sem. · 4 séances / sem.', 0, 'Utilisé 3 fois'],
+  ['Programme', 'Force bloc 1', 'mus', '8 sem. · 3 séances / sem.', 0, 'Utilisé 5 fois'],
+  ['Séance', 'Endurance rapide', 'run', '5 × 2 min · ≈ 45 min', 0, 'Utilisée 12 fois'],
+  ['Séance', 'Circuit Hyrox', 'hyr', '5 tours + AMRAP · 60 min', 0, 'Utilisée 8 fois']
+].map(([type, t, d, det, coory, foot]) => ({ type, t, c: DC[d][0], kind: DC[d][1], det, foot, badge: coory ? 'Coory' : 'Mes modèles', bBg: coory ? 'rgba(139,92,246,.12)' : '#f3f2f7', bC: coory ? '#6a3ee0' : '#4a4855' }));
+const STP = { pub: { stBg: '#f3f2f7', stC: '#17151d', stSh: 'none' }, draft: { stBg: '#fff', stC: '#4a4855', stSh: 'inset 0 0 0 1px rgba(22,18,40,.22)' }, soon: { stBg: 'rgba(139,92,246,.10)', stC: '#6a3ee0', stSh: 'none' } };
+const PROGS = [
+  ['IB', '#f0e5d6', 'Inès Ben Ali', 'Prépa HYROX Gand', 'hyr', '26 oct. → 17 janv.', 'Semaine 2 / 12', 5, 48, 'Publié v1', 'pub', 'HYROX Gand · 13 déc.'],
+  ['LJ', '#e3e9df', 'Lucas Janssens', 'Force bloc 1', 'mus', '2 nov. → 27 déc.', 'Semaine 1 / 8', 2, 24, 'Publié v2', 'pub', ''],
+  ['SL', '#f3dde2', 'Sophie Lambert', 'Renforcement bloc 1', 'mus', '26 oct. → 17 janv.', 'Semaine 2 / 12', 4, 24, 'Publié v1', 'pub', ''],
+  ['TM', '#e0e4f3', 'Thomas Maes', 'Objectif semi de Bruges', 'run', '12 oct. → 3 janv.', 'Semaine 4 / 12', 11, 36, 'Publié v3', 'pub', 'Semi de Bruges · 3 janv.'],
+  ['NV', '#efe6d8', 'Nora Vermeulen', 'Reprise course', 'run', '16 nov. → 10 janv.', 'Commence le 16 nov.', 0, 24, 'À venir', 'soon', ''],
+  ['YK', '#e6e2ee', 'Yanis Khelifi', 'Prépa HYROX Anvers', 'hyr', 'Début à fixer', '8 semaines', 0, 32, 'Brouillon', 'draft', 'HYROX Anvers · févr.']
+].map(([ini, av, who, t, d, per, wk, done, tot, st, sk, obj]) => Object.assign({ ini, av, who, t, c: DC[d][0], kind: DC[d][1], per, wk, done: String(done), tot: String(tot), pct: Math.round(done / tot * 100) + '%', st, obj }, STP[sk]));
+const bw = (a) => a.map(([f, h, c]) => ({ f, h, c }));
+const PDF_SES = [
+  { n: '1', kind: 'Running', name: 'Sortie longue', dur: '≈ 65 min', lines: [['1', 'Échauffement', '6:30 min/km', '10 min'], ['2', 'Course continue', '5:50 – 6:10 min/km · zone 2', '45 min'], ['3', 'Retour au calme', '6:35 min/km', '10 min']], bars: bw([[10, 6, '#b8b6c2'], [45, 10, '#4f4ed6'], [10, 5, '#b8b6c2']]), tip: 'Tu dois pouvoir parler en courant.' },
+  { n: '2', kind: 'Running', name: 'Endurance rapide', dur: '≈ 45 min', lines: [['1', 'Échauffement', '6:15 min/km', '15 min'], ['2', 'Répéter 5 fois', '2 min à 5:00 – 5:10 min/km + 2 min de trot', '20 min'], ['3', 'Retour au calme', '6:35 min/km', '10 min']], bars: bw([[15, 6, '#b8b6c2'], [2, 14, '#4f4ed6'], [2, 4, '#d6d4dd'], [2, 14, '#4f4ed6'], [2, 4, '#d6d4dd'], [2, 14, '#4f4ed6'], [2, 4, '#d6d4dd'], [2, 14, '#4f4ed6'], [2, 4, '#d6d4dd'], [2, 14, '#4f4ed6'], [10, 5, '#b8b6c2']]), tip: 'Garde les 2 min de trot vraiment lentes.' },
+  { n: '3', kind: 'Hyrox', name: 'Race pace', dur: '≈ 45 min', lines: [['1', 'Échauffement', '6:15 min/km', '15 min'], ['2', 'Répéter 4 fois', '1 km à 4:55 min/km + 2 min de trot', '28 min'], ['3', 'Retour au calme', '6:35 min/km', '8 min']], bars: [], tip: '' },
+  { n: '4', kind: 'Hyrox', name: 'Circuit Hyrox · avec le coach', dur: 'sam. 7 nov. · 10:00', lines: [['1', 'Échauffement', 'run 1 000 m à 6:00 min/km', '≈ 6 min'], ['2', '5 tours', 'run 600 m à 5:45 min/km + 25 m de sled push · repos 1 min', '≈ 25 min'], ['3', 'AMRAP 25 min', '12 burpee broad jumps · 40 m de sandbag lunges · 15 wall balls à 6 kg', '25 min']], bars: [], tip: '' }
+].map(s => Object.assign(s, { hasBars: s.bars.length > 0, lines: s.lines.map(([n, t, x, d]) => ({ n, t, s: x, d })) }));
+const PDF_WEEKS = [
+  ['Semaine 1', '26 oct. – 1 nov.', 'S1 Sortie longue · S2 Endurance rapide · S3 Race pace · S4 Circuit Hyrox', 'Sam. 31 oct. · 10:00 · Circuit Hyrox'],
+  ['Semaine 2', '2 – 8 nov.', 'S1 Sortie longue · S2 Endurance rapide · S3 Race pace · S4 Circuit Hyrox', 'Sam. 7 nov. · 10:00 · Circuit Hyrox'],
+  ['Semaine 3', '9 – 15 nov.', 'S1 Sortie longue · S2 Endurance rapide · S3 Race pace · S4 Circuit Hyrox', 'Sam. 14 nov. · 10:00'],
+  ['Semaine 4', '16 – 22 nov. · allégée', 'S1 Sortie longue · S2 Endurance rapide · S3 Race pace · S4 Circuit Hyrox', '—'],
+  ['Semaine 5', '23 – 29 nov.', 'S1 Sortie longue · S2 Endurance rapide · S3 Race pace · S4 Simulation Hyrox', 'Sam. 28 nov. · 09:00 · Simulation'],
+  ['Semaine 6', '30 nov. – 6 déc.', 'S1 Sortie longue · S2 Endurance rapide · S3 Race pace · S4 Circuit Hyrox', 'Sam. 5 déc. · 10:00'],
+  ['Semaine 7', '7 – 13 déc.', 'S1 Sortie courte · S2 Activation · S3 Race pace léger', '★ Dim. 13 déc. · HYROX Gand'],
+  ['Semaine 8', '14 – 20 déc.', 'S1 Récupération · S2 Footing · S3 Mobilité', '—']
+].map(([l, d, s, c]) => ({ l, d, s, c, fw: c.startsWith('★') ? '700' : '400' }));
+const NAV1 = [['Tableau de bord', 'M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['Agenda', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18'], ['Sportifs', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'], ['Programmes', 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5'], ['Comptabilité', 'M5 3h14v18H5zM9 7h6M9 11h1M14 11h1M9 15h1M14 15h1'], ['Bibliothèque', 'M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z']];
+const NAV2 = [['Assistant IA', 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z'], ['Messages', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', '3'], ['Tâches', 'M3 5l2 2 3-3M3 12l2 2 3-3M3 19l2 2 3-3M11 6h10M11 13h10M11 20h10'], ['Documents', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'], ['Notifications', 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0', '9']];
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#dcdbe3}*{box-sizing:border-box}a{color:#6a3ee0;text-decoration:none}a:hover{color:#8b5cf6}button{font-family:'Plus Jakarta Sans',system-ui,sans-serif}</style>
+</helmet>
+<div style="display:flex;flex-direction:column;gap:96px;padding:64px;width:max-content;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#17151d">
+<sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2"><section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:10px"><span style="font:700 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ sec.num }}</span><span style="font:700 18px 'Plus Jakarta Sans'">{{ sec.title }}</span></div><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e;max-width:900px">{{ sec.sub }}</span></div>
+<div style="display:flex;gap:56px;align-items:flex-start">
+
+<div id="{{ sec.d.id }}" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ sec.d.id }}</span><span style="font:600 16px 'Plus Jakarta Sans'">Desktop · 1280</span></div>
+<div data-screen-label="{{ sec.d.label }}" style="width:1280px;min-height:800px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28)">
+<aside style="width:236px;flex:none;border-radius:20px;background:#fff;padding:24px 14px 16px;display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 6px 22px 10px"><img src="assets/coory-logo-clair.svg" alt="Coory" style="height:17px;width:auto"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM9 4v16M15 10l-2 2 2 2"></path></svg></div>
+<sc-for list="{{ nav1 }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ n.bg }};color:{{ n.c }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.l }}</span></sc-for>
+<span style="height:1px;background:#ecebf1;margin:12px 8px"></span>
+<sc-for list="{{ nav2 }}" as="n" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;color:#4a4855"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg><span style="flex:1">{{ n.l }}</span><sc-if value="{{ n.b }}"><span style="min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:rgba(139,92,246,.12);color:#6a3ee0;font:600 11px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">{{ n.b }}</span></sc-if></span></sc-for>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:10px;padding:8px"><span style="width:38px;height:38px;flex:none;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans';box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6">GL</span><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 13px 'Plus Jakarta Sans';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Gianluca Lo Bianco</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Coach</span></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></div>
+</aside>
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+<header style="height:64px;flex:none;border-radius:20px;background:#fff;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px">
+<span style="flex:1;display:flex;align-items:center;gap:9px;font:500 15px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Sportifs<span style="color:#c9c7d1">·</span><span style="font-weight:600;color:#17151d">Inès Benali</span></span>
+<span style="height:32px;padding:0 12px;border-radius:9px;background:#8b5cf6;color:#fff;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg>Assistant IA</span>
+<span style="position:relative;width:32px;height:32px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;border-radius:8px;background:#8b5cf6;color:#fff;font:600 9.5px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">9</span></span>
+</header>
+<section style="border-radius:20px;background:#fff;padding:18px 22px;display:flex;align-items:center;gap:16px">
+<span style="width:56px;height:56px;flex:none;border-radius:50%;background:#f0e5d6;display:flex;align-items:center;justify-content:center;font:600 18px 'Plus Jakarta Sans';color:#2a2733">IB</span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font:600 24px/1.15 'Plus Jakarta Sans';letter-spacing:-.02em">Inès Benali</span><span style="display:flex;align-items:center;gap:12px;font:400 13.5px 'Plus Jakarta Sans';color:#4a4855"><span style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#1f9d55"></span>Actif</span><span style="color:#c9c7d1">·</span>Confirmée<span style="color:#c9c7d1">·</span><span style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:#FEC14F"></span>Hyrox</span></span></div>
+<span style="height:40px;padding:0 14px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;gap:8px;font:500 14px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Écrire</span>
+</section>
+<nav style="display:flex;justify-content:space-between;padding:0 4px"><sc-for list="{{ tabs }}" as="t" hint-placeholder-count="10"><span style="height:36px;padding:0 13px;border-radius:10px;display:flex;align-items:center;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ t.bg }};color:{{ t.c }};box-shadow:{{ t.sh }}">{{ t.l }}</span></sc-for></nav>
+<section style="border-radius:20px;background:#fff;padding:14px 20px;display:flex;align-items:center;gap:20px">
+<div style="flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font:600 15px 'Plus Jakarta Sans'">Prépa Hyrox Bruxelles · bloc 1</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">12 semaines · 26 oct. → 17 janv. · 5 séances par semaine</span></div>
+<div style="flex:1 1 360px;min-width:0;display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:12px;background:#f6f5fa"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M10 6h11M10 12h11M10 18h11M4 6h1v4M4 10h2M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg><span style="font:400 13px/1.5 'Plus Jakarta Sans';color:#4a4855"><strong style="font-weight:600;color:#17151d">{{ sec.modeT }}</strong>{{ sec.modeS }}</span></div>
+</section>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<div style="display:flex;padding:4px;border-radius:12px;background:#e8e7ee"><span style="height:32px;padding:0 13px;border-radius:9px;display:flex;align-items:center;font:500 13px 'Plus Jakarta Sans';background:#fff;box-shadow:0 1px 2px rgba(22,18,40,.10)">Semaine</span><span style="height:32px;padding:0 13px;border-radius:9px;display:flex;align-items:center;font:500 13px 'Plus Jakarta Sans';color:#64626e">Toutes les semaines</span></div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:38px;height:38px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span><span style="height:38px;padding:0 12px 0 14px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:8px;font:600 14px 'Plus Jakarta Sans';white-space:nowrap">Semaine 2<span style="font:500 12.5px 'Plus Jakarta Sans';color:#8b8996">/ 12</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span><span style="width:38px;height:38px;border-radius:11px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+</div>
+<section style="border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1.5px rgba(139,92,246,.55);padding:18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="display:flex;flex-direction:column;gap:2px"><span style="font:600 15.5px/1.3 'Plus Jakarta Sans'">Semaine 2</span><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">2 nov. – 8 nov. · 2 avec le coach · 3 libres</span></div><div style="display:flex;gap:6px"><span style="height:24px;padding:0 9px;border-radius:12px;display:flex;align-items:center;font:500 12px 'Plus Jakarta Sans';background:rgba(139,92,246,.10);color:#6a3ee0">Semaine actuelle</span><span style="height:24px;padding:0 9px;border-radius:12px;display:flex;align-items:center;font:500 12px 'Plus Jakarta Sans';background:#f3f2f7;color:#4a4855">Préparation</span></div></div>
+<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px"><sc-for list="{{ sec.d.ses }}" as="s" hint-placeholder-count="5"><button type="button" onClick="{{ s.toggle }}" aria-expanded="{{ s.exp }}" style="cursor:pointer;border:0;text-align:left;min-width:0;border-radius:14px;padding:14px;background:{{ s.bg }};box-shadow:{{ s.ring }};display:flex;flex-direction:column;gap:8px;color:#17151d">
+<span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="width:26px;height:26px;flex:none;border-radius:50%;background:{{ s.c }};color:{{ s.bc }};display:flex;align-items:center;justify-content:center;font:700 12.5px 'Plus Jakarta Sans'">{{ s.n }}</span><sc-if value="{{ s.hasDay }}"><span style="flex:1;min-width:0;font:700 12px 'Plus Jakarta Sans';color:{{ s.tc }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.day }}</span></sc-if><span style="width:28px;height:28px;flex:none;border-radius:9px;background:{{ s.chevBg }};display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ s.tc }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transform:{{ s.rot }}"><path d="M6 9l6 6 6-6"></path></svg></span></span>
+<span style="font:600 14.5px/1.3 'Plus Jakarta Sans';overflow-wrap:anywhere">{{ s.name }}</span>
+<span style="font:400 12.5px/1.4 'Plus Jakarta Sans';color:#4a4855"><span style="font-weight:600;color:{{ s.tc }}">{{ s.kind }}</span> · {{ s.type }}</span>
+<span style="display:flex;flex-direction:column;gap:2px;padding-top:7px;border-top:1px solid rgba(22,18,40,.08)"><sc-for list="{{ s.lines }}" as="l" hint-placeholder-count="3"><span style="font:500 12px/1.45 'Plus Jakarta Sans';color:#17151d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l }}</span></sc-for></span>
+<sc-if value="{{ s.coach }}"><span style="margin-top:auto;padding-top:8px;border-top:1px solid rgba(22,18,40,.08);display:flex;align-items:center;gap:6px;font:500 12px 'Plus Jakarta Sans'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex:none"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"></path></svg>Coach · {{ s.when }}</span></sc-if>
+</button></sc-for></div>
+<sc-if value="{{ sec.d.has }}" hint-placeholder-val="{{ true }}"><div style="border-radius:16px;background:#f8f7fb;box-shadow:inset 0 0 0 1px rgba(22,18,40,.05);padding:20px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.06em;text-transform:uppercase;color:{{ sec.d.o.tc }}">{{ sec.d.o.kicker }}</span><span style="font:700 22px/1.2 'Plus Jakarta Sans';letter-spacing:-.02em">{{ sec.d.o.name }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">{{ sec.d.o.ctx }}</span></div>
+<div style="display:flex;align-items:center;gap:8px;flex:none"><span style="font:500 13px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap">{{ sec.d.o.meta }}</span><span style="height:32px;padding:0 12px;border-radius:9px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 12v6M9 15l3 3 3-3"></path></svg>PDF</span><button type="button" onClick="{{ sec.d.close }}" aria-label="Réduire" style="cursor:pointer;border:0;width:32px;height:32px;border-radius:9px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"></path></svg></button></div></div>
+<div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ sec.d.o.blocks }}" as="b" hint-placeholder-count="3"><div style="border-radius:14px;background:{{ b.bg }};padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:28px;height:28px;flex:none;border-radius:50%;background:{{ b.nbg }};color:{{ b.nc }};box-shadow:{{ b.nring }};display:flex;align-items:center;justify-content:center;font:700 12.5px 'Plus Jakarta Sans'">{{ b.n }}</span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font:600 14.5px 'Plus Jakarta Sans'">{{ b.title }}</span><sc-if value="{{ b.note }}"><span style="font:400 12.5px/1.4 'Plus Jakarta Sans';color:#64626e">{{ b.note }}</span></sc-if></div><sc-if value="{{ b.rep }}"><span style="height:26px;padding:0 10px;border-radius:13px;background:#fff;display:flex;align-items:center;gap:6px;font:600 12px 'Plus Jakarta Sans';color:{{ b.tc }};white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"></path></svg>{{ b.rep }}</span></sc-if><sc-if value="{{ b.dur }}"><span style="font:600 13.5px 'Plus Jakarta Sans';white-space:nowrap">{{ b.dur }}</span></sc-if></div>
+<sc-if value="{{ b.hasInner }}"><div style="display:flex;flex-direction:column;gap:6px;padding-left:40px"><sc-for list="{{ b.inner }}" as="r" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:12px;border-radius:10px;background:#fff;padding:9px 12px"><span style="width:3px;align-self:stretch;flex:none;border-radius:2px;background:{{ r.bar }}"></span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:600 13.5px 'Plus Jakarta Sans'">{{ r.t }}</span><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">{{ r.s }}</span></div><span style="font:600 13px 'Plus Jakarta Sans';white-space:nowrap">{{ r.d }}</span></div></sc-for></div></sc-if>
+</div></sc-for></div>
+<div style="display:flex;flex-direction:column;gap:10px">
+
+<sc-if value="{{ sec.d.o.hasStats }}"><div style="border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.06);padding:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px"><sc-for list="{{ sec.d.o.stats }}" as="st" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:2px"><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">{{ st.l }}</span><span style="font:600 15px 'Plus Jakarta Sans'">{{ st.v }}</span></div></sc-for></div></sc-if>
+<div style="border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.06);padding:16px;display:flex;gap:12px"><span style="width:30px;height:30px;flex:none;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 10.5px 'Plus Jakarta Sans'">GL</span><div style="display:flex;flex-direction:column;gap:3px"><span style="font:600 13px 'Plus Jakarta Sans'">Conseil du coach</span><span style="font:400 13px/1.5 'Plus Jakarta Sans';color:#4a4855;text-wrap:pretty">{{ sec.d.o.tip }}</span></div></div>
+</div>
+</div>
+</div></sc-if>
+</section>
+</main>
+</div>
+</div>
+
+<div id="{{ sec.m.id }}" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ sec.m.id }}</span><span style="font:600 16px 'Plus Jakarta Sans'">Mobile · 390</span></div>
+<div data-screen-label="{{ sec.m.label }}" style="width:390px;background:#f3f2f7;border-radius:40px;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);padding-bottom:28px">
+<div style="display:flex;justify-content:space-between;padding:16px 28px 8px;font:600 14px 'Plus Jakarta Sans'"><span>9:41</span><span style="font-size:12px">●●● ▮</span></div>
+<header style="display:flex;align-items:center;gap:10px;padding:6px 14px 0">
+<span style="width:46px;height:46px;flex:none;border-radius:14px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span>
+<span style="flex:1;display:flex;align-items:center;gap:8px;font:500 16px 'Plus Jakarta Sans';color:#64626e"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Sportifs</span>
+<span style="display:flex;gap:4px;padding:4px;border-radius:16px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18)"><span style="width:40px;height:40px;border-radius:12px;background:#8b5cf6;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg></span><span style="position:relative;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:8px;background:#8b5cf6;color:#fff;font:600 9.5px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">9</span></span></span>
+</header>
+<div style="padding:20px 14px 0;display:flex;flex-direction:column;gap:12px">
+<section style="border-radius:22px;background:#fff">
+<div style="display:flex;align-items:center;gap:12px;padding:16px 16px 14px 18px"><span style="width:46px;height:46px;flex:none;border-radius:50%;background:#f0e5d6;display:flex;align-items:center;justify-content:center;font:600 15px 'Plus Jakarta Sans';color:#2a2733">IB</span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font:600 16.5px 'Plus Jakarta Sans'">Inès Benali</span><span style="display:flex;align-items:center;gap:6px;font:400 13px 'Plus Jakarta Sans';color:#64626e">Confirmée<span style="color:#c9c7d1">·</span><span style="width:7px;height:7px;border-radius:50%;background:#FEC14F"></span>Hyrox</span></div><span style="width:44px;height:44px;flex:none;border-radius:13px;background:#f3f2f7;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span></div>
+<div style="border-top:1px solid #ecebf1;display:flex;align-items:center;gap:12px;padding:0 18px;height:54px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18"></path></svg><span style="flex:1;font:600 15.5px 'Plus Jakarta Sans'">Agenda</span><span style="font:500 13.5px 'Plus Jakarta Sans';color:#8a8896">3 / 10</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></div>
+</section>
+<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;display:flex;padding:4px;border-radius:12px;background:#e8e7ee"><span style="flex:1;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:500 13.5px 'Plus Jakarta Sans';background:#fff;box-shadow:0 1px 2px rgba(22,18,40,.10)">Semaine</span><span style="flex:1.6;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font:500 13.5px 'Plus Jakarta Sans';color:#64626e">Toutes les semaines</span></div></div>
+<div style="display:flex;align-items:center;gap:8px"><span style="width:44px;height:44px;flex:none;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span><span style="flex:1;height:44px;padding:0 14px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px 'Plus Jakarta Sans'">Semaine 2<span style="font:500 13px 'Plus Jakarta Sans';color:#8b8996">/ 12</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span><span style="width:44px;height:44px;flex:none;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+<section style="border-radius:22px;background:#fff;box-shadow:inset 0 0 0 1.5px rgba(139,92,246,.55);padding:18px 14px 14px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-direction:column;gap:8px;padding:0 4px"><div style="display:flex;flex-direction:column;gap:2px"><span style="font:600 17px 'Plus Jakarta Sans'">Semaine 2</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">2 nov. – 8 nov. · 2 avec le coach · 3 libres</span></div><div style="display:flex;gap:6px"><span style="height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;font:500 12.5px 'Plus Jakarta Sans';background:rgba(139,92,246,.10);color:#6a3ee0">Semaine actuelle</span><span style="height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;font:500 12.5px 'Plus Jakarta Sans';background:#f3f2f7;color:#4a4855">Préparation</span></div></div>
+<sc-for list="{{ sec.m.ses }}" as="s" hint-placeholder-count="5"><div style="border-radius:16px;background:{{ s.bg }};box-shadow:{{ s.ring }};display:flex;flex-direction:column">
+<button type="button" onClick="{{ s.toggle }}" aria-expanded="{{ s.exp }}" style="cursor:pointer;border:0;background:transparent;text-align:left;display:flex;align-items:center;gap:14px;padding:14px 12px 14px 16px;color:#17151d;min-height:72px">
+<span style="width:30px;height:30px;flex:none;border-radius:50%;background:{{ s.c }};color:{{ s.bc }};display:flex;align-items:center;justify-content:center;font:700 13px 'Plus Jakarta Sans'">{{ s.n }}</span>
+<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><sc-if value="{{ s.hasDay }}"><span style="font:700 11.5px 'Plus Jakarta Sans';letter-spacing:.04em;text-transform:uppercase;color:{{ s.tc }}">{{ s.day }}</span></sc-if><span style="font:600 15.5px 'Plus Jakarta Sans'">{{ s.name }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#4a4855"><span style="font-weight:600;color:{{ s.tc }}">{{ s.kind }}</span> · {{ s.type }}</span><sc-if value="{{ s.coach }}"><span style="display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';margin-top:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21a8 8 0 0 0-16 0M12 13a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"></path></svg>Coach · {{ s.when }}</span></sc-if><sc-if value="{{ s.closed }}"><span style="display:flex;flex-direction:column;gap:1px;margin-top:6px"><sc-for list="{{ s.lines }}" as="l" hint-placeholder-count="3"><span style="font:500 13px/1.45 'Plus Jakarta Sans';color:#17151d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l }}</span></sc-for></span></sc-if></span>
+<span style="width:36px;height:36px;flex:none;border-radius:11px;background:{{ s.chevBg }};display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ s.tc }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transform:{{ s.rot }}"><path d="M6 9l6 6 6-6"></path></svg></span>
+</button>
+<sc-if value="{{ s.open }}"><div style="padding:0 10px 10px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;gap:8px;padding:0 6px 2px;font:400 12.5px 'Plus Jakarta Sans';color:#4a4855"><span>{{ s.o.ctxShort }}</span><span style="font-weight:600;white-space:nowrap">{{ s.o.meta }}</span></div>
+<sc-for list="{{ s.o.blocks }}" as="b" hint-placeholder-count="3"><div style="border-radius:13px;background:#fff;padding:12px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;flex:none;border-radius:50%;background:{{ b.nbg }};color:{{ b.nc }};box-shadow:{{ b.nring }};display:flex;align-items:center;justify-content:center;font:700 12px 'Plus Jakarta Sans'">{{ b.n }}</span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font:600 14.5px 'Plus Jakarta Sans'">{{ b.title }}</span><sc-if value="{{ b.note }}"><span style="font:400 12.5px/1.4 'Plus Jakarta Sans';color:#64626e">{{ b.note }}</span></sc-if></div><sc-if value="{{ b.dur }}"><span style="font:600 13.5px 'Plus Jakarta Sans';white-space:nowrap">{{ b.dur }}</span></sc-if></div>
+<sc-if value="{{ b.rep }}"><span style="align-self:flex-start;margin-left:36px;height:24px;padding:0 9px;border-radius:12px;background:{{ b.bg }};display:flex;align-items:center;gap:5px;font:600 12px 'Plus Jakarta Sans';color:{{ b.tc }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"></path></svg>{{ b.rep }}</span></sc-if>
+<sc-if value="{{ b.hasInner }}"><div style="display:flex;flex-direction:column;gap:4px;margin-left:36px"><sc-for list="{{ b.inner }}" as="r" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:10px;border-radius:9px;background:#f6f5fa;padding:8px 10px"><span style="width:3px;align-self:stretch;flex:none;border-radius:2px;background:{{ r.bar }}"></span><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 13px 'Plus Jakarta Sans'">{{ r.t }}</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">{{ r.s }}</span></div><span style="font:600 12.5px 'Plus Jakarta Sans';white-space:nowrap">{{ r.d }}</span></div></sc-for></div></sc-if>
+</div></sc-for>
+
+<div style="border-radius:13px;background:#fff;padding:12px 14px;display:flex;flex-direction:column;gap:3px"><span style="font:600 13px 'Plus Jakarta Sans'">Conseil du coach</span><span style="font:400 13px/1.5 'Plus Jakarta Sans';color:#4a4855">{{ s.o.tip }}</span></div>
+<div style="display:flex;gap:8px"><span style="flex:1;height:44px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center;gap:7px;font:600 14px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 12v6M9 15l3 3 3-3"></path></svg>PDF de la séance</span></div>
+</div></sc-if>
+</div></sc-for>
+</section>
+</div>
+</div>
+</div>
+
+</div>
+</section></sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { open: { '1a': 1, '1b': 1, '2a': 0, '2b': 3 } };
+  renderVals() {
+    const toggle = (fid, i) => () => this.setState(p => ({ open: Object.assign({}, p.open, { [fid]: p.open[fid] === i ? -1 : i }) }));
+    const build = (fid, days) => {
+      const oi = this.state.open[fid];
+      const ses = SES.map((s, i) => {
+        const k = DK[s.d], on = oi === i;
+        return Object.assign({}, s, { n: String(i + 1), c: k.c, bg: k.bg, tc: k.tc, bc: k.bc, kind: k.l, coach: !!s.when, hasDay: !!days, closed: !on,
+          open: on, exp: on ? 'true' : 'false', rot: on ? 'rotate(180deg)' : 'none', chevBg: on ? '#fff' : 'rgba(255,255,255,.65)',
+          ring: on ? 'inset 0 0 0 1.5px ' + k.c + ', 0 12px 26px -16px rgba(22,18,40,.4)' : 'none',
+          toggle: toggle(fid, i), o: detail(i) });
+      });
+      return { ses, has: oi >= 0, o: oi >= 0 ? detail(oi) : detail(1), close: toggle(fid, oi) };
+    };
+    const tabs = ['Vue d’ensemble', 'Profil', 'Agenda', 'Programme', 'Objectifs', 'Repères', 'Disponibilités', 'Notes', 'Documents', 'Historique']
+      .map((l, i) => ({ l, bg: i === 2 ? '#fff' : 'transparent', c: i === 2 ? '#17151d' : '#64626e', sh: i === 2 ? '0 1px 3px rgba(22,18,40,.10)' : 'none' }));
+    const mk = (num, title, sub, dId, mId, dl, days) => ({ num, title, sub, modeT: days ? 'Jours fixés par le coach.' : 'Dans l’ordre, au jour choisi.', modeS: days ? ' Inès suit les jours indiqués sur chaque séance. Tu peux repasser en « dans l’ordre » à tout moment.' : ' Inès enchaîne les séances 1 → 5 quand elle veut ; seules celles avec le coach ont une date.', d: Object.assign({ id: dId, label: 'Agenda desktop · ' + dl }, build(dId, days)), m: Object.assign({ id: mId, label: 'Agenda mobile · ' + dl }, build(mId, days)) });
+    return {
+      tabs, nav1: NAV1.map(([l, d], i) => ({ l, d, bg: i === 2 ? 'rgba(139,92,246,.12)' : 'transparent', c: i === 2 ? '#17151d' : '#4a4855' })),
+      nav2: NAV2.map(([l, d, b]) => ({ l, d, b: b || '' })),
+      sections: [
+        mk('1', 'Agenda · séance ouverte (Running)', 'La flèche de chaque carte de séance déplie ses blocs d’entraînement sous la semaine (desktop) ou dans la carte (mobile). Clique une autre carte pour changer de séance, ou sur la flèche pour refermer.', '1a', '1b', 'Endurance rapide'),
+        mk('2', 'Agenda · jours fixes (option)', 'Pour les sportifs qui veulent être guidés, le coach peut fixer un jour à chaque séance : le jour s’affiche sur la carte. Sans jour fixé, on reste « dans l’ordre » (section 1). Contenu adapté : Musculation et Hyrox.', '2a', '2b', 'Renfo Hyrox / Circuit Hyrox', true)
+      ]
+    };
+  }
+}
+const DK = {
+  run: { l: 'Running', c: '#7776FF', bg: 'color-mix(in srgb, #7776FF 12%, #fff)', tc: '#4f4ed6', bc: '#fff' },
+  mus: { l: 'Musculation', c: '#DD2D4A', bg: 'color-mix(in srgb, #DD2D4A 10%, #fff)', tc: '#b51f39', bc: '#fff' },
+  hyr: { l: 'Hyrox', c: '#FEC14F', bg: 'color-mix(in srgb, #FEC14F 20%, #fff)', tc: '#8a6200', bc: '#17151d' }
+};
+const SES = [
+  { name: 'Renfo Hyrox', type: 'Force', d: 'mus', when: 'Mar 3 · 07:00', day: 'Mardi 3', lines: ['Full Body A', '6 exercices'] },
+  { name: 'Endurance rapide', type: 'Intervalles', d: 'run', when: '', day: 'Mercredi 4', lines: ['20 min @ 6:00', '5 × 4 min @ 4:55', 'récup 1:45', '5 min @ 6:35'] },
+  { name: 'Hyrox Pace', type: 'Spécifique', d: 'hyr', when: '', day: 'Vendredi 6', lines: ['20 min @ 6:30', '4 × 2 min @ 4:50', 'récup 2:30', '10 min @ 6:35'] },
+  { name: 'Circuit Hyrox', type: 'Circuit', d: 'hyr', when: 'Sam 7 · 10:00', day: 'Samedi 7', lines: ['1 000 m @ 6:00', '5 × 600 m @ 5:45', '+ 25 m sled push', 'AMRAP 25 min'] },
+  { name: 'Easy Run', type: 'Endurance', d: 'run', when: '', day: 'Dimanche 8', lines: ['50 min @ 6:30 – 7:30'] }
+];
+const R = (t, s, d, eff, col) => ({ t, s, d, bar: eff ? col : '#c9c7d1' });
+const RAW = [
+  { meta: '3 blocs · ≈ 60 min', tip: 'Qualité avant la charge : garde 2 répétitions en réserve sur chaque série. Ajoute 1 kg seulement si la dernière série reste propre.',
+    blocks: [
+      { title: 'Échauffement', note: 'Mobilité + activation : hanches, épaules, gainage, fessiers', dur: '10 min' },
+      { title: 'Bloc principal', note: '', rep: '5 exercices', inner: [['Bulgarian split squat', '3 × 8-10 · 14 kg · RIR 2', '90 s'], ['Tirage vertical', '3 × 10-12 · RIR 2', '75 s'], ['Superset · Pompes + Tirage bûcheron', '3 tours · 10 + 10 / bras', '60 s'], ['Leg curl assis', 'Pyramide 20-15-10-8', '60 s'], ['EMOM pompes', '20 s d’effort · 40 s de repos', '6 min']] },
+      { title: 'Retour au calme', note: 'Étirements et respiration', dur: '10 min' }],
+    stats: [['Exercices', '5'], ['Séries', '13'], ['Durée', '≈ 60 min']] },
+  { meta: '3 blocs · ≈ 54 min', total: '≈ 54 min', tip: 'Les 4 min doivent rester contrôlées : si l’allure chute de plus de 5 s/km sur la dernière, arrête la série là.',
+    blocks: [
+      { title: 'Échauffement', note: 'À 6:00 min/km, allure progressive', dur: '20 min' },
+      { title: 'Bloc principal', note: '', rep: 'Répéter 5 fois', inner: [['Effort', '4:55 min/km', '4 min', 1], ['Récupération', 'Trot lent', '1:45 min', 0]] },
+      { title: 'Retour au calme', note: 'À 6:35 min/km', dur: '5 min' }],
+    bars: { warm: 20, reps: 5, eff: 4, rec: 1.75, cool: 5 }, marks: [['1 · 20 min', 'Échauffement'], ['2 · 5 × 4 min', 'Récup. 1:45'], ['3 · 5 min', 'Retour au calme']], legend: 'Effort · 4:55/km' },
+  { meta: '3 blocs · ≈ 54 min', total: '≈ 54 min', tip: 'C’est ton allure de course Hyrox : vise la régularité plutôt que la vitesse sur les 4 répétitions.',
+    blocks: [
+      { title: 'Échauffement', note: 'À 6:30 min/km', dur: '20 min' },
+      { title: 'Bloc principal', note: '', rep: 'Répéter 4 fois', inner: [['Allure course', '4:50 min/km', '2 min', 1], ['Récupération', '6:15 min/km', '2:30 min', 0]] },
+      { title: 'Retour au calme', note: 'À 6:35 min/km', dur: '10 min' }],
+    bars: { warm: 20, reps: 4, eff: 2, rec: 2.5, cool: 10 }, marks: [['1 · 20 min', 'Échauffement'], ['2 · 4 × 2 min', 'Récup. 2:30'], ['3 · 10 min', 'Retour au calme']], legend: 'Allure course · 4:50/km' },
+  { meta: '3 blocs · limite 60 min', tip: 'Transitions rapides entre run et sled : c’est là que se gagne le temps. Note ton nombre de tours à l’AMRAP.',
+    blocks: [
+      { title: 'Échauffement', note: 'Run 1 000 m à 6:00 min/km', dur: '≈ 6 min' },
+      { title: 'Circuit', note: '', rep: '5 tours', inner: [['Run', '600 m · 5:45 min/km', '≈ 3:30', 1], ['Sled push', '25 m · charge course', '—', 1]] },
+      { title: 'AMRAP 25 min', note: '', rep: 'Max de tours', inner: [['Burpee broad jumps', '12 répétitions', '', 1], ['Sandbag lunges', '40 m', '', 1], ['Wall balls', '15 répétitions · 6 kg', '', 1]] }],
+    stats: [['Tours circuit', '5'], ['AMRAP', '25 min'], ['Limite', '60 min']] },
+  { meta: '1 bloc · ≈ 50 min', total: '≈ 50 min', tip: 'Tu dois pouvoir parler en courant. Si la fréquence cardiaque dépasse la zone 2, ralentis sans hésiter.',
+    blocks: [{ title: 'Endurance continue', note: 'À 6:30 – 7:30 min/km · zone 2', dur: '50 min' }],
+    bars: { single: 50 }, marks: [['1 · 50 min', 'Endurance continue']], legend: 'Allure facile · zone 2' }
+];
+function detail(i) {
+  const s = SES[i], k = DK[s.d], r = RAW[i];
+  const blocks = r.blocks.map((b, j) => {
+    const inner = (b.inner || []).map(x => R(x[0], x[1], x[2], s.d === 'run' || s.d === 'hyr' ? x[3] : 1, k.c));
+    const rich = inner.length > 0;
+    return { n: String(j + 1), title: b.title, note: b.note || '', dur: b.dur || '', rep: b.rep || '', tc: k.tc, inner, hasInner: rich,
+      bg: rich ? k.bg : '#fff', nbg: rich ? k.c : '#fff', nc: rich ? k.bc : '#17151d', nring: rich ? 'none' : 'inset 0 0 0 1.5px rgba(22,18,40,.16)' };
+  });
+  let bars = [], marks = [];
+  if (r.bars) {
+    const B = r.bars, easy = '#d9d7e0';
+    if (B.single) bars.push({ f: 1, h: 22, c: k.c });
+    else {
+      bars.push({ f: B.warm, h: 16, c: easy });
+      for (let n = 0; n < B.reps; n++) { bars.push({ f: B.eff, h: 46, c: k.c }); if (n < B.reps - 1) bars.push({ f: B.rec, h: 10, c: '#c9c7d1' }); }
+      bars.push({ f: B.cool, h: 14, c: easy });
+    }
+    bars = bars.map(b => Object.assign(b, { hm: Math.round(b.h * 0.8) }));
+    const al = ['left', 'center', 'right'];
+    marks = r.marks.map((m, j) => ({ t: m[0], s: m[1], al: r.marks.length === 1 ? 'left' : al[j], c: j === 1 ? k.tc : '#17151d' }));
+  }
+  return { kicker: k.l + ' · Séance ' + (i + 1) + ' sur 5', name: s.name, tc: k.tc,
+    ctx: 'Semaine 2 · 2 nov. – 8 nov. · ' + (s.when ? 'avec le coach, ' + s.when : 'au jour choisi par Inès'),
+    ctxShort: s.when ? 'Coach · ' + s.when : 'Au jour choisi par Inès',
+    meta: r.meta, tip: r.tip, blocks, hasBars: false, bars, marks, total: r.total || '',
+    legend: r.bars ? [{ l: r.legend, c: k.c }, { l: 'Récupération', c: '#c9c7d1' }, { l: 'Allure facile', c: '#d9d7e0' }].slice(0, r.bars.single ? 1 : 3) : [],
+    hasStats: !!r.stats, stats: (r.stats || []).map(([l, v]) => ({ l, v })) };
+}
+const NAV1 = [['Tableau de bord', 'M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['Agenda', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18'], ['Sportifs', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'], ['Programmes', 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5'], ['Comptabilité', 'M5 3h14v18H5zM9 7h6M9 11h1M14 11h1M9 15h1M14 15h1'], ['Bibliothèque', 'M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z']];
+const NAV2 = [['Assistant IA', 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z'], ['Messages', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', '3'], ['Tâches', 'M3 5l2 2 3-3M3 12l2 2 3-3M3 19l2 2 3-3M11 6h10M11 13h10M11 20h10'], ['Documents', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'], ['Notifications', 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0', '9']];
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+{
+  "_source": "EXACT — extrait du code de la planche",
+  "neutral": {
+    "ink": "#17151d",
+    "ink2": "#4a4855",
+    "muted": "#64626e",
+    "subtle": "#8a8896",
+    "faint": "#c9c7d1",
+    "disabled": "#d6d4dd",
+    "line": "#dcdae3",
+    "line2": "#e6e4ec",
+    "line3": "#ecebf1",
+    "line4": "#f0eff4",
+    "bgApp": "#f3f2f7",
+    "bgSoft": "#f6f5fa",
+    "bgSofter": "#faf9fd",
+    "segTrack": "#e8e7ee",
+    "surface": "#ffffff",
+    "avatarDark": "#2a2733",
+    "boardBg": "#dcdbe3 (planche uniquement)"
+  },
+  "accent": {
+    "violet": "#8b5cf6",
+    "violetInk": "#6a3ee0",
+    "violetLight": "#b9a3ff",
+    "violetSoft": "#f1edfc",
+    "violet12": "rgba(139,92,246,.12)",
+    "violet10": "rgba(139,92,246,.10)",
+    "selectRing": "rgba(139,92,246,.55)",
+    "panelRing": "rgba(139,92,246,.35)"
+  },
+  "discipline": {
+    "running": {
+      "base": "#7776FF",
+      "ink": "#4f4ed6"
+    },
+    "musculation": {
+      "base": "#DD2D4A",
+      "ink": "#b51f39"
+    },
+    "hyrox": {
+      "base": "#FEC14F",
+      "ink": "#8a6200",
+      "textOnBase": "#17151d"
+    },
+    "hybride": {
+      "base": "#26CBB8",
+      "note": "officielle ; usage marginal (phase Affûtage du sommaire PDF)"
+    }
+  },
+  "tints": {
+    "rule": "color-mix(in srgb, BASE N%, #fff)",
+    "agendaCard": "14%",
+    "pdfHeaderRunMus": "14%",
+    "pdfHeaderHyrox": "24%",
+    "pdfBorderRunMus": "45%",
+    "pdfBorderHyrox": "70%",
+    "editorGroup": "9%"
+  },
+  "semantic": {
+    "danger": "#b51f39",
+    "success": "#1f9d55",
+    "overlay": "rgba(22,18,40,.32)",
+    "overlayMobile": "rgba(22,18,40,.34)"
+  },
+  "alpha": {
+    "border12": "rgba(22,18,40,.12)",
+    "border10": "rgba(22,18,40,.10)",
+    "border08": "rgba(22,18,40,.08)",
+    "border14": "rgba(22,18,40,.14)",
+    "border22": "rgba(22,18,40,.22)"
+  }
+}

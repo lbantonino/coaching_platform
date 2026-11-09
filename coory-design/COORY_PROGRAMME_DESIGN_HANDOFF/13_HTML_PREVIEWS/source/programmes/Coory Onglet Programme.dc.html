@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#dcdbe3}*{box-sizing:border-box}a{color:#6a3ee0;text-decoration:none}a:hover{color:#8b5cf6}</style>
+</helmet>
+<div style="display:flex;flex-direction:column;gap:96px;padding:64px;width:max-content;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#17151d">
+<sc-for list="{{ states }}" as="x" hint-placeholder-count="2"><section style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:10px"><span style="font:700 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ x.num }}</span><span style="font:700 18px 'Plus Jakarta Sans'">{{ x.h }}</span></div><span style="font:400 14px 'Plus Jakarta Sans';color:#64626e;max-width:900px">{{ x.hsub }}</span></div>
+<div style="display:flex;gap:56px;align-items:flex-start">
+
+<div id="{{ x.idD }}" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ x.idD }}</span><span style="font:600 16px 'Plus Jakarta Sans'">Desktop · 1280</span></div>
+<div data-screen-label="{{ x.labelD }}" style="width:1280px;min-height:800px;background:#f3f2f7;border-radius:18px;padding:14px;display:flex;gap:20px;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28)">
+<aside style="width:236px;flex:none;border-radius:20px;background:#fff;padding:24px 14px 16px;display:flex;flex-direction:column;gap:2px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 6px 22px 10px"><img src="assets/coory-logo-clair.svg" alt="Coory" style="height:17px;width:auto"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM9 4v16M15 10l-2 2 2 2"></path></svg></div>
+<sc-for list="{{ nav1 }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ n.bg }};color:{{ n.c }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg>{{ n.l }}</span></sc-for>
+<span style="height:1px;background:#ecebf1;margin:12px 8px"></span>
+<sc-for list="{{ nav2 }}" as="n" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;border-radius:10px;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;color:#4a4855"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="{{ n.d }}"></path></svg><span style="flex:1">{{ n.l }}</span><sc-if value="{{ n.b }}"><span style="min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:rgba(139,92,246,.12);color:#6a3ee0;font:600 11px 'Plus Jakarta Sans';display:flex;align-items:center;justify-content:center">{{ n.b }}</span></sc-if></span></sc-for>
+<div style="flex:1"></div>
+<div style="display:flex;align-items:center;gap:10px;padding:8px"><span style="width:38px;height:38px;flex:none;border-radius:50%;background:#2a2733;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px 'Plus Jakarta Sans';box-shadow:0 0 0 2px #fff,0 0 0 3.5px #8b5cf6">JM</span><div style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 14px 'Plus Jakarta Sans'">Julien Mertens</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e">Coach</span></div></div>
+</aside>
+<main style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+<header style="height:64px;flex:none;border-radius:20px;background:#fff;padding:0 16px 0 20px;display:flex;align-items:center;gap:10px">
+<span style="flex:1;display:flex;align-items:center;gap:9px;font:500 15px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"></path></svg><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Sportifs<span style="color:#c9c7d1">·</span><span style="font-weight:600;color:#17151d">{{ x.a.name }}</span></span>
+<span style="height:32px;padding:0 12px;border-radius:9px;background:#8b5cf6;color:#fff;display:flex;align-items:center;gap:6px;font:500 12.5px 'Plus Jakarta Sans';white-space:nowrap"><svg width="13" height="13" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg>Assistant IA</span>
+<span style="width:32px;height:32px;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span>
+</header>
+<section style="border-radius:20px;background:#fff;padding:18px 22px;display:flex;align-items:center;gap:16px">
+<span style="width:56px;height:56px;flex:none;border-radius:50%;background:{{ x.a.avBg }};display:flex;align-items:center;justify-content:center;font:600 18px 'Plus Jakarta Sans';color:#2a2733">{{ x.a.ini }}</span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font:600 24px/1.15 'Plus Jakarta Sans';letter-spacing:-.02em">{{ x.a.name }}</span><span style="display:flex;align-items:center;gap:12px;font:400 13.5px 'Plus Jakarta Sans';color:#4a4855"><span style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:{{ x.a.stC }}"></span>{{ x.a.st }}</span><span style="color:#c9c7d1">·</span>{{ x.a.lvl }}<span style="color:#c9c7d1">·</span><span style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:{{ x.a.dC }}"></span>{{ x.a.d }}</span></span></div>
+<span style="height:40px;padding:0 14px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;gap:8px;font:500 14px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>Écrire</span>
+</section>
+<nav style="display:flex;justify-content:space-between;padding:0 4px"><sc-for list="{{ tabs }}" as="t" hint-placeholder-count="10"><span style="height:36px;padding:0 13px;border-radius:10px;display:flex;align-items:center;font:500 13.5px 'Plus Jakarta Sans';white-space:nowrap;background:{{ t.bg }};color:{{ t.c }};box-shadow:{{ t.sh }}">{{ t.l }}</span></sc-for></nav>
+
+<sc-if value="{{ x.has }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:minmax(0,1fr) 352px;gap:12px;align-items:start">
+<section style="border-radius:20px;background:#fff;padding:20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div style="display:flex;flex-direction:column;gap:3px"><span style="display:flex;align-items:center;gap:8px;font:600 17px 'Plus Jakarta Sans';white-space:nowrap">Semaine 2<span style="height:22px;padding:0 8px;border-radius:11px;background:rgba(139,92,246,.10);color:#6a3ee0;font:500 11.5px 'Plus Jakarta Sans';display:flex;align-items:center">Semaine en cours</span></span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">2 – 8 nov. · Base · 2 faites sur 4</span></div>
+<div style="display:flex;align-items:center;gap:6px"><span style="width:36px;height:36px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span><span style="height:36px;padding:0 12px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:7px;font:600 13.5px 'Plus Jakarta Sans';white-space:nowrap">Semaine 2<span style="font:500 12px 'Plus Jakarta Sans';color:#8b8996">/ 12</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span><span style="width:36px;height:36px;border-radius:10px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ ses }}" as="s" hint-placeholder-count="4"><div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-radius:15px;background:{{ s.bg }};box-shadow:{{ s.ring }}">
+<span style="width:30px;height:30px;flex:none;border-radius:50%;background:{{ s.dotBg }};color:{{ s.dotC }};box-shadow:{{ s.dotRing }};display:flex;align-items:center;justify-content:center;font:700 12.5px 'Plus Jakarta Sans'">{{ s.mark }}</span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font:600 11.5px 'Plus Jakarta Sans';letter-spacing:.05em;text-transform:uppercase;color:#8a8896">Séance {{ s.n }}</span><span style="display:flex;align-items:center;gap:8px;font:600 15px 'Plus Jakarta Sans'"><span style="width:8px;height:8px;flex:none;border-radius:50%;background:{{ s.c }}"></span>{{ s.name }}</span><span style="font:400 13px 'Plus Jakarta Sans';color:#4a4855">{{ s.sum }}</span>
+<sc-if value="{{ s.feel }}"><span style="margin-top:6px;display:flex;align-items:flex-start;gap:8px;padding:9px 12px;border-radius:11px;background:#fff;font:400 13px/1.45 'Plus Jakarta Sans';color:#4a4855"><span style="font-weight:600;color:#17151d;white-space:nowrap">Ressenti {{ s.rpe }}</span>{{ s.feel }}</span></sc-if></div>
+<span style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none"><span style="height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;gap:6px;font:600 12px 'Plus Jakarta Sans';white-space:nowrap;background:{{ s.pillBg }};color:{{ s.pillC }}">{{ s.state }}</span><span style="font:400 12px 'Plus Jakarta Sans';color:#64626e;white-space:nowrap">{{ s.when }}</span></span>
+</div></sc-for></div>
+</section>
+<div style="display:flex;flex-direction:column;gap:12px">
+<section style="border-radius:20px;background:#fff;padding:20px;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="display:flex;align-items:center;gap:8px;font:600 17px 'Plus Jakarta Sans'"><span style="width:8px;height:8px;border-radius:50%;background:#FEC14F"></span>Prépa HYROX Gand</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">26 oct. → 17 janv. · 12 semaines · Publié v1</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font:500 13px 'Plus Jakarta Sans'"><span style="color:#64626e">Semaine</span><span style="font-weight:600">2 / 12</span></div><div style="display:flex;gap:3px"><sc-for list="{{ wbar }}" as="w" hint-placeholder-count="12"><span style="flex:1;height:8px;border-radius:3px;background:{{ w.c }}"></span></sc-for></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font:500 13px 'Plus Jakarta Sans'"><span style="color:#64626e">Séances faites</span><span style="font-weight:600">5 / 48</span></div><div style="height:8px;border-radius:4px;background:#ecebf1;overflow:hidden"><div style="width:10.4%;height:100%;border-radius:4px;background:#8b5cf6"></div></div></div>
+<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#f6f5fa"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M4 22V4M4 4h13l-2 4 2 4H4"></path></svg><span style="font:400 13px/1.4 'Plus Jakarta Sans';color:#4a4855"><strong style="font-weight:600;color:#17151d">HYROX Gand · 13 déc.</strong> · Open Femme</span></div>
+<div style="display:flex;gap:8px"><span style="flex:1;height:42px;border-radius:11px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14px 'Plus Jakarta Sans'">Ouvrir l’éditeur</span><span style="height:42px;padding:0 14px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;gap:6px;font:600 13.5px 'Plus Jakarta Sans'"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 12v6M9 15l3 3 3-3"></path></svg>PDF</span></div>
+</section>
+<section style="border-radius:20px;background:#fff;padding:16px 12px 10px;display:flex;flex-direction:column">
+<span style="padding:0 8px 8px;font:600 14px 'Plus Jakarta Sans'">Autres semaines</span>
+<sc-for list="{{ others }}" as="o" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:10px;min-height:44px;padding:0 8px;border-top:1px solid #f0eff4"><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font:600 13.5px 'Plus Jakarta Sans'">{{ o.l }}</span><span style="font:400 12px 'Plus Jakarta Sans';color:#8a8896">{{ o.d }}</span></span><span style="font:500 12.5px 'Plus Jakarta Sans';color:{{ o.c }};white-space:nowrap">{{ o.s }}</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a8896" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg></span></sc-for>
+<span style="min-height:40px;padding:0 8px;display:flex;align-items:center;border-top:1px solid #f0eff4;font:500 13px 'Plus Jakarta Sans';color:#6a3ee0">Voir les 12 semaines</span>
+</section>
+</div>
+</div></sc-if>
+
+<sc-if value="{{ x.empty }}"><section style="border-radius:20px;background:#fff;padding:56px 40px;display:flex;flex-direction:column;align-items:center;text-align:center">
+<span style="width:64px;height:64px;border-radius:20px;background:#f1edfc;display:flex;align-items:center;justify-content:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 12v6M9 15h6"></path></svg></span>
+<span style="margin-top:20px;font:700 22px/1.2 'Plus Jakarta Sans';letter-spacing:-.02em">Aucun programme pour Julien</span>
+<span style="margin-top:8px;max-width:440px;font:400 14.5px/1.6 'Plus Jakarta Sans';color:#64626e;text-wrap:pretty">Crée-lui un programme semaine par semaine. Tu pars d’un modèle ou de zéro, et tu le publies quand il est prêt.</span>
+<div style="margin-top:24px;display:flex;gap:10px"><span style="height:44px;padding:0 18px;border-radius:11px;background:#17151d;color:#fff;display:flex;align-items:center;gap:8px;font:600 14px 'Plus Jakarta Sans'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Créer un programme</span><span style="height:44px;padding:0 16px;border-radius:11px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;font:600 14px 'Plus Jakarta Sans'">Copier un programme précédent</span></div>
+<span style="margin-top:18px;font:400 12.5px 'Plus Jakarta Sans';color:#8a8896">L’assistant s’ouvre avec Julien déjà choisi.</span>
+</section></sc-if>
+</main>
+</div>
+</div>
+
+<div id="{{ x.idM }}" style="display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><span style="font:600 12px 'Plus Jakarta Sans';padding:4px 9px;border-radius:8px;background:#17151d;color:#fff">{{ x.idM }}</span><span style="font:600 16px 'Plus Jakarta Sans'">Mobile · 390</span></div>
+<div data-screen-label="{{ x.labelM }}" style="position:relative;width:390px;min-height:844px;background:#f3f2f7;border-radius:40px;overflow:hidden;box-shadow:0 0 0 1px rgba(22,18,40,.16),0 24px 60px -24px rgba(22,18,40,.28);padding-bottom:28px">
+<div style="display:flex;justify-content:space-between;padding:16px 28px 8px;font:600 14px 'Plus Jakarta Sans'"><span>9:41</span><span style="font-size:12px">●●● ▮</span></div>
+<header style="display:flex;align-items:center;gap:10px;padding:6px 14px 0">
+<span style="width:46px;height:46px;flex:none;border-radius:14px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></span>
+<span style="flex:1;display:flex;align-items:center;gap:8px;font:500 16px 'Plus Jakarta Sans';color:#64626e"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Sportifs</span>
+<span style="display:flex;gap:4px;padding:4px;border-radius:16px;background:#fff;box-shadow:0 4px 14px -6px rgba(22,18,40,.18)"><span style="width:40px;height:40px;border-radius:12px;background:#8b5cf6;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.2 6.1L20 10l-5.8 2L12 18l-2.2-6L4 10l5.8-1.9z"></path></svg></span><span style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17151d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></span></span>
+</header>
+<div style="padding:20px 14px 0;display:flex;flex-direction:column;gap:12px">
+<section style="border-radius:22px;background:#fff">
+<div style="display:flex;align-items:center;gap:12px;padding:16px 16px 14px 18px"><span style="width:46px;height:46px;flex:none;border-radius:50%;background:{{ x.a.avBg }};display:flex;align-items:center;justify-content:center;font:600 15px 'Plus Jakarta Sans';color:#2a2733">{{ x.a.ini }}</span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font:600 16.5px 'Plus Jakarta Sans'">{{ x.a.name }}</span><span style="display:flex;align-items:center;gap:6px;font:400 13px 'Plus Jakarta Sans';color:#64626e">{{ x.a.lvl }}<span style="color:#c9c7d1">·</span><span style="width:7px;height:7px;border-radius:50%;background:{{ x.a.dC }}"></span>{{ x.a.d }}</span></div><span style="width:44px;height:44px;flex:none;border-radius:13px;background:#f3f2f7;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span></div>
+<div style="border-top:1px solid #ecebf1;display:flex;align-items:center;gap:12px;padding:0 18px;height:54px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"></path></svg><span style="flex:1;font:600 15.5px 'Plus Jakarta Sans'">Programme</span><span style="font:500 13.5px 'Plus Jakarta Sans';color:#8a8896">4 / 10</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></div>
+</section>
+
+<sc-if value="{{ x.has }}" hint-placeholder-val="{{ true }}">
+<section style="border-radius:22px;background:#fff;padding:18px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:3px"><span style="display:flex;align-items:center;gap:8px;font:600 17px 'Plus Jakarta Sans'"><span style="width:8px;height:8px;border-radius:50%;background:#FEC14F"></span>Prépa HYROX Gand</span><span style="font:400 13px 'Plus Jakarta Sans';color:#64626e">26 oct. → 17 janv. · Publié v1</span></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px"><div style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font:500 12.5px 'Plus Jakarta Sans'"><span style="color:#64626e">Semaine</span><span style="font-weight:600">2 / 12</span></span><div style="display:flex;gap:2px"><sc-for list="{{ wbar }}" as="w" hint-placeholder-count="12"><span style="flex:1;height:7px;border-radius:2px;background:{{ w.c }}"></span></sc-for></div></div><div style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font:500 12.5px 'Plus Jakarta Sans'"><span style="color:#64626e">Faites</span><span style="font-weight:600">5 / 48</span></span><div style="height:7px;border-radius:4px;background:#ecebf1;overflow:hidden"><div style="width:10.4%;height:100%;background:#8b5cf6"></div></div></div></div>
+<span style="font:400 13px 'Plus Jakarta Sans';color:#4a4855"><strong style="font-weight:600;color:#17151d">HYROX Gand · 13 déc.</strong> · Open Femme</span>
+<div style="display:flex;gap:8px"><span style="flex:1;height:46px;border-radius:12px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14.5px 'Plus Jakarta Sans'">Ouvrir l’éditeur</span><span style="height:46px;padding:0 16px;border-radius:12px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;font:600 14px 'Plus Jakarta Sans'">PDF</span></div>
+</section>
+<div style="display:flex;align-items:center;gap:8px"><span style="width:44px;height:44px;flex:none;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></span><span style="flex:1;height:44px;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px 'Plus Jakarta Sans'">Semaine 2<span style="font:500 13px 'Plus Jakarta Sans';color:#8b8996">/ 12</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64626e" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg></span><span style="width:44px;height:44px;flex:none;border-radius:12px;background:#fff;box-shadow:inset 0 0 0 1px rgba(22,18,40,.12);display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"></path></svg></span></div>
+<section style="border-radius:22px;background:#fff;box-shadow:inset 0 0 0 1.5px rgba(139,92,246,.55);padding:16px 12px 12px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px 4px"><span style="font:600 16px 'Plus Jakarta Sans'">Semaine en cours</span><span style="font:400 12.5px 'Plus Jakarta Sans';color:#64626e">2 – 8 nov. · 2 / 4</span></div>
+<sc-for list="{{ ses }}" as="s" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:15px;background:{{ s.bg }};box-shadow:{{ s.ring }}">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:30px;height:30px;flex:none;border-radius:50%;background:{{ s.dotBg }};color:{{ s.dotC }};box-shadow:{{ s.dotRing }};display:flex;align-items:center;justify-content:center;font:700 12.5px 'Plus Jakarta Sans'">{{ s.mark }}</span><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="display:flex;align-items:center;gap:7px;font:600 15px 'Plus Jakarta Sans'"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:{{ s.c }}"></span>{{ s.name }}</span><span style="font:400 12.5px 'Plus Jakarta Sans';color:#4a4855">{{ s.sum }}</span></div><span style="height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;font:600 12px 'Plus Jakarta Sans';white-space:nowrap;background:{{ s.pillBg }};color:{{ s.pillC }}">{{ s.state }}</span></div>
+<sc-if value="{{ s.feel }}"><span style="margin-left:42px;padding:9px 12px;border-radius:11px;background:#fff;font:400 13px/1.45 'Plus Jakarta Sans';color:#4a4855"><strong style="font-weight:600;color:#17151d">Ressenti {{ s.rpe }}</strong> · {{ s.feel }}</span></sc-if>
+<sc-if value="{{ s.when }}"><span style="margin-left:42px;font:400 12px 'Plus Jakarta Sans';color:#64626e">{{ s.when }}</span></sc-if>
+</div></sc-for>
+</section>
+</sc-if>
+
+<sc-if value="{{ x.empty }}"><section style="border-radius:22px;background:#fff;padding:36px 24px 28px;display:flex;flex-direction:column;align-items:center;text-align:center">
+<span style="width:60px;height:60px;border-radius:19px;background:#f1edfc;display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6a3ee0" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M12 12v6M9 15h6"></path></svg></span>
+<span style="margin-top:18px;font:700 21px/1.2 'Plus Jakarta Sans';letter-spacing:-.02em">Aucun programme pour Julien</span>
+<span style="margin-top:8px;font:400 14.5px/1.6 'Plus Jakarta Sans';color:#64626e;text-wrap:pretty">Crée-lui un programme semaine par semaine. Tu pars d’un modèle ou de zéro, et tu le publies quand il est prêt.</span>
+<div style="margin-top:22px;align-self:stretch;display:flex;flex-direction:column;gap:8px"><span style="height:50px;border-radius:13px;background:#17151d;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px 'Plus Jakarta Sans'">Créer un programme</span><span style="height:50px;border-radius:13px;box-shadow:inset 0 0 0 1px rgba(22,18,40,.14);display:flex;align-items:center;justify-content:center;font:600 14.5px 'Plus Jakarta Sans'">Copier un programme précédent</span></div>
+</section></sc-if>
+</div>
+</div>
+</div>
+
+</div>
+</section></sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const C = { run: '#7776FF', hyr: '#FEC14F' };
+    const ST = {
+      done: { state: 'Faite', pillBg: 'rgba(31,157,85,.12)', pillC: '#17803f', dotBg: '#1f9d55', dotC: '#fff', dotRing: 'none', mark: '✓', bg: '#f8f7fb', ring: 'none' },
+      next: { state: 'À faire', pillBg: 'rgba(139,92,246,.10)', pillC: '#6a3ee0', dotBg: '#fff', dotC: '#17151d', dotRing: 'inset 0 0 0 1.5px #8b5cf6', bg: '#fff', ring: 'inset 0 0 0 1.5px rgba(139,92,246,.45)' },
+      todo: { state: 'À faire', pillBg: '#f3f2f7', pillC: '#4a4855', dotBg: '#fff', dotC: '#17151d', dotRing: 'inset 0 0 0 1.5px rgba(22,18,40,.16)', bg: '#fff', ring: 'inset 0 0 0 1px rgba(22,18,40,.08)' }
+    };
+    const ses = [
+      ['1', 'Sortie longue', 'run', '65 min · zone 2', 'done', '7/10', 'Jambes lourdes au début, puis ça s’est débloqué.', 'Mardi 3 nov.'],
+      ['2', 'Endurance rapide', 'run', '5 × 2 min · 45 min', 'done', '8/10', 'Dernière répétition dure, allure tenue.', 'Jeudi 5 nov.'],
+      ['3', 'Race pace', 'hyr', '4 × 1 km · 45 min', 'next', '', '', ''],
+      ['4', 'Circuit Hyrox', 'hyr', '5 tours + AMRAP · 60 min', 'todo', '', '', 'Avec le coach · Sam 7 nov. · 10:00']
+    ].map(([n, name, d, sum, st, rpe, feel, when]) => Object.assign({ n, name, c: C[d], sum, rpe, feel, when }, ST[st], st !== 'done' ? { mark: n } : {}));
+    return {
+      nav1: NAV1.map(([l, d], i) => ({ l, d, bg: i === 2 ? 'rgba(139,92,246,.12)' : 'transparent', c: i === 2 ? '#17151d' : '#4a4855' })),
+      nav2: NAV2.map(([l, d, b]) => ({ l, d, b: b || '' })),
+      tabs: ['Vue d’ensemble', 'Profil', 'Agenda', 'Programme', 'Objectifs', 'Repères', 'Disponibilités', 'Notes', 'Documents', 'Historique'].map((l, i) => ({ l, bg: i === 3 ? '#fff' : 'transparent', c: i === 3 ? '#17151d' : '#64626e', sh: i === 3 ? '0 1px 3px rgba(22,18,40,.10)' : 'none' })),
+      ses,
+      wbar: Array.from({ length: 12 }, (_, i) => ({ c: i === 0 ? '#17151d' : i === 1 ? '#8b5cf6' : '#ecebf1' })),
+      others: [{ l: 'Semaine 1', d: '26 oct. – 1 nov.', s: '3 faites · 1 pas faite', c: '#b51f39' }, { l: 'Semaine 3', d: '9 – 15 nov.', s: 'À venir', c: '#64626e' }, { l: 'Semaine 4', d: '16 – 22 nov. · allégée', s: 'À venir', c: '#64626e' }],
+      states: [
+        { num: '07', h: 'Onglet Programme · avec un programme', hsub: 'Résumé du programme (semaine, séances faites, version, objectif), la semaine en cours avec l’état de chaque séance et le ressenti du sportif, accès aux autres semaines, « Ouvrir l’éditeur » et « PDF ».', idD: '7a', idM: '7b', labelD: 'Onglet Programme desktop · avec programme', labelM: 'Onglet Programme mobile · avec programme', has: true, empty: false,
+          a: { name: 'Inès Ben Ali', ini: 'IB', avBg: '#f0e5d6', st: 'Actif', stC: '#1f9d55', lvl: 'Confirmée', d: 'Hyrox', dC: '#FEC14F' } },
+        { num: '07', h: 'Onglet Programme · sans programme', hsub: 'État vide : une invitation claire. « Créer un programme » ouvre l’assistant avec ce sportif déjà choisi.', idD: '7c', idM: '7d', labelD: 'Onglet Programme desktop · vide', labelM: 'Onglet Programme mobile · vide', has: false, empty: true,
+          a: { name: 'Julien Dubois', ini: 'JD', avBg: '#dfe7ef', st: 'En pause', stC: '#d38a12', lvl: 'Débutant', d: 'Musculation', dC: '#DD2D4A' } }
+      ]
+    };
+  }
+}
+const NAV1 = [['Tableau de bord', 'M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z'], ['Agenda', 'M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM16 2v4M8 2v4M3 10h18'], ['Sportifs', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'], ['Programmes', 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5'], ['Comptabilité', 'M5 3h14v18H5zM9 7h6M9 11h1M14 11h1M9 15h1M14 15h1'], ['Bibliothèque', 'M2 4h7a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H2zM22 4h-7a3 3 0 0 0-3 3v14a2 2 0 0 1 2-2h8z']];
+const NAV2 = [['Assistant IA', 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z'], ['Messages', 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z', '3'], ['Tâches', 'M3 5l2 2 3-3M3 12l2 2 3-3M3 19l2 2 3-3M11 6h10M11 13h10M11 20h10'], ['Documents', 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'], ['Notifications', 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0', '9']];
+</script>
+</body>
+</html>
