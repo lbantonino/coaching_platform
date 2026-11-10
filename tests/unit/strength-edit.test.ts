@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addExercise,
   addSet,
   addSuperset,
   exerciseSummary,
@@ -143,5 +144,30 @@ describe("modifications", () => {
     expect(ungroup(fullBody(), "g1").items).toHaveLength(4);
     expect(addSet(split()).sets).toHaveLength(5);
     expect(strengthContentSchema.safeParse(created?.content).success).toBe(true);
+  });
+});
+
+describe("ajouts (phase 4)", () => {
+  it("un exercice ajouté suit la façon de viser du programme (BR-12)", () => {
+    const pct = addExercise(fullBody(), { name: "Hip thrust" }, undefined, "pct");
+    const added = pct.content.items.find((item) => item.id === pct.id);
+    expect(added?.kind === "exercise" ? added.sets.map((set) => set.pct) : []).toEqual([
+      70, 70, 70,
+    ]);
+    expect(strengthContentSchema.safeParse(pct.content).success).toBe(true);
+    const superset = addSuperset(fullBody(), [{ name: "Fentes" }, { name: "Gainage" }], "pct");
+    const group = superset?.content.items.at(-1);
+    expect(group?.kind === "superset" ? group.exercises.map((x) => x.loadMode) : []).toEqual([
+      "pct",
+      "pct",
+    ]);
+  });
+  it("au-delà de 40 éléments, rien ne s'ajoute (la séance resterait non enregistrable)", () => {
+    const full: StrengthContent = {
+      discipline: "strength",
+      items: Array.from({ length: 40 }, (_, i) => ({ ...split(), id: `x${i + 10}` })),
+    };
+    expect(addExercise(full, { name: "Un de trop" }).content.items).toHaveLength(40);
+    expect(addSuperset(full, [{ name: "A" }, { name: "B" }])).toBeNull();
   });
 });

@@ -281,6 +281,28 @@ export async function archiveProgram(
   return { ok: true };
 }
 
+// « Désarchiver » (phase 4, décision d'Antonino du 10/11) : le programme reprend son état d'avant
+// (brouillon, ou publié avec sa version), sauf s'il chevaucherait un autre programme publié (C-8).
+export async function unarchiveProgram(
+  organizationId: string,
+  programId: string,
+): Promise<ActionResult<{ status: "draft" | "published" }>> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (!z.uuid().safeParse(programId).success) return fail("NOT_FOUND", "Programme introuvable.");
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("unarchive_program", { p_program_id: programId });
+  if (error) {
+    return error.code === "23P01"
+      ? fail(
+          "OVERLAP",
+          "Un autre programme publié de ce sportif occupe déjà ces dates : archive-le ou change ses dates d'abord.",
+        )
+      : fromDatabase(error);
+  }
+  revalidateProgram(membership.organizationId);
+  return { ok: true, status: data === "draft" ? "draft" : "published" };
+}
+
 // « Dupliquer le programme » : un nouveau brouillon pour le même sportif, aux mêmes dates.
 export async function duplicateProgram(
   organizationId: string,

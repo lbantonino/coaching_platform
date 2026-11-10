@@ -81,7 +81,7 @@ export async function loadWizardData(organizationId: string): Promise<WizardData
         "id, athlete_id, title, weeks_count, start_date, status, program_publications!programs_active_publication_fkey ( number )",
       )
       .eq("organization_id", organizationId)
-      .neq("status", "archived")
+      // Archivés compris : un ancien programme se copie toujours (phase 4).
       .order("start_date", { ascending: false }),
     listTemplates(organizationId, { kind: "program" }),
   ]);

@@ -54,15 +54,15 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 - [ ] `P3-06` Saisie manuelle validée de 3 modèles exemples des PDF sources (anonymisés).
 
 ### P4 — Éditeur/programmes
-- [ ] `P4-01` Wizard client+durée+slots+template en brouillon.
-- [ ] `P4-02` Editeur desktop triple panneau ; sauvegarde et conflit révision.
-- [ ] `P4-03` Éditeur mobile coach complet pour séances/blocs/exercices.
-- [ ] `P4-04` Running : segments, cadence facultative, pace/FC, intervalles, récupération.
-- [ ] `P4-05` Musculation : séries/rép/charges/EMOM/superset, notes.
-- [ ] `P4-06` Hyrox : stations, distance/allure erg, AMRAP, Time Cap, répétitions.
+- [x] `P4-01` Wizard client+durée+slots+template en brouillon. **Fait** (D-157, D-160).
+- [x] `P4-02` Editeur desktop triple panneau ; sauvegarde et conflit révision. **Fait** (D-157 ; D-160 : rien ne se perd si l'enregistrement échoue).
+- [x] `P4-03` Éditeur mobile coach complet pour séances/blocs/exercices. **Fait** (D-157, D-160).
+- [x] `P4-04` Running : segments, cadence facultative, pace/FC, intervalles, récupération. **Fait** (D-157, D-160 ; cadence non demandée par les maquettes).
+- [~] `P4-05` Musculation : séries/rép/charges/EMOM/superset, notes. **Fait**, sauf la création d'un EMOM dans l'éditeur (il se lit et se modifie).
+- [x] `P4-06` Hyrox : stations, distance/allure erg, AMRAP, Time Cap, répétitions. **Fait** (D-157, D-160).
 - [ ] `P4-07` Hybride : mélanger librement étapes et formats dans même séance.
-- [ ] `P4-08` Dupliquer semaine/slots, progression **manuelle**, validation, aperçu.
-- [ ] `P4-09` Réordonner, déplacer, supprimer, bibliothèque -> personnalisation sans mutation source.
+- [~] `P4-08` Dupliquer semaine/slots, progression **manuelle**, validation, aperçu. **Fait**, sauf l'aperçu côté sportif (espace sportif).
+- [x] `P4-09` Réordonner, déplacer, supprimer, bibliothèque -> personnalisation sans mutation source. **Fait** (D-160 : glisser par la poignée, modèles jamais modifiés par leurs copies).
 
 ### P5 — PDF/publication
 - [ ] `P5-01` Snapshot publication atomique, numéro version et immutabilité.

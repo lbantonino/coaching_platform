@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Lock } from "lucide-react";
+import { ChevronDown, Lock, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 
 import { ChipGroup } from "@/components/ui/chip-group";
@@ -384,6 +384,33 @@ export function DayPicker({
             </span>
           ) : null}
         </div>
+        {/* FIX-F06 : le jour choisi est indisponible ou déjà pris ? On le dit tout de suite (BR-04,
+            BR-05 : autorisé, avec avertissement). */}
+        {day && (unavailable(context, day) || taken.some((entry) => entry.day === day)) ? (
+          <p
+            role="status"
+            className="flex items-start gap-2 rounded-[11px] bg-warn-soft px-3 py-2 text-[12.5px] leading-[1.45] text-text-2"
+          >
+            <TriangleAlert
+              aria-hidden
+              size={14}
+              strokeWidth={2}
+              className="mt-px shrink-0 text-warn"
+            />
+            <span>
+              {unavailable(context, day)
+                ? `${weekdayLabels[day]}. : ${context.firstName} n'est pas disponible ce jour-là. Tu peux garder ce jour.`
+                : (() => {
+                    const same = taken.filter((entry) => entry.day === day);
+                    return `${weekdayLabels[day]}. : ${same
+                      .map((entry) => `la séance ${entry.n}`)
+                      .join(
+                        " et ",
+                      )} ${same.length > 1 ? "y sont" : "y est"} déjà. Deux séances le même jour, c'est possible.`;
+                  })()}
+            </span>
+          </p>
+        ) : null}
       </div>
 
       <button

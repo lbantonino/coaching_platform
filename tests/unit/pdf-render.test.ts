@@ -34,6 +34,15 @@ describe("rendu des PDF du programme", () => {
     expect(pages.links).toBeGreaterThan(model.pages.length);
   }, 30_000);
 
+  it("TC-17 : 12 semaines = 13 pages (sommaire + 12), un lien et un signet vers chaque semaine", async () => {
+    const model = agendaPdf(demoProgram(12));
+    const pdf = await renderAgendaPdf(model, "Coach Test");
+    expect(pagesOf(pdf).count).toBe(13);
+    const raw = pdf.toString("latin1");
+    for (const name of ["toc", ...Array.from({ length: 12 }, (_, i) => `week-${i + 1}`)])
+      expect(raw.includes(`(${name})`), name).toBe(true);
+  }, 30_000);
+
   it("Fiches et repères : un PDF A4 aux pages prévues, « (suite) » compris", async () => {
     const model = fichesPdf(demoProgram(12));
     const pdf = await renderFichesPdf(model, "Coach Test");

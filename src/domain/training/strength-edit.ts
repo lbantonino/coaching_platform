@@ -1,6 +1,11 @@
 import { kgFromPercent } from "./aims";
 import { localId } from "./plan-edit";
-import type { StrengthContent, StrengthExercise, StrengthSet } from "./session-v2";
+import {
+  SESSION_ITEMS_MAX,
+  type StrengthContent,
+  type StrengthExercise,
+  type StrengthSet,
+} from "./session-v2";
 import { formatSeconds } from "./session-view";
 
 // Éditeur de séance Musculation (05, MUS-01 à 03, D-157) : règles PURES, testées par Vitest. Charge
@@ -216,10 +221,12 @@ function ids(content: StrengthContent): Set<string> {
   return taken;
 }
 
+// `loadMode` : la façon de viser par défaut du programme (BR-12) ; en % du max, 70 % pour commencer.
 export function newExercise(
   content: StrengthContent,
   picked: { exerciseId?: string; name: string },
   taken = ids(content),
+  loadMode: StrengthExercise["loadMode"] = "kg",
 ): StrengthExercise {
   const id = localId("x", taken);
   taken.add(id);
@@ -228,8 +235,12 @@ export function newExercise(
     kind: "exercise",
     ...(picked.exerciseId ? { exerciseId: picked.exerciseId } : {}),
     name: picked.name.slice(0, 80),
-    loadMode: "kg",
-    sets: Array.from({ length: 3 }, () => ({ type: "normal" as const, repsMin: 10 })),
+    loadMode,
+    sets: Array.from({ length: 3 }, () => ({
+      type: "normal" as const,
+      repsMin: 10,
+      ...(loadMode === "pct" ? { pct: 70 } : {}),
+    })),
     restSec: 90,
   };
 }
@@ -238,10 +249,13 @@ export function addExercise(
   content: StrengthContent,
   picked: { exerciseId?: string; name: string },
   groupId?: string,
+  loadMode: StrengthExercise["loadMode"] = "kg",
 ): { content: StrengthContent; id: string } {
-  const exercise = newExercise(content, picked);
-  if (!groupId)
+  const exercise = newExercise(content, picked, ids(content), loadMode);
+  if (!groupId) {
+    if (content.items.length >= SESSION_ITEMS_MAX) return { id: exercise.id, content };
     return { id: exercise.id, content: { ...content, items: [...content.items, exercise] } };
+  }
   return {
     id: exercise.id,
     content: {
@@ -261,14 +275,15 @@ export function addExercise(
 export function addSuperset(
   content: StrengthContent,
   picked: { exerciseId?: string; name: string }[],
+  loadMode: StrengthExercise["loadMode"] = "kg",
 ): { content: StrengthContent; id: string } | null {
-  if (picked.length < 2) return null;
+  if (picked.length < 2 || content.items.length >= SESSION_ITEMS_MAX) return null;
   const taken = ids(content);
   const id = localId("g", taken);
   taken.add(id);
   const exercises = picked
     .slice(0, 6)
-    .map((pick) => ({ ...newExercise(content, pick, taken), restSec: undefined }));
+    .map((pick) => ({ ...newExercise(content, pick, taken, loadMode), restSec: undefined }));
   return {
     id: exercises[0]?.id ?? id,
     content: {

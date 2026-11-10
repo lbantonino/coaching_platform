@@ -1,7 +1,13 @@
 import { decimalClock } from "./clock-input";
 import { formatPace } from "./pace";
 import { localId } from "./plan-edit";
-import type { RunMeasure, RunRepeat, RunStep, RunningContent } from "./session-v2";
+import {
+  SESSION_ITEMS_MAX,
+  type RunMeasure,
+  type RunRepeat,
+  type RunStep,
+  type RunningContent,
+} from "./session-v2";
 import { formatMeters, formatMinutes } from "./session-view";
 
 // Éditeur de séance Running (04, RUN-01 à 03, D-157) : règles PURES, testées par Vitest. L'éditeur
@@ -216,6 +222,7 @@ export function addStep(
     };
   }
   const step = newStep(content);
+  if (content.items.length >= SESSION_ITEMS_MAX) return { id: step.id, content };
   return { id: step.id, content: { ...content, items: [...content.items, step] } };
 }
 
@@ -236,6 +243,7 @@ export function addRepeat(content: RunningContent): { content: RunningContent; i
       { id: recovery, kind: "step", role: "recovery", measure: { type: "time", seconds: 60 } },
     ],
   };
+  if (content.items.length >= SESSION_ITEMS_MAX) return { id: run, content };
   return { id: run, content: { ...content, items: [...content.items, repeat] } };
 }
 

@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dayShortLabel } from "@/lib/format";
 
 import { WeekPicker } from "./week-picker";
-import { WeekSessionCards } from "./week-session-cards";
+import { OpenSessionProvider, WeekSessionCards } from "./week-session-cards";
 
 // Onglet « Agenda » quand le sportif a un programme (D-46), d'après la maquette « Sportifs » du
 // 03/11/2026 (page 2c). En haut, le programme (durée, dates, rythme) et sa règle : les séances n'ont
@@ -446,21 +446,23 @@ export async function ProgramWeeksSection({
         </div>
       ) : null}
 
-      {shownWeeks.map((week, index) => (
-        <WeekCard
-          key={week.index}
-          last={view === "toutes" && index === shownWeeks.length - 1}
-          week={week}
-          current={week.index === current?.index}
-          today={today}
-          basePath={basePath}
-          editHref={editHref}
-          pdfBase={pdfBase}
-          coachItems={coachItemsByMonday.get(week.monday) ?? []}
-          agendaPath={agendaPath}
-          name={name}
-        />
-      ))}
+      <OpenSessionProvider>
+        {shownWeeks.map((week, index) => (
+          <WeekCard
+            key={week.index}
+            last={view === "toutes" && index === shownWeeks.length - 1}
+            week={week}
+            current={week.index === current?.index}
+            today={today}
+            basePath={basePath}
+            editHref={editHref}
+            pdfBase={pdfBase}
+            coachItems={coachItemsByMonday.get(week.monday) ?? []}
+            agendaPath={agendaPath}
+            name={name}
+          />
+        ))}
+      </OpenSessionProvider>
     </div>
   );
 }

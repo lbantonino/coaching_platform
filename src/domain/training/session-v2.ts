@@ -13,6 +13,9 @@ import { PACE_MAX_SEC_PER_KM, PACE_MIN_SEC_PER_KM } from "./pace";
 // ne sert qu'aux séances hybrides v1 converties.
 
 const text = (max: number) => z.string().trim().min(1).max(max);
+// Éléments d'une séance (étapes, exercices, blocs) : au-delà, la séance ne s'enregistre plus, les
+// éditeurs n'en ajoutent donc pas davantage.
+export const SESSION_ITEMS_MAX = 40;
 // Identifiant local d'un élément (étape, exercice, bloc), unique dans la séance.
 export const itemIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,40}$/);
 const seconds = (max: number) => z.number().int().min(1).max(max);
@@ -325,6 +328,9 @@ export const sessionDraftSchema = sessionBodySchema.extend({
     .optional(),
   // Modèle de séance copié (BR-10 : la copie ne change jamais le modèle).
   sourceTemplate: z.object({ id: z.uuid(), version: z.number().int().min(1) }).optional(),
+  // Durée corrigée à la main par le coach : elle n'est plus recalculée d'après le contenu (décision
+  // d'Antonino du 10/11/2026, phase 4).
+  durationManual: z.boolean().optional(),
 });
 
 // Une séance figée dans une publication (publication_sessions.session_json).

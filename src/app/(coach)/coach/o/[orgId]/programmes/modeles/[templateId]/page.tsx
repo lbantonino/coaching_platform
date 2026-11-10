@@ -25,19 +25,36 @@ export const metadata: Metadata = {
 // séance : son détail, à dupliquer ou archiver.
 export default function TemplatePage({
   params,
+  searchParams,
 }: PageProps<"/coach/o/[orgId]/programmes/modeles/[templateId]">) {
   return (
     <main className={`${pageMainClass} lg:h-dvh lg:flex-none`}>
       <Suspense fallback={<PageLoading />}>
-        {params.then(({ orgId, templateId }) => (
-          <Template orgId={orgId} templateId={templateId} />
+        {Promise.all([params, searchParams]).then(([{ orgId, templateId }, query]) => (
+          <Template
+            orgId={orgId}
+            templateId={templateId}
+            // Retour de l'éditeur d'une séance du modèle : sa semaine et la séance.
+            focus={{
+              week: Number(typeof query.semaine === "string" ? query.semaine : NaN) || null,
+              session: typeof query.seance === "string" ? query.seance : null,
+            }}
+          />
         ))}
       </Suspense>
     </main>
   );
 }
 
-async function Template({ orgId, templateId }: { orgId: string; templateId: string }) {
+async function Template({
+  orgId,
+  templateId,
+  focus,
+}: {
+  orgId: string;
+  templateId: string;
+  focus: EditorMeta["focus"];
+}) {
   const { membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
   const base = `/coach/o/${organizationId}/programmes`;
@@ -57,7 +74,7 @@ async function Template({ orgId, templateId }: { orgId: string; templateId: stri
       athleteHref: null,
       today: todayIsoInBrussels(),
       templateSource: program.source,
-      focus: { week: null, session: null },
+      focus,
       sessionTemplates,
       publishContext: null,
     };

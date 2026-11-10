@@ -395,6 +395,7 @@ export function RunStepPanel({
   step,
   place,
   athlete,
+  defaultAim = "pace",
   onChange,
   onDone,
   onDelete,
@@ -403,6 +404,8 @@ export function RunStepPanel({
   // Dans un bloc : « Bloc Répéter 5 fois · étape 1 » ; sinon « Étape 3 ».
   place: { repeatTimes: number | null; position: number };
   athlete: AthleteAims;
+  // Façon de viser par défaut du programme (BR-12), pour une étape encore sans cible.
+  defaultAim?: "pace" | "hr";
   onChange: (step: RunStep) => void;
   onDone: () => void;
   onDelete: () => void;
@@ -411,7 +414,9 @@ export function RunStepPanel({
   const distance = step.measure.type === "distance" ? distanceField(step.measure.meters) : null;
   const [measureInput, setMeasureInput] = useState(time?.value ?? distance?.value ?? "");
   const [measureError, setMeasureError] = useState(false);
-  const [aim, setAim] = useState<"pace" | "hr">(step.target?.kind === "hr" ? "hr" : "pace");
+  const [aim, setAim] = useState<"pace" | "hr">(
+    step.target ? (step.target.kind === "hr" ? "hr" : "pace") : defaultAim,
+  );
   const [paceMode, setPaceMode] = useState<PaceMode>(
     // Le % de VMA ne se recalcule que si la VMA du sportif est connue ; sinon, l'allure écrite.
     step.target?.kind === "pace" && step.target.vmaPercent && athlete.vmaKmh ? "vma" : "minkm",
@@ -512,15 +517,14 @@ export function RunStepPanel({
     onChange({ ...step, target: { kind: "hr", zone: zoneValue, bpmFrom: from, bpmTo: to } });
   };
 
+  // Sans FC max (TC-10) : pas de calcul ; la plage déjà écrite reste, et elle est enregistrée avec
+  // la nouvelle zone (avant, elle restait affichée mais partait sans les bpm).
   const chooseZone = (value: number) => {
     const range = athlete.hrMax ? hrZoneRange(athlete.hrMax, value) : null;
-    const next = range ? { from: String(range.bpmFrom), to: String(range.bpmTo) } : bpm;
-    setBpm(next);
+    if (!range) return commitBpm(bpm, value);
+    setBpm({ from: String(range.bpmFrom), to: String(range.bpmTo) });
     setBpmError(null);
-    onChange({
-      ...step,
-      target: range ? { kind: "hr", zone: value, ...range } : { kind: "hr", zone: value },
-    });
+    onChange({ ...step, target: { kind: "hr", zone: value, ...range } });
   };
 
   const switchAim = (value: "pace" | "hr") => {
@@ -732,7 +736,15 @@ export function RunStepPanel({
                 {paceMode === "minkm" ? "min/km" : "% VMA"}
               </span>
             </div>
-            {paceError ? <p className="text-[12.5px] text-alert">{paceError}</p> : null}
+            {paceError ? (
+              <p className="text-[12.5px] text-alert">{paceError}</p>
+            ) : paceMode === "vma" && step.target?.kind === "pace" ? (
+              // En % de VMA : l'allure qui en sort, en min/km.
+              <p className="text-[12.5px] text-muted">
+                Soit {formatPace(step.target.fromSecPerKm)}–{formatPace(step.target.toSecPerKm)}{" "}
+                min/km.
+              </p>
+            ) : null}
           </>
         ) : (
           <>

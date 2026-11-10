@@ -28,6 +28,8 @@ function StatusPill({ program }: { program: ProgramListItem }) {
     case "finished":
       // Non dessiné (PROPOSÉ) : gris, comme une version publiée.
       return <span className={`${pillBase} bg-bg text-muted`}>Terminé</span>;
+    case "archived":
+      return <span className={`${pillBase} bg-bg text-muted`}>Archivé</span>;
     default:
       return (
         <span className={`${pillBase} bg-bg text-text`}>
@@ -160,12 +162,13 @@ export function TemplateCard({
         </span>
         <span className="truncate">{template.detail}</span>
       </p>
-      {/* Pied : seulement sur ordinateur (la maquette du téléphone n'en a pas). */}
-      <div className="mt-[3px] hidden items-center justify-between gap-3 border-t border-dlg-divider pt-3 lg:flex">
+      {/* Pied : « Utiliser » aussi sur téléphone (phase 4 : la maquette du téléphone n'en avait pas, et
+          un modèle ne pouvait alors pas servir depuis un téléphone). */}
+      <div className="mt-[3px] flex items-center justify-between gap-3 border-t border-dlg-divider pt-3">
         <span className="min-w-0 truncate text-[13px] text-text-2">{template.footer}</span>
         <Link
           href={useHref}
-          className="relative z-10 inline-flex h-[30px] shrink-0 items-center rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97]"
+          className="tap-44 relative z-10 inline-flex h-[30px] shrink-0 items-center rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97]"
         >
           Utiliser
         </Link>

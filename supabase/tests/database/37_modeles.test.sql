@@ -1,5 +1,7 @@
 -- Tests des modèles (D-154) : modèles Coory lisibles par tous et en lecture seule, Mes modèles
 -- isolés par organisation, version qui monte d'elle-même, pas de suppression (on archive).
+-- Indépendant des modèles de démonstration de la graine (phase 4, 10/11/2026 : le test comptait tous
+-- les modèles Coory et tombait sur « Sortie longue » de la graine) : il ne lit que ses propres lignes.
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
@@ -29,7 +31,8 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';
 
 select is(
-  (select count(*)::int from public.program_templates where origin = 'coory'),
+  (select count(*)::int from public.program_templates
+   where origin = 'coory' and id = '7e000000-0000-4000-8000-000000000001'),
   1, 'Le coach A lit les modèles Coory'
 );
 update public.program_templates set title = 'Modifié' where id = '7e000000-0000-4000-8000-000000000001';
@@ -44,21 +47,21 @@ select throws_ok(
 );
 select lives_ok(
   $$ insert into public.session_templates (organization_id, origin, title, discipline, session_type, content_json, created_by)
-     values ('aaaaaaaa-0000-4000-8000-000000000001', 'coach', 'Sortie longue', 'running',
-       'Sortie longue', '{"title":"Sortie longue"}', '11111111-1111-4111-8111-111111111111') $$,
+     values ('aaaaaaaa-0000-4000-8000-000000000001', 'coach', 'Sortie longue test', 'running',
+       'Sortie longue', '{"title":"Sortie longue test"}', '11111111-1111-4111-8111-111111111111') $$,
   'Le coach A enregistre un modèle de séance'
 );
-update public.session_templates set content_json = '{"title":"Sortie longue 2"}' where title = 'Sortie longue';
+update public.session_templates set content_json = '{"title":"Sortie longue 2"}' where title = 'Sortie longue test';
 select is(
-  (select version from public.session_templates where title = 'Sortie longue'),
+  (select version from public.session_templates where title = 'Sortie longue test'),
   2, 'Modifier le contenu fait monter la version'
 );
 select throws_ok(
-  $$ delete from public.session_templates where title = 'Sortie longue' $$,
+  $$ delete from public.session_templates where title = 'Sortie longue test' $$,
   '42501', null, 'Un modèle ne se supprime pas : il s''archive'
 );
 select lives_ok(
-  $$ update public.session_templates set archived_at = now() where title = 'Sortie longue' $$,
+  $$ update public.session_templates set archived_at = now() where title = 'Sortie longue test' $$,
   'Le coach archive son modèle'
 );
 
@@ -68,7 +71,8 @@ select is(
   0, 'Le coach B ne voit pas les modèles de l''organisation A'
 );
 select is(
-  (select count(*)::int from public.program_templates where origin = 'coory'),
+  (select count(*)::int from public.program_templates
+   where origin = 'coory' and id = '7e000000-0000-4000-8000-000000000001'),
   1, 'Le coach B lit aussi les modèles Coory'
 );
 

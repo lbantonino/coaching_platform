@@ -2119,6 +2119,7 @@ export type Database = {
         };
         Returns: number;
       };
+      unarchive_program: { Args: { p_program_id: string }; Returns: string };
       withdraw_health_consent: { Args: { p_athlete_id: string }; Returns: undefined };
     };
     Enums: {

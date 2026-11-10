@@ -54,9 +54,9 @@ function freezeExercise(exercise: StrengthExercise, ctx: AimContext): StrengthEx
   return {
     ...exercise,
     sets: exercise.sets.map((set) =>
-      set.pct !== undefined && set.kg === undefined
-        ? { ...set, kg: kgFromPercent(max.kg, set.pct) }
-        : set,
+      // Toujours depuis le max du jour de la publication (BR-14) : des kg gardés dans le brouillon
+      // dateraient d'un ancien max.
+      set.pct !== undefined ? { ...set, kg: kgFromPercent(max.kg, set.pct) } : set,
     ),
   };
 }

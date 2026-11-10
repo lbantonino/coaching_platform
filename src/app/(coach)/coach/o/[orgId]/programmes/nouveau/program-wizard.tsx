@@ -337,7 +337,17 @@ export function ProgramWizard({
       ? "Créer le modèle"
       : "Créer le brouillon"
     : "Continuer";
-  const onPrimary = () => (last ? submit() : go((step + 1) as StepIndex));
+  // Dernière étape : si une étape d'avant n'est plus complète (titre effacé en revenant en arrière),
+  // on y retourne au lieu d'envoyer une demande que le serveur refuserait.
+  const missing = last ? ([1, 2, 3] as StepIndex[]).find((index) => !ready[index]) : undefined;
+  const onPrimary = () => {
+    if (!last) return go((step + 1) as StepIndex);
+    if (missing) {
+      go(missing);
+      return setError("Complète cette étape pour créer le programme.");
+    }
+    submit();
+  };
   const primaryDisabled = !ready[step] || pending;
 
   return (
@@ -771,7 +781,7 @@ export function ProgramWizard({
                       checked={start === "blank"}
                       onChange={() => setStart("blank")}
                       title="Partir de zéro"
-                      description="Les semaines et séances sont créées vides, à remplir."
+                      description="Les semaines sont créées vides : tu ajoutes les séances une à une."
                     />
                     {templateMode ? null : (
                       <OptionCard
@@ -818,7 +828,9 @@ export function ProgramWizard({
                         meta: `${firstName} · ${program.weeksCount} semaines · ${
                           program.status === "draft"
                             ? "brouillon"
-                            : `publié v${program.publicationNumber ?? 1}`
+                            : program.status === "archived"
+                              ? "archivé"
+                              : `publié v${program.publicationNumber ?? 1}`
                         }`,
                         discipline: athlete.programType,
                       }))}
@@ -829,12 +841,18 @@ export function ProgramWizard({
                       label="Modèle"
                       value={templateId}
                       onChange={setTemplateId}
-                      options={data.templates.map((template) => ({
-                        value: template.id,
-                        title: template.title,
-                        meta: `${template.source === "coory" ? "Coory" : "Mes modèles"} · ${template.detail}`,
-                        discipline: template.discipline,
-                      }))}
+                      options={[...data.templates]
+                        .sort(
+                          (a, b) =>
+                            Number(b.discipline === discipline) -
+                            Number(a.discipline === discipline),
+                        )
+                        .map((template) => ({
+                          value: template.id,
+                          title: template.title,
+                          meta: `${template.source === "coory" ? "Coory" : "Mes modèles"} · ${template.detail}`,
+                          discipline: template.discipline,
+                        }))}
                     />
                   ) : null}
 

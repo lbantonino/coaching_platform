@@ -2,7 +2,16 @@
 
 import { ChevronDown, MessageSquareQuote, Pencil, Repeat2, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useState, type CSSProperties } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type CSSProperties,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
@@ -235,6 +244,28 @@ function SessionDetail({
   );
 }
 
+// Une seule séance dépliée à la fois, même dans la vue « Toutes les semaines » (AGD-F02, TC-16) :
+// les semaines partagent l'état ; Échap referme.
+type OpenState = [string | null, Dispatch<SetStateAction<string | null>>];
+const OpenSessionContext = createContext<OpenState | null>(null);
+
+function useEscapeClose(open: string | null, setOpen: OpenState[1], active: boolean) {
+  useEffect(() => {
+    if (!active || !open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, setOpen, active]);
+}
+
+export function OpenSessionProvider({ children }: { children: ReactNode }) {
+  const state = useState<string | null>(null);
+  useEscapeClose(state[0], state[1], true);
+  return <OpenSessionContext.Provider value={state}>{children}</OpenSessionContext.Provider>;
+}
+
 export function WeekSessionCards({
   weekIndex,
   sessions,
@@ -244,7 +275,10 @@ export function WeekSessionCards({
   sessions: WeekSessionView[];
   pdfBase: string;
 }) {
-  const [open, setOpen] = useState<string | null>(null);
+  const shared = useContext(OpenSessionContext);
+  const local = useState<string | null>(null);
+  const [open, setOpen] = shared ?? local;
+  useEscapeClose(open, setOpen, shared === null);
   const openSession = sessions.find((session) => session.id === open) ?? null;
   const toggle = (id: string) => setOpen((current) => (current === id ? null : id));
 
