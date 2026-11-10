@@ -118,6 +118,13 @@
   --color-warn-soft: var(--warn-soft);
   --color-warn-dot: var(--warn-dot);
   --color-archived-dot: var(--archived-dot);
+  /* Programmes (D-156) : anneau marqué, filet des champs (le .12 de la Bibliothèque, nom générique)
+     et ombres des maquettes. */
+  --color-ring-strong: var(--ring-strong);
+  --color-field-ring: var(--lib-field-ring);
+  --shadow-segment: var(--sh-segment);
+  --shadow-menu: var(--sh-menu);
+  --shadow-lift: var(--sh-lift);
   --color-track: var(--track);
   --color-track-active: var(--track-active);
   --color-glass: var(--glass);

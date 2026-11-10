@@ -18,15 +18,15 @@ const BUILT = new Set([
   "notifications",
   "documents",
   "bibliotheque",
+  // Programmes (C-19) : /coach/programmes renvoie vers la page de l'organisation.
+  "programmes",
 ]);
 
-export function generateStaticParams() {
-  return Object.keys(COACH_MODULES)
-    .filter((module) => !BUILT.has(module))
-    .map((module) => ({ module }));
-}
-
+// Depuis Programmes (D-157), tous les modules ont leur page : plus rien à générer à la construction
+// (Next refuse une liste vide avec Cache Components). La route reste dynamique : un module encore à
+// construire s'afficherait ici, une adresse inconnue répond « Page introuvable ».
 function find(slug: string) {
+  if (BUILT.has(slug)) return null;
   return Object.hasOwn(COACH_MODULES, slug) ? COACH_MODULES[slug as CoachModule] : null;
 }
 

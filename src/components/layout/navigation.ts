@@ -70,7 +70,18 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
       match: under(`${orgBase}/sportifs`),
     });
   }
-  main.push(moduleEntry("programmes", FileText));
+  // Programmes (C-19, 09/11/2026) : dans l'organisation, comme les Sportifs ; l'éditeur, l'assistant et
+  // les modèles (sous-pages) allument l'entrée.
+  main.push(
+    orgBase
+      ? {
+          label: COACH_MODULES.programmes.label,
+          href: `${orgBase}/programmes`,
+          icon: FileText,
+          match: under(`${orgBase}/programmes`),
+        }
+      : moduleEntry("programmes", FileText),
+  );
   // Plus de Facturation (D-90) : Coory ne fait pas de factures, la Comptabilité suit l'argent.
   main.push(
     moduleEntry("comptabilite", Calculator),
@@ -185,6 +196,11 @@ const coachTitles: [RegExp, string][] = [
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/nouvelle$/, "Nouvelle séance"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+\/modifier$/, "Modifier la séance"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/[^/]+$/, "Séance"],
+  [/^\/coach\/o\/[^/]+\/programmes$/, "Programmes"],
+  [/^\/coach\/o\/[^/]+\/programmes\/nouveau$/, "Nouveau programme"],
+  [/^\/coach\/o\/[^/]+\/programmes\/modeles\/[^/]+$/, "Modèle"],
+  [/^\/coach\/o\/[^/]+\/programmes\/[^/]+\/seances\/[^/]+$/, "Séance"],
+  [/^\/coach\/o\/[^/]+\/programmes\/[^/]+$/, "Programme"],
   [/^\/coach\/bibliotheque\/[^/]+$/, "Exercice"],
 ];
 

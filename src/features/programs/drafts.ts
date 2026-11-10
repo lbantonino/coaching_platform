@@ -249,3 +249,29 @@ export async function loadDraft(
   });
   return { program, draft, revision: 0, activePublication, hasUnpublishedChanges: false };
 }
+
+// Max du sportif par exercice, avec la date du repère (« Max de Lucas : 20 kg, repère du 12 oct. ») :
+// le repère le plus récent relié à chaque exercice (éditeur Musculation, % du max).
+export async function loadStrengthMaxes(
+  supabase: Supabase,
+  organizationId: string,
+  athleteId: string,
+): Promise<Record<string, OneRepMax & { date: string }>> {
+  const { data, error } = await supabase
+    .from("athlete_reference_metrics")
+    .select("load_kg, reps, exercise_id, measured_on, created_at")
+    .eq("organization_id", organizationId)
+    .eq("athlete_id", athleteId)
+    .eq("kind", "strength_load")
+    .not("exercise_id", "is", null)
+    .order("measured_on", latestFirst)
+    .order("created_at", latestFirst);
+  if (error) throw new Error("Lecture des repères impossible.");
+  const maxes: Record<string, OneRepMax & { date: string }> = {};
+  for (const row of data ?? []) {
+    if (!row.exercise_id || row.load_kg === null || maxes[row.exercise_id]) continue;
+    const max = oneRepMax(Number(row.load_kg), row.reps);
+    if (max) maxes[row.exercise_id] = { ...max, date: row.measured_on };
+  }
+  return maxes;
+}

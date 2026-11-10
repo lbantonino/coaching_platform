@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { Discipline } from "@/domain/training/discipline";
 import { programPlanSchema, type ProgramPlan } from "@/domain/training/program-plan";
 import { sessionBodySchema, type SessionBody } from "@/domain/training/session-v2";
+import { sessionHeadline } from "@/domain/training/session-view";
 import { createClient } from "@/lib/supabase/server";
 
 import type { TemplateKind } from "./schemas";
@@ -20,10 +21,12 @@ export type TemplateCard = {
   source: TemplateSource;
   title: string;
   discipline: Discipline;
-  // Programme : « 12 semaines · 4 séances » ; séance : son type (« Sortie longue »).
+  // Ligne sous le titre : « 12 sem. · 4 séances / sem. » ; séance : « 60 min · zone 2 ».
+  detail: string;
+  // Pied de carte : les phases d'un programme (« Base · Spécifique · Affûtage »), sinon la source
+  // (« Fourni par Coory ») ou l'usage d'un de Mes modèles (« Utilisé 3 fois »).
+  footer: string;
   weeksCount: number | null;
-  sessionsPerWeek: number | null;
-  sessionType: string | null;
   version: number;
   updatedAt: string;
 };
@@ -44,6 +47,10 @@ const normalize = (value: string) =>
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase();
 
+const usedLabel = (count: number) => (count === 0 ? "Pas encore utilisé" : `Utilisé ${count} fois`);
+
+// Tous les modèles lisibles par l'organisation (Coory et les siens), filtres appliqués ensuite par
+// la page (les compteurs de la barre de filtres portent sur l'ensemble).
 export async function listTemplates(
   organizationId: string,
   filters: TemplateFilters = {},
@@ -51,13 +58,13 @@ export async function listTemplates(
   const supabase = await createClient();
   const kind = filters.kind ?? "all";
   const visible = `organization_id.is.null,organization_id.eq.${organizationId}`;
-  const [programs, sessions] = await Promise.all([
+  const [programs, sessions, uses] = await Promise.all([
     kind === "session"
       ? Promise.resolve({ data: [], error: null })
       : supabase
           .from("program_templates")
           .select(
-            "id, organization_id, title, discipline, weeks_count, sessions_per_week, version, updated_at",
+            "id, organization_id, title, discipline, weeks_count, sessions_per_week, version, updated_at, content_json",
           )
           .or(visible)
           .is("archived_at", null),
@@ -65,46 +72,84 @@ export async function listTemplates(
       ? Promise.resolve({ data: [], error: null })
       : supabase
           .from("session_templates")
-          .select("id, organization_id, title, discipline, session_type, version, updated_at")
+          .select(
+            "id, organization_id, title, discipline, session_type, version, updated_at, content_json",
+          )
           .or(visible)
           .is("archived_at", null),
+    // Programmes de l'organisation copiés d'un modèle : « Utilisé N fois ».
+    supabase
+      .from("programs")
+      .select("source_template_id")
+      .eq("organization_id", organizationId)
+      .not("source_template_id", "is", null),
   ]);
-  if (programs.error || sessions.error) throw new Error("Lecture des modèles impossible.");
+  if (programs.error || sessions.error || uses.error)
+    throw new Error("Lecture des modèles impossible.");
+
+  const useCount = new Map<string, number>();
+  for (const row of uses.data ?? []) {
+    if (row.source_template_id)
+      useCount.set(row.source_template_id, (useCount.get(row.source_template_id) ?? 0) + 1);
+  }
 
   const cards: TemplateCard[] = [
-    ...(programs.data ?? []).map((row) => ({
-      kind: "program" as const,
-      id: row.id,
-      source: (row.organization_id === null ? "coory" : "mine") as TemplateSource,
-      title: row.title,
-      discipline: DISCIPLINE.parse(row.discipline),
-      weeksCount: row.weeks_count,
-      sessionsPerWeek: row.sessions_per_week,
-      sessionType: null,
-      version: row.version,
-      updatedAt: row.updated_at,
-    })),
-    ...(sessions.data ?? []).map((row) => ({
-      kind: "session" as const,
-      id: row.id,
-      source: (row.organization_id === null ? "coory" : "mine") as TemplateSource,
-      title: row.title,
-      discipline: DISCIPLINE.parse(row.discipline),
-      weeksCount: null,
-      sessionsPerWeek: null,
-      sessionType: row.session_type,
-      version: row.version,
-      updatedAt: row.updated_at,
-    })),
+    ...(programs.data ?? []).map((row) => {
+      const source: TemplateSource = row.organization_id === null ? "coory" : "mine";
+      const plan = programPlanSchema.safeParse(row.content_json).data;
+      const phases = plan?.phases.map((phase) => phase.name) ?? [];
+      return {
+        kind: "program" as const,
+        id: row.id,
+        source,
+        title: row.title,
+        discipline: DISCIPLINE.parse(row.discipline),
+        detail: `${row.weeks_count} sem. · ${row.sessions_per_week} séance${row.sessions_per_week > 1 ? "s" : ""} / sem.`,
+        footer:
+          phases.length > 0
+            ? phases.join(" · ")
+            : source === "coory"
+              ? "Fourni par Coory"
+              : usedLabel(useCount.get(row.id) ?? 0),
+        weeksCount: row.weeks_count,
+        version: row.version,
+        updatedAt: row.updated_at,
+      };
+    }),
+    ...(sessions.data ?? []).map((row) => {
+      const source: TemplateSource = row.organization_id === null ? "coory" : "mine";
+      const body = sessionBodySchema.safeParse(row.content_json).data;
+      return {
+        kind: "session" as const,
+        id: row.id,
+        source,
+        title: row.title,
+        discipline: DISCIPLINE.parse(row.discipline),
+        detail: body ? sessionHeadline(body) : row.session_type,
+        // L'usage d'un modèle de séance n'est pas encore compté : on dit d'où il vient.
+        footer: source === "coory" ? "Fourni par Coory" : "Créé par toi",
+        weeksCount: null,
+        version: row.version,
+        updatedAt: row.updated_at,
+      };
+    }),
   ];
   const search = filters.search ? normalize(filters.search.trim()) : "";
-  return cards
-    .filter((card) =>
-      filters.source && filters.source !== "all" ? card.source === filters.source : true,
-    )
-    .filter((card) => (filters.discipline ? card.discipline === filters.discipline : true))
-    .filter((card) => (search ? normalize(card.title).includes(search) : true))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return (
+    cards
+      .filter((card) =>
+        filters.source && filters.source !== "all" ? card.source === filters.source : true,
+      )
+      .filter((card) => (filters.discipline ? card.discipline === filters.discipline : true))
+      .filter((card) => (search ? normalize(card.title).includes(search) : true))
+      // Coory d'abord (comme la maquette), puis les plus récents.
+      .sort(
+        (a, b) =>
+          Number(a.source === "mine") - Number(b.source === "mine") ||
+          Number(a.kind === "session") - Number(b.kind === "session") ||
+          b.updatedAt.localeCompare(a.updatedAt),
+      )
+  );
 }
 
 export type ProgramTemplate = {
@@ -173,4 +218,58 @@ export async function getSessionTemplate(
     version: data.version,
     session: session.success ? session.data : null,
   };
+}
+
+export type SessionTemplateChoice = {
+  id: string;
+  source: TemplateSource;
+  title: string;
+  discipline: Discipline;
+  detail: string;
+  body: SessionBody;
+};
+
+// « Depuis un modèle » (éditeur de programme) : les modèles de séance lisibles, avec leur contenu
+// (copié tel quel dans la semaine). Une discipline donnée : ses modèles d'abord, Coory avant Mes modèles.
+export async function listSessionTemplateChoices(
+  organizationId: string,
+  discipline: Discipline | null,
+): Promise<SessionTemplateChoice[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("session_templates")
+    .select("id, organization_id, title, discipline, updated_at, content_json")
+    .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
+    .is("archived_at", null);
+  if (error) throw new Error("Lecture des modèles impossible.");
+  return (data ?? [])
+    .flatMap((row) => {
+      const body = sessionBodySchema.safeParse(row.content_json);
+      if (!body.success) return [];
+      return [
+        {
+          id: row.id,
+          source: (row.organization_id === null ? "coory" : "mine") as TemplateSource,
+          title: row.title,
+          discipline: DISCIPLINE.parse(row.discipline),
+          detail: sessionHeadline(body.data),
+          body: body.data,
+          updatedAt: row.updated_at,
+        },
+      ];
+    })
+    .sort(
+      (a, b) =>
+        Number(a.discipline !== discipline) - Number(b.discipline !== discipline) ||
+        Number(a.source === "mine") - Number(b.source === "mine") ||
+        b.updatedAt.localeCompare(a.updatedAt),
+    )
+    .map((choice) => ({
+      id: choice.id,
+      source: choice.source,
+      title: choice.title,
+      discipline: choice.discipline,
+      detail: choice.detail,
+      body: choice.body,
+    }));
 }

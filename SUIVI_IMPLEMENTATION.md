@@ -29,8 +29,54 @@
 | 7. Recette finale | À faire |
 
 ## Dernière session
-- Date : 2026-11-09
+- Date : 2026-11-10
 - Objectif : intégration des maquettes « Programmes » (`coory-design/COORY_PROGRAMME_DESIGN_HANDOFF/`), phase 1 (audit, `coory-design/AUDIT_REPORT.md`) puis phase 2 (architecture, D-155, `coory-design/PHASE2_ARCHITECTURE.md`), validées par Antonino.
+
+### Écrans Programmes, phase 3b en cours (D-157, 10/11/2026)
+```
+Pages : app/(coach)/coach/o/[orgId]/programmes/ (liste, nouveau/, [programId]/, [programId]/seances/[cle]/,
+  modeles/[templateId]/) ; /coach/programmes renvoie vers la page de l'organisation.
+Éditeur de programme : _editor/editor-provider.tsx (plan, enregistrement automatique 700 ms, révision,
+  conflit), _editor/program-editor.tsx (ordinateur 3 colonnes, téléphone en pile), _editor/editor-sheets.tsx
+  (Dupliquer vers…, Depuis un modèle, texte, Publier). Retour d'une séance : ?semaine=N&seance=clé.
+Éditeur de séance : _session/session-editor.tsx (cadre commun 04-06), _session/running-parts.tsx (liste,
+  bloc Répéter, panneau d'étape), _session/strength-parts.tsx (exercices, superset, EMOM, tableau des séries,
+  choix dans la Bibliothèque), _session/hyrox-parts.tsx (blocs, lignes, panneaux, simulation de course),
+  components/programs/use-reorder.ts (poignées), session-detail.tsx.
+  Serveur : drafts.ts (loadStrengthMaxes : max datés), library-choices.ts. Créer → Programme : assistant
+  (/coach/programmes/nouveau renvoie vers l'organisation ; fiche sportif : ?sportif=<id>).
+Règles pures : domain/training/plan-edit.ts, running-edit.ts (+ tests unitaires) ; session-view.ts
+  (sessionHeadline, sessionStats). Requêtes : templates.ts (listSessionTemplateChoices), wizard.ts.
+Correctif : coach/[module]/page.tsx sans generateStaticParams (liste vide refusée par Next 16 au build).
+Tests : Vitest 51 fichiers / 357 tests ; e2e program-editor.spec.ts (Running + Musculation, ordinateur +
+  téléphone) ; suite complète : 186 passés, échecs = agenda « Créer → Programme » (test mis à jour, repasse)
+  et le favori de la Bibliothèque (instabilité connue, coach partagé entre les deux projets).
+Vérifié au navigateur : 1440 et cadre de 390, clair et sombre, contre EDT-01 à 05 et RUN-01 à 03.
+Écarts signalés : Aperçu et PDF absents sur un modèle ; « Enregistré » après la cloche dans l'en-tête ;
+  réglages de la séance (type, objectif, conseil) sous la liste sur téléphone (non dessinés) ; durée de
+  séance des modèles de séance non modifiable ici (se modifie dans un programme).
+Reste : jours fixes (03b), onglet Programme, agenda, Publier (08), PDF ; durée d'une séance
+  Musculation non recalculée (gardée telle quelle, pas de formule inventée) ; vignettes grises (maquette).
+```
+
+### Composants communs des écrans Programmes, phase 3a (D-156)
+```
+Mesures relevées dans le code source des maquettes (13_HTML_PREVIEWS/source/programmes).
+Jetons (tokens.css, globals.css) : --ring-strong, --sh-segment, --sh-menu, --sh-lift (clair = maquette,
+  sombre dérivé) ; classes field-ring (alias du filet .12), ring-strong, shadow-segment / menu / lift.
+Créés : components/ui/segmented-control.tsx, select-field.tsx, chip-group.tsx, switch.tsx,
+  radio-choice.tsx (RadioMark, RadioList, OptionCard), more-menu.tsx ;
+  components/programs/editor-session-card.tsx ; app/design/programmes (démonstration TEMPORAIRE,
+  introuvable en production, à supprimer fin de phase 3b).
+Réutilisés : Sheet / ActionMenu (overlay.tsx), phoneFabClass (bouton +).
+Vérifié au navigateur : 1440 (ordinateur) et cadre de 390 (téléphone), clair et sombre ; comparé aux
+  captures EDT-01 (cartes, menu ouvert) et EDT-04 (cartes téléphone).
+Tests : typecheck, lint, Prettier OK ; Vitest 332/332 ; aucun écran existant modifié (e2e non relancés).
+Incident : serveur de dev périmé (classes du thème non générées), relancé après rm -rf .next/dev ;
+  une construction neuve générait bien les classes.
+Écarts signalés (C-20) : feuille du bas et bouton + de l'app gardés ; interrupteur allumé en encre ;
+  menu ··· sur téléphone = feuille d'actions de l'app ; menus en 16 px sur téléphone.
+```
 
 ### Architecture des programmes : données et règles de l'éditeur (D-155)
 ```

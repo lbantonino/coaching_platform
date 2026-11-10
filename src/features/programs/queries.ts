@@ -9,7 +9,7 @@ import {
   type ProgramListStatus,
 } from "@/domain/training/program-status";
 import { addDays } from "@/features/agenda/items";
-import { todayIsoInBrussels } from "@/lib/format";
+import { formatDayMonth, todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 // Programme publié d'un sportif (D-46, tranche 1) : ce que le sportif suit, lu depuis la publication
@@ -230,8 +230,17 @@ export type ProgramListItem = {
   hasUnpublishedChanges: boolean;
   // Semaine en cours (1 à N) d'un programme en cours.
   currentWeek: number | null;
+  // Séances de la version publiée, ou prévues par le brouillon (semaines × séances par semaine).
+  sessionsTotal: number | null;
+  // « HYROX Gand · 13 déc. » (objectif de course du brouillon), ou l'objectif écrit d'avant l'éditeur.
+  goalLine: string | null;
   updatedAt: string;
 };
+
+const raceGoalSchema = z.object({
+  raceName: z.string().optional(),
+  raceDate: z.string().optional(),
+});
 
 export type ProgramListFilters = {
   status?: ProgramListStatus | "all";
@@ -255,7 +264,7 @@ export async function listPrograms(
   let query = supabase
     .from("programs")
     .select(
-      "id, title, discipline, athlete_id, start_date, weeks_count, status, updated_at, athlete_profiles!inner ( first_name, display_name, photo_path ), program_drafts ( revision ), program_publications!programs_active_publication_fkey ( number, source_revision )",
+      "id, title, goal, discipline, athlete_id, start_date, weeks_count, status, updated_at, athlete_profiles!inner ( first_name, display_name, photo_path, program_type ), program_drafts ( revision, sessionsPerWeek:draft_json->sessionsPerWeek, raceGoal:draft_json->goal ), program_publications!programs_active_publication_fkey ( number, source_revision, publication_sessions ( count ) )",
     )
     .eq("organization_id", organizationId)
     .order("updated_at", { ascending: false })
@@ -283,10 +292,16 @@ export async function listPrograms(
         ? (row.program_drafts[0] ?? null)
         : row.program_drafts;
       const athleteName = row.athlete_profiles.display_name ?? row.athlete_profiles.first_name;
+      // Séances : celles de la version publiée ; pour un brouillon, le plan (semaines × séances voulues).
+      const published = publication?.publication_sessions?.[0]?.count;
+      const perWeek = typeof draft?.sessionsPerWeek === "number" ? draft.sessionsPerWeek : null;
+      const race = raceGoalSchema.safeParse(draft?.raceGoal).data;
       return {
         id: row.id,
         title: row.title,
-        discipline: row.discipline as ProgramListItem["discipline"],
+        // Programme publié avant l'éditeur : pas de discipline enregistrée, celle du sportif.
+        discipline: (row.discipline ??
+          row.athlete_profiles.program_type) as ProgramListItem["discipline"],
         athleteId: row.athlete_id,
         athleteName,
         photoPath: row.athlete_profiles.photo_path,
@@ -298,6 +313,17 @@ export async function listPrograms(
           publication !== null && draft !== null && publication.source_revision !== draft.revision,
         currentWeek:
           status === "current" ? currentWeekIndex(row.start_date, row.weeks_count, today) : null,
+        sessionsTotal:
+          typeof published === "number" && published > 0
+            ? published
+            : perWeek !== null
+              ? perWeek * row.weeks_count
+              : null,
+        goalLine: race?.raceName
+          ? [race.raceName, race.raceDate ? formatDayMonth(race.raceDate) : null]
+              .filter(Boolean)
+              .join(" · ")
+          : row.goal,
         updatedAt: row.updated_at,
       };
     })

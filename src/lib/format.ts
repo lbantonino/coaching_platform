@@ -34,6 +34,18 @@ export function formatDate(isoDay: string): string {
   return dateFormatter.format(new Date(`${isoDay}T00:00:00Z`));
 }
 
+// Jour et mois en abrégé (« 26 oct. ») à partir d'une date SQL, sans décalage de fuseau : périodes
+// des programmes (« 26 oct. → 17 janv. »).
+const dayMonthFormatter = new Intl.DateTimeFormat("fr-BE", {
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
+
+export function formatDayMonth(isoDay: string): string {
+  return dayMonthFormatter.format(new Date(`${isoDay}T00:00:00Z`));
+}
+
 // Date du jour à Bruxelles (AAAA-MM-JJ). À appeler uniquement dans du code exécuté à la requête.
 export function todayIsoInBrussels(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
