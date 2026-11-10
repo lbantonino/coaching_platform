@@ -1,7 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { ActionMenu } from "./overlay";
 
@@ -28,6 +28,7 @@ export function MoreMenu({
   phoneSize = "md",
   width = 260,
   className = "",
+  button,
 }: {
   // Nom du bouton pour les lecteurs d'écran (« Plus d'actions sur le programme »).
   label: string;
@@ -38,6 +39,8 @@ export function MoreMenu({
   phoneSize?: "md" | "lg";
   width?: number;
   className?: string;
+  // Autre bouton que « ··· » (ex. « PDF » : le même menu, une autre étiquette et son style).
+  button?: { content: ReactNode; className: string };
 }) {
   const [open, setOpen] = useState<"popover" | "sheet" | null>(null);
   const box = useRef<HTMLDivElement>(null);
@@ -93,11 +96,15 @@ export function MoreMenu({
         aria-expanded={open !== null}
         aria-controls={open === "popover" ? menuId : undefined}
         onClick={toggle}
-        className={`grid place-items-center bg-surface text-[14px] leading-none font-bold tracking-[1px] text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 active:scale-[0.96] lg:size-8 lg:rounded-[9px] lg:bg-transparent ${
-          phoneSize === "lg" ? "size-12 rounded-[13px]" : "size-11 rounded-[12px]"
-        } ${open ? "bg-surface-2" : "hover:bg-surface-2"}`}
+        className={
+          button
+            ? button.className
+            : `grid place-items-center bg-surface text-[14px] leading-none font-bold tracking-[1px] text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 active:scale-[0.96] lg:size-8 lg:rounded-[9px] lg:bg-transparent ${
+                phoneSize === "lg" ? "size-12 rounded-[13px]" : "size-11 rounded-[12px]"
+              } ${open ? "bg-surface-2" : "hover:bg-surface-2"}`
+        }
       >
-        ···
+        {button ? button.content : "···"}
       </button>
 
       {open === "popover" ? (

@@ -10,6 +10,7 @@ import {
   FileDown,
   FileText,
   LayoutTemplate,
+  ListFilter,
   Lock,
   Pencil,
   Plus,
@@ -23,11 +24,13 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { barBackClass, barBackIcon } from "@/components/layout/back-link";
 import { MobileBarTitle, phoneFabClass } from "@/components/layout/mobile-bar";
 import { EditorSessionCard } from "@/components/programs/editor-session-card";
+import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 import { SessionDetail } from "@/components/programs/session-detail";
 import { Avatar } from "@/components/ui/avatar";
 import { MoreMenu, type MoreMenuItem } from "@/components/ui/more-menu";
 import { ConfirmDialog, DialogBody, Overlay } from "@/components/ui/overlay";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { SelectField } from "@/components/ui/select-field";
 import { useToast } from "@/components/ui/toast";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import {
@@ -230,10 +233,15 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   const editHref = (key: string) =>
     target.kind === "program" ? `${meta.base}/${target.programId}/seances/${key}` : null;
 
+  // Ouvrir une séance seulement quand le brouillon est bien enregistré : sinon sa page ne la
+  // trouverait pas (« Page introuvable »).
   const openSession = async (key: string) => {
     const href = editHref(key);
     if (!href) return;
-    await editor.flush();
+    if (!(await editor.flush())) {
+      toast("Le brouillon n'est pas enregistré : recharge la page, puis réessaie.");
+      return;
+    }
     router.push(href);
   };
 
@@ -481,6 +489,14 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     }
     return groups;
   })();
+  // Téléphone (demande d'Antonino du 10/11) : n'afficher qu'une semaine de la liste, ou toutes.
+  const [phoneWeek, setPhoneWeek] = useState<number | null>(null);
+  const phoneGroups =
+    phoneWeek === null
+      ? phaseGroups
+      : phaseGroups
+          .map((group) => ({ ...group, weeks: group.weeks.filter((w) => w.index === phoneWeek) }))
+          .filter((group) => group.weeks.length > 0);
   const nextPhaseName =
     ["Base", "Spécifique", "Affûtage"][plan.phases.length] ?? `Phase ${plan.phases.length + 1}`;
   const canAddPhase =
@@ -590,14 +606,55 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     if (!week) return;
     const slot = week.sessions.findIndex((item) => item.key === key);
     if (slot < 0) return;
-    update((current) => ({
-      ...current,
-      weeks: applySessionDay(current.weeks, current.phases, week.index, slot, choice, scope, dates),
-    }));
+    // Ce qui a vraiment changé ailleurs : semaines touchées et copies créées (semaines où la séance
+    // n'était pas). Le message le dit, sans promettre plus.
+    let others = 0;
+    let copies = 0;
+    update((current) => {
+      const weeks = applySessionDay(
+        current.weeks,
+        current.phases,
+        week.index,
+        slot,
+        choice,
+        scope,
+        dates,
+      );
+      weeks.forEach((item, i) => {
+        const before = current.weeks[i];
+        if (item === before || item.index === week.index) return;
+        others += 1;
+        copies += item.sessions.length - (before?.sessions.length ?? 0);
+      });
+      return { ...current, weeks };
+    });
     setDayPicker(null);
+    const title = week.sessions[slot]?.title ?? "La séance";
     toast(
-      scope === "week" ? "Jour de la séance enregistré." : "Jour appliqué aux autres semaines.",
+      scope === "week"
+        ? "Jour de la séance enregistré."
+        : others === 0
+          ? "Jour enregistré pour cette semaine : aucune autre semaine ne pouvait changer (passées ou rendez-vous du coach)."
+          : copies > 0
+            ? `« ${title} » est placée dans ${others} autre${others > 1 ? "s" : ""} semaine${others > 1 ? "s" : ""} (${copies} copie${copies > 1 ? "s" : ""} créée${copies > 1 ? "s" : ""}).`
+            : `Jour appliqué à cette semaine et à ${others} autre${others > 1 ? "s" : ""}.`,
     );
+  };
+  // Semaines (hors celle-ci, non passées) que « Appliquer ce jour à » changera, par portée.
+  const reachable = () => {
+    const count = (inScope: (index: number) => boolean) =>
+      plan.weeks.filter(
+        (item) =>
+          item.index !== week?.index &&
+          inScope(item.index) &&
+          !(dates && isPastWeek(dates.startDate, item.index, dates.today)),
+      ).length;
+    return {
+      phase: weekPhase
+        ? count((index) => weekPhase.weekFrom <= index && index <= weekPhase.weekTo)
+        : 0,
+      program: count(() => true),
+    };
   };
   const openDayPicker = (key: string) => {
     if (readOnly) return;
@@ -615,6 +672,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         weeksCount={plan.weeks.length}
         context={daysContext}
         compact={compact}
+        reachable={reachable()}
         onValidate={(choice, scope) => applyDay(pickerSession.key, choice, scope)}
         onCancel={() => setDayPicker(null)}
       />
@@ -785,15 +843,17 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               <Eye aria-hidden size={phone ? 16 : 13} strokeWidth={2} />
               Aperçu
             </Link>
-            {phone ? null : (
+            {phone ? null : meta.publication ? (
+              // PDF tirés de la version PUBLIÉE (phase 5) : le brouillon en cours n'y est pas.
+              <ProgramPdfMenu
+                base={`${meta.base}/${target.programId}/pdf`}
+                className={smallButton}
+              />
+            ) : (
               <button
                 type="button"
                 disabled
-                title={
-                  meta.publication
-                    ? "Les PDF arrivent avec la phase 5."
-                    : "Publie le programme pour générer les PDF."
-                }
+                title="Publie le programme pour générer les PDF."
                 className={smallButton}
               >
                 <FileDown aria-hidden size={13} strokeWidth={2} />
@@ -1126,8 +1186,8 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               <>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col gap-1">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <h3 className="text-[17px] leading-[1.25] font-semibold text-text">
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <h3 className="text-[17px] leading-[1.25] font-semibold whitespace-nowrap text-text">
                         Semaine {week.index}
                       </h3>
                       {currentWeek === week.index ? (
@@ -1146,23 +1206,23 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                     <p className="truncate text-[13px] text-muted">{weekMeta}</p>
                   </div>
                   {readOnly ? null : (
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setSheet("duplicate")}
-                          className={smallButton}
-                        >
-                          <Copy aria-hidden size={13} strokeWidth={2} />
-                          Dupliquer
-                        </button>
-                        <MoreMenu
-                          label={`Plus d'actions sur la semaine ${week.index}`}
-                          title={`Semaine ${week.index}`}
-                          items={weekMenu}
-                        />
-                      </div>
+                    // Sélecteur des jours, Dupliquer et « ··· » sur une seule ligne (demande
+                    // d'Antonino du 10/11 : gagner de la place sur ordinateur).
+                    <div className="flex shrink-0 items-center gap-2">
                       {modeSwitch("card")}
+                      <button
+                        type="button"
+                        onClick={() => setSheet("duplicate")}
+                        className={smallButton}
+                      >
+                        <Copy aria-hidden size={13} strokeWidth={2} />
+                        Dupliquer
+                      </button>
+                      <MoreMenu
+                        label={`Plus d'actions sur la semaine ${week.index}`}
+                        title={`Semaine ${week.index}`}
+                        items={weekMenu}
+                      />
                     </div>
                   )}
                 </div>
@@ -1285,7 +1345,28 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                 </>
               )}
             </div>
-            {phaseGroups.map((group, g) => (
+            <label className="flex items-center gap-2.5 px-1">
+              <ListFilter aria-hidden size={18} strokeWidth={2} className="shrink-0 text-muted" />
+              <span className="sr-only">Semaine à afficher</span>
+              <SelectField
+                size="sm"
+                className="flex-1"
+                value={phoneWeek ?? ""}
+                onChange={(event) =>
+                  setPhoneWeek(event.target.value ? Number(event.target.value) : null)
+                }
+              >
+                <option value="">Toutes les semaines</option>
+                {plan.weeks.map((item) => (
+                  <option key={item.index} value={item.index}>
+                    {draft
+                      ? `Semaine ${item.index} · ${weekRange(draft.startDate, item.index)}`
+                      : `Semaine ${item.index}`}
+                  </option>
+                ))}
+              </SelectField>
+            </label>
+            {phoneGroups.map((group, g) => (
               <div key={group.phase?.id ?? `none-${g}`} className="flex flex-col gap-3">
                 {group.phase ? (
                   <div className="flex items-center justify-between px-1.5 pt-1">

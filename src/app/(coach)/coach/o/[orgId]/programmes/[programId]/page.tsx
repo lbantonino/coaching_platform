@@ -136,6 +136,7 @@ async function Program({
 
   return (
     <EditorProvider
+      key={`${program.id}:${loaded.revision}`}
       organizationId={organizationId}
       target={{ kind: "program", programId: program.id }}
       readOnly={program.status === "archived"}

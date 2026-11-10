@@ -22,16 +22,23 @@ export const metadata: Metadata = {
   title: "Séance",
 };
 
-// Modifier une séance du programme (04 Running ; 05 Musculation et 06 Hyrox à venir, D-157). Adresse :
-// la clé de la séance dans le brouillon. « Terminer » revient à l'éditeur du programme, sur sa semaine.
+// Modifier une séance du programme (04 Running ; 05 Musculation et 06 Hyrox, D-157). Adresse : la clé
+// de la séance dans le brouillon. « Terminer » revient à l'éditeur du programme, sur sa semaine ; ou,
+// venu de la fiche du sportif (?retour=…, demande d'Antonino du 10/11), à cette fiche.
 export default function SessionPage({
   params,
+  searchParams,
 }: PageProps<"/coach/o/[orgId]/programmes/[programId]/seances/[cle]">) {
   return (
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading />}>
-        {params.then(({ orgId, programId, cle }) => (
-          <Session orgId={orgId} programId={programId} sessionKey={cle} />
+        {Promise.all([params, searchParams]).then(([{ orgId, programId, cle }, query]) => (
+          <Session
+            orgId={orgId}
+            programId={programId}
+            sessionKey={cle}
+            returnTo={typeof query.retour === "string" ? query.retour : null}
+          />
         ))}
       </Suspense>
     </main>
@@ -42,10 +49,12 @@ async function Session({
   orgId,
   programId,
   sessionKey,
+  returnTo,
 }: {
   orgId: string;
   programId: string;
   sessionKey: string;
+  returnTo: string | null;
 }) {
   const { user, membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
@@ -87,11 +96,20 @@ async function Session({
     strength: isStrength
       ? { athlete: { firstName: athlete?.firstName ?? "le sportif", maxes }, library }
       : null,
+    // Retour vers la fiche du sportif : seulement une page de fiche de CETTE organisation (jamais une
+    // adresse quelconque reçue dans l'URL).
+    returnTo:
+      returnTo &&
+      returnTo.startsWith(`/coach/o/${organizationId}/sportifs/`) &&
+      !returnTo.includes("//")
+        ? { href: returnTo, label: athlete?.displayName ?? "Fiche du sportif" }
+        : null,
   };
-  const back = programHref(meta);
+  const back = meta.returnTo?.href ?? programHref(meta);
 
   return (
     <EditorProvider
+      key={`${programId}:${loaded.revision}`}
       organizationId={organizationId}
       target={{ kind: "program", programId }}
       readOnly={loaded.program.status === "archived"}
@@ -100,7 +118,7 @@ async function Session({
     >
       <PageHeader
         title={`Séance ${position}`}
-        back={{ href: back, label: loaded.draft.title }}
+        back={{ href: back, label: meta.returnTo?.label ?? loaded.draft.title }}
         visibleTitle={false}
         phoneBack={false}
         actions={<SessionHeaderActions href={back} />}

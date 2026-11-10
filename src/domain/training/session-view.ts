@@ -41,6 +41,23 @@ export function formatSeconds(total: number): string {
   return seconds ? `${minutes}:${String(seconds).padStart(2, "0")} min` : `${minutes} min`;
 }
 
+// Running (règle d'Antonino du 10/11/2026, pour TOUS les coachs) : une durée de course s'écrit
+// toujours en minutes, jamais en heures : 4800 -> « 80 min » ; 105 -> « 1:45 min » ; 20 -> « 20 s ».
+export function formatMinutes(total: number): string {
+  if (total < 60) return `${total} s`;
+  const minutes = Math.floor(total / 60);
+  const seconds = total % 60;
+  return seconds ? `${minutes}:${String(seconds).padStart(2, "0")} min` : `${minutes} min`;
+}
+
+// « 1 h 20 » -> « 80 min » dans un texte déjà écrit (séances v1 en texte) : même règle Running.
+export function hoursToMinutes(text: string): string {
+  return text.replace(
+    /\b(\d+) h(?: (\d{1,2}))?(?![:\d])/g,
+    (_, h: string, m?: string) => `${Number(h) * 60 + Number(m ?? 0)} min`,
+  );
+}
+
 // Temps cible : « 25:00 », « 1:18:20 ».
 export function formatClock(total: number): string {
   const hours = Math.floor(total / 3600);
@@ -58,12 +75,12 @@ export function formatMeters(meters: number): string {
   return `${meters} m`;
 }
 
-const formatKg = (kg: number) => `${String(kg).replace(".", ",")} kg`;
+export const formatKg = (kg: number) => `${String(kg).replace(".", ",")} kg`;
 
 // ---------------------------------------------------------------------------
 // Running
 // ---------------------------------------------------------------------------
-const runRoleLabels: Record<RunStep["role"], string> = {
+export const runRoleLabels: Record<RunStep["role"], string> = {
   warmup: "Échauffement",
   run: "Course",
   recovery: "Récupération",
@@ -74,7 +91,7 @@ const runRoleLabels: Record<RunStep["role"], string> = {
 function runMeasure(step: RunStep): string | null {
   switch (step.measure.type) {
     case "time":
-      return formatSeconds(step.measure.seconds);
+      return formatMinutes(step.measure.seconds);
     case "distance":
       return formatMeters(step.measure.meters);
     case "open":
@@ -169,7 +186,11 @@ export function exerciseLine(exercise: StrengthExercise, options?: { withSets?: 
   if (load) parts.push(load);
   const rir = uniform(sets.map((set) => (set.rir !== undefined ? `RIR ${set.rir}` : null)));
   if (rir) parts.push(rir);
-  if (exercise.restSec) parts.push(`repos ${formatSeconds(exercise.restSec).replace(/ min$/, "")}`);
+  if (exercise.restSec) {
+    // « repos 2:30 » (maquette) mais « repos 2 min » : l'unité ne tombe qu'avec les secondes.
+    const rest = formatSeconds(exercise.restSec);
+    parts.push(`repos ${rest.includes(":") ? rest.replace(/ min$/, "") : rest}`);
+  }
   if (exercise.tempo) parts.push(`tempo ${exercise.tempo}`);
   return parts.join(" · ");
 }
@@ -177,7 +198,7 @@ export function exerciseLine(exercise: StrengthExercise, options?: { withSets?: 
 // ---------------------------------------------------------------------------
 // Hyrox
 // ---------------------------------------------------------------------------
-const hyroxFormatLabels: Record<HyroxBlock["format"], string> = {
+export const hyroxFormatLabels: Record<HyroxBlock["format"], string> = {
   simple: "Bloc",
   circuit: "Circuit",
   for_time: "For time",
@@ -187,7 +208,7 @@ const hyroxFormatLabels: Record<HyroxBlock["format"], string> = {
   simulation: "Simulation",
 };
 
-const ergLabels = { skierg: "SkiErg", rowing: "Rameur", bike: "Bike" } as const;
+export const ergLabels = { skierg: "SkiErg", rowing: "Rameur", bike: "Bike" } as const;
 
 // « Run 600 m @5:45 min/km », « Sled push 25 m · 102 kg », « Farmers carry 200 m · 2 × 16 kg »,
 // « SkiErg 1 km @2:10 min/500 m », « Transition 30 s ».
@@ -382,6 +403,7 @@ export function sessionHeadline(
   const { content } = session;
   switch (content.discipline) {
     case "running": {
+      const duration = formatMinutes(session.durationMinutes * 60);
       const steps = content.items.flatMap((item) =>
         item.kind === "step" ? [item] : item.kind === "repeat" ? item.steps : [],
       );
@@ -397,7 +419,7 @@ export function sessionHeadline(
         const work = repeat.steps.find((step) => step.role === "run") ?? repeat.steps[0];
         const measure =
           work?.measure.type === "time"
-            ? formatSeconds(work.measure.seconds)
+            ? formatMinutes(work.measure.seconds)
             : work?.measure.type === "distance"
               ? formatMeters(work.measure.meters)
               : null;
@@ -474,7 +496,7 @@ export function sessionStats(
     case "running": {
       const meters = runningDistanceMeters(content);
       return [
-        duration,
+        { label: "Durée", value: `≈ ${formatMinutes(session.durationMinutes * 60)}` },
         {
           label: "Distance",
           value: meters ? `≈ ${String(Math.round(meters / 100) / 10).replace(".", ",")} km` : "—",

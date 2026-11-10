@@ -67,8 +67,8 @@ Le scénario démo recruteur devient possible à la fin de P6. Le produit initia
 ### P5 — PDF/publication
 - [ ] `P5-01` Snapshot publication atomique, numéro version et immutabilité.
 - [ ] `P5-02` Validation métier, avertissements, historique publié/brouillon.
-- [ ] `P5-03` Renderer PDF A4 couverture/semaine/détails avec tests visuels.
-- [ ] `P5-04` Stockage privé, download coach, inclusion de version/checksum.
+- [x] `P5-03` Renderer PDF A4 couverture/semaine/détails avec tests visuels. **Fait le 10/11/2026 (D-158)** : « Agenda du programme » et « Fiches et repères » (React-PDF), rendu réel testé et comparé aux maquettes.
+- [~] `P5-04` Stockage privé, download coach, inclusion de version/checksum. **Fait** : téléchargement du coach, version dans le pied de page (D-158). **Reste** : stockage et historique des PDF (« plus tard », PHASE2_ARCHITECTURE §8).
 - [ ] `P5-05` Préparation/envoi mail selon provider dispo ; zéro faux « envoyé ».
 
 ### P6 — Sportif et retour

@@ -1,3 +1,4 @@
+import { decimalClock } from "./clock-input";
 import {
   HYROX_RUN_METERS,
   HYROX_STATION_RULES,
@@ -456,7 +457,8 @@ export function moveItem(
 
 // Temps cible et limite : « 5:05 » (mm:ss), « 1:18:20 » (h:mm:ss) ; un nombre seul = des minutes.
 export function parseClock(input: string): number | null {
-  const value = input.trim();
+  // « 5,05 » ou « 1,5 » au pavé décimal du téléphone (clock-input.ts).
+  const value = decimalClock(input.trim());
   if (!value) return null;
   const parts = value.split(":");
   if (parts.length > 3 || parts.some((part) => !/^\d+$/.test(part))) return null;

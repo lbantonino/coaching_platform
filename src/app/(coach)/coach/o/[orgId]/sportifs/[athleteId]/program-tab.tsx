@@ -1,16 +1,24 @@
-import { ChevronLeft, ChevronRight, FileDown, FilePlus, Flag, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePlus, Flag, Plus } from "lucide-react";
 import Link from "next/link";
 
-import { disciplineStyles } from "@/domain/training/discipline";
+import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
+
+import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import { hyroxDivisionLabels } from "@/domain/training/hyrox-official";
 import { weekdayLabels } from "@/domain/training/scheduling";
+import { sessionStats } from "@/domain/training/session-view";
+import { draftSessionKeys } from "@/features/programs/drafts";
+import { sessionEditHref } from "@/features/programs/edit-href";
 import type { AthleteProgram, ProgramSessionCard, ProgramWeek } from "@/features/programs/queries";
+import { createClient } from "@/lib/supabase/server";
 
+import { ProgramWeekBoard, type BoardSession } from "./program-week-board";
 import { WeekPicker } from "./week-picker";
 
-// Onglet « Programme » de la fiche d'un sportif (maquette 07, TAB-01 à 04, D-157) : le programme
-// publié (semaine, séances faites, version, objectif), la semaine choisie avec l'état de chaque
-// séance, les autres semaines, « Ouvrir l'éditeur » et « PDF ». Sans programme : « Créer un
+// Onglet « Programme » de la fiche d'un sportif (maquette 07, TAB-01 à 04, D-157 ; revu à la demande
+// d'Antonino le 10/11) : la semaine choisie avec l'état de chaque séance ; à droite, la carte du
+// programme (épurée : dates, version, objectif, « Ouvrir l'éditeur », « PDF ») et le DÉTAIL de la
+// séance choisie, comme dans l'éditeur, avec « Modifier la séance ». Sans programme : « Créer un
 // programme » ouvre l'assistant avec ce sportif déjà choisi.
 //
 // États : « Faite » viendra du retour du sportif (son espace n'existe pas encore) : aucune séance
@@ -48,7 +56,8 @@ function when(week: ProgramWeek, session: ProgramSessionCard): string | null {
   return session.coachDate ? `Avec le coach · ${label}` : label;
 }
 
-export function ProgramTab({
+export async function ProgramTab({
+  organizationId,
   name,
   program,
   requestedWeek,
@@ -59,6 +68,7 @@ export function ProgramTab({
   copyHref,
   draft,
 }: {
+  organizationId: string;
   name: string;
   program: AthleteProgram | null;
   requestedWeek: number | null;
@@ -90,7 +100,6 @@ export function ProgramTab({
         return date === null || date >= today;
       }) ?? null)
     : null;
-  const total = program.weeks.reduce((sum, week) => sum + week.sessions.length, 0);
   const weekHref = (index: number) => `${basePath}?onglet=programme&semaine=${index}`;
   const hrefFor = Object.fromEntries(
     program.weeks.map((week) => [week.index, weekHref(week.index)]),
@@ -98,13 +107,27 @@ export function ProgramTab({
   const last = program.weeks[program.weeks.length - 1];
   const dot = program.discipline ? disciplineStyles[program.discipline].dot : "bg-violet";
   const ofName = /^[aeiouyéèêàâîïôûh]/i.test(name) ? `d'${name}` : `de ${name}`;
-  const others = program.weeks.filter((week) => week.index !== shown.index);
-  const nearby = others.filter((week) => Math.abs(week.index - shown.index) <= 2).slice(0, 3);
-  const weekState = (week: ProgramWeek) =>
-    week.sunday < today ? "Passée" : week.monday <= today ? "En cours" : "À venir";
 
+  // « Modifier la séance » : directement l'éditeur de la séance si elle est encore dans le brouillon
+  // (le brouillon peut avoir changé depuis la publication) ; sinon l'éditeur, sur sa semaine.
+  const draftKeys = editorHref
+    ? new Set(await draftSessionKeys(await createClient(), organizationId, program.id))
+    : new Set<string>();
+  const editHref = (session: ProgramSessionCard) =>
+    editorHref
+      ? sessionEditHref(
+          editorHref,
+          draftKeys,
+          shown.index,
+          session.key,
+          `${basePath}?onglet=programme&semaine=${shown.index}`,
+        )
+      : null;
+
+  // Carte du programme, épurée (demandes d'Antonino du 10/11) : le titre, les dates et la version,
+  // l'objectif en petit dessous, l'avancement des semaines ; plus de « Séances faites ».
   const programCard = (
-    <section className="flex flex-col gap-4 rounded-[20px] bg-surface p-4 lg:gap-4 lg:p-5">
+    <section className="flex flex-col gap-4 rounded-[20px] bg-surface p-4 lg:p-5">
       <div className="flex flex-col gap-1">
         <h2 className="flex items-center gap-2 text-[17px] font-semibold text-text">
           <span aria-hidden className={`size-2 shrink-0 rounded-full ${dot}`} />
@@ -112,57 +135,44 @@ export function ProgramTab({
         </h2>
         <p className="text-[13px] text-muted">
           {dayMonth.format(asDate(program.startDate))} →{" "}
-          {dayMonth.format(asDate(last?.sunday ?? program.startDate))}
-          <span className="max-lg:hidden"> · {program.weeksCount} semaines</span> · Publié v
-          {program.publicationNumber}
+          {dayMonth.format(asDate(last?.sunday ?? program.startDate))} · {program.weeksCount}{" "}
+          semaines · Publié v{program.publicationNumber}
         </p>
-      </div>
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-1">
-        <div className="flex flex-col gap-2">
-          <p className="flex justify-between text-[13px] font-medium">
-            <span className="text-muted">Semaine</span>
-            <span className="font-semibold text-text">
-              {current ? current.index : shown.index} / {program.weeksCount}
+        {program.race ? (
+          <p className="flex items-center gap-1.5 text-[12.5px] leading-[1.4] text-text-2">
+            <Flag aria-hidden size={13} strokeWidth={1.8} className="shrink-0 text-muted" />
+            <span>
+              <span className="font-semibold text-text">
+                {program.race.name}
+                {program.race.date ? ` · ${dayMonth.format(asDate(program.race.date))}` : ""}
+              </span>
+              {program.race.division ? ` · ${hyroxDivisionLabels[program.race.division]}` : ""}
             </span>
           </p>
-          <div aria-hidden className="flex gap-[3px]">
-            {program.weeks.map((week) => (
-              <span
-                key={week.index}
-                className={`h-2 flex-1 rounded-[3px] ${
-                  week.sunday < today
-                    ? "bg-cta"
-                    : week.index === current?.index
-                      ? "bg-violet"
-                      : "bg-chip"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <p className="flex justify-between text-[13px] font-medium">
-            <span className="text-muted">
-              <span className="lg:hidden">Faites</span>
-              <span className="max-lg:hidden">Séances faites</span>
-            </span>
-            <span className="font-semibold text-text">0 / {total}</span>
-          </p>
-          <div aria-hidden className="h-2 overflow-hidden rounded-[4px] bg-chip" />
-        </div>
+        ) : null}
       </div>
-      {program.race ? (
-        <p className="flex items-center gap-2.5 rounded-[12px] text-[13px] leading-[1.4] text-text-2 lg:bg-surface-2 lg:px-3 lg:py-2.5">
-          <Flag aria-hidden size={15} strokeWidth={1.8} className="shrink-0 max-lg:hidden" />
-          <span>
-            <strong className="font-semibold text-text">
-              {program.race.name}
-              {program.race.date ? ` · ${dayMonth.format(asDate(program.race.date))}` : ""}
-            </strong>
-            {program.race.division ? ` · ${hyroxDivisionLabels[program.race.division]}` : ""}
+      <div className="flex flex-col gap-2">
+        <p className="flex justify-between text-[13px] font-medium">
+          <span className="text-muted">Semaine</span>
+          <span className="font-semibold text-text">
+            {current ? current.index : shown.index} / {program.weeksCount}
           </span>
         </p>
-      ) : null}
+        <div aria-hidden className="flex gap-[3px]">
+          {program.weeks.map((week) => (
+            <span
+              key={week.index}
+              className={`h-2 flex-1 rounded-[3px] ${
+                week.sunday < today
+                  ? "bg-cta"
+                  : week.index === current?.index
+                    ? "bg-violet"
+                    : "bg-chip"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
       <div className="flex gap-2">
         {editorHref ? (
           <Link
@@ -172,15 +182,14 @@ export function ProgramTab({
             Ouvrir l&apos;éditeur
           </Link>
         ) : null}
-        <button
-          type="button"
-          disabled
-          title="Les PDF arrivent avec la phase 5."
-          className="inline-flex h-12 items-center gap-1.5 rounded-[13px] px-4 text-[15px] font-semibold text-faint inset-ring inset-ring-field-ring lg:h-[42px] lg:rounded-[11px] lg:px-3.5 lg:text-[13.5px]"
-        >
-          <FileDown aria-hidden size={14} strokeWidth={2} className="max-lg:hidden" />
-          PDF
-        </button>
+        {editorHref ? (
+          <ProgramPdfMenu
+            base={`${editorHref}/pdf`}
+            iconSize={14}
+            iconClassName="max-lg:hidden"
+            className="inline-flex h-12 items-center gap-1.5 rounded-[13px] px-4 text-[15px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98] lg:h-[42px] lg:rounded-[11px] lg:px-3.5 lg:text-[13.5px]"
+          />
+        ) : null}
       </div>
     </section>
   );
@@ -221,144 +230,74 @@ export function ProgramTab({
     .filter(Boolean)
     .join(" · ");
 
-  const sessions = (
-    <ol className="m-0 flex list-none flex-col gap-2 p-0">
-      {shown.sessions.length === 0 ? (
-        <li className="rounded-[15px] bg-surface-2 px-4 py-6 text-center text-[13.5px] text-muted">
-          Aucune séance cette semaine.
-        </li>
-      ) : null}
-      {shown.sessions.map((session, index) => {
-        const isNext = session.id === next?.id;
-        const date = when(shown, session);
-        return (
-          <li key={session.id}>
-            <Link
-              href={`${basePath}/programme/${session.id}`}
-              className={`flex items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 transition-[box-shadow] duration-150 lg:gap-3.5 lg:px-4 lg:py-3.5 ${
-                isNext
-                  ? "inset-ring-[1.5px] inset-ring-violet/45"
-                  : "inset-ring inset-ring-line hover:inset-ring-field-ring"
-              }`}
-            >
-              <span
-                className={`grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text ${
-                  isNext
-                    ? "inset-ring-[1.5px] inset-ring-violet"
-                    : "inset-ring-[1.5px] inset-ring-field-ring"
-                }`}
-              >
-                {index + 1}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                <span className="text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase max-lg:hidden">
-                  Séance {index + 1}
-                </span>
-                <span className="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text">
-                  <span
-                    aria-hidden
-                    className={`size-2 shrink-0 rounded-full ${disciplineStyles[session.content.discipline ?? "hybrid"].dot}`}
-                  />
-                  <span className="truncate">{session.content.title}</span>
-                </span>
-                <span className="text-[13px] text-text-2">{session.headline}</span>
-                {date ? <span className="text-[12px] text-muted lg:hidden">{date}</span> : null}
-              </span>
-              <span className="flex shrink-0 flex-col items-end gap-1.5">
-                {past ? null : (
-                  <span
-                    className={`inline-flex h-[26px] items-center rounded-[13px] px-2.5 text-[12px] font-semibold whitespace-nowrap ${
-                      isNext ? "bg-violet-soft text-violet-text" : "bg-bg text-text-2"
-                    }`}
-                  >
-                    À faire
-                  </span>
-                )}
-                {date ? (
-                  <span className="text-[12px] whitespace-nowrap text-muted max-lg:hidden">
-                    {date}
-                  </span>
-                ) : null}
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ol>
+  const weekHeader = (
+    <div className="flex items-center justify-between gap-3 max-lg:px-1 max-lg:pt-1">
+      <div className="flex min-w-0 flex-col gap-[3px]">
+        <h2
+          id="program-week-title"
+          className="flex items-center gap-2 text-[17px] font-semibold whitespace-nowrap text-text"
+        >
+          <span className="lg:hidden">
+            {isCurrent ? "Semaine en cours" : `Semaine ${shown.index}`}
+          </span>
+          <span className="max-lg:hidden">Semaine {shown.index}</span>
+          {isCurrent ? (
+            <span className="inline-flex h-[22px] items-center rounded-[11px] bg-violet-soft px-2 text-[11.5px] font-medium text-violet-text max-lg:hidden">
+              Semaine en cours
+            </span>
+          ) : null}
+        </h2>
+        <p className="truncate text-[13px] text-muted max-lg:hidden">
+          {meta} · {shown.sessions.length} séance{shown.sessions.length > 1 ? "s" : ""}
+        </p>
+      </div>
+      <span className="text-[12.5px] whitespace-nowrap text-muted lg:hidden">
+        {range(shown.monday, shown.sunday)} · 0 / {shown.sessions.length}
+      </span>
+      <div className="max-lg:hidden">{navigator}</div>
+    </div>
   );
 
+  // Le détail de chaque séance (comme le panneau de l'éditeur), version publiée : v2 structurée ou
+  // v1 en texte.
+  const sessions: BoardSession[] = shown.sessions.map((session, i) => {
+    const discipline = session.content.discipline ?? "hybrid";
+    return {
+      id: session.id,
+      index: i + 1,
+      title: session.content.title,
+      dot: disciplineStyles[discipline].dot,
+      headline: session.headline,
+      date: when(shown, session),
+      isNext: session.id === next?.id,
+      editHref: editHref(session),
+      detail: {
+        discipline,
+        title: session.content.title,
+        kicker: `${disciplineLabels[discipline]} · Séance ${i + 1}`,
+        line: [session.content.sessionType, `Semaine ${shown.index}`].filter(Boolean).join(" · "),
+        stats: session.published
+          ? sessionStats(session.published)
+          : [
+              { label: "Durée", value: `≈ ${session.content.durationMinutes} min` },
+              { label: "Blocs", value: String(session.content.steps.length) },
+            ],
+        steps: session.content.steps,
+      },
+    };
+  });
+
   return (
-    <div className="grid w-full items-start gap-3 lg:grid-cols-[minmax(0,1fr)_352px]">
-      {/* Téléphone : la carte du programme d'abord (maquette 7b). */}
-      <div className="lg:hidden">{programCard}</div>
-      <div className="lg:hidden">{navigator}</div>
-
-      <section
-        aria-labelledby="program-week-title"
-        className={`flex flex-col gap-3.5 rounded-[20px] bg-surface p-3 lg:p-5 ${isCurrent ? "max-lg:inset-ring-[1.5px] max-lg:inset-ring-violet/45" : ""}`}
-      >
-        <div className="flex items-center justify-between gap-3 max-lg:px-1 max-lg:pt-1">
-          <div className="flex min-w-0 flex-col gap-[3px]">
-            <h2
-              id="program-week-title"
-              className="flex items-center gap-2 text-[17px] font-semibold whitespace-nowrap text-text"
-            >
-              <span className="lg:hidden">
-                {isCurrent ? "Semaine en cours" : `Semaine ${shown.index}`}
-              </span>
-              <span className="max-lg:hidden">Semaine {shown.index}</span>
-              {isCurrent ? (
-                <span className="inline-flex h-[22px] items-center rounded-[11px] bg-violet-soft px-2 text-[11.5px] font-medium text-violet-text max-lg:hidden">
-                  Semaine en cours
-                </span>
-              ) : null}
-            </h2>
-            <p className="truncate text-[13px] text-muted max-lg:hidden">
-              {meta} · {shown.sessions.length} séance{shown.sessions.length > 1 ? "s" : ""}
-            </p>
-          </div>
-          <span className="text-[12.5px] whitespace-nowrap text-muted lg:hidden">
-            {range(shown.monday, shown.sunday)} · 0 / {shown.sessions.length}
-          </span>
-          <div className="max-lg:hidden">{navigator}</div>
-        </div>
-        {sessions}
-      </section>
-
-      <div className="flex flex-col gap-3">
-        <div className="max-lg:hidden">{programCard}</div>
-        <section className="flex flex-col rounded-[20px] bg-surface px-3 pt-4 pb-2.5">
-          <h3 className="px-2 pb-2 text-[14px] font-semibold text-text">Autres semaines</h3>
-          {nearby.map((week) => (
-            <Link
-              key={week.index}
-              href={weekHref(week.index)}
-              scroll={false}
-              className="flex min-h-11 items-center gap-2.5 border-t border-dlg-divider px-2 transition-colors duration-150 hover:bg-surface-2"
-            >
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-[13.5px] font-semibold text-text">Semaine {week.index}</span>
-                <span className="truncate text-[12px] text-faint">
-                  {[range(week.monday, week.sunday), week.light ? "allégée" : null]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-              </span>
-              <span className="text-[12.5px] font-medium whitespace-nowrap text-muted">
-                {weekState(week)}
-              </span>
-              <ChevronRight aria-hidden size={15} strokeWidth={2} className="shrink-0 text-faint" />
-            </Link>
-          ))}
-          <Link
-            href={`${basePath}?onglet=agenda&vue=toutes`}
-            className="flex min-h-10 items-center border-t border-dlg-divider px-2 text-[13px] font-medium text-violet-text hover:underline"
-          >
-            Voir les {program.weeksCount} semaines
-          </Link>
-        </section>
-      </div>
-    </div>
+    <ProgramWeekBoard
+      key={shown.index}
+      programCard={programCard}
+      phoneTop={navigator}
+      weekHeader={weekHeader}
+      weekRing={isCurrent}
+      sessions={sessions}
+      initialId={next?.id ?? shown.sessions[0]?.id ?? null}
+      showTodo={!past}
+    />
   );
 }
 

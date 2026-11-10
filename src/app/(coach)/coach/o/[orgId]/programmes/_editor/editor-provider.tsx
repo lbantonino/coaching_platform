@@ -49,6 +49,8 @@ export function useEditor<P extends ProgramPlan | ProgramDraft = ProgramDraft>()
   return value as unknown as EditorValue<P>;
 }
 
+// À monter avec une clé qui contient la révision lue sur le serveur (voir les pages) : l'état local
+// ne suit pas les nouvelles props, c'est la clé qui le renouvelle.
 export function EditorProvider({
   organizationId,
   target,

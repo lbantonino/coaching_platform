@@ -64,7 +64,7 @@ const endurance = (): RunningContent => ({
 });
 
 describe("saisie des mesures", () => {
-  it("lit une durée en minutes, en mm:ss ou en h:mm:ss", () => {
+  it("lit une durée en minutes, en mm:ss ou en h:mm:ss ; l'écrit toujours en minutes", () => {
     expect(parseDuration("2:00")).toBe(120);
     expect(parseDuration("45")).toBe(2700);
     expect(parseDuration("1:15:00")).toBe(4500);
@@ -72,7 +72,8 @@ describe("saisie des mesures", () => {
     expect(parseDuration("2:75")).toBeNull();
     expect(parseDuration("abc")).toBeNull();
     expect(durationField(120)).toEqual({ value: "2:00", unit: "min" });
-    expect(durationField(4500)).toEqual({ value: "1:15:00", unit: "h" });
+    // Running : toujours en minutes, jamais en heures (règle d'Antonino du 10/11).
+    expect(durationField(4500)).toEqual({ value: "75:00", unit: "min" });
   });
   it("lit une distance en mètres ou en kilomètres", () => {
     expect(parseDistance("800")).toBe(800);

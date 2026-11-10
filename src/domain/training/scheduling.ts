@@ -1,3 +1,4 @@
+import { localId } from "./plan-edit";
 import type { Phase, Week } from "./program-plan";
 import { WEEKDAYS, type SessionDraft, type Weekday } from "./session-v2";
 
@@ -174,10 +175,15 @@ export function proposeWeekDays(
   return result;
 }
 
-// « Appliquer ce jour à » (03b, choix du jour d'une séance) : la séance à la position `slot` (ordre
-// du coach dans la semaine source) reçoit ce jour et cette heure (ou « sans jour ») dans chaque semaine
-// visée. Une semaine visée passe en jours fixes, ses autres séances gardent leur jour. Les semaines
-// passées (BR-07) et les séances avec le coach (BR-06) ne changent pas.
+// « Appliquer ce jour à » (03b, choix du jour d'une séance) : la séance reçoit ce jour (et cette
+// heure, ou « sans jour ») dans chaque semaine visée. Dans une autre semaine, « la même séance » est :
+// 1. celle qui porte le même nom ;
+// 2. sinon, si la semaine a autant de séances que la semaine source (programme parti d'un modèle),
+//    celle à la même place (règle de la maquette : la séance n de chaque semaine) ;
+// 3. sinon, la séance n'y est pas : elle y est COPIÉE à ce jour (demande d'Antonino du 10/11 : poser
+//    « Sortie longue le mercredi » sur tout le programme sans dupliquer les semaines à la main).
+// Une semaine visée passe en jours fixes ; ses autres séances gardent leur jour. Les semaines passées
+// (BR-07) et les séances avec le coach (BR-06) ne changent pas ; « Sans jour » ne copie rien.
 export function applySessionDay(
   weeks: Week[],
   phases: Phase[],
@@ -187,30 +193,55 @@ export function applySessionDay(
   scope: ScheduleScope,
   dates?: { startDate: string; today: string },
 ): Week[] {
+  const sourceWeek = weeks.find((week) => week.index === sourceIndex);
+  const source = sourceWeek?.sessions[slot];
+  if (!sourceWeek || !source) return weeks;
   const phase = phases.find((item) => item.weekFrom <= sourceIndex && sourceIndex <= item.weekTo);
   const inScope = (index: number) =>
     index === sourceIndex ||
     scope === "program" ||
     (scope === "phase" && phase !== undefined && phase.weekFrom <= index && index <= phase.weekTo);
+  const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+  const taken = new Set(weeks.flatMap((week) => week.sessions.map((session) => session.key)));
+  const placed = {
+    fixedDay: choice.day ?? undefined,
+    fixedTime: choice.day && choice.time ? choice.time : undefined,
+    athleteCanMove: choice.athleteCanMove,
+  };
+
   return weeks.map((week) => {
     if (!inScope(week.index)) return week;
     if (week.index !== sourceIndex && dates && isPastWeek(dates.startDate, week.index, dates.today))
       return week;
-    const target = week.sessions[slot];
-    if (!target || target.withCoach) return week;
+    const at =
+      week.index === sourceIndex
+        ? slot
+        : (() => {
+            const byName = week.sessions.findIndex((session) =>
+              sameName(session.title, source.title),
+            );
+            if (byName >= 0) return byName;
+            return week.sessions.length === sourceWeek.sessions.length ? slot : -1;
+          })();
+    const target = at >= 0 ? week.sessions[at] : undefined;
+    if (target?.withCoach) return week;
+    if (target) {
+      return {
+        ...week,
+        scheduling: "fixed",
+        sessions: week.sessions.map((session, i) =>
+          i === at ? { ...session, ...placed } : session,
+        ),
+      };
+    }
+    // Pas de séance correspondante : une copie, à ce jour (jamais avec le rendez-vous du coach).
+    if (choice.day === null || week.sessions.length >= 14) return week;
+    const key = localId("s", taken);
+    taken.add(key);
     return {
       ...week,
       scheduling: "fixed",
-      sessions: week.sessions.map((session, i) =>
-        i === slot
-          ? {
-              ...session,
-              fixedDay: choice.day ?? undefined,
-              fixedTime: choice.day && choice.time ? choice.time : undefined,
-              athleteCanMove: choice.athleteCanMove,
-            }
-          : session,
-      ),
+      sessions: [...week.sessions, { ...source, ...placed, key, withCoach: undefined }],
     };
   });
 }

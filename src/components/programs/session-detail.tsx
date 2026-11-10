@@ -1,79 +1,82 @@
-import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
+import { detailItems } from "@/domain/training/card-lines";
+import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import type { SessionBody } from "@/domain/training/session-v2";
-import { sessionHeadline, sessionStats, sessionSteps } from "@/domain/training/session-view";
+import {
+  sessionHeadline,
+  sessionStats,
+  sessionSteps,
+  type ViewStep,
+} from "@/domain/training/session-view";
+
+import { SessionLine } from "./session-line";
 
 // Détail d'une séance (maquette 03 : panneau de droite EDT-01 sur ordinateur, page « Une séance »
-// EDT-05 sur téléphone ; page d'un modèle de séance) : titre, deux chiffres clés, puis une ligne par
-// étape (jamais de graphique : règle 2 du dossier de design). Le filet suit la discipline ;
-// échauffement et retour au calme restent neutres.
+// EDT-05 sur téléphone ; page d'un modèle de séance ; onglet Programme de la fiche d'un sportif) :
+// titre, deux chiffres clés, puis chaque étape (jamais de graphique : règle 2 du dossier de design).
+// Le filet suit la discipline ; échauffement et retour au calme restent neutres. Dans une étape, une
+// info par ligne avec les règles des cartes de l'agenda (demande d'Antonino du 10/11 : puces, gras),
+// en entier : noms complets, et en musculation la charge, le RIR et le repos.
 
 type Place = { position?: number; week?: string };
 
-export function SessionHeading({
-  session,
-  position,
-  week,
-  variant,
-}: { session: SessionBody; variant: "panel" | "page" } & Place) {
-  const discipline = session.content.discipline;
-  const kicker = [
-    disciplineLabels[discipline],
-    position ? `Séance ${position}` : null,
-    variant === "page" ? week : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-  const line =
-    variant === "panel"
-      ? [session.sessionType, week].filter(Boolean).join(" · ")
-      : `${session.sessionType} · ${sessionHeadline(session)}`;
+// Ce qu'affiche le détail, quelle que soit la séance (structurée v2, ou publiée en v1 en texte).
+export type SessionDetailModel = {
+  discipline: Discipline;
+  title: string;
+  // « Hyrox · Séance 2 ».
+  kicker: string;
+  // « Circuit · Semaine 1 ».
+  line: string;
+  stats: { label: string; value: string }[];
+  steps: ViewStep[];
+};
+
+function Heading({ model, variant }: { model: SessionDetailModel; variant: "panel" | "page" }) {
   return (
     <div className={`flex flex-col ${variant === "page" ? "gap-1.5 px-1" : "gap-1"}`}>
       <span className="flex items-center gap-[7px] text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase">
         <span
           aria-hidden
-          className={`size-[7px] rounded-full ${disciplineStyles[discipline].dot}`}
+          className={`size-[7px] rounded-full ${disciplineStyles[model.discipline].dot}`}
         />
-        {kicker}
+        {model.kicker}
       </span>
       <h2
         className={`font-bold tracking-[-0.02em] text-text ${
           variant === "page" ? "text-[24px] leading-[1.15]" : "text-[21px] leading-[1.2]"
         }`}
       >
-        {session.title}
+        {model.title}
       </h2>
-      <p className={`text-muted ${variant === "page" ? "text-[13.5px]" : "text-[13px]"}`}>{line}</p>
+      <p className={`text-muted ${variant === "page" ? "text-[13.5px]" : "text-[13px]"}`}>
+        {model.line}
+      </p>
     </div>
   );
 }
 
-export function SessionBlocks({
-  session,
-  variant,
-}: {
-  session: SessionBody;
-  variant: "panel" | "page";
-}) {
-  const discipline = session.content.discipline;
+function StepBlocks({ model, variant }: { model: SessionDetailModel; variant: "panel" | "page" }) {
+  const { discipline } = model;
   const page = variant === "page";
   return (
     <>
-      <dl className="grid grid-cols-2 gap-2">
-        {sessionStats(session).map((stat) => (
-          <div
-            key={stat.label}
-            className="flex flex-col gap-0.5 rounded-[12px] bg-surface-2 px-3 py-2.5"
-          >
-            <dt className="text-[12px] text-muted">{stat.label}</dt>
-            <dd className="text-[15px] font-semibold text-text">{stat.value}</dd>
-          </div>
-        ))}
-      </dl>
+      {model.stats.length > 0 ? (
+        <dl className="grid grid-cols-2 gap-2">
+          {model.stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="flex flex-col gap-0.5 rounded-[12px] bg-surface-2 px-3 py-2.5"
+            >
+              <dt className="text-[12px] text-muted">{stat.label}</dt>
+              <dd className="text-[15px] font-semibold text-text">{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
       <ol className="flex flex-col gap-1.5">
-        {sessionSteps(session).map((step, i) => {
+        {model.steps.map((step, i) => {
           const neutral = /^(échauffement|retour au calme)/i.test(step.title);
-          const detail = step.repeat ? step.repeat.lines.join(" + ") : step.lines.join(" · ");
+          const items = detailItems(step, discipline);
           return (
             <li
               key={i}
@@ -90,11 +93,19 @@ export function SessionBlocks({
                   <span className="min-w-0">{step.title}</span>
                   {step.badge ? <span className="whitespace-nowrap">{step.badge}</span> : null}
                 </span>
-                {detail ? (
+                {items.length > 0 ? (
                   <span
-                    className={`leading-[1.45] text-muted ${page ? "text-[13px]" : "text-[12.5px]"}`}
+                    className={`mt-0.5 flex flex-col gap-0.5 text-text ${page ? "text-[13px]" : "text-[12.5px]"}`}
                   >
-                    {detail}
+                    {items.map((item, j) => (
+                      <SessionLine
+                        key={j}
+                        text={item.text}
+                        discipline={discipline}
+                        dot={disciplineStyles[discipline].dot}
+                        item={item}
+                      />
+                    ))}
                   </span>
                 ) : null}
               </span>
@@ -108,25 +119,76 @@ export function SessionBlocks({
 
 // Panneau (ordinateur) : tout dans la carte. Page (téléphone, modèle) : le titre au-dessus, la carte
 // des chiffres et des étapes en dessous.
-export function SessionDetail({
-  session,
+export function SessionDetailView({
+  model,
   variant = "panel",
-  ...place
-}: { session: SessionBody; variant?: "panel" | "page" } & Place) {
+  heading = true,
+}: {
+  model: SessionDetailModel;
+  variant?: "panel" | "page";
+  // Sans titre : dans une feuille dont l'en-tête porte déjà le nom de la séance.
+  heading?: boolean;
+}) {
   if (variant === "page") {
     return (
       <div className="flex flex-col gap-3">
-        <SessionHeading session={session} variant="page" {...place} />
+        <Heading model={model} variant="page" />
         <section className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-4">
-          <SessionBlocks session={session} variant="page" />
+          <StepBlocks model={model} variant="page" />
         </section>
       </div>
     );
   }
   return (
     <div className="flex flex-col gap-3.5">
-      <SessionHeading session={session} variant="panel" {...place} />
-      <SessionBlocks session={session} variant="panel" />
+      {heading ? <Heading model={model} variant="panel" /> : null}
+      <StepBlocks model={model} variant="panel" />
     </div>
+  );
+}
+
+// Le modèle d'une séance structurée (brouillon, modèle de séance).
+export function sessionDetailModel(
+  session: SessionBody,
+  variant: "panel" | "page",
+  { position, week }: Place,
+): SessionDetailModel {
+  const discipline = session.content.discipline;
+  return {
+    discipline,
+    title: session.title,
+    kicker: [
+      disciplineLabels[discipline],
+      position ? `Séance ${position}` : null,
+      variant === "page" ? week : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    line:
+      variant === "panel"
+        ? [session.sessionType, week].filter(Boolean).join(" · ")
+        : `${session.sessionType} · ${sessionHeadline(session)}`,
+    stats: sessionStats(session),
+    steps: sessionSteps(session),
+  };
+}
+
+export function SessionBlocks({
+  session,
+  variant,
+}: {
+  session: SessionBody;
+  variant: "panel" | "page";
+}) {
+  return <StepBlocks model={sessionDetailModel(session, variant, {})} variant={variant} />;
+}
+
+export function SessionDetail({
+  session,
+  variant = "panel",
+  ...place
+}: { session: SessionBody; variant?: "panel" | "page" } & Place) {
+  return (
+    <SessionDetailView model={sessionDetailModel(session, variant, place)} variant={variant} />
   );
 }

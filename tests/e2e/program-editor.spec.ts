@@ -59,6 +59,23 @@ test("le coach crée un brouillon depuis un modèle et modifie une séance Runni
       .first()
       .click();
   await page.getByRole("textbox", { name: "Durée de l'étape" }).fill("12");
+  // Téléphone (demande du 10/11) : l'allure s'écrit sans « : » au pavé numérique, il se pose seul.
+  // Sur téléphone, l'étape s'édite dans la feuille « Modifier l'étape » (le choix y est un bouton
+  // radio caché sous son libellé, dans une feuille qui défile : on lui envoie le clic).
+  const stepPanel = phone ? page.getByRole("dialog", { name: "Modifier l'étape" }) : page;
+  if (phone) await stepPanel.getByRole("radio", { name: "Allure" }).dispatchEvent("click");
+  else
+    await stepPanel
+      .getByRole("group", { name: "Cible de l'étape" })
+      .filter({ visible: true })
+      .getByText("Allure", { exact: true })
+      .click();
+  const fastest = stepPanel
+    .getByRole("textbox", { name: "Allure la plus rapide" })
+    .filter({ visible: true });
+  await fastest.fill("");
+  await fastest.pressSequentially("455");
+  await expect(fastest).toHaveValue("4:55");
   if (phone) await page.getByRole("button", { name: "Valider l'étape" }).click();
   await expect(page.getByRole("button", { name: /12 min$/ }).first()).toBeVisible();
 
@@ -69,6 +86,16 @@ test("le coach crée un brouillon depuis un modèle et modifie une séance Runni
     await page.getByRole("button", { name: "Terminer" }).click();
   }
   await expect(page).toHaveURL(/\?semaine=1&seance=/);
+  // De retour, une nouvelle séance s'ajoute : l'éditeur repart du brouillon à jour (bug du 10/11 :
+  // l'ancien état réaffiché enregistrait en conflit, puis « Page introuvable »).
+  await page.getByRole("button", { name: "Ajouter une séance" }).click();
+  await expect(page).toHaveURL(/\/seances\/[^/]+$/);
+  await expect(
+    page
+      .getByText(/Séance 4 · Semaine 1/i)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   // La modification est enregistrée dans le brouillon : la séance l'affiche au retour.
   await page.goto(programUrl);
   if (phone) await page.getByRole("button", { name: /^Semaine 1 / }).click();
@@ -179,5 +206,39 @@ test("depuis la fiche du sportif : créer, fixer les jours, publier, retrouver l
   await expect(page.getByText(title).filter({ visible: true }).first()).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Ouvrir l'éditeur" }).filter({ visible: true }),
+  ).toBeVisible();
+  if (phone) return;
+
+  // Synchronisation (demande d'Antonino du 10/11) : une séance modifiée depuis la fiche va dans le
+  // brouillon ; « Terminer » ramène à la fiche, qui propose de publier ; une fois publié, la fiche
+  // montre la nouvelle valeur.
+  const week = page.getByRole("region", { name: /Semaine/ });
+  await week.locator("button[aria-pressed]").first().click();
+  await page.getByRole("link", { name: "Modifier la séance" }).filter({ visible: true }).click();
+  await expect(page).toHaveURL(/\/seances\/[^/?]+\?retour=/);
+  await page.getByRole("textbox", { name: "Durée de l'étape" }).fill("12");
+  await expect(page.getByText("Enregistré", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Terminer" }).click();
+  await expect(page).toHaveURL(/onglet=programme/);
+  await expect(page.getByText("Modifications non publiées.")).toBeVisible();
+  await page.getByRole("button", { name: "Publier la version 2" }).click();
+  await page
+    .getByRole("dialog", { name: /^Publier le programme/ })
+    .getByRole("button", { name: "Publier la version 2" })
+    .click();
+  await expect(page.getByText("Programme publié (version 2).")).toBeVisible();
+  await expect(page.getByText("Modifications non publiées.")).toHaveCount(0);
+  await expect(
+    page
+      .getByText(/Publié v2/)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
+  await week.locator("button[aria-pressed]").first().click();
+  await expect(
+    page
+      .getByRole("region", { name: /^Détail de la séance/ })
+      .getByText("12 min", { exact: true })
+      .first(),
   ).toBeVisible();
 });

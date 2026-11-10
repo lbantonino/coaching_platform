@@ -8,7 +8,6 @@ import {
   formatSeconds,
   sessionSteps,
 } from "@/domain/training/session-view";
-import { parseSegment } from "@/features/programs/session-display";
 
 import { draft, hyroxSession, runningSession, strengthSession } from "./fixtures/program-v2";
 
@@ -46,9 +45,6 @@ describe("sessionSteps (une info par ligne, format de la v1)", () => {
       },
     });
     expect(steps[2]?.lines).toEqual(["10 min · Z2"]);
-    // La page d'une séance relit ces lignes comme celles de la v1.
-    expect(parseSegment("2 min de récupération (trot)").kind).toBe("recovery");
-    expect(parseSegment("15 min @6:15 min/km")).toMatchObject({ kind: "effort", value: "15 min" });
   });
   it("Musculation : échauffement, exercices sur une ligne chacun, superset répété", () => {
     const steps = sessionSteps(strengthSession(EXERCISE));

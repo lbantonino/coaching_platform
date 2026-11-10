@@ -63,6 +63,7 @@ async function Template({ orgId, templateId }: { orgId: string; templateId: stri
     };
     return (
       <EditorProvider
+        key={`${program.id}:${program.version}`}
         organizationId={organizationId}
         target={{ kind: "template", templateId: program.id }}
         readOnly={program.source === "coory"}
