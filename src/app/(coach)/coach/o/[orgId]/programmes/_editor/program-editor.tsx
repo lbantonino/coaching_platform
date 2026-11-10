@@ -3,6 +3,7 @@
 import {
   Archive,
   ArrowLeft,
+  CalendarDays,
   ChevronRight,
   Copy,
   Eye,
@@ -25,7 +26,8 @@ import { EditorSessionCard } from "@/components/programs/editor-session-card";
 import { SessionDetail } from "@/components/programs/session-detail";
 import { Avatar } from "@/components/ui/avatar";
 import { MoreMenu, type MoreMenuItem } from "@/components/ui/more-menu";
-import { ConfirmDialog } from "@/components/ui/overlay";
+import { ConfirmDialog, DialogBody, Overlay } from "@/components/ui/overlay";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useToast } from "@/components/ui/toast";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import {
@@ -49,7 +51,17 @@ import {
   type Week,
 } from "@/domain/training/program-plan";
 import { validateForPublish, type PublishContext } from "@/domain/training/program-publication";
-import { isPastWeek, orderedSessions, weekMonday } from "@/domain/training/scheduling";
+import {
+  applySessionDay,
+  applyWeekSchedule,
+  isPastWeek,
+  orderedSessions,
+  setWeekFixed,
+  setWeekOrdered,
+  weekMonday,
+  type ScheduleScope,
+} from "@/domain/training/scheduling";
+import type { Weekday } from "@/domain/training/session-v2";
 import type { SessionBody, SessionDraft } from "@/domain/training/session-v2";
 import { sessionHeadline } from "@/domain/training/session-view";
 import {
@@ -62,6 +74,15 @@ import {
 } from "@/features/programs/actions";
 
 import { saveStatusLabel, useEditor } from "./editor-provider";
+import {
+  DayPad,
+  DayPicker,
+  DayStrip,
+  MiniDayStrip,
+  ProposeDaysDialog,
+  type DayChoice,
+  type DaysContext,
+} from "./fixed-days";
 import {
   DuplicateWeekSheet,
   PublishSheet,
@@ -178,6 +199,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     | { renamePhase: string }
   >(null);
   const [pending, startTransition] = useTransition();
+  // Jours fixes (03b) : le choix du jour d'une séance (panneau à droite ou feuille du téléphone) et la
+  // proposition en passant une semaine en « Jours fixes ».
+  const [dayPicker, setDayPicker] = useState<{ key: string; sheet: boolean } | null>(null);
+  const [proposal, setProposal] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [openedRevision] = useState(editor.revision);
   // Téléphone : chaque niveau de la pile s'ouvre en haut de la page.
@@ -252,7 +277,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     startTransition(async () => {
       const saved = await editor.flush();
       if (!saved) return setPublishError("Le brouillon n'est pas enregistré. Réessaie.");
-      const result = await publishProgram(organizationId, target.programId, editor.revision);
+      const result = await publishProgram(
+        organizationId,
+        target.programId,
+        editor.currentRevision(),
+      );
       if (!result.ok) return setPublishError(result.issues?.[0] ?? result.message);
       setSheet(null);
       toast(`Programme publié (version ${result.number}).`, {
@@ -506,16 +535,104 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     ? [
         draft ? weekRange(draft.startDate, week.index) : phaseOfWeek(plan.phases, week.index)?.name,
         `${week.sessions.length} séance${week.sessions.length > 1 ? "s" : ""}`,
-        week.scheduling === "fixed"
-          ? "jours fixes"
-          : draft
-            ? "dans l'ordre, sans jour fixe"
-            : "dans l'ordre",
+        // Le sélecteur « Dans l'ordre | Jours fixes » le dit déjà ; en lecture seule, on l'écrit.
+        readOnly
+          ? week.scheduling === "fixed"
+            ? "jours fixes"
+            : draft
+              ? "dans l'ordre, sans jour fixe"
+              : "dans l'ordre"
+          : null,
       ]
         .filter(Boolean)
         .join(" · ")
     : "";
   const weekPhase = week ? phaseOfWeek(plan.phases, week.index) : null;
+
+  const daysContext: DaysContext = {
+    firstName: meta.athlete?.firstName ?? "le sportif",
+    availableDays: meta.publishContext?.availableDays ?? [],
+    startDate: draft?.startDate ?? null,
+  };
+  const dates = draft ? { startDate: draft.startDate, today: meta.today } : undefined;
+  const switchMode = (mode: "ordered" | "fixed") => {
+    if (!week || mode === week.scheduling) return;
+    if (mode === "fixed") return setProposal(true);
+    update((current) => ({
+      ...current,
+      weeks: current.weeks.map((item) => (item.index === week.index ? setWeekOrdered(item) : item)),
+    }));
+    setDayPicker(null);
+    toast(`Semaine ${week.index} : dans l'ordre, sans jour fixe.`);
+  };
+  const fixDays = (days: Map<string, Weekday>, scope: ScheduleScope) => {
+    if (!week) return;
+    update((current) => {
+      const weeks = current.weeks.map((item) =>
+        item.index === week.index ? setWeekFixed(item, days) : item,
+      );
+      return {
+        ...current,
+        weeks:
+          scope === "week"
+            ? weeks
+            : applyWeekSchedule(weeks, current.phases, week.index, scope, dates),
+      };
+    });
+    setProposal(false);
+    toast(
+      scope === "week"
+        ? `Jours fixés pour la semaine ${week.index}.`
+        : "Jours fixés ; les semaines passées n'ont pas changé.",
+    );
+  };
+  const applyDay = (key: string, choice: DayChoice, scope: ScheduleScope) => {
+    if (!week) return;
+    const slot = week.sessions.findIndex((item) => item.key === key);
+    if (slot < 0) return;
+    update((current) => ({
+      ...current,
+      weeks: applySessionDay(current.weeks, current.phases, week.index, slot, choice, scope, dates),
+    }));
+    setDayPicker(null);
+    toast(
+      scope === "week" ? "Jour de la séance enregistré." : "Jour appliqué aux autres semaines.",
+    );
+  };
+  const openDayPicker = (key: string) => {
+    if (readOnly) return;
+    setSessionKey(key);
+    setDayPicker({ key, sheet: !window.matchMedia("(min-width: 1024px)").matches });
+  };
+  const pickerSession = dayPicker ? ordered.find((item) => item.key === dayPicker.key) : undefined;
+  const dayPickerView = (compact: boolean) =>
+    pickerSession && week ? (
+      <DayPicker
+        key={pickerSession.key}
+        session={pickerSession}
+        week={week}
+        phase={weekPhase}
+        weeksCount={plan.weeks.length}
+        context={daysContext}
+        compact={compact}
+        onValidate={(choice, scope) => applyDay(pickerSession.key, choice, scope)}
+        onCancel={() => setDayPicker(null)}
+      />
+    ) : null;
+  const fixedWeek = week?.scheduling === "fixed";
+  const modeSwitch = (size: "card" | "tall") =>
+    readOnly || !week ? null : (
+      <SegmentedControl
+        label={`Organisation de la semaine ${week.index}`}
+        size={size}
+        value={week.scheduling}
+        onChange={switchMode}
+        options={[
+          { value: "ordered", label: "Dans l'ordre" },
+          { value: "fixed", label: "Jours fixes" },
+        ]}
+      />
+    );
 
   const sessionCards = (mobile: boolean) =>
     ordered.map((item, i) => (
@@ -542,6 +659,17 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           !readOnly && week?.scheduling === "ordered" && i < ordered.length - 1
             ? () => update((current) => moveSession(current, week.index, item.key, 1))
             : undefined
+        }
+        dayPad={
+          fixedWeek && week ? (
+            <DayPad
+              session={item}
+              weekIndex={week.index}
+              context={daysContext}
+              selected={!mobile && item.key === session?.key}
+              onOpen={() => openDayPicker(item.key)}
+            />
+          ) : undefined
         }
       />
     ));
@@ -820,16 +948,17 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           open={sheet === "publish"}
           onClose={() => setSheet(null)}
           version={nextVersion}
-          summary={[
-            { label: "Programme", value: plan.title },
-            { label: "Sportif", value: meta.athlete?.name ?? "" },
-            { label: "Semaines", value: String(plan.weeks.length) },
-            { label: "Séances", value: String(sessionCount) },
-          ]}
+          weeks={plan.weeks.length}
+          sessions={sessionCount}
+          firstName={meta.athlete?.firstName ?? "Le sportif"}
           issues={issues}
           pending={pending}
           error={publishError}
           onConfirm={publish}
+          onSee={(index) => {
+            setSheet(null);
+            chooseWeek(index);
+          }}
         />
       ) : null}
     </>
@@ -947,11 +1076,24 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                             allégée
                           </span>
                         ) : null}
+                        {item.scheduling === "fixed" ? (
+                          <CalendarDays
+                            aria-label="jours fixes"
+                            size={14}
+                            strokeWidth={1.8}
+                            className="shrink-0 text-violet"
+                          />
+                        ) : null}
                       </button>
                     );
                   })}
                 </div>
               ))}
+              {plan.weeks.some((item) => item.scheduling === "fixed") ? (
+                <span className="mt-1.5 px-2 text-[11.5px] leading-[1.45] text-faint">
+                  Violet = jours fixes.
+                </span>
+              ) : null}
             </div>
             {readOnly ? null : (
               <div className="mt-2 flex gap-1">
@@ -1004,23 +1146,42 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                     <p className="truncate text-[13px] text-muted">{weekMeta}</p>
                   </div>
                   {readOnly ? null : (
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSheet("duplicate")}
-                        className={smallButton}
-                      >
-                        <Copy aria-hidden size={13} strokeWidth={2} />
-                        Dupliquer
-                      </button>
-                      <MoreMenu
-                        label={`Plus d'actions sur la semaine ${week.index}`}
-                        title={`Semaine ${week.index}`}
-                        items={weekMenu}
-                      />
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSheet("duplicate")}
+                          className={smallButton}
+                        >
+                          <Copy aria-hidden size={13} strokeWidth={2} />
+                          Dupliquer
+                        </button>
+                        <MoreMenu
+                          label={`Plus d'actions sur la semaine ${week.index}`}
+                          title={`Semaine ${week.index}`}
+                          items={weekMenu}
+                        />
+                      </div>
+                      {modeSwitch("card")}
                     </div>
                   )}
                 </div>
+                {fixedWeek ? (
+                  <div className="mt-3 flex flex-col gap-2">
+                    <DayStrip
+                      week={week}
+                      context={daysContext}
+                      selectedKey={session?.key ?? null}
+                      onPick={(key) => setSessionKey(key)}
+                    />
+                    {readOnly ? null : (
+                      <p className="text-[12.5px] leading-[1.45] text-muted">
+                        Clique sur le jour d&apos;une séance pour le changer. Les numéros suivent
+                        l&apos;ordre des jours.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
                 <div className="mt-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pb-1">
                   {ordered.length === 0 ? (
                     <p className="rounded-[15px] bg-surface-2 px-4 py-6 text-center text-[13.5px] text-muted">
@@ -1036,9 +1197,22 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           </section>
 
           {/* La séance choisie */}
-          <aside aria-label="Séance choisie" className={`${card} flex min-h-0 flex-col p-[18px]`}>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{sessionDetail}</div>
-            {sessionActions ? <div className="mt-4">{sessionActions}</div> : null}
+          <aside
+            aria-label={dayPicker && !dayPicker.sheet ? "Jour de la séance" : "Séance choisie"}
+            className={`${card} flex min-h-0 flex-col p-[18px] ${dayPicker && !dayPicker.sheet ? "inset-ring-[1.5px] inset-ring-violet/35" : ""}`}
+          >
+            {dayPicker && !dayPicker.sheet && pickerSession ? (
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                {dayPickerView(true)}
+              </div>
+            ) : (
+              <>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                  {sessionDetail}
+                </div>
+                {sessionActions ? <div className="mt-4">{sessionActions}</div> : null}
+              </>
+            )}
           </aside>
         </div>
       </div>
@@ -1217,12 +1391,18 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                 {[
                   draft ? weekRange(draft.startDate, week.index) : null,
                   weekPhase?.name,
-                  week.scheduling === "fixed" ? "jours fixes" : "dans l'ordre, sans jour fixe",
+                  readOnly
+                    ? week.scheduling === "fixed"
+                      ? "jours fixes"
+                      : "dans l'ordre, sans jour fixe"
+                    : null,
                 ]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
             </div>
+            {modeSwitch("tall")}
+            {fixedWeek ? <MiniDayStrip week={week} context={daysContext} /> : null}
             {readOnly ? null : (
               <div className="flex gap-2">
                 <button
@@ -1316,6 +1496,24 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       </div>
 
       {sheets}
+      <Overlay
+        open={Boolean(dayPicker?.sheet && pickerSession)}
+        onClose={() => setDayPicker(null)}
+        label="Jour de la séance"
+        size="form"
+      >
+        <DialogBody>{dayPicker?.sheet ? dayPickerView(false) : null}</DialogBody>
+      </Overlay>
+      {week ? (
+        <ProposeDaysDialog
+          open={proposal}
+          onClose={() => setProposal(false)}
+          week={week}
+          phase={weekPhase}
+          context={daysContext}
+          onFix={fixDays}
+        />
+      ) : null}
     </>
   );
 }

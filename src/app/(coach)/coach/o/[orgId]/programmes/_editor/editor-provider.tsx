@@ -33,6 +33,9 @@ type EditorValue<P extends ProgramPlan | ProgramDraft = ProgramPlan | ProgramDra
   status: SaveStatus;
   // Révision du brouillon (programme) ou version (modèle) actuellement enregistrée.
   revision: number;
+  // La même, lue au moment de l'appel (après un flush, avant le rendu suivant) : publier envoie
+  // toujours la révision qui vient d'être enregistrée.
+  currentRevision: () => number;
   // Enregistre tout de suite ce qui attend (avant de publier ou d'ouvrir une séance).
   flush: () => Promise<boolean>;
   retry: () => void;
@@ -154,6 +157,7 @@ export function EditorProvider({
     update: update as EditorValue["update"],
     status,
     revision,
+    currentRevision: () => revisionRef.current,
     flush,
     retry: () => {
       dirty.current = true;

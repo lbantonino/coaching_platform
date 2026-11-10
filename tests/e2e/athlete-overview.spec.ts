@@ -84,11 +84,21 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(page).toHaveURL(/onglet=objectifs/);
   await expect(page.getByText("Temps visé 1:15:00")).toBeVisible();
 
-  // Onglet Programme : le programme publié d'Inès (12 semaines, version 1).
+  // Onglet Programme (maquette 07, D-157) : le programme publié d'Inès (version 1), sa semaine
+  // et l'accès à l'éditeur.
   await openAthleteTab(page, "Programme");
-  const summary = page.getByRole("region", { name: "Prépa Hyrox Bruxelles · bloc 1" });
-  await expect(summary).toContainText("12 semaines");
-  await expect(summary).toContainText("Publiée n° 1");
+  await expect(
+    page.getByRole("heading", { name: "Prépa Hyrox Bruxelles · bloc 1" }).filter({ visible: true }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByText(/Publié v1/)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Ouvrir l'éditeur" }).filter({ visible: true }),
+  ).toBeVisible();
   // Agenda d'Inès = son programme (D-46), une semaine à la fois (maquette 2c du 03/11) : 5 séances
   // numérotées sans jour. Ses 5 séances par semaine COMPRENNENT ses 2 rendez-vous avec le coach (pas
   // 5 + 2) : coaching du mardi 7 h et circuit collectif du samedi 10 h, écrits sur leur carte.
@@ -120,8 +130,18 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await page.getByRole("link", { name: "Toutes les semaines" }).click();
   await expect(page.getByRole("region", { name: /^Semaine \d+$/ })).toHaveCount(12);
 
-  // Une séance s'ouvre : étapes, bloc répété, conseils, statut « À faire ».
-  await firstWeek.getByRole("link", { name: /Endurance rapide/ }).click();
+  // Une séance se déplie (maquette 2c, D-157), puis sa page s'ouvre : étapes, bloc répété,
+  // conseils, statut « À faire ».
+  await firstWeek
+    .getByRole("button", { name: /^Déplier la séance \d+ : Endurance rapide$/ })
+    .click();
+  await expect(
+    firstWeek.getByText("Répéter 5 fois").filter({ visible: true }).first(),
+  ).toBeVisible();
+  await firstWeek
+    .getByRole("link", { name: "Ouvrir la page de la séance" })
+    .filter({ visible: true })
+    .click();
   await expect(page.getByRole("heading", { name: "Endurance rapide", level: 1 })).toBeVisible();
   const steps = page.getByRole("list", { name: "Étapes de la séance" });
   await expect(steps).toContainText("Échauffement");

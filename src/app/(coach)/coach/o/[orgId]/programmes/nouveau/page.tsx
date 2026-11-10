@@ -76,6 +76,7 @@ async function NewProgram({
           templateMode={templateMode}
           initialAthleteId={athleteId}
           initialTemplateId={templateId}
+          initialCopy={query.depart === "copie"}
           defaultStartDate={nextMonday(todayIsoInBrussels())}
         />
       </PageBody>

@@ -28,8 +28,11 @@ export type EditorSessionCardProps = {
   // Absent = flèche désactivée (première ou dernière séance).
   onMoveUp?: () => void;
   onMoveDown?: () => void;
-  // Contenu ajouté sous la carte (pavé du jour en jours fixes, plus tard).
+  // Contenu ajouté sous le texte de la carte.
   aside?: ReactNode;
+  // Jours fixes (03b, FIX-02 / 03) : le pavé du jour à gauche ; ni poignée ni flèches (l'ordre suit
+  // les jours). Carte : 9 / 12 / 9 / 9 px sur ordinateur, 10 / 14 / 10 / 10 sur téléphone.
+  dayPad?: ReactNode;
 };
 
 const arrowClass =
@@ -48,17 +51,23 @@ export function EditorSessionCard({
   onMoveUp,
   onMoveDown,
   aside,
+  dayPad,
 }: EditorSessionCardProps) {
   const styles = disciplineStyles[discipline];
   return (
     <div
-      className={`relative flex items-center gap-2.5 rounded-[18px] bg-surface py-3.5 pr-2.5 pl-4 transition-shadow duration-150 lg:gap-3 lg:rounded-[15px] lg:pr-3 lg:pl-2 ${
+      className={`relative flex items-center rounded-[18px] bg-surface transition-shadow duration-150 lg:rounded-[15px] ${
+        dayPad
+          ? "gap-3 py-2.5 pr-3.5 pl-2.5 lg:py-[9px] lg:pr-3 lg:pl-[9px]"
+          : "gap-2.5 py-3.5 pr-2.5 pl-4 lg:gap-3 lg:pr-3 lg:pl-2"
+      } ${
         selected
           ? "inset-ring-[1.5px] inset-ring-violet/55 lg:shadow-lift"
           : "lg:inset-ring lg:inset-ring-line"
       }`}
     >
-      {readOnly ? null : (
+      {dayPad ?? null}
+      {readOnly || dayPad ? null : (
         <GripVertical
           aria-hidden
           size={16}
@@ -109,7 +118,7 @@ export function EditorSessionCard({
         {aside}
       </div>
 
-      {readOnly ? null : (
+      {readOnly || dayPad ? null : (
         <div className="relative z-10 flex shrink-0 flex-col gap-0.5">
           <button
             type="button"

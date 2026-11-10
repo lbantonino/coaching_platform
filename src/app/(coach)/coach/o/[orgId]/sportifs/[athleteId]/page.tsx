@@ -14,21 +14,16 @@ import { listGoals } from "@/features/goals/queries";
 import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { getAthleteNotes } from "@/features/notes/queries";
 import { listReferences } from "@/features/references/queries";
-import { getAthleteProgram } from "@/features/programs/queries";
+import { getAthleteProgram, listAthleteProgramRows } from "@/features/programs/queries";
 import { listSessions } from "@/features/sessions/queries";
 import { removeAthletePhoto, uploadAthletePhoto } from "@/features/photos/actions";
 import { todayIsoInBrussels } from "@/lib/format";
 
 import { PhotoForm } from "../../../../photo-form";
 
-import {
-  AGENDA_VIEWS,
-  agendaRange,
-  AthleteAgendaSection,
-  AthleteProgramSection,
-  type AgendaView,
-} from "./athlete-agenda";
+import { AGENDA_VIEWS, agendaRange, AthleteAgendaSection, type AgendaView } from "./athlete-agenda";
 import { AthleteEditForm } from "./athlete-edit-form";
+import { ProgramTab } from "./program-tab";
 import { ProgramWeeksSection, type ProgramView } from "./program-weeks";
 import { AthleteDocuments } from "./athlete-documents";
 import { AthleteHeader, AthleteIdentity } from "./athlete-header";
@@ -198,6 +193,10 @@ async function AthleteSection({
     tab === "agenda" || tab === "programme"
       ? await getAthleteProgram(organizationId, athlete.id)
       : null;
+  // Onglet Programme : les autres programmes du sportif (brouillon jamais publié, programme à copier).
+  const ownPrograms =
+    tab === "programme" ? await listAthleteProgramRows(organizationId, athlete.id) : [];
+  const programsBase = `/coach/o/${organizationId}/programmes`;
   // Ordinateur (demandes d'Antonino du 04/11) : sur ces onglets, la dernière carte descend jusqu'au
   // bas du menu de gauche même quand la page ne défile pas. Agenda : seulement « Toutes les
   // semaines » (la dernière semaine) ; la vue Semaine garde sa taille naturelle (trop de blanc sinon).
@@ -391,13 +390,27 @@ async function AthleteSection({
               </div>
             )
           ) : tab === "programme" ? (
-            <div className="flex w-full max-w-3xl flex-col gap-6">
-              <AthleteProgramSection
-                name={athlete.firstName}
-                program={program}
-                agendaHref={`${basePath}?onglet=agenda`}
-              />
-            </div>
+            // Onglet Programme (maquette 07, D-157) : le programme publié et sa semaine, sinon l'état vide.
+            <ProgramTab
+              name={athlete.firstName}
+              program={program}
+              requestedWeek={programWeek}
+              today={today}
+              basePath={basePath}
+              editorHref={program ? `${programsBase}/${program.id}` : null}
+              newHref={`${programsBase}/nouveau?sportif=${athlete.id}`}
+              copyHref={
+                ownPrograms.some((row) => row.status !== "draft")
+                  ? `${programsBase}/nouveau?sportif=${athlete.id}&depart=copie`
+                  : null
+              }
+              draft={(() => {
+                const draftRow = program ? null : ownPrograms.find((row) => row.status === "draft");
+                return draftRow
+                  ? { title: draftRow.title, href: `${programsBase}/${draftRow.id}` }
+                  : null;
+              })()}
+            />
           ) : (
             // Onglet Historique (maquette « Sportifs », page 2k) : une carte pleine largeur, étirée
             // jusqu'au bas du menu sur ordinateur ; 6 événements, puis « Voir tout l'historique ».

@@ -2,7 +2,12 @@ import "server-only";
 
 import { z } from "zod";
 
+import type { Discipline } from "@/domain/training/discipline";
+import { HYROX_DIVISIONS, type HyroxDivision } from "@/domain/training/program-plan";
 import { parseProgramSession, type ProgramSessionContent } from "@/domain/training/program-session";
+import { weekdayOf } from "@/domain/training/scheduling";
+import { publishedSessionSchema, type Weekday } from "@/domain/training/session-v2";
+import { sessionHeadline } from "@/domain/training/session-view";
 import {
   pickCurrentProgram,
   programListStatus,
@@ -21,12 +26,19 @@ export type ProgramSessionCard = {
   weekIndex: number;
   slotIndex: number;
   content: ProgramSessionContent;
+  // Résumé d'une ligne (« 65 min · zone 2 », « 5 × 2 min · ≈ 45 min ») et jour : fixé (jours fixes)
+  // ou celui du rendez-vous du coach ; null en « dans l'ordre ».
+  headline: string;
+  day: Weekday | null;
+  time: string | null;
+  coachDate: string | null;
 };
 
 export type ProgramWeek = {
   index: number;
   // Phase de la semaine (« Préparation », « Allègement »…), si le coach l'a nommée.
   label: string | null;
+  light: boolean;
   monday: string;
   sunday: string;
   sessions: ProgramSessionCard[];
@@ -40,14 +52,31 @@ export type AthleteProgram = {
   weeksCount: number;
   publicationNumber: number;
   publishedAt: string;
+  discipline: Discipline | null;
+  // Objectif de course du programme (« HYROX Gand · 13 déc. · Open Femmes »).
+  race: { name: string; date: string | null; division: HyroxDivision | null } | null;
   // Coach qui a créé le programme (signature des conseils sur la page d'une séance).
   createdBy: string | null;
   weeks: ProgramWeek[];
 };
 
 const snapshotSchema = z.object({
+  discipline: z.enum(["running", "strength", "hyrox", "hybrid"]).optional(),
+  goal: z
+    .object({
+      raceName: z.string().optional(),
+      raceDate: z.string().optional(),
+      hyroxDivision: z.enum(HYROX_DIVISIONS).optional(),
+    })
+    .optional(),
   weeks: z
-    .array(z.object({ index: z.number().int(), label: z.string().nullable().optional() }))
+    .array(
+      z.object({
+        index: z.number().int(),
+        label: z.string().nullable().optional(),
+        light: z.boolean().optional(),
+      }),
+    )
     .optional(),
 });
 
@@ -90,17 +119,17 @@ export async function getAthleteProgram(
     .order("slot_index");
   if (sessionsError) throw new Error("Lecture des séances du programme impossible.");
 
-  const labels = new Map(
-    (snapshotSchema.safeParse(publication.snapshot_json).data?.weeks ?? []).map((week) => [
-      week.index,
-      week.label ?? null,
-    ]),
+  const snapshot = snapshotSchema.safeParse(publication.snapshot_json).data;
+  const labels = new Map((snapshot?.weeks ?? []).map((week) => [week.index, week.label ?? null]));
+  const lightWeeks = new Set(
+    (snapshot?.weeks ?? []).filter((week) => week.light).map((week) => week.index),
   );
   const weeks: ProgramWeek[] = Array.from({ length: program.weeks_count }, (_, i) => {
     const monday = addDays(program.start_date, 7 * i);
     return {
       index: i + 1,
       label: labels.get(i + 1) ?? null,
+      light: lightWeeks.has(i + 1),
       monday,
       sunday: addDays(monday, 6),
       sessions: [],
@@ -110,11 +139,18 @@ export async function getAthleteProgram(
     const content = parseProgramSession(row.session_json);
     const week = weeks[row.week_index - 1];
     if (content && week) {
+      // v2 : le jour, le rendez-vous et le résumé viennent de la séance structurée.
+      const v2 = publishedSessionSchema.safeParse(row.session_json);
+      const session = v2.success ? v2.data : null;
       week.sessions.push({
         id: row.id,
         weekIndex: row.week_index,
         slotIndex: row.slot_index,
         content,
+        headline: session ? sessionHeadline(session) : `${content.durationMinutes} min`,
+        day: session?.withCoach ? weekdayOf(session.withCoach.date) : (session?.fixedDay ?? null),
+        time: session?.withCoach?.time ?? session?.fixedTime ?? null,
+        coachDate: session?.withCoach?.date ?? null,
       });
     }
   }
@@ -127,6 +163,14 @@ export async function getAthleteProgram(
     weeksCount: program.weeks_count,
     publicationNumber: publication.number,
     publishedAt: publication.published_at,
+    discipline: snapshot?.discipline ?? null,
+    race: snapshot?.goal?.raceName
+      ? {
+          name: snapshot.goal.raceName,
+          date: snapshot.goal.raceDate ?? null,
+          division: snapshot.goal.hyroxDivision ?? null,
+        }
+      : null,
     createdBy: program.created_by,
     weeks,
   };
@@ -337,4 +381,26 @@ export async function listPrograms(
         ? normalize(item.title).includes(search) || normalize(item.athleteName).includes(search)
         : true,
     );
+}
+
+// Programmes d'un sportif (organisation DÉJÀ vérifiée), du plus récent au plus ancien, archivés exclus :
+// l'onglet Programme y cherche un brouillon jamais publié et un programme à copier.
+export async function listAthleteProgramRows(
+  organizationId: string,
+  athleteId: string,
+): Promise<{ id: string; title: string; status: "draft" | "published" }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("programs")
+    .select("id, title, status, updated_at")
+    .eq("organization_id", organizationId)
+    .eq("athlete_id", athleteId)
+    .neq("status", "archived")
+    .order("updated_at", { ascending: false });
+  if (error) throw new Error("Lecture des programmes du sportif impossible.");
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: row.title,
+    status: row.status === "draft" ? "draft" : "published",
+  }));
 }

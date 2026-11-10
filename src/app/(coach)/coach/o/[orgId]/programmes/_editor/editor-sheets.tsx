@@ -1,11 +1,10 @@
 "use client";
 
-import { CircleAlert, TriangleAlert } from "lucide-react";
 import { useId, useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { dlgPrimaryButtonClass } from "@/components/ui/dialog-styles";
-import { DialogFooter, Sheet } from "@/components/ui/overlay";
+import { DialogBody, DialogFooter, Overlay, Sheet } from "@/components/ui/overlay";
 import { RadioMark } from "@/components/ui/radio-choice";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import type { Phase, Week } from "@/domain/training/program-plan";
@@ -294,103 +293,147 @@ export function SessionTemplateSheet({
   );
 }
 
-// Publier (08, PUB-01 / 02) : le résumé de la version, ce qui bloque et ce qui avertit.
+// Publier (08, PUB-01 / 02, D-157) : fenêtre de 480 px sur ordinateur, feuille du bas sur téléphone.
+// Le résumé de la version (semaines, séances, version créée), puis ce qui bloque et ce qui avertit,
+// chacun avec « Voir » (la semaine concernée s'ouvre dans l'éditeur).
+const ISSUE_HINTS: Record<PublishIssue["code"], string> = {
+  no_session: "Un programme publié a au moins une séance.",
+  overlap: "Change la date de début, ou archive l'autre programme.",
+  empty_week: "Le sportif verra une semaine sans séance. Normal si c'est du repos.",
+  same_day: "Possible : c'est seulement pour que tu le saches.",
+  unavailable_day: "Vérifie ses disponibilités, ou change le jour de la séance.",
+  pct_without_max: "Ajoute un repère relié à l'exercice dans sa fiche.",
+  official_without_division: "Choisis la catégorie Hyrox dans l'objectif du programme.",
+  hr_without_max: "Ajoute sa FC max dans ses repères, ou écris la plage en bpm.",
+  coach_session_missing: "Recrée le rendez-vous dans l'Agenda, ou retire « avec le coach ».",
+};
+
 export function PublishSheet({
   open,
   onClose,
   version,
-  summary,
+  weeks,
+  sessions,
+  firstName,
   issues,
   pending,
   error,
   onConfirm,
+  onSee,
 }: {
   open: boolean;
   onClose: () => void;
   version: number;
-  summary: { label: string; value: string }[];
+  weeks: number;
+  sessions: number;
+  firstName: string;
   issues: PublishIssue[];
   pending: boolean;
   error: string | null;
   onConfirm: () => void;
+  onSee: (weekIndex: number) => void;
 }) {
   const blocking = issues.filter((issue) => issue.level === "blocking");
-  const warnings = issues.filter((issue) => issue.level === "warning");
+  const sorted = [...blocking, ...issues.filter((issue) => issue.level === "warning")];
   return (
-    <Sheet
-      open={open}
-      onClose={onClose}
-      size="menu"
-      title={`Publier la version ${version}`}
-      subtitle="Le sportif verra cette version ; tu pourras continuer à modifier le brouillon."
-      footer={
-        <DialogFooter
-          onCancel={onClose}
-          primary={
+    <Overlay open={open} onClose={onClose} label="Publier le programme" size="menu">
+      <DialogBody>
+        <div className="flex flex-col gap-4 pt-2">
+          <div className="flex flex-col gap-1.5">
+            <h2 className="text-[22px] leading-[1.2] font-bold tracking-[-0.015em] text-text">
+              Publier le programme ?
+            </h2>
+            <p className="text-[14px] leading-[1.45] text-muted">
+              {firstName} verra cette version dans son espace, et les PDF seront tirés de cette
+              version.
+            </p>
+          </div>
+          <dl className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Semaines", value: String(weeks) },
+              { label: "Séances", value: String(sessions) },
+              { label: "Version créée", value: `Version ${version}` },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="flex flex-col gap-0.5 rounded-[12px] bg-surface-2 px-3 py-2.5"
+              >
+                <dt className="truncate text-[12px] text-muted">{item.label}</dt>
+                <dd className="truncate text-[17px] font-bold text-text">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+          {sorted.length > 0 ? (
+            <ul className="m-0 flex max-h-[232px] list-none flex-col gap-2 overflow-y-auto overscroll-contain p-0">
+              {sorted.map((issue, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 rounded-[14px] px-3.5 py-3 inset-ring inset-ring-line"
+                >
+                  <span
+                    aria-hidden
+                    className={`mt-px grid size-[22px] shrink-0 place-items-center rounded-full text-[12px] font-bold ${
+                      issue.level === "blocking"
+                        ? "bg-[color-mix(in_srgb,var(--alert)_14%,var(--surface))] text-alert"
+                        : issue.code === "empty_week" || issue.code === "same_day"
+                          ? "bg-surface-2 text-text"
+                          : "bg-[color-mix(in_srgb,var(--warn)_18%,var(--surface))] text-warn"
+                    }`}
+                  >
+                    !
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-[14.5px] leading-[1.35] font-semibold text-text">
+                      {issue.message}
+                    </span>
+                    <span className="text-[13px] leading-[1.45] text-muted">
+                      {ISSUE_HINTS[issue.code]}
+                    </span>
+                  </span>
+                  {issue.weekIndex ? (
+                    <button
+                      type="button"
+                      onClick={() => issue.weekIndex && onSee(issue.weekIndex)}
+                      className="tap-44 shrink-0 text-[13.5px] font-semibold text-violet-text hover:underline"
+                    >
+                      Voir
+                    </button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="text-[12.5px] leading-[1.45] text-muted">
+            {blocking.length > 0
+              ? "À corriger avant de publier : le reste peut attendre."
+              : sorted.length > 0
+                ? `Rien n'est bloquant : tu peux publier et compléter ensuite (cela créera une version ${version + 1}).`
+                : `Tout est prêt. Tu pourras continuer à modifier le brouillon ; publier à nouveau créera une version ${version + 1}.`}
+          </p>
+          {error ? (
+            <p role="alert" className="text-[13.5px] font-medium text-alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="flex flex-col-reverse gap-2 lg:flex-row">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] px-4 text-[15px] font-semibold text-text inset-ring inset-ring-field-ring transition-colors duration-150 hover:bg-surface-2"
+            >
+              Annuler
+            </button>
             <button
               type="button"
               disabled={blocking.length > 0 || pending}
               onClick={onConfirm}
-              className={dlgPrimaryButtonClass}
+              className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98] disabled:opacity-50"
             >
               {pending ? "Publication…" : `Publier la version ${version}`}
             </button>
-          }
-        />
-      }
-    >
-      <div className="flex flex-col gap-4">
-        <dl className="grid grid-cols-2 gap-2">
-          {summary.map((item) => (
-            <div
-              key={item.label}
-              className="flex flex-col gap-0.5 rounded-[12px] bg-surface-2 px-3.5 py-2.5"
-            >
-              <dt className="text-[12px] text-muted">{item.label}</dt>
-              <dd className="truncate text-[14.5px] font-semibold text-text">{item.value}</dd>
-            </div>
-          ))}
-        </dl>
-        {blocking.length > 0 ? (
-          <ul className="flex flex-col gap-2">
-            {blocking.map((issue, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2.5 text-[13.5px] leading-[1.45] text-alert"
-              >
-                <CircleAlert aria-hidden size={16} strokeWidth={2} className="mt-0.5 shrink-0" />
-                {issue.message}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {warnings.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-[13px] font-semibold text-text">À vérifier (ne bloque pas)</p>
-            <ul className="flex max-h-[180px] flex-col gap-2 overflow-y-auto">
-              {warnings.map((issue, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-2.5 text-[13px] leading-[1.45] text-text-2"
-                >
-                  <TriangleAlert
-                    aria-hidden
-                    size={15}
-                    strokeWidth={2}
-                    className="mt-0.5 shrink-0 text-warn"
-                  />
-                  {issue.message}
-                </li>
-              ))}
-            </ul>
           </div>
-        ) : null}
-        {error ? (
-          <p role="alert" className="text-[13.5px] font-medium text-alert">
-            {error}
-          </p>
-        ) : null}
-      </div>
-    </Sheet>
+        </div>
+      </DialogBody>
+    </Overlay>
   );
 }
