@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import type { Week } from "@/domain/training/program-plan";
 import {
+  applySessionDay,
   applyWeekSchedule,
   isPastWeek,
   orderedSessions,
   plannedDate,
   proposeWeekDays,
   scheduleWarnings,
+  setWeekFixed,
+  setWeekOrdered,
   weekdayOf,
 } from "@/domain/training/scheduling";
 
@@ -152,5 +155,33 @@ describe("proposeWeekDays (proposition automatique)", () => {
       .map((key) => order.indexOf(days.get(key) ?? ""))
       .sort((x, y) => x - y);
     picked.slice(1).forEach((day, i) => expect(day - (picked[i] ?? 0)).toBeGreaterThan(1));
+  });
+});
+
+describe("TC-08 : la séance avec le coach garde le jour du rendez-vous (BR-06)", () => {
+  const coach = session("coach", {
+    withCoach: { coachSessionId: "ca000000-0000-4000-8000-000000000002", date: "2026-10-28" },
+  });
+  const week: Week = {
+    index: 1,
+    light: false,
+    scheduling: "fixed",
+    sessions: [session("seule", { fixedDay: "mon" }), coach],
+  };
+  it("changer son jour ne fait rien, même à l'échelle du programme", () => {
+    const weeks = applySessionDay(
+      [week],
+      [],
+      1,
+      1,
+      { day: "fri", athleteCanMove: false },
+      "program",
+    );
+    expect(weeks[0]?.sessions[1]).toEqual(coach);
+  });
+  it("« Fixer les jours » et « Dans l'ordre » ne la touchent pas", () => {
+    const fixed = setWeekFixed(week, new Map([["coach", "sun" as const]]));
+    expect(fixed.sessions[1]).toEqual(coach);
+    expect(setWeekOrdered(week).sessions[1]?.withCoach).toEqual(coach.withCoach);
   });
 });

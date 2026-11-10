@@ -31,6 +31,8 @@ type EditorValue<P extends ProgramPlan | ProgramDraft = ProgramPlan | ProgramDra
   // Remplace le plan et programme l'enregistrement (700 ms après la dernière modification).
   update: (change: (plan: P) => P) => void;
   status: SaveStatus;
+  // Pourquoi le dernier enregistrement a échoué (message de l'action), null sinon.
+  error: string | null;
   // Révision du brouillon (programme) ou version (modèle) actuellement enregistrée.
   revision: number;
   // La même, lue au moment de l'appel (après un flush, avant le rendu suivant) : publier envoie
@@ -68,6 +70,7 @@ export function EditorProvider({
 }) {
   const [plan, setPlan] = useState(initialPlan);
   const [status, setStatus] = useState<SaveStatus>("saved");
+  const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(initialRevision);
   const planRef = useRef(plan);
   const revisionRef = useRef(initialRevision);
@@ -94,6 +97,7 @@ export function EditorProvider({
             current,
           ).then((r) => (r.ok ? { ok: true as const, revision: r.version } : r));
     if (!result.ok) {
+      setError(result.issues?.[0] ? `${result.message} (${result.issues[0]})` : result.message);
       if (result.code === "REVISION_CONFLICT") {
         blocked.current = true;
         setStatus("conflict");
@@ -105,6 +109,7 @@ export function EditorProvider({
     }
     revisionRef.current = result.revision;
     setRevision(result.revision);
+    setError(null);
     setStatus(dirty.current ? "saving" : "saved");
     return true;
   }, [organizationId, target]);
@@ -158,6 +163,7 @@ export function EditorProvider({
     plan,
     update: update as EditorValue["update"],
     status,
+    error,
     revision,
     currentRevision: () => revisionRef.current,
     flush,

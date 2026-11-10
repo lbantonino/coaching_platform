@@ -13,6 +13,7 @@ import {
   lineRight,
   parseClock,
   removeLine,
+  replaceLine,
 } from "@/domain/training/hyrox-edit";
 import { hyroxContentSchema, type HyroxContent } from "@/domain/training/session-v2";
 
@@ -122,5 +123,68 @@ describe("modifications", () => {
     const { content: withLine } = addLine(content, id, "transition");
     expect(hyroxContentSchema.safeParse(withLine).success).toBe(true);
     expect(removeLine(circuit(), "l5").items).toHaveLength(2);
+  });
+});
+
+describe("TC-12 : simulation Hyrox « Officielles » pour Open Femme", () => {
+  const simulation = () => {
+    const { content, id } = insertSimulation(circuit(), "official", "women_open", "female");
+    const block = content.items.find((item) => item.id === id) ?? content.items.at(-1);
+    if (block?.kind !== "block") throw new Error("bloc attendu");
+    return { content, block };
+  };
+  it("les 8 stations dans l'ordre officiel, un run avant chacune, les charges Open Femme", () => {
+    const { block } = simulation();
+    expect(block.lines).toHaveLength(16);
+    expect(block.lines.every((line, i) => (i % 2 === 0) === (line.kind === "run"))).toBe(true);
+    const stations = block.lines.filter((line) => line.kind !== "run");
+    expect(
+      stations.map((line) =>
+        "station" in line ? line.station : line.kind === "erg" ? line.machine : null,
+      ),
+    ).toEqual([
+      "skierg",
+      "sled_push",
+      "sled_pull",
+      "burpee_broad_jumps",
+      "rowing",
+      "farmers_carry",
+      "sandbag_lunges",
+      "wall_balls",
+    ]);
+    const loads = Object.fromEntries(
+      stations.flatMap((line) =>
+        line.kind === "station" && line.loadKg !== undefined ? [[line.station, line.loadKg]] : [],
+      ),
+    );
+    expect(loads).toEqual({
+      sled_push: 102,
+      sled_pull: 78,
+      farmers_carry: 16,
+      sandbag_lunges: 10,
+      wall_balls: 4,
+    });
+  });
+  it("corriger une ligne ne change qu'elle, et le temps cible du bloc est recalculé", () => {
+    const { content, block } = simulation();
+    const sled = block.lines.find(
+      (line) => line.kind === "station" && line.station === "sled_push",
+    );
+    if (sled?.kind !== "station") throw new Error("sled push attendu");
+    const before = blockMeta(block);
+    const changed = replaceLine(content, {
+      ...sled,
+      loadKg: 90,
+      loadSource: "coach",
+      targetSec: 240,
+    });
+    const after = changed.items.find((item) => item.id === block.id);
+    if (after?.kind !== "block") throw new Error("bloc attendu");
+    after.lines.forEach((line, i) => {
+      if (line.id === sled.id) expect(line).toMatchObject({ loadKg: 90, loadSource: "coach" });
+      else expect(line).toEqual(block.lines[i]);
+    });
+    expect(blockMeta(after)).not.toBe(before);
+    expect(hyroxContentSchema.safeParse(changed).success).toBe(true);
   });
 });

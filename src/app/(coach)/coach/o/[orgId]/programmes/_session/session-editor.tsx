@@ -1,7 +1,6 @@
 "use client";
 
-import { ArrowLeft, Copy, LayoutTemplate, Plus, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, Copy, LayoutTemplate, PenLine, Plus, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { barBackClass, barBackIcon } from "@/components/layout/back-link";
@@ -23,7 +22,6 @@ import {
   RUN_SESSION_TYPES,
   addRepeat,
   addStep,
-  estimatedMinutes,
   findStep,
   removeStep,
   replaceStep,
@@ -45,12 +43,14 @@ import {
   replaceBlock,
   replaceLine,
 } from "@/domain/training/hyrox-edit";
-import type {
-  HyroxBlock,
-  HyroxContent,
-  RunningContent,
-  SessionDraft,
-  StrengthContent,
+import { withEstimatedDuration } from "@/domain/training/session-duration";
+import {
+  SESSION_ITEMS_MAX,
+  type HyroxBlock,
+  type HyroxContent,
+  type RunningContent,
+  type SessionDraft,
+  type StrengthContent,
 } from "@/domain/training/session-v2";
 import {
   addExercise,
@@ -72,10 +72,11 @@ import {
 } from "@/domain/training/session-view";
 import { saveSessionAsTemplate } from "@/features/programs/actions";
 
-import { saveStatusLabel, useEditor } from "../_editor/editor-provider";
+import { useEditor } from "../_editor/editor-provider";
 import { TextSheet } from "../_editor/editor-sheets";
 
 import { programHref } from "./links";
+import { SaveState, useSafeLeave } from "./safe-leave";
 import { RunStepPanel, RunningList, type AthleteAims } from "./running-parts";
 import {
   HyroxBlockPanel,
@@ -124,9 +125,9 @@ const isPhone = () => !window.matchMedia("(min-width: 1024px)").matches;
 export function SessionEditor({ meta }: { meta: SessionMeta }) {
   const editor = useEditor<ProgramDraft>();
   const { plan, update, organizationId } = editor;
-  const router = useRouter();
   const toast = useToast();
   const [pending, startTransition] = useTransition();
+  const { leave, dialog: leaveDialog } = useSafeLeave();
   const found = findSession(plan, meta.sessionKey);
   const session = found?.session ?? null;
   const running = session?.content.discipline === "running" ? session.content : null;
@@ -151,11 +152,6 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
   const [dialog, setDialog] = useState<null | "rename" | "template" | "delete">(null);
 
   const backHref = meta.returnTo?.href ?? programHref(meta);
-  const leave = (href: string) =>
-    startTransition(async () => {
-      await editor.flush();
-      router.push(href);
-    });
 
   if (!session || !found) {
     return (
@@ -165,17 +161,17 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
     );
   }
 
+  // Chaque modification recalcule la durée estimée, sauf si le coach l'a corrigée (phase 4).
   const setSession = (change: (current: SessionDraft) => SessionDraft) =>
     update((current) => {
       const at = findSession(current, meta.sessionKey);
-      return at ? replaceSession(current, change(at.session)) : current;
+      return at ? replaceSession(current, withEstimatedDuration(change(at.session))) : current;
     });
   const setRunning = (content: RunningContent) =>
-    setSession((current) => ({
-      ...current,
-      content,
-      durationMinutes: estimatedMinutes(content, current.durationMinutes),
-    }));
+    setSession((current) => ({ ...current, content }));
+  // Plafond d'une séance (au-delà, elle ne s'enregistrerait plus).
+  const full = (session?.content.items.length ?? 0) >= SESSION_ITEMS_MAX;
+  const tooMany = () => toast(`${SESSION_ITEMS_MAX} éléments au plus dans une séance.`);
 
   const setStrength = (change: (content: StrengthContent) => StrengthContent) =>
     setSession((current) =>
@@ -208,8 +204,8 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
     // Musculation : « Séries » d'abord (maquette 5a).
     ...(strengthCount ? [{ label: "Séries", value: String(strengthCount.sets) }] : []),
     {
-      label: "Durée estimée",
-      value: `≈ ${(running ? formatMinutes : formatSeconds)(session.durationMinutes * 60)}`,
+      label: session.durationManual ? "Durée" : "Durée estimée",
+      value: `${session.durationManual ? "" : "≈ "}${(running ? formatMinutes : formatSeconds)(session.durationMinutes * 60)}`,
     },
     ...(hyrox && hyroxTimeCap(hyrox)
       ? [{ label: "Limite", value: formatSeconds(hyroxTimeCap(hyrox) ?? 0) }]
@@ -342,6 +338,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
             : running.items.findIndex((item) => item.id === step.step.id) + 1,
         }}
         athlete={meta.athlete}
+        defaultAim={plan.aimDefaults.running}
         onChange={(next) => setRunning(replaceStep(running, next))}
         onDone={closePanel}
         onDelete={() => {
@@ -353,12 +350,15 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
       />
     ) : null);
 
-  const menu = (
+  const menu = (phone: boolean) => (
     <MoreMenu
       label="Plus d'actions sur la séance"
       title={session.title}
       width={250}
       items={[
+        ...(phone
+          ? [{ label: "Renommer la séance", icon: PenLine, onSelect: () => setDialog("rename") }]
+          : []),
         {
           label: "Enregistrer comme modèle",
           icon: LayoutTemplate,
@@ -391,26 +391,39 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
     />
   );
 
+  const durationField = (
+    <DurationField
+      minutes={session.durationMinutes}
+      manual={session.durationManual === true}
+      onChange={(minutes) =>
+        setSession((current) => ({ ...current, durationMinutes: minutes, durationManual: true }))
+      }
+      onRecompute={() => setSession((current) => ({ ...current, durationManual: undefined }))}
+    />
+  );
   const titleFields = (
     <>
-      {running || hyrox ? (
-        <label className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-3">
-          <span className={`${label} whitespace-nowrap`}>Type de séance</span>
-          <SelectField
-            className="lg:w-[240px]"
-            value={session.sessionType}
-            onChange={(event) =>
-              setSession((current) => ({ ...current, sessionType: event.target.value }))
-            }
-          >
-            {types.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </SelectField>
-        </label>
-      ) : null}
+      <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:gap-x-6">
+        {running || hyrox ? (
+          <label className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-3">
+            <span className={`${label} whitespace-nowrap`}>Type de séance</span>
+            <SelectField
+              className="lg:w-[240px]"
+              value={session.sessionType}
+              onChange={(event) =>
+                setSession((current) => ({ ...current, sessionType: event.target.value }))
+              }
+            >
+              {types.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </SelectField>
+          </label>
+        ) : null}
+        {durationField}
+      </div>
       {strength ? (
         <div className="grid gap-2.5 lg:grid-cols-2">
           {(["warmup", "cooldown"] as const).map((key) => (
@@ -481,11 +494,13 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
       onSelect={select}
       onChange={setRunning}
       onAddStep={(repeatId) => {
+        if (!repeatId && full) return tooMany();
         const result = addStep(running, repeatId);
         setRunning(result.content);
         select(result.id);
       }}
       onAddRepeat={() => {
+        if (full) return tooMany();
         const result = addRepeat(running);
         setRunning(result.content);
         select(result.id);
@@ -498,8 +513,10 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
       readOnly={false}
       onSelect={select}
       onChange={setStrength}
-      onAddExercise={(groupId) => setPicker({ multiple: false, groupId })}
-      onCreateSuperset={() => setPicker({ multiple: true })}
+      onAddExercise={(groupId) =>
+        !groupId && full ? tooMany() : setPicker({ multiple: false, groupId })
+      }
+      onCreateSuperset={() => (full ? tooMany() : setPicker({ multiple: true }))}
       onRemoveItem={(id) => {
         setStrength((current) => removeStrengthItem(current, id));
         toast("Bloc supprimé.");
@@ -517,6 +534,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         select(result.id);
       }}
       onAddBlock={() => {
+        if (hyrox.items.length >= 20) return toast("20 blocs au plus dans une séance.");
         const result = addBlock(hyrox);
         setHyrox(() => result.content);
         select(result.id);
@@ -580,7 +598,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
                 >
                   Renommer
                 </button>
-                {menu}
+                {menu(false)}
               </span>
             </div>
             {titleFields}
@@ -598,8 +616,10 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
               <h2 className="text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">
                 {session.title}
               </h2>
+              {/* Téléphone : l'état de l'enregistrement, seulement quand il y a quelque chose à dire. */}
+              <SaveState quietWhenSaved className="mt-0.5" />
             </div>
-            {menu}
+            {menu(true)}
           </div>
 
           {/* Aperçu en direct : un résumé écrit et deux totaux, jamais de graphique. */}
@@ -693,7 +713,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
           type="button"
           aria-label="Ajouter un exercice"
           data-phone-fab=""
-          onClick={() => setPicker({ multiple: false })}
+          onClick={() => (full ? tooMany() : setPicker({ multiple: false }))}
           className={phoneFabClass}
         >
           <Plus aria-hidden size={24} strokeWidth={2.2} />
@@ -705,6 +725,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
           aria-label="Ajouter un bloc"
           data-phone-fab=""
           onClick={() => {
+            if (hyrox.items.length >= 20) return toast("20 blocs au plus dans une séance.");
             const result = addBlock(hyrox);
             setHyrox(() => result.content);
             select(result.id);
@@ -750,13 +771,18 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
           onPick={(picked) => {
             if (!strength || !picker) return;
             if (picker.multiple) {
-              const result = addSuperset(strength, picked);
+              const result = addSuperset(strength, picked, plan.aimDefaults.strength);
               if (result) {
                 setStrength(() => result.content);
                 setSelected(result.id);
               }
             } else if (picked[0]) {
-              const result = addExercise(strength, picked[0], picker.groupId);
+              const result = addExercise(
+                strength,
+                picked[0],
+                picker.groupId,
+                plan.aimDefaults.strength,
+              );
               setStrength(() => result.content);
               setSelected(result.id);
               if (isPhone()) setSheetOpen(true);
@@ -771,6 +797,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
           aria-label="Ajouter une étape"
           data-phone-fab=""
           onClick={() => {
+            if (full) return tooMany();
             const result = addStep(running);
             setRunning(result.content);
             select(result.id);
@@ -836,39 +863,91 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
       >
         « {session.title} » sort du brouillon de la semaine {meta.weekIndex}.
       </ConfirmDialog>
+      {leaveDialog}
     </>
+  );
+}
+
+// Durée de la séance (phase 4) : estimée d'après le contenu ; le coach peut l'écrire lui-même
+// (elle ne bouge plus), puis revenir au calcul.
+function DurationField({
+  minutes,
+  manual,
+  onChange,
+  onRecompute,
+}: {
+  minutes: number;
+  manual: boolean;
+  onChange: (minutes: number) => void;
+  onRecompute: () => void;
+}) {
+  // Pendant la saisie, le texte tapé ; sinon, la durée de la séance (qui suit le contenu).
+  const [typing, setTyping] = useState<string | null>(null);
+  const [bad, setBad] = useState(false);
+  return (
+    <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-3">
+      <label htmlFor="session-duration" className={`${label} whitespace-nowrap`}>
+        Durée
+      </label>
+      <span className="flex items-center gap-2.5">
+        <span className="flex h-11 w-[120px] items-center gap-1.5 rounded-[11px] bg-surface px-3.5 inset-ring inset-ring-field-ring focus-within:inset-ring-[1.5px] focus-within:inset-ring-violet has-[[aria-invalid=true]]:inset-ring-alert">
+          <input
+            id="session-duration"
+            inputMode="numeric"
+            value={typing ?? String(minutes)}
+            aria-invalid={bad}
+            aria-describedby="session-duration-hint"
+            onFocus={() => setTyping(String(minutes))}
+            onBlur={() => {
+              setTyping(null);
+              setBad(false);
+            }}
+            onChange={(event) => {
+              const text = event.target.value.replace(/\D/g, "").slice(0, 3);
+              setTyping(text);
+              const value = Number(text);
+              const ok = text !== "" && value >= 5 && value <= 600;
+              setBad(!ok && text !== "");
+              if (ok) onChange(value);
+            }}
+            className="w-full min-w-0 bg-transparent text-[16px] font-medium text-text outline-none lg:text-[14px]"
+          />
+          <span className="text-[13px] font-medium text-muted">min</span>
+        </span>
+        <span id="session-duration-hint" className="text-[12.5px] text-muted">
+          {bad ? (
+            <span className="text-alert">Entre 5 et 600 min.</span>
+          ) : manual ? (
+            <>
+              Écrite par toi.{" "}
+              <button
+                type="button"
+                onClick={onRecompute}
+                className="tap-44 font-semibold text-violet-text hover:underline"
+              >
+                Calculer d&apos;après le contenu
+              </button>
+            </>
+          ) : (
+            "Estimée d'après le contenu."
+          )}
+        </span>
+      </span>
+    </div>
   );
 }
 
 // En-tête (ordinateur) : « Enregistré » puis « Terminer », qui enregistre et revient au programme.
 export function SessionHeaderActions({ href }: { href: string }) {
-  const editor = useEditor();
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const { leave, pending, dialog } = useSafeLeave();
   return (
     <span className="flex items-center gap-2.5 max-lg:hidden">
-      <span
-        aria-live="polite"
-        className={`text-[12.5px] font-medium whitespace-nowrap ${
-          editor.status === "error" || editor.status === "conflict" ? "text-alert" : "text-faint"
-        }`}
-      >
-        {saveStatusLabel(editor.status)}
-        {editor.status === "error" ? (
-          <button type="button" onClick={editor.retry} className="ml-1.5 underline">
-            Réessayer
-          </button>
-        ) : null}
-      </span>
+      <SaveState />
+      {dialog}
       <button
         type="button"
         disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            await editor.flush();
-            router.push(href);
-          })
-        }
+        onClick={() => leave(href)}
         className="inline-flex h-8 items-center rounded-[9px] bg-cta px-3.5 text-[12.5px] font-semibold whitespace-nowrap text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.97] disabled:opacity-60"
       >
         Terminer

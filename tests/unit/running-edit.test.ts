@@ -137,3 +137,20 @@ describe("modifications", () => {
     expect(runningContentSchema.safeParse(copy).success).toBe(true);
   });
 });
+
+describe("plafond de la séance (phase 4)", () => {
+  it("au-delà de 40 éléments, ni étape ni bloc Répéter ne s'ajoute", () => {
+    const full: RunningContent = {
+      discipline: "running",
+      items: Array.from({ length: 40 }, (_, i) => ({
+        id: `e${i + 10}`,
+        kind: "step" as const,
+        role: "run" as const,
+        measure: { type: "time" as const, seconds: 60 },
+      })),
+    };
+    expect(addStep(full).content.items).toHaveLength(40);
+    expect(addRepeat(full).content.items).toHaveLength(40);
+    expect(runningContentSchema.safeParse(addStep(full).content).success).toBe(true);
+  });
+});

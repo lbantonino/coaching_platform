@@ -115,6 +115,33 @@ describe("buildPublication (la version figée)", () => {
       ],
     });
   });
+  it("un % avec un max connu prend les kg du max du jour, même si le brouillon gardait d'anciens kg (BR-14)", () => {
+    const stale = strengthSession(EXERCISE);
+    const content = stale.content.discipline === "strength" ? stale.content : null;
+    const squat = content?.items[0];
+    if (!content || squat?.kind !== "exercise") throw new Error("fixture");
+    const old = {
+      ...stale,
+      content: {
+        ...content,
+        items: [
+          { ...squat, sets: squat.sets.map((set) => (set.pct ? { ...set, kg: 50 } : set)) },
+          ...content.items.slice(1),
+        ],
+      },
+    };
+    const publication = buildPublication(
+      draft({
+        weeks: [{ index: 1, light: false, scheduling: "ordered", sessions: [old] }],
+        phases: [],
+      }),
+      context(),
+    );
+    const published = publication.sessions[0]?.content.content;
+    const first = published?.discipline === "strength" ? published.items[0] : undefined;
+    // Max 80 kg : 70 % = 56 kg ; l'échauffement en kg garde ses 20 kg.
+    expect(first?.kind === "exercise" ? first.sets.map((set) => set.kg) : []).toEqual([20, 56, 56]);
+  });
   it("sans max connu, le % reste sans kg ; sans division, pas de charge officielle", () => {
     const publication = buildPublication(
       draft({
@@ -191,6 +218,29 @@ describe("validateForPublish (fenêtre 08)", () => {
         "coach_session_missing",
       ]),
     );
+  });
+  it("TC-07 : deux séances le même jour, c'est un avertissement, jamais un blocage (BR-04)", () => {
+    const issues = validateForPublish(
+      draft({
+        phases: [],
+        weeks: [
+          {
+            index: 1,
+            light: false,
+            scheduling: "fixed",
+            sessions: [
+              runningSession({ key: "a", fixedDay: "tue" }),
+              runningSession({ key: "b", fixedDay: "tue" }),
+            ],
+          },
+        ],
+      }),
+      context(),
+    );
+    const sameDay = issues.filter((issue) => issue.code === "same_day");
+    expect(sameDay.length).toBeGreaterThan(0);
+    expect(sameDay.every((issue) => issue.level === "warning")).toBe(true);
+    expect(issues.some((issue) => issue.level === "blocking")).toBe(false);
   });
   it("un programme qui suit le précédent sans le chevaucher passe", () => {
     const next = draft({ startDate: "2026-11-16" });

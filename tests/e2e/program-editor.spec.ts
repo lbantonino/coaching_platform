@@ -16,7 +16,7 @@ async function login(page: Page) {
   await expect(page).toHaveURL(/\/coach$/);
 }
 
-test("le coach crée un brouillon depuis un modèle et modifie une séance Running", async ({
+test("TC-02, TC-10 : brouillon depuis un modèle Coory, séance Running modifiée, modèle intact", async ({
   page,
 }, testInfo) => {
   const phone = testInfo.project.name === "telephone";
@@ -76,7 +76,44 @@ test("le coach crée un brouillon depuis un modèle et modifie une séance Runni
   await fastest.fill("");
   await fastest.pressSequentially("455");
   await expect(fastest).toHaveValue("4:55");
+
+  // TC-10 : en zone de FC sans FC max (sportif neuf), pas de calcul : la plage s'écrit à la main et
+  // reste avec la zone quand on en change (elle partait sans les bpm avant la phase 4).
+  if (phone) await stepPanel.getByRole("radio", { name: "Zone de FC" }).dispatchEvent("click");
+  else
+    await stepPanel
+      .getByRole("group", { name: "Cible de l'étape" })
+      .filter({ visible: true })
+      .getByText("Zone de FC", { exact: true })
+      .click();
+  const zones = stepPanel
+    .getByRole("group", { name: "Zone de fréquence cardiaque" })
+    .filter({ visible: true });
+  const pick = (zone: string) =>
+    phone
+      ? zones.getByRole("radio", { name: zone }).dispatchEvent("click")
+      : zones.getByText(zone, { exact: true }).click();
+  await pick("Z4");
+  const low = stepPanel
+    .getByRole("textbox", { name: "FC la plus basse" })
+    .filter({ visible: true });
+  const high = stepPanel
+    .getByRole("textbox", { name: "FC la plus haute" })
+    .filter({ visible: true });
+  await expect(low).toHaveValue("");
+  await expect(stepPanel.getByText(/Pas de FC max pour/).filter({ visible: true })).toBeVisible();
+  await low.fill("150");
+  await high.fill("160");
+  await pick("Z3");
+  await expect(low).toHaveValue("150");
+  await expect(high).toHaveValue("160");
   if (phone) await page.getByRole("button", { name: "Valider l'étape" }).click();
+  await expect(
+    page
+      .getByText(/Zone 3 · 150–160 bpm/)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
   await expect(page.getByRole("button", { name: /12 min$/ }).first()).toBeVisible();
 
   if (phone) {
@@ -105,14 +142,19 @@ test("le coach crée un brouillon depuis un modèle et modifie une séance Runni
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
+
+  // TC-02 : le modèle Coory n'a pas changé (sa première séance garde ses 30 min).
+  if (phone) return;
+  await page.goto(`/coach/o/${ORG}/programmes/modeles/${TEMPLATE}?semaine=1`);
+  const detail = page.getByRole("complementary", { name: "Séance choisie" });
+  await expect(detail.getByText(/30 min/).first()).toBeVisible();
+  await expect(detail.getByText(/12 min/)).toHaveCount(0);
 });
 
 // Modèle « Bloc force 4 semaines » (Mes modèles du coach A, graine de développement).
 const STRENGTH_TEMPLATE = "7a000000-0000-4000-8000-000000000011";
 
-test("le coach règle les séries d'un exercice avec la saisie rapide", async ({
-  page,
-}, testInfo) => {
+test("TC-11 : séries en saisie rapide, et % du max sans max connu", async ({ page }, testInfo) => {
   const phone = testInfo.project.name === "telephone";
   const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const athlete = `Force ${suffix}`;
@@ -147,6 +189,13 @@ test("le coach règle les séries d'un exercice avec la saisie rapide", async ({
   await page.getByRole("textbox", { name: "Saisie rapide" }).fill("5 x 3");
   await page.getByRole("button", { name: "Remplir" }).click();
   await expect(page.getByRole("textbox", { name: "Répétitions de la série 5" })).toHaveValue("3");
+  // TC-11 : en % du max, sans max connu pour ce sportif neuf : le % seul et un avertissement.
+  const load = page.getByRole("group", { name: "Charge de l'exercice" }).filter({ visible: true });
+  if (phone) await load.getByRole("radio", { name: "% du max" }).dispatchEvent("click");
+  else await load.getByText("% du max", { exact: true }).click();
+  await expect(
+    page.getByText(/^Pas de max pour .+ les kg ne sont pas calculés/).filter({ visible: true }),
+  ).toBeVisible();
   if (phone) await page.getByRole("button", { name: "Valider l'exercice" }).click();
   await expect(
     page
@@ -156,7 +205,7 @@ test("le coach règle les séries d'un exercice avec la saisie rapide", async ({
   ).toBeVisible();
 });
 
-test("depuis la fiche du sportif : créer, fixer les jours, publier, retrouver le programme", async ({
+test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, publier, agenda", async ({
   page,
 }, testInfo) => {
   const phone = testInfo.project.name === "telephone";
@@ -187,11 +236,38 @@ test("depuis la fiche du sportif : créer, fixer les jours, publier, retrouver l
   await expect(page).toHaveURL(/\/programmes\/[0-9a-f-]{36}$/);
 
   if (!phone) {
-    // Jours fixes : Coory propose un jour par séance, le coach valide.
+    // TC-06 : jours fixes, appliqués à la phase « Base » (semaines 1 à 3 du modèle).
     await page.getByText("Jours fixes", { exact: true }).filter({ visible: true }).click();
     await expect(page.getByRole("heading", { name: /^Fixer les jours/ })).toBeVisible();
+    await page
+      .getByRole("group", { name: "Appliquer à" })
+      .getByText(/^Phase Base/)
+      .click();
     await page.getByRole("button", { name: "Fixer les jours" }).click();
-    await expect(page.getByText(/Jours fixés pour la semaine/)).toBeVisible();
+    await expect(
+      page.getByText("Jours fixés ; les semaines passées n'ont pas changé."),
+    ).toBeVisible();
+    const weeks = page.getByRole("navigation", { name: "Semaines" });
+    for (const index of [1, 2, 3])
+      await expect(
+        weeks
+          .getByRole("button", { name: new RegExp(`^Semaine ${index}\\b`) })
+          .locator('[aria-label="jours fixes"]'),
+      ).toHaveCount(1);
+    await expect(
+      weeks.getByRole("button", { name: /^Semaine 4\b/ }).locator('[aria-label="jours fixes"]'),
+    ).toHaveCount(0);
+
+    // TC-07 : la séance 2 posée le jour de la séance 1 : un avertissement, et c'est permis.
+    await page
+      .getByRole("button", { name: /^Changer le jour de la séance/ })
+      .nth(1)
+      .click();
+    const picker = page.getByRole("complementary", { name: "Jour de la séance" });
+    await picker.getByRole("button", { name: /S1/ }).click();
+    await expect(picker.getByRole("status")).toContainText("y est déjà");
+    await picker.getByRole("button", { name: "Valider" }).click();
+    await expect(page.getByRole("complementary", { name: "Jour de la séance" })).toHaveCount(0);
   }
 
   // Publier : la version 1, puis l'état « Publié v1 ».
@@ -241,4 +317,23 @@ test("depuis la fiche du sportif : créer, fixer les jours, publier, retrouver l
       .getByText("12 min", { exact: true })
       .first(),
   ).toBeVisible();
+
+  // TC-16 : dans l'agenda, déplier une séance puis une autre : une seule reste dépliée ; Échap referme.
+  await page.goto(`${fiche}?onglet=agenda&vue=toutes`);
+  const first = page.getByRole("button", { name: /^(Déplier|Replier) la séance 1 : / }).first();
+  const second = page.getByRole("button", { name: /^(Déplier|Replier) la séance 2 : / }).first();
+  await first.click();
+  await expect(first).toHaveAttribute("aria-expanded", "true");
+  await second.click();
+  await expect(second).toHaveAttribute("aria-expanded", "true");
+  await expect(first).toHaveAttribute("aria-expanded", "false");
+  // Vue « Toutes les semaines » : la séance 1 de la semaine 2 ne s'ouvre pas en plus.
+  await page
+    .getByRole("button", { name: /^Déplier la séance 1 : / })
+    .nth(1)
+    .click();
+  const opened = page.getByRole("button", { name: /^Replier la séance \d+ : / });
+  await expect(opened).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  await expect(opened).toHaveCount(0);
 });

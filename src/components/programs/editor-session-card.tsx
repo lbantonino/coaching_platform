@@ -33,6 +33,10 @@ export type EditorSessionCardProps = {
   // Jours fixes (03b, FIX-02 / 03) : le pavé du jour à gauche ; ni poignée ni flèches (l'ordre suit
   // les jours). Carte : 9 / 12 / 9 / 9 px sur ordinateur, 10 / 14 / 10 / 10 sur téléphone.
   dayPad?: ReactNode;
+  // Poignée qui glisse la carte (ordinateur, EDT-F06) ; sans elle, la poignée est un simple repère.
+  handle?: ReactNode;
+  // Carte en train d'être glissée : estompée.
+  dragging?: boolean;
 };
 
 const arrowClass =
@@ -52,6 +56,8 @@ export function EditorSessionCard({
   onMoveDown,
   aside,
   dayPad,
+  handle,
+  dragging = false,
 }: EditorSessionCardProps) {
   const styles = disciplineStyles[discipline];
   return (
@@ -64,10 +70,12 @@ export function EditorSessionCard({
         selected
           ? "inset-ring-[1.5px] inset-ring-violet/55 lg:shadow-lift"
           : "lg:inset-ring lg:inset-ring-line"
-      }`}
+      } ${dragging ? "opacity-60" : ""}`}
     >
       {dayPad ?? null}
-      {readOnly || dayPad ? null : (
+      {handle ? (
+        <span className="relative z-10 hidden lg:flex">{handle}</span>
+      ) : readOnly || dayPad ? null : (
         <GripVertical
           aria-hidden
           size={16}

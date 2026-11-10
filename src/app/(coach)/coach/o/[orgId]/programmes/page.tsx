@@ -31,6 +31,8 @@ const statusSlugs = {
   brouillons: "draft",
   "a-venir": "upcoming",
   termines: "finished",
+  // Phase 4 (décision d'Antonino du 10/11) : les archivés se retrouvent, et se désarchivent.
+  archives: "archived",
 } as const;
 type StatusSlug = keyof typeof statusSlugs;
 const statusLabels: Record<StatusSlug, string> = {
@@ -39,6 +41,7 @@ const statusLabels: Record<StatusSlug, string> = {
   brouillons: "Brouillons",
   "a-venir": "À venir",
   termines: "Terminés",
+  archives: "Archivés",
 };
 const disciplineSlugs = {
   running: "running",
@@ -158,17 +161,11 @@ async function Programmes({
           </Link>
         }
       />
-      {/* Pas de bouton flottant sur l'onglet Modèles (maquette PRG-06). */}
-      {models ? null : (
-        <Link
-          href={createHref}
-          aria-label={createLabel}
-          data-phone-fab=""
-          className={phoneFabClass}
-        >
-          <Plus aria-hidden size={24} strokeWidth={2.2} />
-        </Link>
-      )}
+      {/* Téléphone : le bouton flottant crée un programme, ou un modèle sur l'onglet Modèles (phase 4 :
+          la maquette PRG-06 n'en avait pas, et « Nouveau modèle » n'existait alors que sur ordinateur). */}
+      <Link href={createHref} aria-label={createLabel} data-phone-fab="" className={phoneFabClass}>
+        <Plus aria-hidden size={24} strokeWidth={2.2} />
+      </Link>
       <PageBody grow>
         <div className="flex min-h-full flex-1 flex-col gap-3">
           <div className="lg:hidden">
@@ -230,7 +227,7 @@ async function ProgramsTab({
   const athleteId = typeof query.sportif === "string" ? query.sportif : "";
 
   // Une lecture : les compteurs, les sportifs du filtre et l'état vide portent sur l'ensemble.
-  const all = await listPrograms(organizationId);
+  const all = await listPrograms(organizationId, { includeArchived: true });
   if (all.length === 0) return <FirstProgram createHref={createHref} />;
 
   const text = normalize(search.trim());
@@ -242,9 +239,12 @@ async function ProgramsTab({
         normalize(program.title).includes(text) ||
         normalize(program.athleteName).includes(text)),
   );
+  // « Tous » : sans les archivés, qui ont leur onglet.
   const count = (value: ProgramListStatus | "all") =>
-    value === "all" ? matching.length : matching.filter((p) => p.status === value).length;
-  const shown = matching.filter((program) => status === "all" || program.status === status);
+    matching.filter((p) => (value === "all" ? p.status !== "archived" : p.status === value)).length;
+  const shown = matching.filter((program) =>
+    status === "all" ? program.status !== "archived" : program.status === status,
+  );
 
   const athletes = [...new Map(all.map((p) => [p.athleteId, p.athleteName])).entries()].sort(
     (a, b) => a[1].localeCompare(b[1], "fr"),

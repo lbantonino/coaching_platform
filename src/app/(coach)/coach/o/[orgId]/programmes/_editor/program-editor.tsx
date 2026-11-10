@@ -2,13 +2,17 @@
 
 import {
   Archive,
+  ArchiveRestore,
   ArrowLeft,
   CalendarDays,
+  CalendarRange,
   ChevronRight,
+  ClipboardList,
   Copy,
   Eye,
   FileDown,
   FileText,
+  History,
   LayoutTemplate,
   ListFilter,
   Lock,
@@ -24,6 +28,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { barBackClass, barBackIcon } from "@/components/layout/back-link";
 import { MobileBarTitle, phoneFabClass } from "@/components/layout/mobile-bar";
 import { EditorSessionCard } from "@/components/programs/editor-session-card";
+import { useReorder } from "@/components/programs/use-reorder";
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 import { SessionDetail } from "@/components/programs/session-detail";
 import { Avatar } from "@/components/ui/avatar";
@@ -41,10 +46,13 @@ import {
   duplicateSession,
   duplicateWeekTo,
   moveSession,
+  moveSessionTo,
+  phaseRangeBounds,
   removePhase,
   removeSession,
   removeWeek,
   renamePhase,
+  setPhaseRange,
   setWeekLight,
 } from "@/domain/training/plan-edit";
 import {
@@ -74,7 +82,10 @@ import {
   duplicateTemplate,
   publishProgram,
   saveProgramAsTemplate,
+  unarchiveProgram,
 } from "@/features/programs/actions";
+
+import { DropLine, Handle } from "../_session/running-parts";
 
 import { saveStatusLabel, useEditor } from "./editor-provider";
 import {
@@ -88,6 +99,7 @@ import {
 } from "./fixed-days";
 import {
   DuplicateWeekSheet,
+  PhaseRangeSheet,
   PublishSheet,
   SessionTemplateSheet,
   TextSheet,
@@ -181,6 +193,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   });
   const week = plan.weeks.find((item) => item.index === weekIndex) ?? plan.weeks[0];
   const ordered = useMemo(() => (week ? orderedSessions(week) : []), [week]);
+  // Glisser une séance par sa poignée (ordinateur, semaine « dans l'ordre ») : EDT-F06.
+  const reorder = useReorder((from, to) => {
+    if (week) update((current) => moveSessionTo(current, week.index, from, to));
+  });
   const [sessionKey, setSessionKey] = useState<string | null>(
     ordered.find((item) => item.key === meta.focus.session)?.key ?? ordered[0]?.key ?? null,
   );
@@ -199,8 +215,16 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     | "archive"
     | "publish"
     | "delete-session"
+    | "remove-week"
+    | "ordered"
     | { renamePhase: string }
+    | { removePhase: string }
+    | { phaseRange: string }
   >(null);
+  const sheetPhase = (key: "renamePhase" | "removePhase" | "phaseRange") =>
+    typeof sheet === "object" && sheet !== null && key in sheet
+      ? (plan.phases.find((phase) => phase.id === (sheet as Record<string, string>)[key]) ?? null)
+      : null;
   const [pending, startTransition] = useTransition();
   // Jours fixes (03b) : le choix du jour d'une séance (panneau à droite ou feuille du téléphone) et la
   // proposition en passant une semaine en « Jours fixes ».
@@ -208,18 +232,30 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   const [proposal, setProposal] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [openedRevision] = useState(editor.revision);
+  // Publié et rien n'a changé depuis : « Publier » le dit au lieu d'annoncer une version de plus.
+  const unpublished =
+    meta.publication !== null &&
+    editor.revision > 0 &&
+    editor.revision !== meta.publication.sourceRevision;
+  const nothingToPublish = meta.publication !== null && !unpublished;
+  const athleteFirstName = meta.athlete?.firstName ?? "Le sportif";
+  const publishedNumber = meta.publication?.number ?? 0;
   // Téléphone : chaque niveau de la pile s'ouvre en haut de la page.
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [level]);
   useEffect(() => {
     const open = () => {
+      if (nothingToPublish)
+        return toast(
+          `Rien à publier : ${athleteFirstName} voit déjà la version ${publishedNumber}.`,
+        );
       setPublishError(null);
       setSheet("publish");
     };
     window.addEventListener(PUBLISH_EVENT, open);
     return () => window.removeEventListener(PUBLISH_EVENT, open);
-  }, []);
+  }, [nothingToPublish, athleteFirstName, publishedNumber, toast]);
 
   const currentWeek = draft
     ? Math.floor((Date.parse(meta.today) - Date.parse(draft.startDate)) / (7 * 86_400_000)) + 1
@@ -231,7 +267,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       ? `Semaine ${item.index} · ${weekRange(draft.startDate, item.index)}`
       : `Semaine ${item.index}`;
   const editHref = (key: string) =>
-    target.kind === "program" ? `${meta.base}/${target.programId}/seances/${key}` : null;
+    readOnly
+      ? null
+      : target.kind === "program"
+        ? `${meta.base}/${target.programId}/seances/${key}`
+        : `${meta.base}/modeles/${target.templateId}/seances/${key}`;
 
   // Ouvrir une séance seulement quand le brouillon est bien enregistré : sinon sa page ne la
   // trouverait pas (« Page introuvable »).
@@ -257,7 +297,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     const discipline = plan.discipline === "hybrid" ? "running" : plan.discipline;
     let created = "";
     update((current) => {
-      const result = addSession(current, week.index, blankSession(discipline));
+      const result = addSession(current, week.index, blankSession(discipline, current.aimDefaults));
       created = result.key;
       return result.plan;
     });
@@ -339,6 +379,26 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           },
         ];
 
+  // Téléphone : les deux PDF (version publiée) dans « ··· », la ligne des boutons étant pleine.
+  const pdfBase = target.kind === "program" ? `${meta.base}/${target.programId}/pdf` : null;
+  const openPdf = (href: string) => window.open(href, "_blank", "noopener");
+  const phoneMenuItems: MoreMenuItem[] =
+    pdfBase && meta.publication
+      ? [
+          {
+            label: "PDF : agenda du programme",
+            icon: CalendarDays,
+            onSelect: () => openPdf(`${pdfBase}/agenda`),
+          },
+          {
+            label: "PDF : fiches et repères",
+            icon: ClipboardList,
+            onSelect: () => openPdf(`${pdfBase}/fiches`),
+          },
+          ...menuItems,
+        ]
+      : menuItems;
+
   const copyCoory = () =>
     target.kind === "template" &&
     startTransition(async () => {
@@ -352,10 +412,6 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   // Morceaux
   // ---------------------------------------------------------------------------
   // Bandeau (ordinateur) : une pilule 32 px « Publié v1 · ● Modifications non publiées ».
-  const unpublished =
-    meta.publication !== null &&
-    editor.revision > 0 &&
-    editor.revision !== meta.publication.sourceRevision;
   const statePill = (
     <span className="flex h-8 shrink-0 items-center gap-2 rounded-[9px] bg-surface-2 px-3 text-[12.5px] font-medium whitespace-nowrap text-text-2">
       {readOnly && target.kind === "program" ? (
@@ -517,10 +573,15 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
             onSelect: () => setSheet({ renamePhase: phase.id }),
           },
           {
+            label: "Modifier les semaines",
+            icon: CalendarRange,
+            onSelect: () => setSheet({ phaseRange: phase.id }),
+          },
+          {
             label: "Retirer la phase",
             icon: Trash2,
             destructive: true,
-            onSelect: () => update((current) => removePhase(current, phase.id)),
+            onSelect: () => setSheet({ removePhase: phase.id }),
           },
         ]}
         className="-my-2.5 -mr-2.5 [&>button]:bg-transparent! [&>button]:text-faint! [&>button]:inset-ring-0! lg:my-0 lg:mr-0 lg:[&>button]:size-7! lg:[&>button]:rounded-[8px]! lg:[&>button]:text-[12px]!"
@@ -534,15 +595,16 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           icon: Pencil,
           onSelect: () => update((current) => setWeekLight(current, week.index, !week.light)),
         },
-        {
-          label: "Retirer la semaine",
-          icon: Trash2,
-          destructive: true,
-          onSelect: () => {
-            update((current) => removeWeek(current, week.index));
-            setWeekIndex(Math.max(1, week.index - 1));
-          },
-        },
+        ...(plan.weeks.length > 1
+          ? [
+              {
+                label: "Retirer la semaine",
+                icon: Trash2,
+                destructive: true,
+                onSelect: () => setSheet("remove-week"),
+              },
+            ]
+          : []),
       ]
     : [];
 
@@ -574,6 +636,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   const switchMode = (mode: "ordered" | "fixed") => {
     if (!week || mode === week.scheduling) return;
     if (mode === "fixed") return setProposal(true);
+    setSheet("ordered");
+  };
+  const toOrdered = () => {
+    if (!week) return;
     update((current) => ({
       ...current,
       weeks: current.weeks.map((item) => (item.index === week.index ? setWeekOrdered(item) : item)),
@@ -678,6 +744,16 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       />
     ) : null;
   const fixedWeek = week?.scheduling === "fixed";
+  const pastWeekNote =
+    week && !readOnly && meta.publication && locked(week.index) ? (
+      <p className="mt-3 flex items-start gap-2.5 rounded-[12px] bg-warn-soft px-3 py-2.5 text-[12.5px] leading-[1.45] text-text-2 lg:mt-3">
+        <History aria-hidden size={15} strokeWidth={2} className="mt-px shrink-0 text-warn" />
+        <span>
+          Semaine passée : {athleteFirstName} l&apos;a déjà vécue. Ce que tu changes ici remplacera
+          son historique à la prochaine publication.
+        </span>
+      </p>
+    ) : null;
   const modeSwitch = (size: "card" | "tall") =>
     readOnly || !week ? null : (
       <SegmentedControl
@@ -692,45 +768,65 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       />
     );
 
+  const draggable = !readOnly && week?.scheduling === "ordered" && ordered.length > 1;
   const sessionCards = (mobile: boolean) =>
-    ordered.map((item, i) => (
-      <EditorSessionCard
-        key={item.key}
-        index={i + 1}
-        title={item.title}
-        discipline={item.content.discipline}
-        sessionType={item.sessionType}
-        summary={[sessionHeadline(item)]}
-        coach={coachLabel(item)}
-        selected={item.key === session?.key}
-        readOnly={readOnly}
-        onSelect={() => {
-          setSessionKey(item.key);
-          if (mobile) setLevel("session");
-        }}
-        onMoveUp={
-          !readOnly && week?.scheduling === "ordered" && i > 0
-            ? () => update((current) => moveSession(current, week.index, item.key, -1))
-            : undefined
-        }
-        onMoveDown={
-          !readOnly && week?.scheduling === "ordered" && i < ordered.length - 1
-            ? () => update((current) => moveSession(current, week.index, item.key, 1))
-            : undefined
-        }
-        dayPad={
-          fixedWeek && week ? (
-            <DayPad
-              session={item}
-              weekIndex={week.index}
-              context={daysContext}
-              selected={!mobile && item.key === session?.key}
-              onOpen={() => openDayPicker(item.key)}
-            />
-          ) : undefined
-        }
-      />
-    ));
+    ordered.map((item, i) => {
+      const card = (
+        <EditorSessionCard
+          key={item.key}
+          index={i + 1}
+          title={item.title}
+          discipline={item.content.discipline}
+          sessionType={item.sessionType}
+          summary={[sessionHeadline(item)]}
+          coach={coachLabel(item)}
+          selected={item.key === session?.key}
+          readOnly={readOnly}
+          onSelect={() => {
+            setSessionKey(item.key);
+            if (mobile) setLevel("session");
+          }}
+          onMoveUp={
+            !readOnly && week?.scheduling === "ordered" && i > 0
+              ? () => update((current) => moveSession(current, week.index, item.key, -1))
+              : undefined
+          }
+          onMoveDown={
+            !readOnly && week?.scheduling === "ordered" && i < ordered.length - 1
+              ? () => update((current) => moveSession(current, week.index, item.key, 1))
+              : undefined
+          }
+          dayPad={
+            fixedWeek && week ? (
+              <DayPad
+                session={item}
+                weekIndex={week.index}
+                context={daysContext}
+                selected={!mobile && item.key === session?.key}
+                onOpen={() => openDayPicker(item.key)}
+              />
+            ) : undefined
+          }
+          handle={
+            !mobile && draggable ? (
+              <Handle
+                label={`Déplacer « ${item.title} » (flèches haut et bas)`}
+                props={reorder.handleProps(i, ordered.length)}
+              />
+            ) : undefined
+          }
+          dragging={!mobile && reorder.drag?.from === i}
+        />
+      );
+      return mobile || !draggable ? (
+        card
+      ) : (
+        <div key={item.key} data-reorder-row="" className="relative">
+          {card}
+          <DropLine at={reorder.dropMark(i)} />
+        </div>
+      );
+    });
 
   const addButtons = readOnly ? null : (
     <div className="flex gap-2">
@@ -927,23 +1023,86 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         }}
       />
       <TextSheet
-        open={typeof sheet === "object" && sheet !== null && "renamePhase" in sheet}
+        open={sheetPhase("renamePhase") !== null}
         onClose={() => setSheet(null)}
         title="Renommer la phase"
         label="Nom de la phase"
-        initial={
-          typeof sheet === "object" && sheet !== null
-            ? (plan.phases.find((phase) => phase.id === sheet.renamePhase)?.name ?? "")
-            : ""
-        }
+        initial={sheetPhase("renamePhase")?.name ?? ""}
         confirmLabel="Renommer"
         onConfirm={(name) => {
-          if (typeof sheet === "object" && sheet !== null) {
-            update((current) => renamePhase(current, sheet.renamePhase, name.slice(0, 40)));
+          const phase = sheetPhase("renamePhase");
+          if (phase) update((current) => renamePhase(current, phase.id, name.slice(0, 40)));
+          setSheet(null);
+        }}
+      />
+      <PhaseRangeSheet
+        open={sheetPhase("phaseRange") !== null}
+        onClose={() => setSheet(null)}
+        phase={sheetPhase("phaseRange")}
+        bounds={(() => {
+          const phase = sheetPhase("phaseRange");
+          return phase ? phaseRangeBounds(plan, phase.id) : { minFrom: 1, maxTo: 1 };
+        })()}
+        label={(index) =>
+          draft ? `Semaine ${index} · ${weekRange(draft.startDate, index)}` : `Semaine ${index}`
+        }
+        onConfirm={(from, to) => {
+          const phase = sheetPhase("phaseRange");
+          if (phase) {
+            update((current) => setPhaseRange(current, phase.id, from, to));
+            toast(`${phase.name} : semaines ${from} à ${to}.`);
           }
           setSheet(null);
         }}
       />
+      <ConfirmDialog
+        open={sheetPhase("removePhase") !== null}
+        onClose={() => setSheet(null)}
+        title={`Retirer la phase « ${sheetPhase("removePhase")?.name ?? ""} » ?`}
+        confirmLabel="Retirer la phase"
+        icon={Trash2}
+        onConfirm={() => {
+          const phase = sheetPhase("removePhase");
+          if (phase) update((current) => removePhase(current, phase.id));
+          setSheet(null);
+        }}
+      >
+        Ses semaines et leurs séances restent dans le programme ; seule l&apos;étiquette de la phase
+        disparaît.
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={sheet === "remove-week"}
+        onClose={() => setSheet(null)}
+        title={`Retirer la semaine ${week?.index ?? ""} ?`}
+        confirmLabel="Retirer la semaine"
+        icon={Trash2}
+        onConfirm={() => {
+          if (week) {
+            update((current) => removeWeek(current, week.index));
+            setWeekIndex(Math.max(1, week.index - 1));
+            setLevel("weeks");
+          }
+          setSheet(null);
+        }}
+      >
+        {week && week.sessions.length > 0
+          ? `Ses ${week.sessions.length} séance${week.sessions.length > 1 ? "s sont supprimées" : " est supprimée"} du brouillon, et les semaines suivantes remontent d'un cran.`
+          : "Les semaines suivantes remontent d'un cran."}
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={sheet === "ordered"}
+        onClose={() => setSheet(null)}
+        title={`Semaine ${week?.index ?? ""} dans l'ordre ?`}
+        confirmLabel="Retirer les jours"
+        icon={CalendarDays}
+        onConfirm={() => {
+          toOrdered();
+          setSheet(null);
+        }}
+      >
+        Les jours fixés des séances sont retirés ; {athleteFirstName} fera les séances dans
+        l&apos;ordre, au jour de son choix. Une séance avec le coach garde son rendez-vous.
+      </ConfirmDialog>
       <TextSheet
         open={sheet === "save-template"}
         onClose={() => setSheet(null)}
@@ -1010,7 +1169,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           version={nextVersion}
           weeks={plan.weeks.length}
           sessions={sessionCount}
-          firstName={meta.athlete?.firstName ?? "Le sportif"}
+          firstName={athleteFirstName}
           issues={issues}
           pending={pending}
           error={publishError}
@@ -1242,7 +1401,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                     )}
                   </div>
                 ) : null}
-                <div className="mt-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pb-1">
+                {pastWeekNote}
+                <div
+                  {...reorder.listProps}
+                  className="mt-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain pb-1"
+                >
                   {ordered.length === 0 ? (
                     <p className="rounded-[15px] bg-surface-2 px-4 py-6 text-center text-[13.5px] text-muted">
                       Aucune séance cette semaine.
@@ -1309,17 +1472,16 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                   >
                     Dupliquer dans Mes modèles
                   </button>
-                ) : null
+                ) : (
+                  <UnarchiveButton phone />
+                )
               ) : (
                 <>
                   {target.kind === "program" ? (
                     <>
                       <button
                         type="button"
-                        onClick={() => {
-                          setPublishError(null);
-                          setSheet("publish");
-                        }}
+                        onClick={() => window.dispatchEvent(new CustomEvent(PUBLISH_EVENT))}
                         className={`${phoneButton} bg-cta text-on-cta`}
                       >
                         Publier
@@ -1340,7 +1502,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                         : "Plus d'actions sur le modèle"
                     }
                     title={plan.title}
-                    items={menuItems}
+                    items={phoneMenuItems}
                   />
                 </>
               )}
@@ -1452,6 +1614,34 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                 })}
               </div>
             ))}
+            {readOnly ? null : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={plan.weeks.length >= 52}
+                  onClick={() => {
+                    update((current) => addWeek(current));
+                    toast(`Semaine ${plan.weeks.length + 1} ajoutée.`);
+                  }}
+                  className={`${phoneButton} gap-[7px] bg-surface text-violet-text inset-ring inset-ring-field-ring disabled:text-faint`}
+                >
+                  <Plus aria-hidden size={16} strokeWidth={2.2} />
+                  Semaine
+                </button>
+                <button
+                  type="button"
+                  disabled={!canAddPhase}
+                  onClick={() => {
+                    update((current) => addPhase(current, nextPhaseName));
+                    toast(`Phase « ${nextPhaseName} » ajoutée.`);
+                  }}
+                  className={`${phoneButton} gap-[7px] bg-surface text-violet-text inset-ring inset-ring-field-ring disabled:text-faint`}
+                >
+                  <Plus aria-hidden size={16} strokeWidth={2.2} />
+                  Phase
+                </button>
+              </div>
+            )}
           </>
         ) : null}
 
@@ -1484,6 +1674,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
             </div>
             {modeSwitch("tall")}
             {fixedWeek ? <MiniDayStrip week={week} context={daysContext} /> : null}
+            {pastWeekNote}
             {readOnly ? null : (
               <div className="flex gap-2">
                 <button
@@ -1630,6 +1821,7 @@ export function EditorHeaderActions({ base }: { base: string }) {
       </button>
     );
   }
+  if (editor.readOnly && target.kind === "program") return <UnarchiveButton phone={false} />;
   if (editor.readOnly || target.kind !== "program") return null;
   return (
     <button
@@ -1639,6 +1831,42 @@ export function EditorHeaderActions({ base }: { base: string }) {
     >
       <Upload aria-hidden size={13} strokeWidth={2.2} />
       Publier
+    </button>
+  );
+}
+
+// Programme archivé : « Désarchiver » (phase 4) le remet en service (brouillon ou publié, comme avant).
+function UnarchiveButton({ phone }: { phone: boolean }) {
+  const editor = useEditor();
+  const router = useRouter();
+  const toast = useToast();
+  const [pending, startTransition] = useTransition();
+  const { target, organizationId } = editor;
+  if (target.kind !== "program") return null;
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() =>
+        startTransition(async () => {
+          const result = await unarchiveProgram(organizationId, target.programId);
+          if (!result.ok) return toast(result.message);
+          toast(
+            result.status === "draft"
+              ? "Programme désarchivé : il redevient un brouillon."
+              : "Programme désarchivé : il est de nouveau publié.",
+          );
+          router.refresh();
+        })
+      }
+      className={
+        phone
+          ? `${phoneButton} gap-2 bg-cta text-on-cta disabled:opacity-60`
+          : "inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-cta px-3.5 text-[12.5px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.97] disabled:opacity-60 max-lg:hidden"
+      }
+    >
+      <ArchiveRestore aria-hidden size={phone ? 16 : 13} strokeWidth={2} />
+      Désarchiver
     </button>
   );
 }

@@ -9,7 +9,7 @@
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris ; D-76 : exercices du coach) ; Mobilité visible le 31/10 ; liste et fiche aux maquettes d'Antonino le 06/11 (D-142, fond lavande) ; P3-02 à P3-06 à faire | db:test 434/434, test 278/278, test:e2e bibliothèque 8/8 (31/10) ; suite complète du 30/10 : 169 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Sessions du 30 et 31/10/2026 |
-| P4 Éditeur multi-sports | **En cours** : données et règles de l'éditeur faites le 09/11 (D-155 : brouillons avec révision, modèles Coory et Mes modèles, publication par fonction SQL, schéma de séance v2, jours fixes, façons de viser, charges officielles Hyrox) ; **écrans à venir** (phase 3 des maquettes « Programmes ») | db:test 503/503, Vitest 332/332, test:e2e 186 passés / 19 ignorés (1 échec intermittent sans lien, voir session du 09/11) | Session du 09/11/2026 ; `coory-design/PHASE2_ARCHITECTURE.md` |
+| P4 Éditeur multi-sports | **Fait pour Running, Musculation et Hyrox** : données et règles (D-155, 09/11), écrans (D-157, 10/11), phase 4 « fonctionnel » (D-160, 10/11 : matrice des maquettes vérifiée ligne par ligne, cas TC-01 à TC-18) ; reste l'éditeur Hybride (non dessiné) | db:test 503/503, Vitest 332/332, test:e2e 186 passés / 19 ignorés (1 échec intermittent sans lien, voir session du 09/11) | Session du 09/11/2026 ; `coory-design/PHASE2_ARCHITECTURE.md` |
 | P5 Publications/PDF | **En cours** : publication faite (D-155, D-157) ; PDF des programmes faits le 10/11 (D-158 : Agenda du programme, Fiches et repères, menu à 2 choix) ; reste le stockage et l'historique des PDF, l'envoi au sportif | Vitest 386/386 (dont rendu réel des 2 PDF), test:e2e program-pdf 8/8, program-editor + athlete-overview 12/12 | Session du 10/11/2026 |
 | P6 Sportif/feedback | À faire | Aucun | - |
 | P7 Communication | À faire | Aucun | - |
@@ -30,6 +30,43 @@
 
 ## Dernière session
 - Date : 2026-11-10
+
+### Phase 4 (fonctionnel) des écrans Programmes (D-160, 10/11/2026)
+```
+Méthode : chaque ligne de FEATURE_TRACEABILITY_MATRIX.md (PRG, WIZ, EDT, FIX, SES, RUN, MUS, HYR,
+TAB, AGD, PUB) relue dans le code par trois vérifications en parallèle, chaque manque recontrôlé à la
+main avant de coder. Environ 60 lignes faites, 20 en partie ; rien d'absent sauf ce qui attend
+l'espace sportif. 4 décisions d'Antonino (voir D-160) : semaines vides « de zéro », semaine passée
+modifiable avec avertissement, onglet Archivés + Désarchiver, durée calculée et corrigeable.
+Corrigé ou ajouté :
+- Éditeur de séance : sortie protégée (safe-leave.tsx : rester ou quitter sans enregistrer), raison
+  de l'échec (editor-provider : error), état sur téléphone, « Recharger » ; champ Durée (estimée /
+  écrite par toi / « Calculer d'après le contenu ») ; façon de viser du programme (blankSession,
+  newExercise, panneau d'étape) ; « Renommer la séance » dans le ··· du téléphone ; plafond de 40 ;
+  zone de FC sans FC max (TC-10) ; en % de VMA, l'allure en min/km affichée.
+- Règles : session-duration.ts (Running, Musculation, Hyrox, temps de référence des stations) ;
+  freezeExercise recalcule les kg d'un % à chaque publication (BR-14) ; plan-edit : moveSessionTo,
+  phaseRangeBounds, setPhaseRange.
+- Éditeur de programme : confirmations (retirer une phase, une semaine, repasser dans l'ordre) ;
+  bandeau « Semaine passée » (publié) ; poignée qui glisse les séances (use-reorder) ; « Modifier les
+  semaines » d'une phase (PhaseRangeSheet) ; « Rien à publier » ; téléphone : + Semaine, + Phase, PDF
+  dans « ··· » ; séances d'un modèle Mes modèles modifiables (nouvelle page
+  modeles/[templateId]/seances/[cle], retour sur la semaine du modèle).
+- Liste et assistant : onglet Archivés (listPrograms includeArchived), « Désarchiver » (migration
+  20261110120000_desarchiver_programme.sql, action unarchiveProgram, erreur claire si chevauchement) ;
+  « Utiliser » et bouton + sur l'onglet Modèles du téléphone ; « Effacer la recherche » vide le champ
+  (ListSearch, useId) ; programmes archivés copiables ; assistant : retour à l'étape incomplète au
+  lieu d'une erreur du serveur, modèles de la discipline choisie en premier, texte « de zéro ».
+- Jours fixes et agenda : avertissement immédiat (jour indisponible ou déjà pris) ; une seule séance
+  dépliée même en « Toutes les semaines » (OpenSessionProvider), Échap referme.
+Tests : unitaires 409/409 (session-duration, plan-edit, strength-edit, running-edit, scheduling TC-08,
+hyrox-edit TC-12, program-publication TC-07 et BR-14, pdf-render TC-17) ; SQL 510/510
+(39_desarchiver_programme ; 37_modeles rendu indépendant des modèles de démonstration, il échouait
+sur une base avec la graine) ; parcours : program-cases.spec.ts (TC-01, 03, 04, 05, 14, 15, 18 ;
+TC-09 marqué « à faire » : espace sportif), program-editor.spec.ts (TC-02, 06, 07, 10, 11, 13, 16).
+Captures vérifiées : ordinateur et téléphone, sombre et clair. Rien de commité.
+Reste : phase 6 (recette, 14_QA) ; TC-09 et l'aperçu côté sportif avec l'espace sportif.
+```
 - Objectif : intégration des maquettes « Programmes » (`coory-design/COORY_PROGRAMME_DESIGN_HANDOFF/`), phase 1 (audit, `coory-design/AUDIT_REPORT.md`) puis phase 2 (architecture, D-155, `coory-design/PHASE2_ARCHITECTURE.md`), validées par Antonino.
 
 ### Onglet Programme du sportif : le détail de la séance sur place (10/11/2026)

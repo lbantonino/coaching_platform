@@ -2,7 +2,7 @@
 
 import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { ChipGroup } from "@/components/ui/chip-group";
 import { DialogFooter, Sheet } from "@/components/ui/overlay";
@@ -32,9 +32,17 @@ function useQueryUpdate() {
 }
 
 // Recherche en direct : écrite dans l'adresse 250 ms après la dernière lettre (comme les Sportifs).
+// « Effacer la recherche et les filtres » vide l'adresse : le champ suit (PRG-F05), sans réécrire ce
+// qu'on est en train de taper (l'adresse ne change qu'après la frappe).
 export function ListSearch({ initial, placeholder }: { initial: string; placeholder: string }) {
   const update = useQueryUpdate();
+  const id = useId();
   const [value, setValue] = useState(initial);
+  const [seen, setSeen] = useState(initial);
+  if (initial !== seen) {
+    setSeen(initial);
+    if (initial.trim() !== value.trim()) setValue(initial);
+  }
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   return (
@@ -48,11 +56,11 @@ export function ListSearch({ initial, placeholder }: { initial: string; placehol
       className="flex h-11 min-w-0 items-center gap-2.5 rounded-[12px] bg-surface px-3.5 text-muted inset-ring inset-ring-field-ring focus-within:inset-ring-[1.5px] focus-within:inset-ring-violet lg:h-10 lg:w-[220px] lg:shrink lg:gap-2 lg:rounded-[11px] lg:px-3"
     >
       <Search aria-hidden strokeWidth={2} className="size-[17px] shrink-0 lg:size-[15px]" />
-      <label htmlFor="programmes-search" className="sr-only">
+      <label htmlFor={id} className="sr-only">
         {placeholder}
       </label>
       <input
-        id="programmes-search"
+        id={id}
         type="search"
         autoComplete="off"
         value={value}

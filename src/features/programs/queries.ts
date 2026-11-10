@@ -341,6 +341,8 @@ const raceGoalSchema = z.object({
 
 export type ProgramListFilters = {
   status?: ProgramListStatus | "all";
+  // « Tous » sans filtre de statut : avec les archivés aussi (onglet « Archivés », phase 4).
+  includeArchived?: boolean;
   discipline?: "running" | "strength" | "hyrox" | "hybrid";
   athleteId?: string;
   search?: string;
@@ -427,7 +429,7 @@ export async function listPrograms(
     .filter((item) =>
       filters.status && filters.status !== "all"
         ? item.status === filters.status
-        : item.status !== "archived",
+        : filters.includeArchived || item.status !== "archived",
     )
     .filter((item) =>
       search
@@ -436,24 +438,24 @@ export async function listPrograms(
     );
 }
 
-// Programmes d'un sportif (organisation DÉJÀ vérifiée), du plus récent au plus ancien, archivés exclus :
-// l'onglet Programme y cherche un brouillon jamais publié et un programme à copier.
+// Programmes d'un sportif (organisation DÉJÀ vérifiée), du plus récent au plus ancien, archivés
+// compris (phase 4 : un ancien programme archivé reste un programme à copier) : l'onglet Programme y
+// cherche un brouillon jamais publié et un programme à copier.
 export async function listAthleteProgramRows(
   organizationId: string,
   athleteId: string,
-): Promise<{ id: string; title: string; status: "draft" | "published" }[]> {
+): Promise<{ id: string; title: string; status: "draft" | "published" | "archived" }[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("programs")
     .select("id, title, status, updated_at")
     .eq("organization_id", organizationId)
     .eq("athlete_id", athleteId)
-    .neq("status", "archived")
     .order("updated_at", { ascending: false });
   if (error) throw new Error("Lecture des programmes du sportif impossible.");
   return (data ?? []).map((row) => ({
     id: row.id,
     title: row.title,
-    status: row.status === "draft" ? "draft" : "published",
+    status: row.status === "draft" ? "draft" : row.status === "archived" ? "archived" : "published",
   }));
 }

@@ -1,4 +1,4 @@
-import type { Phase, ProgramPlan, Week } from "./program-plan";
+import type { AimDefaults, Phase, ProgramPlan, Week } from "./program-plan";
 import type { SessionBody, SessionDraft } from "./session-v2";
 
 // Opérations de l'éditeur de programme (03, D-157) sur le plan (semaines, phases, séances) : règles
@@ -128,6 +128,24 @@ export function moveSession<T extends Plan>(
   });
 }
 
+// Glisser une séance (EDT-F06) : de la place `from` à la place `to` de sa semaine.
+export function moveSessionTo<T extends Plan>(
+  plan: T,
+  weekIndex: number,
+  from: number,
+  to: number,
+): T {
+  const week = plan.weeks.find((item) => item.index === weekIndex);
+  if (!week || from === to || from < 0 || to < 0) return plan;
+  if (from >= week.sessions.length || to >= week.sessions.length) return plan;
+  return updateWeek(plan, weekIndex, (current) => {
+    const sessions = [...current.sessions];
+    const [moved] = sessions.splice(from, 1);
+    if (moved) sessions.splice(to, 0, moved);
+    return { ...current, sessions };
+  });
+}
+
 // Dupliquer une séance : la copie arrive juste après l'originale, dans la même semaine.
 export function duplicateSession<T extends Plan>(
   plan: T,
@@ -202,6 +220,50 @@ export function renamePhase<T extends Plan>(plan: T, id: string, name: string): 
   };
 }
 
+// Semaines d'une phase (« Modifier les semaines ») : une phase voisine collée suit la limite déplacée
+// (les phases restent contiguës) et garde au moins une semaine ; sans voisine, jusqu'au bout du
+// programme. Renvoie les bornes permises pour le début et la fin.
+function neighbours(plan: Plan, id: string) {
+  const sorted = [...plan.phases].sort((a, b) => a.weekFrom - b.weekFrom);
+  const at = sorted.findIndex((phase) => phase.id === id);
+  return { phase: sorted[at], previous: at > 0 ? sorted[at - 1] : undefined, next: sorted[at + 1] };
+}
+
+export function phaseRangeBounds(plan: Plan, id: string): { minFrom: number; maxTo: number } {
+  const { previous, next } = neighbours(plan, id);
+  return {
+    minFrom: previous ? previous.weekFrom + 1 : 1,
+    maxTo: next ? next.weekTo - 1 : plan.weeks.length,
+  };
+}
+
+export function setPhaseRange<T extends Plan>(plan: T, id: string, from: number, to: number): T {
+  const { phase, previous, next } = neighbours(plan, id);
+  if (!phase) return plan;
+  const { minFrom, maxTo } = phaseRangeBounds(plan, id);
+  const weekFrom = Math.min(Math.max(from, minFrom), maxTo);
+  const weekTo = Math.min(Math.max(to, weekFrom), maxTo);
+  // Une voisine collée (ou qui déborderait) suit la nouvelle limite.
+  const previousTo =
+    previous && (previous.weekTo === phase.weekFrom - 1 || previous.weekTo >= weekFrom)
+      ? weekFrom - 1
+      : undefined;
+  const nextFrom =
+    next && (next.weekFrom === phase.weekTo + 1 || next.weekFrom <= weekTo)
+      ? weekTo + 1
+      : undefined;
+  return {
+    ...plan,
+    phases: plan.phases.map((item) => {
+      if (item.id === id) return { ...item, weekFrom, weekTo };
+      if (item.id === previous?.id && previousTo !== undefined)
+        return { ...item, weekTo: previousTo };
+      if (item.id === next?.id && nextFrom !== undefined) return { ...item, weekFrom: nextFrom };
+      return item;
+    }),
+  };
+}
+
 // Retirer une phase : ses semaines restent, sans phase ; les phases restent contiguës, donc seule la
 // première ou la dernière peut partir sans trou, sinon la précédente reprend ses semaines.
 export function removePhase<T extends Plan>(plan: T, id: string): T {
@@ -222,8 +284,12 @@ export function removePhase<T extends Plan>(plan: T, id: string): T {
 }
 
 // Séance vide d'une discipline (« Ajouter une séance ») : valide pour le schéma, à compléter dans
-// l'éditeur de séance (04 à 06).
-export function blankSession(discipline: "running" | "strength" | "hyrox"): SessionBody {
+// l'éditeur de séance (04 à 06). Elle suit la façon de viser par défaut du programme (BR-12) :
+// Running en zones de FC (Z2, les bpm se calculent depuis la FC max), Musculation en % du max (70 %).
+export function blankSession(
+  discipline: "running" | "strength" | "hyrox",
+  aims: AimDefaults = { running: "pace", strength: "kg" },
+): SessionBody {
   switch (discipline) {
     case "running":
       return {
@@ -233,7 +299,13 @@ export function blankSession(discipline: "running" | "strength" | "hyrox"): Sess
         content: {
           discipline: "running",
           items: [
-            { id: "e1", kind: "step", role: "run", measure: { type: "time", seconds: 2700 } },
+            {
+              id: "e1",
+              kind: "step",
+              role: "run",
+              measure: { type: "time", seconds: 2700 },
+              ...(aims.running === "hr" ? { target: { kind: "hr" as const, zone: 2 } } : {}),
+            },
           ],
         },
       };
@@ -249,8 +321,10 @@ export function blankSession(discipline: "running" | "strength" | "hyrox"): Sess
               id: "x1",
               kind: "exercise",
               name: "Exercice à choisir",
-              loadMode: "kg",
-              sets: [{ type: "normal", repsMin: 10 }],
+              loadMode: aims.strength,
+              sets: [
+                { type: "normal", repsMin: 10, ...(aims.strength === "pct" ? { pct: 70 } : {}) },
+              ],
             },
           ],
         },

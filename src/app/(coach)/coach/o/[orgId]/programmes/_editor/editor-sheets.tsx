@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { dlgPrimaryButtonClass } from "@/components/ui/dialog-styles";
 import { DialogBody, DialogFooter, Overlay, Sheet } from "@/components/ui/overlay";
 import { RadioMark } from "@/components/ui/radio-choice";
+import { SelectField } from "@/components/ui/select-field";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import type { Phase, Week } from "@/domain/training/program-plan";
 import type { PublishIssue } from "@/domain/training/program-publication";
@@ -86,6 +87,99 @@ export function TextSheet({
           className={fieldClass}
         />
         {hint ? <p className="text-[12.5px] leading-[1.45] text-muted">{hint}</p> : null}
+      </form>
+    </Sheet>
+  );
+}
+
+// « Modifier les semaines » d'une phase (TC-05 : « S5 à S9 ») : la première et la dernière semaine,
+// dans les bornes que laissent les phases voisines (qui suivent la limite déplacée).
+export function PhaseRangeSheet({
+  open,
+  onClose,
+  phase,
+  bounds,
+  label,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  phase: Phase | null;
+  bounds: { minFrom: number; maxTo: number };
+  // « Semaine 5 · 23 – 29 nov. » (programme) ou « Semaine 5 » (modèle).
+  label: (index: number) => string;
+  onConfirm: (from: number, to: number) => void;
+}) {
+  const id = useId();
+  const [range, setRange] = useState({ from: phase?.weekFrom ?? 1, to: phase?.weekTo ?? 1 });
+  const [shown, setShown] = useState(open);
+  if (open !== shown) {
+    setShown(open);
+    if (open && phase) setRange({ from: phase.weekFrom, to: phase.weekTo });
+  }
+  const weeks = (from: number, to: number) =>
+    Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i);
+  return (
+    <Sheet
+      open={open && phase !== null}
+      onClose={onClose}
+      title={`Semaines de la phase ${phase?.name ?? ""}`}
+      footer={
+        <DialogFooter
+          onCancel={onClose}
+          primary={
+            <button type="submit" form={id} className={dlgPrimaryButtonClass}>
+              Enregistrer
+            </button>
+          }
+        />
+      }
+    >
+      <form
+        id={id}
+        onSubmit={(event) => {
+          event.preventDefault();
+          onConfirm(range.from, range.to);
+        }}
+        className="flex flex-col gap-4"
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="flex flex-col gap-2">
+            <span className="text-[13.5px] font-semibold text-text">Première semaine</span>
+            <SelectField
+              value={range.from}
+              onChange={(event) => {
+                const from = Number(event.target.value);
+                setRange((current) => ({ from, to: Math.max(from, current.to) }));
+              }}
+            >
+              {weeks(bounds.minFrom, bounds.maxTo).map((index) => (
+                <option key={index} value={index}>
+                  {label(index)}
+                </option>
+              ))}
+            </SelectField>
+          </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-[13.5px] font-semibold text-text">Dernière semaine</span>
+            <SelectField
+              value={range.to}
+              onChange={(event) =>
+                setRange((current) => ({ ...current, to: Number(event.target.value) }))
+              }
+            >
+              {weeks(range.from, bounds.maxTo).map((index) => (
+                <option key={index} value={index}>
+                  {label(index)}
+                </option>
+              ))}
+            </SelectField>
+          </label>
+        </div>
+        <p className="text-[12.5px] leading-[1.45] text-muted">
+          Les séances ne bougent pas. Une phase voisine collée suit la limite et garde au moins une
+          semaine.
+        </p>
       </form>
     </Sheet>
   );
