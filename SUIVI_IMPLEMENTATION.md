@@ -32,7 +32,7 @@
 - Date : 2026-11-10
 - Objectif : intégration des maquettes « Programmes » (`coory-design/COORY_PROGRAMME_DESIGN_HANDOFF/`), phase 1 (audit, `coory-design/AUDIT_REPORT.md`) puis phase 2 (architecture, D-155, `coory-design/PHASE2_ARCHITECTURE.md`), validées par Antonino.
 
-### Écrans Programmes, phase 3b en cours (D-157, 10/11/2026)
+### Écrans Programmes, phase 3b terminée (D-157, 10/11/2026)
 ```
 Pages : app/(coach)/coach/o/[orgId]/programmes/ (liste, nouveau/, [programId]/, [programId]/seances/[cle]/,
   modeles/[templateId]/) ; /coach/programmes renvoie vers la page de l'organisation.
@@ -55,8 +55,20 @@ Vérifié au navigateur : 1440 et cadre de 390, clair et sombre, contre EDT-01 �
 Écarts signalés : Aperçu et PDF absents sur un modèle ; « Enregistré » après la cloche dans l'en-tête ;
   réglages de la séance (type, objectif, conseil) sous la liste sur téléphone (non dessinés) ; durée de
   séance des modèles de séance non modifiable ici (se modifie dans un programme).
-Reste : jours fixes (03b), onglet Programme, agenda, Publier (08), PDF ; durée d'une séance
-  Musculation non recalculée (gardée telle quelle, pas de formule inventée) ; vignettes grises (maquette).
+Jours fixes : _editor/fixed-days.tsx (pavé, bandeaux, choix du jour, proposition) ; scheduling.ts
+  (applySessionDay, setWeekFixed, setWeekOrdered) ; carte de séance : emplacement dayPad.
+Onglet Programme : sportifs/[athleteId]/program-tab.tsx ; queries.ts (getAthleteProgram enrichi : résumé,
+  jour, rendez-vous, objectif de course, semaines allégées ; listAthleteProgramRows) ; assistant :
+  ?depart=copie. Agenda 2c : week-session-cards.tsx (cartes dépliables), card-lines.ts.
+Publier : editor-sheets.tsx (PublishSheet aux mesures PUB-01/02) ; editor-provider.tsx
+  (currentRevision : correctif de la révision envoyée à la publication).
+Démo /design/programmes supprimée. Tests : Vitest 53 fichiers / 361 tests ; e2e program-editor.spec.ts :
+  6 parcours (Running, Musculation, fiche → jours fixes → publication), ordinateur et téléphone.
+  Suite complète : 191 passés ; athlete-overview.spec.ts adapté au nouvel onglet Programme et aux cartes
+  dépliables (repasse, 6/6). Le favori de la Bibliothèque reste l'instabilité connue (pas échoué ce coup-ci).
+Écarts : pas de « Faite » ni de ressenti tant que l'espace du sportif n'existe pas ; « Séances faites
+  0 / N » ; conseil du coach sans avatar ; méta de la semaine sans le mode (le sélecteur le dit).
+Reste : phase 5 (PDF), phase 6 (recette).
 ```
 
 ### Composants communs des écrans Programmes, phase 3a (D-156)

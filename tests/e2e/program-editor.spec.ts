@@ -128,3 +128,56 @@ test("le coach règle les séries d'un exercice avec la saisie rapide", async ({
       .first(),
   ).toBeVisible();
 });
+
+test("depuis la fiche du sportif : créer, fixer les jours, publier, retrouver le programme", async ({
+  page,
+}, testInfo) => {
+  const phone = testInfo.project.name === "telephone";
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const athlete = `Publication ${suffix}`;
+  const title = `Premier 10 km ${suffix}`;
+
+  await login(page);
+  await goToCoachSection(page, "Sportifs");
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
+  await fillAthleteName(page, athlete);
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  await expect(page.getByRole("heading", { name: athlete, level: 1 })).toBeVisible();
+  const fiche = new URL(page.url()).pathname;
+
+  // Onglet Programme vide : « Créer un programme » ouvre l'assistant avec ce sportif déjà choisi.
+  await page.goto(`${fiche}?onglet=programme`);
+  await expect(page.getByRole("heading", { name: /^Aucun programme pour/ })).toBeVisible();
+  await page.getByRole("link", { name: "Créer un programme" }).click();
+  await expect(page).toHaveURL(/\/programmes\/nouveau\?sportif=/);
+  // Depuis un modèle : on repart de l'adresse avec le modèle Coory « Premier 10 km ».
+  await page.goto(`${page.url()}&modele=${TEMPLATE}`);
+  await page.getByLabel("Titre du programme").fill(title);
+  for (let step = 1; step < 4; step += 1) {
+    await page.getByRole("button", { name: "Continuer" }).click();
+  }
+  await page.getByRole("button", { name: "Créer le brouillon" }).click();
+  await expect(page).toHaveURL(/\/programmes\/[0-9a-f-]{36}$/);
+
+  if (!phone) {
+    // Jours fixes : Coory propose un jour par séance, le coach valide.
+    await page.getByText("Jours fixes", { exact: true }).filter({ visible: true }).click();
+    await expect(page.getByRole("heading", { name: /^Fixer les jours/ })).toBeVisible();
+    await page.getByRole("button", { name: "Fixer les jours" }).click();
+    await expect(page.getByText(/Jours fixés pour la semaine/)).toBeVisible();
+  }
+
+  // Publier : la version 1, puis l'état « Publié v1 ».
+  if (phone) await page.getByRole("button", { name: "Publier" }).click();
+  else await page.getByRole("button", { name: "Publier" }).first().click();
+  await expect(page.getByRole("heading", { name: "Publier le programme ?" })).toBeVisible();
+  await page.getByRole("button", { name: "Publier la version 1" }).click();
+  await expect(page.getByText("Programme publié (version 1).")).toBeVisible();
+
+  // La fiche du sportif montre le programme publié.
+  await page.goto(`${fiche}?onglet=programme`);
+  await expect(page.getByText(title).filter({ visible: true }).first()).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Ouvrir l'éditeur" }).filter({ visible: true }),
+  ).toBeVisible();
+});

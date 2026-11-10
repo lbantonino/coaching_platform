@@ -87,6 +87,7 @@ export function ProgramWizard({
   templateMode,
   initialAthleteId,
   initialTemplateId,
+  initialCopy = false,
   defaultStartDate,
 }: {
   organizationId: string;
@@ -95,6 +96,8 @@ export function ProgramWizard({
   templateMode: boolean;
   initialAthleteId: string | null;
   initialTemplateId: string | null;
+  // « Copier un programme précédent » (onglet Programme du sportif) : étape 4 sur « Copier ».
+  initialCopy?: boolean;
   defaultStartDate: string;
 }) {
   const router = useRouter();
@@ -130,8 +133,14 @@ export function ProgramWizard({
   const [phases, setPhases] = useState<PhaseDraft[]>([]);
   const [editedPhase, setEditedPhase] = useState<number | null>(null);
   const [scheduling, setScheduling] = useState<"ordered" | "fixed">("ordered");
-  const [start, setStart] = useState<StartKind>(initialTemplateId ? "template" : "blank");
-  const [sourceProgramId, setSourceProgramId] = useState("");
+  const [start, setStart] = useState<StartKind>(
+    initialTemplateId
+      ? "template"
+      : initialCopy && (initialAthlete?.programs.length ?? 0) > 0
+        ? "copy"
+        : "blank",
+  );
+  const [sourceProgramId, setSourceProgramId] = useState(initialAthlete?.programs[0]?.id ?? "");
   const [templateId, setTemplateId] = useState(initialTemplateId ?? data.templates[0]?.id ?? "");
   const [preview, setPreview] = useState<StartPreview | null>(null);
   const [error, setError] = useState<string | null>(null);

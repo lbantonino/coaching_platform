@@ -1,12 +1,11 @@
 import { ChevronLeft, ChevronRight, Flag } from "lucide-react";
 import Link from "next/link";
 
-import { buttonClass, iconButtonClass } from "@/components/ui/button";
+import { iconButtonClass } from "@/components/ui/button";
 import { disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import { groupByDay, monthGrid, monthLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays, type AgendaItem } from "@/features/agenda/items";
 import { mondayOf } from "@/features/agenda/week";
-import type { AthleteProgram } from "@/features/programs/queries";
 import { dayShortLabel } from "@/lib/format";
 
 // Agenda d'un sportif sur sa fiche (demande d'Antonino du 26/10) : ses séances encadrées avec le coach
@@ -368,79 +367,4 @@ export function AthleteAgendaSection({
       </Link>
     </section>
   );
-}
-
-// Onglet « Programme » : le programme publié (titre, objectif, période, version) et le lien vers sa
-// vue semaine par semaine ; sans programme, un état vide honnête et le bouton pour en créer un.
-// La création et la modification arrivent avec l'éditeur (tranche 2).
-export function AthleteProgramSection({
-  name,
-  program,
-  agendaHref,
-}: {
-  name: string;
-  program: AthleteProgram | null;
-  agendaHref: string;
-}) {
-  if (program) {
-    const last = program.weeks[program.weeks.length - 1];
-    const sessions = program.weeks.reduce((sum, week) => sum + week.sessions.length, 0);
-    return (
-      <section
-        aria-labelledby="athlete-program-title"
-        className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-      >
-        <div className="flex flex-col gap-1">
-          <h2 id="athlete-program-title" className="text-title font-medium">
-            {program.title}
-          </h2>
-          {program.goal ? <p className="text-small text-muted">Objectif : {program.goal}</p> : null}
-        </div>
-        <dl className="grid grid-cols-2 gap-3 text-small sm:grid-cols-4">
-          {[
-            ["Période", `${dayMonthShort(program.startDate)} → ${dayMonthShort(last.sunday)}`],
-            ["Durée", `${program.weeksCount} semaines`],
-            ["Séances", String(sessions)],
-            ["Version", `Publiée n° ${program.publicationNumber}`],
-          ].map(([label, value]) => (
-            <div key={label} className="flex flex-col gap-0.5 rounded-[12px] bg-bg p-3">
-              <dt className="text-[12px] text-muted">{label}</dt>
-              <dd className="font-medium">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <Link href={agendaHref} className={buttonClass({ variant: "outline", className: "w-fit" })}>
-          Voir le programme semaine par semaine
-        </Link>
-      </section>
-    );
-  }
-  return (
-    <section
-      aria-labelledby="athlete-program-title"
-      className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 md:p-[22px]"
-    >
-      <h2 id="athlete-program-title" className="text-title font-medium">
-        Programme
-      </h2>
-      <div className="flex flex-col items-start gap-3 rounded-[14px] border border-dashed border-line-2 p-5">
-        <p className="text-muted">
-          Aucun programme pour {name} pour l&apos;instant. Ici, tu verras son programme semaine par
-          semaine, tu pourras le modifier et y ajouter des séances.
-        </p>
-        <Link href="/coach/programmes" className={buttonClass({ variant: "outline" })}>
-          Créer un programme
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-const dayMonthShortFormat = new Intl.DateTimeFormat("fr-BE", {
-  day: "numeric",
-  month: "short",
-  timeZone: "UTC",
-});
-function dayMonthShort(day: string): string {
-  return dayMonthShortFormat.format(new Date(`${day}T00:00:00Z`));
 }

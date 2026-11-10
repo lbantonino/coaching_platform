@@ -1,13 +1,13 @@
-import { ChevronLeft, ChevronRight, Flag, ListOrdered, UserRound, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Flag, ListOrdered, Users } from "lucide-react";
 import Link from "next/link";
-import type { CSSProperties } from "react";
 
-import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
+import { cardLines } from "@/domain/training/card-lines";
 import type { AgendaItem } from "@/features/agenda/items";
-import type { AthleteProgram, ProgramSessionCard, ProgramWeek } from "@/features/programs/queries";
+import type { AthleteProgram, ProgramWeek } from "@/features/programs/queries";
 import { dayShortLabel } from "@/lib/format";
 
 import { WeekPicker } from "./week-picker";
+import { WeekSessionCards } from "./week-session-cards";
 
 // Onglet « Agenda » quand le sportif a un programme (D-46), d'après la maquette « Sportifs » du
 // 03/11/2026 (page 2c). En haut, le programme (durée, dates, rythme) et sa règle : les séances n'ont
@@ -36,79 +36,27 @@ const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "
 const ofName = (name: string) =>
   /^[aeiouyhàâéèêëîïôöûü]/i.test(name) ? `d'${name}` : `de ${name}`;
 
+// « Mardi 3 » : le jour d'une séance en jours fixes (ou de son rendez-vous avec le coach).
+const longWeekday = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+function fullDay(day: string): string {
+  const text = longWeekday.format(utc(day));
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+const WEEKDAY_OFFSET = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 } as const;
+function dayOfWeek(monday: string, day: keyof typeof WEEKDAY_OFFSET): string {
+  const date = utc(monday);
+  date.setUTCDate(date.getUTCDate() + WEEKDAY_OFFSET[day]);
+  return date.toISOString().slice(0, 10);
+}
+
 // Jour d'une compétition : « Sam 12 déc. ».
 function competitionDay(day: string): string {
   const text = weekdayDayMonth.format(utc(day)).replace(".", "");
   return text.charAt(0).toUpperCase() + text.slice(1);
-}
-
-// Une séance du programme. `coachSlot` : séance faite avec le coach (withCoach) ; son jour et son
-// heure cette semaine (« Aujourd'hui · 07:00 »), ou null si le rendez-vous n'a pas lieu cette
-// semaine-là. Ordinateur : une carte en colonne (numéro, titre, discipline · type, rendez-vous en
-// bas) ; téléphone : une ligne (numéro à gauche). Écrite une fois, placée selon l'écran.
-function SessionCard({
-  session,
-  href,
-  coachSlot,
-  coachToday,
-}: {
-  session: ProgramSessionCard;
-  href: string;
-  coachSlot: string | null | undefined;
-  coachToday: boolean;
-}) {
-  const { content } = session;
-  const styles = content.discipline ? disciplineStyles[content.discipline] : null;
-  return (
-    <Link
-      href={href}
-      className={`flex w-full min-w-0 items-center gap-3.5 rounded-[14px] p-4 transition-[filter] duration-150 hover:brightness-[.97] active:brightness-[.92] active:duration-0 lg:flex-col lg:items-stretch lg:gap-2 lg:p-3.5 ${
-        styles ? styles.tint : "bg-surface-2"
-      }`}
-    >
-      <span
-        aria-hidden
-        className={`grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold lg:size-[26px] ${
-          styles ? styles.number : "bg-chip text-muted"
-        }`}
-      >
-        {session.slotIndex}
-      </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5 lg:contents">
-        <span className="text-[15px] leading-[1.3] font-semibold [overflow-wrap:anywhere] text-text lg:text-[14.5px]">
-          <span className="sr-only">Séance {session.slotIndex} : </span>
-          {content.title}
-        </span>
-        <span className="text-[12.5px] leading-4 text-text-2 lg:leading-[1.4]">
-          {content.discipline ? (
-            <>
-              <span className={`lg:font-semibold ${styles?.text ?? ""} max-lg:text-text-2`}>
-                {disciplineLabels[content.discipline]}
-              </span>
-              {" · "}
-            </>
-          ) : null}
-          {content.sessionType}
-        </span>
-        {coachSlot !== undefined ? (
-          // « Avec le coach · … » sur téléphone, « Coach · … » sur ordinateur (même texte, le début
-          // masqué) ; en violet le jour du rendez-vous.
-          <span
-            className={`flex items-center gap-1.5 pt-[3px] text-[12.5px] leading-4 font-medium lg:mt-auto lg:items-start lg:border-t lg:border-line lg:pt-2 lg:text-[12px] lg:leading-[1.4] ${
-              coachToday ? "text-violet-text" : "text-text"
-            }`}
-          >
-            <UserRound aria-hidden size={13} strokeWidth={2} className="shrink-0 lg:mt-px" />
-            <span className="min-w-0">
-              <span className="lg:hidden">Avec le </span>
-              <span className="lg:capitalize">coach</span>
-              {coachSlot ? ` · ${coachSlot}` : ""}
-            </span>
-          </span>
-        ) : null}
-      </span>
-    </Link>
-  );
 }
 
 // Sous la semaine : ses compétitions, et les séances avec le coach qui ne correspondent à aucune
@@ -160,7 +108,9 @@ function WeekCard({
   coachItems,
   agendaPath,
   last,
+  name,
 }: {
+  name: string;
   week: ProgramWeek;
   current: boolean;
   today: string;
@@ -232,25 +182,33 @@ function WeekCard({
         ) : null}
       </div>
       {count > 0 ? (
-        <ol
-          aria-label={`Séances de la semaine ${week.index}`}
-          style={{ "--n": count } as CSSProperties}
-          className="grid grid-cols-1 gap-2 lg:grid-cols-[repeat(var(--n),minmax(0,1fr))] lg:gap-2.5"
-        >
-          {week.sessions.map((session) => {
+        <WeekSessionCards
+          weekIndex={week.index}
+          sessions={week.sessions.map((session) => {
             const slot = coachSlots.get(session.id);
-            return (
-              <li key={session.id} className="flex min-w-0">
-                <SessionCard
-                  session={session}
-                  href={`${basePath}/programme/${session.id}`}
-                  coachSlot={slot ? slot.label : undefined}
-                  coachToday={slot?.today ?? false}
-                />
-              </li>
-            );
+            const date =
+              session.coachDate ?? (session.day ? dayOfWeek(week.monday, session.day) : null);
+            const dayLabel = date ? fullDay(date) : null;
+            return {
+              id: session.id,
+              slot: session.slotIndex,
+              href: `${basePath}/programme/${session.id}`,
+              content: session.content,
+              lines: cardLines(session.content),
+              dayLabel,
+              coach: slot ? { label: slot.label, today: slot.today } : null,
+              context: [
+                `Semaine ${week.index}`,
+                range,
+                slot
+                  ? `avec le coach${slot.label ? `, ${slot.label}` : ""}`
+                  : dayLabel
+                    ? `le ${dayLabel.toLowerCase()}`
+                    : `au jour choisi par ${name}`,
+              ].join(" · "),
+            };
           })}
-        </ol>
+        />
       ) : null}
       <WeekCoachItems
         items={others}
@@ -343,6 +301,8 @@ export function ProgramWeeksSection({
   ];
 
   const shownWeeks = view === "semaine" ? [shown] : weeks;
+  // Semaine affichée en jours fixes : une séance a un jour sans être un rendez-vous du coach.
+  const fixed = shown.sessions.some((session) => session.day !== null && !session.coachDate);
 
   return (
     // Ordinateur, vue « Toutes les semaines » : la colonne prend la hauteur restante et la dernière
@@ -374,12 +334,21 @@ export function ProgramWeeksSection({
             strokeWidth={2}
             className="mt-0.5 shrink-0 text-violet-text"
           />
-          <span>
-            <strong className="font-semibold text-text">Dans l&apos;ordre, au jour choisi.</strong>{" "}
-            {`${name} enchaîne les séances${most > 1 ? ` 1 → ${most}` : ""} ${
-              pronoun ? `quand ${pronoun} veut` : "à son rythme"
-            } ; seules celles avec le coach ont une date.`}
-          </span>
+          {fixed ? (
+            <span>
+              <strong className="font-semibold text-text">Jours fixés par le coach.</strong>{" "}
+              {`${name} suit les jours indiqués sur chaque séance. Tu peux repasser en « dans l'ordre » à tout moment, dans l'éditeur.`}
+            </span>
+          ) : (
+            <span>
+              <strong className="font-semibold text-text">
+                Dans l&apos;ordre, au jour choisi.
+              </strong>{" "}
+              {`${name} enchaîne les séances${most > 1 ? ` 1 → ${most}` : ""} ${
+                pronoun ? `quand ${pronoun} veut` : "à son rythme"
+              } ; seules celles avec le coach ont une date.`}
+            </span>
+          )}
         </p>
       </section>
 
@@ -448,6 +417,7 @@ export function ProgramWeeksSection({
           basePath={basePath}
           coachItems={coachItemsByMonday.get(week.monday) ?? []}
           agendaPath={agendaPath}
+          name={name}
         />
       ))}
     </div>

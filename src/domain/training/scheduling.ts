@@ -173,3 +173,74 @@ export function proposeWeekDays(
   });
   return result;
 }
+
+// « Appliquer ce jour à » (03b, choix du jour d'une séance) : la séance à la position `slot` (ordre
+// du coach dans la semaine source) reçoit ce jour et cette heure (ou « sans jour ») dans chaque semaine
+// visée. Une semaine visée passe en jours fixes, ses autres séances gardent leur jour. Les semaines
+// passées (BR-07) et les séances avec le coach (BR-06) ne changent pas.
+export function applySessionDay(
+  weeks: Week[],
+  phases: Phase[],
+  sourceIndex: number,
+  slot: number,
+  choice: { day: Weekday | null; time?: string; athleteCanMove: boolean },
+  scope: ScheduleScope,
+  dates?: { startDate: string; today: string },
+): Week[] {
+  const phase = phases.find((item) => item.weekFrom <= sourceIndex && sourceIndex <= item.weekTo);
+  const inScope = (index: number) =>
+    index === sourceIndex ||
+    scope === "program" ||
+    (scope === "phase" && phase !== undefined && phase.weekFrom <= index && index <= phase.weekTo);
+  return weeks.map((week) => {
+    if (!inScope(week.index)) return week;
+    if (week.index !== sourceIndex && dates && isPastWeek(dates.startDate, week.index, dates.today))
+      return week;
+    const target = week.sessions[slot];
+    if (!target || target.withCoach) return week;
+    return {
+      ...week,
+      scheduling: "fixed",
+      sessions: week.sessions.map((session, i) =>
+        i === slot
+          ? {
+              ...session,
+              fixedDay: choice.day ?? undefined,
+              fixedTime: choice.day && choice.time ? choice.time : undefined,
+              athleteCanMove: choice.athleteCanMove,
+            }
+          : session,
+      ),
+    };
+  });
+}
+
+// « Dans l'ordre » : la semaine perd ses jours (les rendez-vous du coach restent).
+export function setWeekOrdered(week: Week): Week {
+  return {
+    ...week,
+    scheduling: "ordered",
+    sessions: week.sessions.map((session) => ({
+      ...session,
+      fixedDay: undefined,
+      fixedTime: undefined,
+    })),
+  };
+}
+
+// « Fixer les jours » : la semaine passe en jours fixes avec les jours choisis (proposition corrigée).
+export function setWeekFixed(week: Week, days: ReadonlyMap<string, Weekday>): Week {
+  return {
+    ...week,
+    scheduling: "fixed",
+    sessions: week.sessions.map((session) =>
+      session.withCoach
+        ? session
+        : {
+            ...session,
+            fixedDay: days.get(session.key),
+            fixedTime: days.get(session.key) ? session.fixedTime : undefined,
+          },
+    ),
+  };
+}
