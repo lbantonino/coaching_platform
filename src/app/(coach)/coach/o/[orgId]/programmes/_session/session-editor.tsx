@@ -65,6 +65,7 @@ import {
   type StrengthGroup,
 } from "@/domain/training/strength-edit";
 import {
+  formatMinutes,
   formatSeconds,
   runningDistanceMeters,
   sessionHeadline,
@@ -109,6 +110,8 @@ export type SessionMeta = {
   strength: { athlete: StrengthAthlete; library: LibraryChoice[] } | null;
   // Hyrox : la division du sportif (charges officielles) et son sexe.
   hyrox: HyroxAthlete | null;
+  // Venu de la fiche du sportif : « Terminer » et le retour y ramènent.
+  returnTo: { href: string; label: string } | null;
 };
 
 const field =
@@ -147,7 +150,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dialog, setDialog] = useState<null | "rename" | "template" | "delete">(null);
 
-  const backHref = programHref(meta);
+  const backHref = meta.returnTo?.href ?? programHref(meta);
   const leave = (href: string) =>
     startTransition(async () => {
       await editor.flush();
@@ -204,7 +207,10 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
   const totals = [
     // Musculation : « Séries » d'abord (maquette 5a).
     ...(strengthCount ? [{ label: "Séries", value: String(strengthCount.sets) }] : []),
-    { label: "Durée estimée", value: `≈ ${formatSeconds(session.durationMinutes * 60)}` },
+    {
+      label: "Durée estimée",
+      value: `≈ ${(running ? formatMinutes : formatSeconds)(session.durationMinutes * 60)}`,
+    },
     ...(hyrox && hyroxTimeCap(hyrox)
       ? [{ label: "Limite", value: formatSeconds(hyroxTimeCap(hyrox) ?? 0) }]
       : []),
@@ -543,7 +549,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
       <MobileBarTitle>
         <button type="button" onClick={() => leave(backHref)} className={barBackClass}>
           <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />
-          <span className="truncate">Semaine {meta.weekIndex}</span>
+          <span className="truncate">{meta.returnTo?.label ?? `Semaine ${meta.weekIndex}`}</span>
         </button>
       </MobileBarTitle>
 

@@ -1,7 +1,8 @@
+import { decimalClock } from "./clock-input";
 import { formatPace } from "./pace";
 import { localId } from "./plan-edit";
 import type { RunMeasure, RunRepeat, RunStep, RunningContent } from "./session-v2";
-import { formatMeters, formatSeconds } from "./session-view";
+import { formatMeters, formatMinutes } from "./session-view";
 
 // Éditeur de séance Running (04, RUN-01 à 03, D-157) : règles PURES, testées par Vitest. L'éditeur
 // les appelle à chaque modification ; le contenu reste valide pour runningContentSchema.
@@ -30,7 +31,8 @@ export const RUN_SESSION_TYPES = [
 // ---------------------------------------------------------------------------
 // « 2:00 » -> 120 ; « 45 » -> 2700 (minutes) ; « 1:15:00 » -> 4500 ; « 90 s » -> 90.
 export function parseDuration(input: string): number | null {
-  const value = input.trim().replace(/\s*min$/i, "");
+  // « 2,30 » ou « 1,5 » au pavé décimal du téléphone (clock-input.ts).
+  const value = decimalClock(input.trim().replace(/\s*min$/i, ""));
   if (!value) return null;
   const seconds = /^(\d{1,4})\s*s$/i.exec(value);
   if (seconds) return Number(seconds[1]) || null;
@@ -49,15 +51,11 @@ export function parseDuration(input: string): number | null {
   return total >= 1 && total <= 36_000 ? total : null;
 }
 
-// Valeur du champ « Mesure » : « 2:00 » (min), « 1:15:00 » (h).
+// Valeur du champ « Mesure » : « 2:00 », « 80:00 » ; toujours en minutes (jamais d'heures en Running).
 export function durationField(seconds: number): { value: string; unit: string } {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const rest = seconds % 60;
-  const ss = String(rest).padStart(2, "0");
-  return hours
-    ? { value: `${hours}:${String(minutes).padStart(2, "0")}:${ss}`, unit: "h" }
-    : { value: `${minutes}:${ss}`, unit: "min" };
+  const minutes = Math.floor(seconds / 60);
+  const ss = String(seconds % 60).padStart(2, "0");
+  return { value: `${minutes}:${ss}`, unit: "min" };
 }
 
 // « 800 » ou « 800 m » -> 800 ; « 1,5 », « 1.5 km », « 10 » (moins de 100 : des km) -> mètres.
@@ -83,7 +81,7 @@ export function distanceField(meters: number): { value: string; unit: string } {
 export function measureText(measure: RunMeasure): string {
   switch (measure.type) {
     case "time":
-      return formatSeconds(measure.seconds);
+      return formatMinutes(measure.seconds);
     case "distance":
       return formatMeters(measure.meters);
     case "open":

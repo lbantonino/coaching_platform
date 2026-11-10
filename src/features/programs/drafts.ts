@@ -275,3 +275,14 @@ export async function loadStrengthMaxes(
   }
   return maxes;
 }
+
+// Clés des séances du brouillon d'un programme (onglet Programme du sportif : « Modifier la séance »
+// ouvre directement l'éditeur d'une séance qui existe encore dans le brouillon).
+export async function draftSessionKeys(
+  supabase: Supabase,
+  organizationId: string,
+  programId: string,
+): Promise<string[]> {
+  const loaded = await loadDraft(supabase, organizationId, programId);
+  return loaded?.draft ? loaded.draft.weeks.flatMap((week) => week.sessions.map((s) => s.key)) : [];
+}

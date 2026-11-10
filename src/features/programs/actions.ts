@@ -14,14 +14,15 @@ import {
   type ProgramDraft,
   type Week,
 } from "@/domain/training/program-plan";
-import { buildPublication, validateForPublish } from "@/domain/training/program-publication";
+import { buildPublication } from "@/domain/training/program-publication";
 import { resizePlan } from "@/domain/training/program-upgrade";
 import { sessionBodySchema } from "@/domain/training/session-v2";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database.types";
 
-import { aimContext, listCoachSessionSlots, loadAthleteContext, loadDraft } from "./drafts";
+import { loadAthleteContext, loadDraft } from "./drafts";
+import { checkPublication } from "./publish-check";
 import { createProgramInputSchema, templateKindSchema, type CreateProgramInput } from "./schemas";
 import { getProgramTemplate, getSessionTemplate } from "./templates";
 
@@ -228,31 +229,15 @@ export async function publishProgram(
   if (!loaded.draft) return fail("INVALID", "Le brouillon n'est pas lisible.");
   const draft: ProgramDraft = loaded.draft;
 
-  const athlete = await loadAthleteContext(supabase, orgId, loaded.program.athleteId);
-  if (!athlete) return fail("NOT_FOUND", "Sportif introuvable.");
-  const [others, coachSessions] = await Promise.all([
-    supabase
-      .from("programs")
-      .select("title, start_date, weeks_count")
-      .eq("organization_id", orgId)
-      .eq("athlete_id", loaded.program.athleteId)
-      .eq("status", "published")
-      .neq("id", programId),
-    listCoachSessionSlots(supabase, orgId),
-  ]);
-  if (others.error) return fail("FAILED", "La vérification n'a pas abouti. Réessaie.");
-
-  const context = aimContext(athlete, draft);
-  const issues = validateForPublish(draft, {
-    ...context,
-    otherPublished: (others.data ?? []).map((row) => ({
-      title: row.title,
-      startDate: row.start_date,
-      weeksCount: row.weeks_count,
-    })),
-    availableDays: athlete.availableDays,
-    coachSessionIds: new Set(coachSessions.map((session) => session.id)),
-  });
+  // Les mêmes vérifications que le bandeau de la fiche du sportif (publish-check.ts).
+  let checked: Awaited<ReturnType<typeof checkPublication>>;
+  try {
+    checked = await checkPublication(supabase, orgId, programId, { ...loaded, draft });
+  } catch {
+    return fail("FAILED", "La vérification n'a pas abouti. Réessaie.");
+  }
+  if (!checked) return fail("NOT_FOUND", "Sportif introuvable.");
+  const { issues, context } = checked;
   const blocking = issues.filter((issue) => issue.level === "blocking");
   if (blocking.length > 0) {
     return fail(

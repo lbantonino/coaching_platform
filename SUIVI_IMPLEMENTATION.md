@@ -10,7 +10,7 @@
 | P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris ; D-76 : exercices du coach) ; Mobilité visible le 31/10 ; liste et fiche aux maquettes d'Antonino le 06/11 (D-142, fond lavande) ; P3-02 à P3-06 à faire | db:test 434/434, test 278/278, test:e2e bibliothèque 8/8 (31/10) ; suite complète du 30/10 : 169 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Sessions du 30 et 31/10/2026 |
 | P4 Éditeur multi-sports | **En cours** : données et règles de l'éditeur faites le 09/11 (D-155 : brouillons avec révision, modèles Coory et Mes modèles, publication par fonction SQL, schéma de séance v2, jours fixes, façons de viser, charges officielles Hyrox) ; **écrans à venir** (phase 3 des maquettes « Programmes ») | db:test 503/503, Vitest 332/332, test:e2e 186 passés / 19 ignorés (1 échec intermittent sans lien, voir session du 09/11) | Session du 09/11/2026 ; `coory-design/PHASE2_ARCHITECTURE.md` |
-| P5 Publications/PDF | À faire | Aucun | - |
+| P5 Publications/PDF | **En cours** : publication faite (D-155, D-157) ; PDF des programmes faits le 10/11 (D-158 : Agenda du programme, Fiches et repères, menu à 2 choix) ; reste le stockage et l'historique des PDF, l'envoi au sportif | Vitest 386/386 (dont rendu réel des 2 PDF), test:e2e program-pdf 8/8, program-editor + athlete-overview 12/12 | Session du 10/11/2026 |
 | P6 Sportif/feedback | À faire | Aucun | - |
 | P7 Communication | À faire | Aucun | - |
 | P8 SaaS commercial | À faire | Aucun | - |
@@ -31,6 +31,95 @@
 ## Dernière session
 - Date : 2026-11-10
 - Objectif : intégration des maquettes « Programmes » (`coory-design/COORY_PROGRAMME_DESIGN_HANDOFF/`), phase 1 (audit, `coory-design/AUDIT_REPORT.md`) puis phase 2 (architecture, D-155, `coory-design/PHASE2_ARCHITECTURE.md`), validées par Antonino.
+
+### Onglet Programme du sportif : le détail de la séance sur place (10/11/2026)
+```
+Demande d'Antonino : comme dans l'éditeur, un appui sur une séance de la semaine affiche son détail
+dans la colonne de droite (sous la carte du programme), au lieu d'ouvrir la page de la séance ; sur
+téléphone, dans une feuille du bas (en-tête standard, croix). « Modifier la séance » ouvre
+directement son éditeur (clé de la séance publiée retrouvée dans le brouillon, sinon l'éditeur sur sa
+semaine). Carte « Autres semaines » remplacée par ce détail ; carte du programme épurée : plus de
+« Séances faites 0 / N » (la barre d'avancement des semaines reste, à la demande d'Antonino),
+l'objectif en petit sous les dates.
+Fichiers : program-week-board.tsx (client), program-tab.tsx (serveur, async : draftSessionKeys),
+components/programs/session-detail.tsx (SessionDetailView : séance v2 structurée ou v1 en texte),
+queries.ts (clé de la séance), drafts.ts (draftSessionKeys).
+Tests : Vitest 390/390 ; test:e2e athlete-overview (détail sur place, la fiche ne change pas
+d'adresse), program-editor, program-pdf 20/20 ; types, lint, format propres.
+Suite (D-159, même jour) : page d'une séance SUPPRIMÉE (accord d'Antonino) avec session-display.ts,
+getProgramSession et leurs tests ; « Ouvrir la page de la séance » de l'agenda déplié devient
+« Modifier la séance ».
+```
+
+### Synchronisation après « Modifier la séance » (D-159, 10/11/2026)
+```
+Constat : les modifications faites depuis la fiche allaient bien dans le brouillon (révision 12 pour
+Anaïs) mais la fiche, les PDF et le sportif montrent la version publiée (v1), par règle (versions
+figées, publication explicite). Choix d'Antonino : « Publier en 1 clic ».
+- Bandeau sur la fiche (onglets Programme et Agenda) quand le brouillon a des modifications non
+  publiées : « Modifications non publiées. Anaïs voit encore la version 1. » + « Publier la
+  version 2 » -> la fenêtre Publier de l'éditeur (semaines, séances, avertissements, refus).
+- Vérifications partagées : features/programs/publish-check.ts (checkPublication, utilisée aussi
+  par l'action publishProgram ; pendingPublication pour la fiche).
+- « Modifier la séance » porte ?retour=<fiche, onglet, semaine> ; « Terminer » et le retour de
+  l'éditeur de séance y ramènent (adresse acceptée seulement si c'est une fiche de l'organisation).
+Tests : test:e2e program-editor (créer, publier v1, modifier depuis la fiche, Terminer -> fiche,
+bandeau, publier v2, « 12 min » dans le détail), athlete-overview, program-pdf 20/20 ; Vitest
+387/387 ; types, lint, format propres. Rien n'a été publié sur le programme d'Anaïs (ses 2
+modifications attendent son « Publier la version 2 »).
+```
+
+### Retouches de l'éditeur demandées par Antonino (10/11/2026, après la phase 5)
+```
+1. Panneau de détail d'une séance (éditeur 03, page d'un modèle, écran téléphone) aux règles des
+   cartes de l'agenda : une info par ligne (plus de « + » ni de « · » entre les lignes), puce devant
+   chaque exercice, gras (Running : durée/distance ; Hyrox : mouvement + volume ; musculation : nom,
+   séries × répétitions et repos), noms entiers (pas de BBJ), récup / consigne / repos du tour sans
+   puce et en gris. Composant commun components/programs/session-line.tsx (cartes + détail) ; règles
+   pures card-lines.ts (detailItems, strengthDetailParts).
+2. Éditeur, ordinateur : « Dans l'ordre | Jours fixes », « Dupliquer » et « ··· » sur une seule ligne.
+   Téléphone : filtre « Toutes les semaines / Semaine n · dates » au-dessus de la liste des semaines.
+3. Clavier des allures au téléphone (iOS : pavé sans « : », pas de changement de clavier possible) :
+   le « : » d'une allure se pose seul (« 455 » -> « 4:55 » ; Running min/km, run et ergomètres
+   Hyrox) ; durées et temps (étape Running, temps cible et limite Hyrox, simulation) au pavé
+   décimal, la virgule sert de « : » (« 2,30 » = 2:30, « 1,5 » = 1:30), un nombre seul reste des
+   minutes. Règles pures clock-input.ts (maskPace, decimalClock), parseDuration et parseClock.
+Tests : Vitest 390/390 ; test:e2e program-editor (saisie « 455 » -> « 4:55 » ordinateur et
+téléphone), program-pdf, athlete-overview 20/20 ; types, lint, format propres.
+```
+
+### PDF des programmes, phase 5 (D-158, 10/11/2026)
+```
+Deux PDF tirés de la version PUBLIÉE, générés à la demande (React-PDF, ADR 0002) :
+- « Agenda du programme » : sommaire (une ligne par semaine, phase en couleur, allégée, ★ course,
+  semaine en cours), puis une page par semaine (7 jours ou « Séance n » en dans l'ordre, Repos,
+  cartes aux règles de l'app : puces, gras, minutes). Musculation et Hyrox longs : résumé et
+  « → fiche dans « Fiches et repères » ». Semaine trop chargée : 3 lignes + « → détail dans Coory ».
+- « Fiches et repères » : une fiche par séance de musculation (échauffement, tableau A1/A2, EMOM,
+  retour au calme, conseil, charges semaine par semaine) ; un workload par séance Hyrox longue (une
+  carte par semaine, blocs numérotés) ; les allures du programme (min/km, min/500 m, vitesse).
+  Une fiche trop longue continue « (suite) ».
+Liens internes (sommaire, ‹ ›, bouton central -> sommaire), signets, métadonnées, A4, Plus Jakarta
+Sans intégrée (6 fichiers OFL dans src/features/programs/pdf/fonts, embarqués au déploiement par
+outputFileTracingIncludes). Routes : …/programmes/[programId]/pdf/agenda et /fiches (requireOrgAccess,
+RLS, 404 pour inconnu, autre organisation ou jamais publié ; ?telecharger pour télécharger).
+Bouton « PDF » = menu à 2 choix (décision d'Antonino) dans l'éditeur (désactivé tant que rien n'est
+publié), l'onglet Programme et la séance dépliée de l'agenda (ouvre sa semaine, #nameddest).
+Fichiers : domain/training/pdf-agenda.ts, pdf-fiches.ts ; features/programs/pdf/ (pdf-kit,
+agenda-pdf, fiches-pdf, program-pdf-source, pdf-response) ; components/programs/program-pdf-menu.tsx ;
+more-menu.tsx (bouton déclencheur réglable) ; queries.ts (getPublishedProgram, séance v2 transmise).
+Pièges React-PDF 4.9 notés au carnet : wrap={false} donne à la page la hauteur de son contenu ;
+minHeight déforme une pile de lignes ; une hauteur sous-estimée pousse le pied sur une page vide
+(le test de rendu compare le nombre de pages au modèle).
+Vérifié : rendu réel d'Anaïs (13 + 14 pages) et de 3 programmes de la graine (v1 et v2), comparé
+aux maquettes ; liens et signets lus dans le fichier. À faire par Antonino : ouvrir les PDF dans
+Aperçu, Safari iOS (Fichiers) et un lecteur Android (tableau de compatibilité du handoff).
+Tests : Vitest 386/386, test:e2e program-pdf 8/8, program-editor et athlete-overview 12/12 (sans
+db:reset, pour garder la simulation d'Antonino) ; types, lint, format propres.
+Reste en P5 : stockage et historique des PDF, envoi au sportif. Ensuite : demandes d'Antonino en
+attente (panneau de détail de l'éditeur aux règles des cartes, sélecteur des jours sur la ligne de
+Dupliquer, filtre de semaine sur téléphone, « : » automatique des allures), puis phase 6 (recette).
+```
 
 ### Écrans Programmes, phase 3b terminée (D-157, 10/11/2026)
 ```
@@ -68,6 +157,45 @@ Démo /design/programmes supprimée. Tests : Vitest 53 fichiers / 361 tests ; e2
   dépliables (repasse, 6/6). Le favori de la Bibliothèque reste l'instabilité connue (pas échoué ce coup-ci).
 Écarts : pas de « Faite » ni de ressenti tant que l'espace du sportif n'existe pas ; « Séances faites
   0 / N » ; conseil du coach sans avatar ; méta de la semaine sans le mode (le sélecteur le dit).
+Correctif (signalé par Antonino) : après « Terminer » sur une séance, un 2e « Ajouter une séance »
+  menait à « Page introuvable ». Next.js garde la page de l'éditeur montée en arrière-plan avec son
+  ancien état ; l'enregistrement partait avec une révision périmée (refusé). Les EditorProvider ont
+  maintenant pour clé la révision lue sur le serveur ; une séance ne s'ouvre que si le brouillon est
+  enregistré. Scénario ajouté au parcours program-editor.spec.ts (6/6).
+Demandes d'Antonino (10/11, en testant) : « Appliquer ce jour à la phase / tout le programme » place
+  la séance dans chaque semaine visée (même nom, sinon même place si la semaine a autant de séances,
+  sinon une COPIE à ce jour) : plus besoin de dupliquer des semaines pour poser « Sortie longue le
+  mercredi » partout. Le choix du jour (panneau, feuille, proposition) n'affiche que les noms des
+  jours ; la carte de la semaine garde les dates (« Lun 16 »). Message après validation honnête
+  (semaines changées, copies créées). scheduling.ts : applySessionDay ; tests scheduling-days.
+Agenda du sportif (demande d'Antonino, 10/11) : toutes les cartes d'une semaine ont la hauteur de la
+  plus haute (la carte remplit sa colonne, rien d'écrit en dur) ; plus aucune ligne coupée (texte à la
+  ligne, 11,5 px, unités et plages insécables) ; bloc répété groupé (« 4 × » puis l'effort et la récup
+  derrière un trait) ; la récup garde son unité et sa cible ; jour « Mer 18 » sur carte étroite,
+  « Mercredi 18 » sinon (requête de conteneur). card-lines.ts (CardLine) + tests.
+Règle d'Antonino (10/11) : Running toujours en minutes, jamais en heures (« 80 min »), partout et pour
+  tous (session-view.ts formatMinutes / hoursToMinutes, running-edit.ts durationField, card-lines.ts).
+  Cartes de l'agenda : durée/distance en gras, plage de FC d'une zone en italique (lineParts).
+Profil de démonstration (demande d'Antonino, 10/11) : Anaïs VDB, « Prépa HYROX Bruxelles » publiée,
+  12 semaines, 7 séances par semaine en jours fixes (créée par script en local, aucun db:reset).
+  Défauts vus sur ses cartes et corrigés : « Run 1,5 km » n'est plus coupé à la virgule décimale ;
+  un bloc Hyrox sans tours (AMRAP) garde toutes ses lignes sous son nom (CardLine « group ») ; la
+  musculation montre chaque exercice au lieu de « 2 exercices » ; « repos 2 min » garde son unité
+  (session-view.ts) ; « 2:10 /500 m » au lieu de « 2:10 min /500 m ». Vitest 366/366, types et lint
+  propres ; Playwright non relancé (db:reset effacerait la simulation d'Antonino).
+Cartes de l'agenda, demande d'Antonino (10/11) : la musculation au plus court, une ligne par exercice
+  avec son nom et son volume (« Back squat 4 × 6 ») ; charge, RIR, repos, consignes, échauffement et
+  retour au calme seulement dans la carte dépliée (strengthShort). Hyrox et musculation : le mouvement
+  et son volume en gras (« Run 1 km » @ 6:00, « Sled push 50 m » · 102 kg), l'intensité normale
+  (lineParts selon la discipline) ; Running inchangé. Abréviations sur les cartes seulement : BBJ, SDT,
+  KB (abbreviate). Volume et arobase jamais seuls en fin de ligne. Semaine 1 d'Anaïs : cartes de 470
+  à 299 px. Vitest 368/368, types, lint et format propres ; vérifié ordinateur, téléphone, sombre.
+Puces (demande d'Antonino, 10/11) : une puce de 5 px à la couleur de la discipline devant chaque
+  exercice, centrée sur la première ligne (isExercise : pas de puce devant une récup, un repos ou un
+  objectif, alignés sur le texte et en gris). Dans un bloc, les puces sont posées sur le trait du bloc
+  (fil à 50 %) : pas de colonne en plus, « Fentes marchées 10 » et « 800 m @ 4:30–4:40 » tiennent sur
+  une ligne. Semaine 1 : 315 px (299 sans puces). Vitest 369/369, types, lint, format ; vérifié
+  ordinateur, téléphone, sombre.
 Reste : phase 5 (PDF), phase 6 (recette).
 ```
 

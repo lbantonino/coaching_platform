@@ -8,6 +8,7 @@ import { MoreMenu } from "@/components/ui/more-menu";
 import { DialogBody, Overlay } from "@/components/ui/overlay";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { SelectField } from "@/components/ui/select-field";
+import { maskPace } from "@/domain/training/clock-input";
 import {
   HYROX_STATION_RULES,
   hyroxDivisionLabels,
@@ -384,6 +385,7 @@ function UnitField({
   parse,
   onValue,
   className = "",
+  kind = "number",
 }: {
   name: string;
   unit?: string;
@@ -392,6 +394,8 @@ function UnitField({
   parse: (text: string) => number | null;
   onValue: (value: number | undefined) => void;
   className?: string;
+  // « pace » : le « : » se pose tout seul ; « clock » : pavé décimal, la virgule sert de « : ».
+  kind?: "number" | "pace" | "clock";
 }) {
   const [text, setText] = useState(initial);
   const [bad, setBad] = useState(false);
@@ -403,14 +407,15 @@ function UnitField({
           value={text}
           placeholder={placeholder}
           aria-invalid={bad}
-          inputMode="numeric"
+          inputMode={kind === "clock" ? "decimal" : "numeric"}
           onChange={(event) => {
-            setText(event.target.value);
-            if (!event.target.value.trim()) {
+            const typed = kind === "pace" ? maskPace(event.target.value) : event.target.value;
+            setText(typed);
+            if (!typed.trim()) {
               setBad(false);
               return onValue(undefined);
             }
-            const value = parse(event.target.value);
+            const value = parse(typed);
             setBad(value === null);
             if (value !== null) onValue(value);
           }}
@@ -556,6 +561,7 @@ export function HyroxBlockPanel({
             initial={clockOf(block.restSec)}
             placeholder="1:00"
             parse={parseClock}
+            kind="clock"
             onValue={(value) => onChange({ ...block, restSec: value })}
           />
         ) : null}
@@ -565,6 +571,7 @@ export function HyroxBlockPanel({
           initial={clockOf(block.targetSec)}
           placeholder="25:00"
           parse={parseClock}
+          kind="clock"
           onValue={(value) => onChange({ ...block, targetSec: value })}
         />
         <UnitField
@@ -573,6 +580,7 @@ export function HyroxBlockPanel({
           initial={clockOf(block.timeCapSec)}
           placeholder="30:00"
           parse={parseClock}
+          kind="clock"
           onValue={(value) => onChange({ ...block, timeCapSec: value })}
         />
       </div>
@@ -734,6 +742,7 @@ export function HyroxLinePanel({
               initial={line.paceSecPerKm ? formatPace(line.paceSecPerKm) : ""}
               placeholder="5:45"
               parse={paceIn}
+              kind="pace"
               onValue={(value) => onChange({ ...line, paceSecPerKm: value })}
             />
           </>
@@ -763,6 +772,7 @@ export function HyroxLinePanel({
                 initial={line.pacePer500m ? formatPace(line.pacePer500m) : ""}
                 placeholder="2:10"
                 parse={pace500In}
+                kind="pace"
                 onValue={(value) => onChange({ ...line, pacePer500m: value })}
               />
             ) : HYROX_STATION_RULES[line.station].loadKg ? (
@@ -792,6 +802,7 @@ export function HyroxLinePanel({
               initial={line.pacePer500m ? formatPace(line.pacePer500m) : ""}
               placeholder="2:10"
               parse={pace500In}
+              kind="pace"
               onValue={(value) => onChange({ ...line, pacePer500m: value })}
             />
           </>
@@ -829,6 +840,7 @@ export function HyroxLinePanel({
             initial={clockOf(line.targetSec)}
             placeholder="3:30"
             parse={parseClock}
+            kind="clock"
             onValue={(value) => onChange({ ...line, targetSec: value })}
           />
         ) : null}
@@ -948,7 +960,8 @@ export function SimulationSheet({
                 <span className="text-[12.5px] whitespace-nowrap text-muted">{row.detail}</span>
                 <input
                   aria-label={`Temps cible : ${row.label}`}
-                  inputMode="numeric"
+                  // Pavé décimal : sa virgule sert de « : » (« 5,05 »), un nombre seul = des minutes.
+                  inputMode="decimal"
                   value={times[index]}
                   placeholder="—"
                   aria-invalid={times[index]?.trim() ? parsed[index] === null : false}

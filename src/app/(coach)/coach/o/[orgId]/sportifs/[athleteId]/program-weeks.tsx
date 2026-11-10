@@ -3,7 +3,10 @@ import Link from "next/link";
 
 import { cardLines } from "@/domain/training/card-lines";
 import type { AgendaItem } from "@/features/agenda/items";
+import { draftSessionKeys } from "@/features/programs/drafts";
+import { sessionEditHref } from "@/features/programs/edit-href";
 import type { AthleteProgram, ProgramWeek } from "@/features/programs/queries";
+import { createClient } from "@/lib/supabase/server";
 import { dayShortLabel } from "@/lib/format";
 
 import { WeekPicker } from "./week-picker";
@@ -44,6 +47,16 @@ const longWeekday = new Intl.DateTimeFormat("fr-BE", {
 });
 function fullDay(day: string): string {
   const text = longWeekday.format(utc(day));
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+// « Mer 18 » : sur une carte étroite (7 séances dans la semaine).
+const shortWeekday = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+function shortDay(day: string): string {
+  const text = shortWeekday.format(utc(day)).replace(".", "");
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 const WEEKDAY_OFFSET = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 } as const;
@@ -105,6 +118,8 @@ function WeekCard({
   current,
   today,
   basePath,
+  editHref,
+  pdfBase,
   coachItems,
   agendaPath,
   last,
@@ -115,6 +130,9 @@ function WeekCard({
   current: boolean;
   today: string;
   basePath: string;
+  // « Modifier la séance » d'une séance de cette semaine (edit-href.ts).
+  editHref: (weekIndex: number, key: string) => string;
+  pdfBase: string;
   coachItems: AgendaItem[];
   agendaPath: string;
   // Dernière semaine de la vue « Toutes » : sur ordinateur, elle descend jusqu'au bas du menu.
@@ -184,6 +202,7 @@ function WeekCard({
       {count > 0 ? (
         <WeekSessionCards
           weekIndex={week.index}
+          pdfBase={pdfBase}
           sessions={week.sessions.map((session) => {
             const slot = coachSlots.get(session.id);
             const date =
@@ -192,10 +211,11 @@ function WeekCard({
             return {
               id: session.id,
               slot: session.slotIndex,
-              href: `${basePath}/programme/${session.id}`,
+              editHref: editHref(week.index, session.key),
               content: session.content,
               lines: cardLines(session.content),
               dayLabel,
+              dayShort: date ? shortDay(date) : null,
               coach: slot ? { label: slot.label, today: slot.today } : null,
               context: [
                 `Semaine ${week.index}`,
@@ -246,22 +266,30 @@ function WeekStep({ href, label, next }: { href: string | null; label: string; n
   );
 }
 
-export function ProgramWeeksSection({
+export async function ProgramWeeksSection({
+  organizationId,
   name,
   sex,
   program,
   today,
   basePath,
+  editorHref,
+  pdfBase,
   agendaPath,
   coachItemsByMonday,
   view,
   requestedWeek,
 }: {
+  organizationId: string;
   name: string;
   sex: "female" | "male" | "unspecified" | null;
   program: AthleteProgram;
   today: string;
   basePath: string;
+  // L'éditeur du programme (« …/programmes/[id] ») : « Modifier la séance ».
+  editorHref: string;
+  // Adresse des PDF du programme publié (« …/programmes/[id]/pdf »).
+  pdfBase: string;
   agendaPath: string;
   coachItemsByMonday: Map<string, AgendaItem[]>;
   view: ProgramView;
@@ -269,6 +297,17 @@ export function ProgramWeeksSection({
   requestedWeek: number | null;
 }) {
   const weeks = program.weeks;
+  const draftKeys = new Set(
+    await draftSessionKeys(await createClient(), organizationId, program.id),
+  );
+  const editHref = (weekIndex: number, key: string) =>
+    sessionEditHref(
+      editorHref,
+      draftKeys,
+      weekIndex,
+      key,
+      `${basePath}?onglet=agenda&semaine=${weekIndex}`,
+    );
   const first = weeks[0];
   const last = weeks[weeks.length - 1];
   const current = weeks.find((week) => today >= week.monday && today <= week.sunday) ?? null;
@@ -415,6 +454,8 @@ export function ProgramWeeksSection({
           current={week.index === current?.index}
           today={today}
           basePath={basePath}
+          editHref={editHref}
+          pdfBase={pdfBase}
           coachItems={coachItemsByMonday.get(week.monday) ?? []}
           agendaPath={agendaPath}
           name={name}

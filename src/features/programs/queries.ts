@@ -6,7 +6,11 @@ import type { Discipline } from "@/domain/training/discipline";
 import { HYROX_DIVISIONS, type HyroxDivision } from "@/domain/training/program-plan";
 import { parseProgramSession, type ProgramSessionContent } from "@/domain/training/program-session";
 import { weekdayOf } from "@/domain/training/scheduling";
-import { publishedSessionSchema, type Weekday } from "@/domain/training/session-v2";
+import {
+  publishedSessionSchema,
+  type PublishedSession,
+  type Weekday,
+} from "@/domain/training/session-v2";
 import { sessionHeadline } from "@/domain/training/session-view";
 import {
   pickCurrentProgram,
@@ -23,6 +27,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export type ProgramSessionCard = {
   id: string;
+  // Clé de la séance dans le programme (la même dans le brouillon : « Modifier la séance »).
+  key: string;
   weekIndex: number;
   slotIndex: number;
   content: ProgramSessionContent;
@@ -32,6 +38,9 @@ export type ProgramSessionCard = {
   day: Weekday | null;
   time: string | null;
   coachDate: string | null;
+  // La séance structurée (v2) telle que publiée ; null pour une publication v1 (texte). Sert aux
+  // fiches PDF (séries, charges, repos).
+  published: PublishedSession | null;
 };
 
 export type ProgramWeek = {
@@ -39,6 +48,8 @@ export type ProgramWeek = {
   // Phase de la semaine (« Préparation », « Allègement »…), si le coach l'a nommée.
   label: string | null;
   light: boolean;
+  // Jours fixés par le coach (03b) ; sinon « dans l'ordre », le sportif choisit ses jours.
+  fixed: boolean;
   monday: string;
   sunday: string;
   sessions: ProgramSessionCard[];
@@ -53,6 +64,8 @@ export type AthleteProgram = {
   publicationNumber: number;
   publishedAt: string;
   discipline: Discipline | null;
+  // Séances par semaine prévues à la création (v2) ; null en v1.
+  sessionsPerWeek: number | null;
   // Objectif de course du programme (« HYROX Gand · 13 déc. · Open Femmes »).
   race: { name: string; date: string | null; division: HyroxDivision | null } | null;
   // Coach qui a créé le programme (signature des conseils sur la page d'une séance).
@@ -62,6 +75,7 @@ export type AthleteProgram = {
 
 const snapshotSchema = z.object({
   discipline: z.enum(["running", "strength", "hyrox", "hybrid"]).optional(),
+  sessionsPerWeek: z.number().int().optional(),
   goal: z
     .object({
       raceName: z.string().optional(),
@@ -75,6 +89,7 @@ const snapshotSchema = z.object({
         index: z.number().int(),
         label: z.string().nullable().optional(),
         light: z.boolean().optional(),
+        scheduling: z.enum(["ordered", "fixed"]).optional(),
       }),
     )
     .optional(),
@@ -109,10 +124,29 @@ export async function getAthleteProgram(
   );
   const publication = program?.program_publications;
   if (!program || !publication) return null;
+  return readPublication(supabase, organizationId, program, publication);
+}
 
+type ProgramRow = {
+  id: string;
+  title: string;
+  goal: string | null;
+  start_date: string;
+  weeks_count: number;
+  created_by: string | null;
+};
+type PublicationRow = { id: string; number: number; published_at: string; snapshot_json: unknown };
+
+// Le programme tel que publié (version figée) : semaines, phases, séances v1 et v2.
+async function readPublication(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  organizationId: string,
+  program: ProgramRow,
+  publication: PublicationRow,
+): Promise<AthleteProgram> {
   const { data: rows, error: sessionsError } = await supabase
     .from("publication_sessions")
-    .select("id, week_index, slot_index, session_json")
+    .select("id, source_session_key, week_index, slot_index, session_json")
     .eq("organization_id", organizationId)
     .eq("publication_id", publication.id)
     .order("week_index")
@@ -124,12 +158,14 @@ export async function getAthleteProgram(
   const lightWeeks = new Set(
     (snapshot?.weeks ?? []).filter((week) => week.light).map((week) => week.index),
   );
+  const scheduling = new Map((snapshot?.weeks ?? []).map((week) => [week.index, week.scheduling]));
   const weeks: ProgramWeek[] = Array.from({ length: program.weeks_count }, (_, i) => {
     const monday = addDays(program.start_date, 7 * i);
     return {
       index: i + 1,
       label: labels.get(i + 1) ?? null,
       light: lightWeeks.has(i + 1),
+      fixed: scheduling.get(i + 1) === "fixed",
       monday,
       sunday: addDays(monday, 6),
       sessions: [],
@@ -144,6 +180,7 @@ export async function getAthleteProgram(
       const session = v2.success ? v2.data : null;
       week.sessions.push({
         id: row.id,
+        key: row.source_session_key,
         weekIndex: row.week_index,
         slotIndex: row.slot_index,
         content,
@@ -151,6 +188,7 @@ export async function getAthleteProgram(
         day: session?.withCoach ? weekdayOf(session.withCoach.date) : (session?.fixedDay ?? null),
         time: session?.withCoach?.time ?? session?.fixedTime ?? null,
         coachDate: session?.withCoach?.date ?? null,
+        published: session,
       });
     }
   }
@@ -164,6 +202,7 @@ export async function getAthleteProgram(
     publicationNumber: publication.number,
     publishedAt: publication.published_at,
     discipline: snapshot?.discipline ?? null,
+    sessionsPerWeek: snapshot?.sessionsPerWeek ?? null,
     race: snapshot?.goal?.raceName
       ? {
           name: snapshot.goal.raceName,
@@ -176,20 +215,34 @@ export async function getAthleteProgram(
   };
 }
 
-// Une séance du programme publié du sportif (page de détail) ; null si elle n'en fait pas partie.
-export async function getProgramSession(
+// Un programme PUBLIÉ précis de l'organisation (PDF de la phase 5), avec le nom de son sportif ; null
+// s'il n'existe pas, n'est pas de cette organisation ou n'a jamais été publié (le PDF se tire de la
+// version publiée, jamais du brouillon).
+export async function getPublishedProgram(
   organizationId: string,
-  athleteId: string,
-  sessionId: string,
-): Promise<{ program: AthleteProgram; week: ProgramWeek; session: ProgramSessionCard } | null> {
-  if (!z.uuid().safeParse(sessionId).success) return null;
-  const program = await getAthleteProgram(organizationId, athleteId);
-  if (!program) return null;
-  for (const week of program.weeks) {
-    const session = week.sessions.find((candidate) => candidate.id === sessionId);
-    if (session) return { program, week, session };
-  }
-  return null;
+  programId: string,
+): Promise<{ program: AthleteProgram; athleteName: string } | null> {
+  if (!z.uuid().safeParse(programId).success) return null;
+  const supabase = await createClient();
+  const { data: row, error } = await supabase
+    .from("programs")
+    .select(
+      "id, title, goal, start_date, weeks_count, created_by, athlete_id, program_publications!programs_active_publication_fkey ( id, number, published_at, snapshot_json )",
+    )
+    .eq("organization_id", organizationId)
+    .eq("id", programId)
+    .maybeSingle();
+  if (error) throw new Error("Lecture du programme impossible.");
+  const publication = row?.program_publications;
+  if (!row || !publication) return null;
+  const { data: athlete } = await supabase
+    .from("athlete_profiles")
+    .select("display_name")
+    .eq("organization_id", organizationId)
+    .eq("id", row.athlete_id)
+    .maybeSingle();
+  const program = await readPublication(supabase, organizationId, row, publication);
+  return { program, athleteName: athlete?.display_name ?? "Sportif" };
 }
 
 export type ActiveProgram = {

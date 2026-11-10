@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   // le partage de connexion de l'iPhone (172.20.10…, Mac en 172.20.10.9 le 04/11), même si l'IP change.
   allowedDevOrigins: ["192.168.*.*", "172.20.10.*"],
   partialPrefetching: true,
+  // PDF des programmes (phase 5) : les polices Plus Jakarta Sans sont lues sur le disque par les deux
+  // routes de téléchargement ; on les embarque avec ces routes au déploiement.
+  outputFileTracingIncludes: {
+    "/coach/o/[orgId]/programmes/[programId]/pdf/*": ["./src/features/programs/pdf/fonts/*"],
+  },
   experimental: {
     // Photos de profil jusqu'à 2 Mo (D-28), documents jusqu'à 10 Mo (D-60) : 1 Mo par défaut pour une
     // action serveur, plus la marge du formulaire. La taille réelle est revérifiée dans l'action.

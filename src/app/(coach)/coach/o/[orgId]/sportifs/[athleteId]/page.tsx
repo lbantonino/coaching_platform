@@ -15,6 +15,7 @@ import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { getAthleteNotes } from "@/features/notes/queries";
 import { listReferences } from "@/features/references/queries";
 import { getAthleteProgram, listAthleteProgramRows } from "@/features/programs/queries";
+import { pendingPublication } from "@/features/programs/publish-check";
 import { listSessions } from "@/features/sessions/queries";
 import { removeAthletePhoto, uploadAthletePhoto } from "@/features/photos/actions";
 import { todayIsoInBrussels } from "@/lib/format";
@@ -24,6 +25,7 @@ import { PhotoForm } from "../../../../photo-form";
 import { AGENDA_VIEWS, agendaRange, AthleteAgendaSection, type AgendaView } from "./athlete-agenda";
 import { AthleteEditForm } from "./athlete-edit-form";
 import { ProgramTab } from "./program-tab";
+import { PublishBanner } from "./publish-banner";
 import { ProgramWeeksSection, type ProgramView } from "./program-weeks";
 import { AthleteDocuments } from "./athlete-documents";
 import { AthleteHeader, AthleteIdentity } from "./athlete-header";
@@ -193,6 +195,18 @@ async function AthleteSection({
     tab === "agenda" || tab === "programme"
       ? await getAthleteProgram(organizationId, athlete.id)
       : null;
+  // Modifications du brouillon que le sportif ne voit pas encore (demande d'Antonino du 10/11) : un
+  // bandeau propose de publier la version suivante, au-dessus des onglets Programme et Agenda.
+  const pending = program ? await pendingPublication(organizationId, program.id) : null;
+  const publishBanner =
+    program && pending ? (
+      <PublishBanner
+        organizationId={organizationId}
+        firstName={athlete.firstName}
+        pending={pending}
+        editorHref={`/coach/o/${organizationId}/programmes/${program.id}`}
+      />
+    ) : null;
   // Onglet Programme : les autres programmes du sportif (brouillon jamais publié, programme à copier).
   const ownPrograms =
     tab === "programme" ? await listAthleteProgramRows(organizationId, athlete.id) : [];
@@ -347,27 +361,33 @@ async function AthleteSection({
             <GoalsSection organizationId={organizationId} athleteId={athlete.id} today={today} />
           ) : tab === "agenda" ? (
             program ? (
-              <ProgramWeeksSection
-                name={athlete.firstName}
-                sex={athlete.sex}
-                view={programView}
-                requestedWeek={programWeek}
-                program={program}
-                today={today}
-                basePath={basePath}
-                agendaPath={`/coach/o/${organizationId}/agenda`}
-                coachItemsByMonday={groupByMonday(
-                  agendaFor(
-                    await listSessions(organizationId),
-                    goals,
-                    { id: athlete.id, name: athlete.displayName },
-                    {
-                      from: program.weeks[0].monday,
-                      to: program.weeks[program.weeks.length - 1].sunday,
-                    },
-                  ),
-                )}
-              />
+              <>
+                {publishBanner}
+                <ProgramWeeksSection
+                  organizationId={organizationId}
+                  editorHref={`${programsBase}/${program.id}`}
+                  name={athlete.firstName}
+                  sex={athlete.sex}
+                  view={programView}
+                  requestedWeek={programWeek}
+                  program={program}
+                  today={today}
+                  basePath={basePath}
+                  pdfBase={`${programsBase}/${program.id}/pdf`}
+                  agendaPath={`/coach/o/${organizationId}/agenda`}
+                  coachItemsByMonday={groupByMonday(
+                    agendaFor(
+                      await listSessions(organizationId),
+                      goals,
+                      { id: athlete.id, name: athlete.displayName },
+                      {
+                        from: program.weeks[0].monday,
+                        to: program.weeks[program.weeks.length - 1].sunday,
+                      },
+                    ),
+                  )}
+                />
+              </>
             ) : (
               // Pas encore de programme : l'agenda de ce qui a un jour (séances avec le coach,
               // compétitions), en trois vues.
@@ -391,26 +411,32 @@ async function AthleteSection({
             )
           ) : tab === "programme" ? (
             // Onglet Programme (maquette 07, D-157) : le programme publié et sa semaine, sinon l'état vide.
-            <ProgramTab
-              name={athlete.firstName}
-              program={program}
-              requestedWeek={programWeek}
-              today={today}
-              basePath={basePath}
-              editorHref={program ? `${programsBase}/${program.id}` : null}
-              newHref={`${programsBase}/nouveau?sportif=${athlete.id}`}
-              copyHref={
-                ownPrograms.some((row) => row.status !== "draft")
-                  ? `${programsBase}/nouveau?sportif=${athlete.id}&depart=copie`
-                  : null
-              }
-              draft={(() => {
-                const draftRow = program ? null : ownPrograms.find((row) => row.status === "draft");
-                return draftRow
-                  ? { title: draftRow.title, href: `${programsBase}/${draftRow.id}` }
-                  : null;
-              })()}
-            />
+            <>
+              {publishBanner}
+              <ProgramTab
+                organizationId={organizationId}
+                name={athlete.firstName}
+                program={program}
+                requestedWeek={programWeek}
+                today={today}
+                basePath={basePath}
+                editorHref={program ? `${programsBase}/${program.id}` : null}
+                newHref={`${programsBase}/nouveau?sportif=${athlete.id}`}
+                copyHref={
+                  ownPrograms.some((row) => row.status !== "draft")
+                    ? `${programsBase}/nouveau?sportif=${athlete.id}&depart=copie`
+                    : null
+                }
+                draft={(() => {
+                  const draftRow = program
+                    ? null
+                    : ownPrograms.find((row) => row.status === "draft");
+                  return draftRow
+                    ? { title: draftRow.title, href: `${programsBase}/${draftRow.id}` }
+                    : null;
+                })()}
+              />
+            </>
           ) : (
             // Onglet Historique (maquette « Sportifs », page 2k) : une carte pleine largeur, étirée
             // jusqu'au bas du menu sur ordinateur ; 6 événements, puis « Voir tout l'historique ».

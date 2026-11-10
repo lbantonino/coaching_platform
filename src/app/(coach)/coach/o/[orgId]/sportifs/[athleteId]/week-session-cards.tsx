@@ -1,17 +1,13 @@
 "use client";
 
-import {
-  ChevronDown,
-  ExternalLink,
-  FileDown,
-  MessageSquareQuote,
-  Repeat2,
-  UserRound,
-} from "lucide-react";
+import { ChevronDown, MessageSquareQuote, Pencil, Repeat2, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
+import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
+import { SessionLine } from "@/components/programs/session-line";
+import type { CardLine } from "@/domain/training/card-lines";
 import type { ProgramSessionContent } from "@/domain/training/program-session";
 
 // Séances d'une semaine dans l'agenda du programme (maquette 2c, AGD-01 à 04, D-157) : cartes
@@ -22,17 +18,34 @@ import type { ProgramSessionContent } from "@/domain/training/program-session";
 export type WeekSessionView = {
   id: string;
   slot: number;
-  href: string;
+  // « Modifier la séance » : son éditeur (edit-href.ts).
+  editHref: string;
   content: ProgramSessionContent;
-  lines: string[];
+  // Lignes de la carte (card-lines.ts) : une info par ligne, le bloc répété groupé.
+  lines: CardLine[];
   // « Mardi 3 » en jours fixes (ou le jour du rendez-vous du coach).
   dayLabel: string | null;
+  // « Mer 18 », quand la carte est trop étroite pour « Mercredi 18 ».
+  dayShort: string | null;
   coach: { label: string | null; today: boolean } | null;
   // « Semaine 2 · 2 nov. – 8 nov. · au jour choisi par Inès ».
   context: string;
 };
 
 const discipline = (content: ProgramSessionContent): Discipline => content.discipline ?? "hybrid";
+
+// Une ligne de carte : le composant commun aux cartes et au détail des séances (session-line.tsx).
+function CardItem({
+  text,
+  discipline,
+  dot,
+}: {
+  text: string;
+  discipline: Discipline;
+  dot: string;
+}) {
+  return <SessionLine text={text} discipline={discipline} dot={dot} />;
+}
 
 // Une ligne d'un bloc répété : « 4 min @4:55 min/km » -> Effort · 4:55 min/km · 4 min ;
 // « 1:45 min de récupération (trot lent) » -> Récupération · Trot lent · 1:45 min.
@@ -66,10 +79,14 @@ function SessionDetail({
   session,
   count,
   onClose,
+  pdfBase,
+  weekIndex,
 }: {
   session: WeekSessionView;
   count: number;
   onClose: () => void;
+  pdfBase: string;
+  weekIndex: number;
 }) {
   const { content } = session;
   const kind = discipline(content);
@@ -93,15 +110,11 @@ function SessionDetail({
             {content.steps.length} bloc{content.steps.length > 1 ? "s" : ""} · ≈{" "}
             {content.durationMinutes} min
           </span>
-          <button
-            type="button"
-            disabled
-            title="Les PDF arrivent avec la phase 5."
-            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-faint inset-ring inset-ring-field-ring max-lg:hidden"
-          >
-            <FileDown aria-hidden size={13} strokeWidth={2} />
-            PDF
-          </button>
+          <ProgramPdfMenu
+            base={pdfBase}
+            week={weekIndex}
+            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] max-lg:hidden"
+          />
           <button
             type="button"
             onClick={onClose}
@@ -207,12 +220,14 @@ function SessionDetail({
               </span>
             </div>
           ) : null}
+          {/* La page d'une séance a été retirée (décision d'Antonino du 10/11) : on modifie la
+              séance directement dans son éditeur. */}
           <Link
-            href={session.href}
+            href={session.editHref}
             className="inline-flex min-h-10 items-center gap-1.5 self-start rounded-[10px] px-1 text-[13px] font-medium text-violet-text hover:underline"
           >
-            <ExternalLink aria-hidden size={14} strokeWidth={2} />
-            Ouvrir la page de la séance
+            <Pencil aria-hidden size={14} strokeWidth={2} />
+            Modifier la séance
           </Link>
         </div>
       </div>
@@ -223,9 +238,11 @@ function SessionDetail({
 export function WeekSessionCards({
   weekIndex,
   sessions,
+  pdfBase,
 }: {
   weekIndex: number;
   sessions: WeekSessionView[];
+  pdfBase: string;
 }) {
   const [open, setOpen] = useState<string | null>(null);
   const openSession = sessions.find((session) => session.id === open) ?? null;
@@ -245,7 +262,9 @@ export function WeekSessionCards({
           return (
             <li key={session.id} className="flex min-w-0 flex-col gap-2">
               <div
-                className={`relative flex w-full min-w-0 flex-col gap-2 rounded-[14px] p-4 transition-[box-shadow] duration-150 lg:p-3.5 ${styles.tint} ${
+                // Ordinateur : toutes les cartes d'une semaine ont la hauteur de la plus haute (la
+                // colonne de la grille s'étire, la carte la remplit ; aucune taille écrite en dur).
+                className={`@container relative flex w-full min-w-0 flex-col gap-2 rounded-[14px] p-4 transition-[box-shadow] duration-150 lg:flex-1 lg:p-3.5 ${styles.tint} ${
                   isOpen ? "inset-ring-[1.5px] inset-ring-violet lg:shadow-lift" : ""
                 }`}
               >
@@ -257,8 +276,15 @@ export function WeekSessionCards({
                     {session.slot}
                   </span>
                   {session.dayLabel ? (
-                    <span className={`text-[12px] font-bold ${styles.text}`}>
-                      {session.dayLabel}
+                    // Une seule ligne : « Mercredi 18 » si la carte est assez large (requête de
+                    // conteneur), sinon « Mer 18 » (semaine de 7 séances).
+                    <span
+                      className={`min-w-0 text-[12px] font-bold whitespace-nowrap ${styles.text}`}
+                    >
+                      <span className="@min-[180px]:hidden">
+                        {session.dayShort ?? session.dayLabel}
+                      </span>
+                      <span className="hidden @min-[180px]:inline">{session.dayLabel}</span>
                     </span>
                   ) : null}
                   <button
@@ -284,12 +310,34 @@ export function WeekSessionCards({
                   {session.content.sessionType}
                 </span>
                 {session.lines.length > 0 ? (
-                  <span className="flex flex-col gap-0.5 border-t border-line pt-2.5 text-[12px] leading-[1.45] font-medium text-text">
-                    {session.lines.map((line, i) => (
-                      <span key={i} className="truncate">
-                        {line}
-                      </span>
-                    ))}
+                  // Tout se lit : le texte passe à la ligne au lieu d'être coupé (« … »).
+                  <span className="flex flex-col gap-1 border-t border-line pt-2.5 text-[12px] leading-[1.4] font-normal [overflow-wrap:anywhere] text-text lg:text-[11.5px]">
+                    {session.lines.map((line, i) =>
+                      line.kind === "line" ? (
+                        <CardItem key={i} text={line.text} discipline={kind} dot={styles.dot} />
+                      ) : (
+                        // Bloc répété : « 4 × » puis, derrière un trait, l'effort et la récup qui le
+                        // suit, pour lire que la récup fait partie de chaque répétition. Un bloc Hyrox
+                        // sans tours (« AMRAP 20 min ») se lit de la même façon, sous son nom.
+                        <span key={i} className="flex flex-col gap-0.5">
+                          <span className={`text-[11.5px] font-bold ${styles.text}`}>
+                            {line.kind === "repeat" ? `${line.times} ×` : line.label}
+                          </span>
+                          {/* Le trait du bloc passe sous les puces des exercices (des perles sur un
+                              fil discret) : le bloc se lit d'un coup d'œil sans prendre une colonne
+                              de plus, et chaque puce reste nette. */}
+                          <span className="relative flex flex-col gap-0.5">
+                            <span
+                              aria-hidden
+                              className={`absolute inset-y-0 left-[1.5px] w-0.5 rounded-full opacity-50 ${styles.dot}`}
+                            />
+                            {line.lines.map((text, j) => (
+                              <CardItem key={j} text={text} discipline={kind} dot={styles.dot} />
+                            ))}
+                          </span>
+                        </span>
+                      ),
+                    )}
                   </span>
                 ) : null}
                 {session.coach ? (
@@ -313,6 +361,8 @@ export function WeekSessionCards({
                 <div className="lg:hidden">
                   <SessionDetail
                     session={session}
+                    pdfBase={pdfBase}
+                    weekIndex={weekIndex}
                     count={sessions.length}
                     onClose={() => setOpen(null)}
                   />
@@ -327,6 +377,8 @@ export function WeekSessionCards({
         <div className="max-lg:hidden">
           <SessionDetail
             session={openSession}
+            pdfBase={pdfBase}
+            weekIndex={weekIndex}
             count={sessions.length}
             onClose={() => setOpen(null)}
           />

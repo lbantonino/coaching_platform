@@ -8,6 +8,7 @@ import { ChipGroup } from "@/components/ui/chip-group";
 import { MoreMenu } from "@/components/ui/more-menu";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { SelectField } from "@/components/ui/select-field";
+import { maskPace } from "@/domain/training/clock-input";
 import { hrZoneRange, paceRangeFromVma } from "@/domain/training/aims";
 import { formatPace, paceToSpeedKmh, parsePace } from "@/domain/training/pace";
 import {
@@ -27,7 +28,7 @@ import {
   type RunItem,
 } from "@/domain/training/running-edit";
 import { RUN_ROLES, type RunStep, type RunningContent } from "@/domain/training/session-v2";
-import { formatSeconds } from "@/domain/training/session-view";
+import { formatMinutes } from "@/domain/training/session-view";
 
 // Liste et panneau de l'éditeur Running (04, RUN-01 à 03 ; sources CooryEditeurListe et
 // CooryEditeurPanneau). Étapes colorées par rôle : effort en couleur Running, récupération en gris,
@@ -211,7 +212,7 @@ function RepeatGroup({
         <span className="min-w-0 flex-1 truncate text-[12.5px] text-text-2">
           fois
           {seconds
-            ? ` · ${seconds % 60 ? `≈ ${formatSeconds(Math.round(seconds / 60) * 60)}` : formatSeconds(seconds)}`
+            ? ` · ${seconds % 60 ? `≈ ${formatMinutes(Math.round(seconds / 60) * 60)}` : formatMinutes(seconds)}`
             : ""}
         </span>
         {readOnly ? null : (
@@ -632,7 +633,8 @@ export function RunStepPanel({
             <input
               aria-label={step.measure.type === "time" ? "Durée de l'étape" : "Distance de l'étape"}
               value={measureInput}
-              inputMode={step.measure.type === "time" ? "numeric" : "decimal"}
+              // Pavé décimal : sa virgule sert de « : » (« 2,30 »), un nombre seul = des minutes.
+              inputMode="decimal"
               aria-invalid={measureError}
               onChange={(event) => {
                 setMeasureInput(event.target.value);
@@ -695,9 +697,11 @@ export function RunStepPanel({
                 value={paceMode === "minkm" ? pace.from : pace.vmaFrom}
                 aria-invalid={paceError !== null}
                 onChange={(event) => {
+                  // Le « : » d'une allure se pose tout seul (pavé numérique sans « : » sur iPhone).
                   const next = {
                     ...pace,
-                    [paceMode === "minkm" ? "from" : "vmaFrom"]: event.target.value,
+                    [paceMode === "minkm" ? "from" : "vmaFrom"]:
+                      paceMode === "minkm" ? maskPace(event.target.value) : event.target.value,
                   };
                   setPace(next);
                   commitPace(next);
@@ -716,7 +720,8 @@ export function RunStepPanel({
                 onChange={(event) => {
                   const next = {
                     ...pace,
-                    [paceMode === "minkm" ? "to" : "vmaTo"]: event.target.value,
+                    [paceMode === "minkm" ? "to" : "vmaTo"]:
+                      paceMode === "minkm" ? maskPace(event.target.value) : event.target.value,
                   };
                   setPace(next);
                   commitPace(next);

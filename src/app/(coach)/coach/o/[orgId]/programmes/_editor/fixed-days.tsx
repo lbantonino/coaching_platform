@@ -20,7 +20,7 @@ import {
   type ScheduleScope,
 } from "@/domain/training/scheduling";
 import { WEEKDAYS, type SessionDraft, type Weekday } from "@/domain/training/session-v2";
-import { formatSeconds } from "@/domain/training/session-view";
+import { formatMinutes, formatSeconds } from "@/domain/training/session-view";
 
 // Jours fixes (03b, FIX-01 à 05 ; sources CooryJoursFixes, CooryJourPicker, CooryJourPropose).
 // « Dans l'ordre » : le sportif fait ses séances dans l'ordre, au jour de son choix. « Jours fixes » :
@@ -35,8 +35,21 @@ export type DaysContext = {
   startDate: string | null;
 };
 
+// Un jour de séance est un jour de la semaine (« lundi »), jamais une date : la même séance garde
+// son jour d'une semaine à l'autre. Demande d'Antonino du 10/11 : le CHOIX du jour (panneau de
+// droite, feuille, proposition) ne montre que les noms des jours ; la carte de la semaine (bandeau
+// des jours, pavés des séances) montre aussi la date de cette semaine-là (« Lun 16 »).
 const dayNumber = (startDate: string | null, weekIndex: number, day: Weekday) =>
   startDate ? String(Number(plannedDate(startDate, weekIndex, day).slice(8, 10))) : null;
+const weekdayFull: Record<Weekday, string> = {
+  mon: "Lundi",
+  tue: "Mardi",
+  wed: "Mercredi",
+  thu: "Jeudi",
+  fri: "Vendredi",
+  sat: "Samedi",
+  sun: "Dimanche",
+};
 const unavailable = (context: DaysContext, day: Weekday) =>
   context.availableDays.length > 0 && !context.availableDays.includes(day);
 const pillTint: Record<SessionDraft["content"]["discipline"], string> = {
@@ -74,8 +87,8 @@ export function DayPad({
       onClick={onOpen}
       aria-label={
         coach
-          ? `Jour verrouillé par le rendez-vous du coach : ${day ? weekdayLabels[day] : ""} ${number ?? ""}`
-          : `Changer le jour de la séance (${day ? `${weekdayLabels[day]} ${number ?? ""}` : "sans jour"})`
+          ? `Jour verrouillé par le rendez-vous du coach : ${day ? weekdayFull[day] : ""}`
+          : `Changer le jour de la séance (${day ? weekdayFull[day] : "sans jour"})`
       }
       className={`relative z-10 flex size-[58px] shrink-0 flex-col items-center justify-center gap-px rounded-[13px] transition-[scale] duration-150 active:scale-[0.96] lg:h-14 lg:w-[62px] lg:rounded-[12px] ${
         selected
@@ -85,17 +98,36 @@ export function DayPad({
             : "bg-bg text-text"
       }`}
     >
-      <span className="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">
-        {day ? weekdayLabels[day] : "Jour"}
-      </span>
-      <span className="flex items-center gap-[3px] text-[18px] leading-none font-bold">
-        {number ?? (day ? "" : "—")}
-        {coach ? (
-          <Lock aria-hidden size={11} strokeWidth={2.4} />
-        ) : (
-          <ChevronDown aria-hidden size={12} strokeWidth={2.4} />
-        )}
-      </span>
+      {number ? (
+        <>
+          <span className="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">
+            {day ? weekdayLabels[day] : ""}
+          </span>
+          <span className="flex items-center gap-[3px] text-[18px] leading-none font-bold">
+            {number}
+            {coach ? (
+              <Lock aria-hidden size={11} strokeWidth={2.4} />
+            ) : (
+              <ChevronDown aria-hidden size={12} strokeWidth={2.4} />
+            )}
+          </span>
+        </>
+      ) : (
+        // Modèle (pas de dates) ou séance sans jour : le nom du jour, ou « — ».
+        <>
+          <span className="text-[17px] leading-none font-bold">
+            {day ? weekdayLabels[day] : "—"}
+          </span>
+          <span className="flex items-center gap-[3px] text-[10.5px] font-semibold opacity-80">
+            {day ? null : "Jour"}
+            {coach ? (
+              <Lock aria-hidden size={11} strokeWidth={2.4} />
+            ) : (
+              <ChevronDown aria-hidden size={12} strokeWidth={2.4} />
+            )}
+          </span>
+        </>
+      )}
     </button>
   );
 }
@@ -123,7 +155,6 @@ export function DayStrip({
         const off = unavailable(context, day);
         const first = sessions[0]?.session;
         const selected = sessions.some(({ session }) => session.key === selectedKey);
-        const number = dayNumber(context.startDate, week.index, day);
         return (
           <div
             key={day}
@@ -139,7 +170,9 @@ export function DayStrip({
               className={`truncate text-[11.5px] font-semibold ${off ? "text-faint" : "text-text-2"}`}
             >
               {weekdayLabels[day]}
-              {number ? ` ${number}` : ""}
+              {dayNumber(context.startDate, week.index, day)
+                ? ` ${dayNumber(context.startDate, week.index, day)}`
+                : ""}
             </span>
             {sessions.map(({ session, n }) => (
               <button
@@ -169,7 +202,7 @@ export function DayStrip({
   );
 }
 
-// Mini-bandeau (téléphone) : lettre, date, carré 26 × 22 avec le numéro de la séance.
+// Mini-bandeau (téléphone, maquette FIX-03) : lettre, date, carré 26 × 22 avec le numéro de la séance.
 export function MiniDayStrip({ week, context }: { week: Week; context: DaysContext }) {
   const ordered = orderedSessions(week);
   return (
@@ -222,6 +255,7 @@ export function DayPicker({
   weeksCount,
   context,
   compact,
+  reachable,
   onValidate,
   onCancel,
 }: {
@@ -231,6 +265,8 @@ export function DayPicker({
   weeksCount: number;
   context: DaysContext;
   compact: boolean;
+  // Autres semaines à venir que ce choix changera, par portée.
+  reachable: { phase: number; program: number };
   onValidate: (choice: DayChoice, scope: ScheduleScope) => void;
   onCancel: () => void;
 }) {
@@ -292,7 +328,6 @@ export function DayPicker({
             const off = unavailable(context, item);
             const chosen = day === item;
             const others = taken.filter((entry) => entry.day === item);
-            const number = dayNumber(context.startDate, week.index, item);
             return (
               <button
                 key={item}
@@ -309,11 +344,10 @@ export function DayPicker({
                       : "bg-surface text-text inset-ring inset-ring-field-ring"
                 }`}
               >
-                <span className="text-[11px] font-semibold opacity-85">{weekdayLabels[item]}</span>
                 <span
-                  className={`text-[16px] leading-none font-bold ${off && !chosen ? "line-through" : ""}`}
+                  className={`text-[15px] leading-none font-bold ${off && !chosen ? "line-through" : ""}`}
                 >
-                  {number ?? ""}
+                  {weekdayLabels[item]}
                 </span>
                 <span
                   className={`h-3 text-[9.5px] font-semibold whitespace-nowrap ${
@@ -416,6 +450,13 @@ export function DayPicker({
             </label>
           ))}
         </div>
+        {scope !== "week" ? (
+          <p className="mt-1 text-[12px] leading-[1.45] text-muted">
+            {reachable[scope] > 0
+              ? `${reachable[scope]} autre${reachable[scope] > 1 ? "s" : ""} semaine${reachable[scope] > 1 ? "s" : ""} : la séance y passe à ce jour, ou y est copiée si elle n'y est pas encore. Les semaines passées ne changent pas.`
+              : "Aucune autre semaine à venir : seule cette semaine change."}
+          </p>
+        ) : null}
       </fieldset>
 
       <Switch
@@ -474,7 +515,7 @@ function Heading({
       </h2>
       <p className="text-[13px] text-muted">
         {disciplineLabels[discipline]} · {session.sessionType} · ≈{" "}
-        {formatSeconds(session.durationMinutes * 60)}
+        {(discipline === "running" ? formatMinutes : formatSeconds)(session.durationMinutes * 60)}
       </p>
     </div>
   );
@@ -513,10 +554,7 @@ export function ProposeDaysDialog({
         : [],
     ),
   );
-  const label = (day: Weekday) => {
-    const number = dayNumber(context.startDate, week.index, day);
-    return `${weekdayLabels[day]}${number ? ` ${number}` : ""}`;
-  };
+  const label = (day: Weekday) => weekdayFull[day];
   return (
     <Overlay
       open={open}
@@ -554,7 +592,7 @@ export function ProposeDaysDialog({
                           : "bg-[color-mix(in_srgb,var(--ok)_10%,var(--surface))] text-text"
                     }`}
                   >
-                    <span className="text-[12px] font-semibold">{label(day)}</span>
+                    <span className="text-[12px] font-semibold">{weekdayLabels[day]}</span>
                     <span className="text-[10.5px] font-medium whitespace-nowrap opacity-90">
                       {coach !== undefined
                         ? `coach${coach ? ` ${coach}` : ""}`

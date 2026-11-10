@@ -38,7 +38,7 @@ test("la vue d'ensemble résume la fiche et « Modifier » ouvre le bon onglet",
 
 test("la fiche propose « Créer un programme », le menu « ••• » et les prochaines séances", async ({
   page,
-}, testInfo) => {
+}) => {
   await page.goto("/login");
   await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
   await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
@@ -99,6 +99,19 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(
     page.getByRole("link", { name: "Ouvrir l'éditeur" }).filter({ visible: true }),
   ).toBeVisible();
+  // Une séance de la semaine s'affiche en détail sur place (colonne de droite sur ordinateur, feuille
+  // sur téléphone, demande du 10/11), avec « Modifier la séance » ; on ne quitte pas la fiche.
+  const fiche = page.url();
+  await page
+    .getByRole("region", { name: /Semaine/ })
+    .locator("button[aria-pressed]")
+    .first()
+    .click();
+  await expect(
+    page.getByRole("link", { name: "Modifier la séance" }).filter({ visible: true }),
+  ).toHaveAttribute("href", /\/programmes\/.+(\/seances\/|\?semaine=)/);
+  expect(page.url()).toBe(fiche);
+  await page.keyboard.press("Escape");
   // Agenda d'Inès = son programme (D-46), une semaine à la fois (maquette 2c du 03/11) : 5 séances
   // numérotées sans jour. Ses 5 séances par semaine COMPRENNENT ses 2 rendez-vous avec le coach (pas
   // 5 + 2) : coaching du mardi 7 h et circuit collectif du samedi 10 h, écrits sur leur carte.
@@ -130,33 +143,18 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await page.getByRole("link", { name: "Toutes les semaines" }).click();
   await expect(page.getByRole("region", { name: /^Semaine \d+$/ })).toHaveCount(12);
 
-  // Une séance se déplie (maquette 2c, D-157), puis sa page s'ouvre : étapes, bloc répété,
-  // conseils, statut « À faire ».
+  // Une séance se déplie (maquette 2c, D-157) : étapes, bloc répété ; « Modifier la séance » ouvre
+  // son éditeur (la page d'une séance a été retirée le 10/11, décision d'Antonino).
   await firstWeek
     .getByRole("button", { name: /^Déplier la séance \d+ : Endurance rapide$/ })
     .click();
   await expect(
     firstWeek.getByText("Répéter 5 fois").filter({ visible: true }).first(),
   ).toBeVisible();
-  await firstWeek
-    .getByRole("link", { name: "Ouvrir la page de la séance" })
-    .filter({ visible: true })
-    .click();
-  await expect(page.getByRole("heading", { name: "Endurance rapide", level: 1 })).toBeVisible();
-  const steps = page.getByRole("list", { name: "Étapes de la séance" });
-  await expect(steps).toContainText("Échauffement");
-  await expect(steps).toContainText("Répéter 5 fois");
-  await expect(page.getByRole("heading", { name: "Conseil du coach" })).toBeVisible();
-  // Plus de graphique « Déroulé de la séance » (D-152).
-  await expect(page.getByRole("region", { name: "Déroulé de la séance" })).toHaveCount(0);
-  await expect(page.getByRole("main").getByText("À faire").first()).toBeVisible();
-  // Retour : dans l'en-tête de page sur ordinateur, dans la barre du haut sur téléphone.
-  await page
-    .getByRole(testInfo.project.name === "telephone" ? "banner" : "main")
-    .getByRole("link", { name: "Inès Benali" })
-    .filter({ visible: true })
-    .click();
-  await expect(page).toHaveURL(/onglet=agenda/);
+  await expect(
+    firstWeek.getByRole("link", { name: "Modifier la séance" }).filter({ visible: true }),
+  ).toHaveAttribute("href", /\/programmes\/.+(\/seances\/|\?semaine=)/);
+  await expect(page.getByRole("link", { name: "Ouvrir la page de la séance" })).toHaveCount(0);
 
   // Sans programme (Julien, en pause), l'onglet Agenda montre ce qui a un jour, en trois vues.
   await page.goto(`/coach/o/${ORG_A}/sportifs/${JULIEN}?onglet=agenda&vue=mois&date=2026-12-01`);
