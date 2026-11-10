@@ -68,7 +68,7 @@ export function CreateMenu({ orgBase }: { orgBase: string }) {
             icon: FilePlus,
             tone: "hybrid",
             chevron: true,
-            onSelect: go("/coach/programmes"),
+            onSelect: go("/coach/programmes/nouveau"),
           },
           {
             label: "Tâche",

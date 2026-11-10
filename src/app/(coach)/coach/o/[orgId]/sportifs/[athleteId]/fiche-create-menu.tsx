@@ -55,16 +55,16 @@ export function FicheCreateMenu({
         onClose={() => setOpen(false)}
         title={`Créer pour ${athlete.name}`}
         items={[
-          // Kit (boîte 05) : descriptions et chevrons. Le kit écrit « Plusieurs semaines, préremplies
-          // pour elle » : pas de préremplissage tant que l'éditeur de programmes n'existe pas (la
-          // ligne mène à la page Programmes), d'où une description sans cette promesse.
+          // Kit (boîte 05) : descriptions et chevrons. L'assistant s'ouvre avec ce sportif déjà choisi
+          // (D-157) ; la description du kit (« préremplies pour elle ») suppose le genre : on garde
+          // une phrase neutre.
           {
             label: "Programme",
             description: "Plusieurs semaines d'entraînement",
             icon: FilePlus,
             tone: "hybrid",
             chevron: true,
-            onSelect: () => router.push("/coach/programmes"),
+            onSelect: () => router.push(`/coach/programmes/nouveau?sportif=${athlete.id}`),
           },
           {
             label: "Séance",

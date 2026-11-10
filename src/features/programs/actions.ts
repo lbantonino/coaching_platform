@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import type { Discipline } from "@/domain/training/discipline";
 import {
   planFromDraft,
   programDraftSchema,
@@ -529,4 +530,145 @@ export async function archiveTemplate(
   if (!data?.length) return fail("NOT_FOUND", "Modèle introuvable.");
   revalidateProgram(orgId);
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Assistant (02), étape 4 : l'aperçu du point de départ, une grille semaines × séances où chaque case
+// prend la couleur de la discipline de la séance reprise (vide = « à remplir »). Un plan de
+// remplissage, pas un graphique de séance (spécification de l'étape 4).
+// ---------------------------------------------------------------------------
+const previewInputSchema = z.object({
+  start: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("blank") }),
+    z.object({ kind: z.literal("copy"), programId: z.uuid() }),
+    z.object({ kind: z.literal("template"), templateId: z.uuid() }),
+  ]),
+  weeksCount: z.number().int().min(1).max(52),
+  sessionsPerWeek: z.number().int().min(1).max(7),
+});
+
+export type StartPreview = { weeks: (Discipline | null)[][]; filled: number };
+
+export async function previewStart(
+  organizationId: string,
+  input: z.input<typeof previewInputSchema>,
+): Promise<ActionResult<StartPreview>> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const parsed = previewInputSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const { start, weeksCount, sessionsPerWeek } = parsed.data;
+  const orgId = membership.organizationId;
+
+  let source: Week[] = [];
+  if (start.kind === "copy") {
+    const supabase = await createClient();
+    const loaded = await loadDraft(supabase, orgId, start.programId);
+    if (!loaded?.draft) return fail("NOT_FOUND", "Programme introuvable.");
+    source = loaded.draft.weeks;
+  } else if (start.kind === "template") {
+    const template = await getProgramTemplate(orgId, start.templateId);
+    if (!template?.plan) return fail("NOT_FOUND", "Modèle introuvable.");
+    source = template.plan.weeks;
+  }
+
+  let filled = 0;
+  const weeks = Array.from({ length: weeksCount }, (_, i) => {
+    const sessions = source[i]?.sessions ?? [];
+    const cells: (Discipline | null)[] = sessions.map((session) => session.content.discipline);
+    filled += cells.length;
+    while (cells.length < sessionsPerWeek) cells.push(null);
+    return cells;
+  });
+  return { ok: true, weeks, filled };
+}
+
+// ---------------------------------------------------------------------------
+// « Nouveau modèle » (onglet Modèles, [P] accepté le 09/11/2026) : l'assistant sans sportif ni dates,
+// qui crée un de Mes modèles (vide, ou copie d'un autre modèle) puis l'ouvre dans l'éditeur.
+// ---------------------------------------------------------------------------
+const createTemplateInputSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  discipline: z.enum(["running", "strength", "hyrox"]),
+  aimDefaults: z.object({ running: z.enum(["pace", "hr"]), strength: z.enum(["kg", "pct"]) }),
+  weeksCount: z.number().int().min(1).max(52),
+  sessionsPerWeek: z.number().int().min(1).max(7),
+  phases: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(40),
+        weekFrom: z.number().int().min(1),
+        weekTo: z.number().int().min(1),
+      }),
+    )
+    .max(12),
+  scheduling: z.enum(["ordered", "fixed"]),
+  start: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("blank") }),
+    z.object({ kind: z.literal("template"), templateId: z.uuid() }),
+  ]),
+});
+
+export async function createProgramTemplate(
+  organizationId: string,
+  input: z.input<typeof createTemplateInputSchema>,
+): Promise<ActionResult<{ templateId: string }>> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
+  const parsed = createTemplateInputSchema.safeParse(input);
+  if (!parsed.success) return invalid(parsed.error);
+  const values = parsed.data;
+
+  let base: { weeks: Week[]; phases: Phase[] } = resizePlan(
+    { weeks: [], phases: [] },
+    values.weeksCount,
+    { vmaKmh: null, hrMax: null },
+  );
+  if (values.start.kind === "template") {
+    const template = await getProgramTemplate(orgId, values.start.templateId);
+    if (!template?.plan) return fail("NOT_FOUND", "Modèle introuvable.");
+    base = resizePlan(template.plan, values.weeksCount, { vmaKmh: null, hrMax: null });
+  }
+  const plan = programPlanSchema.safeParse({
+    schemaVersion: 2,
+    title: values.title,
+    discipline: values.discipline,
+    aimDefaults: values.aimDefaults,
+    sessionsPerWeek: values.sessionsPerWeek,
+    phases:
+      values.phases.length > 0
+        ? values.phases.map((phase) => ({ id: shortId("p"), ...phase }))
+        : base.phases,
+    weeks: base.weeks.map((week) => ({
+      ...week,
+      scheduling: values.scheduling,
+      sessions:
+        values.scheduling === "ordered"
+          ? week.sessions.map((session) => ({
+              ...session,
+              fixedDay: undefined,
+              fixedTime: undefined,
+            }))
+          : week.sessions,
+    })),
+  });
+  if (!plan.success) return invalid(plan.error);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("program_templates")
+    .insert({
+      organization_id: orgId,
+      origin: "coach",
+      title: plan.data.title,
+      discipline: plan.data.discipline,
+      weeks_count: plan.data.weeks.length,
+      sessions_per_week: plan.data.sessionsPerWeek,
+      content_json: toJson(plan.data),
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return fail("FAILED", "Le modèle n'a pas pu être créé. Réessaie.");
+  revalidateProgram(orgId);
+  return { ok: true, templateId: data.id };
 }

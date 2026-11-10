@@ -105,7 +105,7 @@ test("le tableau de bord montre les séances à venir, jour par jour, et les pro
   await expect(page.getByRole("heading", { name: "Agenda", level: 1 })).toBeVisible();
 });
 
-test("le menu « Créer » mène aux vraies créations, et à la page vide du module pour le reste", async ({
+test("le menu « Créer » mène aux vraies créations : séance, programme et tâche", async ({
   page,
 }) => {
   await loginAsCoachA(page);
@@ -120,10 +120,9 @@ test("le menu « Créer » mène aux vraies créations, et à la page vide du mo
   await expect(newSession).toBeHidden();
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await menu.getByRole("button", { name: "Programme" }).click();
-  await expect(page.getByRole("heading", { name: "Programmes", level: 1 })).toBeVisible();
-  // Module pas encore construit (D-32) : sa page, vide et honnête, sans badge « Bientôt ».
-  await expect(page.getByRole("main").getByText("Aucun programme pour l'instant")).toBeVisible();
-  await expect(page.getByRole("main").getByText(/Bientôt/)).toHaveCount(0);
+  // Programmes construits (D-157) : l'assistant « Créer un programme » s'ouvre à sa première étape.
+  await expect(page).toHaveURL(/\/coach\/o\/[^/]+\/programmes\/nouveau$/);
+  await expect(page.getByText("Étape 1 sur 4").filter({ visible: true }).first()).toBeVisible();
 });
 
 // Carte Tâches et messages (D-35, D-36). Chaque projet (ordinateur, téléphone) touche SES lignes du seed :

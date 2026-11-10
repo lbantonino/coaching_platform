@@ -37,6 +37,7 @@ export function PageHeader({
   icon,
   visibleTitle = true,
   quiet = false,
+  phoneBack = true,
 }: {
   title: ReactNode;
   // À côté du titre, sur la même ligne (ex. corbeille d'une page Modifier sur téléphone, pastilles
@@ -57,6 +58,10 @@ export function PageHeader({
   // Pages d'erreur (D-147, maquette « Coory Erreurs ») : « Erreur » en gris, sans icône, et pas en
   // titre de page (le h1 est celui de la carte d'erreur).
   quiet?: boolean;
+  // false : la page pose elle-même son retour dans la barre du téléphone, qui change selon le niveau
+  // ouvert (éditeur de programme : « ← Programmes », « ← Semaines », « ← Semaine 2 ») ; sur ordinateur,
+  // le chemin reste celui de `back`.
+  phoneBack?: boolean;
 }) {
   const Icon = icon;
   return (
@@ -67,7 +72,7 @@ export function PageHeader({
     >
       {/* Retour « là où j'étais » (29/10/2026), voir back-link.tsx : dans la barre du haut sur
           téléphone (D-117). */}
-      {back ? (
+      {back && phoneBack ? (
         <MobileBarTitle>
           <BackLink href={back.href} label={back.label} variant="bar" />
         </MobileBarTitle>
