@@ -15,12 +15,22 @@ import {
   plannedDate,
   proposeWeekDays,
   sessionDay,
+  sessionMoment,
+  suggestedMoment,
   weekdayLabels,
   weekdayOf,
   type ScheduleScope,
 } from "@/domain/training/scheduling";
-import { WEEKDAYS, type SessionDraft, type Weekday } from "@/domain/training/session-v2";
-import { formatMinutes, formatSeconds } from "@/domain/training/session-view";
+import {
+  MAX_SESSIONS_PER_DAY,
+  SESSION_MOMENTS,
+  sessionMomentLabels,
+  WEEKDAYS,
+  type SessionDraft,
+  type SessionMoment,
+  type Weekday,
+} from "@/domain/training/session-v2";
+import { formatMinutes } from "@/domain/training/session-view";
 
 // Jours fixes (03b, FIX-01 à 05 ; sources CooryJoursFixes, CooryJourPicker, CooryJourPropose).
 // « Dans l'ordre » : le sportif fait ses séances dans l'ordre, au jour de son choix. « Jours fixes » :
@@ -155,13 +165,15 @@ export function DayStrip({
         const off = unavailable(context, day);
         const first = sessions[0]?.session;
         const selected = sessions.some(({ session }) => session.key === selectedKey);
+        // Plusieurs séances ce jour-là (D-164) : chacune avec son moment, sur un fond neutre.
+        const several = sessions.length > 1;
         return (
           <div
             key={day}
             className={`flex min-h-[82px] min-w-0 flex-col gap-[3px] rounded-[12px] p-2 ${
               off && !first
                 ? "bg-[repeating-linear-gradient(135deg,var(--surface-2)_0_6px,var(--bg)_6px_12px)]"
-                : first
+                : first && !several
                   ? pillTint[first.content.discipline]
                   : "bg-surface inset-ring inset-ring-line"
             } ${selected ? "inset-ring-[1.5px] inset-ring-violet" : ""}`}
@@ -175,19 +187,27 @@ export function DayStrip({
                 : ""}
             </span>
             {sessions.map(({ session, n }) => (
-              <button
-                key={session.key}
-                type="button"
-                onClick={() => onPick(session.key)}
-                aria-label={`Séance ${n} : ${session.title}`}
-                className={`flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold ${disciplineStyles[session.content.discipline].number}`}
-              >
-                S{n}
-              </button>
+              <div key={session.key} className="flex min-w-0 flex-col items-start gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => onPick(session.key)}
+                  aria-label={`Séance ${n} : ${session.title}${several && sessionMoment(session) ? `, ${sessionMomentLabels[sessionMoment(session) as SessionMoment].toLowerCase()}` : ""}`}
+                  className={`flex h-6 min-w-8 items-center justify-center rounded-[8px] px-2 text-[12px] font-bold ${disciplineStyles[session.content.discipline].number}`}
+                >
+                  S{n}
+                </button>
+                {several ? (
+                  <span className="max-w-full truncate text-[10.5px] font-medium text-text-2">
+                    {sessionMoment(session)
+                      ? sessionMomentLabels[sessionMoment(session) as SessionMoment]
+                      : "Moment ?"}
+                  </span>
+                ) : null}
+              </div>
             ))}
-            {first && coachTime(first) ? (
+            {first && !several && coachTime(first) ? (
               <span className="text-[10.5px] font-medium text-text-2">{coachTime(first)}</span>
-            ) : first?.fixedTime ? (
+            ) : first && !several && first.fixedTime ? (
               <span className="text-[10.5px] font-medium text-text-2">{first.fixedTime}</span>
             ) : null}
             {!first ? (
@@ -210,6 +230,11 @@ export function MiniDayStrip({ week, context }: { week: Week; context: DaysConte
       {WEEKDAYS.map((day) => {
         const index = ordered.findIndex((session) => sessionDay(session) === day);
         const session = ordered[index];
+        // Plusieurs séances ce jour-là (D-164) : un petit carré par séance, dans l'ordre du jour.
+        const extra = ordered
+          .map((item, i) => ({ item, n: i + 1 }))
+          .filter(({ item }) => sessionDay(item) === day)
+          .slice(1);
         const off = unavailable(context, day);
         return (
           <span key={day} className="flex flex-col items-center gap-1 py-1">
@@ -232,6 +257,14 @@ export function MiniDayStrip({ week, context }: { week: Week; context: DaysConte
             >
               {session ? index + 1 : off ? "×" : ""}
             </span>
+            {extra.map(({ item, n }) => (
+              <span
+                key={item.key}
+                className={`grid h-[22px] w-[26px] place-items-center rounded-[7px] text-[11px] font-bold ${disciplineStyles[item.content.discipline].number}`}
+              >
+                {n}
+              </span>
+            ))}
           </span>
         );
       })}
@@ -245,7 +278,13 @@ const TIMES = Array.from({ length: 32 }, (_, i) => {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${minutes % 60 ? "30" : "00"}`;
 });
 
-export type DayChoice = { day: Weekday | null; time?: string; athleteCanMove: boolean };
+export type DayChoice = {
+  day: Weekday | null;
+  time?: string;
+  // Le jour a déjà une ou plusieurs séances (D-164) : le moment de celle-ci.
+  moment?: SessionMoment;
+  athleteCanMove: boolean;
+};
 
 // Choisir le jour d'une séance (FIX-02 compact dans le panneau ; FIX-05 complet en feuille).
 export function DayPicker({
@@ -273,13 +312,29 @@ export function DayPicker({
   const ordered = orderedSessions(week);
   const position = ordered.findIndex((item) => item.key === session.key) + 1;
   const [day, setDay] = useState<Weekday | null>(sessionDay(session));
+  // Plusieurs séances le même jour (D-164) : le moment de celle-ci, proposé (le premier libre).
+  const [moment, setMoment] = useState<SessionMoment | null>(() => {
+    const initial = sessionDay(session);
+    return session.moment ?? (initial ? suggestedMoment(week, initial, session.key) : null);
+  });
   const [time, setTime] = useState(session.fixedTime ?? "");
   const [scope, setScope] = useState<ScheduleScope>(phase ? "phase" : "week");
   const [canMove, setCanMove] = useState(session.athleteCanMove);
   const offDays = WEEKDAYS.filter((item) => unavailable(context, item));
   const taken = ordered
-    .map((item, index) => ({ day: sessionDay(item), n: index + 1, key: item.key }))
+    .map((item, index) => ({
+      day: sessionDay(item),
+      n: index + 1,
+      key: item.key,
+      title: item.title,
+      moment: sessionMoment(item),
+    }))
     .filter((item) => item.key !== session.key && item.day !== null);
+  const sameDay = day ? taken.filter((entry) => entry.day === day) : [];
+  const chooseDay = (next: Weekday) => {
+    setDay(next);
+    setMoment(suggestedMoment(week, next, session.key));
+  };
   const scopes: { value: ScheduleScope; label: string; sub: string }[] = [
     { value: "week", label: "Cette semaine seulement", sub: `Semaine ${week.index}` },
     ...(phase
@@ -328,27 +383,48 @@ export function DayPicker({
             const off = unavailable(context, item);
             const chosen = day === item;
             const others = taken.filter((entry) => entry.day === item);
+            // Quatre séances déjà ce jour-là (D-164) : complet.
+            const full = !chosen && others.length >= MAX_SESSIONS_PER_DAY;
             return (
               <button
                 key={item}
                 type="button"
                 aria-pressed={chosen}
-                onClick={() => setDay(item)}
-                className={`flex flex-col items-center justify-center gap-px rounded-[11px] transition-[scale,background-color] duration-150 active:scale-[0.96] ${
+                disabled={full}
+                aria-label={full ? `${weekdayFull[item]} : complet, 4 séances` : undefined}
+                onClick={() => chooseDay(item)}
+                className={`flex flex-col items-center justify-center gap-px rounded-[11px] transition-[scale,background-color] duration-150 enabled:active:scale-[0.96] disabled:cursor-not-allowed ${
                   compact ? "h-[52px]" : "h-[62px]"
                 } ${
                   chosen
                     ? "bg-cta text-on-cta"
-                    : off
+                    : off || full
                       ? "bg-surface-2 text-dlg-disabled"
                       : "bg-surface text-text inset-ring inset-ring-field-ring"
                 }`}
               >
-                <span
-                  className={`text-[15px] leading-none font-bold ${off && !chosen ? "line-through" : ""}`}
-                >
-                  {weekdayLabels[item]}
-                </span>
+                {/* FIX-05 (recette du 11/11) : le jour en petit et sa date en gras, quand le
+                    programme est daté ; un modèle n'a que le jour. */}
+                {dayNumber(context.startDate, week.index, item) ? (
+                  <>
+                    <span
+                      className={`text-[10.5px] leading-none font-semibold ${chosen ? "" : off ? "" : "text-muted"} ${off && !chosen ? "line-through" : ""}`}
+                    >
+                      {weekdayLabels[item]}
+                    </span>
+                    <span
+                      className={`text-[16px] leading-[1.1] font-bold ${off && !chosen ? "line-through" : ""}`}
+                    >
+                      {dayNumber(context.startDate, week.index, item)}
+                    </span>
+                  </>
+                ) : (
+                  <span
+                    className={`text-[15px] leading-none font-bold ${off && !chosen ? "line-through" : ""}`}
+                  >
+                    {weekdayLabels[item]}
+                  </span>
+                )}
                 <span
                   className={`h-3 text-[9.5px] font-semibold whitespace-nowrap ${
                     chosen ? "text-on-cta" : off ? "text-dlg-disabled" : "text-violet-text"
@@ -356,9 +432,11 @@ export function DayPicker({
                 >
                   {chosen
                     ? `S${position}`
-                    : off
-                      ? "indispo"
-                      : others.map((entry) => `S${entry.n}`).join(" ")}
+                    : full
+                      ? "complet"
+                      : off
+                        ? "indispo"
+                        : others.map((entry) => `S${entry.n}`).join(" ")}
                 </span>
               </button>
             );
@@ -380,13 +458,14 @@ export function DayPicker({
               <strong className="font-semibold text-text">
                 {taken.map((entry) => `S${entry.n}`).join(", ")}
               </strong>{" "}
-              = jour déjà pris par une autre séance. Possible, Coory te prévient.
+              = jour qui a déjà une séance : celle-ci s&apos;y ajoute avec son moment (4 au plus par
+              jour).
             </span>
           ) : null}
         </div>
-        {/* FIX-F06 : le jour choisi est indisponible ou déjà pris ? On le dit tout de suite (BR-04,
-            BR-05 : autorisé, avec avertissement). */}
-        {day && (unavailable(context, day) || taken.some((entry) => entry.day === day)) ? (
+        {/* FIX-F06 : le jour choisi est indisponible ? On le dit tout de suite (BR-05 : autorisé, avec
+            avertissement). */}
+        {day && unavailable(context, day) ? (
           <p
             role="status"
             className="flex items-start gap-2 rounded-[11px] bg-warn-soft px-3 py-2 text-[12.5px] leading-[1.45] text-text-2"
@@ -398,18 +477,38 @@ export function DayPicker({
               className="mt-px shrink-0 text-warn"
             />
             <span>
-              {unavailable(context, day)
-                ? `${weekdayLabels[day]}. : ${context.firstName} n'est pas disponible ce jour-là. Tu peux garder ce jour.`
-                : (() => {
-                    const same = taken.filter((entry) => entry.day === day);
-                    return `${weekdayLabels[day]}. : ${same
-                      .map((entry) => `la séance ${entry.n}`)
-                      .join(
-                        " et ",
-                      )} ${same.length > 1 ? "y sont" : "y est"} déjà. Deux séances le même jour, c'est possible.`;
-                  })()}
+              {`${weekdayLabels[day]}. : ${context.firstName} n'est pas disponible ce jour-là. Tu peux garder ce jour.`}
             </span>
           </p>
+        ) : null}
+        {/* D-164 (demande d'Antonino du 11/11) : le jour a déjà une séance ? Celle-ci s'y ajoute et
+            chaque séance du jour dit son moment, pour le coach comme pour le sportif. */}
+        {day && sameDay.length > 0 ? (
+          <div className="flex flex-col gap-2 rounded-[12px] bg-surface-2 p-3">
+            <p className="text-[12.5px] leading-[1.45] text-text-2">
+              <strong className="font-semibold text-text">{weekdayFull[day]}</strong> :{" "}
+              {sameDay
+                .map(
+                  (entry) =>
+                    `S${entry.n} ${entry.title}${entry.moment ? `, ${sessionMomentLabels[entry.moment].toLowerCase()}` : ""}`,
+                )
+                .join(" ; ")}{" "}
+              {sameDay.length > 1 ? "sont déjà prévues" : "est déjà prévue"}. Choisis le moment de
+              cette séance.
+            </p>
+            {/* Pastilles (comme « Appliquer à ») : elles passent à la ligne dans le panneau étroit au
+                lieu de couper « Après-midi ». */}
+            <ChipGroup
+              label="Moment de la séance"
+              on="page"
+              value={moment ?? suggestedMoment(week, day, session.key) ?? "evening"}
+              onChange={setMoment}
+              options={SESSION_MOMENTS.map((value) => ({
+                value,
+                label: sessionMomentLabels[value],
+              }))}
+            />
+          </div>
         ) : null}
       </div>
 
@@ -493,12 +592,20 @@ export function DayPicker({
         description="Dans la même semaine. Tu reçois une notification."
       />
 
-      <div className="flex gap-2">
+      <div className={`flex gap-2 ${compact ? "" : "sticky bottom-0 -mx-1 bg-dlg px-1 pt-2 pb-1"}`}>
         <button
           type="button"
           onClick={() =>
             onValidate(
-              { day, time: day && time ? time : undefined, athleteCanMove: canMove },
+              {
+                day,
+                time: day && time ? time : undefined,
+                moment:
+                  day && sameDay.length > 0
+                    ? (moment ?? suggestedMoment(week, day, session.key) ?? undefined)
+                    : undefined,
+                athleteCanMove: canMove,
+              },
               scope,
             )
           }
@@ -542,7 +649,7 @@ function Heading({
       </h2>
       <p className="text-[13px] text-muted">
         {disciplineLabels[discipline]} · {session.sessionType} · ≈{" "}
-        {(discipline === "running" ? formatMinutes : formatSeconds)(session.durationMinutes * 60)}
+        {formatMinutes(session.durationMinutes * 60)}
       </p>
     </div>
   );
@@ -581,7 +688,11 @@ export function ProposeDaysDialog({
         : [],
     ),
   );
-  const label = (day: Weekday) => weekdayFull[day];
+  // FIX-01 (recette du 11/11) : « Mar 3 » comme la maquette (le jour et sa date, sans couper « Mercredi »).
+  const label = (day: Weekday) => {
+    const date = dayNumber(context.startDate, week.index, day);
+    return date ? `${weekdayLabels[day]} ${date}` : weekdayFull[day];
+  };
   return (
     <Overlay
       open={open}
@@ -665,7 +776,7 @@ export function ProposeDaysDialog({
                     <SelectField
                       size="sm"
                       aria-label={`Jour de ${session.title}`}
-                      className="w-[112px] shrink-0"
+                      className="w-[100px] shrink-0"
                       value={days.get(session.key) ?? ""}
                       onChange={(event) =>
                         setDays((current) => {

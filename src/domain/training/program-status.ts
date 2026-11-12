@@ -50,3 +50,26 @@ export function pickCurrentProgram<T extends { startDate: string; weeksCount: nu
   if (upcoming) return upcoming;
   return [...programs].sort((a, b) => b.startDate.localeCompare(a.startDate))[0] ?? null;
 }
+
+// Carte « Programmes en cours » du tableau de bord (recette du 11/11/2026) : les programmes en cours
+// d'abord (le plus récent en tête), puis ceux à venir (le plus proche en tête), puis les terminés.
+// Avant, le tri par date de début décroissante faisait passer les « à venir » devant, et la carte
+// (3 lignes) pouvait ne plus montrer aucun programme en cours.
+export function orderForDashboard<T extends { startDate: string; weeksCount: number }>(
+  programs: readonly T[],
+  today: string,
+): T[] {
+  const group = (program: T) =>
+    today < program.startDate
+      ? 1
+      : today >= programEnd(program.startDate, program.weeksCount)
+        ? 2
+        : 0;
+  return [...programs].sort((a, b) => {
+    const byGroup = group(a) - group(b);
+    if (byGroup !== 0) return byGroup;
+    return group(a) === 1
+      ? a.startDate.localeCompare(b.startDate)
+      : b.startDate.localeCompare(a.startDate);
+  });
+}

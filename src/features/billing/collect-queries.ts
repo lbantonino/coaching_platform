@@ -49,7 +49,6 @@ async function listPaidSessionDates(organizationId: string, from: string): Promi
 // lus par la page (tableau de bord), pour ne pas les relire.
 export async function listUnpaidDates(
   organizationId: string,
-  vatRate: number,
   preloaded?: { sessions: CoachSession[]; covers: PackageCover[] },
 ): Promise<UnpaidDate[]> {
   const today = todayIsoInBrussels();
@@ -65,7 +64,6 @@ export async function listUnpaidDates(
     from,
     today,
     nowTimeInBrussels(),
-    vatRate,
     (session, date) => paid.has(`${session.id}:${date}`),
     // Forfait : seulement pour une séance individuelle (son sportif).
     (session, date) =>

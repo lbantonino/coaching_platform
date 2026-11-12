@@ -6,6 +6,7 @@ import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import { hyroxDivisionLabels } from "@/domain/training/hyrox-official";
 import { weekdayLabels } from "@/domain/training/scheduling";
+import { sessionMomentLabels } from "@/domain/training/session-v2";
 import { sessionStats } from "@/domain/training/session-view";
 import { draftSessionKeys } from "@/features/programs/drafts";
 import { sessionEditHref } from "@/features/programs/edit-href";
@@ -52,7 +53,9 @@ function when(week: ProgramWeek, session: ProgramSessionCard): string | null {
   const date = sessionDate(week, session);
   if (!date) return null;
   const day = session.day ? weekdayLabels[session.day] : "";
-  const label = `${day} ${dayMonth.format(asDate(date))}${session.time ? ` · ${session.time}` : ""}`;
+  // Plusieurs séances le même jour (D-164) : leur moment (« Sam 7 nov. · Soir »), puis l'heure.
+  const moment = session.moment ? ` · ${sessionMomentLabels[session.moment]}` : "";
+  const label = `${day} ${dayMonth.format(asDate(date))}${moment}${session.time ? ` · ${session.time}` : ""}`;
   return session.coachDate ? `Avec le coach · ${label}` : label;
 }
 
@@ -322,21 +325,21 @@ function EmptyProgram({
       </h2>
       <p className="mt-2 max-w-[440px] text-[14.5px] leading-[1.6] text-pretty text-muted">
         {draft
-          ? `« ${draft.title} » n'est pas encore publié : ${name} ne le voit pas. Termine-le puis publie-le depuis l'éditeur.`
+          ? `« ${draft.title} » n'est pas encore publié\u00a0: ${name} ne le voit pas. Termine-le puis publie-le depuis l'éditeur.`
           : "Crée-lui un programme semaine par semaine. Tu pars d'un modèle ou de zéro, et tu le publies quand il est prêt."}
       </p>
       <div className="mt-6 flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row">
         {draft ? (
           <Link
             href={draft.href}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-[11px] bg-cta px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
+            className="inline-flex h-[50px] items-center justify-center sm:h-11 gap-2 rounded-[11px] bg-cta px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
           >
             Ouvrir le brouillon
           </Link>
         ) : (
           <Link
             href={newHref}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-[11px] bg-cta px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
+            className="inline-flex h-[50px] items-center justify-center sm:h-11 gap-2 rounded-[11px] bg-cta px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
           >
             <Plus aria-hidden size={16} strokeWidth={2.2} />
             Créer un programme
@@ -345,7 +348,7 @@ function EmptyProgram({
         {copyHref && !draft ? (
           <Link
             href={copyHref}
-            className="inline-flex h-11 items-center justify-center rounded-[11px] px-4 text-[14px] font-semibold whitespace-nowrap text-text inset-ring inset-ring-field-ring transition-colors duration-150 hover:bg-surface-2"
+            className="inline-flex h-[50px] items-center justify-center sm:h-11 rounded-[11px] px-4 text-[14px] font-semibold whitespace-nowrap text-text inset-ring inset-ring-field-ring transition-colors duration-150 hover:bg-surface-2"
           >
             Copier un programme précédent
           </Link>

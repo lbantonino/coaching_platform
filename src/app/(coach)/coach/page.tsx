@@ -86,7 +86,6 @@ async function Dashboard() {
   // Paiements depuis le lundi ou le 1er du mois (le plus ancien des deux) : semaine et mois.
   const monthStart = `${today.slice(0, 7)}-01`;
   const weekStart = mondayOf(today);
-  const { vatRate } = current;
   const [sessions, tasks, payments, programs, covers] = await Promise.all([
     listSessions(current.organizationId),
     getDashboardTasks(current.organizationId),
@@ -95,7 +94,7 @@ async function Dashboard() {
     listPackageCovers(current.organizationId),
   ]);
   // Séances passées pas encore payées (D-90), à partir des séances et forfaits déjà lus.
-  const unpaid = await listUnpaidDates(current.organizationId, vatRate, { sessions, covers });
+  const unpaid = await listUnpaidDates(current.organizationId, { sessions, covers });
   // Montants dans la devise de l'organisation (D-69).
   const money = (cents: number) => formatMoney(cents, current.currency);
   // Après un changement de devise (D-70) : les montants d'avant sont convertis, total « ≈ ».
@@ -119,7 +118,6 @@ async function Dashboard() {
     sessions,
     weekStart,
     addDays(weekStart, 6),
-    vatRate,
     (session, date) =>
       session.kind === "individual" && coveredByPackage(covers, session.athletes[0]?.id, date),
     convert,

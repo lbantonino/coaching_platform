@@ -399,11 +399,12 @@ function strengthCount(content: Extract<PublishedSession["content"], { disciplin
 export function sessionHeadline(
   session: Pick<PublishedSession, "content" | "durationMinutes">,
 ): string {
-  const duration = formatSeconds(session.durationMinutes * 60);
+  // Durée d'une séance : toujours en minutes, toutes disciplines (« 75 min », jamais « 1 h 15 » :
+  // règle d'Antonino pour le Running, étendue comme les maquettes à la recette du 11/11/2026).
+  const duration = formatMinutes(session.durationMinutes * 60);
   const { content } = session;
   switch (content.discipline) {
     case "running": {
-      const duration = formatMinutes(session.durationMinutes * 60);
       const steps = content.items.flatMap((item) =>
         item.kind === "step" ? [item] : item.kind === "repeat" ? item.steps : [],
       );
@@ -490,7 +491,7 @@ export function runningDistanceMeters(
 export function sessionStats(
   session: Pick<PublishedSession, "content" | "durationMinutes">,
 ): { label: string; value: string }[] {
-  const duration = { label: "Durée", value: `≈ ${formatSeconds(session.durationMinutes * 60)}` };
+  const duration = { label: "Durée", value: `≈ ${formatMinutes(session.durationMinutes * 60)}` };
   const { content } = session;
   switch (content.discipline) {
     case "running": {

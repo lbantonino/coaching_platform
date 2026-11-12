@@ -15,6 +15,14 @@ import { listTemplates } from "./templates";
 // la division Hyrox, leurs anciens programmes (« Copier un programme précédent ») et les modèles de
 // programme (« Partir d'un modèle »).
 
+// Début proposé : le lundi qui commence la semaine prochaine (aujourd'hui si c'est un lundi).
+export function nextMonday(today: string): string {
+  const date = new Date(`${today}T00:00:00Z`);
+  const offset = (8 - date.getUTCDay()) % 7;
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
+}
+
 export type WizardProgram = {
   id: string;
   title: string;

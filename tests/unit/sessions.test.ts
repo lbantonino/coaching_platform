@@ -33,6 +33,8 @@ const base: SessionFormInput = {
   newAthleteName: "",
   notes: "",
   price: "",
+  applyVat: false,
+  vatRate: "",
   vatIncluded: true,
   paymentMethod: "transfer",
 };
@@ -57,6 +59,7 @@ describe("parseSessionForm", () => {
         notes: null,
         price_cents: null,
         price_vat_included: true,
+        vat_rate: 0,
         payment_method: null,
       },
     });
@@ -234,21 +237,36 @@ describe("prix d'une séance (D-52)", () => {
     });
   });
 
-  it("calcule le montant reçu : prix direct, ou prix HTVA plus 21 %", () => {
-    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: true }, 21)).toBe(6500);
-    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false }, 21)).toBe(7865);
+  it("calcule le montant reçu avec la TVA de la séance (D-163)", () => {
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: true, vatRate: 21 })).toBe(
+      6500,
+    );
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false, vatRate: 21 })).toBe(
+      7865,
+    );
     // Taux libre (D-69) : 8,1 % en Suisse, 0 % sans TVA.
-    expect(sessionAmountCents({ priceCents: 10000, priceVatIncluded: false }, 8.1)).toBe(10810);
-    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false }, 0)).toBe(6500);
+    expect(sessionAmountCents({ priceCents: 10000, priceVatIncluded: false, vatRate: 8.1 })).toBe(
+      10810,
+    );
+    expect(sessionAmountCents({ priceCents: 6500, priceVatIncluded: false, vatRate: 0 })).toBe(
+      6500,
+    );
     expect(defaultVatIncluded("cash")).toBe(true);
     expect(defaultVatIncluded("transfer")).toBe(false);
   });
 
-  it("garde un prix hors TVA quand la case est décochée (facturé par virement)", () => {
-    const parsed = parseSessionForm({ ...base, price: "65", vatIncluded: false });
+  it("garde un prix hors TVA quand la TVA s'applique sans être comprise (facturé par virement)", () => {
+    const parsed = parseSessionForm({
+      ...base,
+      price: "65",
+      applyVat: true,
+      vatRate: "21",
+      vatIncluded: false,
+    });
     expect(parsed.ok && parsed.values).toMatchObject({
       price_cents: 6500,
       price_vat_included: false,
+      vat_rate: 21,
       payment_method: "transfer",
     });
   });
@@ -264,6 +282,18 @@ describe("prix d'une séance (D-52)", () => {
     });
   });
 
+  it("lit la TVA de la séance : décochée = 0 %, cochée = son taux (D-163)", () => {
+    const priced = { ...base, price: "65", paymentMethod: "transfer" };
+    const none = parseSessionForm({ ...priced, vatRate: "21", vatIncluded: false });
+    expect(none.ok && none.values).toMatchObject({ vat_rate: 0, price_vat_included: true });
+    const vat = parseSessionForm({ ...priced, applyVat: true, vatRate: "8,1", vatIncluded: false });
+    expect(vat.ok && vat.values).toMatchObject({ vat_rate: 8.1, price_vat_included: false });
+    expect(parseSessionForm({ ...priced, applyVat: true, vatRate: "abc" })).toEqual({
+      ok: false,
+      error: "Taux de TVA invalide : un nombre entre 0 et 100 (ex. 21).",
+    });
+  });
+
   it("additionne les dates de la période qui ont un prix, déplacements compris", () => {
     const weekly = {
       startsOn: "2026-09-07",
@@ -272,6 +302,7 @@ describe("prix d'une séance (D-52)", () => {
       endsOn: null,
       priceCents: 6500,
       priceVatIncluded: false,
+      vatRate: 21,
       // La date du lundi 2 novembre a lieu le dimanche 1er : elle reste dans la semaine du 26/10.
       exceptions: [{ originalDate: "2026-11-02", newDate: "2026-11-01", newStartTime: "09:00" }],
     };
@@ -284,7 +315,7 @@ describe("prix d'une séance (D-52)", () => {
     };
     const free = { ...weekly, priceCents: null, exceptions: [] };
     // Deux dates facturées (78,65 €) et une en espèces (65 €).
-    expect(plannedIncome([weekly, once, free], "2026-10-26", "2026-11-01", 21)).toEqual({
+    expect(plannedIncome([weekly, once, free], "2026-10-26", "2026-11-01")).toEqual({
       count: 3,
       inclCents: 22230,
     });
@@ -310,11 +341,12 @@ describe("forfaits (D-52)", () => {
       endsOn: null,
       priceCents: 6500,
       priceVatIncluded: true,
+      vatRate: 0,
       athleteId: ATHLETE,
     };
     const other = { ...session, athleteId: OTHER };
     expect(
-      plannedIncome([session, other], "2026-10-26", "2026-11-01", 21, (s, date) =>
+      plannedIncome([session, other], "2026-10-26", "2026-11-01", (s, date) =>
         coveredByPackage(covers, s.athleteId, date),
       ),
     ).toEqual({ count: 1, inclCents: 6500 });
@@ -324,7 +356,13 @@ describe("forfaits (D-52)", () => {
 // À encaisser (D-90) : mardi 3 novembre 2026, 10:00.
 describe("séances à encaisser (D-90)", () => {
   const today = "2026-11-03";
-  const base = { repeatsWeekly: false, endsOn: null, priceVatIncluded: true, exceptions: [] };
+  const base = {
+    repeatsWeekly: false,
+    endsOn: null,
+    priceVatIncluded: true,
+    vatRate: 0,
+    exceptions: [],
+  };
   // Chaque lundi à 07:00, 65 € HTVA (78,65 € à 21 %) ; le 19/10 déplacé au mardi 20 à 09:00.
   const weekly = {
     ...base,
@@ -334,6 +372,7 @@ describe("séances à encaisser (D-90)", () => {
     repeatsWeekly: true,
     priceCents: 6500,
     priceVatIncluded: false,
+    vatRate: 21,
     exceptions: [{ originalDate: "2026-10-19", newDate: "2026-10-20", newStartTime: "09:00" }],
   };
   const morning = { ...base, id: "matin", startsOn: today, startTime: "08:00", priceCents: 4000 };
@@ -353,7 +392,6 @@ describe("séances à encaisser (D-90)", () => {
       "2026-10-19",
       today,
       "10:00",
-      21,
       (session, date) => paid.has(`${session.id}:${date}`),
     );
     expect(
@@ -378,7 +416,6 @@ describe("séances à encaisser (D-90)", () => {
       "2026-10-19",
       today,
       "10:00",
-      21,
       () => false,
       (_session, date) => date >= "2026-10-26",
     );

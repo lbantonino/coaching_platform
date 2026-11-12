@@ -46,7 +46,7 @@ export function WeekPicker({
   return (
     // Pas de « relative » ici : la grille se place sur tout le groupe ‹ Semaine › (le parent), alignée à
     // gauche sur téléphone (le groupe y est à gauche de l'écran) et à droite sur ordinateur.
-    <div ref={box} onKeyDown={onKeyDown} className="flex">
+    <div ref={box} onKeyDown={onKeyDown} className="flex min-w-0 flex-1 lg:flex-none">
       <button
         ref={trigger}
         type="button"
@@ -54,7 +54,7 @@ export function WeekPicker({
         aria-haspopup="true"
         aria-label={`Semaine ${shown} sur ${count} : choisir une semaine`}
         onClick={() => setOpen((value) => !value)}
-        className={`flex h-[38px] items-center gap-2 rounded-[11px] bg-surface pr-3 pl-3.5 text-[14px] font-semibold whitespace-nowrap text-text transition-shadow duration-150 ${
+        className={`flex h-[38px] items-center gap-2 rounded-[11px] bg-surface pr-3 pl-3.5 text-[14px] font-semibold whitespace-nowrap text-text transition-shadow duration-150 max-lg:h-[42px] max-lg:w-full max-lg:justify-center ${
           open ? "inset-ring-[1.5px] inset-ring-violet/55" : "inset-ring inset-ring-line-2"
         }`}
       >

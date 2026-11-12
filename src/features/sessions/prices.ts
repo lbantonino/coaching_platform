@@ -17,6 +17,8 @@ export type PricedSessionLike = ScheduleLike & {
   exceptions?: SessionException[];
   priceCents: number | null;
   priceVatIncluded: boolean;
+  // TVA de la séance (D-163, 0 = sans TVA).
+  vatRate: number;
   // Devise du prix (D-69) ; sans devise, celle de l'organisation.
   currency?: Currency;
 };
@@ -25,8 +27,6 @@ export function plannedIncome<T extends PricedSessionLike>(
   sessions: T[],
   from: string,
   to: string,
-  // Taux de TVA habituel de l'organisation (D-69), pour les prix hors TVA.
-  vatRate: number,
   covered: (session: T, date: string) => boolean = () => false,
   // Après un changement de devise (D-70) : prix ramenés dans la devise de l'organisation.
   convert?: Converter,
@@ -39,7 +39,7 @@ export function plannedIncome<T extends PricedSessionLike>(
       (occurrence) => !covered(session, occurrence.originalDate),
     ).length;
     count += dates;
-    const amount = sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate);
+    const amount = sessionAmountCents({ ...session, priceCents: session.priceCents });
     inclCents += dates * (convert && session.currency ? convert(amount, session.currency) : amount);
   }
   return { count, inclCents };
@@ -64,14 +64,13 @@ export function datesToCollect<T extends PricedSessionLike>(
   today: string,
   // Heure actuelle, « 14:30 ».
   now: string,
-  vatRate: number,
   paid: (session: T, originalDate: string) => boolean,
   covered: (session: T, originalDate: string) => boolean = () => false,
 ): DateToCollect<T>[] {
   const result: DateToCollect<T>[] = [];
   for (const session of sessions) {
     if (session.priceCents === null) continue;
-    const amountCents = sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate);
+    const amountCents = sessionAmountCents({ ...session, priceCents: session.priceCents });
     for (const occurrence of sessionOccurrences(session, from, today)) {
       if (occurrence.date === today && occurrence.startTime.slice(0, 5) > now) continue;
       if (paid(session, occurrence.originalDate) || covered(session, occurrence.originalDate)) {

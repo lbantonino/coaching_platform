@@ -6,10 +6,13 @@ import {
   formatClock,
   formatMeters,
   formatSeconds,
+  sessionHeadline,
+  sessionStats,
   sessionSteps,
 } from "@/domain/training/session-view";
 
 import { draft, hyroxSession, runningSession, strengthSession } from "./fixtures/program-v2";
+import { hyrox, strength } from "./pdf-fixtures";
 
 const EXERCISE = "8a5f1c3e-3a4b-5c6d-8e9f-0a1b2c3d4e5f";
 
@@ -139,5 +142,17 @@ describe("parseProgramSession (v1 et v2)", () => {
     expect(display?.steps.map((step) => step.title)).toEqual(["Échauffement", "Circuit"]);
     expect(display?.steps[1]?.repeat).toEqual(v1.steps[1]?.repeat);
     expect(display?.withCoach).toEqual(v1.withCoach);
+  });
+});
+
+describe("durée d'une séance en minutes, toutes disciplines (recette du 11/11/2026)", () => {
+  it("une séance d'une heure s'écrit « 60 min », jamais « 1 h »", () => {
+    const strengthHour = strength(40);
+    const hyroxLong = { ...hyrox(3), durationMinutes: 75 };
+    expect(sessionHeadline(hyroxLong)).not.toMatch(/\d h\b/);
+    expect(sessionStats(strengthHour).find((stat) => stat.label === "Durée")?.value).toBe(
+      "≈ 60 min",
+    );
+    expect(sessionStats(hyroxLong).find((stat) => stat.label === "Durée")?.value).toBe("≈ 75 min");
   });
 });

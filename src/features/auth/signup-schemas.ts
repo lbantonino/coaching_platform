@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { isCurrency, parseVatRate, type Currency } from "@/domain/billing/money";
+import { isCurrency, type Currency } from "@/domain/billing/money";
 import { isCountryCode } from "@/domain/geo/countries";
 
 import { emailField, newPasswordField } from "./schemas";
@@ -79,25 +79,17 @@ export const onboardingSchema = z.object({
   terms,
 });
 
-// Étape « Pays, devise et TVA » d'un coach (D-69, simplifiée par D-90) : pays et devise (toujours,
-// pré-remplis), puis une seule question, la TVA : « Pas de TVA » (par défaut) ou « Je facture la
-// TVA » avec son taux. Coory ne fait pas de factures : ce taux sert au prix des séances et au
-// résultat HTVA de la Comptabilité. Tout se modifie ensuite dans Paramètres.
-export const VAT_CHOICES = ["none", "vat"] as const;
-export type VatChoice = (typeof VAT_CHOICES)[number];
-
+// Étape « Pays et devise » d'un coach (D-69) : pays et devise, pré-remplis. Plus de question sur la
+// TVA (D-163, demande d'Antonino du 11/11) : elle se choisit à chaque paiement, dépense ou séance.
+// Tout se modifie ensuite dans Paramètres.
 export type BillingSetupInput = {
   country: string;
   currency: string;
-  vatChoice: string;
-  vatRate: string;
 };
 
 export type BillingSetup = {
   country: string;
   currency: Currency;
-  // 0 = pas de TVA.
-  vatRate: number;
 };
 
 export function parseBillingSetup(
@@ -105,11 +97,5 @@ export function parseBillingSetup(
 ): { ok: true; setup: BillingSetup } | { ok: false; error: string } {
   if (!isCountryCode(input.country)) return { ok: false, error: "Choisis ton pays." };
   if (!isCurrency(input.currency)) return { ok: false, error: "Choisis ta devise." };
-  const base = { country: input.country, currency: input.currency };
-  if (input.vatChoice !== "vat") return { ok: true, setup: { ...base, vatRate: 0 } };
-  const vatRate = parseVatRate(input.vatRate);
-  if (vatRate === null || vatRate === 0) {
-    return { ok: false, error: "Indique ton taux de TVA (un nombre entre 0 et 100)." };
-  }
-  return { ok: true, setup: { ...base, vatRate } };
+  return { ok: true, setup: { country: input.country, currency: input.currency } };
 }

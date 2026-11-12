@@ -180,7 +180,7 @@ export function SettingsDialogPanel({
           />
         ) : shown === "argent" ? (
           <MoneySection
-            key={`${data.organization.country}-${data.organization.vatRate}`}
+            key={data.organization.country}
             data={data}
             intro={intro}
             onChanged={onChanged}

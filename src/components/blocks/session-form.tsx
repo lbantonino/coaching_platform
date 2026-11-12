@@ -33,7 +33,7 @@ import {
   mobileActionSecondaryClass,
 } from "@/components/ui/mobile-action-bar";
 import { DialogBody, DialogFooter } from "@/components/ui/overlay";
-import { currencySymbol, formatVatRate } from "@/domain/billing/money";
+import { currencySymbol, formatVatRate, parseVatRate } from "@/domain/billing/money";
 import { addVat, parseAmount, splitVat } from "@/domain/billing/payments";
 import { foldText } from "@/domain/documents/documents";
 import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
@@ -48,6 +48,56 @@ import {
 
 // Ordre du menu Discipline (demande d'Antonino, 23/10) : les séances encadrées ont surtout lieu en salle.
 const SESSION_DISCIPLINES: Discipline[] = ["strength", "hyrox", "running", "hybrid"];
+
+// TVA d'une séance (D-163, demande d'Antonino du 11/11) : « Appliquer la TVA » est décochée par défaut,
+// le prix est alors ce que le sportif paie. Cochée : le taux (pré-rempli avec le taux normal du pays,
+// modifiable) et « TVA comprise dans le prix », qui suit le mode de paiement (règle de Gianluca :
+// virement = prix hors TVA, espèces = TVA comprise).
+function useSessionVat(v: SessionFormInput) {
+  const { suggestedVatRate } = useMoney();
+  const [apply, setApply] = useState(v.applyVat);
+  const [rateText, setRateText] = useState(v.vatRate || suggestedVatRate);
+  const [included, setIncluded] = useState(v.vatIncluded);
+  const parsed = parseVatRate(rateText);
+  return {
+    apply,
+    setApply,
+    rateText,
+    setRateText,
+    included,
+    setIncluded,
+    // Taux appliqué : 0 sans TVA, null si le taux saisi est faux.
+    rate: apply ? parsed : 0,
+  };
+}
+type SessionVat = ReturnType<typeof useSessionVat>;
+
+// Ce que le sportif paie : le prix tel quel sans TVA ou TVA comprise, sinon le prix HTVA plus la TVA.
+function paidAmount(priceCents: number, vat: SessionVat): number {
+  return !vat.rate || vat.included ? priceCents : addVat(priceCents, vat.rate);
+}
+
+// La phrase de calcul sous le prix, recalculée à chaque frappe.
+function priceSentence(
+  priceCents: number,
+  vat: SessionVat,
+  format: (cents: number) => string,
+): string {
+  if (vat.rate === null) return "Indique le taux de TVA (ex. 21).";
+  if (vat.rate === 0) return `${format(priceCents)} reçus, sans TVA.`;
+  const rate = formatVatRate(vat.rate);
+  if (vat.included) {
+    const split = splitVat(priceCents, vat.rate);
+    return `${format(priceCents)} reçus, TVA comprise : ${format(split.exclCents)} HTVA et ${format(split.vatCents)} de TVA (${rate}).`;
+  }
+  return `${format(priceCents)} HTVA : le sportif paie ${format(addVat(priceCents, vat.rate))}, TVA de ${rate} comprise.`;
+}
+
+// Case à cocher de la page Modifier la séance (« Appliquer la TVA », « TVA comprise dans le prix »).
+const pageCheckLabelClass =
+  "flex min-h-11 w-fit cursor-pointer items-center gap-2.5 text-[14.5px] leading-[normal] font-medium has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:min-h-0 lg:text-[13.5px]";
+const pageCheckBoxClass =
+  "grid size-[22px] shrink-0 place-items-center rounded-[7px] bg-surface text-white inset-ring-[1.5px] inset-ring-line-2 transition-colors duration-150 peer-checked:bg-violet peer-checked:inset-ring-transparent lg:size-5 lg:rounded-[6px] [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100";
 
 type Action = (previous: SessionFormState, formData: FormData) => Promise<SessionFormState>;
 
@@ -263,41 +313,33 @@ function SessionFields({
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
   const [endsOn, setEndsOn] = useState(v.endsOn);
   const [price, setPrice] = useState(v.price);
-  const [vatIncluded, setVatIncluded] = useState(v.vatIncluded);
+  const vat = useSessionVat(v);
+  const vatId = useId();
   const [paymentMethod, setPaymentMethod] = useState(v.paymentMethod || "transfer");
   const [enrolled, setEnrolled] = useState<string[]>(v.athleteIds);
   const [search, setSearch] = useState("");
-  // Devise et taux de TVA de l'organisation (D-69, réglés dans les Paramètres).
-  const { currency, vatRate, format } = useMoney();
+  // Devise de l'organisation (D-69) ; la TVA est celle de la séance (D-163).
+  const { currency, format } = useMoney();
 
   const priceCents = parseAmount(price);
-  // Ce que le sportif paie : le prix tel quel s'il est TVA comprise (ou sans TVA), sinon HTVA + TVA.
-  const paidCents =
-    priceCents === null
-      ? null
-      : vatIncluded || vatRate === 0
-        ? priceCents
-        : addVat(priceCents, vatRate);
+  const paidCents = priceCents === null ? null : paidAmount(priceCents, vat);
+  const withVat = Boolean(vat.rate);
   const enrolledAthletes = athletes.filter((athlete) => enrolled.includes(athlete.id));
   const individual = athletes.find((athlete) => athlete.id === v.athleteId) ?? null;
   const ends = isoDate(endsOn);
   const words = foldText(search).split(/\s+/).filter(Boolean);
 
-  // Ligne de calcul (kit) : recalculée à chaque frappe, au taux de l'organisation.
+  // Ligne de calcul (kit) : recalculée à chaque frappe, au taux de la séance.
   const priceLine =
     priceCents === null || paidCents === null
       ? kind === "group"
         ? "Sans prix, la séance ne compte pas dans l'encaissé."
         : "Aucun prix : la séance ne sera pas facturée."
       : kind === "group" && enrolledAthletes.length > 0
-        ? `${format(paidCents)}${vatRate === 0 ? "" : " TTC"} pour la séance, soit ${format(
+        ? `${format(paidCents)}${withVat ? " TTC" : ""} pour la séance, soit ${format(
             Math.round(paidCents / enrolledAthletes.length),
-          )} par inscrit${vatRate === 0 ? ", sans TVA (réglage dans Paramètres)" : ""}.`
-        : vatRate === 0
-          ? `${format(priceCents)} reçus, sans TVA (réglage dans Paramètres).`
-          : vatIncluded
-            ? `${format(priceCents)} reçus, TVA comprise : ${format(splitVat(priceCents, vatRate).exclCents)} HTVA et ${format(splitVat(priceCents, vatRate).vatCents)} de TVA (${formatVatRate(vatRate)}).`
-            : `${format(priceCents)} HTVA : le sportif paie ${format(paidCents)}, TVA de ${formatVatRate(vatRate)} comprise.`;
+          )} par inscrit${withVat ? "" : ", sans TVA"}.`
+        : priceSentence(priceCents, vat, format);
 
   const recap = [
     { label: "Quand", value: whenLabel(startsOn, startTime, repeats) },
@@ -305,7 +347,7 @@ function SessionFields({
     { label: "Jusqu'au", value: repeats ? (ends ? dayFull.format(ends) : "Sans fin") : "—" },
     {
       label: "Prix",
-      value: paidCents === null ? "—" : `${format(paidCents)}${vatRate === 0 ? "" : " TTC"}`,
+      value: paidCents === null ? "—" : `${format(paidCents)}${withVat ? " TTC" : ""}`,
     },
     { label: "Paiement", value: paymentMethod === "cash" ? "Espèces" : "Virement" },
   ];
@@ -738,7 +780,7 @@ function SessionFields({
                       checked={paymentMethod === method}
                       onChange={() => {
                         setPaymentMethod(method);
-                        setVatIncluded(defaultVatIncluded(method));
+                        vat.setIncluded(defaultVatIncluded(method));
                       }}
                       className="peer sr-only"
                     />
@@ -750,22 +792,60 @@ function SessionFields({
               </div>
             </fieldset>
           </div>
-          <label className="flex min-h-11 w-fit cursor-pointer items-center gap-2.5 text-[14.5px] leading-[normal] font-medium has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:min-h-0 lg:text-[13.5px]">
+          <label className={pageCheckLabelClass}>
             <input
               type="checkbox"
-              name="vatIncluded"
-              checked={vatIncluded}
-              onChange={(event) => setVatIncluded(event.target.checked)}
+              name="applyVat"
+              checked={vat.apply}
+              onChange={(event) => vat.setApply(event.target.checked)}
               className="peer sr-only"
             />
-            <span
-              aria-hidden
-              className="grid size-[22px] shrink-0 place-items-center rounded-[7px] bg-surface text-white inset-ring-[1.5px] inset-ring-line-2 transition-colors duration-150 peer-checked:bg-violet peer-checked:inset-ring-transparent lg:size-5 lg:rounded-[6px] [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100"
-            >
+            <span aria-hidden className={pageCheckBoxClass}>
               <Check size={13} strokeWidth={3} />
             </span>
-            TVA comprise dans le prix
+            Appliquer la TVA
           </label>
+          {vat.apply ? (
+            <div className="grid gap-3.5 lg:grid-cols-2 lg:items-end">
+              <div className="flex min-w-0 flex-col gap-[7px]">
+                <label htmlFor={vatId} className={editLabelClass}>
+                  Taux de TVA
+                </label>
+                <div className="relative">
+                  <input
+                    id={vatId}
+                    name="vatRate"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    placeholder="21"
+                    value={vat.rateText}
+                    onChange={(event) => vat.setRateText(event.target.value)}
+                    aria-describedby={priceLineId}
+                    className={`${editFieldClass} pr-10`}
+                  />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-[16px] text-faint lg:text-[14px]"
+                  >
+                    %
+                  </span>
+                </div>
+              </div>
+              <label className={`${pageCheckLabelClass} lg:min-h-11`}>
+                <input
+                  type="checkbox"
+                  name="vatIncluded"
+                  checked={vat.included}
+                  onChange={(event) => vat.setIncluded(event.target.checked)}
+                  className="peer sr-only"
+                />
+                <span aria-hidden className={pageCheckBoxClass}>
+                  <Check size={13} strokeWidth={3} />
+                </span>
+                TVA comprise dans le prix
+              </label>
+            </div>
+          ) : null}
           <p
             id={priceLineId}
             aria-live="polite"
@@ -843,8 +923,8 @@ function SessionDialogFields({
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
   const [newClient, setNewClient] = useState(v.newClient);
   const [price, setPrice] = useState(v.price);
-  const { currency, vatRate, format } = useMoney();
-  const [vatIncluded, setVatIncluded] = useState(v.vatIncluded);
+  const { currency, format } = useMoney();
+  const vat = useSessionVat(v);
   const [paymentMethod, setPaymentMethod] = useState(v.paymentMethod || "transfer");
   const priceCents = parseAmount(price);
 
@@ -1021,7 +1101,7 @@ function SessionDialogFields({
                 value={paymentMethod}
                 onChange={(method) => {
                   setPaymentMethod(method as typeof paymentMethod);
-                  setVatIncluded(
+                  vat.setIncluded(
                     defaultVatIncluded(method as Parameters<typeof defaultVatIncluded>[0]),
                   );
                 }}
@@ -1033,19 +1113,40 @@ function SessionDialogFields({
             </DlgFieldset>
           </div>
           <DlgCheckCard
-            name="vatIncluded"
-            checked={vatIncluded}
-            onChange={(event) => setVatIncluded(event.target.checked)}
-            label="TVA comprise dans le prix"
+            name="applyVat"
+            checked={vat.apply}
+            onChange={(event) => vat.setApply(event.target.checked)}
+            label="Appliquer la TVA"
+            description="Coche si tu factures la TVA sur cette séance."
           />
+          {vat.apply ? (
+            <>
+              <DlgField label="Taux de TVA" htmlFor="session-vat" half>
+                <DlgSuffixInput
+                  id="session-vat"
+                  name="vatRate"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  placeholder="21"
+                  value={vat.rateText}
+                  onChange={(event) => vat.setRateText(event.target.value)}
+                  aria-describedby="session-price-hint"
+                  suffix="%"
+                />
+              </DlgField>
+              <DlgCheckCard
+                name="vatIncluded"
+                checked={vat.included}
+                onChange={(event) => vat.setIncluded(event.target.checked)}
+                label="TVA comprise dans le prix"
+                half
+              />
+            </>
+          ) : null}
           <DlgHint id="session-price-hint" live>
             {priceCents === null
               ? "Sans prix, la séance ne compte pas dans l'encaissé."
-              : vatRate === 0
-                ? `${format(priceCents)} reçus, sans TVA (réglage dans Paramètres).`
-                : vatIncluded
-                  ? `${format(priceCents)} reçus, TVA comprise : ${format(splitVat(priceCents, vatRate).exclCents)} HTVA et ${format(splitVat(priceCents, vatRate).vatCents)} de TVA (${formatVatRate(vatRate)}).`
-                  : `${format(priceCents)} HTVA : le sportif paie ${format(addVat(priceCents, vatRate))}, TVA de ${formatVatRate(vatRate)} comprise.`}
+              : priceSentence(priceCents, vat, format)}
           </DlgHint>
 
           <DlgField label="Note du coach" htmlFor="session-notes" optional>

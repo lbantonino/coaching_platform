@@ -1050,6 +1050,7 @@ export type Database = {
           starts_on: string;
           title: string;
           updated_at: string;
+          vat_rate: number;
         };
         ComputedFields: never;
         Insert: {
@@ -1073,6 +1074,7 @@ export type Database = {
           starts_on: string;
           title: string;
           updated_at?: string;
+          vat_rate?: number;
         };
         Update: {
           athlete_id?: string | null;
@@ -1095,6 +1097,7 @@ export type Database = {
           starts_on?: string;
           title?: string;
           updated_at?: string;
+          vat_rate?: number;
         };
         Relationships: [
           {

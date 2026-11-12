@@ -10,6 +10,7 @@ import {
   formatVatRate,
   parseAmount,
   parseVatRate,
+  standardVatRate,
   splitVat,
 } from "@/domain/billing/money";
 import { paymentMethodLabel, paymentTotals } from "@/domain/billing/payments";
@@ -61,6 +62,12 @@ describe("taux de TVA libre", () => {
     expect(splitVat(10810, 8.1)).toEqual({ exclCents: 10000, vatCents: 810 });
   });
 
+  it("propose le taux normal du pays quand on coche « Appliquer la TVA » (D-163)", () => {
+    expect(standardVatRate("BE")).toBe(21);
+    expect(standardVatRate("CH")).toBe(8.1);
+    expect(standardVatRate("XX")).toBeNull();
+  });
+
   it("retrouve exactement le HTVA saisi, quel que soit le taux", () => {
     for (const rate of [5.5, 7.7, 8.1, 10, 16, 19, 20, 25.5]) {
       for (let cents = 1; cents <= 20_000; cents += 7) {
@@ -93,20 +100,14 @@ describe("pays", () => {
   });
 });
 
-describe("inscription : étape « Pays, devise et TVA » (D-90)", () => {
-  const base = { country: "FR", currency: "EUR", vatChoice: "", vatRate: "" };
+describe("inscription : étape « Pays et devise » (D-163)", () => {
+  const base = { country: "FR", currency: "EUR" };
 
-  it("sans TVA choisie, le taux vaut 0", () => {
+  it("garde le pays et la devise, sans question sur la TVA", () => {
     expect(parseBillingSetup(base)).toEqual({
       ok: true,
-      setup: { country: "FR", currency: "EUR", vatRate: 0 },
+      setup: { country: "FR", currency: "EUR" },
     });
-  });
-
-  it("un coach qui facture la TVA donne son taux", () => {
-    const parsed = parseBillingSetup({ ...base, vatChoice: "vat", vatRate: "20" });
-    expect(parsed.ok && parsed.setup.vatRate).toBe(20);
-    expect(parseBillingSetup({ ...base, vatChoice: "vat" }).ok).toBe(false);
   });
 
   it("refuse un pays ou une devise inconnus", () => {

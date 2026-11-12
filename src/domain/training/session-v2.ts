@@ -301,6 +301,19 @@ export const sessionContentSchema = z.discriminatedUnion("discipline", [
 export const WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type Weekday = (typeof WEEKDAYS)[number];
 
+// Plusieurs séances le même jour (D-164, demande d'Antonino du 11/11 : un sportif s'entraîne parfois
+// deux, trois, voire quatre fois par jour) : chacune dit son moment, dans cet ordre.
+export const SESSION_MOMENTS = ["morning", "noon", "afternoon", "evening"] as const;
+export type SessionMoment = (typeof SESSION_MOMENTS)[number];
+export const sessionMomentLabels: Record<SessionMoment, string> = {
+  morning: "Matin",
+  noon: "Midi",
+  afternoon: "Après-midi",
+  evening: "Soir",
+};
+export const MAX_SESSIONS_PER_DAY = 4;
+export const MAX_SESSIONS_PER_WEEK = 14;
+
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 
 export const sessionBodySchema = z.object({
@@ -320,6 +333,8 @@ export const sessionDraftSchema = sessionBodySchema.extend({
   // Jours fixes (03b) : un jour, et une heure facultative.
   fixedDay: z.enum(WEEKDAYS).optional(),
   fixedTime: hhmm.optional(),
+  // Moment de la journée quand le jour a plusieurs séances (D-164).
+  moment: z.enum(SESSION_MOMENTS).optional(),
   // C-14 : enregistré maintenant, utilisé avec l'espace sportif (le sportif déplace dans la semaine).
   athleteCanMove: z.boolean(),
   // Séance faite AVEC le coach : le rendez-vous de son agenda verrouille le jour (BR-06).
@@ -338,6 +353,7 @@ export const publishedSessionSchema = sessionBodySchema.extend({
   schemaVersion: z.literal(2),
   fixedDay: z.enum(WEEKDAYS).optional(),
   fixedTime: hhmm.optional(),
+  moment: z.enum(SESSION_MOMENTS).optional(),
   athleteCanMove: z.boolean(),
   withCoach: z
     .object({ coachSessionId: z.uuid(), date: z.iso.date(), time: hhmm.optional() })

@@ -158,7 +158,7 @@ function Group({
           onClick={() => onSelect(group.id)}
           className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[8px] text-left focus-visible:outline-2 focus-visible:outline-violet"
         >
-          <span className="flex items-center gap-[7px] text-[14px] font-semibold whitespace-nowrap text-strength">
+          <span className="flex items-center gap-[7px] text-[14px] font-semibold whitespace-nowrap text-strength-text">
             <Icon aria-hidden size={15} strokeWidth={2} />
             {superset ? "Superset" : "EMOM"}
           </span>
@@ -184,7 +184,7 @@ function Group({
                 onSelect: onRemove,
               },
             ]}
-            className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-faint! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
+            className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-muted! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
           />
         )}
       </div>
@@ -233,7 +233,7 @@ function Group({
         <button
           type="button"
           onClick={onAdd}
-          className={`flex min-h-10 items-center gap-[7px] self-start rounded-[12px] px-3 text-[13px] font-medium text-strength transition-colors duration-150 hover:bg-surface/60 ${superset ? "ml-6" : ""}`}
+          className={`flex min-h-10 items-center gap-[7px] self-start rounded-[12px] px-3 text-[13px] font-medium text-strength-text transition-colors duration-150 hover:bg-surface/60 ${superset ? "ml-6" : ""}`}
         >
           <Plus aria-hidden size={14} strokeWidth={2} />
           {superset ? "Relier un exercice" : "Ajouter un exercice"}
@@ -453,7 +453,7 @@ function SetRow({
         }}
         className={`h-10 truncate rounded-[10px] px-2.5 text-left text-[13px] font-medium transition-colors duration-150 ${
           warmup
-            ? "bg-[color-mix(in_srgb,var(--strength-fill)_10%,var(--surface))] text-strength"
+            ? "bg-[color-mix(in_srgb,var(--strength-fill)_10%,var(--surface))] text-strength-text"
             : "bg-bg text-text"
         }`}
       >

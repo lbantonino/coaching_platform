@@ -81,20 +81,20 @@ async function Session({
     weekIndex: found.week.index,
     position,
     athlete: {
-      firstName: athlete?.firstName ?? "le sportif",
+      firstName: athlete?.firstName ?? "ton sportif",
       vmaKmh: athlete?.vmaKmh ?? null,
       hrMax: athlete?.hrMax ?? null,
     },
     hyrox:
       found.session.content.discipline === "hyrox"
         ? {
-            firstName: athlete?.firstName ?? "le sportif",
+            firstName: athlete?.firstName ?? "ton sportif",
             division: loaded.draft.goal?.hyroxDivision ?? athlete?.defaultHyroxDivision ?? null,
             sex: athlete?.sex ?? null,
           }
         : null,
     strength: isStrength
-      ? { athlete: { firstName: athlete?.firstName ?? "le sportif", maxes }, library }
+      ? { athlete: { firstName: athlete?.firstName ?? "ton sportif", maxes }, library }
       : null,
     // Retour vers la fiche du sportif : seulement une page de fiche de CETTE organisation (jamais une
     // adresse quelconque reçue dans l'URL).

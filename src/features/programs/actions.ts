@@ -16,7 +16,7 @@ import {
 } from "@/domain/training/program-plan";
 import { buildPublication } from "@/domain/training/program-publication";
 import { resizePlan } from "@/domain/training/program-upgrade";
-import { sessionBodySchema } from "@/domain/training/session-v2";
+import { MAX_SESSIONS_PER_WEEK, sessionBodySchema } from "@/domain/training/session-v2";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database.types";
@@ -140,6 +140,7 @@ export async function createProgram(
             ...session,
             fixedDay: undefined,
             fixedTime: undefined,
+            moment: undefined,
           }))
         : week.sessions,
   }));
@@ -551,7 +552,7 @@ const previewInputSchema = z.object({
     z.object({ kind: z.literal("template"), templateId: z.uuid() }),
   ]),
   weeksCount: z.number().int().min(1).max(52),
-  sessionsPerWeek: z.number().int().min(1).max(7),
+  sessionsPerWeek: z.number().int().min(1).max(MAX_SESSIONS_PER_WEEK),
 });
 
 export type StartPreview = { weeks: (Discipline | null)[][]; filled: number };
@@ -598,7 +599,7 @@ const createTemplateInputSchema = z.object({
   discipline: z.enum(["running", "strength", "hyrox"]),
   aimDefaults: z.object({ running: z.enum(["pace", "hr"]), strength: z.enum(["kg", "pct"]) }),
   weeksCount: z.number().int().min(1).max(52),
-  sessionsPerWeek: z.number().int().min(1).max(7),
+  sessionsPerWeek: z.number().int().min(1).max(MAX_SESSIONS_PER_WEEK),
   phases: z
     .array(
       z.object({
@@ -654,6 +655,7 @@ export async function createProgramTemplate(
               ...session,
               fixedDay: undefined,
               fixedTime: undefined,
+              moment: undefined,
             }))
           : week.sessions,
     })),

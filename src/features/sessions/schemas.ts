@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { parseVatRate } from "@/domain/billing/money";
 import { addVat, parseAmount } from "@/domain/billing/payments";
 import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { formatDate } from "@/lib/format";
@@ -29,8 +30,11 @@ export type SessionFormInput = {
   newClient: boolean;
   newAthleteName: string;
   notes: string;
-  // Prix (D-52) : facultatif, « 65 » ou « 65,50 » ; TVA comprise (21 %) ou sans TVA ; mode attendu.
+  // Prix (D-52) : facultatif, « 65 » ou « 65,50 » ; mode attendu. TVA de la séance (D-163) :
+  // « Appliquer la TVA », son taux, et si le prix la comprend déjà.
   price: string;
+  applyVat: boolean;
+  vatRate: string;
   vatIncluded: boolean;
   paymentMethod: string;
 };
@@ -50,6 +54,7 @@ export type SessionValues = {
   notes: string | null;
   price_cents: number | null;
   price_vat_included: boolean;
+  vat_rate: number;
   payment_method: SessionPaymentMethod | null;
 };
 
@@ -57,18 +62,21 @@ export type SessionValues = {
 export const SESSION_PAYMENT_METHODS = ["transfer", "cash"] as const;
 export type SessionPaymentMethod = (typeof SESSION_PAYMENT_METHODS)[number];
 
-// TVA d'une séance : le taux de l'organisation (D-90, 0 si le coach n'en facture pas).
+// TVA d'une séance : son propre taux (D-163, 0 = sans TVA), choisi dans la fenêtre de la séance.
 // Règle de Gianluca (26/10) : par virement, la séance est facturée et le prix est hors TVA
 // (65 € HTVA -> 78,65 € payés à 21 %) ; en espèces, le prix est « direct », TVA comprise.
 export const defaultVatIncluded = (method: SessionPaymentMethod) => method === "cash";
 
-// Montant reçu pour une date, TVA comprise : le prix tel quel s'il est TVA comprise, sinon le prix
-// HTVA plus la TVA au taux donné.
-export function sessionAmountCents(
-  price: { priceCents: number; priceVatIncluded: boolean },
-  vatRate: number,
-): number {
-  return price.priceVatIncluded ? price.priceCents : addVat(price.priceCents, vatRate);
+// Montant reçu pour une date : le prix tel quel s'il est sans TVA ou TVA comprise, sinon le prix
+// HTVA plus la TVA de la séance.
+export function sessionAmountCents(price: {
+  priceCents: number;
+  priceVatIncluded: boolean;
+  vatRate: number;
+}): number {
+  return price.vatRate === 0 || price.priceVatIncluded
+    ? price.priceCents
+    : addVat(price.priceCents, price.vatRate);
 }
 
 // Nouveau sportif à créer avant la séance (fiche minimale : prénom, et nom s'il est donné).
@@ -135,6 +143,7 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
 
   let priceCents: number | null = null;
   let paymentMethod: SessionPaymentMethod | null = null;
+  let vatRate = 0;
   if (input.price.trim() !== "") {
     priceCents = parseAmount(input.price);
     if (priceCents === null) {
@@ -143,6 +152,13 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
     paymentMethod =
       SESSION_PAYMENT_METHODS.find((method) => method === input.paymentMethod) ?? null;
     if (!paymentMethod) return { ok: false, error: "Choisis espèces ou virement." };
+    if (input.applyVat) {
+      const rate = parseVatRate(input.vatRate);
+      if (rate === null) {
+        return { ok: false, error: "Taux de TVA invalide : un nombre entre 0 et 100 (ex. 21)." };
+      }
+      vatRate = rate;
+    }
   }
 
   let athleteId: string | null = null;
@@ -187,7 +203,9 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
       ends_on: endsOn,
       notes: notes === "" ? null : notes,
       price_cents: priceCents,
-      price_vat_included: input.vatIncluded,
+      // Sans TVA, le prix est ce que le sportif paie.
+      price_vat_included: vatRate === 0 ? true : input.vatIncluded,
+      vat_rate: vatRate,
       payment_method: paymentMethod,
     },
   };

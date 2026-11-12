@@ -57,6 +57,7 @@ export function AthleteHeader({
                 name: athlete.displayName,
                 programType: athlete.programType,
               }}
+              programHref={`${basePath}/nouveau-programme`}
             />
             <AthleteFicheMenu
               organizationId={organizationId}
@@ -70,6 +71,7 @@ export function AthleteHeader({
       {/* Téléphone : « + Créer » en bouton flottant, en bas à droite (D-117). */}
       <FicheCreateMenu
         athlete={{ id: athlete.id, name: athlete.displayName, programType: athlete.programType }}
+        programHref={`${basePath}/nouveau-programme`}
         phone
       />
     </>

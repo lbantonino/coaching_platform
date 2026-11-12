@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import type { Week } from "@/domain/training/program-plan";
+import { planIssues, type Week } from "@/domain/training/program-plan";
 import {
   applySessionDay,
   applyWeekSchedule,
+  dayHasRoom,
+  fillMoments,
   isPastWeek,
+  momentFromTime,
   orderedSessions,
   plannedDate,
   proposeWeekDays,
   scheduleWarnings,
   setWeekFixed,
   setWeekOrdered,
+  suggestedMoment,
   weekdayOf,
 } from "@/domain/training/scheduling";
 
@@ -70,7 +74,7 @@ describe("orderedSessions (numérotation des séances)", () => {
 });
 
 describe("scheduleWarnings (jamais bloquants)", () => {
-  it("signale deux séances le même jour et un jour indisponible", () => {
+  it("signale plusieurs séances le même jour sans moment, et un jour indisponible", () => {
     const week: Week = {
       index: 1,
       light: false,
@@ -82,8 +86,20 @@ describe("scheduleWarnings (jamais bloquants)", () => {
       ],
     };
     const warnings = scheduleWarnings(week, ["mon", "wed", "fri"]);
-    expect(warnings).toContainEqual({ code: "same_day", day: "mon", keys: ["a", "b"] });
+    expect(warnings).toContainEqual({ code: "moment_missing", day: "mon", keys: ["a", "b"] });
     expect(warnings).toContainEqual({ code: "unavailable_day", day: "sun", key: "c" });
+  });
+  it("deux séances le même jour avec leur moment : rien à signaler (D-164)", () => {
+    const week: Week = {
+      index: 1,
+      light: false,
+      scheduling: "fixed",
+      sessions: [
+        session("a", { fixedDay: "mon", moment: "evening" }),
+        session("b", { fixedDay: "mon", fixedTime: "07:00" }),
+      ],
+    };
+    expect(scheduleWarnings(week, [])).toEqual([]);
   });
   it("ne dit rien pour une semaine dans l'ordre", () => {
     const week: Week = {
@@ -183,5 +199,101 @@ describe("TC-08 : la séance avec le coach garde le jour du rendez-vous (BR-06)"
     const fixed = setWeekFixed(week, new Map([["coach", "sun" as const]]));
     expect(fixed.sessions[1]).toEqual(coach);
     expect(setWeekOrdered(week).sessions[1]?.withCoach).toEqual(coach.withCoach);
+  });
+});
+
+// Plusieurs séances le même jour (D-164) : jusqu'à 4, chacune avec son moment.
+describe("moments de la journée", () => {
+  const fixedWeek = (sessions: ReturnType<typeof session>[]): Week => ({
+    index: 1,
+    light: false,
+    scheduling: "fixed",
+    sessions,
+  });
+
+  it("déduit le moment d'une heure", () => {
+    expect(momentFromTime("07:30")).toBe("morning");
+    expect(momentFromTime("12:15")).toBe("noon");
+    expect(momentFromTime("16:00")).toBe("afternoon");
+    expect(momentFromTime("19:00")).toBe("evening");
+    expect(momentFromTime(undefined)).toBeNull();
+  });
+
+  it("numérote par jour, puis matin, midi, après-midi, soir", () => {
+    const week = fixedWeek([
+      session("soir", { fixedDay: "mon", moment: "evening" }),
+      session("mardi", { fixedDay: "tue" }),
+      session("matin", { fixedDay: "mon", moment: "morning" }),
+      session("midi", { fixedDay: "mon", moment: "noon" }),
+    ]);
+    expect(orderedSessions(week).map((item) => item.key)).toEqual([
+      "matin",
+      "midi",
+      "soir",
+      "mardi",
+    ]);
+  });
+
+  it("donne un moment aux séances d'un jour qui en a plusieurs, matin d'abord", () => {
+    const two = fillMoments(
+      fixedWeek([session("a", { fixedDay: "mon" }), session("b", { fixedDay: "mon" })]),
+    );
+    expect(two.sessions.map((item) => item.moment)).toEqual(["morning", "evening"]);
+    const three = fillMoments(
+      fixedWeek([
+        session("a", { fixedDay: "wed" }),
+        session("b", { fixedDay: "wed" }),
+        session("c", { fixedDay: "wed" }),
+      ]),
+    );
+    expect(three.sessions.map((item) => item.moment)).toEqual(["morning", "noon", "evening"]);
+    // Le soir est déjà pris : l'autre séance du jour passe au matin.
+    const taken = fillMoments(
+      fixedWeek([
+        session("a", { fixedDay: "fri" }),
+        session("b", { fixedDay: "fri", moment: "evening" }),
+      ]),
+    );
+    expect(taken.sessions.find((item) => item.key === "a")?.moment).toBe("morning");
+    // Un jour d'une seule séance ne change pas.
+    const single = fillMoments(fixedWeek([session("a", { fixedDay: "sat" })]));
+    expect(single.sessions[0]?.moment).toBeUndefined();
+  });
+
+  it("propose le moment suivant et refuse un cinquième passage le même jour", () => {
+    const week = fixedWeek([
+      session("a", { fixedDay: "mon", moment: "morning" }),
+      session("b", { fixedDay: "mon", moment: "evening" }),
+    ]);
+    expect(suggestedMoment(week, "mon")).toBe("noon");
+    expect(suggestedMoment(week, "tue")).toBeNull();
+    // Une séance déjà là, sans moment : elle garde le matin, la nouvelle passe au soir.
+    const one = fixedWeek([session("a", { fixedDay: "wed" })]);
+    expect(suggestedMoment(one, "wed")).toBe("evening");
+    const full = fixedWeek([
+      session("a", { fixedDay: "sun" }),
+      session("b", { fixedDay: "sun" }),
+      session("c", { fixedDay: "sun" }),
+      session("d", { fixedDay: "sun" }),
+    ]);
+    expect(dayHasRoom(full, "sun")).toBe(false);
+    expect(dayHasRoom(full, "sun", "d")).toBe(true);
+  });
+
+  it("la proposition automatique double des jours sans dépasser 4 séances par jour", () => {
+    const sessions = Array.from({ length: 10 }, (_, i) => session(`s${i}`));
+    const days = proposeWeekDays(sessions, ["mon", "wed"]);
+    const perDay = new Map<string, number>();
+    for (const day of days.values()) perDay.set(day, (perDay.get(day) ?? 0) + 1);
+    expect(Math.max(...perDay.values())).toBeLessThanOrEqual(4);
+    expect(days.size).toBe(8);
+  });
+
+  it("un plan refuse une cinquième séance le même jour", () => {
+    const issues = planIssues({
+      phases: [],
+      weeks: [fixedWeek(["a", "b", "c", "d", "e"].map((key) => session(key, { fixedDay: "thu" })))],
+    });
+    expect(issues.some((issue) => issue.message === "4 séances au plus le même jour.")).toBe(true);
   });
 });

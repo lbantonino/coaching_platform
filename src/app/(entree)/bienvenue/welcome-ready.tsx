@@ -25,7 +25,7 @@ import type { BillingSetupInput } from "@/features/auth/signup-schemas";
 import { BillingSetupFields, useBillingSetup } from "./billing-setup-fields";
 
 // Bienvenue (maquette d'Antonino du 06/11/2026, écran 03, D-139), après une inscription par e-mail :
-// type de compte, nom et conditions sont connus. Le coach règle son pays, sa devise et sa TVA
+// type de compte, nom et conditions sont connus. Le coach règle son pays et sa devise (D-163 : la TVA se choisit à chaque paiement)
 // (D-69, D-90) ; à droite sur ordinateur, l'image 7c d'Antonino (7d pour un sportif, D-143). Le bouton finalise le compte
 // (complete_signup : organisation du coach, ou compte sportif en attente d'invitation) puis ouvre
 // l'espace. Le sportif n'a rien à régler (version proposée, la maquette ne la dessine pas).
@@ -170,7 +170,7 @@ export function WelcomeReady({
         firstName={values.firstName}
         sub={
           coach
-            ? "Ton compte est créé. Règle ta comptabilité, tu pourras tout modifier ensuite."
+            ? "Ton compte est créé. Choisis ton pays et ta devise, tu pourras les modifier ensuite."
             : "Ton compte est créé. Ton coach va te rattacher à son espace."
         }
       />

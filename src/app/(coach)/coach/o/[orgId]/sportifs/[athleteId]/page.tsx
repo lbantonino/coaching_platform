@@ -421,10 +421,10 @@ async function AthleteSection({
                 today={today}
                 basePath={basePath}
                 editorHref={program ? `${programsBase}/${program.id}` : null}
-                newHref={`${programsBase}/nouveau?sportif=${athlete.id}`}
+                newHref={`${basePath}/nouveau-programme`}
                 copyHref={
                   ownPrograms.some((row) => row.status !== "draft")
-                    ? `${programsBase}/nouveau?sportif=${athlete.id}&depart=copie`
+                    ? `${basePath}/nouveau-programme?depart=copie`
                     : null
                 }
                 draft={(() => {

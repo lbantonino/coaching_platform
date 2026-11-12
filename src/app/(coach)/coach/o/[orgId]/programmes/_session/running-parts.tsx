@@ -134,7 +134,7 @@ function StepRow({
 // Nombre de répétitions : − 5 + (30 px, maquette).
 function Stepper({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const button =
-    "grid h-full w-[30px] place-items-center text-muted transition-colors duration-150 enabled:hover:text-text disabled:text-dlg-disabled";
+    "tap-44 grid h-full w-[30px] place-items-center text-muted transition-colors duration-150 enabled:hover:text-text disabled:text-dlg-disabled";
   return (
     <span className="relative flex h-[30px] items-center rounded-[9px] bg-surface text-[14px] font-semibold text-text inset-ring inset-ring-field-ring after:absolute after:-inset-y-[7px] after:inset-x-0">
       <button
@@ -200,7 +200,7 @@ function RepeatGroup({
       <DropLine at={drop} />
       <div className="flex min-h-8 flex-wrap items-center gap-2.5 pt-0.5 pr-1 pl-1.5">
         {handle}
-        <span className="flex items-center gap-[7px] text-[14px] font-semibold whitespace-nowrap text-run">
+        <span className="flex items-center gap-[7px] text-[14px] font-semibold whitespace-nowrap text-run-text">
           <Repeat2 aria-hidden size={15} strokeWidth={2} />
           Répéter
         </span>
@@ -224,7 +224,7 @@ function RepeatGroup({
               { label: "Dupliquer le bloc", icon: Copy, onSelect: onDuplicate },
               { label: "Supprimer le bloc", icon: Trash2, destructive: true, onSelect: onRemove },
             ]}
-            className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-faint! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
+            className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-muted! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
           />
         )}
       </div>
@@ -253,7 +253,7 @@ function RepeatGroup({
         <button
           type="button"
           onClick={onAddStep}
-          className="flex min-h-10 items-center gap-[7px] self-start rounded-[12px] px-3 text-[13px] font-medium text-run transition-colors duration-150 hover:bg-surface/60"
+          className="flex min-h-10 items-center gap-[7px] self-start rounded-[12px] px-3 text-[13px] font-medium text-run-text transition-colors duration-150 hover:bg-surface/60"
         >
           <Plus aria-hidden size={14} strokeWidth={2} />
           Ajouter une étape

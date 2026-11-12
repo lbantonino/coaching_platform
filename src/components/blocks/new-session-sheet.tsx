@@ -136,6 +136,9 @@ export function NewSessionSheet({
               newAthleteName: "",
               notes: "",
               price: priceText(defaults.priceCents),
+              // TVA (D-163) : décochée par défaut ; cochée, le taux normal du pays est proposé.
+              applyVat: false,
+              vatRate: "",
               vatIncluded: defaults.paymentMethod === "cash",
               paymentMethod: defaults.paymentMethod,
             }}

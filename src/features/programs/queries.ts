@@ -9,10 +9,12 @@ import { weekdayOf } from "@/domain/training/scheduling";
 import {
   publishedSessionSchema,
   type PublishedSession,
+  type SessionMoment,
   type Weekday,
 } from "@/domain/training/session-v2";
 import { sessionHeadline } from "@/domain/training/session-view";
 import {
+  orderForDashboard,
   pickCurrentProgram,
   programListStatus,
   type ProgramListStatus,
@@ -37,6 +39,8 @@ export type ProgramSessionCard = {
   headline: string;
   day: Weekday | null;
   time: string | null;
+  // Moment choisi par le coach quand le jour a plusieurs séances (D-164) ; null sinon.
+  moment: SessionMoment | null;
   coachDate: string | null;
   // La séance structurée (v2) telle que publiée ; null pour une publication v1 (texte). Sert aux
   // fiches PDF (séries, charges, repos).
@@ -187,6 +191,7 @@ async function readPublication(
         headline: session ? sessionHeadline(session) : `${content.durationMinutes} min`,
         day: session?.withCoach ? weekdayOf(session.withCoach.date) : (session?.fixedDay ?? null),
         time: session?.withCoach?.time ?? session?.fixedTime ?? null,
+        moment: session?.moment ?? null,
         coachDate: session?.withCoach?.date ?? null,
         published: session,
       });
@@ -289,7 +294,7 @@ export async function listActivePrograms(
       return picked ? [picked.id] : [];
     }),
   );
-  return (data ?? [])
+  const rows = (data ?? [])
     .filter((row) => shown.has(row.id))
     .map((row) => ({
       id: row.id,
@@ -301,6 +306,8 @@ export async function listActivePrograms(
       startDate: row.start_date,
       weeksCount: row.weeks_count,
     }));
+  // En cours d'abord, puis à venir (recette du 11/11/2026).
+  return orderForDashboard(rows, today);
 }
 
 // Semaine en cours d'un programme (1 à n), bornée : avant le début, 1 ; après la fin, n.

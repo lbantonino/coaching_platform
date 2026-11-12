@@ -394,12 +394,26 @@ const ISSUE_HINTS: Record<PublishIssue["code"], string> = {
   no_session: "Un programme publié a au moins une séance.",
   overlap: "Change la date de début, ou archive l'autre programme.",
   empty_week: "Le sportif verra une semaine sans séance. Normal si c'est du repos.",
-  same_day: "Possible : c'est seulement pour que tu le saches.",
+  moment_missing: "Indique le moment de chaque séance (matin, midi, après-midi, soir).",
   unavailable_day: "Vérifie ses disponibilités, ou change le jour de la séance.",
   pct_without_max: "Ajoute un repère relié à l'exercice dans sa fiche.",
   official_without_division: "Choisis la catégorie Hyrox dans l'objectif du programme.",
   hr_without_max: "Ajoute sa FC max dans ses repères, ou écris la plage en bpm.",
   coach_session_missing: "Recrée le rendez-vous dans l'Agenda, ou retire « avec le coach ».",
+};
+
+// Plusieurs avertissements du même genre : une seule ligne avec leur nombre (maquette 08, recette du
+// 11/11 : la liste détaillée débordait de la fenêtre, surtout sur téléphone).
+const ISSUE_GROUPS: Record<PublishIssue["code"], (count: number) => string> = {
+  no_session: () => "Ajoute au moins une séance avant de publier.",
+  overlap: (n) => `Les dates chevauchent ${n} programmes publiés.`,
+  empty_week: (n) => `${n} semaines sans séance.`,
+  moment_missing: (n) => `${n} semaines avec plusieurs séances un même jour, sans moment.`,
+  unavailable_day: (n) => `${n} séances tombent un jour où le sportif n'est pas disponible.`,
+  pct_without_max: (n) => `${n} exercices en % sans max connu (les kg ne sont pas calculés).`,
+  official_without_division: (n) => `${n} séances aux charges officielles sans division Hyrox.`,
+  hr_without_max: (n) => `${n} étapes en zone de FC sans plage en bpm (FC max inconnue).`,
+  coach_session_missing: (n) => `${n} rendez-vous du coach n'existent plus.`,
 };
 
 export function PublishSheet({
@@ -429,6 +443,15 @@ export function PublishSheet({
 }) {
   const blocking = issues.filter((issue) => issue.level === "blocking");
   const sorted = [...blocking, ...issues.filter((issue) => issue.level === "warning")];
+  // Un groupe par genre d'avertissement, dans l'ordre (bloquants d'abord) ; « Voir » mène au premier.
+  const groups = [...new Set(sorted.map((issue) => issue.code))].map((code) => {
+    const items = sorted.filter((issue) => issue.code === code);
+    const first = items[0] as PublishIssue;
+    return {
+      ...first,
+      message: items.length > 1 ? ISSUE_GROUPS[code](items.length) : first.message,
+    };
+  });
   return (
     <Overlay open={open} onClose={onClose} label="Publier le programme" size="menu">
       <DialogBody>
@@ -457,19 +480,19 @@ export function PublishSheet({
               </div>
             ))}
           </dl>
-          {sorted.length > 0 ? (
+          {groups.length > 0 ? (
             <ul className="m-0 flex max-h-[232px] list-none flex-col gap-2 overflow-y-auto overscroll-contain p-0">
-              {sorted.map((issue, i) => (
+              {groups.map((issue, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-3 rounded-[14px] px-3.5 py-3 inset-ring inset-ring-line"
+                  className="flex shrink-0 items-start gap-3 rounded-[14px] px-3.5 py-3 inset-ring inset-ring-line"
                 >
                   <span
                     aria-hidden
                     className={`mt-px grid size-[22px] shrink-0 place-items-center rounded-full text-[12px] font-bold ${
                       issue.level === "blocking"
                         ? "bg-[color-mix(in_srgb,var(--alert)_14%,var(--surface))] text-alert"
-                        : issue.code === "empty_week" || issue.code === "same_day"
+                        : issue.code === "empty_week" || issue.code === "moment_missing"
                           ? "bg-surface-2 text-text"
                           : "bg-[color-mix(in_srgb,var(--warn)_18%,var(--surface))] text-warn"
                     }`}
@@ -509,11 +532,11 @@ export function PublishSheet({
               {error}
             </p>
           ) : null}
-          <div className="flex flex-col-reverse gap-2 lg:flex-row">
+          <div className="flex shrink-0 flex-col-reverse gap-2 lg:flex-row">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] px-4 text-[15px] font-semibold text-text inset-ring inset-ring-field-ring transition-colors duration-150 hover:bg-surface-2"
+              className="inline-flex h-12 w-full shrink-0 items-center justify-center rounded-[13px] px-4 text-[15px] font-semibold text-text inset-ring inset-ring-field-ring transition-colors duration-150 hover:bg-surface-2 lg:w-auto lg:flex-1"
             >
               Annuler
             </button>
@@ -521,7 +544,7 @@ export function PublishSheet({
               type="button"
               disabled={blocking.length > 0 || pending}
               onClick={onConfirm}
-              className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98] disabled:opacity-50"
+              className="inline-flex h-12 w-full shrink-0 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98] disabled:opacity-50 lg:w-auto lg:flex-1"
             >
               {pending ? "Publication…" : `Publier la version ${version}`}
             </button>

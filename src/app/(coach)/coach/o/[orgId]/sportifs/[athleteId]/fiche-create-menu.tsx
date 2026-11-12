@@ -18,9 +18,12 @@ import type { Discipline } from "@/domain/training/discipline";
 // le bouton « + Créer » de 32 px de l'en-tête, sur ordinateur.
 export function FicheCreateMenu({
   athlete,
+  programHref,
   phone = false,
 }: {
   athlete: { id: string; name: string; programType: Discipline | null };
+  // L'assistant dans la fiche du sportif (D-163) : sportif fixé, retour vers son onglet Programme.
+  programHref: string;
   phone?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -64,7 +67,7 @@ export function FicheCreateMenu({
             icon: FilePlus,
             tone: "hybrid",
             chevron: true,
-            onSelect: () => router.push(`/coach/programmes/nouveau?sportif=${athlete.id}`),
+            onSelect: () => router.push(programHref),
           },
           {
             label: "Séance",

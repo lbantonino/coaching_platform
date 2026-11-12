@@ -65,7 +65,7 @@ test("téléphone : un menu déroulant des rubriques, Échap referme le menu d'a
   await expect(picker).toHaveAttribute("aria-expanded", "false");
   await picker.click();
   const sections = dialog.getByRole("navigation", { name: "Sections des paramètres" });
-  for (const name of ["Profil", "Préférences", "Pays, devise et TVA", "Sécurité", "Données"]) {
+  for (const name of ["Profil", "Préférences", "Pays et devise", "Sécurité", "Données"]) {
     await expect(sections.getByRole("button", { name, exact: true })).toBeVisible();
   }
   await expect(sections.getByRole("button", { name: "Profil", exact: true })).toHaveAttribute(
@@ -103,7 +103,8 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   await save.click();
   await expect(page.getByText("Préférences enregistrées.")).toBeVisible();
 
-  // La fenêtre « Nouvelle séance » reprend ces valeurs (espèces : TVA comprise).
+  // La fenêtre « Nouvelle séance » reprend ces valeurs ; la TVA, décochée par défaut (D-163), est
+  // comprise dans le prix en espèces quand on la coche.
   await page.goto("/coach");
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await page.getByRole("dialog", { name: "Créer" }).getByRole("button", { name: "Séance" }).click();
@@ -112,7 +113,9 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   await expect(sheet.getByLabel(/^Lieu/)).toHaveValue("Box de test");
   await expect(sheet.getByLabel(/^Prix de la séance/)).toHaveValue("70");
   await expect(sheet.getByRole("radio", { name: "Espèces" })).toBeChecked();
-  await expect(sheet.getByLabel("TVA comprise dans le prix")).toBeChecked();
+  await expect(sheet.getByLabel(/^Appliquer la TVA/)).not.toBeChecked();
+  await sheet.getByLabel(/^Appliquer la TVA/).check();
+  await expect(sheet.getByLabel(/^TVA comprise dans le prix/)).toBeChecked();
   await sheet.getByRole("button", { name: "Fermer" }).click();
 
   // Cloche : couper « Fiches à compléter » (puis Enregistrer) la retire de la page Notifications.
@@ -140,34 +143,15 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   await expect(page.getByText("Préférences enregistrées.")).toBeVisible();
 });
 
-// TVA (D-90) : un seul taux, réglé par le propriétaire. Organisation B (sans TVA), remise à 0 ensuite.
-test("le propriétaire règle son taux de TVA, puis l'enlève", async ({ page }) => {
-  test.skip(!isPhone(page), "Écrit la TVA de l'organisation B : un seul projet.");
+// Plus de TVA dans les Paramètres (D-163, demande d'Antonino du 11/11) : elle se choisit à chaque
+// paiement, dépense ou séance. La rubrique ne garde que le pays et la devise.
+test("Pays et devise : la TVA n'est plus un réglage", async ({ page }) => {
   await loginAsCoachB(page);
-  let dialog = await openSettings(page, "argent");
-  const vat = dialog.getByRole("region", { name: "TVA" });
-  const save = dialog.getByRole("button", { name: "Enregistrer", exact: true });
-  const toggle = vat.getByRole("switch", { name: "Je facture la TVA" });
-  await expect(toggle).not.toBeChecked();
-  await expect(vat.getByLabel("Taux de TVA")).toHaveCount(0);
-
-  await toggle.check();
-  await save.click();
-  await expect(dialog.getByRole("alert")).toContainText("Indique ton taux de TVA");
-  await vat.getByLabel("Taux de TVA").fill("8,1");
-  await save.click();
-  await expect(page.getByText("Pays et TVA enregistrés.")).toBeVisible();
-  // Le menu des rubriques résume : « Belgique · EUR · 8,1 % ».
-  await expect(dialog.locator("button[aria-expanded]")).toContainText("8,1 %");
-  dialog = await openSettings(page, "argent");
-  await expect(toggle).toBeChecked();
-  await expect(vat.getByLabel("Taux de TVA")).toHaveValue("8,1");
-
-  await toggle.uncheck();
-  await save.click();
-  await expect(page.getByText("Pays et TVA enregistrés.")).toBeVisible();
-  dialog = await openSettings(page, "argent");
-  await expect(toggle).not.toBeChecked();
+  const dialog = await openSettings(page, "argent");
+  await expect(dialog.getByLabel("Pays", { exact: true })).toBeVisible();
+  await expect(dialog.getByRole("region", { name: "TVA" })).toHaveCount(0);
+  await expect(dialog.getByText("Je facture la TVA")).toHaveCount(0);
+  await expect(dialog.locator("button[aria-expanded]")).not.toContainText("%");
 });
 
 test("sécurité : le mot de passe actuel est vérifié, et les données s'exportent", async ({

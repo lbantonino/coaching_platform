@@ -23,7 +23,6 @@ export type SettingsData = {
     isOwner: boolean;
     country: string;
     currency: Currency;
-    vatRate: number;
   };
   // Changements de devise passés (D-70), du plus ancien au plus récent.
   currencyChanges: { from: Currency; to: Currency; rate: number; changedOn: string }[];
@@ -66,7 +65,6 @@ export async function getSettingsData(
       isOwner: membership.role === "owner",
       country: membership.country,
       currency: membership.currency,
-      vatRate: membership.vatRate,
     },
     currencyChanges,
   };

@@ -193,8 +193,6 @@ export async function completeSignup(
   const billingInput: BillingSetupInput = {
     country: field("country"),
     currency: field("currency"),
-    vatChoice: field("vatChoice"),
-    vatRate: field("vatRate"),
   };
   const fail = (error: string) => ({
     error,
@@ -208,7 +206,7 @@ export async function completeSignup(
     terms: formData.get("terms") ?? undefined,
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Formulaire invalide.");
-  // Coach : pays, devise et TVA (facultative). Sportif : rien à demander.
+  // Coach : pays et devise (la TVA se choisit ensuite à chaque paiement, D-163). Sportif : rien.
   const billing = parsed.data.kind === "coach" ? parseBillingSetup(billingInput) : null;
   if (billing && !billing.ok) return fail(billing.error);
   const setup = billing?.ok ? billing.setup : null;
@@ -225,7 +223,6 @@ export async function completeSignup(
       ? {
           p_country: setup.country,
           p_currency: setup.currency,
-          p_vat_rate: setup.vatRate,
         }
       : {}),
   });

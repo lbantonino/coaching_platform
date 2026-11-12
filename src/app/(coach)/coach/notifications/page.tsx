@@ -53,7 +53,7 @@ async function NotificationList() {
   const organizationId = memberships[0].organizationId;
   const today = todayIsoInBrussels();
   const [all, profile] = await Promise.all([
-    getNotifications(organizationId, today, memberships[0].vatRate),
+    getNotifications(organizationId, today),
     getCoachProfile(user),
   ]);
   // Catégories gardées dans Paramètres > Préférences (D-57) : les autres ne s'affichent pas ici.

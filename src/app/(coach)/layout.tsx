@@ -40,13 +40,13 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
     first ? countNotifications(first.organizationId, todayIsoInBrussels()) : null,
   ]);
   // La fenêtre des Paramètres (D-58) enveloppe toute la coquille : le menu du compte l'ouvre.
-  // Devise, pays (D-69) et taux de TVA (D-90) de l'organisation pour tous les écrans d'argent.
+  // Devise et pays (D-69) de l'organisation pour tous les écrans d'argent (la TVA se choisit à chaque
+  // paiement, D-163).
   return (
     <MoneyProvider
       value={{
         currency: first?.currency ?? "EUR",
         country: first?.country ?? "BE",
-        vatRate: first?.vatRate ?? 0,
       }}
     >
       <SettingsDialogProvider load={loadSettings}>

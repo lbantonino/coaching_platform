@@ -66,12 +66,11 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   await page.goto(await confirmationLink(request, email));
   await expect(page).toHaveURL(/\/bienvenue$/);
   await expect(page.getByRole("heading", { name: /^Bienvenue,\s*Léa\./ })).toBeVisible();
-  // Étape « Pays, devise et TVA » (D-69, D-90) : le pays propose sa devise ; une seule question sur
-  // la TVA. Libellés exacts : la section porte aussi « pays » et « devise » dans son titre.
+  // Étape « Pays et devise » (D-69) : le pays propose sa devise. Plus de question sur la TVA (D-163) :
+  // elle se choisit à chaque paiement. Libellés exacts : la section porte aussi « pays » et « devise ».
   await page.getByLabel("Pays", { exact: true }).selectOption("CH");
   await expect(page.getByLabel("Devise", { exact: true })).toHaveValue("CHF");
-  await page.getByText("Je facture la TVA").click();
-  await page.getByLabel("Taux de TVA").fill("8,1");
+  await expect(page.getByText("Je facture la TVA")).toHaveCount(0);
   await page.getByRole("button", { name: "Ouvrir mon espace" }).click();
 
   // Son espace est vide et n'a rien en commun avec les organisations de démonstration.
@@ -84,11 +83,10 @@ test("un coach s'inscrit, confirme son e-mail et arrive dans son propre espace",
   );
   await expect(page.getByText("Aucune séance prévue dans les 30 prochains jours.")).toBeVisible();
   await expect(page.getByText("Organisation Démo A")).toHaveCount(0);
-  // Son taux est enregistré : Paramètres › Pays, devise et TVA.
+  // Son pays est enregistré : Paramètres › Pays et devise, sans rubrique TVA (D-163).
   await page.goto("/coach/profil?onglet=argent");
-  const vat = page.getByRole("region", { name: "TVA" });
-  await expect(vat.getByRole("switch", { name: "Je facture la TVA" })).toBeChecked();
-  await expect(vat.getByLabel("Taux de TVA")).toHaveValue("8,1");
+  await expect(page.getByLabel("Pays", { exact: true })).toHaveValue("CH");
+  await expect(page.getByRole("region", { name: "TVA" })).toHaveCount(0);
 });
 
 test("un coach qui déménage change de devise : le futur passe en francs suisses", async ({
@@ -104,7 +102,7 @@ test("un coach qui déménage change de devise : le futur passe en francs suisse
   await page.getByRole("button", { name: "Ouvrir mon espace" }).click();
   await expect(page).toHaveURL(/\/coach$/);
 
-  // Paramètres › Pays, devise et TVA : « Changer de devise » (D-70), taux saisi, aperçu, confirmation.
+  // Paramètres › Pays et devise : « Changer de devise » (D-70), taux saisi, aperçu, confirmation.
   await page.goto("/coach/profil?onglet=argent");
   await page.getByRole("button", { name: "Changer de devise" }).click();
   const sheet = page.getByRole("dialog", { name: "Changer de devise" });

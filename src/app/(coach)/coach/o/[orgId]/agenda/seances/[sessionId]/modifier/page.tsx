@@ -126,6 +126,9 @@ async function EditSession({ orgId, sessionId }: { orgId: string; sessionId: str
               session.priceCents === null
                 ? ""
                 : (session.priceCents / 100).toFixed(2).replace(".", ",").replace(/,00$/, ""),
+            // TVA de la séance (D-163) : cochée si elle en a une, avec son taux (« 8,1 »).
+            applyVat: session.vatRate > 0,
+            vatRate: session.vatRate > 0 ? String(session.vatRate).replace(".", ",") : "",
             vatIncluded: session.priceVatIncluded,
             paymentMethod: session.paymentMethod ?? "transfer",
           }}

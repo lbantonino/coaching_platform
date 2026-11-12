@@ -81,7 +81,7 @@ describe("formulaire « Nouvelle dépense »", () => {
   };
 
   it("lit une dépense mensuelle", () => {
-    const parsed = parseExpenseForm(base, true);
+    const parsed = parseExpenseForm(base);
     expect(parsed.ok && parsed.expense).toEqual({
       label: "Loyer de la salle",
       categoryId: null,
@@ -93,14 +93,20 @@ describe("formulaire « Nouvelle dépense »", () => {
     });
   });
 
-  it("un coach non soumis à la TVA ne récupère rien (taux 0)", () => {
-    const parsed = parseExpenseForm(base, false);
+  it("« Appliquer la TVA » décochée : taux 0, rien à récupérer (D-163)", () => {
+    const parsed = parseExpenseForm({ ...base, vatRate: "0" });
     expect(parsed.ok && parsed.expense.vatRate).toBe(0);
   });
 
+  it("le taux est libre, à chaque dépense (D-163)", () => {
+    const parsed = parseExpenseForm({ ...base, vatRate: "8,1" });
+    expect(parsed.ok && parsed.expense.vatRate).toBe(8.1);
+    expect(parseExpenseForm({ ...base, vatRate: "150" }).ok).toBe(false);
+  });
+
   it("refuse un montant faux ou une fin avant le début", () => {
-    expect(parseExpenseForm({ ...base, amount: "abc" }, true).ok).toBe(false);
-    expect(parseExpenseForm({ ...base, endsOn: "2026-09-01" }, true).ok).toBe(false);
-    expect(parseExpenseForm({ ...base, label: " " }, true).ok).toBe(false);
+    expect(parseExpenseForm({ ...base, amount: "abc" }).ok).toBe(false);
+    expect(parseExpenseForm({ ...base, endsOn: "2026-09-01" }).ok).toBe(false);
+    expect(parseExpenseForm({ ...base, label: " " }).ok).toBe(false);
   });
 });

@@ -13,7 +13,8 @@ import type { SettingsSection } from "@/components/blocks/settings-context";
 // Les six sections des Paramètres (D-57, D-58 ; kit « Coory Pages », page 13, D-127). Module partagé
 // (ni client ni serveur) : la page serveur y lit la section demandée (?onglet=), la fenêtre y lit
 // libellés et icônes. `hint` : la phrase sous le titre de la rubrique ; `short` : sa ligne courte
-// dans le menu (celle de « Pays, devise et TVA » est calculée : « Belgique · EUR · 21 % »).
+// dans le menu (celle de « Pays et devise » est calculée : « Belgique · EUR »). La TVA n'est plus un
+// réglage : elle se choisit à chaque paiement, dépense ou séance (D-163).
 export const SECTIONS = [
   {
     key: "profil",
@@ -31,9 +32,9 @@ export const SECTIONS = [
   },
   {
     key: "argent",
-    label: "Pays, devise et TVA",
-    hint: "Ta devise et ton taux de TVA",
-    short: "Pays, devise, TVA",
+    label: "Pays et devise",
+    hint: "Ton pays et ta devise",
+    short: "Pays, devise",
     icon: Landmark,
   },
   {

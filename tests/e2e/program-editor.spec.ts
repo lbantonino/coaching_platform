@@ -124,12 +124,18 @@ test("TC-02, TC-10 : brouillon depuis un modèle Coory, séance Running modifié
   }
   await expect(page).toHaveURL(/\?semaine=1&seance=/);
   // De retour, une nouvelle séance s'ajoute : l'éditeur repart du brouillon à jour (bug du 10/11 :
-  // l'ancien état réaffiché enregistrait en conflit, puis « Page introuvable »).
+  // l'ancien état réaffiché enregistrait en conflit, puis « Page introuvable »). Toutes les
+  // disciplines sont proposées (D-163) : une séance de musculation dans ce programme running (le modèle
+  // 10 km a 4 séances par semaine depuis D-165, la nouvelle est la 5e).
   await page.getByRole("button", { name: "Ajouter une séance" }).click();
+  const choice = page.getByRole("dialog", { name: "Nouvelle séance" });
+  await expect(choice.getByRole("button", { name: /^Running/ })).toBeVisible();
+  await expect(choice.getByRole("button", { name: /^Hyrox/ })).toBeVisible();
+  await choice.getByRole("button", { name: /^Musculation/ }).click();
   await expect(page).toHaveURL(/\/seances\/[^/]+$/);
   await expect(
     page
-      .getByText(/Séance 4 · Semaine 1/i)
+      .getByText(/Musculation · Séance 5 · Semaine 1/i)
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
@@ -205,6 +211,29 @@ test("TC-11 : séries en saisie rapide, et % du max sans max connu", async ({ pa
   ).toBeVisible();
 });
 
+// D-164 (demande d'Antonino du 11/11) : plus de 7 séances par semaine. « 8+ » ouvre un compteur de 8 à
+// 14 ; l'aperçu suit. Lecture seule : l'assistant n'est pas validé (aucun modèle de test créé).
+test("assistant : « 8+ » séances par semaine, jusqu'à 14", async ({ page }) => {
+  await login(page);
+  await page.goto(`/coach/o/${ORG}/programmes/nouveau?modele=nouveau`);
+  await page.getByLabel("Nom du modèle").fill("Doubles séances");
+  await page.getByRole("button", { name: "Continuer" }).click();
+  await page.getByText("Running", { exact: true }).first().click();
+  await page.getByRole("button", { name: "Continuer" }).click();
+  const perWeek = page.getByRole("group", { name: "Séances par semaine" });
+  await perWeek.getByText("8+", { exact: true }).click();
+  await expect(page.getByText("De 8 à 14")).toBeVisible();
+  await page.getByRole("button", { name: "Une séance de plus" }).click();
+  await expect(page.getByText(/certains jours auront plusieurs séances/)).toBeVisible();
+  // 9 → 14 : cinq fois « + », puis le bouton se désactive.
+  for (let i = 0; i < 5; i += 1) {
+    await page.getByRole("button", { name: "Une séance de plus" }).click();
+  }
+  await expect(page.getByRole("button", { name: "Une séance de plus" })).toBeDisabled();
+  await page.getByRole("button", { name: "Continuer" }).click();
+  await expect(page.getByText(/× 14 séances/)).toBeVisible();
+});
+
 test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, publier, agenda", async ({
   page,
 }, testInfo) => {
@@ -221,13 +250,24 @@ test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, pub
   await expect(page.getByRole("heading", { name: athlete, level: 1 })).toBeVisible();
   const fiche = new URL(page.url()).pathname;
 
-  // Onglet Programme vide : « Créer un programme » ouvre l'assistant avec ce sportif déjà choisi.
+  // Onglet Programme vide : « Créer un programme » ouvre l'assistant dans la fiche (D-163), le
+  // sportif fixé : ni liste ni recherche de sportifs, et le retour ramène chez lui.
   await page.goto(`${fiche}?onglet=programme`);
   await expect(page.getByRole("heading", { name: /^Aucun programme pour/ })).toBeVisible();
   await page.getByRole("link", { name: "Créer un programme" }).click();
-  await expect(page).toHaveURL(/\/programmes\/nouveau\?sportif=/);
+  await expect(page).toHaveURL(/\/sportifs\/[0-9a-f-]{36}\/nouveau-programme$/);
+  await expect(
+    page.getByRole("heading", { name: /^Comment s'appelle le programme de/ }),
+  ).toBeVisible();
+  await expect(page.getByPlaceholder("Rechercher un sportif")).toHaveCount(0);
+  if (!phone) {
+    await expect(page.getByRole("link", { name: new RegExp(athlete) }).first()).toHaveAttribute(
+      "href",
+      `${fiche}?onglet=programme`,
+    );
+  }
   // Depuis un modèle : on repart de l'adresse avec le modèle Coory « Premier 10 km ».
-  await page.goto(`${page.url()}&modele=${TEMPLATE}`);
+  await page.goto(`${page.url()}?modele=${TEMPLATE}`);
   await page.getByLabel("Titre du programme").fill(title);
   for (let step = 1; step < 4; step += 1) {
     await page.getByRole("button", { name: "Continuer" }).click();
@@ -258,16 +298,21 @@ test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, pub
       weeks.getByRole("button", { name: /^Semaine 4\b/ }).locator('[aria-label="jours fixes"]'),
     ).toHaveCount(0);
 
-    // TC-07 : la séance 2 posée le jour de la séance 1 : un avertissement, et c'est permis.
+    // TC-07, D-164 : la séance 2 posée le jour de la séance 1 : c'est permis (jusqu'à 4 par jour),
+    // le moment se choisit (le soir est proposé) et chaque séance du jour l'affiche.
     await page
       .getByRole("button", { name: /^Changer le jour de la séance/ })
       .nth(1)
       .click();
     const picker = page.getByRole("complementary", { name: "Jour de la séance" });
     await picker.getByRole("button", { name: /S1/ }).click();
-    await expect(picker.getByRole("status")).toContainText("y est déjà");
+    const moment = picker.getByRole("group", { name: "Moment de la séance" });
+    await expect(moment.getByRole("radio", { name: "Soir" })).toBeChecked();
     await picker.getByRole("button", { name: "Valider" }).click();
     await expect(page.getByRole("complementary", { name: "Jour de la séance" })).toHaveCount(0);
+    const weekColumn = page.getByRole("region", { name: /^Semaine \d+$/ }).first();
+    await expect(weekColumn.getByText("Matin", { exact: true }).first()).toBeVisible();
+    await expect(weekColumn.getByText("Soir", { exact: true }).first()).toBeVisible();
   }
 
   // Publier : la version 1, puis l'état « Publié v1 ».

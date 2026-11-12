@@ -205,7 +205,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
     ...(strengthCount ? [{ label: "Séries", value: String(strengthCount.sets) }] : []),
     {
       label: session.durationManual ? "Durée" : "Durée estimée",
-      value: `${session.durationManual ? "" : "≈ "}${(running ? formatMinutes : formatSeconds)(session.durationMinutes * 60)}`,
+      value: `${session.durationManual ? "" : "≈ "}${formatMinutes(session.durationMinutes * 60)}`,
     },
     ...(hyrox && hyroxTimeCap(hyrox)
       ? [{ label: "Limite", value: formatSeconds(hyroxTimeCap(hyrox) ?? 0) }]

@@ -27,6 +27,7 @@ export function SelectField({
     <div className={`relative min-w-0 ${className}`}>
       <select
         {...props}
+        data-chevron="own"
         className={`w-full min-w-0 cursor-pointer appearance-none truncate rounded-[11px] bg-surface pr-9 pl-3.5 leading-[normal] font-medium text-text inset-ring inset-ring-field-ring transition-shadow duration-150 focus:inset-ring-[1.5px] focus:inset-ring-violet focus:outline-none disabled:cursor-not-allowed disabled:text-faint ${SIZE[size]}`}
       >
         {children}

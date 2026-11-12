@@ -1,7 +1,13 @@
 import { z } from "zod";
 
 import { DISCIPLINES } from "./discipline";
-import { sessionDraftSchema, type SessionDraft } from "./session-v2";
+import {
+  MAX_SESSIONS_PER_DAY,
+  MAX_SESSIONS_PER_WEEK,
+  sessionDraftSchema,
+  WEEKDAYS,
+  type SessionDraft,
+} from "./session-v2";
 
 // Le PLAN d'un programme (D-155, 09/11/2026) : phases, semaines et séances. C'est le cœur commun du
 // brouillon d'un programme (program_drafts.draft_json) et d'un modèle de programme
@@ -50,7 +56,7 @@ export const weekSchema = z.object({
   light: z.boolean(),
   // « Dans l'ordre, sans jour » (le sportif choisit) ou « Jours fixes » (03b).
   scheduling: z.enum(["ordered", "fixed"]),
-  sessions: z.array(sessionDraftSchema).max(14),
+  sessions: z.array(sessionDraftSchema).max(MAX_SESSIONS_PER_WEEK),
 });
 
 const planShape = {
@@ -59,7 +65,8 @@ const planShape = {
   // Discipline principale du programme (les séances ont chacune la leur).
   discipline: z.enum(DISCIPLINES),
   aimDefaults: aimDefaultsSchema,
-  sessionsPerWeek: z.number().int().min(1).max(7),
+  // Jusqu'à 14 séances par semaine (D-164 : « 8+ » dans l'assistant, plusieurs séances par jour).
+  sessionsPerWeek: z.number().int().min(1).max(MAX_SESSIONS_PER_WEEK),
   phases: z.array(phaseSchema).max(12),
   weeks: z.array(weekSchema).min(1).max(52),
 };
@@ -86,7 +93,31 @@ export function planIssues(plan: { phases: Phase[]; weeks: Week[] }): PlanIssue[
           message: "Une heure va avec un jour.",
         });
       }
+      if (session.moment !== undefined && session.fixedDay === undefined && !session.withCoach) {
+        issues.push({
+          path: ["weeks", i, "sessions", j, "moment"],
+          message: "Un moment de la journée va avec un jour.",
+        });
+      }
     });
+    // Quatre séances au plus le même jour (D-164).
+    if (week.scheduling === "fixed") {
+      const perDay = new Map<string, number>();
+      week.sessions.forEach((session, j) => {
+        const day = session.withCoach
+          ? WEEKDAYS[(new Date(`${session.withCoach.date}T00:00:00Z`).getUTCDay() + 6) % 7]
+          : session.fixedDay;
+        if (!day) return;
+        const count = (perDay.get(day) ?? 0) + 1;
+        perDay.set(day, count);
+        if (count === MAX_SESSIONS_PER_DAY + 1) {
+          issues.push({
+            path: ["weeks", i, "sessions", j, "fixedDay"],
+            message: `${MAX_SESSIONS_PER_DAY} séances au plus le même jour.`,
+          });
+        }
+      });
+    }
   });
 
   const keys = new Set<string>();
