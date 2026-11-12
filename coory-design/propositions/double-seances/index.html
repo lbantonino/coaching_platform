@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deux séances le même jour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script>
+  // Thème choisi par l'adresse : #sombre ou #clair (clair par défaut), posé avant l'affichage.
+  document.documentElement.dataset.theme = location.hash === "#sombre" ? "dark" : "light";
+</script>
+</head>
+<body class="text-text antialiased">
+<div class="min-h-dvh bg-surface">
+<main class="mx-auto flex max-w-[1344px] flex-col gap-16 px-4 pt-10 pb-20 md:px-8">
+  <header class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-start justify-between gap-5">
+      <div class="flex max-w-[760px] flex-col gap-2">
+        <p class="text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Coory · proposition à valider avant de coder</p>
+        <h1 class="text-[32px] leading-[1.15] font-bold tracking-[-0.03em] text-balance text-text md:text-[40px] md:leading-[1.05] md:tracking-[-0.035em]">Deux séances le même jour</h1>
+        <p class="text-[15px] leading-[1.6] text-pretty text-muted">Pour Gianluca, qui fait parfois s'entraîner ses sportifs deux fois dans la journée. Exemple fictif : Nadia El Amrani, programme « Prépa semi », semaine 3 (16 → 22 nov.) en jours fixes, 7 séances sur 5 jours.</p>
+      </div>
+      <nav aria-label="Thème" class="inline-flex rounded-[12px] bg-track p-1">
+        <a href="#clair" data-theme-link="light" class="inline-flex h-8 items-center gap-1.5 rounded-[9px] px-3 text-[13px] font-medium text-muted aria-[current=true]:bg-track-active aria-[current=true]:text-text aria-[current=true]:shadow-segment"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>Clair</a>
+        <a href="#sombre" data-theme-link="dark" class="inline-flex h-8 items-center gap-1.5 rounded-[9px] px-3 text-[13px] font-medium text-muted aria-[current=true]:bg-track-active aria-[current=true]:text-text aria-[current=true]:shadow-segment"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>Sombre</a>
+      </nav>
+    </div>
+    <ul class="grid gap-2.5 md:grid-cols-3">
+      <li class="flex flex-col gap-1 rounded-[16px] bg-bg px-4 py-3.5"><span class="text-[14px] font-semibold text-text">Deux séances par jour</span><span class="text-[13px] leading-[1.45] text-muted">Un jour peut porter deux séances, distinguées par leur moment (matin, midi, soir) ou leur heure.</span></li>
+      <li class="flex flex-col gap-1 rounded-[16px] bg-bg px-4 py-3.5"><span class="text-[14px] font-semibold text-text">Jusqu'à 14 séances par semaine</span><span class="text-[13px] leading-[1.45] text-muted">L'assistant propose 1 à 7, puis « 8+ » pour aller de 8 à 14.</span></li>
+      <li class="flex flex-col gap-1 rounded-[16px] bg-bg px-4 py-3.5"><span class="text-[14px] font-semibold text-text">Plus d'avertissement</span><span class="text-[13px] leading-[1.45] text-muted">« Deux séances le même jour » n'est plus signalé à la publication : c'est voulu.</span></li>
+    </ul>
+  </header>
+
+  <section id="assistant" class="flex flex-col gap-5">
+    <div class="flex max-w-[760px] flex-col gap-1.5">
+      <p class="text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">1 · Téléphone</p>
+      <h2 class="text-[22px] leading-[1.25] font-bold tracking-[-0.02em] text-text">Assistant, étape 3 : séances par semaine</h2>
+      <p class="text-[15px] leading-[1.6] text-pretty text-muted">Une 8<sup>e</sup> puce « 8+ » ouvre un réglage de 8 à 14 séances ; ici, 9 séances par semaine.</p>
+    </div>
+    <div class="-mx-4 flex overflow-x-auto px-4 pt-1 pb-3 md:mx-0 md:px-1"><div id="cadre-1" class="relative flex w-[390px] shrink-0 flex-col overflow-hidden rounded-[48px] bg-bg ring-1 ring-line-2 h-[844px]"><div aria-hidden="true" class="flex h-[47px] shrink-0 items-end justify-between px-[30px] pb-[9px] text-text">
+    <span class="w-[54px] text-center text-[15.5px] leading-none font-semibold tracking-[-0.01em]">9:41</span>
+    <span class="flex items-center gap-[5px]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10 10v4"/><path d="M14 10v4"/><path d="M22 14v-4"/><path d="M6 10v4"/><rect x="2" y="6" width="16" height="12" rx="2"/></svg></span>
+  </div><header class="relative z-30 flex h-[58px] shrink-0 items-center justify-between px-3 pt-2.5 [background:linear-gradient(to_bottom,var(--under-bar)_60%,transparent)]">
+    <span class="grid size-11 shrink-0 place-items-center rounded-[14px] bg-panel text-text inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></span>
+    <div class="flex min-w-0 flex-1 items-center pr-0 pl-2">
+      <span class="inline-flex min-h-11 min-w-0 items-center gap-1.5 pl-0.5 text-[16px] leading-[normal] font-medium whitespace-nowrap text-violet-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span class="truncate">Programmes</span></span>
+    </div>
+    <div class="flex shrink-0 items-center gap-1 rounded-2xl bg-panel p-1 inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]">
+      <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-ai-bg text-ai-text inset-ring inset-ring-ai-border"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="fill-current"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg></span>
+      <span class="relative inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-text-2"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></span>
+    </div>
+  </header>
+  <div class="px-3.5 pt-[18px]">
+    <div aria-hidden="true" class="mb-3 flex gap-1.5">
+      <span class="h-[5px] flex-1 rounded-full bg-violet"></span><span class="h-[5px] flex-1 rounded-full bg-violet"></span><span class="h-[5px] flex-1 rounded-full bg-violet"></span><span class="h-[5px] flex-1 rounded-full bg-dlg-handle"></span>
+    </div>
+    <p class="text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Étape 3 sur 4<span> · Calendrier</span></p>
+    <h2 class="mt-1.5 text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">Comment s'organise-t-il ?</h2>
+    <div class="mt-4 flex flex-col gap-5 rounded-[22px] bg-surface p-[18px]">
+      <div class="grid gap-3">
+        <div class="flex min-w-0 flex-col gap-2">
+          <p class="text-[13.5px] leading-[normal] font-semibold text-text">Date de début</p>
+          <div class="flex h-[46px] w-full min-w-0 items-center rounded-[12px] bg-surface px-3.5 text-[16px] font-medium text-text inset-ring inset-ring-field-ring">16 nov. 2026</div>
+        </div>
+        <div class="flex min-w-0 flex-col gap-2">
+          <p class="text-[13.5px] leading-[normal] font-semibold text-text">Nombre de semaines</p>
+          <div class="flex h-[46px] items-center rounded-[12px] bg-surface inset-ring inset-ring-field-ring">
+            <span class="grid h-full w-11 shrink-0 place-items-center text-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/></svg></span>
+            <span class="flex h-full min-w-0 flex-1 items-center justify-center bg-transparent text-center text-[16px] font-semibold text-text">12</span>
+            <span class="grid h-full w-11 shrink-0 place-items-center text-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/><path d="M12 5v14"/></svg></span>
+          </div>
+        </div>
+      </div>
+      <p class="-mt-2 text-[12.5px] leading-[1.45] text-muted">Se termine le dim. 7 févr. 2027</p>
+
+      <div class="flex min-w-0 flex-col gap-2">
+        <p class="text-[13.5px] leading-[normal] font-semibold text-text">Séances par semaine</p>
+        <div class="flex gap-1.5">
+          <span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-surface text-text inset-ring inset-ring-field-ring">1</span><span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-surface text-text inset-ring inset-ring-field-ring">2</span><span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-surface text-text inset-ring inset-ring-field-ring">3</span><span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-surface text-text inset-ring inset-ring-field-ring">4</span><span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-surface text-text inset-ring inset-ring-field-ring">5</span><span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-surface text-text inset-ring inset-ring-field-ring">6</span><span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-surface text-text inset-ring inset-ring-field-ring">7</span>
+          <span class="tap-44 inline-flex h-11 min-w-0 flex-1 items-center justify-center rounded-[11px] text-[15px] leading-[normal] font-semibold whitespace-nowrap bg-cta text-on-cta">8+</span>
+        </div>
+        <!-- NOUVEAU : « 8+ » choisi, le nombre exact (8 à 14). -->
+        <div class="mt-1 flex flex-col gap-2.5 rounded-[14px] bg-surface-2 p-3.5">
+          <div class="flex items-center justify-between gap-3">
+            <span class="flex min-w-0 flex-col gap-0.5">
+              <span class="text-[14px] leading-[1.3] font-semibold text-text">Nombre de séances</span>
+              <span class="text-[12.5px] leading-[1.4] text-muted">De 8 à 14</span>
+            </span>
+            <div class="flex h-11 shrink-0 items-center rounded-[12px] bg-surface inset-ring inset-ring-field-ring">
+              <span class="grid h-full w-11 shrink-0 place-items-center text-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/></svg></span>
+              <span class="w-9 text-center text-[16px] font-semibold text-text tabular">9</span>
+              <span class="grid h-full w-11 shrink-0 place-items-center text-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/><path d="M12 5v14"/></svg></span>
+            </div>
+          </div>
+          <p class="text-[12.5px] leading-[1.45] text-muted">Au-delà de 7, certains jours auront deux séances (matin et soir).</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-baseline justify-between gap-3">
+          <p class="text-[13.5px] leading-[normal] font-semibold text-text">Phases <span class="font-normal text-faint">(facultatif)</span></p>
+        </div>
+        <div class="flex gap-1.5">
+          <span class="grid h-[50px] flex-1 shrink-0 place-items-center gap-1.5 rounded-[11px] bg-surface text-[13.5px] font-medium text-text inset-ring inset-ring-field-ring"><span class="inline-flex items-center gap-1.5"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/><path d="M12 5v14"/></svg>Ajouter une phase</span></span>
+        </div>
+      </div>
+
+      <div class="flex min-w-0 flex-col gap-2.5">
+        <p class="text-[13.5px] leading-[normal] font-semibold text-text">Organisation de la semaine</p>
+        <div class="flex items-start gap-3 rounded-[14px] bg-surface px-4 py-3.5 inset-ring-[1.5px] inset-ring-text"><span class="mt-px"><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-cta"><span class="size-[7px] rounded-full bg-on-cta"></span></span></span><span class="flex min-w-0 flex-1 flex-col gap-1"><span class="text-[14.5px] leading-[1.3] font-semibold text-text">Dans l'ordre, sans jour</span><span class="text-[13px] leading-[1.45] text-muted">Par défaut. Nadia fait les séances 1 → 9 dans l'ordre, au jour de son choix.</span></span></div>
+        <div class="flex items-start gap-3 rounded-[14px] bg-surface px-4 py-3.5 inset-ring inset-ring-field-ring"><span class="mt-px"><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span></span><span class="flex min-w-0 flex-1 flex-col gap-1"><span class="text-[14.5px] leading-[1.3] font-semibold text-text">Un jour fixe par séance</span><span class="text-[13px] leading-[1.45] text-muted">Tu choisis un jour pour chaque séance (lundi, mercredi…), et le moment quand un jour en a deux.</span></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="absolute inset-x-0 bottom-0 z-30 flex gap-2.5 px-4 pt-3 pb-[30px] [background:linear-gradient(to_bottom,transparent,var(--bg)_30%)]">
+    <span class="inline-flex h-[54px] w-[110px] shrink-0 items-center justify-center rounded-[15px] bg-surface px-5 text-[15px] leading-[normal] font-medium text-text inset-ring inset-ring-line-2">Retour</span>
+    <span class="inline-flex h-[54px] min-w-0 flex-1 items-center justify-center gap-2 rounded-[15px] bg-cta px-5 text-[16px] leading-[normal] font-semibold text-on-cta shadow-[0_12px_28px_-10px_rgba(22,18,40,0.45)]">Continuer</span>
+  </div></div></div>
+  </section>
+  <section id="editeur" class="flex flex-col gap-5">
+    <div class="flex max-w-[760px] flex-col gap-1.5">
+      <p class="text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">2 · Ordinateur</p>
+      <h2 class="text-[22px] leading-[1.25] font-bold tracking-[-0.02em] text-text">Éditeur de programme, semaine en jours fixes</h2>
+      <p class="text-[15px] leading-[1.6] text-pretty text-muted">Le lundi et le samedi portent deux pastilles (matin en haut, soir en bas), et leurs deux séances sont regroupées sous leur jour, chacune avec son moment ; plus aucun avertissement.</p>
+    </div>
+    <div class="-mx-4 flex overflow-x-auto px-4 pt-1 pb-3 md:mx-0 md:px-1"><div id="cadre-2" class="flex w-[1280px] shrink-0 overflow-hidden rounded-[24px] bg-bg ring-1 ring-line-2">
+    <aside class="my-3.5 ml-3.5 flex w-[236px] shrink-0 flex-col rounded-[20px] bg-panel px-3.5 pt-6 pb-4 inset-ring inset-ring-line">
+    <div class="flex h-[55px] items-center justify-between gap-2 pt-1 pb-6">
+      <span class="flex w-fit rounded-sm px-2.5"><span class="inline-flex shrink-0"><span class="brand-dark inline-flex"><span role="img" aria-label="Coory" style="display:inline-flex;flex-direction:row;align-items:center;gap:7.215px;line-height:1"><svg viewBox="0 0 240 120" width="37" height="18.5" style="flex:none" aria-hidden="true"><path fill="#F4F4F2" d="M126.69 0H60A60 60 0 0 0 60 120H95.31L103.68 88H60A28 28 0 0 1 60 32H118.32Z"></path><path fill="#8B5CF6" d="M144.69 0H180A60 60 0 0 1 180 120H113.31L121.68 88H180A28 28 0 0 0 180 32H136.32Z"></path></svg><span style="font-family:var(--font-jakarta), &quot;Plus Jakarta Sans&quot;, system-ui, sans-serif;font-weight:800;font-size:21.46px;letter-spacing:0.01em;color:#F4F4F2;white-space:nowrap">COORY</span></span></span><span class="brand-light inline-flex"><span role="img" aria-label="Coory" style="display:inline-flex;flex-direction:row;align-items:center;gap:7.215px;line-height:1"><svg viewBox="0 0 240 120" width="37" height="18.5" style="flex:none" aria-hidden="true"><path fill="#17151D" d="M126.69 0H60A60 60 0 0 0 60 120H95.31L103.68 88H60A28 28 0 0 1 60 32H118.32Z"></path><path fill="#8B5CF6" d="M144.69 0H180A60 60 0 0 1 180 120H113.31L121.68 88H180A28 28 0 0 0 180 32H136.32Z"></path></svg><span style="font-family:var(--font-jakarta), &quot;Plus Jakarta Sans&quot;, system-ui, sans-serif;font-weight:800;font-size:21.46px;letter-spacing:0.01em;color:#17151D;white-space:nowrap">COORY</span></span></span></span></span>
+      <span class="-my-[8.5px] inline-flex size-[34px] shrink-0 items-center justify-center rounded-[9px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></svg></span>
+    </div>
+    <nav class="flex flex-col gap-0.5">
+      <ul class="flex flex-col gap-0.5">
+        <li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="flex-1 truncate">Tableau de bord</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg><span class="flex-1 truncate">Agenda</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg><span class="flex-1 truncate">Sportifs</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] bg-selected text-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg><span class="flex-1 truncate">Programmes</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg><span class="flex-1 truncate">Comptabilité</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg><span class="flex-1 truncate">Bibliothèque</span></span></li>
+      </ul>
+      <div aria-hidden="true" class="mx-1 my-2.5 h-px shrink-0 bg-line"></div>
+      <ul class="flex flex-col gap-0.5">
+        <li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg><span class="flex-1 truncate">Assistant IA</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg><span class="flex-1 truncate">Messages</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M13 5h8"/><path d="M13 12h8"/><path d="M13 19h8"/><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/></svg><span class="flex-1 truncate">Tâches</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg><span class="flex-1 truncate">Documents</span></span></li><li><span class="relative flex h-[34px] items-center gap-2.5 rounded-[9px] px-3 text-[13.5px] text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="flex-1 truncate">Notifications</span></span></li>
+      </ul>
+    </nav>
+    <div class="mt-auto">
+      <span class="flex min-h-[55px] w-full items-center gap-2.5 rounded-wide p-2 text-left text-text">
+        <span class="relative inline-flex shrink-0 rounded-full outline outline-[1.5px] outline-offset-2 outline-violet">
+          <span class="relative inline-flex shrink-0"><span class="inline-flex size-9 items-center justify-center rounded-full bg-chip text-[12px] font-semibold text-text">JM</span></span>
+          <span aria-hidden="true" class="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full bg-ok ring-2 ring-panel"></span>
+        </span>
+        <span class="flex min-w-0 flex-1 flex-col"><span class="truncate text-[14px] font-semibold">Julien Mertens</span><span class="truncate text-[12px] text-muted">Coach</span></span>
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+    </div>
+  </aside>
+    <div class="flex min-w-0 flex-1 flex-col">
+      <header class="mt-3.5 mr-3.5 ml-5 flex min-h-16 flex-nowrap items-center gap-x-4 rounded-[20px] bg-surface py-3 pr-[18px] pl-[22px] inset-ring inset-ring-line">
+    <div class="flex min-w-0 flex-[1_1_auto] flex-row items-center gap-2.5">
+      <div class="flex min-w-0 flex-1 items-center gap-2.5">
+        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="block shrink-0 text-violet-text"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+        <span class="flex min-w-0 shrink"><span class="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-[4px] text-[15px] leading-[normal] font-medium whitespace-nowrap text-muted"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span class="min-w-0 truncate">Programmes</span></span></span>
+        <span aria-hidden="true" class="shrink-0 text-[15px] text-faint">·</span>
+        <h1 class="min-w-0 truncate font-display text-[15px] leading-tight font-semibold tracking-tight">Prépa semi</h1>
+      </div>
+    </div>
+    <div class="flex flex-none items-center gap-2.5">
+      <div class="flex items-center gap-2.5">
+        <span class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[9px] bg-ai-bg px-3 text-[12.5px] font-medium text-ai-text inset-ring inset-ring-ai-border"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="fill-current"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg>Assistant IA</span>
+        <span class="relative inline-flex size-8 shrink-0 items-center justify-center rounded-[9px] border border-line text-text-2"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></span>
+      </div>
+      <span class="inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-cta px-3.5 text-[12.5px] font-semibold text-on-cta"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>Publier</span>
+    </div>
+  </header>
+      <div class="flex min-h-0 flex-1 flex-col gap-4 pt-4 pr-3.5 pb-3.5 pl-5">
+        <div class="flex min-h-0 flex-1 flex-col gap-3">
+          <section class="flex items-center gap-3.5 rounded-[20px] bg-surface py-4 pr-[18px] pl-5">
+    <span class="relative inline-flex shrink-0"><span class="inline-flex size-[46px] items-center justify-center rounded-full bg-chip text-[15px] font-semibold text-text">NA</span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-1">
+      <div class="flex min-w-0 items-center gap-2.5">
+        <h2 class="truncate text-[19px] leading-[1.2] font-semibold tracking-[-0.015em] text-text">Prépa semi</h2>
+        <span class="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-[12px] px-[9px] text-[11.5px] leading-[normal] font-semibold whitespace-nowrap bg-bg text-[12px] font-medium text-text-2"><span aria-hidden="true" class="size-[7px] rounded-full bg-run-fill"></span>Running</span>
+      </div>
+      <p class="text-[13px] leading-[1.4] text-muted">Nadia El Amrani · 2 nov. → 11 janv. · 10 semaines · 7 séances par semaine</p>
+    </div>
+    <span class="flex h-8 shrink-0 items-center gap-2 rounded-[9px] bg-surface-2 px-3 text-[12.5px] font-medium whitespace-nowrap text-text-2"><span class="font-semibold text-text">Publié v1</span></span>
+    <span class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>Aperçu</span>
+    <span class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></svg>PDF</span>
+    <span class="grid size-8 place-items-center rounded-[9px] bg-transparent text-[14px] leading-none font-bold tracking-[1px] text-text inset-ring inset-ring-field-ring">···</span>
+  </section>
+          <div class="grid min-h-0 flex-1 grid-cols-[212px_minmax(0,1fr)_304px] gap-3">
+            <nav aria-label="Semaines" class="flex min-h-0 flex-col rounded-[20px] bg-surface px-2.5 py-3.5">
+    <p class="mb-2 flex items-baseline justify-between px-2 text-[15px] font-semibold text-text">Semaines <span class="text-[12.5px] font-medium text-faint tabular">10</span></p>
+    <div class="flex min-h-0 flex-1 flex-col">
+      <div class="flex flex-col gap-1"><div class="mb-0.5 flex min-h-7 items-center gap-1.5 pr-0.5 pl-2"><span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-text-2">Base</span><span class="shrink-0 text-[12px] font-medium text-faint tabular">S1–4</span><span class="grid size-7 place-items-center rounded-[8px] bg-transparent text-[12px] leading-none font-bold tracking-[1px] text-muted">···</span></div><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 1</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">2 – 8 nov.</span>
+      </span>
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-violet"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 13h.01"/><path d="M12 13h.01"/><path d="M16 13h.01"/><path d="M8 17h.01"/><path d="M12 17h.01"/><path d="M16 17h.01"/></svg>
+    </span><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 2<span aria-label="en cours" class="size-1.5 rounded-full bg-violet"></span></span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">9 – 15 nov.</span>
+      </span>
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-violet"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 13h.01"/><path d="M12 13h.01"/><path d="M16 13h.01"/><path d="M8 17h.01"/><path d="M12 17h.01"/><path d="M16 17h.01"/></svg>
+    </span><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left bg-lib-lavender">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-semibold">Semaine 3</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">16 – 22 nov.</span>
+      </span>
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-violet"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 13h.01"/><path d="M12 13h.01"/><path d="M16 13h.01"/><path d="M8 17h.01"/><path d="M12 17h.01"/><path d="M16 17h.01"/></svg>
+    </span><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 4</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">23 – 29 nov.</span>
+      </span>
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-violet"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 13h.01"/><path d="M12 13h.01"/><path d="M16 13h.01"/><path d="M8 17h.01"/><path d="M12 17h.01"/><path d="M16 17h.01"/></svg>
+    </span></div>
+      <div class="mt-3 flex flex-col gap-1 border-t border-line pt-3"><div class="mb-0.5 flex min-h-7 items-center gap-1.5 pr-0.5 pl-2"><span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-text-2">Spécifique</span><span class="shrink-0 text-[12px] font-medium text-faint tabular">S5–8</span><span class="grid size-7 place-items-center rounded-[8px] bg-transparent text-[12px] leading-none font-bold tracking-[1px] text-muted">···</span></div><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 5</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">30 nov. – 6 déc.</span>
+      </span>
+      
+    </span><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 6</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">7 – 13 déc.</span>
+      </span>
+      
+    </span><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 7</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">14 – 20 déc.</span>
+      </span>
+      
+    </span><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 8</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">21 – 27 déc.</span>
+      </span>
+      
+    </span></div>
+      <div class="mt-3 flex flex-col gap-1 border-t border-line pt-3"><div class="mb-0.5 flex min-h-7 items-center gap-1.5 pr-0.5 pl-2"><span class="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-text-2">Affûtage</span><span class="shrink-0 text-[12px] font-medium text-faint tabular">S9–10</span><span class="grid size-7 place-items-center rounded-[8px] bg-transparent text-[12px] leading-none font-bold tracking-[1px] text-muted">···</span></div><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 9</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">28 déc. – 3 janv.</span>
+      </span>
+      
+    </span><span class="flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left ">
+      <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text font-medium">Semaine 10</span>
+        <span class="truncate text-[12px] leading-[1.3] text-muted">4 – 10 janv.</span>
+      </span>
+      
+    </span></div>
+      <span class="mt-1.5 px-2 text-[11.5px] leading-[1.45] text-faint">Violet = jours fixes.</span>
+    </div>
+    <div class="mt-2.5 flex gap-1 border-t border-line pt-2.5">
+      <span class="inline-flex h-[30px] items-center gap-1 rounded-[8px] px-2 text-[13px] font-medium text-violet-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/><path d="M12 5v14"/></svg> Semaine</span>
+      <span class="inline-flex h-[30px] items-center gap-1 rounded-[8px] px-2 text-[13px] font-medium text-violet-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/><path d="M12 5v14"/></svg> Phase</span>
+    </div>
+  </nav><section aria-label="Semaine 3" class="flex min-h-0 flex-col rounded-[20px] bg-surface p-[18px]">
+    <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-3">
+      <div class="flex min-w-0 flex-col gap-1">
+        <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          <h3 class="text-[17px] leading-[1.25] font-semibold whitespace-nowrap text-text">Semaine 3</h3>
+          <span class="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-[12px] px-[9px] text-[11.5px] leading-[normal] font-semibold whitespace-nowrap h-[22px] bg-bg font-medium text-text-2">Base</span>
+        </div>
+        <p class="truncate text-[13px] text-muted">16 – 22 nov. · 7 séances</p>
+      </div>
+      <div class="flex shrink-0 items-center gap-2">
+        <div class="inline-flex rounded-[11px] bg-bg p-[3px]"><span class="tap-44 inline-flex h-[34px] min-w-0 items-center justify-center rounded-[9px] px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap text-muted"><span class="truncate">Dans l'ordre</span></span><span class="tap-44 inline-flex h-[34px] min-w-0 items-center justify-center rounded-[9px] px-3 text-[13px] leading-[normal] font-medium whitespace-nowrap bg-track-active text-text shadow-segment"><span class="truncate">Jours fixes</span></span></div>
+        <span class="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>Dupliquer</span>
+        <span class="grid size-8 place-items-center rounded-[9px] bg-transparent text-[14px] leading-none font-bold tracking-[1px] text-text inset-ring inset-ring-field-ring">···</span>
+      </div>
+    </div>
+    <div class="mt-3 flex flex-col gap-2">
+      <div class="grid grid-cols-7 gap-[5px]"><div class="flex min-h-[82px] min-w-0 flex-col gap-0.5">
+    <div class="flex shrink-0 flex-col gap-[3px] rounded-t-[12px] rounded-b-[5px] px-2 pt-2 pb-1.5 bg-[color-mix(in_srgb,var(--run-fill)_14%,var(--surface))] "><span class="truncate text-[11.5px] font-semibold text-text-2">Lun 16</span><span class="flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold bg-run-fill text-on-run-fill">S1</span><span class="truncate text-[10.5px] leading-[14px] font-medium text-text-2">Matin</span></div>
+    <div class="flex flex-1 flex-col gap-[3px] rounded-t-[5px] rounded-b-[12px] px-2 pt-1.5 pb-2 bg-[color-mix(in_srgb,var(--strength-fill)_14%,var(--surface))] inset-ring-[1.5px] inset-ring-violet"><span class="flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold bg-strength-fill text-on-strength-fill">S2</span><span class="truncate text-[10.5px] leading-[14px] font-medium text-text-2">Soir</span></div>
+  </div><div class="flex min-h-[82px] min-w-0 flex-col gap-[3px] rounded-[12px] bg-surface p-2 inset-ring inset-ring-line"><span class="truncate text-[11.5px] font-semibold text-text-2">Mar 17</span><span class="text-[11px] font-medium text-text-2">Repos</span></div><div class="flex min-h-[82px] min-w-0 flex-col gap-[3px] rounded-[12px] p-2 bg-[color-mix(in_srgb,var(--run-fill)_14%,var(--surface))] "><span class="truncate text-[11.5px] font-semibold text-text-2">Mer 18</span><span class="flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold bg-run-fill text-on-run-fill">S3</span></div><div class="flex min-h-[82px] min-w-0 flex-col gap-[3px] rounded-[12px] p-2 bg-[color-mix(in_srgb,var(--strength-fill)_14%,var(--surface))] "><span class="truncate text-[11.5px] font-semibold text-text-2">Jeu 19</span><span class="flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold bg-strength-fill text-on-strength-fill">S4</span></div><div class="flex min-h-[82px] min-w-0 flex-col gap-[3px] rounded-[12px] bg-surface p-2 inset-ring inset-ring-line"><span class="truncate text-[11.5px] font-semibold text-text-2">Ven 20</span><span class="text-[11px] font-medium text-text-2">Repos</span></div><div class="flex min-h-[82px] min-w-0 flex-col gap-0.5">
+    <div class="flex shrink-0 flex-col gap-[3px] rounded-t-[12px] rounded-b-[5px] px-2 pt-2 pb-1.5 bg-[color-mix(in_srgb,var(--run-fill)_14%,var(--surface))] "><span class="truncate text-[11.5px] font-semibold text-text-2">Sam 21</span><span class="flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold bg-run-fill text-on-run-fill">S5</span><span class="truncate text-[10.5px] leading-[14px] font-medium text-text-2">Matin</span></div>
+    <div class="flex flex-1 flex-col gap-[3px] rounded-t-[5px] rounded-b-[12px] px-2 pt-1.5 pb-2 bg-[color-mix(in_srgb,var(--hyrox-fill)_14%,var(--surface))] "><span class="flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold bg-hyrox-fill text-on-hyrox-fill">S6</span><span class="truncate text-[10.5px] leading-[14px] font-medium text-text-2">Soir</span></div>
+  </div><div class="flex min-h-[82px] min-w-0 flex-col gap-[3px] rounded-[12px] p-2 bg-[color-mix(in_srgb,var(--run-fill)_14%,var(--surface))] "><span class="truncate text-[11.5px] font-semibold text-text-2">Dim 22</span><span class="flex h-6 min-w-8 items-center justify-center self-start rounded-[8px] px-2 text-[12px] font-bold bg-run-fill text-on-run-fill">S7</span></div></div>
+      <p class="text-[12.5px] leading-[1.45] text-muted">Clique sur le jour d'une séance pour le changer. Les numéros suivent l'ordre des jours, puis le moment.</p>
+    </div>
+    <div class="mt-4 flex min-h-0 flex-1 flex-col gap-2 pb-1"><div class="flex flex-col gap-1.5 rounded-[18px] bg-bg p-1.5">
+      <p class="px-2.5 pt-1 pb-0.5 text-[12.5px] leading-[1.3] font-semibold text-text-2">Lundi 16 <span class="font-medium text-muted">· 2 séances</span></p>
+      <div class="relative flex items-center gap-3 rounded-[15px] bg-surface py-[9px] pr-3 pl-[9px] inset-ring inset-ring-line">
+    <span class="relative z-10 flex h-14 w-[62px] shrink-0 flex-col items-center justify-center gap-px rounded-[12px] bg-bg text-text"><span class="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">Lun</span><span class="flex items-center gap-[3px] text-[18px] leading-none font-bold">16<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m6 9 6 6 6-6"/></svg></span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+      <span class="flex min-w-0 items-center gap-2"><span class="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Séance 1</span><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-5 px-[7px] text-[11.5px] leading-[normal]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>Matin</span></span>
+      <span class="flex min-w-0 items-center gap-2"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="min-w-0 truncate text-left text-[15px] leading-[1.25] font-semibold text-text">Endurance</span></span>
+      <span class="truncate text-[12.5px] leading-[normal] text-muted">Running · Endurance</span>
+      <span class="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[1.35] font-medium text-text-2"><span class="max-w-full truncate">45 min · zone 2</span></span>
+    </div>
+  </div><div class="relative flex items-center gap-3 rounded-[15px] bg-surface py-[9px] pr-3 pl-[9px] inset-ring-[1.5px] inset-ring-violet/55 shadow-lift">
+    <span class="relative z-10 flex h-14 w-[62px] shrink-0 flex-col items-center justify-center gap-px rounded-[12px] bg-cta text-on-cta"><span class="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">Lun</span><span class="flex items-center gap-[3px] text-[18px] leading-none font-bold">16<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m6 9 6 6 6-6"/></svg></span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+      <span class="flex min-w-0 items-center gap-2"><span class="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Séance 2</span><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-5 px-[7px] text-[11.5px] leading-[normal]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>Soir</span></span>
+      <span class="flex min-w-0 items-center gap-2"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0 truncate text-left text-[15px] leading-[1.25] font-semibold text-text">Renfo jambes</span></span>
+      <span class="truncate text-[12.5px] leading-[normal] text-muted">Musculation · Renfo</span>
+      <span class="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[1.35] font-medium text-text-2"><span class="max-w-full truncate">5 exercices</span></span>
+    </div>
+  </div>
+    </div><div class="relative flex items-center gap-3 rounded-[15px] bg-surface py-[9px] pr-3 pl-[9px] inset-ring inset-ring-line">
+    <span class="relative z-10 flex h-14 w-[62px] shrink-0 flex-col items-center justify-center gap-px rounded-[12px] bg-bg text-text"><span class="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">Mer</span><span class="flex items-center gap-[3px] text-[18px] leading-none font-bold">18<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m6 9 6 6 6-6"/></svg></span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+      <span class="flex min-w-0 items-center gap-2"><span class="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Séance 3</span></span>
+      <span class="flex min-w-0 items-center gap-2"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="min-w-0 truncate text-left text-[15px] leading-[1.25] font-semibold text-text">Fractionné 10 × 400 m</span></span>
+      <span class="truncate text-[12.5px] leading-[normal] text-muted">Running · Fractionné</span>
+      <span class="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[1.35] font-medium text-text-2"><span class="max-w-full truncate">10 × 400 m · ≈ 55 min</span></span>
+    </div>
+  </div><div class="relative flex items-center gap-3 rounded-[15px] bg-surface py-[9px] pr-3 pl-[9px] inset-ring inset-ring-line">
+    <span class="relative z-10 flex h-14 w-[62px] shrink-0 flex-col items-center justify-center gap-px rounded-[12px] bg-bg text-text"><span class="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">Jeu</span><span class="flex items-center gap-[3px] text-[18px] leading-none font-bold">19<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m6 9 6 6 6-6"/></svg></span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+      <span class="flex min-w-0 items-center gap-2"><span class="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Séance 4</span></span>
+      <span class="flex min-w-0 items-center gap-2"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0 truncate text-left text-[15px] leading-[1.25] font-semibold text-text">Force haut du corps</span></span>
+      <span class="truncate text-[12.5px] leading-[normal] text-muted">Musculation · Force</span>
+      <span class="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[1.35] font-medium text-text-2"><span class="max-w-full truncate">6 exercices</span></span>
+    </div>
+  </div><div class="flex flex-col gap-1.5 rounded-[18px] bg-bg p-1.5">
+      <p class="px-2.5 pt-1 pb-0.5 text-[12.5px] leading-[1.3] font-semibold text-text-2">Samedi 21 <span class="font-medium text-muted">· 2 séances</span></p>
+      <div class="relative flex items-center gap-3 rounded-[15px] bg-surface py-[9px] pr-3 pl-[9px] inset-ring inset-ring-line">
+    <span class="relative z-10 flex h-14 w-[62px] shrink-0 flex-col items-center justify-center gap-px rounded-[12px] bg-bg text-text"><span class="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">Sam</span><span class="flex items-center gap-[3px] text-[18px] leading-none font-bold">21<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m6 9 6 6 6-6"/></svg></span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+      <span class="flex min-w-0 items-center gap-2"><span class="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Séance 5</span><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-5 px-[7px] text-[11.5px] leading-[normal]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>Matin</span></span>
+      <span class="flex min-w-0 items-center gap-2"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="min-w-0 truncate text-left text-[15px] leading-[1.25] font-semibold text-text">Sortie longue</span></span>
+      <span class="truncate text-[12.5px] leading-[normal] text-muted">Running · Sortie longue</span>
+      <span class="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[1.35] font-medium text-text-2"><span class="max-w-full truncate">80 min · zone 2</span></span>
+    </div>
+  </div><div class="relative flex items-center gap-3 rounded-[15px] bg-surface py-[9px] pr-3 pl-[9px] inset-ring inset-ring-line">
+    <span class="relative z-10 flex h-14 w-[62px] shrink-0 flex-col items-center justify-center gap-px rounded-[12px] bg-bg text-text"><span class="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">Sam</span><span class="flex items-center gap-[3px] text-[18px] leading-none font-bold">21<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m6 9 6 6 6-6"/></svg></span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+      <span class="flex min-w-0 items-center gap-2"><span class="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Séance 6</span><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-5 px-[7px] text-[11.5px] leading-[normal]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>Soir</span></span>
+      <span class="flex min-w-0 items-center gap-2"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-hyrox-fill"></span><span class="min-w-0 truncate text-left text-[15px] leading-[1.25] font-semibold text-text">Stations légères</span></span>
+      <span class="truncate text-[12.5px] leading-[normal] text-muted">Hyrox · Stations</span>
+      <span class="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[1.35] font-medium text-text-2"><span class="max-w-full truncate">3 tours · 40 min</span></span>
+    </div>
+  </div>
+    </div><div class="relative flex items-center gap-3 rounded-[15px] bg-surface py-[9px] pr-3 pl-[9px] inset-ring inset-ring-line">
+    <span class="relative z-10 flex h-14 w-[62px] shrink-0 flex-col items-center justify-center gap-px rounded-[12px] bg-bg text-text"><span class="text-[10.5px] font-semibold tracking-[0.06em] uppercase opacity-90">Dim</span><span class="flex items-center gap-[3px] text-[18px] leading-none font-bold">22<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m6 9 6 6 6-6"/></svg></span></span>
+    <div class="flex min-w-0 flex-1 flex-col gap-[5px]">
+      <span class="flex min-w-0 items-center gap-2"><span class="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">Séance 7</span></span>
+      <span class="flex min-w-0 items-center gap-2"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="min-w-0 truncate text-left text-[15px] leading-[1.25] font-semibold text-text">Récupération</span></span>
+      <span class="truncate text-[12.5px] leading-[normal] text-muted">Running · Récupération</span>
+      <span class="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[12.5px] leading-[1.35] font-medium text-text-2"><span class="max-w-full truncate">30 min · zone 1</span></span>
+    </div>
+  </div></div>
+    <div class="mt-3"><div class="flex gap-2">
+      <span class="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[15px] text-[13.5px] font-medium text-text-2 inset-ring-[1.5px] inset-ring-line"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M5 12h14"/><path d="M12 5v14"/></svg>Ajouter une séance</span>
+      <span class="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[15px] text-[13.5px] font-medium text-text-2 inset-ring-[1.5px] inset-ring-line"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/></svg>Depuis un modèle</span>
+    </div></div>
+  </section><aside aria-label="Séance choisie" class="flex min-h-0 flex-col rounded-[20px] bg-surface p-[18px]">
+    <div class="flex flex-col gap-3.5">
+      <div class="flex flex-col gap-1">
+        <span class="flex items-center gap-[7px] text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase"><span aria-hidden="true" class="size-[7px] rounded-full bg-strength-fill"></span>Musculation · Séance 2</span>
+        <h2 class="text-[21px] leading-[1.2] font-bold tracking-[-0.02em] text-text">Renfo jambes</h2>
+        <p class="text-[13px] text-muted">Renfo · Semaine 3 · lundi soir</p>
+      </div>
+      <dl class="grid grid-cols-2 gap-2">
+        <div class="flex flex-col gap-0.5 rounded-[12px] bg-surface-2 px-3 py-2.5"><dt class="text-[12px] text-muted">Durée</dt><dd class="text-[15px] font-semibold text-text">≈ 50 min</dd></div>
+        <div class="flex flex-col gap-0.5 rounded-[12px] bg-surface-2 px-3 py-2.5"><dt class="text-[12px] text-muted">Séries</dt><dd class="text-[15px] font-semibold text-text">16</dd></div>
+      </dl>
+      <ol class="flex flex-col gap-1.5">
+        <li class="flex min-w-0 gap-2.5 rounded-[12px] px-3 py-2.5 inset-ring inset-ring-line">
+    <span aria-hidden="true" class="w-[3px] shrink-0 rounded-[2px] bg-dlg-disabled"></span>
+    <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+      <span class="flex justify-between gap-2 text-[13.5px] font-semibold text-text"><span class="min-w-0">Échauffement</span></span>
+      <span class="mt-0.5 flex flex-col gap-0.5 text-[12.5px] text-text"><span class="flex items-start gap-1.5 leading-[1.4] "><span aria-hidden="true" class="mt-[calc(0.7em_-_2.5px)] size-[5px] shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0"><span>10 min de mobilité, hanches et chevilles</span></span></span></span>
+    </span>
+  </li>
+        <li class="flex min-w-0 gap-2.5 rounded-[12px] px-3 py-2.5 inset-ring inset-ring-line">
+    <span aria-hidden="true" class="w-[3px] shrink-0 rounded-[2px] bg-strength-fill"></span>
+    <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+      <span class="flex justify-between gap-2 text-[13.5px] font-semibold text-text"><span class="min-w-0">Exercices</span></span>
+      <span class="mt-0.5 flex flex-col gap-0.5 text-[12.5px] text-text"><span class="flex items-start gap-1.5 leading-[1.4] "><span aria-hidden="true" class="mt-[calc(0.7em_-_2.5px)] size-[5px] shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0"><strong class="font-bold text-text">Squat goblet</strong><span> · </span><strong class="font-bold text-text">4 × 10</strong><span> · </span><span>20 kg</span><span> · </span><strong class="font-bold text-text">repos 1:30 min</strong></span></span><span class="flex items-start gap-1.5 leading-[1.4] "><span aria-hidden="true" class="mt-[calc(0.7em_-_2.5px)] size-[5px] shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0"><strong class="font-bold text-text">Fentes arrière</strong><span> · </span><strong class="font-bold text-text">3 × 8 par jambe</strong><span> · </span><span>2 × 10 kg</span></span></span><span class="flex items-start gap-1.5 leading-[1.4] "><span aria-hidden="true" class="mt-[calc(0.7em_-_2.5px)] size-[5px] shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0"><strong class="font-bold text-text">Soulevé de terre roumain</strong><span> · </span><strong class="font-bold text-text">3 × 10</strong><span> · </span><span>40 kg</span></span></span><span class="flex items-start gap-1.5 leading-[1.4] "><span aria-hidden="true" class="mt-[calc(0.7em_-_2.5px)] size-[5px] shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0"><strong class="font-bold text-text">Hip thrust</strong><span> · </span><strong class="font-bold text-text">3 × 12</strong><span> · </span><span>50 kg</span></span></span><span class="flex items-start gap-1.5 leading-[1.4] "><span aria-hidden="true" class="mt-[calc(0.7em_-_2.5px)] size-[5px] shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0"><strong class="font-bold text-text">Gainage latéral</strong><span> · </span><strong class="font-bold text-text">3 × 30 s</strong></span></span></span>
+    </span>
+  </li>
+        <li class="flex min-w-0 gap-2.5 rounded-[12px] px-3 py-2.5 inset-ring inset-ring-line">
+    <span aria-hidden="true" class="w-[3px] shrink-0 rounded-[2px] bg-dlg-disabled"></span>
+    <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+      <span class="flex justify-between gap-2 text-[13.5px] font-semibold text-text"><span class="min-w-0">Retour au calme</span></span>
+      <span class="mt-0.5 flex flex-col gap-0.5 text-[12.5px] text-text"><span class="flex items-start gap-1.5 leading-[1.4] "><span aria-hidden="true" class="mt-[calc(0.7em_-_2.5px)] size-[5px] shrink-0 rounded-full bg-strength-fill"></span><span class="min-w-0"><span>5 min d'étirements</span></span></span></span>
+    </span>
+  </li>
+      </ol>
+    </div>
+    <div class="mt-4"><div class="flex gap-2">
+      <span class="inline-flex h-10 flex-1 items-center justify-center rounded-[11px] bg-cta px-4 text-[13.5px] font-semibold text-on-cta">Modifier la séance</span>
+      <span class="grid size-10 shrink-0 place-items-center rounded-[11px] text-text inset-ring inset-ring-field-ring"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></span>
+      <span class="grid size-10 shrink-0 place-items-center rounded-[11px] text-alert inset-ring inset-ring-field-ring"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span>
+    </div></div>
+  </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  </section>
+  <section id="choix-du-jour" class="flex flex-col gap-5">
+    <div class="flex max-w-[760px] flex-col gap-1.5">
+      <p class="text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">3 · Téléphone</p>
+      <h2 class="text-[22px] leading-[1.25] font-bold tracking-[-0.02em] text-text">Choisir le jour d'une séance</h2>
+      <p class="text-[15px] leading-[1.6] text-pretty text-muted">Chaque jour dit ce qu'il porte déjà et reste choisissable ; si le jour choisi a déjà une séance, on précise le moment (le samedi, déjà complet, est grisé). Plus bas, « Appliquer ce jour à » et l'autorisation de déplacer ne changent pas.</p>
+    </div>
+    <div class="-mx-4 flex overflow-x-auto px-4 pt-1 pb-3 md:mx-0 md:px-1"><div id="cadre-3" class="relative flex w-[390px] shrink-0 flex-col overflow-hidden rounded-[48px] bg-bg ring-1 ring-line-2 h-[844px]"><div aria-hidden="true" class="flex h-[47px] shrink-0 items-end justify-between px-[30px] pb-[9px] text-text">
+    <span class="w-[54px] text-center text-[15.5px] leading-none font-semibold tracking-[-0.01em]">9:41</span>
+    <span class="flex items-center gap-[5px]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10 10v4"/><path d="M14 10v4"/><path d="M22 14v-4"/><path d="M6 10v4"/><rect x="2" y="6" width="16" height="12" rx="2"/></svg></span>
+  </div><header class="relative z-30 flex h-[58px] shrink-0 items-center justify-between px-3 pt-2.5 [background:linear-gradient(to_bottom,var(--under-bar)_60%,transparent)]">
+    <span class="grid size-11 shrink-0 place-items-center rounded-[14px] bg-panel text-text inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></span>
+    <div class="flex min-w-0 flex-1 items-center pr-0 pl-2">
+      <span class="inline-flex min-h-11 min-w-0 items-center gap-1.5 pl-0.5 text-[16px] leading-[normal] font-medium whitespace-nowrap text-violet-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span class="truncate">Semaines</span></span>
+    </div>
+    <div class="flex shrink-0 items-center gap-1 rounded-2xl bg-panel p-1 inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]">
+      <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-ai-bg text-ai-text inset-ring inset-ring-ai-border"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="fill-current"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg></span>
+      <span class="relative inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-text-2"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></span>
+    </div>
+  </header><div class="flex flex-col gap-3 px-3.5 pt-[18px]">
+    <div class="flex flex-col gap-1.5 px-1">
+      <h2 class="flex items-center gap-2 text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">Semaine 3</h2>
+      <p class="text-[13.5px] text-muted">16 – 22 nov. · Base</p>
+    </div>
+    <div class="flex w-full rounded-[13px] bg-track p-1">
+      <span class="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-[10px] text-[14px] font-semibold text-muted">Dans l'ordre</span>
+      <span class="inline-flex h-10 min-w-0 flex-1 items-center justify-center rounded-[10px] bg-track-active text-[14px] font-semibold text-text shadow-segment">Jours fixes</span>
+    </div>
+    <div class="grid grid-cols-7 gap-0.5 rounded-[18px] bg-surface px-2 py-2.5"><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">L</span><span class="text-[15px] font-bold text-text">16</span><span class="flex gap-0.5"><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-run-fill text-on-run-fill">1</span><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-strength-fill text-on-strength-fill">2</span></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">M</span><span class="text-[15px] font-bold text-text">17</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] bg-surface-2 text-[11px] font-bold text-dlg-disabled"></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">M</span><span class="text-[15px] font-bold text-text">18</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] text-[11px] font-bold bg-run-fill text-on-run-fill">3</span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">J</span><span class="text-[15px] font-bold text-text">19</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] text-[11px] font-bold bg-strength-fill text-on-strength-fill">4</span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">V</span><span class="text-[15px] font-bold text-text">20</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] bg-surface-2 text-[11px] font-bold text-dlg-disabled"></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">S</span><span class="text-[15px] font-bold text-text">21</span><span class="flex gap-0.5"><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-run-fill text-on-run-fill">5</span><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-hyrox-fill text-on-hyrox-fill">6</span></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">D</span><span class="text-[15px] font-bold text-text">22</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] text-[11px] font-bold bg-run-fill text-on-run-fill">7</span></span></div>
+  </div><div aria-hidden="true" class="absolute inset-0 z-40 bg-[var(--dlg-scrim)]"></div><div class="absolute inset-x-0 bottom-0 z-50 flex max-h-[calc(100%-44px)] flex-col overflow-hidden rounded-t-[28px] bg-dlg text-text shadow-[var(--dlg-shadow)]">
+    <span aria-hidden="true" class="flex shrink-0 justify-center pt-2.5 pb-0.5"><span class="h-[5px] w-10 rounded-[5px] bg-dlg-handle"></span></span>
+    <div class="min-h-0 flex-auto overflow-hidden px-5 pt-2.5">
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-[3px]">
+          <span class="flex items-center gap-[7px] text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase"><span aria-hidden="true" class="size-[7px] rounded-full bg-strength-fill"></span>Séance 2 · Semaine 3</span>
+          <h2 class="text-[19px] leading-[1.2] font-bold tracking-[-0.015em] text-text">Renfo jambes</h2>
+          <p class="text-[13px] text-muted">Musculation · Renfo · ≈ 50 min</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="text-[12.5px] font-semibold text-text-2">Jour de la séance</span>
+          <div class="flex flex-col overflow-hidden rounded-[13px] inset-ring inset-ring-field-ring">
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0 bg-surface-2 "><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-cta"><span class="size-[7px] rounded-full bg-on-cta"></span></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Lundi 16</span><span class="truncate text-[12px] leading-[1.35] text-muted">Déjà : S1 Endurance, matin</span></span></span>
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0  "><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Mardi 17</span></span></span>
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0  "><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Mercredi 18</span><span class="truncate text-[12px] leading-[1.35] text-muted">Déjà : S3 Fractionné 10 × 400 m</span></span></span>
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0  "><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Jeudi 19</span><span class="truncate text-[12px] leading-[1.35] text-muted">Déjà : S4 Force haut du corps</span></span></span>
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0  "><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Vendredi 20</span></span></span>
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0  opacity-50"><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Samedi 21</span><span class="truncate text-[12px] leading-[1.35] text-muted">Complet : S5 le matin, S6 le soir</span></span></span>
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0  "><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Dimanche 22</span><span class="truncate text-[12px] leading-[1.35] text-muted">Déjà : S7 Récupération</span></span></span>
+            <span class="flex min-h-12 items-center gap-3 border-b border-dlg-divider px-3.5 py-1.5 last:border-b-0  "><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex min-w-0 flex-1 flex-col gap-0.5"><span class="truncate text-[13.5px] leading-[1.3] font-semibold text-text">Sans jour</span><span class="truncate text-[12px] leading-[1.35] text-muted">Dans l'ordre, au choix de Nadia.</span></span></span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="text-[12.5px] font-semibold text-text-2">Moment</span>
+          <div class="flex w-full rounded-[11px] bg-bg p-[3px]"><span class="tap-44 inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[9px] px-1.5 text-[13.5px] leading-[normal] font-medium whitespace-nowrap text-text-2"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg><span class="truncate">Matin</span></span><span class="tap-44 inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[9px] px-1.5 text-[13.5px] leading-[normal] font-medium whitespace-nowrap text-text-2"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg><span class="truncate">Midi</span></span><span class="tap-44 inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[9px] px-1.5 text-[13.5px] leading-[normal] font-medium whitespace-nowrap bg-surface text-text inset-ring-[1.5px] inset-ring-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg><span class="truncate">Soir</span></span></div>
+          <p class="text-[12px] leading-[1.45] text-muted">Lundi, S1 Endurance est déjà prévue le matin.</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="text-[12.5px] font-semibold text-text-2">Heure <span class="font-normal text-faint">(facultatif)</span></span>
+          <div class="relative min-w-0"><span class="flex h-11 w-full min-w-0 items-center truncate rounded-[11px] bg-surface pr-9 pl-3.5 text-[16px] leading-[normal] font-medium text-text inset-ring inset-ring-field-ring">Pas d'heure</span><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <span class="text-[12.5px] font-semibold text-text-2">Appliquer ce jour à</span>
+          <div class="flex flex-col overflow-hidden rounded-[13px] inset-ring inset-ring-line">
+            <span class="flex min-h-12 items-center gap-3 px-3.5 py-1.5"><span aria-hidden="true" class="grid size-5 shrink-0 place-items-center rounded-full transition-colors duration-150 bg-surface inset-ring-[1.5px] inset-ring-ring-strong"></span><span class="flex flex-1 flex-col gap-px"><span class="text-[13.5px] font-semibold text-text">Cette semaine seulement</span><span class="text-[12px] text-muted">Semaine 3</span></span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex shrink-0 gap-2 bg-dlg px-5 pt-2 pb-[26px]">
+      <span class="inline-flex h-[46px] flex-1 items-center justify-center rounded-[12px] bg-cta px-4 text-[14.5px] font-semibold text-on-cta">Valider</span>
+      <span class="inline-flex h-[46px] items-center rounded-[12px] px-4 text-[14px] font-semibold text-text inset-ring inset-ring-field-ring">Annuler</span>
+    </div>
+  </div></div></div>
+  </section>
+  <section id="fiche-sportif" class="flex flex-col gap-5">
+    <div class="flex max-w-[760px] flex-col gap-1.5">
+      <p class="text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">4 · Téléphone</p>
+      <h2 class="text-[22px] leading-[1.25] font-bold tracking-[-0.02em] text-text">Fiche de Nadia, onglet Programme</h2>
+      <p class="text-[15px] leading-[1.6] text-pretty text-muted">Le bandeau montre « 1 2 » sur un jour doublé, puis la semaine se lit jour par jour, avec le moment de chaque séance.</p>
+    </div>
+    <div class="-mx-4 flex overflow-x-auto px-4 pt-1 pb-3 md:mx-0 md:px-1"><div id="cadre-4" class="relative flex w-[390px] shrink-0 flex-col overflow-hidden rounded-[48px] bg-bg ring-1 ring-line-2 "><div aria-hidden="true" class="flex h-[47px] shrink-0 items-end justify-between px-[30px] pb-[9px] text-text">
+    <span class="w-[54px] text-center text-[15.5px] leading-none font-semibold tracking-[-0.01em]">9:41</span>
+    <span class="flex items-center gap-[5px]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10 10v4"/><path d="M14 10v4"/><path d="M22 14v-4"/><path d="M6 10v4"/><rect x="2" y="6" width="16" height="12" rx="2"/></svg></span>
+  </div><header class="relative z-30 flex h-[58px] shrink-0 items-center justify-between px-3 pt-2.5 [background:linear-gradient(to_bottom,var(--under-bar)_60%,transparent)]">
+    <span class="grid size-11 shrink-0 place-items-center rounded-[14px] bg-panel text-text inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></span>
+    <div class="flex min-w-0 flex-1 items-center pr-0 pl-2">
+      <span class="inline-flex min-h-11 min-w-0 items-center gap-1.5 pl-0.5 text-[16px] leading-[normal] font-medium whitespace-nowrap text-violet-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span class="truncate">Sportifs</span></span>
+    </div>
+    <div class="flex shrink-0 items-center gap-1 rounded-2xl bg-panel p-1 inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]">
+      <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-ai-bg text-ai-text inset-ring inset-ring-ai-border"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="fill-current"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg></span>
+      <span class="relative inline-flex size-10 shrink-0 items-center justify-center rounded-xl text-text-2"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class=""><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></span>
+    </div>
+  </header><div class="flex flex-col gap-3 px-3.5 pt-[18px] pb-7"><section aria-label="Identité du sportif" class="relative rounded-[20px] bg-surface inset-ring inset-ring-line-soft">
+    <div class="flex items-center gap-3 pt-4 pr-4 pb-3.5 pl-5">
+      <span class="relative flex shrink-0">
+        <span class="relative inline-flex shrink-0"><span class="inline-flex size-[46px] items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--run)_24%,var(--surface))] text-[15px] font-semibold text-text">NA</span></span>
+        <span aria-hidden="true" class="absolute right-0 bottom-0 size-3 rounded-full bg-ok ring-[2.5px] ring-surface"></span>
+      </span>
+      <div class="flex min-w-0 flex-1 flex-col gap-[3px]">
+        <div class="flex min-w-0 items-center gap-1.5"><p class="truncate text-[16.5px] leading-[normal] font-semibold tracking-[-0.01em]">Nadia El Amrani</p><span class="shrink-0 text-[12px] leading-none font-medium text-female-text">♀</span></div>
+        <div class="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] leading-[normal] text-muted"><span class="flex items-center gap-1.5"><span aria-hidden="true" class="size-1.5 rounded-full bg-run-fill"></span>Running</span></div>
+      </div>
+      <span class="grid size-11 shrink-0 place-items-center rounded-[13px] bg-bg text-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="size-[17px]"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg></span>
+      <span class="grid size-11 place-items-center rounded-[12px] bg-surface text-[14px] leading-none font-bold tracking-[1px] text-text inset-ring inset-ring-field-ring">···</span>
+    </div>
+    <span class="flex min-h-[54px] w-full items-center gap-2.5 rounded-b-[20px] border-t border-line pr-4 pl-5 text-left text-text"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-violet-text"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg><span class="flex-1 text-[15px] font-semibold">Programme</span><span class="text-[12.5px] font-medium whitespace-nowrap text-faint">4 / 10</span><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-muted"><path d="m6 9 6 6 6-6"/></svg></span>
+  </section><section class="flex flex-col gap-4 rounded-[20px] bg-surface p-4">
+    <div class="flex flex-col gap-1">
+      <h2 class="flex items-center gap-2 text-[17px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span>Prépa semi</h2>
+      <p class="text-[13px] text-muted">2 nov. → 10 janv. · 10 semaines · Publié v1</p>
+    </div>
+    <div class="flex flex-col gap-2">
+      <p class="flex justify-between text-[13px] font-medium"><span class="text-muted">Semaine</span><span class="font-semibold text-text">2 / 10</span></p>
+      <div aria-hidden="true" class="flex gap-[3px]"><span class="h-2 flex-1 rounded-[3px] bg-cta"></span><span class="h-2 flex-1 rounded-[3px] bg-violet"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span><span class="h-2 flex-1 rounded-[3px] bg-chip"></span></div>
+    </div>
+    <div class="flex gap-2">
+      <span class="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta">Ouvrir l'éditeur</span>
+      <span class="inline-flex h-12 items-center gap-1.5 rounded-[13px] px-4 text-[15px] font-semibold text-text inset-ring inset-ring-field-ring">PDF</span>
+    </div>
+  </section><div class="relative flex items-center gap-1.5">
+    <span class="grid size-11 shrink-0 place-items-center rounded-[13px] bg-surface text-text inset-ring inset-ring-field-ring"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m15 18-6-6 6-6"/></svg></span>
+    <div class="flex min-w-0 flex-1"><span class="flex h-[42px] w-full items-center justify-center gap-2 rounded-[11px] bg-surface pr-3 pl-3.5 text-[14px] font-semibold whitespace-nowrap text-text inset-ring inset-ring-line-2">Semaine 3<span class="text-[12.5px] font-medium text-faint">/ 10</span><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted"><path d="m6 9 6 6 6-6"/></svg></span></div>
+    <span class="grid size-11 shrink-0 place-items-center rounded-[13px] bg-surface text-text inset-ring inset-ring-field-ring"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class=""><path d="m9 18 6-6-6-6"/></svg></span>
+  </div><section aria-label="Semaine 3" class="flex flex-col gap-3.5 rounded-[20px] bg-surface p-3">
+    <div class="flex items-center justify-between gap-3 px-1 pt-1">
+      <div class="flex min-w-0 flex-col gap-[3px]"><h2 class="flex items-center gap-2 text-[17px] font-semibold whitespace-nowrap text-text">Semaine 3</h2></div>
+      <span class="text-[12.5px] whitespace-nowrap text-muted">16 – 22 nov. · 0 / 7</span>
+    </div>
+    <div class="grid grid-cols-7 gap-0.5 rounded-[16px] bg-bg px-2 py-2.5"><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">L</span><span class="text-[15px] font-bold text-text">16</span><span class="flex gap-0.5"><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-run-fill text-on-run-fill">1</span><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-strength-fill text-on-strength-fill">2</span></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">M</span><span class="text-[15px] font-bold text-text">17</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] bg-surface-2 text-[11px] font-bold text-dlg-disabled"></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">M</span><span class="text-[15px] font-bold text-text">18</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] text-[11px] font-bold bg-run-fill text-on-run-fill">3</span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">J</span><span class="text-[15px] font-bold text-text">19</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] text-[11px] font-bold bg-strength-fill text-on-strength-fill">4</span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">V</span><span class="text-[15px] font-bold text-text">20</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] bg-surface-2 text-[11px] font-bold text-dlg-disabled"></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">S</span><span class="text-[15px] font-bold text-text">21</span><span class="flex gap-0.5"><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-run-fill text-on-run-fill">5</span><span class="grid h-[22px] w-[19px] place-items-center rounded-[6px] text-[11px] font-bold bg-hyrox-fill text-on-hyrox-fill">6</span></span></span><span class="flex flex-col items-center gap-1 py-1"><span class="text-[11px] font-semibold text-text">D</span><span class="text-[15px] font-bold text-text">22</span><span class="grid h-[22px] w-[26px] place-items-center rounded-[7px] text-[11px] font-bold bg-run-fill text-on-run-fill">7</span></span></div>
+    <div class="flex flex-col gap-4 pt-0.5"><div class="flex flex-col gap-2">
+      <p class="px-1 text-[13px] leading-[1.3] font-semibold text-text">Lun 16 <span class="text-[12.5px] font-medium text-muted">· 2 séances</span></p>
+      <ol class="m-0 flex list-none flex-col gap-2 p-0"><li><span class="flex w-full items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 text-left inset-ring inset-ring-line">
+    <span class="grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text inset-ring-[1.5px] inset-ring-field-ring">1</span>
+    <span class="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span class="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="truncate">Endurance</span></span>
+      <span class="text-[13px] text-text-2">45 min · zone 2</span>
+      <span class="mt-1 flex"><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-[22px] px-2 text-[12px]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>Matin</span></span>
+    </span>
+    <span class="flex shrink-0 flex-col items-end gap-1.5"><span class="inline-flex h-[26px] items-center rounded-[13px] bg-bg px-2.5 text-[12px] font-semibold whitespace-nowrap text-text-2">À faire</span></span>
+  </span></li><li><span class="flex w-full items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 text-left inset-ring inset-ring-line">
+    <span class="grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text inset-ring-[1.5px] inset-ring-field-ring">2</span>
+    <span class="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span class="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-strength-fill"></span><span class="truncate">Renfo jambes</span></span>
+      <span class="text-[13px] text-text-2">5 exercices</span>
+      <span class="mt-1 flex"><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-[22px] px-2 text-[12px]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>Soir</span></span>
+    </span>
+    <span class="flex shrink-0 flex-col items-end gap-1.5"><span class="inline-flex h-[26px] items-center rounded-[13px] bg-bg px-2.5 text-[12px] font-semibold whitespace-nowrap text-text-2">À faire</span></span>
+  </span></li></ol>
+    </div><p class="px-1 text-[13px] leading-[1.3] font-semibold text-text">Mar 17 <span class="text-[12.5px] font-medium text-faint">· Repos</span></p><div class="flex flex-col gap-2">
+      <p class="px-1 text-[13px] leading-[1.3] font-semibold text-text">Mer 18</p>
+      <ol class="m-0 flex list-none flex-col gap-2 p-0"><li><span class="flex w-full items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 text-left inset-ring inset-ring-line">
+    <span class="grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text inset-ring-[1.5px] inset-ring-field-ring">3</span>
+    <span class="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span class="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="truncate">Fractionné 10 × 400 m</span></span>
+      <span class="text-[13px] text-text-2">10 × 400 m · ≈ 55 min</span>
+      
+    </span>
+    <span class="flex shrink-0 flex-col items-end gap-1.5"><span class="inline-flex h-[26px] items-center rounded-[13px] bg-bg px-2.5 text-[12px] font-semibold whitespace-nowrap text-text-2">À faire</span></span>
+  </span></li></ol>
+    </div><div class="flex flex-col gap-2">
+      <p class="px-1 text-[13px] leading-[1.3] font-semibold text-text">Jeu 19</p>
+      <ol class="m-0 flex list-none flex-col gap-2 p-0"><li><span class="flex w-full items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 text-left inset-ring inset-ring-line">
+    <span class="grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text inset-ring-[1.5px] inset-ring-field-ring">4</span>
+    <span class="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span class="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-strength-fill"></span><span class="truncate">Force haut du corps</span></span>
+      <span class="text-[13px] text-text-2">6 exercices</span>
+      
+    </span>
+    <span class="flex shrink-0 flex-col items-end gap-1.5"><span class="inline-flex h-[26px] items-center rounded-[13px] bg-bg px-2.5 text-[12px] font-semibold whitespace-nowrap text-text-2">À faire</span></span>
+  </span></li></ol>
+    </div><p class="px-1 text-[13px] leading-[1.3] font-semibold text-text">Ven 20 <span class="text-[12.5px] font-medium text-faint">· Repos</span></p><div class="flex flex-col gap-2">
+      <p class="px-1 text-[13px] leading-[1.3] font-semibold text-text">Sam 21 <span class="text-[12.5px] font-medium text-muted">· 2 séances</span></p>
+      <ol class="m-0 flex list-none flex-col gap-2 p-0"><li><span class="flex w-full items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 text-left inset-ring inset-ring-line">
+    <span class="grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text inset-ring-[1.5px] inset-ring-field-ring">5</span>
+    <span class="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span class="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="truncate">Sortie longue</span></span>
+      <span class="text-[13px] text-text-2">80 min · zone 2</span>
+      <span class="mt-1 flex"><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-[22px] px-2 text-[12px]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/></svg>Matin</span></span>
+    </span>
+    <span class="flex shrink-0 flex-col items-end gap-1.5"><span class="inline-flex h-[26px] items-center rounded-[13px] bg-bg px-2.5 text-[12px] font-semibold whitespace-nowrap text-text-2">À faire</span></span>
+  </span></li><li><span class="flex w-full items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 text-left inset-ring inset-ring-line">
+    <span class="grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text inset-ring-[1.5px] inset-ring-field-ring">6</span>
+    <span class="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span class="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-hyrox-fill"></span><span class="truncate">Stations légères</span></span>
+      <span class="text-[13px] text-text-2">3 tours · 40 min</span>
+      <span class="mt-1 flex"><span class="inline-flex shrink-0 items-center gap-1 self-start rounded-[11px] bg-bg font-semibold whitespace-nowrap text-text-2 h-[22px] px-2 text-[12px]"><svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>Soir</span></span>
+    </span>
+    <span class="flex shrink-0 flex-col items-end gap-1.5"><span class="inline-flex h-[26px] items-center rounded-[13px] bg-bg px-2.5 text-[12px] font-semibold whitespace-nowrap text-text-2">À faire</span></span>
+  </span></li></ol>
+    </div><div class="flex flex-col gap-2">
+      <p class="px-1 text-[13px] leading-[1.3] font-semibold text-text">Dim 22</p>
+      <ol class="m-0 flex list-none flex-col gap-2 p-0"><li><span class="flex w-full items-start gap-3 rounded-[15px] bg-surface px-3.5 py-3 text-left inset-ring inset-ring-line">
+    <span class="grid size-[30px] shrink-0 place-items-center rounded-full text-[12.5px] font-bold text-text inset-ring-[1.5px] inset-ring-field-ring">7</span>
+    <span class="flex min-w-0 flex-1 flex-col gap-[3px]">
+      <span class="flex min-w-0 items-center gap-2 text-[15px] font-semibold text-text"><span aria-hidden="true" class="size-2 shrink-0 rounded-full bg-run-fill"></span><span class="truncate">Récupération</span></span>
+      <span class="text-[13px] text-text-2">30 min · zone 1</span>
+      
+    </span>
+    <span class="flex shrink-0 flex-col items-end gap-1.5"><span class="inline-flex h-[26px] items-center rounded-[13px] bg-bg px-2.5 text-[12px] font-semibold whitespace-nowrap text-text-2">À faire</span></span>
+  </span></li></ol>
+    </div></div>
+  </section></div></div></div>
+  </section>
+</main>
+</div>
+<script>
+  // Boutons Clair / Sombre : changent le thème de toute la page.
+  const links = document.querySelectorAll("[data-theme-link]");
+  const sync = () => {
+    const theme = location.hash === "#sombre" ? "dark" : "light";
+    document.documentElement.dataset.theme = theme;
+    links.forEach((link) => link.setAttribute("aria-current", String(link.dataset.themeLink === theme)));
+  };
+  addEventListener("hashchange", sync);
+  sync();
+</script>
+</body>
+</html>

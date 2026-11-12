@@ -44,6 +44,8 @@ function readForm(formData: FormData, kind: string): SessionFormInput {
     newAthleteName: field("newAthleteName"),
     notes: field("notes"),
     price: field("price"),
+    applyVat: formData.get("applyVat") === "on",
+    vatRate: field("vatRate"),
     vatIncluded: formData.get("vatIncluded") === "on",
     paymentMethod: field("paymentMethod"),
   };
@@ -192,6 +194,7 @@ export async function updateSession(
     notes: v.notes,
     price_cents: v.price_cents,
     price_vat_included: v.price_vat_included,
+    vat_rate: v.vat_rate,
     payment_method: v.payment_method,
   };
   const { error } = await supabase
@@ -379,14 +382,14 @@ export async function markSessionPaid(
   if (coveredByPackage(await listPackageCovers(orgId), athleteId, sessionDate))
     return { ok: false };
 
-  const { vatRate } = membership;
+  // Le paiement reprend la TVA de la séance (D-163, 0 = sans TVA).
   const supabase = await createClient();
   const { error } = await supabase.from("athlete_payments").insert({
     organization_id: orgId,
     athlete_id: athleteId,
     received_on: todayIsoInBrussels(),
-    amount_cents: sessionAmountCents({ ...session, priceCents: session.priceCents }, vatRate),
-    vat_rate: vatRate,
+    amount_cents: sessionAmountCents({ ...session, priceCents: session.priceCents }),
+    vat_rate: session.vatRate,
     method: session.paymentMethod,
     label: `${session.title} · ${dayLabel(sessionDate)}`.slice(0, 120),
     session_id: session.id,

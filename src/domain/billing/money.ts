@@ -99,8 +99,9 @@ export function parseAmount(text: string): number | null {
 }
 
 // --- TVA ------------------------------------------------------------------------------------------
-// Taux LIBRE (D-69) : Coory ne tient aucune liste de taux par pays (D-66). Le coach saisit le sien :
-// 21, 20, 8,1, 5,5… entre 0 et 100 %, 2 décimales au plus.
+// Taux LIBRE (D-69) : Coory n'impose aucun taux par pays (D-66) ; le taux normal du pays n'est
+// qu'une proposition (D-163). Le coach saisit le sien : 21, 20, 8,1, 5,5… entre 0 et 100 %, 2
+// décimales au plus.
 export const VAT_RATE_MAX = 100;
 
 export function parseVatRate(text: string): number | null {
@@ -122,6 +123,25 @@ export const vatRateField = z.coerce.string().transform((text, context) => {
   }
   return rate;
 });
+
+// TVA par paiement, dépense ou séance (D-163, demande d'Antonino du 11/11) : plus de réglage global.
+// Quand le coach coche « Appliquer la TVA », le champ « Taux » se pré-remplit avec le taux normal de
+// son pays (modifiable) ; un pays absent de la liste laisse le champ vide.
+const STANDARD_VAT_RATES: Record<string, number> = {
+  BE: 21,
+  FR: 20,
+  LU: 17,
+  CH: 8.1,
+  CA: 5,
+  NL: 21,
+  DE: 19,
+  ES: 21,
+  IT: 22,
+  PT: 23,
+};
+export function standardVatRate(country: string): number | null {
+  return STANDARD_VAT_RATES[country] ?? null;
+}
 
 // « 21 % », « 8,1 % », « 5,5 % ».
 export function formatVatRate(rate: number): string {

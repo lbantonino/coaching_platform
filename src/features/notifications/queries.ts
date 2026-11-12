@@ -90,8 +90,7 @@ export async function countNotifications(
       .eq("organization_id", organizationId)
       .is("done_at", null)
       .lte("due_on", today),
-    // Le montant ne compte pas ici : taux de TVA 0.
-    listUnpaidDates(organizationId, 0).then((dates) => dates.filter((date) => date.late)),
+    listUnpaidDates(organizationId).then((dates) => dates.filter((date) => date.late)),
     // Même règle que features/athletes/completeness : sans nom de famille, ou sans aucun contact.
     supabase
       .from("athlete_profiles")
@@ -150,19 +149,18 @@ export type Notifications = {
   profiles: (IncompleteProfile & NotificationMeta)[];
 };
 
-// Le détail de chaque section (page Notifications). `vatRate` : montant attendu des séances à
-// encaisser, TVA comprise.
+// Le détail de chaque section (page Notifications). Le montant attendu d'une séance à encaisser suit
+// la TVA de la séance (D-163).
 export async function getNotifications(
   organizationId: string,
   today: string,
-  vatRate: number,
 ): Promise<Notifications> {
   const supabase = await createClient();
   const [events, conversations, tasks, unpaid, athletes, heads, states] = await Promise.all([
     listAgendaEvents(organizationId),
     listConversations(organizationId),
     listTasks(organizationId),
-    listUnpaidDates(organizationId, vatRate),
+    listUnpaidDates(organizationId),
     listAthletes(organizationId, { status: "all", q: "" }),
     unreadMessageHeads(supabase, organizationId),
     readStates(supabase, organizationId),

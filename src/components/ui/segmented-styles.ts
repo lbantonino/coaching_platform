@@ -11,7 +11,9 @@
 //   13/500 ;
 // - field : champ d'un formulaire (Mesure, Cible, Charge), toute la largeur, 3 px r11, segments 36 px r9,
 //   13,5/500.
-// Segment choisi : fond clair et ombre douce, texte encre ; les autres, texte gris.
+// Segment choisi : fond clair et ombre douce, texte encre ; les autres, texte gris. Champ d'un
+// formulaire (« field ») : fond de carte et anneau d'encre de 1,5 px, comme la source des maquettes
+// des éditeurs de séance (`inset 0 0 0 1.5px #17151d`, recette du 11/11/2026).
 export type SegmentedSize = "header" | "page" | "full" | "tall" | "card" | "field";
 
 const TRACK: Record<SegmentedSize, string> = {
@@ -39,6 +41,12 @@ export function segmentTrackClass(size: SegmentedSize): string {
 // Aussi pour des onglets en liens (Programmes / Modèles changent l'adresse) : même dessin.
 export function segmentItemClass(size: SegmentedSize, active: boolean): string {
   return `tap-44 inline-flex min-w-0 items-center justify-center leading-[normal] whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 ${ITEM[size]} ${
-    active ? "bg-track-active text-text shadow-segment" : "text-muted hover:text-text"
+    active
+      ? size === "field"
+        ? "bg-surface text-text inset-ring-[1.5px] inset-ring-text"
+        : "bg-track-active text-text shadow-segment"
+      : size === "field"
+        ? "text-text-2 hover:text-text"
+        : "text-muted hover:text-text"
   }`;
 }

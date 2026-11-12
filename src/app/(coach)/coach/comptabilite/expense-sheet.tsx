@@ -53,13 +53,11 @@ export function NewExpenseButton({
   action,
   categories,
   categoryActions,
-  vatSubject,
   today,
 }: {
   action: Action;
   categories: DocumentCategory[];
   categoryActions: ExpenseCategoryActions;
-  vatSubject: boolean;
   today: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -98,7 +96,6 @@ export function NewExpenseButton({
             onCancel={() => setOpen(false)}
             action={action}
             categories={categories}
-            vatSubject={vatSubject}
             today={today}
             onManage={() => setManaging(true)}
             onSaved={() => setOpen(false)}
@@ -130,7 +127,6 @@ export function NewExpenseButton({
 function ExpenseForm({
   action,
   categories,
-  vatSubject,
   today,
   onManage,
   onSaved,
@@ -138,7 +134,6 @@ function ExpenseForm({
 }: {
   action: Action;
   categories: DocumentCategory[];
-  vatSubject: boolean;
   today: string;
   onManage: () => void;
   onSaved: () => void;
@@ -146,7 +141,7 @@ function ExpenseForm({
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
   const toast = useToast();
-  const { currency, vatRate: habitual, format } = useMoney();
+  const { currency, format } = useMoney();
   useEffect(() => {
     if (!state.saved) return;
     toast("Dépense enregistrée.");
@@ -157,7 +152,7 @@ function ExpenseForm({
     label: "",
     categoryId: "",
     amount: "",
-    vatRate: String(habitual).replace(".", ","),
+    vatRate: "0",
     spentOn: today,
     repeatsMonthly: false,
     endsOn: "",
@@ -170,7 +165,6 @@ function ExpenseForm({
       error={state.error}
       values={v}
       categories={categories}
-      vatSubject={vatSubject}
       currency={currency}
       format={format}
       onManage={onManage}
@@ -185,7 +179,6 @@ function Fields({
   error,
   values: v,
   categories,
-  vatSubject,
   currency,
   format,
   onManage,
@@ -196,23 +189,20 @@ function Fields({
   error: string | null;
   values: NonNullable<ExpenseFormState["values"]>;
   categories: DocumentCategory[];
-  vatSubject: boolean;
   currency: Currency;
   format: (cents: number) => string;
   onManage: () => void;
   onCancel: () => void;
 }) {
   const formId = useId();
-  const { vatRate: habitual } = useMoney();
-  // « Appliquer la TVA » (D-118, coach soumis à la TVA) : décochée, la dépense est notée sans TVA
-  // (taux 0) ; après une erreur, la saisie revient ; recocher redonne le taux habituel.
+  const { suggestedVatRate } = useMoney();
+  // « Appliquer la TVA » (D-163) : décochée par défaut, la dépense est notée sans TVA (taux 0) ; après
+  // une erreur, la saisie revient ; cocher propose le taux normal du pays.
   const initialRate = parseVatRate(v.vatRate);
   const [applyVat, setApplyVat] = useState(initialRate !== 0);
-  const withVat = vatSubject && applyVat;
+  const withVat = applyVat;
   const [amount, setAmount] = useState(v.amount);
-  const [vatRate, setVatRate] = useState(
-    initialRate === 0 ? String(habitual).replace(".", ",") : v.vatRate,
-  );
+  const [vatRate, setVatRate] = useState(initialRate === 0 ? suggestedVatRate : v.vatRate);
   const [monthly, setMonthly] = useState(v.repeatsMonthly);
   const cents = parseAmount(amount);
   const rate = parseVatRate(vatRate);
@@ -303,22 +293,18 @@ function Fields({
             <input type="hidden" name="vatRate" value="0" />
           )}
           <DlgHint id="expense-amount-hint" live>
-            {!vatSubject
-              ? "Le montant que tu as payé."
-              : !withVat
-                ? "Sans TVA : le montant payé compte tel quel."
-                : totals && rate !== null
-                  ? `${format(totals.exclCents)} HTVA + ${format(totals.vatCents)} de TVA récupérable (${formatVatRate(rate)}).`
-                  : "TVA comprise : la TVA récupérable se calcule toute seule."}
+            {!withVat
+              ? "Le montant que tu as payé, sans TVA."
+              : totals && rate !== null
+                ? `${format(totals.exclCents)} HTVA + ${format(totals.vatCents)} de TVA récupérable (${formatVatRate(rate)}).`
+                : "TVA comprise : la TVA récupérable se calcule toute seule."}
           </DlgHint>
-          {vatSubject ? (
-            <DlgCheckCard
-              checked={applyVat}
-              onChange={(event) => setApplyVat(event.target.checked)}
-              label="Appliquer la TVA"
-              description="Décoche pour une dépense sans TVA."
-            />
-          ) : null}
+          <DlgCheckCard
+            checked={applyVat}
+            onChange={(event) => setApplyVat(event.target.checked)}
+            label="Appliquer la TVA"
+            description="Coche si la dépense comprend de la TVA récupérable."
+          />
 
           <DlgField
             label={monthly ? "Première dépense le" : "Payée le"}

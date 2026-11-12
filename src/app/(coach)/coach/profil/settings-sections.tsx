@@ -19,7 +19,6 @@ import { FieldCheck } from "@/components/ui/field-check";
 import { mobileActionPrimaryClass } from "@/components/ui/mobile-action-bar";
 import { ThemeChoice } from "@/components/ui/theme-choice";
 import { useToast } from "@/components/ui/toast";
-import { VatRateInput } from "@/components/ui/vat-rate-input";
 import { currencyLabel, currencySymbol } from "@/domain/billing/money";
 import { LEGAL } from "@/config/legal";
 import { COUNTRY_NAMES } from "@/domain/geo/country-names";
@@ -29,7 +28,6 @@ import {
   changePassword,
   setNotificationPreference,
   setOrganizationCountry,
-  setOrganizationVatRate,
   signOutEverywhere,
   updatePreferences,
   type SettingsState,
@@ -39,14 +37,13 @@ import {
   notificationKindLabels,
   type NotificationKind,
   type PreferencesInput,
-  type VatSettingInput,
 } from "@/features/coach/settings";
 import type { SettingsData } from "@/features/coach/settings-data";
 import { formatDate } from "@/lib/format";
 
 import { CurrencyChangeButton } from "./currency-change-sheet";
 
-// Rubriques Préférences, Pays / devise / TVA, Sécurité et Données de la fenêtre des Paramètres, au
+// Rubriques Préférences, Pays et devise, Sécurité et Données de la fenêtre des Paramètres, au
 // kit « Coory Pages », page 13 (D-127). La rubrique Profil n'est pas ici (déjà faite, ne pas toucher :
 // ProfileDialogSection). Téléphone d'abord : cartes blanches sur le fond de la page, champs de 48 px
 // en 16 px, segments égaux, interrupteurs 46 × 28, boutons pleine largeur de 48 px. Ordinateur (à
@@ -315,8 +312,6 @@ export function SectionBody({
 const hours = (from: number, to: number) =>
   Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
-const vatText = (rate: number) => String(rate).replace(".", ",");
-
 export function PreferencesSection({
   values,
   notify,
@@ -342,7 +337,7 @@ export function PreferencesSection({
   const form = useRef<HTMLFormElement>(null);
   const formId = useId();
   const toast = useToast();
-  const { currency, vatRate } = useMoney();
+  const { currency } = useMoney();
   const symbol = currencySymbol(currency);
 
   // Enregistré : un mot, et la fenêtre relit ses données (cloche, valeurs par défaut).
@@ -368,14 +363,11 @@ export function PreferencesSection({
       form.current?.requestSubmit();
     });
 
+  // TVA (D-163) : elle se choisit dans chaque séance ; ici, le prix proposé et son mode de paiement.
   const priceHelp =
     method === "cash"
-      ? vatRate > 0
-        ? "En espèces : prix direct, TVA comprise."
-        : "En espèces : prix direct."
-      : vatRate > 0
-        ? `Par virement : prix hors TVA, la TVA de ${vatText(vatRate)} % s'ajoute.`
-        : "Par virement : prix sans TVA (tu ne factures pas la TVA).";
+      ? "En espèces : prix direct, ce que le sportif paie."
+      : "Par virement : si tu appliques la TVA à la séance, elle s'ajoute à ce prix.";
 
   return (
     <>
@@ -547,7 +539,9 @@ export function PreferencesSection({
   );
 }
 
-// --- Pays, devise et TVA -------------------------------------------------------------------------
+// --- Pays et devise -------------------------------------------------------------------------------
+// La TVA n'est plus réglée ici (D-163, demande d'Antonino du 11/11) : elle se choisit à chaque
+// paiement, dépense ou séance, au taux normal du pays proposé.
 export function MoneySection({
   data,
   intro,
@@ -563,36 +557,21 @@ export function MoneySection({
   const [country, setCountry] = useState(org.country);
   const [countryError, setCountryError] = useState<string | null>(null);
   const [countryPending, startCountry] = useTransition();
-  const [state, formAction, vatPending] = useActionState(
-    setOrganizationVatRate.bind(null, org.id),
-    initial<VatSettingInput>(),
-  );
-  const saved = state.values ?? {
-    vatEnabled: org.vatRate > 0,
-    vatRate: org.vatRate > 0 ? vatText(org.vatRate) : "",
-  };
-  const [enabled, setEnabled] = useState(saved.vatEnabled);
-  const [rate, setRate] = useState(saved.vatRate);
-  const form = useRef<HTMLFormElement>(null);
-  const formId = useId();
   const toast = useToast();
 
-  useEffect(() => {
-    if (state.saved) {
-      toast("Pays et TVA enregistrés.");
-      onChanged();
-    }
-  }, [state, toast, onChanged]);
-
-  // Un seul « Enregistrer » : le pays s'il a changé, puis la TVA.
+  // « Enregistrer » : le pays s'il a changé.
   const save = () =>
     startCountry(async () => {
-      if (country !== org.country) {
-        const result = await setOrganizationCountry(org.id, country);
-        setCountryError(result.error);
-        if (!result.ok) return;
-      } else setCountryError(null);
-      form.current?.requestSubmit();
+      if (country === org.country) {
+        setCountryError(null);
+        toast("Pays enregistré.");
+        return;
+      }
+      const result = await setOrganizationCountry(org.id, country);
+      setCountryError(result.error);
+      if (!result.ok) return;
+      toast("Pays enregistré.");
+      onChanged();
     });
 
   const ownerOnly = org.isOwner ? null : "Seul le propriétaire peut changer ces réglages.";
@@ -600,7 +579,6 @@ export function MoneySection({
   return (
     <>
       <SectionBody intro={intro} saveBar={org.isOwner}>
-        <form ref={form} id={formId} key={state.attempt} action={formAction} noValidate hidden />
         <SettingsCard id="settings-country" title="Pays et devise" description={ownerOnly}>
           <div className={gridClass}>
             <Field
@@ -656,57 +634,13 @@ export function MoneySection({
             </div>
           ) : null}
         </SettingsCard>
-
-        {/* TVA (D-90) : un seul taux, sans règle d'aucun pays. Coory ne fait pas de factures. */}
-        <SettingsCard
-          id="settings-vat"
-          title="TVA"
-          description="Pour le prix de tes séances et ton résultat hors TVA dans la Comptabilité. Tes factures se font dans ton logiciel de facturation ou chez ton comptable."
-        >
-          <div className="flex flex-col">
-            <SwitchRow
-              label="Je facture la TVA"
-              hint="Sinon, tes prix et tes gains s'affichent sans TVA."
-              checked={enabled}
-              disabled={!org.isOwner}
-              onChange={setEnabled}
-            />
-          </div>
-          {/* Champs reliés au formulaire de la TVA : l'interrupteur ci-dessus est hors formulaire,
-              sa valeur part par ce champ caché. */}
-          {enabled ? (
-            <>
-              <input type="hidden" form={formId} name="vatEnabled" value="on" />
-              <input type="hidden" form={formId} name="vatRate" value={rate} />
-            </>
-          ) : null}
-          {enabled ? (
-            <Field
-              label="Taux de TVA"
-              htmlFor="settings-vat-rate"
-              help="Pour tes prochains paiements ; ceux déjà notés gardent leur taux."
-              helpId="settings-vat-rate-hint"
-              className="md:max-w-[220px]"
-            >
-              <VatRateInput
-                id="settings-vat-rate"
-                name="vatRateShown"
-                value={rate}
-                onChange={setRate}
-                describedBy="settings-vat-rate-hint"
-                disabled={!org.isOwner}
-                className={`${inputClass} pr-10`}
-              />
-            </Field>
-          ) : null}
-        </SettingsCard>
       </SectionBody>
       {org.isOwner ? (
         <SaveFooter
           onSave={save}
           onCancel={onClose}
-          pending={countryPending || vatPending}
-          error={countryError ?? state.error}
+          pending={countryPending}
+          error={countryError}
         />
       ) : null}
     </>
@@ -940,10 +874,9 @@ export function LegalSection({ intro }: { intro: string }) {
   );
 }
 
-// Ligne courte d'une rubrique dans le menu (kit) : « Belgique · EUR · 21 % ».
+// Ligne courte d'une rubrique dans le menu (kit) : « Belgique · EUR ».
 export function moneySummary(data: SettingsData) {
   const org = data.organization;
   const country = COUNTRY_NAMES.find(([code]) => code === org.country)?.[1] ?? org.country;
-  const vat = org.vatRate > 0 ? `${vatText(org.vatRate)} %` : "sans TVA";
-  return `${country} · ${org.currency} · ${vat}`;
+  return `${country} · ${org.currency}`;
 }

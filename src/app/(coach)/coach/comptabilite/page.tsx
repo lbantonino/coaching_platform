@@ -144,11 +144,14 @@ async function Accounting({
     listExpenses(organizationId),
     listExpenseCategories(organizationId),
     getConverter(membership),
-    listUnpaidDates(organizationId, membership.vatRate),
+    listUnpaidDates(organizationId),
   ]);
-  // Résultat (D-73) : HTVA pour un coach soumis à la TVA (taux de l'organisation, D-90), TVA
-  // comprise sinon.
-  const vatSubject = membership.vatRate > 0;
+  // Résultat (D-73) : chaque paiement et chaque dépense a son taux (D-163, 0 = sans TVA). Dès qu'il y a
+  // de la TVA dans les comptes, tout se lit HTVA (une ligne sans TVA compte en entier) ; sinon, ni
+  // « HTVA » ni « TVAC » nulle part.
+  const vatSubject =
+    payments.some((payment) => payment.vatRate > 0) ||
+    expenses.some((expense) => expense.vatRate > 0);
   const basis = vatSubject ? "excl" : "incl";
   const basisLabel = vatSubject ? "HTVA" : "";
 
@@ -243,7 +246,6 @@ async function Accounting({
                 remove: deleteExpenseCategory.bind(null, organizationId),
                 recolor: setExpenseCategoryColor.bind(null, organizationId),
               }}
-              vatSubject={vatSubject}
               today={today}
             />
             <NewPaymentButton className={`max-lg:hidden ${compact}`} />
@@ -579,8 +581,8 @@ async function Accounting({
                             payment.coversFrom && payment.coversTo
                               ? `Forfait du ${day(payment.coversFrom)} au ${day(payment.coversTo)}`
                               : null,
-                            // TVA (D-118) : rien chez un coach sans TVA ; « Sans TVA » pour un
-                            // paiement noté sans.
+                            // TVA (D-118, D-163) : rien si les comptes n'ont pas de TVA ; sinon
+                            // « Sans TVA » pour un paiement noté sans.
                             payment.vatRate > 0
                               ? `${formatMoney(exclCents, payment.currency)} HTVA (TVA ${formatVatRate(payment.vatRate)})`
                               : vatSubject

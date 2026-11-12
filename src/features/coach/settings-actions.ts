@@ -15,13 +15,11 @@ import {
   emailChangeSchema,
   organizationNameSchema,
   parsePreferences,
-  parseVatSetting,
   passwordChangeSchema,
   profileSchema,
   type NotificationKind,
   type PreferencesInput,
   type ProfileInput,
-  type VatSettingInput,
 } from "./settings";
 
 // Page Paramètres (D-57). Chaque action revérifie qui appelle (requireCoach / requireOrgAccess) :
@@ -151,36 +149,6 @@ export async function setOrganizationCountry(
   }
   revalidatePath("/coach", "layout");
   return { ok: true, error: null };
-}
-
-// Taux de TVA de l'organisation (D-90) : propriétaire seulement, comme le pays. Il vaut pour les
-// nouveaux paiements ; ceux déjà notés gardent leur taux.
-export async function setOrganizationVatRate(
-  organizationId: string,
-  previous: SettingsState<VatSettingInput>,
-  formData: FormData,
-): Promise<SettingsState<VatSettingInput>> {
-  const { membership } = await requireOrgAccess(organizationId);
-  const values: VatSettingInput = {
-    vatEnabled: formData.get("vatEnabled") === "on",
-    vatRate: field(formData, "vatRate"),
-  };
-  const attempt = previous.attempt + 1;
-  const fail = (error: string) => ({ error, saved: false, attempt, values });
-  if (membership.role !== "owner") return fail("Seul le propriétaire peut changer la TVA.");
-  const parsed = parseVatSetting(values);
-  if (!parsed.ok) return fail(parsed.error);
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("organizations")
-    .update({ vat_rate: parsed.vatRate })
-    .eq("id", membership.organizationId)
-    .select("id");
-  if (error || (data ?? []).length !== 1) {
-    return fail("La TVA n'a pas pu être enregistrée. Réessaie.");
-  }
-  revalidatePath("/coach", "layout");
-  return { error: null, saved: true, attempt, values: null };
 }
 
 // Changement de devise (D-70, déménagement) : ce que le changement va convertir, et ce qui reste dans

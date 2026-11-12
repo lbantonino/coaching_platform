@@ -22,6 +22,8 @@ export type EditorSessionCardProps = {
   summary: string[];
   // « Avec le coach · Sam 7 · 10:00 ».
   coach?: string;
+  // Plusieurs séances le même jour (D-164) : « Matin », « Soir »… à côté du numéro.
+  moment?: string;
   selected?: boolean;
   readOnly?: boolean;
   onSelect?: () => void;
@@ -49,6 +51,7 @@ export function EditorSessionCard({
   sessionType,
   summary,
   coach,
+  moment,
   selected = false,
   readOnly = false,
   onSelect,
@@ -85,8 +88,15 @@ export function EditorSessionCard({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col gap-[5px]">
-        <span className="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">
-          Séance {index}
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="text-[11.5px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase">
+            Séance {index}
+          </span>
+          {moment ? (
+            <span className="inline-flex h-5 items-center rounded-[6px] bg-surface-2 px-1.5 text-[11.5px] leading-none font-semibold text-text-2">
+              {moment}
+            </span>
+          ) : null}
         </span>
         <span className="flex min-w-0 items-center gap-2">
           <span aria-hidden className={`size-2 shrink-0 rounded-full ${styles.dot}`} />

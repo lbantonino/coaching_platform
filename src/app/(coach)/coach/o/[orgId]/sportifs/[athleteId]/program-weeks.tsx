@@ -244,7 +244,7 @@ function WeekCard({
 function WeekStep({ href, label, next }: { href: string | null; label: string; next?: boolean }) {
   const Icon = next ? ChevronRight : ChevronLeft;
   const className =
-    "grid size-[38px] shrink-0 place-items-center rounded-[11px] bg-surface inset-ring inset-ring-line-2";
+    "tap-44 grid size-[38px] shrink-0 place-items-center rounded-[11px] bg-surface inset-ring inset-ring-line-2 max-lg:size-[42px]";
   return href ? (
     <Link
       href={href}
@@ -393,14 +393,17 @@ export async function ProgramWeeksSection({
 
       {/* Une semaine ou toutes ; dans la vue Semaine, ‹ menu ›. */}
       <div className="flex flex-wrap items-center justify-between gap-2.5">
-        <nav aria-label="Affichage du programme" className="flex rounded-[12px] bg-track p-1">
+        <nav
+          aria-label="Affichage du programme"
+          className="flex w-full rounded-[12px] bg-track p-1 lg:w-auto"
+        >
           {modes.map((mode) => (
             <Link
               key={mode.key}
               href={mode.href}
               scroll={false}
               aria-current={view === mode.key ? "page" : undefined}
-              className={`flex h-8 items-center rounded-[9px] px-[13px] text-[13px] font-medium whitespace-nowrap transition-colors duration-150 ${
+              className={`flex h-8 items-center justify-center rounded-[9px] px-[13px] text-[13px] font-medium whitespace-nowrap transition-colors duration-150 max-lg:h-[34px] max-lg:flex-1 ${
                 view === mode.key
                   ? "bg-track-active text-text shadow-[0_1px_3px_rgba(22,18,40,0.10)]"
                   : "text-muted hover:text-text"
@@ -412,7 +415,7 @@ export async function ProgramWeeksSection({
         </nav>
         {view === "semaine" ? (
           // Le groupe porte la position du menu des semaines (WeekPicker).
-          <div className="relative flex items-center gap-1.5">
+          <div className="relative flex w-full items-center gap-1.5 lg:w-auto">
             <WeekStep
               href={previous ? weekHref(previous.index) : null}
               label="Semaine précédente"

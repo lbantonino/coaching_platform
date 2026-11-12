@@ -26,9 +26,11 @@ export type CoachSession = {
   athletes: SessionAthlete[];
   // Dates déplacées (séance hebdomadaire seulement).
   exceptions: SessionException[];
-  // Prix (D-52), en centimes : TVA comprise si priceVatIncluded, sinon sans TVA. Null : pas de prix.
+  // Prix (D-52), en centimes ; null : pas de prix. TVA de la séance (D-163) : vatRate (0 = sans TVA),
+  // comprise dans le prix si priceVatIncluded, sinon elle s'ajoute.
   priceCents: number | null;
   priceVatIncluded: boolean;
+  vatRate: number;
   // Devise du prix (D-69).
   currency: Currency;
   paymentMethod: SessionPaymentMethod | null;
@@ -37,7 +39,7 @@ export type CoachSession = {
 // Le sportif direct (séance individuelle) et les inscrits (collective) passent par deux relations
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
 const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes,
-  repeats_weekly, ends_on, notes, price_cents, price_vat_included, currency, payment_method,
+  repeats_weekly, ends_on, notes, price_cents, price_vat_included, vat_rate, currency, payment_method,
   individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ),
   enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ) ),
   exceptions:coach_session_exceptions ( original_date, new_date, new_start_time )`;
@@ -62,6 +64,7 @@ type Row = {
   notes: string | null;
   price_cents: number | null;
   price_vat_included: boolean;
+  vat_rate: number;
   currency: string;
   payment_method: string | null;
   individual: Profile;
@@ -103,6 +106,7 @@ function toSession(row: Row): CoachSession {
     })),
     priceCents: row.price_cents,
     priceVatIncluded: row.price_vat_included,
+    vatRate: Number(row.vat_rate),
     currency: currencyOf(row.currency),
     paymentMethod: row.payment_method as SessionPaymentMethod | null,
   };

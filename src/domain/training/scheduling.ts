@@ -1,6 +1,14 @@
 import { localId } from "./plan-edit";
 import type { Phase, Week } from "./program-plan";
-import { WEEKDAYS, type SessionDraft, type Weekday } from "./session-v2";
+import {
+  MAX_SESSIONS_PER_DAY,
+  MAX_SESSIONS_PER_WEEK,
+  SESSION_MOMENTS,
+  WEEKDAYS,
+  type SessionDraft,
+  type SessionMoment,
+  type Weekday,
+} from "./session-v2";
 
 // Organisation de la semaine (03b « Fixer les jours ») : règles PURES, testées par Vitest.
 // « Dans l'ordre, sans jour » : le sportif fait ses séances dans l'ordre, au jour de son choix (BR-02).
@@ -48,8 +56,26 @@ export function sessionDay(session: SessionDraft): Weekday | null {
   return session.fixedDay ?? null;
 }
 
+// Moment d'une heure (« 07:00 » -> matin) : avant midi, midi à 14 h, l'après-midi jusqu'à 18 h, le soir.
+export function momentFromTime(time: string | undefined): SessionMoment | null {
+  if (!time) return null;
+  const hour = Number(time.slice(0, 2));
+  return hour < 12 ? "morning" : hour < 14 ? "noon" : hour < 18 ? "afternoon" : "evening";
+}
+
+// Moment d'une séance (D-164) : celui choisi par le coach, sinon celui de son heure, sinon aucun.
+export function sessionMoment(session: SessionDraft): SessionMoment | null {
+  return session.moment ?? momentFromTime(session.withCoach?.time ?? session.fixedTime);
+}
+
+const momentRank = (session: SessionDraft) => {
+  const moment = sessionMoment(session);
+  return moment === null ? SESSION_MOMENTS.length : SESSION_MOMENTS.indexOf(moment);
+};
+
 // Les séances dans l'ordre de leur numérotation (Séance 1, 2…). En jours fixes : par jour, puis par
-// heure ; les séances « sans jour » viennent après, dans l'ordre choisi par le coach.
+// moment (matin, midi, après-midi, soir), puis par heure ; les séances « sans jour » viennent après,
+// dans l'ordre choisi par le coach.
 export function orderedSessions(week: Week): SessionDraft[] {
   if (week.scheduling === "ordered") return week.sessions;
   const position = (session: SessionDraft) => {
@@ -61,6 +87,7 @@ export function orderedSessions(week: Week): SessionDraft[] {
     .sort(
       (a, b) =>
         position(a.session) - position(b.session) ||
+        momentRank(a.session) - momentRank(b.session) ||
         (a.session.fixedTime ?? a.session.withCoach?.time ?? "").localeCompare(
           b.session.fixedTime ?? b.session.withCoach?.time ?? "",
         ) ||
@@ -69,26 +96,94 @@ export function orderedSessions(week: Week): SessionDraft[] {
     .map(({ session }) => session);
 }
 
+// Les séances d'un jour (jours fixes), dans l'ordre ; `except` : la séance qu'on est en train de placer.
+export function sessionsOnDay(week: Week, day: Weekday, except?: string): SessionDraft[] {
+  return orderedSessions(week).filter(
+    (session) => session.key !== except && sessionDay(session) === day,
+  );
+}
+
+// Un jour peut recevoir encore une séance (4 au plus, D-164).
+export function dayHasRoom(week: Week, day: Weekday, except?: string): boolean {
+  return sessionsOnDay(week, day, except).length < MAX_SESSIONS_PER_DAY;
+}
+
+// Moments proposés pour n séances le même jour : 2 = matin et soir, 3 = matin, midi et soir, 4 = tous.
+function momentsFor(count: number): SessionMoment[] {
+  if (count <= 2) return ["morning", "evening"];
+  if (count === 3) return ["morning", "noon", "evening"];
+  return [...SESSION_MOMENTS];
+}
+
+// Le moment proposé pour une séance ajoutée à un jour qui en a déjà (null si le jour est vide). Les
+// séances déjà là sans moment gardent les premiers moments libres (comme fillMoments) : une séance
+// ajoutée à un jour d'une seule séance passe donc au soir, l'autre restant le matin.
+export function suggestedMoment(week: Week, day: Weekday, except?: string): SessionMoment | null {
+  const others = sessionsOnDay(week, day, except);
+  if (others.length === 0) return null;
+  const preferred = momentsFor(others.length + 1);
+  const order = [...preferred, ...SESSION_MOMENTS.filter((moment) => !preferred.includes(moment))];
+  const taken = new Set(others.map(sessionMoment).filter((moment) => moment !== null));
+  const free = order.filter((moment) => !taken.has(moment));
+  const waiting = others.filter((session) => sessionMoment(session) === null).length;
+  return free[waiting] ?? free[0] ?? null;
+}
+
+// Plusieurs séances le même jour (D-164) : celles qui n'ont pas de moment en reçoivent un, libre et
+// dans l'ordre de la journée (matin d'abord). Un jour d'une seule séance ne change pas.
+export function fillMoments(week: Week): Week {
+  if (week.scheduling !== "fixed") return week;
+  const byDay = new Map<Weekday, SessionDraft[]>();
+  for (const session of orderedSessions(week)) {
+    const day = sessionDay(session);
+    if (day) byDay.set(day, [...(byDay.get(day) ?? []), session]);
+  }
+  const assigned = new Map<string, SessionMoment>();
+  for (const group of byDay.values()) {
+    if (group.length < 2) continue;
+    const taken = new Set(group.map(sessionMoment).filter((moment) => moment !== null));
+    const free = [
+      ...momentsFor(group.length),
+      ...SESSION_MOMENTS.filter((moment) => !momentsFor(group.length).includes(moment)),
+    ].filter((moment) => !taken.has(moment));
+    for (const session of group) {
+      if (sessionMoment(session) !== null) continue;
+      const moment = free.shift();
+      if (moment) assigned.set(session.key, moment);
+    }
+  }
+  if (assigned.size === 0) return week;
+  return {
+    ...week,
+    sessions: week.sessions.map((session) =>
+      assigned.has(session.key) ? { ...session, moment: assigned.get(session.key) } : session,
+    ),
+  };
+}
+
 export type ScheduleWarning =
-  | { code: "same_day"; day: Weekday; keys: string[] }
+  | { code: "moment_missing"; day: Weekday; keys: string[] }
   | { code: "unavailable_day"; day: Weekday; key: string };
 
-// Avertissements d'une semaine à jours fixes : deux séances le même jour (BR-04), jour où le sportif
+// Avertissements d'une semaine à jours fixes : plusieurs séances le même jour sans moment (BR-04,
+// D-164 : plusieurs séances par jour sont normales, mais chacune dit son moment), jour où le sportif
 // n'est pas disponible (BR-05). Jamais bloquants.
 export function scheduleWarnings(week: Week, availableDays: readonly Weekday[]): ScheduleWarning[] {
   if (week.scheduling !== "fixed") return [];
   const warnings: ScheduleWarning[] = [];
-  const byDay = new Map<Weekday, string[]>();
+  const byDay = new Map<Weekday, SessionDraft[]>();
   for (const session of week.sessions) {
     const day = sessionDay(session);
     if (day === null) continue;
-    byDay.set(day, [...(byDay.get(day) ?? []), session.key]);
+    byDay.set(day, [...(byDay.get(day) ?? []), session]);
     if (availableDays.length > 0 && !availableDays.includes(day) && !session.withCoach) {
       warnings.push({ code: "unavailable_day", day, key: session.key });
     }
   }
-  for (const [day, keys] of byDay) {
-    if (keys.length > 1) warnings.push({ code: "same_day", day, keys });
+  for (const [day, sessions] of byDay) {
+    if (sessions.length > 1 && sessions.some((session) => sessionMoment(session) === null)) {
+      warnings.push({ code: "moment_missing", day, keys: sessions.map((session) => session.key) });
+    }
   }
   return warnings;
 }
@@ -123,9 +218,14 @@ export function applyWeekSchedule(
       sessions: week.sessions.map((session, i) => {
         const model = source.sessions[i];
         if (source.scheduling === "ordered" || session.withCoach || !model) {
-          return { ...session, fixedDay: undefined, fixedTime: undefined };
+          return { ...session, fixedDay: undefined, fixedTime: undefined, moment: undefined };
         }
-        return { ...session, fixedDay: model.fixedDay, fixedTime: model.fixedTime };
+        return {
+          ...session,
+          fixedDay: model.fixedDay,
+          fixedTime: model.fixedTime,
+          moment: model.moment,
+        };
       }),
     };
   });
@@ -148,11 +248,13 @@ export function proposeWeekDays(
   const result = new Map<string, Weekday>();
   const candidates = availableDays.length > 0 ? [...availableDays] : [...WEEKDAYS];
   const used = new Map<number, boolean>(); // jour (0 à 6) -> séance dure ?
+  const count = new Map<number, number>(); // jour (0 à 6) -> séances déjà posées (4 au plus, D-164)
   for (const session of sessions) {
     if (!session.withCoach) continue;
     const day = weekdayOf(session.withCoach.date);
     result.set(session.key, day);
     used.set(WEEKDAYS.indexOf(day), isHardSession(session));
+    count.set(WEEKDAYS.indexOf(day), (count.get(WEEKDAYS.indexOf(day)) ?? 0) + 1);
   }
 
   const free = sessions.filter((session) => !session.withCoach);
@@ -162,6 +264,7 @@ export function proposeWeekDays(
     let best: { day: number; score: number } | null = null;
     for (const name of candidates) {
       const day = WEEKDAYS.indexOf(name);
+      if ((count.get(day) ?? 0) >= MAX_SESSIONS_PER_DAY) continue;
       const nextToHard = used.get(day - 1) === true || used.get(day + 1) === true;
       const score =
         (used.has(day) ? 100 : 0) + (hard && nextToHard ? 10 : 0) + Math.abs(day - ideal);
@@ -170,6 +273,7 @@ export function proposeWeekDays(
     if (best) {
       result.set(session.key, WEEKDAYS[best.day] as Weekday);
       used.set(best.day, (used.get(best.day) ?? false) || hard);
+      count.set(best.day, (count.get(best.day) ?? 0) + 1);
     }
   });
   return result;
@@ -189,7 +293,7 @@ export function applySessionDay(
   phases: Phase[],
   sourceIndex: number,
   slot: number,
-  choice: { day: Weekday | null; time?: string; athleteCanMove: boolean },
+  choice: { day: Weekday | null; time?: string; moment?: SessionMoment; athleteCanMove: boolean },
   scope: ScheduleScope,
   dates?: { startDate: string; today: string },
 ): Week[] {
@@ -206,6 +310,7 @@ export function applySessionDay(
   const placed = {
     fixedDay: choice.day ?? undefined,
     fixedTime: choice.day && choice.time ? choice.time : undefined,
+    moment: choice.day && choice.moment ? choice.moment : undefined,
     athleteCanMove: choice.athleteCanMove,
   };
 
@@ -225,24 +330,28 @@ export function applySessionDay(
           })();
     const target = at >= 0 ? week.sessions[at] : undefined;
     if (target?.withCoach) return week;
+    // Jour déjà plein dans une autre semaine (4 séances, D-164) : cette semaine ne change pas.
+    const full = (except?: string) =>
+      choice.day !== null && !dayHasRoom({ ...week, scheduling: "fixed" }, choice.day, except);
     if (target) {
-      return {
+      if (week.index !== sourceIndex && full(target.key)) return week;
+      return fillMoments({
         ...week,
         scheduling: "fixed",
         sessions: week.sessions.map((session, i) =>
           i === at ? { ...session, ...placed } : session,
         ),
-      };
+      });
     }
     // Pas de séance correspondante : une copie, à ce jour (jamais avec le rendez-vous du coach).
-    if (choice.day === null || week.sessions.length >= 14) return week;
+    if (choice.day === null || week.sessions.length >= MAX_SESSIONS_PER_WEEK || full()) return week;
     const key = localId("s", taken);
     taken.add(key);
-    return {
+    return fillMoments({
       ...week,
       scheduling: "fixed",
       sessions: [...week.sessions, { ...source, ...placed, key, withCoach: undefined }],
-    };
+    });
   });
 }
 
@@ -255,13 +364,14 @@ export function setWeekOrdered(week: Week): Week {
       ...session,
       fixedDay: undefined,
       fixedTime: undefined,
+      moment: undefined,
     })),
   };
 }
 
 // « Fixer les jours » : la semaine passe en jours fixes avec les jours choisis (proposition corrigée).
 export function setWeekFixed(week: Week, days: ReadonlyMap<string, Weekday>): Week {
-  return {
+  return fillMoments({
     ...week,
     scheduling: "fixed",
     sessions: week.sessions.map((session) =>
@@ -271,7 +381,8 @@ export function setWeekFixed(week: Week, days: ReadonlyMap<string, Weekday>): We
             ...session,
             fixedDay: days.get(session.key),
             fixedTime: days.get(session.key) ? session.fixedTime : undefined,
+            moment: days.get(session.key) ? session.moment : undefined,
           },
     ),
-  };
+  });
 }

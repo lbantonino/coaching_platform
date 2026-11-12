@@ -150,7 +150,6 @@ async function SessionDetail({
   const { membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
   if (!z.uuid().safeParse(sessionId).success) notFound();
-  const { vatRate } = membership;
   const [session, payments, covers] = await Promise.all([
     getSession(organizationId, sessionId),
     listSessionPayments(organizationId, sessionId),
@@ -218,6 +217,8 @@ async function SessionDetail({
   const hasPackage = recentPayable.some((occurrence) =>
     coveredByPackage(covers, athleteId, occurrence.originalDate),
   );
+  // TVA de la séance (D-163, 0 = sans TVA).
+  const vatRate = session.vatRate;
   const amountLabel =
     session.priceCents === null
       ? ""
@@ -242,7 +243,7 @@ async function SessionDetail({
     };
   };
   const currentRow = current ? paymentRow(current) : null;
-  // « 65,00 € HTVA · 78,65 € TVAC (21 %) · Virement » ; sans TVA (D-90), le prix seul.
+  // « 65,00 € HTVA · 78,65 € TVAC (21 %) · Virement » ; sans TVA (D-163), le prix seul.
   const priceDetail =
     session.priceCents === null
       ? null

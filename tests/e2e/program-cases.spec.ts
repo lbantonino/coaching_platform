@@ -94,26 +94,28 @@ test("TC-01, TC-14, TC-05, TC-04 : de zéro, publication bloquée, phases, modè
 
   // TC-05 : une phase S5–9, renommée puis retirée ; les 12 semaines restent.
   await weeks.getByRole("button", { name: "Phase", exact: true }).click();
-  await expect(weeks.getByText("Base · S1–12")).toBeVisible();
+  // En-tête d'une phase (carte aérée du 11/11) : son nom, puis sa plage à part.
+  const phaseHeader = (name: string) => weeks.locator("[data-phase-header]", { hasText: name });
+  await expect(phaseHeader("Base")).toContainText("S1–12");
   await page.getByRole("button", { name: "Plus d'actions sur la phase Base" }).click();
   await page.getByRole("menuitem", { name: "Modifier les semaines" }).click();
   const range = page.getByRole("dialog", { name: "Semaines de la phase Base" });
   await range.getByRole("combobox", { name: "Première semaine" }).selectOption("5");
   await range.getByRole("combobox", { name: "Dernière semaine" }).selectOption("9");
   await range.getByRole("button", { name: "Enregistrer" }).click();
-  await expect(weeks.getByText("Base · S5–9")).toBeVisible();
+  await expect(phaseHeader("Base")).toContainText("S5–9");
   await page.getByRole("button", { name: "Plus d'actions sur la phase Base" }).click();
   await page.getByRole("menuitem", { name: "Renommer la phase" }).click();
   await page.getByRole("textbox", { name: "Nom de la phase" }).fill("Bloc 2");
   await page.getByRole("button", { name: "Renommer" }).click();
-  await expect(weeks.getByText("Bloc 2 · S5–9")).toBeVisible();
+  await expect(phaseHeader("Bloc 2")).toContainText("S5–9");
   await page.getByRole("button", { name: "Plus d'actions sur la phase Bloc 2" }).click();
   await page.getByRole("menuitem", { name: "Retirer la phase" }).click();
   await page
     .getByRole("dialog", { name: "Retirer la phase « Bloc 2 » ?" })
     .getByRole("button", { name: "Retirer la phase" })
     .click();
-  await expect(weeks.getByText(/Bloc 2 · S/)).toHaveCount(0);
+  await expect(phaseHeader("Bloc 2")).toHaveCount(0);
   await expect(weeks.getByRole("button", { name: /^Semaine \d+/ })).toHaveCount(12);
 
   // TC-04 : « Enregistrer comme modèle » : il arrive dans Mes modèles, sans sportif ni dates.

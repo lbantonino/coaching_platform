@@ -19,7 +19,9 @@ export const disciplineStyles = {
     avatar: "bg-[color-mix(in_srgb,var(--run)_24%,var(--surface))]",
     frame: "border-run",
     icon: "border border-run/50 bg-run-soft text-run",
-    text: "text-run",
+    // Texte coloré : la version « texte » du jeton (identique en clair, plus lumineuse en sombre pour
+    // garder 4,5:1 sur le fond teinté, recette du 11/11/2026).
+    text: "text-run-text",
     // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
     dot: "bg-run-fill",
     // Carte d'une séance du programme (maquette « Sportifs », page 2c) : fond teinté et numéro plein.
@@ -31,7 +33,7 @@ export const disciplineStyles = {
     avatar: "bg-[color-mix(in_srgb,var(--strength)_24%,var(--surface))]",
     frame: "border-strength",
     icon: "border border-strength/50 bg-strength-soft text-strength",
-    text: "text-strength",
+    text: "text-strength-text",
     // Point de 6 à 8 px devant le nom de la discipline (couleur pleine, maquette du 03/11/2026).
     dot: "bg-strength-fill",
     // Carte d'une séance du programme (maquette « Sportifs », page 2c) : fond teinté et numéro plein.

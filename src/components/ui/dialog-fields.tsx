@@ -181,7 +181,7 @@ export function DlgSegmented({
 export function DlgSelect({ children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className="relative">
-      <select {...props} className={dlgSelectClass}>
+      <select {...props} data-chevron="own" className={dlgSelectClass}>
         {children}
       </select>
       <ChevronDown

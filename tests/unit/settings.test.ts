@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  parsePreferences,
-  parseVatSetting,
-  passwordChangeSchema,
-  profileSchema,
-} from "@/features/coach/settings";
+import { parsePreferences, passwordChangeSchema, profileSchema } from "@/features/coach/settings";
 import { enabledTotal } from "@/features/notifications/filter";
 
 // Page Paramètres (D-57) : profil, préférences, TVA, mot de passe.
@@ -58,23 +53,6 @@ describe("profil et préférences", () => {
     expect(parsePreferences({ ...prefs, agendaFirstHour: "14" }).ok).toBe(false);
     expect(parsePreferences({ ...prefs, agendaLastHour: "12" }).ok).toBe(false);
     expect(parsePreferences({ ...prefs, defaultPaymentMethod: "bitcoin" }).ok).toBe(false);
-  });
-});
-
-// TVA (D-90) : un seul taux, 0 sans TVA.
-describe("TVA de l'organisation", () => {
-  it("sans TVA, le taux vaut 0, quoi qu'il reste dans le champ", () => {
-    expect(parseVatSetting({ vatEnabled: false, vatRate: "21" })).toEqual({ ok: true, vatRate: 0 });
-  });
-
-  it("avec TVA, un taux libre entre 0 et 100, virgule acceptée", () => {
-    expect(parseVatSetting({ vatEnabled: true, vatRate: "8,1" })).toEqual({
-      ok: true,
-      vatRate: 8.1,
-    });
-    expect(parseVatSetting({ vatEnabled: true, vatRate: "" }).ok).toBe(false);
-    expect(parseVatSetting({ vatEnabled: true, vatRate: "0" }).ok).toBe(false);
-    expect(parseVatSetting({ vatEnabled: true, vatRate: "150" }).ok).toBe(false);
   });
 });
 

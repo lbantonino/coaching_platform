@@ -51,8 +51,8 @@ export async function createExpense(
     values,
     saved: false,
   });
-  // Coach soumis à la TVA (D-73, taux de l'organisation depuis D-90) : TVA récupérable sur la dépense.
-  const parsed = parseExpenseForm(values, membership.vatRate > 0);
+  // TVA récupérable sur la dépense (D-73) : le taux choisi dans la fenêtre (D-163), 0 sans TVA.
+  const parsed = parseExpenseForm(values);
   if (!parsed.ok) return fail(parsed.error);
   const expense = parsed.expense;
   const supabase = await createClient();

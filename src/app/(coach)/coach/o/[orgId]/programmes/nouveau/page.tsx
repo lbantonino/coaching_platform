@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { requireOrgAccess } from "@/features/auth/guards";
-import { loadWizardData } from "@/features/programs/wizard";
+import { loadWizardData, nextMonday } from "@/features/programs/wizard";
 import { todayIsoInBrussels } from "@/lib/format";
 
 import { ProgramWizard } from "./program-wizard";
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 // Assistant « Créer un programme » (maquette 02, WIZ-01 à 05, D-157) : 4 étapes, puis le brouillon
-// s'ouvre dans l'éditeur. Adresses : ?sportif=<id> (depuis la fiche d'un sportif, étape 1 déjà
-// choisie), ?modele=<id> (« Utiliser » un modèle : étape 4 « Partir d'un modèle »), ?modele=nouveau
+// s'ouvre dans l'éditeur. Adresses : ?sportif=<id> (sportif pré-choisi, modifiable ; depuis la fiche
+// d'un sportif, l'assistant a sa propre page, sportifs/<id>/nouveau-programme, D-163), ?modele=<id> (« Utiliser » un modèle : étape 4 « Partir d'un modèle »), ?modele=nouveau
 // (« Nouveau modèle » : l'assistant sans sportif ni dates, [P] accepté).
 export default function NewProgramPage({
   params,
@@ -30,14 +30,6 @@ export default function NewProgramPage({
       </Suspense>
     </main>
   );
-}
-
-// Le lundi qui commence la semaine prochaine (aujourd'hui si c'est un lundi).
-function nextMonday(today: string): string {
-  const date = new Date(`${today}T00:00:00Z`);
-  const offset = (8 - date.getUTCDay()) % 7;
-  date.setUTCDate(date.getUTCDate() + offset);
-  return date.toISOString().slice(0, 10);
 }
 
 async function NewProgram({

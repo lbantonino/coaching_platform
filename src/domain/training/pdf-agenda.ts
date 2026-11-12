@@ -1,7 +1,7 @@
 import { cardLines, type CardLine } from "./card-lines";
 import type { Discipline } from "./discipline";
 import type { ProgramSessionContent } from "./program-session";
-import type { PublishedSession, Weekday } from "./session-v2";
+import { sessionMomentLabels, type PublishedSession, type Weekday } from "./session-v2";
 import { formatMinutes } from "./session-view";
 
 // PDF 1 « Agenda du programme » (handoff 12_PDF_SYSTEM, maquette CooryPdfDoc, phase 5) : un sommaire
@@ -182,7 +182,9 @@ function sessionMeta(session: PdfSessionInput): string {
   // En minutes pour toutes les disciplines, comme la maquette (« ≈ 54 min ») ; pour le Running c'est
   // aussi la règle d'Antonino du 10/11/2026 (jamais en heures).
   const duration = `≈ ${formatMinutes(session.content.durationMinutes * 60)}`;
-  return time ? `${time} · ${duration}` : duration;
+  // Plusieurs séances le même jour (D-164) : le moment d'abord (« Soir · 18:30 · ≈ 45 min »).
+  const moment = session.published?.moment ? sessionMomentLabels[session.published.moment] : null;
+  return [moment, time, duration].filter(Boolean).join(" · ");
 }
 
 function sessionView(session: PdfSessionInput, raceDate: string | null, date: string | null) {

@@ -32,8 +32,15 @@ import { useReorder } from "@/components/programs/use-reorder";
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 import { SessionDetail } from "@/components/programs/session-detail";
 import { Avatar } from "@/components/ui/avatar";
+import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
 import { MoreMenu, type MoreMenuItem } from "@/components/ui/more-menu";
-import { ConfirmDialog, DialogBody, Overlay } from "@/components/ui/overlay";
+import {
+  ActionMenu,
+  ConfirmDialog,
+  DialogBody,
+  Overlay,
+  type ActionMenuItem,
+} from "@/components/ui/overlay";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { SelectField } from "@/components/ui/select-field";
 import { useToast } from "@/components/ui/toast";
@@ -67,13 +74,20 @@ import {
   applyWeekSchedule,
   isPastWeek,
   orderedSessions,
+  sessionMoment,
+  sessionDay,
   setWeekFixed,
   setWeekOrdered,
   weekMonday,
   type ScheduleScope,
 } from "@/domain/training/scheduling";
-import type { Weekday } from "@/domain/training/session-v2";
-import type { SessionBody, SessionDraft } from "@/domain/training/session-v2";
+import {
+  sessionMomentLabels,
+  type SessionBody,
+  type SessionDiscipline,
+  type SessionDraft,
+  type Weekday,
+} from "@/domain/training/session-v2";
 import { sessionHeadline } from "@/domain/training/session-view";
 import {
   archiveProgram,
@@ -166,7 +180,23 @@ function coachLabel(session: SessionDraft): string | undefined {
 
 const PUBLISH_EVENT = "coory:publier";
 
+// Plage d'une phase dans la colonne des semaines : « S5–7 », ou « S4 » pour une seule semaine.
+const phaseRangeShort = (phase: { weekFrom: number; weekTo: number }) =>
+  phase.weekFrom === phase.weekTo ? `S${phase.weekFrom}` : `S${phase.weekFrom}–${phase.weekTo}`;
+
 const isDraft = (plan: ProgramPlan | ProgramDraft): plan is ProgramDraft => "startDate" in plan;
+
+// « Nouvelle séance » : les trois disciplines d'une séance, celle du programme en premier (un
+// programme hybride garde l'ordre Running, Musculation, Hyrox).
+type NewSessionDiscipline = Exclude<SessionDiscipline, "hybrid">;
+const SESSION_DISCIPLINES: NewSessionDiscipline[] = ["running", "strength", "hyrox"];
+const sessionDisciplinesFor = (main: Discipline): NewSessionDiscipline[] =>
+  [...SESSION_DISCIPLINES].sort((a, b) => Number(b === main) - Number(a === main));
+const disciplineHints: Record<NewSessionDiscipline, string> = {
+  running: "Endurance, fractionné, sortie longue",
+  strength: "Renfo, force, gainage",
+  hyrox: "Stations, enchaînements, simulation",
+};
 
 const pill =
   "inline-flex h-6 shrink-0 items-center gap-1.5 rounded-[12px] px-[9px] text-[11.5px] leading-[normal] font-semibold whitespace-nowrap";
@@ -210,6 +240,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     | null
     | "duplicate"
     | "from-template"
+    | "add-session"
     | "rename"
     | "save-template"
     | "archive"
@@ -292,9 +323,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     setLevel("week");
   };
 
-  const addBlank = () => {
+  // « Ajouter une séance » : toutes les disciplines, quel que soit le programme (demande d'Antonino du
+  // 11/11 : un programme running a aussi besoin de renfo jambes). La discipline du programme est
+  // proposée en premier.
+  const addBlank = (discipline: NewSessionDiscipline) => {
     if (!week) return;
-    const discipline = plan.discipline === "hybrid" ? "running" : plan.discipline;
     let created = "";
     update((current) => {
       const result = addSession(current, week.index, blankSession(discipline, current.aimDefaults));
@@ -584,7 +617,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
             onSelect: () => setSheet({ removePhase: phase.id }),
           },
         ]}
-        className="-my-2.5 -mr-2.5 [&>button]:bg-transparent! [&>button]:text-faint! [&>button]:inset-ring-0! lg:my-0 lg:mr-0 lg:[&>button]:size-7! lg:[&>button]:rounded-[8px]! lg:[&>button]:text-[12px]!"
+        className="-my-2.5 -mr-2.5 [&>button]:bg-transparent! [&>button]:text-muted! [&>button]:inset-ring-0! lg:my-0 lg:mr-0 lg:[&>button]:size-7! lg:[&>button]:rounded-[8px]! lg:[&>button]:text-[12px]!"
       />
     );
 
@@ -628,7 +661,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   const weekPhase = week ? phaseOfWeek(plan.phases, week.index) : null;
 
   const daysContext: DaysContext = {
-    firstName: meta.athlete?.firstName ?? "le sportif",
+    firstName: meta.athlete?.firstName ?? "ton sportif",
     availableDays: meta.publishContext?.availableDays ?? [],
     startDate: draft?.startDate ?? null,
   };
@@ -744,6 +777,15 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       />
     ) : null;
   const fixedWeek = week?.scheduling === "fixed";
+  // Plusieurs séances le même jour (D-164) : chaque carte dit son moment (« Matin », « Soir »…).
+  const dayMoment = (item: SessionDraft): string | undefined => {
+    if (!week || !fixedWeek) return undefined;
+    const day = sessionDay(item);
+    if (!day || week.sessions.filter((other) => sessionDay(other) === day).length < 2)
+      return undefined;
+    const moment = sessionMoment(item);
+    return moment ? sessionMomentLabels[moment] : "Moment ?";
+  };
   const pastWeekNote =
     week && !readOnly && meta.publication && locked(week.index) ? (
       <p className="mt-3 flex items-start gap-2.5 rounded-[12px] bg-warn-soft px-3 py-2.5 text-[12.5px] leading-[1.45] text-text-2 lg:mt-3">
@@ -780,6 +822,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           sessionType={item.sessionType}
           summary={[sessionHeadline(item)]}
           coach={coachLabel(item)}
+          moment={dayMoment(item)}
           selected={item.key === session?.key}
           readOnly={readOnly}
           onSelect={() => {
@@ -832,7 +875,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     <div className="flex gap-2">
       <button
         type="button"
-        onClick={addBlank}
+        onClick={() => setSheet("add-session")}
         className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[15px] text-[13.5px] font-medium text-text-2 inset-ring-[1.5px] inset-ring-line transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"
       >
         <Plus aria-hidden size={15} strokeWidth={2} />
@@ -992,6 +1035,19 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           }}
         />
       ) : null}
+      <ActionMenu
+        open={sheet === "add-session"}
+        onClose={() => setSheet(null)}
+        title="Nouvelle séance"
+        subtitle={week ? `Semaine ${week.index} · choisis la discipline` : undefined}
+        items={sessionDisciplinesFor(plan.discipline).map((discipline): ActionMenuItem => ({
+          label: disciplineLabels[discipline],
+          description: disciplineHints[discipline],
+          icon: dialogDisciplineIcons[discipline],
+          tone: discipline,
+          onSelect: () => addBlank(discipline),
+        }))}
+      />
       <SessionTemplateSheet
         open={sheet === "from-template"}
         onClose={() => setSheet(null)}
@@ -1236,7 +1292,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           {readOnly ? null : programActions(false)}
         </section>
 
-        <div className="grid min-h-0 flex-1 grid-cols-[196px_minmax(0,1fr)_304px] gap-3">
+        <div className="grid min-h-0 flex-1 grid-cols-[212px_minmax(0,1fr)_304px] gap-3">
           {/* Semaines */}
           <nav aria-label="Semaines" className={`${card} flex min-h-0 flex-col px-2.5 py-3.5`}>
             <p className="mb-2 flex items-baseline justify-between px-2 text-[15px] font-semibold text-text">
@@ -1245,13 +1301,25 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                 {plan.weeks.length}
               </span>
             </p>
-            <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain">
+            {/* Carte aérée (demande d'Antonino du 11/11 : « tout est l'un sur l'autre ») : chaque phase
+                est une section séparée par un filet, son nom en clair (plus de majuscules coupées) et
+                sa plage à part ; des lignes de semaine de 44 px, la date en gris lisible. */}
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
               {phaseGroups.map((group, g) => (
-                <div key={group.phase?.id ?? `none-${g}`} className="flex flex-col gap-0.5">
+                <div
+                  key={group.phase?.id ?? `none-${g}`}
+                  className={`flex flex-col gap-1 ${g > 0 ? "mt-3 border-t border-line pt-3" : ""}`}
+                >
                   {group.phase ? (
-                    <div className="mt-2 flex items-center justify-between px-2 first:mt-0">
-                      <span className="truncate text-[11px] font-semibold tracking-[0.06em] text-faint uppercase">
-                        {group.phase.name} · S{group.phase.weekFrom}–{group.phase.weekTo}
+                    <div
+                      data-phase-header=""
+                      className="mb-0.5 flex min-h-7 items-center gap-1.5 pr-0.5 pl-2"
+                    >
+                      <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-text-2">
+                        {group.phase.name}
+                      </span>
+                      <span className="shrink-0 text-[12px] font-medium text-faint tabular">
+                        {phaseRangeShort(group.phase)}
                       </span>
                       {phaseMenu(group.phase)}
                     </div>
@@ -1264,11 +1332,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                         type="button"
                         onClick={() => chooseWeek(item.index)}
                         aria-current={active ? "true" : undefined}
-                        className={`flex min-h-9 w-full items-center gap-2 rounded-[10px] px-2 py-1 text-left transition-colors duration-150 ${
+                        className={`flex min-h-11 w-full items-center gap-2 rounded-[11px] px-2.5 py-1.5 text-left transition-colors duration-150 ${
                           active ? "bg-lib-lavender" : "hover:bg-surface-2"
                         }`}
                       >
-                        <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                           <span
                             className={`flex items-center gap-1.5 text-[13.5px] leading-[1.3] text-text ${active ? "font-semibold" : "font-medium"}`}
                           >
@@ -1281,11 +1349,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                             ) : null}
                           </span>
                           {draft ? (
-                            <span className="truncate text-[11.5px] leading-[1.3] text-faint">
+                            <span className="truncate text-[12px] leading-[1.3] text-muted">
                               {weekRange(draft.startDate, item.index)}
                             </span>
                           ) : (
-                            <span className="text-[11.5px] leading-[1.3] text-faint">
+                            <span className="text-[12px] leading-[1.3] text-muted">
                               {item.sessions.length} séance{item.sessions.length > 1 ? "s" : ""}
                             </span>
                           )}
@@ -1315,7 +1383,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               ) : null}
             </div>
             {readOnly ? null : (
-              <div className="mt-2 flex gap-1">
+              <div className="mt-2.5 flex gap-1 border-t border-line pt-2.5">
                 <button
                   type="button"
                   disabled={plan.weeks.length >= 52}
@@ -1339,11 +1407,14 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           {/* La semaine */}
           <section
             aria-label={`Semaine ${week?.index}`}
-            className={`${card} flex min-h-0 flex-col p-[18px]`}
+            className={`${card} @container flex min-h-0 flex-col p-[18px]`}
           >
             {week ? (
               <>
-                <div className="flex items-start justify-between gap-3">
+                {/* Colonne étroite (1280 px, menu déplié) : les boutons passent sous le titre au lieu
+                    de le recouvrir (recette du 11/11, après l'élargissement de la colonne des
+                    semaines). La place se mesure sur la colonne (requête de conteneur). */}
+                <div className="flex flex-col gap-3 @min-[560px]:flex-row @min-[560px]:items-start @min-[560px]:justify-between">
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                       <h3 className="text-[17px] leading-[1.25] font-semibold whitespace-nowrap text-text">
@@ -1533,7 +1604,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                 {group.phase ? (
                   <div className="flex items-center justify-between px-1.5 pt-1">
                     <span className="text-[11.5px] font-semibold tracking-[0.06em] text-faint uppercase">
-                      {group.phase.name} · semaines {group.phase.weekFrom} à {group.phase.weekTo}
+                      {group.phase.name} ·{" "}
+                      {group.phase.weekFrom === group.phase.weekTo
+                        ? `semaine ${group.phase.weekFrom}`
+                        : `semaines ${group.phase.weekFrom} à ${group.phase.weekTo}`}
                     </span>
                     {phaseMenu(group.phase)}
                   </div>
@@ -1712,7 +1786,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               <button
                 type="button"
                 aria-label="Ajouter une séance"
-                onClick={addBlank}
+                onClick={() => setSheet("add-session")}
                 data-phone-fab=""
                 className={phoneFabClass}
               >

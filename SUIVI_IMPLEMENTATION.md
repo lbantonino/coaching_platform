@@ -9,7 +9,7 @@
 | P1 Auth/organisations | **Fait** : P1-01 à P1-05 (connexion, mot de passe oublié, organisations, RLS, garde-fous coach/sportif/admin, invitation sportif) ; vérification d'e-mail sans objet tant qu'il n'y a pas d'inscription | db:test 54/54, test:e2e 27/27 (x3 stables), check, build | Sessions du 19 et 20/10/2026 |
 | P2 CRM | **Fait** pour tout ce qui ne dépend pas des programmes : P2-01 (liste, recherche, archivage) ; P2-02 parties 1 à 4 (identité, contact, profil, objectifs et compétitions, disponibilités et contraintes physiques avec accord, records personnels : OPEN-01 terminé) ; P2-03 (repères datés, calcul des allures, notes) ; P2-04 (fiche à onglets, historique, graphique des repères) ; P2-05 (agenda : séances encadrées + compétitions, D-27). Attendent P4 à P6 : historique des programmes, KPI d'activité du tableau de bord, agenda du sportif. Ouvert : OPEN-18 (séances). Défaut du formulaire « Ajouter une mesure » corrigé le 22/10 (compteur attempt, test Playwright ajouté) | test 125/125, db:test 186/186, test:e2e 88/88 + 4 ignorés (après db:reset) | Sessions du 20 et 22/10/2026 |
 | P3 Bibliothèque | **En cours** : P3-01 fait le 30/10 (D-75 : catalogue commun Musculation / Cardio / Hyrox, fiche, favoris ; D-76 : exercices du coach) ; Mobilité visible le 31/10 ; liste et fiche aux maquettes d'Antonino le 06/11 (D-142, fond lavande) ; P3-02 à P3-06 à faire | db:test 434/434, test 278/278, test:e2e bibliothèque 8/8 (31/10) ; suite complète du 30/10 : 169 + 13 ignorés (2 échecs liés à la date, hors bibliothèque) | Sessions du 30 et 31/10/2026 |
-| P4 Éditeur multi-sports | **Fait pour Running, Musculation et Hyrox** : données et règles (D-155, 09/11), écrans (D-157, 10/11), phase 4 « fonctionnel » (D-160, 10/11 : matrice des maquettes vérifiée ligne par ligne, cas TC-01 à TC-18) ; reste l'éditeur Hybride (non dessiné) | db:test 503/503, Vitest 332/332, test:e2e 186 passés / 19 ignorés (1 échec intermittent sans lien, voir session du 09/11) | Session du 09/11/2026 ; `coory-design/PHASE2_ARCHITECTURE.md` |
+| P4 Éditeur multi-sports | **Fait pour Running, Musculation et Hyrox** : données et règles (D-155, 09/11), écrans (D-157, 10/11), phase 4 « fonctionnel » (D-160, 10/11 : matrice des maquettes vérifiée ligne par ligne, cas TC-01 à TC-18), phase 6 « recette » (D-161, 11/11, `coory-design/PHASE6_RECETTE.md`) ; reste l'éditeur Hybride (non dessiné) | db:test 503/503, Vitest 332/332, test:e2e 186 passés / 19 ignorés (1 échec intermittent sans lien, voir session du 09/11) | Session du 09/11/2026 ; `coory-design/PHASE2_ARCHITECTURE.md` |
 | P5 Publications/PDF | **En cours** : publication faite (D-155, D-157) ; PDF des programmes faits le 10/11 (D-158 : Agenda du programme, Fiches et repères, menu à 2 choix) ; reste le stockage et l'historique des PDF, l'envoi au sportif | Vitest 386/386 (dont rendu réel des 2 PDF), test:e2e program-pdf 8/8, program-editor + athlete-overview 12/12 | Session du 10/11/2026 |
 | P6 Sportif/feedback | À faire | Aucun | - |
 | P7 Communication | À faire | Aucun | - |
@@ -29,7 +29,99 @@
 | 7. Recette finale | À faire |
 
 ## Dernière session
-- Date : 2026-11-10
+- Date : 2026-11-11
+
+### Modèles de course : 10 km avec renfo, semi-marathon, marathon (D-165, 11/11/2026)
+```
+Contenu rédigé par un agent (script scratchpad/modeles/generer.py), validé par programPlanSchema et
+  planIssues, exerciceId vérifiés en base ; intégré par moi dans supabase/seed.sql (même INSERT que les
+  modèles Coory) et appliqué à la base de développement (UPDATE du 10 km, INSERT semi et marathon ;
+  sauvegarde supabase/.temp/modeles-course-avant-2026-11-11.json).
+10 km : 8 × 4 (renfo ajouté en 4e séance) ; semi : 12 semaines, 47 séances ; marathon : 16 semaines, 79.
+tests/unit/seed-programmes.test.ts : 5 plans dans la graine (au lieu de 3).
+Limites relevées : consigne d'un exercice en superset absente de la vue séance ; pas de série en secondes.
+```
+
+### Plusieurs séances le même jour (D-164, 11/11/2026)
+```
+Décision d'Antonino sur la proposition visuelle : 4 séances par jour au plus, 14 par semaine, un moment
+  par séance quand le jour en a plusieurs (Matin, Midi, Après-midi, Soir) ; « 8+ » validé.
+Domaine : SessionDraft.moment (et version publiée), MAX_SESSIONS_PER_DAY / _WEEK (session-v2) ;
+  planIssues refuse une 5e séance le même jour ; scheduling : momentFromTime, sessionMoment, tri jour >
+  moment > heure, suggestedMoment, fillMoments, dayHasRoom ; proposition des jours limitée à 4 par jour ;
+  avertissement same_day -> moment_missing.
+Interface : assistant (puces 1 à 7 + « 8+ » et compteur 8 à 14) ; choix du jour (jour « complet »,
+  moment en pastilles) ; bandeau des 7 jours, mini-bandeau, cartes de l'éditeur, onglet Programme de la
+  fiche, PDF Agenda.
+Migration 20261111130000_seances_multiples_par_jour.sql (modèles : 1 à 14 séances par semaine),
+  appliquée sans db:reset.
+Tests : unitaires 418 (7 nouveaux sur les moments) ; Playwright éditeur 8/8 (nouveau test « 8+ »,
+  TC-07 : le moment se choisit, Matin et Soir affichés) ; captures téléphone et ordinateur, clair et
+  sombre (le choix du moment passe en pastilles : « Après-midi » était coupé dans le panneau).
+```
+
+### TVA par paiement, programme depuis la fiche, séances de toutes disciplines (D-163, 11/11/2026)
+```
+TVA (remplace le réglage global) : « Appliquer la TVA » décochée par défaut dans Nouveau paiement,
+  Nouvelle dépense et le prix d'une séance ; cochée = taux normal du pays proposé (standardVatRate), libre.
+  Migration 20261111120000_tva_par_seance.sql (coach_sessions.vat_rate, reprise du taux de l'organisation,
+  appliquée sans db:reset) ; « Marquer payée » note le paiement au taux de la séance ; Comptabilité ligne
+  par ligne ; Paramètres « Pays et devise » ; inscription sans TVA ; organizations.vat_rate plus lue.
+  Retirés : setOrganizationVatRate, parseVatSetting, VatRateInput, l'étape de fin de suite Playwright.
+Programme depuis la fiche : page sportifs/<id>/nouveau-programme (sportif fixé, retour vers la fiche),
+  liens de l'onglet Programme et du bouton « Créer » de la fiche.
+Toutes disciplines : « Ajouter une séance » ouvre « Nouvelle séance » (Running, Musculation, Hyrox).
+Doubles séances : proposition visuelle (coory-design/propositions/double-seances/), OPEN-23, rien codé.
+En-tête de semaine de l'éditeur : à 1280 px (menu déplié, colonne de 456 px), « Semaine N » passait sous
+  les boutons ; ils passent dessous quand la colonne fait moins de 560 px (@container), vérifié à 1280 et
+  1536 px, clair et sombre, sans chevauchement mesuré.
+Tests : « Annuler le paiement » attend la confirmation du serveur (« Paiement annulé. ») : l'écran change
+  avant sa réponse et la fin du test pouvait couper la demande (2 paiements de test restés, sauvegardés dans
+  supabase/.temp/paiements-de-test-2026-11-11.json puis supprimés).
+Tests : unitaires 411/411 (expenses, money, sessions, settings adaptés) ; pgTAP 515/515 (+ 40_tva_par_seance) ;
+  Playwright TVA (accounting, sessions, settings, signup) 48 passés ; éditeur et fiche 17 passés ;
+  nouveau test « une séance à 21 % : le paiement garde ce taux ».
+```
+
+### TVA de base à 0 %, cohérente partout (D-162, 11/11/2026)
+```
+Demande : base à 0 %, et l'app calcule depuis le taux réglé dans Paramètres (21 % si on met 21).
+Constat : le code lisait déjà le taux de l'organisation ; la graine et les données de démo étaient à 21 %.
+Graine : organisation A à 0 % ; paiements de séance = prix + taux de l'organisation (taux copié) ; autres
+  paiements et dépenses à 0 %.
+Base de dev (sans db:reset) : 105 paiements de séance, 5 autres, 2 dépenses alignés ; sauvegarde
+  supabase/.temp/tva-alignement-2026-11-11.json ; 1 paiement laissé par un test supprimé ; 0 écart restant.
+Tests : setOrganizationVatRate (helpers.ts) dans les 6 tests qui vérifient la TVA (accounting, sessions),
+  global-teardown.ts remet 0 % ; rangement de « À encaisser » ouvre « Voir plus » sur téléphone.
+Résultats : lint, typage, format OK ; Vitest 411/411 ; pgTAP 510/510 (39 fichiers) ;
+  Playwright 206 passés, 22 ignorés, 0 échec ; après la suite : organisations A et B à 0 %, 0 écart de taux.
+```
+
+### Phase 6 (recette) des écrans Programmes (D-161, 11/11/2026)
+```
+Rapport : coory-design/PHASE6_RECETTE.md (écran par écran : écart mesuré, verdict, écarts restants).
+Méthode : 41 écrans capturés dans l'état le plus proche (Chromium, 1280 / 390 px, clair), côte à côte
+avec la maquette, part de pixels mesurée ; revue visuelle par trois relecteurs, chaque signalement
+revérifié ; axe-core en clair et en sombre ; contrôles au clavier ; PDF lus par poppler (pages,
+polices, liens suivis un par un, signets). Scripts de recette dans le dossier de travail de la session.
+Corrigé : select-field / dialog-fields / billing-setup-fields (data-chevron, globals.css) ;
+editor-sheets (PublishSheet : boutons fixes, ISSUE_GROUPS) ; segmented-styles (anneau d'encre,
+taille « field ») ; fixed-days (dates des jours, pied collant, « Mar 17 ») ; session-view, session-editor,
+fixed-days (durées en minutes) ; « ton sportif » (pages des éditeurs) ; contrastes (program-editor,
+program-wizard, page Programmes, discipline.ts : text-run-text / text-strength-text, « ··· » des blocs) ;
+tap-44 (compteurs, flèches de semaine) ; program-weeks / week-picker (téléphone pleine largeur) ;
+program-tab (« : » insécable, boutons de 50 px) ; page Programmes (filtres qui passent à la ligne) ;
+program-status.orderForDashboard + listActivePrograms (en cours avant à venir) ; 37_modeles.test.sql
+indépendant de la graine.
+Demandes d'Antonino (11/11) : more-menu.tsx en popover (couche supérieure, posé sur le bouton, au-dessus
+s'il manque de place, fermé au défilement) ; colonne Semaines de l'éditeur aérée (program-editor).
+Tests : unitaires 411/411, base 510/510, lint/types/format propres ; parcours : 194 réussis, 22 ignorés,
+12 échecs (comptabilité et paiement des séances : TVA de l'Organisation Démo A à 0 % dans la base, la
+graine dit 21 % ; à décider par Antonino). Le test du tableau de bord passe (correctif de l'ordre).
+Vérifié en captures sur la version de production (ordinateur, téléphone, clair, sombre).
+Note : le serveur de développement d'Antonino (port 3000) sert un CSS périmé depuis le vidage de
+.next/dev en début de session : le relancer (rm -rf .next/dev puis npm run dev).
+```
 
 ### Phase 4 (fonctionnel) des écrans Programmes (D-160, 10/11/2026)
 ```

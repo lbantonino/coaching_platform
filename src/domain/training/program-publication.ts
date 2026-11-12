@@ -145,6 +145,7 @@ function publishedSession(session: SessionDraft, ctx: AimContext): PublishedSess
     content: freezeContent(session.content, ctx),
     ...(session.fixedDay ? { fixedDay: session.fixedDay } : {}),
     ...(session.fixedTime ? { fixedTime: session.fixedTime } : {}),
+    ...(session.moment ? { moment: session.moment } : {}),
     athleteCanMove: session.athleteCanMove,
     ...(session.withCoach ? { withCoach: session.withCoach } : {}),
   };
@@ -206,7 +207,7 @@ export type PublishIssue = {
     | "no_session"
     | "overlap"
     | "empty_week"
-    | "same_day"
+    | "moment_missing"
     | "unavailable_day"
     | "pct_without_max"
     | "official_without_division"
@@ -275,12 +276,12 @@ export function validateForPublish(draft: ProgramDraft, ctx: PublishContext): Pu
     }
     for (const warning of scheduleWarnings(week, ctx.availableDays)) {
       issues.push(
-        warning.code === "same_day"
+        warning.code === "moment_missing"
           ? {
               level: "warning",
-              code: "same_day",
+              code: "moment_missing",
               weekIndex: week.index,
-              message: `Semaine ${week.index} : deux séances le même jour.`,
+              message: `Semaine ${week.index} : plusieurs séances le même jour sans moment (matin, soir…).`,
             }
           : {
               level: "warning",

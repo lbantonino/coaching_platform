@@ -237,7 +237,8 @@ describe("validateForPublish (fenêtre 08)", () => {
       }),
       context(),
     );
-    const sameDay = issues.filter((issue) => issue.code === "same_day");
+    // D-164 : plusieurs séances le même jour sont permises ; sans moment, c'est un avertissement.
+    const sameDay = issues.filter((issue) => issue.code === "moment_missing");
     expect(sameDay.length).toBeGreaterThan(0);
     expect(sameDay.every((issue) => issue.level === "warning")).toBe(true);
     expect(issues.some((issue) => issue.level === "blocking")).toBe(false);

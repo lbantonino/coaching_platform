@@ -260,8 +260,9 @@ async function ProgramsTab({
 
   return (
     <>
-      {/* Ordinateur : statuts, menus et recherche sur une ligne. */}
-      <div className="hidden items-center gap-3 lg:flex">
+      {/* Ordinateur : statuts, menus et recherche sur une ligne ; s'il manque de la place (l'onglet
+          « Archivés » depuis la phase 4), les menus passent dessous plutôt que d'être tronqués. */}
+      <div className="hidden flex-wrap items-center gap-3 lg:flex">
         <nav aria-label="Statut" className={`${segmentTrackClass("page")} shrink-0`}>
           {(Object.keys(statusSlugs) as StatusSlug[]).map((slug) => (
             <Link
@@ -272,26 +273,26 @@ async function ProgramsTab({
               className={segmentItemClass("page", slug === statusSlug)}
             >
               {statusLabels[slug]}
-              <span className="text-[12px] font-medium text-faint tabular">
+              <span className="text-[12px] font-medium text-muted tabular">
                 {count(statusSlugs[slug])}
               </span>
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex min-w-0 items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           <QuerySelect
             name="discipline"
             label="Discipline"
             value={disciplineSlug === "toutes" ? "" : disciplineSlug}
             options={disciplineOptions("Toutes les disciplines")}
-            className="w-[196px] min-w-[150px] shrink"
+            className="w-[196px] shrink-0"
           />
           <QuerySelect
             name="sportif"
             label="Sportif"
             value={athleteId}
             options={athleteOptions}
-            className="w-[172px] min-w-[140px] shrink"
+            className="w-[172px] shrink-0"
           />
           <ListSearch initial={search} placeholder="Rechercher un programme" />
         </div>
@@ -370,7 +371,7 @@ async function TemplatesTab({
               className={segmentItemClass("page", slug === sourceSlug)}
             >
               {sourceLabels[slug]}
-              <span className="text-[12px] font-medium text-faint tabular">
+              <span className="text-[12px] font-medium text-muted tabular">
                 {count(sourceSlugs[slug])}
               </span>
             </Link>

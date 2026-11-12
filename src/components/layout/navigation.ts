@@ -191,6 +191,7 @@ const coachTitles: [RegExp, string][] = [
   [/^\/coach\/o\/[^/]+\/sportifs$/, "Sportifs"],
   [/^\/coach\/o\/[^/]+\/sportifs\/nouveau$/, "Nouveau sportif"],
   [/^\/coach\/o\/[^/]+\/sportifs\/[^/]+\/inviter$/, "Invitation"],
+  [/^\/coach\/o\/[^/]+\/sportifs\/[^/]+\/nouveau-programme$/, "Nouveau programme"],
   [/^\/coach\/o\/[^/]+\/sportifs\/[^/]+$/, "Fiche sportif"],
   [/^\/coach\/o\/[^/]+\/agenda$/, "Agenda"],
   [/^\/coach\/o\/[^/]+\/agenda\/seances\/nouvelle$/, "Nouvelle séance"],

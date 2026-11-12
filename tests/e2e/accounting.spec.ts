@@ -46,6 +46,9 @@ test("le coach note un paiement reçu en espèces et le retrouve dans sa comptab
     .click();
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Sophie Lambert" });
+  // TVA choisie pour ce paiement (D-163) : cochée, le taux normal du pays (Belgique) est proposé.
+  await dialog.getByLabel(/^Appliquer la TVA/).check();
+  await expect(dialog.getByLabel("Taux de TVA")).toHaveValue("21");
   await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("3000");
   await expect(dialog.getByText(/2\s479,34\s€ HTVA · 520,66\s€ de TVA/)).toBeVisible();
   await dialog.getByText("Espèces", { exact: true }).click();
@@ -99,7 +102,7 @@ test("le montant reçu est obligatoire, et la saisie est gardée après l'erreur
   await openNew(page, "Nouveau paiement");
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Thomas Peeters" });
-  await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("abc");
+  await dialog.getByLabel(/^Montant reçu/).fill("abc");
   await dialog.getByRole("button", { name: "Enregistrer le paiement" }).click();
   await expect(dialog.getByRole("alert")).toContainText("Indique le montant reçu");
   await expect(dialog.getByRole("combobox", { name: "Sportif" })).toHaveValue(
@@ -174,8 +177,9 @@ test("une dépense mensuelle compte chaque mois, s'arrête, puis se supprime", a
   const sheet = page.getByRole("dialog", { name: "Nouvelle dépense" });
   await sheet.getByLabel("Description").fill(label);
   await sheet.getByLabel("Catégorie", { exact: true }).selectOption({ label: "Loyer et salle" });
+  // TVA choisie pour cette dépense (D-163) : la TVA récupérable se calcule.
+  await sheet.getByLabel(/^Appliquer la TVA/).check();
   await sheet.getByLabel(/^Montant payé/).fill("121");
-  // Coach A est soumis à la TVA : la TVA récupérable se calcule.
   await expect(sheet.getByText(/100,00\s€ HTVA \+ 21,00\s€ de TVA récupérable/)).toBeVisible();
   await sheet.getByText("Se répète chaque mois").click();
   await sheet.getByRole("button", { name: "Enregistrer la dépense" }).click();
@@ -233,43 +237,69 @@ test("À encaisser : une séance passée se marque payée depuis la Comptabilit�
   await expect(list.getByRole("button", { name: label, exact: true })).toHaveCount(0);
   await page.goto(href ?? "/");
   await expect(page.getByText(/^Payée le /).first()).toBeVisible();
+  // Rangement (recette du 11/11) : le paiement de test s'annule ; la séance redevient à encaisser, le
+  // test reste rejouable et aucun paiement de test ne reste dans la comptabilité.
+  const today = new Intl.DateTimeFormat("fr-BE", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Europe/Brussels",
+  }).format(new Date());
+  const price = page.getByRole("region", { name: "Prix et paiements" });
+  // Téléphone : les dates de la séance sont sous « Voir plus ».
+  if (isPhone(page)) await price.getByRole("button", { name: "Voir plus" }).click();
+  const paidToday = price
+    .getByRole("listitem")
+    .filter({ hasText: `Payée le ${today}` })
+    .first();
+  await paidToday.getByRole("button", { name: /^Annuler le paiement : / }).click();
+  await expect(price.getByText(`Payée le ${today}`)).toHaveCount(0);
+  // Confirmation du serveur (l'écran change avant sa réponse) : le paiement est bien retiré.
+  await expect(page.getByText("Paiement annulé.")).toBeVisible();
 });
 
-// TVA (D-118) : un coach soumis à la TVA peut noter un paiement ou une dépense sans TVA ; un coach
-// sans TVA n'en voit nulle part (ni taux, ni « TVAC »).
-test("« Appliquer la TVA » décochée : un paiement et une dépense sans TVA", async ({
+// TVA à chaque paiement et dépense (D-163, demande d'Antonino du 11/11) : plus de réglage dans les
+// Paramètres. « Appliquer la TVA » est décochée par défaut ; cochée, le taux normal du pays est
+// proposé et reste libre.
+test("la TVA se choisit à chaque paiement et dépense, au taux voulu", async ({
   page,
 }, testInfo) => {
-  const label = `Sans TVA ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const label = `TVA libre ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   await loginAsCoachA(page);
   await page.goto("/coach/comptabilite");
 
   await openNew(page, "Nouveau paiement");
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await dialog.getByRole("combobox", { name: "Sportif" }).selectOption({ label: "Sophie Lambert" });
-  await dialog.getByLabel(/^Montant reçu \(TVAC/).fill("80");
-  await expect(dialog.getByLabel("Taux de TVA")).toBeVisible();
-  await dialog.getByLabel(/^Appliquer la TVA/).uncheck();
+  await expect(dialog.getByLabel(/^Appliquer la TVA/)).not.toBeChecked();
   await expect(dialog.getByLabel("Taux de TVA")).toHaveCount(0);
-  await expect(dialog.getByText("Sans TVA : le montant reçu compte tel quel.")).toBeVisible();
+  await dialog.getByLabel(/^Montant reçu \(EUR\)$/).fill("80");
+  await expect(dialog.getByText("Le montant que tu as reçu, sans TVA.")).toBeVisible();
+  await dialog.getByLabel(/^Appliquer la TVA/).check();
+  await expect(dialog.getByLabel("Taux de TVA")).toHaveValue("21");
+  await expect(dialog.getByText(/66,12\s€ HTVA · 13,88\s€ de TVA \(21 %\)/)).toBeVisible();
+  // Un autre taux, juste pour ce paiement.
+  await dialog.getByLabel("Taux de TVA").fill("6");
+  await expect(dialog.getByText(/75,47\s€ HTVA · 4,53\s€ de TVA \(6 %\)/)).toBeVisible();
   await dialog.getByLabel(/^Libellé/).fill(label);
   await dialog.getByRole("button", { name: "Enregistrer le paiement" }).click();
   await expect(page.getByText("Paiement enregistré.")).toBeVisible();
+  const more = page.getByRole("button", { name: /^Voir les \d+ paiements$/ });
+  if ((await more.count()) > 0) await more.click();
   const row = page
     .getByRole("list", { name: "Liste des paiements" })
     .getByRole("listitem")
     .filter({ hasText: label });
-  await expect(row).toContainText("Sans TVA");
-  await expect(row).not.toContainText("HTVA");
+  await expect(row).toContainText(/75,47\s€ HTVA \(TVA 6 %\)/);
 
-  // Dépense : même case, la TVA récupérable disparaît.
+  // Dépense : même case, décochée par défaut ; cochée, la TVA récupérable se calcule.
   await openNew(page, "Nouvelle dépense");
   const expense = page.getByRole("dialog", { name: "Nouvelle dépense" });
-  await expense.getByLabel(/^Montant payé \(TVAC/).fill("50");
-  await expect(expense.getByText(/de TVA récupérable/)).toBeVisible();
-  await expense.getByLabel(/^Appliquer la TVA/).uncheck();
   await expect(expense.getByLabel("Taux de TVA")).toHaveCount(0);
-  await expect(expense.getByText("Sans TVA : le montant payé compte tel quel.")).toBeVisible();
+  await expense.getByLabel(/^Montant payé \(EUR\)$/).fill("50");
+  await expect(expense.getByText("Le montant que tu as payé, sans TVA.")).toBeVisible();
+  await expense.getByLabel(/^Appliquer la TVA/).check();
+  await expect(expense.getByLabel("Taux de TVA")).toHaveValue("21");
+  await expect(expense.getByText(/41,32\s€ HTVA \+ 8,68\s€ de TVA récupérable/)).toBeVisible();
   await page.keyboard.press("Escape");
 
   // Nettoyage : le paiement se supprime.
@@ -285,7 +315,7 @@ test("« Appliquer la TVA » décochée : un paiement et une dépense sans TVA",
   await expect(page.getByRole("listitem").filter({ hasText: label })).toHaveCount(0);
 });
 
-test("un coach sans TVA ne voit ni taux ni « TVAC » dans ses paiements et dépenses", async ({
+test("par défaut, ni taux ni « TVAC » : la case « Appliquer la TVA » est décochée", async ({
   page,
 }) => {
   await page.goto("/login");
@@ -299,7 +329,7 @@ test("un coach sans TVA ne voit ni taux ni « TVAC » dans ses paiements et dép
   const dialog = page.getByRole("dialog", { name: "Nouveau paiement" });
   await expect(dialog.getByLabel(/^Montant reçu \(EUR\)$/)).toBeVisible();
   await expect(dialog.getByLabel("Taux de TVA")).toHaveCount(0);
-  await expect(dialog.getByText("Appliquer la TVA")).toHaveCount(0);
+  await expect(dialog.getByLabel(/^Appliquer la TVA/)).not.toBeChecked();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
 
@@ -307,5 +337,5 @@ test("un coach sans TVA ne voit ni taux ni « TVAC » dans ses paiements et dép
   const expense = page.getByRole("dialog", { name: "Nouvelle dépense" });
   await expect(expense.getByLabel(/^Montant payé \(EUR\)$/)).toBeVisible();
   await expect(expense.getByLabel("Taux de TVA")).toHaveCount(0);
-  await expect(expense.getByText("Appliquer la TVA")).toHaveCount(0);
+  await expect(expense.getByLabel(/^Appliquer la TVA/)).not.toBeChecked();
 });

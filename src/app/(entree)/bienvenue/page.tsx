@@ -71,9 +71,9 @@ async function Welcome() {
     organizationName: text(meta.organization_name),
   };
   const termsAccepted = text(meta.terms_version) === TERMS_VERSION;
-  // Étape « Pays, devise et TVA » d'un coach (D-69, D-90) : pays deviné d'après la langue du navigateur.
+  // Étape « Pays et devise » d'un coach (D-69, D-163) : pays deviné d'après la langue du navigateur.
   const country = countryFromAcceptLanguage((await headers()).get("accept-language"));
-  const billing = { country, currency: defaultCurrencyFor(country), vatChoice: "", vatRate: "" };
+  const billing = { country, currency: defaultCurrencyFor(country) };
   // Tout vient de l'inscription par e-mail (type, nom, conditions acceptées) : écran de bienvenue.
   const ready =
     (text(meta.kind) === "coach" || text(meta.kind) === "athlete") &&
@@ -83,7 +83,7 @@ async function Welcome() {
 
   if (ready) return <WelcomeReady values={initial} billing={billing} />;
 
-  // Après Google / Facebook / Apple : formulaire complet (type, nom, conditions, pays et TVA).
+  // Après Google / Facebook / Apple : formulaire complet (type, nom, conditions, pays et devise).
   return (
     <SplitShell
       visual={<AuthCardImage card="configuration" />}

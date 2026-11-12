@@ -17,8 +17,7 @@ export type CoachMembership = {
   // Pays et devise de l'organisation (D-69) : chaque écran d'argent les lit ici.
   country: string;
   currency: Currency;
-  // Taux de TVA du coach (D-90), 0 s'il n'en a pas : prix des séances, résultat HTVA.
-  vatRate: number;
+  // Plus de taux de TVA de l'organisation (D-163) : chaque paiement, dépense ou séance a le sien.
 };
 
 // Utilisateur connecté, vérifié côté serveur (getClaims valide le jeton). null si non connecté.
@@ -52,7 +51,7 @@ export async function getCoachMemberships(
   const supabase = client ?? (await createClient());
   const { data, error } = await supabase
     .from("organization_members")
-    .select("organization_id, role, organizations ( name, country, currency, vat_rate )")
+    .select("organization_id, role, organizations ( name, country, currency )")
     .eq("user_id", userId)
     .eq("status", "active");
 
@@ -65,7 +64,6 @@ export async function getCoachMemberships(
     role: row.role as CoachMembership["role"],
     country: row.organizations.country,
     currency: currencyOf(row.organizations.currency),
-    vatRate: row.organizations.vat_rate,
   }));
 }
 

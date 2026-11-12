@@ -24,6 +24,7 @@ export default defineConfig({
     { name: "ordinateur", use: { ...devices["Desktop Chrome"] } },
     { name: "telephone", use: { ...devices["Pixel 7"] } },
   ],
+  // Fin de suite : TVA de l'organisation A remise à 0 % (les tests TVA la règlent à 21 %).
   webServer: {
     command: `npm run build && npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/login`,

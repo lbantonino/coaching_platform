@@ -58,7 +58,7 @@ async function TemplateSession({
   const isStrength = found.session.content.discipline === "strength";
   const library = isStrength ? await listLibraryChoices(user.id, organizationId) : [];
 
-  const nobody = "le sportif";
+  const nobody = "ton sportif";
   const meta: SessionMeta = {
     // Les adresses de l'éditeur de séance (retour, duplication) se construisent sur …/modeles/<id>.
     base: `/coach/o/${organizationId}/programmes/modeles`,

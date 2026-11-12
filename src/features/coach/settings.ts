@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { parseVatRate } from "@/domain/billing/money";
 import { parseAmount } from "@/domain/billing/payments";
 import { emailField, newPasswordField } from "@/features/auth/schemas";
 
@@ -130,22 +129,6 @@ export const notificationKindLabels: Record<NotificationKind, { label: string; h
     hint: "Les sportifs sans nom de famille ou sans contact.",
   },
 };
-
-// --- TVA (D-90) --------------------------------------------------------------------------------
-// Un seul réglage, le taux du coach : 0 s'il ne facture pas la TVA. Coory ne fait pas de factures ;
-// ce taux sert au prix des séances (HTVA ou TVAC) et au résultat HTVA de la Comptabilité.
-export type VatSettingInput = { vatEnabled: boolean; vatRate: string };
-
-export function parseVatSetting(
-  input: VatSettingInput,
-): { ok: true; vatRate: number } | { ok: false; error: string } {
-  if (!input.vatEnabled) return { ok: true, vatRate: 0 };
-  const rate = parseVatRate(input.vatRate);
-  if (rate === null || rate === 0) {
-    return { ok: false, error: "Indique ton taux de TVA (un nombre entre 0 et 100)." };
-  }
-  return { ok: true, vatRate: rate };
-}
 
 // --- Sécurité -----------------------------------------------------------------------------------
 export const emailChangeSchema = z.object({ email: emailField });

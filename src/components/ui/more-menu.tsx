@@ -12,6 +12,9 @@ import { ActionMenu } from "./overlay";
 // destructrice en rouge. Téléphone : bouton 44 × 44 rayon 12 sur fond de carte, et la feuille d'actions
 // de l'app (la maquette ne dessine pas de menu sur téléphone). Échap, clic dehors : fermé ; flèches
 // ↑ ↓ : d'une ligne à l'autre.
+// Le menu s'ouvre dans la couche supérieure du navigateur (API Popover), posé sur le bouton : aucune
+// liste qui défile ne peut plus le couper (menu d'une phase dans la colonne des semaines, signalé par
+// Antonino le 11/11). Il s'ouvre au-dessus s'il manque de place en bas, et se ferme au défilement.
 export type MoreMenuItem = {
   label: string;
   icon: LucideIcon;
@@ -43,23 +46,46 @@ export function MoreMenu({
   button?: { content: ReactNode; className: string };
 }) {
   const [open, setOpen] = useState<"popover" | "sheet" | null>(null);
+  // Position du menu (pixels de la fenêtre), calculée à l'ouverture depuis le bouton.
+  const [place, setPlace] = useState<{ top: number; left: number; up: boolean } | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const menu = useRef<HTMLDivElement>(null);
   const menuId = useId();
 
   useEffect(() => {
     if (open !== "popover") return;
+    menu.current?.showPopover?.();
     const onPointerDown = (event: PointerEvent) => {
       if (!box.current?.contains(event.target as Node)) setOpen(null);
     };
+    const close = () => setOpen(null);
     document.addEventListener("pointerdown", onPointerDown);
-    box.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus();
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    window.addEventListener("resize", close);
+    // Défilement de la page ou d'une liste : le menu ne suivrait pas son bouton, il se ferme.
+    window.addEventListener("scroll", close, true);
+    box.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus({ preventScroll: true });
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", close, true);
+    };
   }, [open]);
 
   const toggle = () => {
     if (open) return setOpen(null);
-    setOpen(window.matchMedia("(min-width: 1024px)").matches ? "popover" : "sheet");
+    const desktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (desktop && trigger.current) {
+      const rect = trigger.current.getBoundingClientRect();
+      const height = items.length * 38 + 12;
+      const up = rect.bottom + 6 + height > window.innerHeight - 8 && rect.top - 6 - height >= 8;
+      setPlace({
+        top: up ? rect.top - 6 - height : rect.bottom + 6,
+        left: Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8),
+        up,
+      });
+    }
+    setOpen(desktop ? "popover" : "sheet");
   };
 
   const choose = (item: MoreMenuItem) => {
@@ -109,11 +135,15 @@ export function MoreMenu({
 
       {open === "popover" ? (
         <div
+          ref={menu}
           id={menuId}
           role="menu"
           aria-label={label}
-          style={{ width }}
-          className="absolute top-[calc(100%+6px)] right-0 z-30 flex origin-top-right flex-col rounded-[14px] bg-popover p-1.5 shadow-menu transition-[opacity,scale] duration-150 ease-out starting:scale-95 starting:opacity-0"
+          popover="manual"
+          style={{ width, top: place?.top ?? 0, left: place?.left ?? 0 }}
+          className={`fixed inset-auto m-0 flex flex-col overflow-visible rounded-[14px] border-0 bg-popover p-1.5 text-text shadow-menu transition-[opacity,scale] duration-150 ease-out starting:scale-95 starting:opacity-0 ${
+            place?.up ? "origin-bottom-right" : "origin-top-right"
+          }`}
         >
           {items.map((item) => {
             const Icon = item.icon;

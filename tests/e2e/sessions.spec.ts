@@ -71,12 +71,15 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   const enrolled = dialog.getByRole("group", { name: /Sportifs inscrits/ });
   await enrolled.getByText("Thomas Peeters", { exact: true }).click();
   await enrolled.getByText("Inès Benali", { exact: true }).click();
-  // Prix (D-52) : 80 € TVA comprise pour toute la séance, en espèces.
+  // Prix (D-52) : 80 € TVA comprise pour toute la séance, en espèces. TVA de la séance (D-163) :
+  // cochée, le taux normal du pays (21 %) est proposé.
   await dialog.getByLabel(/^Prix pour toute la séance/).fill("80");
   await dialog
     .getByRole("group", { name: "Paiement" })
     .getByText("Espèces", { exact: true })
     .click();
+  await dialog.getByLabel(/^Appliquer la TVA/).check();
+  await expect(dialog.getByLabel("Taux de TVA")).toHaveValue("21");
   await dialog.getByRole("button", { name: "Créer la séance" }).click();
 
   // On reste sur l'agenda : la fenêtre se ferme et la séance apparaît le mercredi 6.
@@ -121,7 +124,7 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   await expect(page.getByLabel(/^Prix pour toute la séance/)).toHaveValue("80");
   await page.getByLabel("Heure", { exact: true }).fill("19:30");
   // Kit « Coory Pages », 06 / 12 (D-123) : le récapitulatif (ordinateur) et la ligne du prix suivent
-  // la saisie ; le prix par inscrit est un simple calcul (TVA de la démo : 21 %).
+  // la saisie ; le prix par inscrit est un simple calcul (TVA de la séance : 21 %).
   if (testInfo.project.name === "ordinateur") {
     await expect(
       page.getByRole("complementary", { name: "Récapitulatif de la séance" }),
@@ -276,8 +279,8 @@ test("une date de séance se marque payée, compte dans la comptabilité, puis s
   await loginAsCoachA(page);
   await page.goto(`/coach/o/${ORG_A}/agenda/seances/ca000000-0000-4000-8000-000000000201`);
   const price = page.getByRole("region", { name: "Prix et paiements" });
-  // Facturée par virement : 65 € hors TVA, 78,65 € payés.
-  await expect(price).toContainText(/65,00\s€ HTVA · 78,65\s€ TVAC/);
+  // Par virement, sans TVA (séance de démonstration, D-163) : 65 € payés.
+  await expect(price).toContainText(/65,00\s€ · Virement/);
   // Les dates à encaisser : sous « Voir plus » sur téléphone ; sur ordinateur, autant que la carte
   // en contient, « Toutes les dates » montrant les autres (03/11).
   const showPaymentDates = async () => {
@@ -288,7 +291,7 @@ test("une date de séance se marque payée, compte dans la comptabilité, puis s
   const row = price.getByRole("listitem").filter({ hasText: when });
   await expect(row).toContainText("Pas encore payée");
   await row.getByRole("button", { name: `Marquer payée : ${when}` }).click();
-  await expect(row).toContainText(/Payée le .* · 78,65\s€/);
+  await expect(row).toContainText(/Payée le .* · 65,00\s€/);
 
   // Comptabilité : le paiement de cette date, en virement (le mode de la séance).
   await page.goto("/coach/comptabilite");
@@ -301,13 +304,82 @@ test("une date de séance se marque payée, compte dans la comptabilité, puis s
     .filter({ hasText: `Coaching force · ${dayText}` });
   await expect(payment).toContainText("Nadia El Amrani");
   await expect(payment).toContainText("Virement");
-  await expect(payment).toContainText(/78,65\s€/);
+  await expect(payment).toContainText(/65,00\s€/);
 
   // Marquée par erreur : « Annuler » retire le paiement.
   await page.goto(`/coach/o/${ORG_A}/agenda/seances/ca000000-0000-4000-8000-000000000201`);
   await showPaymentDates();
   await row.getByRole("button", { name: `Annuler le paiement : ${when}` }).click();
   await expect(row).toContainText("Pas encore payée");
+  // L'écran change avant la réponse du serveur (affichage optimiste) : on attend sa confirmation, sinon
+  // la fin du test peut couper la demande et laisser le paiement (recette du 11/11).
+  await expect(page.getByText("Paiement annulé.")).toBeVisible();
+});
+
+// TVA de la séance (D-163, demande d'Antonino du 11/11) : l'app calcule avec le taux choisi dans la
+// séance, et le paiement noté en la marquant payée reprend ce taux. Titre en « Coaching force » : le
+// test « À encaisser » (accounting.spec) laisse ces séances de côté.
+test("une séance à 21 % : le prix HTVA plus la TVA, et le paiement garde ce taux", async ({
+  page,
+}, testInfo) => {
+  test.skip(isPhone(page), "Crée une séance et un paiement de test : un seul projet.");
+  const title = `Coaching force TVA ${unique(testInfo)}`;
+  const date = pastMonday(2);
+  const dayText = longDay.format(new Date(`${date}T00:00:00Z`));
+  const when = `${capitalize(dayText)} · 06:00`;
+  await loginAsCoachA(page);
+  await page.goto(`/coach/o/${ORG_A}/agenda?date=${date}`);
+  const dialog = await openNewSession(page);
+  await dialog.getByLabel("Titre").fill(title);
+  await fillSchedule(dialog, date, "06:00", "60");
+  await dialog.getByLabel("Sportif", { exact: true }).selectOption({ label: "Nadia El Amrani" });
+  await dialog.getByLabel(/^Prix de la séance/).fill("65");
+  // Par virement : la TVA s'ajoute au prix (règle de Gianluca).
+  await dialog.getByLabel(/^Appliquer la TVA/).check();
+  await expect(dialog.getByLabel("Taux de TVA")).toHaveValue("21");
+  await expect(dialog.getByLabel(/^TVA comprise dans le prix/)).not.toBeChecked();
+  await expect(
+    dialog.getByText(/65,00\s€ HTVA : le sportif paie 78,65\s€, TVA de 21 % comprise\./),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Créer la séance" }).click();
+  await expect(page.getByText("Séance créée.")).toBeVisible();
+
+  await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=${date}`);
+  await page.getByRole("link", { name: new RegExp(title) }).click();
+  await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
+  const price = page.getByRole("region", { name: "Prix et paiements" });
+  await expect(price).toContainText(/65,00\s€ HTVA · 78,65\s€ TVAC \(21 %\)/);
+  const row = price.getByRole("listitem").filter({ hasText: when });
+  await row.getByRole("button", { name: `Marquer payée : ${when}` }).click();
+  await expect(row).toContainText(/Payée le .* · 78,65\s€/);
+
+  // Comptabilité : le paiement garde la TVA de la séance.
+  await page.goto("/coach/comptabilite");
+  const more = page.getByRole("button", { name: /^Voir les \d+ paiements$/ });
+  if ((await more.count()) > 0) await more.click();
+  const payment = page
+    .getByRole("list", { name: "Liste des paiements" })
+    .getByRole("listitem")
+    .filter({ hasText: title });
+  await expect(payment).toContainText(/65,00\s€ HTVA \(TVA 21 %\)/);
+  await expect(payment).toContainText(/78,65\s€/);
+
+  // Rangement : le paiement s'annule, puis la séance se supprime.
+  await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=${date}`);
+  await page.getByRole("link", { name: new RegExp(title) }).click();
+  await price
+    .getByRole("listitem")
+    .filter({ hasText: when })
+    .getByRole("button", {
+      name: `Annuler le paiement : ${when}`,
+    })
+    .click();
+  await expect(price.getByRole("listitem").filter({ hasText: when })).toContainText(
+    "Pas encore payée",
+  );
+  // Confirmation du serveur avant de supprimer la séance (le paiement resterait sinon).
+  await expect(page.getByText("Paiement annulé.")).toBeVisible();
+  await deleteOpenSession(page, title);
 });
 
 test("la vue Liste de l'Agenda montre les séances jour par jour, avec ses filtres (remplace la page Séances)", async ({

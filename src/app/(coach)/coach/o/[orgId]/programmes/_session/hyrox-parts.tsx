@@ -117,7 +117,7 @@ function LineRow({
 
 function Stepper({ value, onChange }: { value: number; onChange: (value: number) => void }) {
   const button =
-    "relative z-10 grid h-full w-[30px] place-items-center text-muted transition-colors duration-150 enabled:hover:text-text disabled:text-dlg-disabled";
+    "tap-44 relative z-10 grid h-full w-[30px] place-items-center text-muted transition-colors duration-150 enabled:hover:text-text disabled:text-dlg-disabled";
   return (
     <span className="relative flex h-[30px] items-center rounded-[9px] bg-surface text-[14px] font-semibold text-text inset-ring inset-ring-field-ring after:absolute after:inset-x-0 after:-inset-y-[7px]">
       <button
@@ -176,7 +176,7 @@ function BlockGroup({
     block.format === "amrap" || block.format === "emom" || block.format === "for_time"
       ? Clock
       : Repeat2;
-  const tone = run ? "text-run" : "text-hyrox";
+  const tone = run ? "text-run-text" : "text-hyrox";
   return (
     <div
       data-reorder-row=""
@@ -217,7 +217,7 @@ function BlockGroup({
             { label: "Dupliquer le bloc", icon: Copy, onSelect: onDuplicate },
             { label: "Supprimer le bloc", icon: Trash2, destructive: true, onSelect: onRemove },
           ]}
-          className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-faint! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
+          className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-muted! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
         />
       </div>
       <div {...inner.listProps} className="flex flex-col gap-1.5">

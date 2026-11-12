@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { programDraftSchema } from "@/domain/training/program-plan";
-import { pickCurrentProgram, programListStatus } from "@/domain/training/program-status";
+import {
+  orderForDashboard,
+  pickCurrentProgram,
+  programListStatus,
+} from "@/domain/training/program-status";
 import { adaptSession, draftFromPublication, resizePlan } from "@/domain/training/program-upgrade";
 
 import { draft, runningSession } from "./fixtures/program-v2";
@@ -142,5 +146,24 @@ describe("statut et programme à montrer (C-8)", () => {
     expect(pickCurrentProgram([next], "2026-11-09")?.id).toBe("b");
     expect(pickCurrentProgram([current], "2027-06-01")?.id).toBe("a");
     expect(pickCurrentProgram([], "2026-11-09")).toBeNull();
+  });
+});
+
+describe("tableau de bord : « Programmes en cours » (recette, 11/11/2026)", () => {
+  it("les programmes en cours passent avant ceux à venir, puis les terminés ; ordre gardé dans chaque groupe", () => {
+    const programs = [
+      { id: "a-venir-loin", startDate: "2026-12-07", weeksCount: 8 },
+      { id: "a-venir-proche", startDate: "2026-11-16", weeksCount: 8 },
+      { id: "en-cours-recent", startDate: "2026-11-09", weeksCount: 12 },
+      { id: "termine", startDate: "2026-08-03", weeksCount: 8 },
+      { id: "en-cours-ancien", startDate: "2026-10-26", weeksCount: 12 },
+    ];
+    expect(orderForDashboard(programs, "2026-11-11").map((p) => p.id)).toEqual([
+      "en-cours-recent",
+      "en-cours-ancien",
+      "a-venir-proche",
+      "a-venir-loin",
+      "termine",
+    ]);
   });
 });

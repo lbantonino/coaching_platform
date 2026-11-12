@@ -39,6 +39,9 @@ type StartKind = "blank" | "copy" | "template";
 type PhaseDraft = { name: string; length: number };
 
 const PHASE_NAMES = ["Base", "Spécifique", "Affûtage"];
+// Séances par semaine (D-164) : 1 à 7 en puces ; « 8+ » ouvre un compteur jusqu'à 14 (certains jours
+// ont alors plusieurs séances : matin, midi, après-midi, soir).
+const MAX_PER_WEEK = 14;
 const DISCIPLINE_CHOICES: MainDiscipline[] = ["running", "strength", "hyrox"];
 
 const kicker = "text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase";
@@ -86,6 +89,7 @@ export function ProgramWizard({
   data,
   templateMode,
   initialAthleteId,
+  lockedAthlete = false,
   initialTemplateId,
   initialCopy = false,
   defaultStartDate,
@@ -95,6 +99,8 @@ export function ProgramWizard({
   data: WizardData;
   templateMode: boolean;
   initialAthleteId: string | null;
+  // Ouvert depuis la fiche du sportif (D-163) : le sportif est fixé, l'étape 1 ne demande que le titre.
+  lockedAthlete?: boolean;
   initialTemplateId: string | null;
   // « Copier un programme précédent » (onglet Programme du sportif) : étape 4 sur « Copier ».
   initialCopy?: boolean;
@@ -128,7 +134,7 @@ export function ProgramWizard({
   const [snapped, setSnapped] = useState(false);
   const [weeksCount, setWeeksCount] = useState(initialTemplate?.weeksCount ?? 12);
   const [perWeek, setPerWeek] = useState(
-    String(Math.min(Math.max(initialAthlete?.sessionsPerWeek ?? 4, 1), 7)),
+    String(Math.min(Math.max(initialAthlete?.sessionsPerWeek ?? 4, 1), MAX_PER_WEEK)),
   );
   const [phases, setPhases] = useState<PhaseDraft[]>([]);
   const [editedPhase, setEditedPhase] = useState<number | null>(null);
@@ -148,13 +154,16 @@ export function ProgramWizard({
 
   const athlete = data.athletes.find((a) => a.id === athleteId);
   const firstName = athlete?.firstName ?? "ton sportif";
+  const fixed = lockedAthlete && !templateMode && athlete ? athlete : null;
 
   // Changer de sportif : la façon de viser, la division et les séances par semaine suivent ses repères.
   const chooseAthlete = (next: WizardAthlete) => {
     setAthleteId(next.id);
     setAim(aimFor(next));
     setDivision(next.defaultDivision ?? "");
-    if (next.sessionsPerWeek) setPerWeek(String(Math.min(Math.max(next.sessionsPerWeek, 1), 7)));
+    if (next.sessionsPerWeek) {
+      setPerWeek(String(Math.min(Math.max(next.sessionsPerWeek, 1), MAX_PER_WEEK)));
+    }
     if (!discipline) setDiscipline(mainDiscipline(next.programType));
     setSourceProgramId(next.programs[0]?.id ?? "");
   };
@@ -317,11 +326,17 @@ export function ProgramWizard({
   };
 
   const steps = [
-    {
-      title: templateMode ? "Nom" : "Pour qui",
-      sub: templateMode ? "Titre du modèle" : "Sportif et titre",
-      question: templateMode ? "Comment s'appelle ce modèle ?" : "Pour qui est ce programme ?",
-    },
+    fixed
+      ? {
+          title: "Titre",
+          sub: `Pour ${fixed.firstName}`,
+          question: `Comment s'appelle le programme de ${fixed.firstName} ?`,
+        }
+      : {
+          title: templateMode ? "Nom" : "Pour qui",
+          sub: templateMode ? "Titre du modèle" : "Sportif et titre",
+          question: templateMode ? "Comment s'appelle ce modèle ?" : "Pour qui est ce programme ?",
+        },
     { title: "Objectif", sub: "Discipline et course", question: "Quel est l'objectif ?" },
     {
       title: "Calendrier",
@@ -391,7 +406,11 @@ export function ProgramWizard({
                 <span className="truncate text-[14px] leading-[normal] font-semibold text-text">
                   {item.title}
                 </span>
-                <span className="truncate text-[12px] leading-[normal] text-faint">{item.sub}</span>
+                <span
+                  className={`truncate text-[12px] leading-[normal] ${active ? "text-muted" : "text-faint"}`}
+                >
+                  {item.sub}
+                </span>
               </span>
             </button>
           );
@@ -431,13 +450,17 @@ export function ProgramWizard({
                   </Field>
                 ) : (
                   <>
-                    <AthletePicker
-                      athletes={data.athletes}
-                      selected={athleteId}
-                      query={query}
-                      onQuery={setQuery}
-                      onChoose={chooseAthlete}
-                    />
+                    {fixed ? (
+                      <FixedAthlete athlete={fixed} />
+                    ) : (
+                      <AthletePicker
+                        athletes={data.athletes}
+                        selected={athleteId}
+                        query={query}
+                        onQuery={setQuery}
+                        onChoose={chooseAthlete}
+                      />
+                    )}
                     <Field label="Titre du programme" htmlFor="wizard-title">
                       <input
                         id="wizard-title"
@@ -460,7 +483,7 @@ export function ProgramWizard({
                       {DISCIPLINE_CHOICES.map((choice) => (
                         <label
                           key={choice}
-                          className={`flex min-h-[84px] cursor-pointer flex-col justify-between rounded-[14px] bg-surface p-3.5 transition-[box-shadow,scale] duration-150 active:scale-[0.98] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-violet ${
+                          className={`flex min-h-[84px] cursor-pointer flex-col justify-between rounded-[14px] bg-surface p-3.5 max-lg:pr-1.5 max-lg:pl-3 transition-[box-shadow,scale] duration-150 active:scale-[0.98] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-violet ${
                             discipline === choice
                               ? "inset-ring-[1.5px] inset-ring-text"
                               : "inset-ring inset-ring-field-ring"
@@ -484,8 +507,10 @@ export function ProgramWizard({
                         </label>
                       ))}
                     </div>
-                    <p className="text-[12.5px] leading-[1.4] text-faint">
-                      « Hybride » arrivera plus tard.
+                    {/* Demande d'Antonino du 11/11 : la discipline principale n'enferme pas le programme. */}
+                    <p className="text-[12.5px] leading-[1.4] text-muted">
+                      Tu pourras aussi y ajouter des séances des autres disciplines, comme un renfo
+                      jambes dans un programme running.
                     </p>
                   </fieldset>
 
@@ -647,14 +672,56 @@ export function ProgramWizard({
                     <ChipGroup
                       label="Séances par semaine"
                       size="count"
-                      value={perWeek}
-                      onChange={setPerWeek}
-                      options={["1", "2", "3", "4", "5", "6", "7"].map((value) => ({
+                      value={Number(perWeek) > 7 ? "8+" : perWeek}
+                      onChange={(value) =>
+                        setPerWeek(value === "8+" ? (Number(perWeek) > 7 ? perWeek : "8") : value)
+                      }
+                      options={["1", "2", "3", "4", "5", "6", "7", "8+"].map((value) => ({
                         value,
                         label: value,
                       }))}
                     />
                   </Field>
+                  {Number(perWeek) > 7 ? (
+                    <div className="-mt-1 flex flex-col gap-3 rounded-[14px] bg-surface-2 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <p className={fieldLabel}>Nombre de séances</p>
+                          <p className="text-[12.5px] leading-[normal] text-muted">De 8 à 14</p>
+                        </div>
+                        <div className="flex h-11 w-[132px] shrink-0 items-center rounded-[12px] bg-surface inset-ring inset-ring-field-ring">
+                          <button
+                            type="button"
+                            aria-label="Une séance de moins"
+                            disabled={Number(perWeek) <= 8}
+                            onClick={() => setPerWeek(String(Number(perWeek) - 1))}
+                            className="grid h-full w-11 shrink-0 place-items-center text-text transition-[scale] duration-150 enabled:active:scale-90 disabled:text-dlg-disabled"
+                          >
+                            <Minus aria-hidden size={16} strokeWidth={2} />
+                          </button>
+                          <span
+                            aria-live="polite"
+                            className="flex-1 text-center text-[16px] font-semibold text-text tabular-nums lg:text-[15px]"
+                          >
+                            {perWeek}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Une séance de plus"
+                            disabled={Number(perWeek) >= MAX_PER_WEEK}
+                            onClick={() => setPerWeek(String(Number(perWeek) + 1))}
+                            className="grid h-full w-11 shrink-0 place-items-center text-text transition-[scale] duration-150 enabled:active:scale-90 disabled:text-dlg-disabled"
+                          >
+                            <Plus aria-hidden size={16} strokeWidth={2} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[12.5px] leading-[1.45] text-muted">
+                        Au-delà de 7, certains jours auront plusieurs séances : jusqu&apos;à 4,
+                        chacune avec son moment (matin, midi, après-midi ou soir).
+                      </p>
+                    </div>
+                  ) : null}
 
                   <div className="flex flex-col gap-2.5">
                     <div className="flex items-baseline justify-between gap-3">
@@ -952,6 +1019,32 @@ function AimRow({ discipline, children }: { discipline: Discipline; children: Re
         {disciplineLabels[discipline]}
       </span>
       <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
+// Étape 1 depuis la fiche d'un sportif (D-163) : le sportif est déjà choisi, rien à chercher.
+function FixedAthlete({ athlete }: { athlete: WizardAthlete }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2.5">
+      <p className={fieldLabel}>Sportif</p>
+      <div className="flex min-h-[60px] items-center gap-3 rounded-[13px] bg-surface-2 px-3.5 py-2.5">
+        <Avatar name={athlete.name} photoPath={athlete.photoPath} size="stack" />
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-[14.5px] leading-[normal] font-semibold text-text">
+            {athlete.name}
+          </span>
+          {athlete.programType ? (
+            <span className="flex items-center gap-1.5 text-[12.5px] leading-[normal] text-muted">
+              <span
+                aria-hidden
+                className={`size-1.5 rounded-full ${disciplineStyles[athlete.programType].dot}`}
+              />
+              {disciplineLabels[athlete.programType]}
+            </span>
+          ) : null}
+        </span>
+      </div>
     </div>
   );
 }

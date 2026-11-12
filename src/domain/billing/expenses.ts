@@ -74,10 +74,9 @@ const schema = z.object({
   endsOn: z.union([z.literal(""), z.iso.date({ error: "Date de fin invalide." })]),
 });
 
-// `vatSubject` : un coach non soumis à la TVA ne récupère rien, le taux est 0.
+// Le taux vient de la fenêtre (D-163) : 0 quand « Appliquer la TVA » est décochée.
 export function parseExpenseForm(
   values: ExpenseFormValues,
-  vatSubject: boolean,
 ): { ok: true; expense: ExpenseInput } | { ok: false; error: string } {
   const result = schema.safeParse(values);
   if (!result.success) return { ok: false, error: result.error.issues[0].message };
@@ -85,7 +84,7 @@ export function parseExpenseForm(
   if (amountCents === null) {
     return { ok: false, error: "Montant invalide : écris par exemple 650 ou 49,90." };
   }
-  const vatRate = vatSubject ? parseVatRate(values.vatRate || "0") : 0;
+  const vatRate = parseVatRate(values.vatRate || "0");
   if (vatRate === null) {
     return { ok: false, error: "Taux de TVA invalide : un nombre entre 0 et 100 (ex. 21)." };
   }
