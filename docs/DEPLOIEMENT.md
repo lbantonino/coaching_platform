@@ -93,7 +93,7 @@ mois** au plus. La base vérifie les deux à chaque demande (`reserve_assistant_
 1. console.anthropic.com : crée l'organisation, ajoute des crédits (Billing).
 2. **Settings → Limits** : fixe une **limite de dépense mensuelle** (ex. 20 $). C'est le filet de
    sécurité ultime, même en cas de bug.
-3. **API Keys → Create Key** : nom `coory-production`. Copie-la **une seule fois** dans Vercel
+3. **API Keys → Create Key** : nom `coory-production`, **Linked account : un compte de service** (pas toi : la clé ne dépend pas de ton compte) et **limitée à un espace de travail** (ex. Default). Sinon l'API refuse chaque demande (400 « This API key is not scoped to a workspace »). Copie-la **une seule fois** dans Vercel
    (`ANTHROPIC_API_KEY`, étape 4). Jamais dans le code, dans Git ni dans un message.
 4. Activer l'abonnement d'une organisation (toi seul, dans **SQL Editor** de Supabase) :
 
