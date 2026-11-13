@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
@@ -10,6 +11,7 @@ import {
   withdrawHealthConsentByAthlete,
 } from "@/features/consents/actions";
 import { getOwnHealthConsents, type OwnHealthConsent } from "@/features/consents/queries";
+import { FEATURES } from "@/config/features";
 import { formatDateTime } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -17,6 +19,8 @@ export const metadata: Metadata = {
 };
 
 export default function AthleteHomePage() {
+  // MVP espace coach seul (D-167) : page masquée, le code reste.
+  if (!FEATURES.athleteSpace) notFound();
   return (
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading label="Chargement de ton espace…" />}>

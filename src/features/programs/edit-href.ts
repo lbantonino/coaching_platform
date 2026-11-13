@@ -10,7 +10,9 @@ export function sessionEditHref(
   // La page de la fiche où revenir après « Terminer » (onglet et semaine).
   returnTo?: string,
 ): string {
+  // Dans les deux cas, le retour ramène à la fiche (revue MVP du 13/11, B15).
+  const back = returnTo ? encodeURIComponent(returnTo) : null;
   return draftKeys.has(key)
-    ? `${editorHref}/seances/${encodeURIComponent(key)}${returnTo ? `?retour=${encodeURIComponent(returnTo)}` : ""}`
-    : `${editorHref}?semaine=${weekIndex}&seance=${encodeURIComponent(key)}`;
+    ? `${editorHref}/seances/${encodeURIComponent(key)}${back ? `?retour=${back}` : ""}`
+    : `${editorHref}?semaine=${weekIndex}&seance=${encodeURIComponent(key)}${back ? `&retour=${back}` : ""}`;
 }

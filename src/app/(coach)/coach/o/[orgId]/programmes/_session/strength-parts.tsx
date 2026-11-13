@@ -10,7 +10,12 @@ import { MoreMenu } from "@/components/ui/more-menu";
 import { DialogFooter, Sheet } from "@/components/ui/overlay";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { kgFromPercent } from "@/domain/training/aims";
-import type { StrengthContent, StrengthExercise, StrengthSet } from "@/domain/training/session-v2";
+import {
+  isTimedExercise,
+  type StrengthContent,
+  type StrengthExercise,
+  type StrengthSet,
+} from "@/domain/training/session-v2";
 import {
   addSet,
   exerciseSummary,
@@ -19,11 +24,13 @@ import {
   parseQuickFill,
   parseReps,
   parseRest,
+  parseSeconds,
   quickFill,
   quickFillText,
   removeLastSet,
   repsText,
   restText,
+  setExerciseMeasure,
   setLoadMode,
   ungroup,
   withComputedKg,
@@ -37,7 +44,14 @@ import { BASE, DropLine, Handle, SELECTED, field, label } from "./running-parts"
 // trait visible ; EMOM en bloc. Charge en kg ou en % du max, au choix pour chaque exercice.
 
 // Un exercice de la Bibliothèque, tel que le choix et le panneau en ont besoin.
-export type LibraryChoice = { id: string; name: string; meta: string; search: string };
+// `timed` : l'exercice se mesure en secondes (planche, gainage…, D-166).
+export type LibraryChoice = {
+  id: string;
+  name: string;
+  meta: string;
+  search: string;
+  timed: boolean;
+};
 // Max du sportif par exercice (repère relié, D-155) avec sa date, pour « Max de Lucas : 20 kg ».
 export type AthleteMax = {
   kg: number;
@@ -360,23 +374,31 @@ export function StrengthList({
 // ---------------------------------------------------------------------------
 const cell =
   "h-10 w-full min-w-0 rounded-[10px] bg-surface px-2.5 text-[16px] font-medium text-text inset-ring inset-ring-field-ring outline-none transition-shadow duration-150 placeholder:text-faint focus:inset-ring-[1.5px] focus:inset-ring-violet aria-invalid:inset-ring-alert lg:text-[15px]";
-const GRID =
-  "grid grid-cols-[24px_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.7fr)] gap-1.5";
+// Un exercice tenu n'a pas de RIR (D-166) : sa grille perd la colonne (revue MVP du 13/11, C13).
+const gridOf = (timed: boolean) =>
+  timed
+    ? "grid grid-cols-[24px_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.8fr)] gap-1.5"
+    : "grid grid-cols-[24px_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.7fr)] gap-1.5";
 
 function SetRow({
   set,
   index,
   mode,
+  timed,
   maxKg,
   onChange,
 }: {
   set: StrengthSet;
   index: number;
   mode: StrengthExercise["loadMode"];
+  // Exercice tenu (D-166) : la colonne dit le temps, en secondes.
+  timed: boolean;
   maxKg: number | null;
   onChange: (set: StrengthSet) => void;
 }) {
-  const [reps, setReps] = useState(repsText(set));
+  // Exercice tenu : « 30–45 » (la colonne « Durée » et la mesure « Secondes » disent l'unité ; la
+  // cellule est trop étroite pour « 30–45 s »).
+  const [reps, setReps] = useState(timed ? repsText(set).replace(/ s$/, "") : repsText(set));
   const [load, setLoad] = useState(
     mode === "pct"
       ? set.pct !== undefined
@@ -393,12 +415,25 @@ function SetRow({
     mode === "pct" && set.pct !== undefined && maxKg ? kgFromPercent(maxKg, set.pct) : null;
 
   const commitReps = (value: string) => {
+    if (timed) {
+      const seconds = parseSeconds(value);
+      setBad((current) => ({ ...current, reps: !seconds }));
+      if (!seconds) return;
+      const next: StrengthSet = { ...set, seconds: seconds.seconds };
+      if (seconds.secondsMax !== undefined) next.secondsMax = seconds.secondsMax;
+      else delete next.secondsMax;
+      delete next.repsMin;
+      delete next.repsMax;
+      return onChange(next);
+    }
     const parsed = parseReps(value);
     setBad((current) => ({ ...current, reps: !parsed }));
     if (!parsed) return;
     const next: StrengthSet = { ...set, repsMin: parsed.repsMin };
     if (parsed.repsMax !== undefined) next.repsMax = parsed.repsMax;
     else delete next.repsMax;
+    delete next.seconds;
+    delete next.secondsMax;
     onChange(next);
   };
   const commitLoad = (value: string) => {
@@ -440,7 +475,7 @@ function SetRow({
   };
 
   return (
-    <div className={`${GRID} items-center`}>
+    <div className={`${gridOf(timed)} items-center`}>
       <span className="text-center text-[13px] font-semibold text-faint">{index + 1}</span>
       <button
         type="button"
@@ -460,7 +495,7 @@ function SetRow({
         {warmup ? "Échauff." : "Normale"}
       </button>
       <input
-        aria-label={`Répétitions de la série ${index + 1}`}
+        aria-label={`${timed ? "Secondes" : "Répétitions"} de la série ${index + 1}`}
         inputMode="numeric"
         value={reps}
         aria-invalid={bad.reps ?? false}
@@ -493,18 +528,20 @@ function SetRow({
           </span>
         ) : null}
       </span>
-      <input
-        aria-label={`RIR de la série ${index + 1}`}
-        inputMode="numeric"
-        value={rir}
-        placeholder="—"
-        aria-invalid={bad.rir ?? false}
-        onChange={(event) => {
-          setRir(event.target.value);
-          commitRir(event.target.value);
-        }}
-        className={cell}
-      />
+      {timed ? null : (
+        <input
+          aria-label={`RIR de la série ${index + 1}`}
+          inputMode="numeric"
+          value={rir}
+          placeholder="—"
+          aria-invalid={bad.rir ?? false}
+          onChange={(event) => {
+            setRir(event.target.value);
+            commitRir(event.target.value);
+          }}
+          className={cell}
+        />
+      )}
     </div>
   );
 }
@@ -545,8 +582,9 @@ export function StrengthExercisePanel({
     setVersion((value) => value + 1);
   };
 
+  const timed = isTimedExercise(exercise);
   const fill = () => {
-    const parsed = parseQuickFill(quick);
+    const parsed = parseQuickFill(quick, timed);
     setQuickError(!parsed);
     if (parsed) restructure(quickFill(exercise, parsed));
   };
@@ -574,7 +612,7 @@ export function StrengthExercisePanel({
             id={quickId}
             value={quick}
             aria-invalid={quickError}
-            placeholder="3 séries de 8 à 10"
+            placeholder={timed ? "3 séries de 30 s" : "3 séries de 8 à 10"}
             onChange={(event) => setQuick(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
@@ -594,40 +632,64 @@ export function StrengthExercisePanel({
         </div>
         {quickError ? (
           <p className="text-[12.5px] text-alert">
-            Écris par exemple « 3 séries de 8 à 10 » ou « 4 x 6 ».
+            {timed
+              ? "Écris par exemple « 3 séries de 30 s » ou « 3 x 45 s »."
+              : "Écris par exemple « 3 séries de 8 à 10 », « 4 x 6 » ou « 3 x 30 s »."}
           </p>
         ) : null}
       </div>
 
+      {/* Mesure (D-166) : répétitions, ou secondes pour un exercice tenu (planche, gainage,
+          équilibre…). Le catalogue propose les secondes d'office pour ces exercices. */}
       <div className="flex flex-col gap-2">
-        <span className={label}>Charge</span>
+        <span className={label}>Mesure</span>
         <SegmentedControl
-          label="Charge de l'exercice"
-          value={exercise.loadMode}
-          onChange={(mode) => restructure(setLoadMode(exercise, mode, maxKg))}
+          label="Mesure de l'exercice"
+          value={timed ? "time" : "reps"}
+          onChange={(value) => {
+            const next = setExerciseMeasure(exercise, value === "time");
+            setQuick(quickFillText(next));
+            setQuickError(false);
+            restructure(next);
+          }}
           options={[
-            { value: "kg", label: "kg" },
-            { value: "pct", label: "% du max" },
+            { value: "reps", label: "Répétitions" },
+            { value: "time", label: "Secondes" },
           ]}
         />
-        {exercise.loadMode === "pct" ? (
-          <p className="text-[12.5px] leading-[1.45] text-muted">
-            {max
-              ? max.estimated
-                ? `Max estimé de ${athlete.firstName} : ${kg(max.kg)}, depuis ${kg(max.fromKg)} × ${max.fromReps} (repère du ${dayMonth.format(new Date(`${max.date}T00:00:00Z`))}). Les kg sont calculés.`
-                : `Max de ${athlete.firstName} : ${kg(max.kg)} (repère du ${dayMonth.format(new Date(`${max.date}T00:00:00Z`))}). Les kg sont calculés.`
-              : `Pas de max pour ${athlete.firstName} sur cet exercice : les kg ne sont pas calculés. Ajoute un repère relié à l'exercice dans sa fiche.`}
-          </p>
-        ) : null}
       </div>
 
+      {timed ? null : (
+        <div className="flex flex-col gap-2">
+          <span className={label}>Charge</span>
+          <SegmentedControl
+            label="Charge de l'exercice"
+            value={exercise.loadMode}
+            onChange={(mode) => restructure(setLoadMode(exercise, mode, maxKg))}
+            options={[
+              { value: "kg", label: "kg" },
+              { value: "pct", label: "% du max" },
+            ]}
+          />
+          {exercise.loadMode === "pct" ? (
+            <p className="text-[12.5px] leading-[1.45] text-muted">
+              {max
+                ? max.estimated
+                  ? `Max estimé de ${athlete.firstName} : ${kg(max.kg)}, depuis ${kg(max.fromKg)} × ${max.fromReps} (repère du ${dayMonth.format(new Date(`${max.date}T00:00:00Z`))}). Les kg sont calculés.`
+                  : `Max de ${athlete.firstName} : ${kg(max.kg)} (repère du ${dayMonth.format(new Date(`${max.date}T00:00:00Z`))}). Les kg sont calculés.`
+                : `Pas de max pour ${athlete.firstName} sur cet exercice : les kg ne sont pas calculés. Ajoute un repère relié à l'exercice dans sa fiche.`}
+            </p>
+          ) : null}
+        </div>
+      )}
+
       <div className="flex flex-col gap-1.5">
-        <div className={`${GRID} px-1 text-[11.5px] font-semibold text-faint`}>
+        <div className={`${gridOf(timed)} px-1 text-[11.5px] font-semibold text-faint`}>
           <span>#</span>
           <span>Type</span>
-          <span>Répét.</span>
+          <span>{timed ? "Durée" : "Répét."}</span>
           <span>{exercise.loadMode === "pct" ? "% max" : "kg"}</span>
-          <span>RIR</span>
+          {timed ? null : <span>RIR</span>}
         </div>
         {exercise.sets.map((set, index) => (
           <SetRow
@@ -635,6 +697,7 @@ export function StrengthExercisePanel({
             set={set}
             index={index}
             mode={exercise.loadMode}
+            timed={timed}
             maxKg={maxKg}
             onChange={(next) =>
               onChange({
@@ -868,7 +931,7 @@ export function ExercisePickerSheet({
   title: string;
   library: LibraryChoice[];
   multiple: boolean;
-  onPick: (picked: { exerciseId?: string; name: string }[]) => void;
+  onPick: (picked: { exerciseId?: string; name: string; timed?: boolean }[]) => void;
 }) {
   const searchId = useId();
   const search = useRef<HTMLInputElement>(null);
@@ -898,7 +961,7 @@ export function ExercisePickerSheet({
   ).slice(0, 60);
   const free = query.trim();
   const pick = (item: LibraryChoice) => {
-    if (!multiple) return onPick([{ exerciseId: item.id, name: item.name }]);
+    if (!multiple) return onPick([{ exerciseId: item.id, name: item.name, timed: item.timed }]);
     setChosen((current) =>
       current.some((entry) => entry.id === item.id)
         ? current.filter((entry) => entry.id !== item.id)
@@ -925,7 +988,13 @@ export function ExercisePickerSheet({
                 type="button"
                 disabled={chosen.length < 2}
                 onClick={() =>
-                  onPick(chosen.map((item) => ({ exerciseId: item.id, name: item.name })))
+                  onPick(
+                    chosen.map((item) => ({
+                      exerciseId: item.id,
+                      name: item.name,
+                      timed: item.timed,
+                    })),
+                  )
                 }
                 className={dlgPrimaryButtonClass}
               >

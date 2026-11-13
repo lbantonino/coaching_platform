@@ -11,6 +11,7 @@ import { DialogBody, Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import type { Discipline } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
+import type { SessionFormInput } from "@/features/sessions/schemas";
 
 import { SessionForm } from "./session-form";
 
@@ -28,6 +29,8 @@ type Slot = {
   label?: string;
   athleteId?: string;
   discipline?: Discipline | null;
+  // « Modifier » une carte de l'Assistant IA : toute la séance proposée, pré-remplie.
+  values?: Partial<SessionFormInput>;
 };
 type Athlete = { id: string; name: string };
 
@@ -80,6 +83,7 @@ export function NewSessionSheet({
         label: wanted?.label,
         athleteId: wanted?.athleteId,
         discipline: wanted?.discipline,
+        values: wanted?.values,
       });
       loadAthletes().then(setAthletes, () => setAthletes([]));
     },
@@ -141,6 +145,7 @@ export function NewSessionSheet({
               vatRate: "",
               vatIncluded: defaults.paymentMethod === "cash",
               paymentMethod: defaults.paymentMethod,
+              ...slot.values,
             }}
             locked={false}
             submitLabel="Créer la séance"

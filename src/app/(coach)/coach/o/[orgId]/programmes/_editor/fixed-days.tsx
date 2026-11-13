@@ -8,6 +8,7 @@ import { DialogBody, Overlay } from "@/components/ui/overlay";
 import { RadioMark } from "@/components/ui/radio-choice";
 import { SelectField } from "@/components/ui/select-field";
 import { Switch } from "@/components/ui/switch";
+import { FEATURES } from "@/config/features";
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import type { Phase, Week } from "@/domain/training/program-plan";
 import {
@@ -585,12 +586,15 @@ export function DayPicker({
         ) : null}
       </fieldset>
 
-      <Switch
-        checked={canMove}
-        onChange={setCanMove}
-        label={`${context.firstName} peut déplacer la séance`}
-        description="Dans la même semaine. Tu reçois une notification."
-      />
+      {/* MVP espace coach seul (D-167) : sans espace sportif, le sportif ne déplace rien. */}
+      {FEATURES.athleteSpace ? (
+        <Switch
+          checked={canMove}
+          onChange={setCanMove}
+          label={`${context.firstName} peut déplacer la séance`}
+          description="Dans la même semaine. Tu reçois une notification."
+        />
+      ) : null}
 
       <div className={`flex gap-2 ${compact ? "" : "sticky bottom-0 -mx-1 bg-dlg px-1 pt-2 pb-1"}`}>
         <button
@@ -604,7 +608,7 @@ export function DayPicker({
                   day && sameDay.length > 0
                     ? (moment ?? suggestedMoment(week, day, session.key) ?? undefined)
                     : undefined,
-                athleteCanMove: canMove,
+                athleteCanMove: FEATURES.athleteSpace ? canMove : false,
               },
               scope,
             )
@@ -688,6 +692,16 @@ export function ProposeDaysDialog({
         : [],
     ),
   );
+  // Séances déjà posées sur chaque jour (rendez-vous du coach compris) : un jour en a 4 au plus
+  // (D-164) ; au-delà, la semaine serait refusée à l'enregistrement (revue MVP du 13/11, C12).
+  const perDay = (day: Weekday, except: string) =>
+    week.sessions.filter((session) =>
+      session.key === except
+        ? false
+        : session.withCoach
+          ? weekdayOf(session.withCoach.date) === day
+          : days.get(session.key) === day,
+    ).length;
   // FIX-01 (recette du 11/11) : « Mar 3 » comme la maquette (le jour et sa date, sans couper « Mercredi »).
   const label = (day: Weekday) => {
     const date = dayNumber(context.startDate, week.index, day);
@@ -789,11 +803,15 @@ export function ProposeDaysDialog({
                       }
                     >
                       <option value="">Sans jour</option>
-                      {WEEKDAYS.map((day) => (
-                        <option key={day} value={day}>
-                          {label(day)}
-                        </option>
-                      ))}
+                      {WEEKDAYS.map((day) => {
+                        const full = perDay(day, session.key) >= MAX_SESSIONS_PER_DAY;
+                        return (
+                          <option key={day} value={day} disabled={full}>
+                            {label(day)}
+                            {full ? " (complet)" : ""}
+                          </option>
+                        );
+                      })}
                     </SelectField>
                   )}
                 </li>

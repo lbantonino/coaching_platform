@@ -34,11 +34,11 @@ describe("documents du coach", () => {
       ok: false,
       error: "Choisis un fichier.",
     });
-    const big = new Uint8Array(10 * 1024 * 1024 + 1);
+    const big = new Uint8Array(4 * 1024 * 1024 + 1);
     big.set([0x25, 0x50, 0x44, 0x46]);
     expect(checkDocument(big, "gros.pdf")).toEqual({
       ok: false,
-      error: "Fichier trop lourd : 10 Mo maximum.",
+      error: "Fichier trop lourd : 4 Mo maximum.",
     });
   });
 

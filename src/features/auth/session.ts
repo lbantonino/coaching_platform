@@ -32,6 +32,28 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   };
 }
 
+// Session ouverte par un lien de réinitialisation du mot de passe depuis moins d'une heure (le jeton
+// porte la méthode « recovery »). Une session ordinaire (connexion par mot de passe, Google) ne
+// suffit PAS pour choisir un nouveau mot de passe sans l'ancien : un ordinateur resté connecté ne
+// permet pas de prendre le compte (revue de sécurité du 13/11/2026). null sinon.
+const RECOVERY_WINDOW_SECONDS = 60 * 60;
+export async function getRecoveryUser(): Promise<CurrentUser | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data?.claims) return null;
+  const now = Date.now() / 1000;
+  const recovered = (data.claims.amr ?? []).some((entry) =>
+    typeof entry === "string"
+      ? entry === "recovery"
+      : entry.method === "recovery" && now - entry.timestamp < RECOVERY_WINDOW_SECONDS,
+  );
+  if (!recovered) return null;
+  return {
+    id: data.claims.sub,
+    email: typeof data.claims.email === "string" ? data.claims.email : null,
+  };
+}
+
 // À appeler en tête de toute page ou action réservée aux utilisateurs connectés.
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
@@ -53,7 +75,10 @@ export async function getCoachMemberships(
     .from("organization_members")
     .select("organization_id, role, organizations ( name, country, currency )")
     .eq("user_id", userId)
-    .eq("status", "active");
+    .eq("status", "active")
+    // Ordre stable : la première organisation (celle qu'utilisent le menu et les pages) est la plus
+    // ancienne, pas celle que la base renvoie au hasard.
+    .order("created_at", { ascending: true });
 
   if (error) throw new Error("Lecture des organisations impossible.");
 

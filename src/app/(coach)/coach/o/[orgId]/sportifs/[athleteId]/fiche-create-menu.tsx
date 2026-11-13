@@ -21,7 +21,8 @@ export function FicheCreateMenu({
   programHref,
   phone = false,
 }: {
-  athlete: { id: string; name: string; programType: Discipline | null };
+  // `archived` : une fiche archivée ne reçoit pas de programme (il faut d'abord la réactiver).
+  athlete: { id: string; name: string; programType: Discipline | null; archived?: boolean };
   // L'assistant dans la fiche du sportif (D-163) : sportif fixé, retour vers son onglet Programme.
   programHref: string;
   phone?: boolean;
@@ -61,14 +62,18 @@ export function FicheCreateMenu({
           // Kit (boîte 05) : descriptions et chevrons. L'assistant s'ouvre avec ce sportif déjà choisi
           // (D-157) ; la description du kit (« préremplies pour elle ») suppose le genre : on garde
           // une phrase neutre.
-          {
-            label: "Programme",
-            description: "Plusieurs semaines d'entraînement",
-            icon: FilePlus,
-            tone: "hybrid",
-            chevron: true,
-            onSelect: () => router.push(programHref),
-          },
+          ...(athlete.archived
+            ? []
+            : [
+                {
+                  label: "Programme",
+                  description: "Plusieurs semaines d'entraînement",
+                  icon: FilePlus,
+                  tone: "hybrid" as const,
+                  chevron: true,
+                  onSelect: () => router.push(programHref),
+                },
+              ]),
           {
             label: "Séance",
             description: "Une séance dans l'agenda",

@@ -11,7 +11,8 @@ import { listLibraryChoices } from "@/features/programs/library-choices";
 import { createClient } from "@/lib/supabase/server";
 
 import { EditorProvider } from "../../../_editor/editor-provider";
-import { programHref } from "../../../_session/links";
+import { SafeBack } from "../../../_session/safe-leave";
+import { ficheReturn, programHref } from "../../../_session/links";
 import {
   SessionEditor,
   SessionHeaderActions,
@@ -38,6 +39,7 @@ export default function SessionPage({
             programId={programId}
             sessionKey={cle}
             returnTo={typeof query.retour === "string" ? query.retour : null}
+            editorReturn={typeof query.editeur === "string" ? query.editeur : null}
           />
         ))}
       </Suspense>
@@ -50,11 +52,14 @@ async function Session({
   programId,
   sessionKey,
   returnTo,
+  editorReturn,
 }: {
   orgId: string;
   programId: string;
   sessionKey: string;
   returnTo: string | null;
+  // L'éditeur du programme avait été ouvert depuis la fiche (?editeur=, B15) : il y ramènera.
+  editorReturn: string | null;
 }) {
   const { user, membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
@@ -98,12 +103,10 @@ async function Session({
       : null,
     // Retour vers la fiche du sportif : seulement une page de fiche de CETTE organisation (jamais une
     // adresse quelconque reçue dans l'URL).
-    returnTo:
-      returnTo &&
-      returnTo.startsWith(`/coach/o/${organizationId}/sportifs/`) &&
-      !returnTo.includes("//")
-        ? { href: returnTo, label: athlete?.displayName ?? "Fiche du sportif" }
-        : null,
+    returnTo: ficheReturn(returnTo, organizationId)
+      ? { href: returnTo as string, label: athlete?.displayName ?? "Fiche du sportif" }
+      : null,
+    editorReturn: ficheReturn(editorReturn, organizationId),
   };
   const back = meta.returnTo?.href ?? programHref(meta);
 
@@ -116,13 +119,16 @@ async function Session({
       initialPlan={loaded.draft}
       initialRevision={loaded.revision}
     >
-      <PageHeader
-        title={`Séance ${position}`}
-        back={{ href: back, label: meta.returnTo?.label ?? loaded.draft.title }}
-        visibleTitle={false}
-        phoneBack={false}
-        actions={<SessionHeaderActions href={back} />}
-      />
+      {/* Le retour de l'en-tête enregistre d'abord ce qui attend (revue MVP du 13/11, C7). */}
+      <SafeBack>
+        <PageHeader
+          title={`Séance ${position}`}
+          back={{ href: back, label: meta.returnTo?.label ?? loaded.draft.title }}
+          visibleTitle={false}
+          phoneBack={false}
+          actions={<SessionHeaderActions href={back} />}
+        />
+      </SafeBack>
       <PageBody>
         <SessionEditor meta={meta} />
       </PageBody>

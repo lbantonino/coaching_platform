@@ -32,6 +32,8 @@ export type LibraryExercise = {
   hyroxStation: number | null;
   equipment: string[];
   primaryMuscles: string[];
+  // Mesuré en secondes seulement (planche, gainage, équilibre…, D-166).
+  timed?: boolean;
   // Image de la vignette, ou null : la tuile de remplacement s'affiche.
   thumbnail: string | null;
   favorite: boolean;

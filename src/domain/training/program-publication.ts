@@ -1,7 +1,14 @@
 import { hrZoneRange, kgFromPercent, type OneRepMax } from "./aims";
 import { officialLoadKg, type AthleteSex } from "./hyrox-official";
+import { BLANK_EXERCISE_NAME, BLANK_SESSION_TITLE } from "./plan-edit";
 import { phaseOfWeek, planSessions, type HyroxDivision, type ProgramDraft } from "./program-plan";
-import { orderedSessions, plannedDate, scheduleWarnings, sessionDay } from "./scheduling";
+import {
+  orderedSessions,
+  plannedDate,
+  scheduleWarnings,
+  sessionDay,
+  weekMonday,
+} from "./scheduling";
 import type {
   HyroxContent,
   PublishedSession,
@@ -212,7 +219,9 @@ export type PublishIssue = {
     | "pct_without_max"
     | "official_without_division"
     | "hr_without_max"
-    | "coach_session_missing";
+    | "coach_session_missing"
+    | "coach_date_mismatch"
+    | "incomplete_session";
   message: string;
   weekIndex?: number;
   sessionKey?: string;
@@ -303,6 +312,33 @@ export function validateForPublish(draft: ProgramDraft, ctx: PublishContext): Pu
         code: "coach_session_missing",
         ...where,
         message: `${label} : le rendez-vous du coach n'existe plus.`,
+      });
+    } else if (session.withCoach) {
+      // Revue MVP du 13/11 (B5) : le rendez-vous est daté ; s'il ne tombe plus dans SA semaine (dates
+      // du programme changées, ancienne copie), la séance s'afficherait au mauvais endroit.
+      const monday = weekMonday(draft.startDate, week.index);
+      if (session.withCoach.date < monday || session.withCoach.date > addDays(monday, 6)) {
+        issues.push({
+          level: "warning",
+          code: "coach_date_mismatch",
+          ...where,
+          message: `${label} : le rendez-vous du coach n'est pas dans cette semaine.`,
+        });
+      }
+    }
+    // Revue MVP du 13/11 (C24) : une séance ajoutée puis jamais remplie part telle quelle chez le
+    // sportif (« Nouvelle séance », « Exercice à choisir »).
+    const blankExercise =
+      session.content.discipline === "strength" &&
+      strengthExercises(session.content).some(
+        (exercise) => exercise.name === BLANK_EXERCISE_NAME && !exercise.exerciseId,
+      );
+    if (session.title === BLANK_SESSION_TITLE || blankExercise) {
+      issues.push({
+        level: "warning",
+        code: "incomplete_session",
+        ...where,
+        message: `${label} : séance à compléter${blankExercise ? " (exercice à choisir)" : ""}.`,
       });
     }
     const { content } = session;

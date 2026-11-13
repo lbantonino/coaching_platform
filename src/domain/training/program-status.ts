@@ -73,3 +73,42 @@ export function orderForDashboard<T extends { startDate: string; weeksCount: num
       : b.startDate.localeCompare(a.startDate);
   });
 }
+
+// ---------------------------------------------------------------------------
+// Revue MVP du 13/11 (B1, B2, B8, C3) : où en est un programme publié, quelle semaine montrer, et
+// quand en commencer un nouveau sans chevaucher les autres.
+// ---------------------------------------------------------------------------
+export type ProgramTiming = "current" | "upcoming" | "finished";
+
+export function programTiming(
+  program: { startDate: string; weeksCount: number },
+  today: string,
+): ProgramTiming {
+  if (today < program.startDate) return "upcoming";
+  return today >= programEnd(program.startDate, program.weeksCount) ? "finished" : "current";
+}
+
+// La semaine montrée par défaut, la MÊME dans les onglets Programme et Agenda : la semaine en cours ;
+// avant le début, la semaine 1 ; après la fin, la dernière.
+export function defaultWeekIndex(startDate: string, weeksCount: number, today: string): number {
+  const days = Math.floor((Date.parse(today) - Date.parse(startDate)) / 86_400_000);
+  return Math.min(Math.max(Math.floor(days / 7) + 1, 1), weeksCount);
+}
+
+type Period = { startDate: string; weeksCount: number };
+
+// Deux programmes se chevauchent (C-8) : même règle que la contrainte de la base (fin exclue).
+export function periodsOverlap(a: Period, b: Period): boolean {
+  return (
+    a.startDate < programEnd(b.startDate, b.weeksCount) &&
+    b.startDate < programEnd(a.startDate, a.weeksCount)
+  );
+}
+
+// Début proposé pour un nouveau programme : `from` (le prochain lundi), ou le lundi qui suit la fin
+// du dernier programme publié encore en cours ou à venir, pour ne pas le chevaucher.
+export function firstFreeMonday(published: readonly Period[], from: string): string {
+  return published
+    .map((program) => programEnd(program.startDate, program.weeksCount))
+    .reduce((latest, end) => (end > latest ? end : latest), from);
+}

@@ -6,22 +6,24 @@ import { remembers, sessionCookieOptions } from "@/lib/supabase/session-cookies"
 // (effacés à la fermeture du navigateur), sauf quand il s'agit de les effacer.
 describe("sessionCookieOptions", () => {
   const persistent = { path: "/", maxAge: 34_560_000, sameSite: "lax" as const };
+  // Toujours httpOnly et Lax ; Secure en production seulement (revue de sécurité du 13/11/2026).
+  const hardened = { httpOnly: true, sameSite: "lax", secure: false };
 
   it("garde la durée quand on se souvient de la personne", () => {
-    expect(sessionCookieOptions(persistent, true)).toEqual(persistent);
+    expect(sessionCookieOptions(persistent, true)).toEqual({ ...persistent, ...hardened });
   });
 
   it("retire la durée (cookie de navigateur) sinon", () => {
-    expect(sessionCookieOptions(persistent, false)).toEqual({ path: "/", sameSite: "lax" });
+    expect(sessionCookieOptions(persistent, false)).toEqual({ path: "/", ...hardened });
     const dated = { path: "/", expires: new Date(Date.now() + 86_400_000) };
-    expect(sessionCookieOptions(dated, false)).toEqual({ path: "/" });
+    expect(sessionCookieOptions(dated, false)).toEqual({ path: "/", ...hardened });
   });
 
   it("n'empêche jamais un effacement (durée 0 ou date passée)", () => {
     const removal = { path: "/", maxAge: 0 };
-    expect(sessionCookieOptions(removal, false)).toEqual(removal);
+    expect(sessionCookieOptions(removal, false)).toEqual({ ...removal, ...hardened });
     const past = { path: "/", expires: new Date(0) };
-    expect(sessionCookieOptions(past, false)).toEqual(past);
+    expect(sessionCookieOptions(past, false)).toEqual({ ...past, ...hardened });
   });
 
   it("se souvient par défaut (cookie absent), oublie seulement sur « 0 »", () => {

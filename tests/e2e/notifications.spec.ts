@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { FEATURES } from "../../src/config/features";
 import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Notifications du coach (D-37) : la cloche compte ce qui attend, la page le range en sections
@@ -42,16 +43,23 @@ test("la cloche mène aux notifications, rangées en sections, et chaque ligne a
 
   for (const name of [
     "Compétitions dans les 7 jours",
-    "Messages non lus",
     "Tâches du jour ou en retard",
     "Séances à encaisser",
     "Fiches à compléter",
   ]) {
     await expect(page.getByRole("region", { name })).toBeVisible();
   }
-  // Chaque séance à encaisser ouvre sa page, sur la date à payer.
+  // MVP espace coach seul (D-167) : pas de section « Messages non lus ».
+  await expect(page.getByRole("region", { name: "Messages non lus" })).toHaveCount(0);
+  // Chaque séance à encaisser ouvre sa page, sur la date à payer. La Remise en forme du mardi de
+  // Sophie y est toujours ; d'autres dates la précèdent selon le temps écoulé depuis la dernière remise
+  // à zéro de la base (la graine paie tout jusqu'à 8 jours avant) : on ne suppose pas sa place.
   const unpaid = page.getByRole("region", { name: "Séances à encaisser" });
-  await expect(unpaid.getByRole("link", { name: /Sophie Lambert/ }).first()).toHaveAttribute(
+  const tuesday = unpaid
+    .getByRole("link", { name: /Sophie Lambert/ })
+    .and(page.locator('a[href*="/agenda/seances/ca000000-0000-4000-8000-00000000020c?date="]'))
+    .first();
+  await expect(tuesday).toHaveAttribute(
     "href",
     /\/agenda\/seances\/ca000000-0000-4000-8000-00000000020c\?date=\d{4}-\d{2}-\d{2}$/,
   );
@@ -71,7 +79,10 @@ test("une compétition d'un sportif dans les 7 jours devient un rappel dans les 
   const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const name = `Rappel ${suffix}`;
   const competition = `Course ${suffix}`;
-  const inThreeDays = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+  // Dans 3 jours À BRUXELLES, comme l'app (en UTC, entre minuit et 1 h, la date de la veille donnait J-2).
+  const inThreeDays = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(
+    new Date(Date.now() + 3 * 86_400_000),
+  );
   await loginAsCoachA(page);
   await page.goto("/coach/o/0a000000-0000-4000-8000-0000000000a1/sportifs/nouveau");
   await fillAthleteName(page, name);
@@ -150,6 +161,7 @@ test("la cloche déplie l'aperçu des notifications, rangé en sections, avec «
 test("Messages : le filtre « Non lues » ne garde que les conversations à lire", async ({
   page,
 }) => {
+  test.skip(!FEATURES.messages, "MVP espace coach seul (D-167) : messagerie masquée.");
   await loginAsCoachA(page);
   await page.goto("/coach/messages?filtre=non-lus");
   const filters = page.getByRole("navigation", { name: "Filtrer les conversations" });

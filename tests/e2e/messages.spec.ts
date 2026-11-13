@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { FEATURES } from "../../src/config/features";
+
+// MVP espace coach seul (D-167) : la messagerie est masquée, ses tests attendent sa réouverture.
+test.skip(!FEATURES.messages, "MVP espace coach seul (D-167) : messagerie masquée.");
+
 // Messages, kit « Coory Pages », page 07 (D-131) : « Nouveau message » (choisir un sportif ouvre son
 // fil), la recherche dans les conversations et « Planifier » (Nouvelle séance avec ce sportif). Rien
 // n'est écrit en base : les deux projets peuvent tourner en même temps.

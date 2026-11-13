@@ -554,12 +554,7 @@ async function Accounting({
                                 running
                                   ? {
                                       label: "Arrêter (ne compte plus après aujourd'hui)",
-                                      action: stopExpense.bind(
-                                        null,
-                                        organizationId,
-                                        expense.id,
-                                        today,
-                                      ),
+                                      action: stopExpense.bind(null, organizationId, expense.id),
                                     }
                                   : undefined
                               }

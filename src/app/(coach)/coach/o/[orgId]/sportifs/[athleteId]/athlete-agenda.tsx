@@ -19,16 +19,19 @@ export function AgendaItemRow({
   today,
   agendaPath,
   goalsHref,
+  returnTo,
 }: {
   item: AgendaItem;
   today: string;
   agendaPath: string;
   goalsHref: string;
+  // La fiche où revenir depuis la séance (B15).
+  returnTo?: string;
 }) {
   const isToday = item.date === today;
   return (
     <Link
-      href={item.type === "session" ? `${agendaPath}/seances/${item.sessionId}` : goalsHref}
+      href={itemHref(item, agendaPath, goalsHref, returnTo)}
       scroll={item.type === "session"}
       className={`-mx-2 flex min-h-[52px] items-center gap-3 rounded-[10px] px-2 py-2.5 transition-colors duration-150 hover:bg-surface-2 ${
         isToday ? "bg-accent-soft" : ""
@@ -113,8 +116,14 @@ const dotColors: Record<Discipline, string> = {
   hybrid: "bg-hybrid",
 };
 
-function itemHref(item: AgendaItem, agendaPath: string, goalsHref: string) {
-  return item.type === "session" ? `${agendaPath}/seances/${item.sessionId}` : goalsHref;
+// Une séance s'ouvre à la date touchée (revue MVP du 13/11, B6 : sans ?date=, la page d'une séance
+// hebdomadaire montrait la prochaine date, pas celle choisie) et ramène à la fiche (B15).
+function itemHref(item: AgendaItem, agendaPath: string, goalsHref: string, returnTo?: string) {
+  return item.type === "session"
+    ? `${agendaPath}/seances/${item.sessionId}?date=${item.date}${
+        returnTo ? `&retour=${encodeURIComponent(returnTo)}` : ""
+      }`
+    : goalsHref;
 }
 
 function itemKind(item: AgendaItem): string {
@@ -127,14 +136,16 @@ function WeekCard({
   item,
   agendaPath,
   goalsHref,
+  returnTo,
 }: {
   item: AgendaItem;
   agendaPath: string;
   goalsHref: string;
+  returnTo: string;
 }) {
   return (
     <Link
-      href={itemHref(item, agendaPath, goalsHref)}
+      href={itemHref(item, agendaPath, goalsHref, returnTo)}
       scroll={item.type === "session"}
       className={`flex flex-col gap-0.5 rounded-[10px] border p-2 transition-[filter] duration-150 hover:brightness-95 ${
         item.discipline ? disciplineStyles[item.discipline].header : "border-line bg-bg"
@@ -154,7 +165,7 @@ function WeekCard({
   );
 }
 
-// Onglet « Agenda » de la fiche (demande d'Antonino du 26/10) : trois vues, Aujourd'hui (la liste du
+// Onglet « Agenda » de la fiche (demande d'Antonino du 26/10) : trois vues, Jour (la liste du
 // jour), Semaine (une colonne par jour, cartes sans grille horaire ; 3 jours visibles sur téléphone,
 // on fait glisser) et Mois (pastilles par jour, toucher un jour ouvre ce jour-là). Seulement ce qui
 // concerne le sportif ; l'agenda du coach (tableau de bord, page Agenda) reste celui de tout le monde.
@@ -179,9 +190,11 @@ export function AthleteAgendaSection({
 }) {
   const href = (nextView: AgendaView, nextDate: string) =>
     `${basePath}?onglet=agenda&vue=${nextView}&date=${nextDate}`;
+  const returnTo = href(view, date);
   const byDay = groupByDay(items);
+  // « Jour » (revue MVP du 13/11, B17) : la vue d'un jour, ouverte sur aujourd'hui.
   const viewLinks: { view: AgendaView; label: string; date: string }[] = [
-    { view: "jour", label: "Aujourd'hui", date: today },
+    { view: "jour", label: "Jour", date: today },
     { view: "semaine", label: "Semaine", date },
     { view: "mois", label: "Mois", date },
   ];
@@ -252,6 +265,7 @@ export function AthleteAgendaSection({
                   today={today}
                   agendaPath={agendaPath}
                   goalsHref={goalsHref}
+                  returnTo={returnTo}
                 />
               </li>
             ))}
@@ -289,6 +303,7 @@ export function AthleteAgendaSection({
                         item={item}
                         agendaPath={agendaPath}
                         goalsHref={goalsHref}
+                        returnTo={returnTo}
                       />
                     ))
                   )}

@@ -75,7 +75,7 @@ import { saveSessionAsTemplate } from "@/features/programs/actions";
 import { useEditor } from "../_editor/editor-provider";
 import { TextSheet } from "../_editor/editor-sheets";
 
-import { programHref } from "./links";
+import { programHref, sessionHref } from "./links";
 import { SaveState, useSafeLeave } from "./safe-leave";
 import { RunStepPanel, RunningList, type AthleteAims } from "./running-parts";
 import {
@@ -113,6 +113,8 @@ export type SessionMeta = {
   hyrox: HyroxAthlete | null;
   // Venu de la fiche du sportif : « Terminer » et le retour y ramènent.
   returnTo: { href: string; label: string } | null;
+  // Venu de l'éditeur du programme, lui-même ouvert depuis la fiche (B15) : son retour vers la fiche.
+  editorReturn?: string | null;
 };
 
 const field =
@@ -375,10 +377,11 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
               created = result.key;
               return result.plan;
             });
-            if (created) {
-              toast("Séance dupliquée.");
-              leave(`${meta.base}/${meta.programId}/seances/${created}`);
-            }
+            // Semaine pleine (14 séances, D-164) : rien n'est copié (revue MVP, C12).
+            if (!created) return toast("14 séances au plus par semaine.");
+            toast("Séance dupliquée.");
+            // La copie s'ouvre avec les mêmes retours (fiche du sportif ou éditeur), B16.
+            leave(sessionHref(meta, created, meta.returnTo?.href ?? null));
           },
         },
         {
@@ -554,9 +557,9 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
     <div className="flex flex-col gap-3">
       <SessionBlocks session={session} variant="panel" />
       <p className="rounded-[12px] bg-surface-2 px-3.5 py-3 text-[13px] leading-[1.45] text-text-2">
-        L&apos;éditeur {disciplineLabels[discipline]} n&apos;est pas encore dessiné : cette séance
-        se lit ici et se modifie depuis l&apos;éditeur du programme (dupliquer, supprimer, remplacer
-        par un modèle).
+        L&apos;éditeur {disciplineLabels[discipline]} n&apos;existe pas encore : cette séance,
+        reprise d&apos;un ancien programme, se lit ici. Tu peux la dupliquer ou la supprimer (menu «
+        ··· »), et ajouter à sa place une séance Running, Musculation ou Hyrox.
       </p>
     </div>
   );
@@ -858,7 +861,13 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
           update((current) => removeSession(current, meta.weekIndex, meta.sessionKey));
           setDialog(null);
           toast("Séance supprimée du brouillon.");
-          leave(`${meta.base}/${meta.programId}?semaine=${meta.weekIndex}`);
+          // Venu de la fiche, on y revient (B16) ; sinon l'éditeur, sur la semaine.
+          leave(
+            meta.returnTo?.href ??
+              `${meta.base}/${meta.programId}?semaine=${meta.weekIndex}${
+                meta.editorReturn ? `&retour=${encodeURIComponent(meta.editorReturn)}` : ""
+              }`,
+          );
         }}
       >
         « {session.title} » sort du brouillon de la semaine {meta.weekIndex}.

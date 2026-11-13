@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { EditorProvider } from "../_editor/editor-provider";
 import { EditorHeaderActions, ProgramEditor, type EditorMeta } from "../_editor/program-editor";
+import { SafeBack } from "../_session/safe-leave";
 
 export const metadata: Metadata = {
   title: "Programme",
@@ -39,6 +40,7 @@ export default function ProgramPage({
               week: Number(typeof query.semaine === "string" ? query.semaine : NaN) || null,
               session: typeof query.seance === "string" ? query.seance : null,
             }}
+            returnTo={typeof query.retour === "string" ? query.retour : null}
           />
         ))}
       </Suspense>
@@ -50,11 +52,14 @@ async function Program({
   orgId,
   programId,
   focus,
+  returnTo,
 }: {
   orgId: string;
   programId: string;
   // Retour d'une séance (« Terminer ») : ?semaine=2&seance=<clé> rouvre cette semaine et cette séance.
   focus: EditorMeta["focus"];
+  // Ouvert depuis la fiche du sportif (?retour=, revue MVP du 13/11, B15) : le retour y ramène.
+  returnTo: string | null;
 }) {
   const { membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
@@ -63,7 +68,11 @@ async function Program({
   const loaded = await loadDraft(supabase, organizationId, programId);
   if (!loaded) notFound();
   const { program, draft } = loaded;
-  const back = { href: base, label: "Programmes" };
+  // Seulement une fiche de CETTE organisation, jamais une adresse quelconque reçue dans l'URL.
+  const fiche = `/coach/o/${organizationId}/sportifs/${program.athleteId}`;
+  const fromFiche =
+    returnTo !== null && returnTo.startsWith(fiche) && !returnTo.includes("//") ? returnTo : null;
+  const back = { href: fromFiche ?? base, label: "Programmes" };
 
   if (!draft) {
     return (
@@ -98,6 +107,7 @@ async function Program({
     listSessionTemplateChoices(organizationId, draft.discipline),
   ]);
   if (!athlete) notFound();
+  if (fromFiche) back.label = athlete.displayName;
 
   const context = aimContext(athlete, draft);
   const meta: EditorMeta = {
@@ -119,6 +129,7 @@ async function Program({
     templateSource: null,
     focus,
     sessionTemplates,
+    returnTo: fromFiche ? back : null,
     publishContext: {
       hrMax: context.hrMax,
       maxByExercise: [...context.maxByExercise.entries()],
@@ -143,13 +154,16 @@ async function Program({
       initialPlan={draft}
       initialRevision={loaded.revision}
     >
-      <PageHeader
-        title={draft.title}
-        back={back}
-        visibleTitle={false}
-        phoneBack={false}
-        actions={<EditorHeaderActions base={base} />}
-      />
+      {/* Le retour de l'en-tête enregistre d'abord ce qui attend (revue MVP du 13/11, C7). */}
+      <SafeBack>
+        <PageHeader
+          title={draft.title}
+          back={back}
+          visibleTitle={false}
+          phoneBack={false}
+          actions={<EditorHeaderActions base={base} />}
+        />
+      </SafeBack>
       <PageBody fill>
         <ProgramEditor meta={meta} />
       </PageBody>

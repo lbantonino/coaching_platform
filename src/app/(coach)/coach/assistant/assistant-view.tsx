@@ -5,72 +5,94 @@ import { useState } from "react";
 
 import {
   AssistantComposer,
+  AssistantLockTile,
   AssistantOrb,
   AssistantThread,
+  assistantLockText,
+  remainingLabel,
   SHORTCUTS,
   useAssistant,
 } from "@/components/blocks/assistant";
 import { MobileBarTool } from "@/components/layout/mobile-bar";
 import { DialogBody, Sheet } from "@/components/ui/overlay";
+import { assistantComposerOpen } from "@/features/assistant/rules";
 
 // Page de l'Assistant IA (kit « Coory Pages », 02, D-132). Ordinateur : une carte, la colonne
 // « Historique » (250 px : « Nouvelle conversation », puis les conversations par date) et la
 // conversation (accueil : orbe, salutation, saisie, trois raccourcis ; sinon le fil centré à 720 px
 // et « Répondre… » en bas). Téléphone : « Historique » et « Nouvelle conversation » dans la barre du
-// haut, la saisie collée en bas. Les conversations ne sont pas encore enregistrées (décision 15) :
-// l'historique le dit, sans fausses lignes.
+// haut, la saisie collée en bas. Les conversations ne sont pas enregistrées : l'historique le dit,
+// sans fausses lignes. Sans abonnement Coory (D-168) : le verrou à la place de la saisie.
 const NO_HISTORY =
-  "Tes conversations apparaîtront ici quand l'assistant sera branché. Pour l'instant, rien n'est enregistré.";
+  "Les conversations ne sont pas enregistrées : « Nouvelle conversation » efface celle en cours.";
 
 export function AssistantView() {
   const assistant = useAssistant();
   const [history, setHistory] = useState(false);
   if (!assistant) return null;
   const empty = assistant.messages.length === 0;
+  const ready = assistantComposerOpen(assistant.access);
+  const lock = assistantLockText(assistant.access);
+  const remaining = remainingLabel(assistant.access);
 
   return (
     <>
       {/* Téléphone : Historique · Nouvelle conversation, dans la barre du haut. */}
-      <MobileBarTool>
-        <button
-          type="button"
-          aria-label="Historique"
-          onClick={() => setHistory(true)}
-          className="grid size-10 place-items-center rounded-xl text-text-2"
-        >
-          <History aria-hidden size={17} strokeWidth={1.9} />
-        </button>
-        <button
-          type="button"
-          aria-label="Nouvelle conversation"
-          onClick={assistant.restart}
-          className="grid size-10 place-items-center rounded-xl bg-cta text-on-cta"
-        >
-          <SquarePen aria-hidden size={16} strokeWidth={1.9} />
-        </button>
-      </MobileBarTool>
+      {/* Verrouillé (D-168) : rien à ouvrir dans la barre du téléphone. */}
+      {ready ? (
+        <MobileBarTool>
+          <button
+            type="button"
+            aria-label="Historique"
+            onClick={() => setHistory(true)}
+            className="grid size-10 place-items-center rounded-xl text-text-2"
+          >
+            <History aria-hidden size={17} strokeWidth={1.9} />
+          </button>
+          <button
+            type="button"
+            aria-label="Nouvelle conversation"
+            onClick={assistant.restart}
+            className="grid size-10 place-items-center rounded-xl bg-cta text-on-cta"
+          >
+            <SquarePen aria-hidden size={16} strokeWidth={1.9} />
+          </button>
+        </MobileBarTool>
+      ) : null}
 
       <section
         aria-label="Assistant IA"
         className="flex min-h-[70vh] flex-1 overflow-hidden rounded-[22px] bg-surface inset-ring inset-ring-line lg:min-h-0 lg:rounded-[20px]"
       >
-        <nav
-          aria-label="Historique des conversations"
-          className="flex w-[250px] shrink-0 flex-col gap-5 border-r border-line px-3.5 py-5 max-lg:hidden"
-        >
-          <button
-            type="button"
-            onClick={assistant.restart}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-[11px] bg-cta text-[13.5px] leading-[normal] font-semibold text-on-cta transition-[scale,opacity] duration-150 hover:opacity-90 active:scale-[0.98]"
+        {/* Verrouillé (D-168) : pas d'historique ni de « Nouvelle conversation ». */}
+        {ready ? (
+          <nav
+            aria-label="Historique des conversations"
+            className="flex w-[250px] shrink-0 flex-col gap-5 border-r border-line px-3.5 py-5 max-lg:hidden"
           >
-            <SquarePen aria-hidden size={15} strokeWidth={1.9} />
-            Nouvelle conversation
-          </button>
-          <p className="px-1.5 text-[13px] leading-[1.5] text-faint">{NO_HISTORY}</p>
-        </nav>
+            <button
+              type="button"
+              onClick={assistant.restart}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-[11px] bg-cta text-[13.5px] leading-[normal] font-semibold text-on-cta transition-[scale,opacity] duration-150 hover:opacity-90 active:scale-[0.98]"
+            >
+              <SquarePen aria-hidden size={15} strokeWidth={1.9} />
+              Nouvelle conversation
+            </button>
+            <p className="px-1.5 text-[13px] leading-[1.5] text-faint">{NO_HISTORY}</p>
+          </nav>
+        ) : null}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          {empty ? (
+          {!ready ? (
+            // Sans abonnement : le verrou, ni saisie ni raccourcis (aucune demande ne peut partir).
+            <div className="mx-auto flex w-full max-w-[720px] flex-1 flex-col items-center justify-center gap-4 px-4 py-8 text-center lg:px-10">
+              <AssistantLockTile />
+              <h2 className="text-[24px] leading-[1.2] font-bold tracking-[-0.025em] text-balance lg:text-[28px]">
+                {lock.title}
+              </h2>
+              <p className="max-w-[460px] text-[14.5px] leading-[1.5] text-muted">{lock.detail}</p>
+            </div>
+          ) : empty ? (
             <div className="mx-auto flex w-full max-w-[720px] flex-1 flex-col justify-center gap-6 px-4 py-8 lg:px-10">
               <div className="flex flex-col items-center gap-3 text-center">
                 <AssistantOrb size={72} />
@@ -78,10 +100,14 @@ export function AssistantView() {
                   Bonjour {assistant.firstName}. Comment puis-je t&apos;aider ?
                 </h2>
                 <p className="max-w-[460px] text-[14.5px] leading-[1.5] text-muted">
-                  Je prépare tes programmes, ton agenda et ton admin. Tu valides.
+                  Séances, programmes, messages : je propose, tu décides. Mes réponses peuvent
+                  contenir des erreurs.
                 </p>
               </div>
-              <AssistantComposer rows={3} placeholder="Demande à ton assistant…" />
+              <div className="flex flex-col gap-2">
+                <AssistantComposer rows={3} placeholder="Demande à ton assistant…" />
+                <p className="text-center text-[12px] leading-[normal] text-faint">{remaining}</p>
+              </div>
               <ul aria-label="Raccourcis" className="grid gap-3 sm:grid-cols-3">
                 {SHORTCUTS.map((shortcut) => (
                   <li key={shortcut.title}>
@@ -110,8 +136,9 @@ export function AssistantView() {
               <div className="mx-auto flex min-h-0 w-full max-w-[720px] flex-1 flex-col px-4 pt-6 lg:px-10">
                 <AssistantThread className="flex-1 pb-4" />
               </div>
-              <div className="mx-auto w-full max-w-[720px] px-4 pb-4 max-lg:sticky max-lg:bottom-0 lg:px-10 lg:pb-7">
+              <div className="mx-auto flex w-full max-w-[720px] flex-col gap-2 px-4 pb-4 max-lg:sticky max-lg:bottom-0 lg:px-10 lg:pb-7">
                 <AssistantComposer rows={2} placeholder="Répondre…" />
+                <p className="text-center text-[12px] leading-[normal] text-faint">{remaining}</p>
               </div>
             </>
           )}

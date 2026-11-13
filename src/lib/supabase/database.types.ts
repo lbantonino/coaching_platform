@@ -37,6 +37,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      assistant_usage: {
+        Row: {
+          created_at: string;
+          id: string;
+          input_tokens: number | null;
+          model: string | null;
+          organization_id: string;
+          output_tokens: number | null;
+          status: string;
+          steps: number;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          input_tokens?: number | null;
+          model?: string | null;
+          organization_id: string;
+          output_tokens?: number | null;
+          status?: string;
+          steps?: number;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          input_tokens?: number | null;
+          model?: string | null;
+          organization_id?: string;
+          output_tokens?: number | null;
+          status?: string;
+          steps?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_usage_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       athlete_consents: {
         Row: {
           action: string;
@@ -1637,6 +1682,7 @@ export type Database = {
       };
       organizations: {
         Row: {
+          coory_plan: string;
           country: string;
           created_at: string;
           created_by: string | null;
@@ -1651,6 +1697,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          coory_plan?: string;
           country?: string;
           created_at?: string;
           created_by?: string | null;
@@ -1664,6 +1711,7 @@ export type Database = {
           vat_rate?: number;
         };
         Update: {
+          coory_plan?: string;
           country?: string;
           created_at?: string;
           created_by?: string | null;
@@ -2040,6 +2088,7 @@ export type Database = {
         Returns: string;
       };
       archive_program: { Args: { p_program_id: string }; Returns: undefined };
+      assistant_access_allowed: { Args: { p_organization_id: string }; Returns: boolean };
       before_user_created_access_code: { Args: { event: Json }; Returns: Json };
       change_organization_currency: {
         Args: { p_currency: string; p_organization_id: string; p_rate: number };
@@ -2059,6 +2108,10 @@ export type Database = {
         };
         Returns: string;
       };
+      continue_assistant_use: {
+        Args: { p_id: string; p_organization_id: string };
+        Returns: number;
+      };
       create_program: {
         Args: {
           p_athlete_id: string;
@@ -2074,6 +2127,16 @@ export type Database = {
         Returns: string;
       };
       current_user_is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      finish_assistant_use: {
+        Args: {
+          p_id: string;
+          p_input_tokens: number;
+          p_model: string;
+          p_output_tokens: number;
+          p_status: string;
+        };
+        Returns: undefined;
+      };
       get_invitation: {
         Args: { p_token_hash: string };
         Returns: {
@@ -2110,6 +2173,7 @@ export type Database = {
         };
         Returns: number;
       };
+      reserve_assistant_use: { Args: { p_organization_id: string }; Returns: string };
       save_program_draft: {
         Args: {
           p_discipline: string;

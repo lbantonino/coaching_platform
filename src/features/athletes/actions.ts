@@ -8,9 +8,8 @@ import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
-import { todayIsoInBrussels } from "@/lib/format";
-
-import { parseNewAthleteForm, type NewAthleteFormInput } from "./new-athlete";
+import { insertAthlete } from "./create-athlete";
+import { type NewAthleteFormInput } from "./new-athlete";
 import { getAthlete } from "./queries";
 import {
   ATHLETE_STATUSES,
@@ -74,63 +73,13 @@ export async function createAthlete(
     values,
   });
 
-  const parsed = parseNewAthleteForm(values, todayIsoInBrussels());
-  if (!parsed.ok) return fail(parsed.error);
-  const { profile, goal, consent, coachNote } = parsed.values;
-
-  const supabase = await createClient();
-  const { data: athlete, error } = await supabase
-    .from("athlete_profiles")
-    .insert({ ...profile, organization_id: orgId, created_by: user.id })
-    .select("id")
-    .single();
-  if (error || !athlete) {
-    return fail(
-      error?.code === "23505"
-        ? "Un sportif de ton organisation utilise déjà cette adresse e-mail."
-        : "Le sportif n'a pas pu être enregistré. Réessaie.",
-    );
-  }
-
-  let incomplete = false;
-  if (coachNote) {
-    const { error: noteError } = await supabase.from("athlete_notes").insert({
-      organization_id: orgId,
-      athlete_id: athlete.id,
-      visibility: "coach",
-      body: coachNote,
-      created_by: user.id,
-      updated_by: user.id,
-    });
-    incomplete ||= Boolean(noteError);
-  }
-  if (goal) {
-    const { error: goalError } = await supabase.from("athlete_goals").insert({
-      ...goal,
-      organization_id: orgId,
-      athlete_id: athlete.id,
-      created_by: user.id,
-    });
-    incomplete ||= Boolean(goalError);
-  }
-  if (consent) {
-    const { error: consentError } = await supabase.rpc("grant_health_consent", {
-      p_athlete_id: athlete.id,
-      p_coach_proof: consent.proof,
-    });
-    incomplete ||= Boolean(consentError);
-    if (!consentError && consent.healthConstraints !== null) {
-      const { error: healthError } = await supabase
-        .from("athlete_profiles")
-        .update({ health_constraints: consent.healthConstraints })
-        .eq("id", athlete.id)
-        .eq("organization_id", orgId);
-      incomplete ||= Boolean(healthError);
-    }
-  }
+  const created = await insertAthlete(orgId, user.id, values);
+  if (!created.ok) return fail(created.error);
 
   revalidatePath(`/coach/o/${orgId}/sportifs`, "layout");
-  redirect(`/coach/o/${orgId}/sportifs/${athlete.id}${incomplete ? "?creation=incomplete" : ""}`);
+  redirect(
+    `/coach/o/${orgId}/sportifs/${created.id}${created.incomplete ? "?creation=incomplete" : ""}`,
+  );
 }
 
 // Saisie telle que reçue du formulaire (chaînes brutes), renvoyée en cas d'erreur.

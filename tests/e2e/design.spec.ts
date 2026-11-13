@@ -129,7 +129,7 @@ test("sur téléphone, le nom de la page revient dans la barre après l'Agenda o
   await expect(barTitle).toBeVisible();
 });
 
-test("le menu de gauche : Assistant IA puis Messages, Notifications ; le menu du compte mène aux Paramètres", async ({
+test("le menu de gauche : Assistant IA puis Tâches, sans Messages (MVP), Notifications ; le menu du compte mène aux Paramètres", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "ordinateur", "Barre latérale de l'ordinateur");
@@ -139,8 +139,10 @@ test("le menu de gauche : Assistant IA puis Messages, Notifications ; le menu du
   await expect(nav.getByRole("link", { name: "Tâches", exact: true })).toBeVisible();
   const labels = await nav.getByRole("link").allInnerTexts();
   const names = labels.map((label) => label.trim().split("\n")[0]);
-  // Messages juste en dessous de l'Assistant IA ; Notifications dans la même section.
-  expect(names.indexOf("Messages")).toBe(names.indexOf("Assistant IA") + 1);
+  // MVP espace coach seul (D-167) : pas de Messages ; Tâches juste sous l'Assistant IA, et
+  // Notifications dans la même section.
+  expect(names).not.toContain("Messages");
+  expect(names.indexOf("Tâches")).toBe(names.indexOf("Assistant IA") + 1);
   expect(names).toContain("Notifications");
   expect(names).not.toContain("Paramètres");
 

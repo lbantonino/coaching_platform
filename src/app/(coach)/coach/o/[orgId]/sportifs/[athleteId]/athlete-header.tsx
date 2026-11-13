@@ -1,9 +1,11 @@
 import { MessageCircle, Send } from "lucide-react";
 import Link from "next/link";
 
+import { NotAvailableButton } from "@/components/blocks/not-available";
 import { PageHeader } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { SexMark } from "@/components/ui/sex-mark";
+import { FEATURES } from "@/config/features";
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import { completionLabel, missingProfileInfo } from "@/features/athletes/completeness";
 import type { AthleteDetail } from "@/features/athletes/queries";
@@ -56,6 +58,7 @@ export function AthleteHeader({
                 id: athlete.id,
                 name: athlete.displayName,
                 programType: athlete.programType,
+                archived: athlete.status === "archived",
               }}
               programHref={`${basePath}/nouveau-programme`}
             />
@@ -70,7 +73,12 @@ export function AthleteHeader({
 
       {/* Téléphone : « + Créer » en bouton flottant, en bas à droite (D-117). */}
       <FicheCreateMenu
-        athlete={{ id: athlete.id, name: athlete.displayName, programType: athlete.programType }}
+        athlete={{
+          id: athlete.id,
+          name: athlete.displayName,
+          programType: athlete.programType,
+          archived: athlete.status === "archived",
+        }}
         programHref={`${basePath}/nouveau-programme`}
         phone
       />
@@ -190,23 +198,40 @@ export function AthleteIdentity({
             </div>
           </div>
           {athlete.hasAccount ? (
-            <Link
-              href={`/coach/messages?sportif=${athlete.id}`}
-              aria-label={`Écrire à ${athlete.displayName}`}
-              className="grid size-11 shrink-0 place-items-center rounded-[13px] bg-bg text-text transition-colors duration-150 lg:flex lg:h-10 lg:w-auto lg:gap-2 lg:rounded-[11px] lg:bg-transparent lg:px-3.5 lg:text-[14px] lg:font-medium lg:inset-ring lg:inset-ring-line-2 lg:hover:bg-surface-2"
-            >
-              <MessageCircle aria-hidden strokeWidth={1.8} className="size-[17px] lg:size-[15px]" />
-              <span className="max-lg:sr-only">Écrire</span>
-            </Link>
+            FEATURES.messages ? (
+              <Link
+                href={`/coach/messages?sportif=${athlete.id}`}
+                aria-label={`Écrire à ${athlete.displayName}`}
+                className={identityAction}
+              >
+                {writeContent}
+              </Link>
+            ) : (
+              // MVP espace coach seul (D-167) : le bouton reste, la fenêtre dit « pas encore ».
+              <NotAvailableButton
+                label={`Écrire à ${athlete.displayName}`}
+                className={identityAction}
+              >
+                {writeContent}
+              </NotAvailableButton>
+            )
           ) : canInvite ? (
-            <Link
-              href={invitePath}
-              aria-label={`Inviter ${athlete.displayName} dans son espace`}
-              className="grid size-11 shrink-0 place-items-center rounded-[13px] bg-bg text-text transition-colors duration-150 lg:flex lg:h-10 lg:w-auto lg:gap-2 lg:rounded-[11px] lg:bg-transparent lg:px-3.5 lg:text-[14px] lg:font-medium lg:inset-ring lg:inset-ring-line-2 lg:hover:bg-surface-2"
-            >
-              <Send aria-hidden strokeWidth={1.8} className="size-[17px] lg:size-[15px]" />
-              <span className="max-lg:sr-only">Inviter</span>
-            </Link>
+            FEATURES.invitations ? (
+              <Link
+                href={invitePath}
+                aria-label={`Inviter ${athlete.displayName} dans son espace`}
+                className={identityAction}
+              >
+                {inviteContent}
+              </Link>
+            ) : (
+              <NotAvailableButton
+                label={`Inviter ${athlete.displayName} dans son espace`}
+                className={identityAction}
+              >
+                {inviteContent}
+              </NotAvailableButton>
+            )
           ) : null}
           {/* Téléphone : « ··· » (absent de la maquette) garde les actions de l'en-tête de l'ordinateur. */}
           <span className="lg:hidden">
@@ -250,3 +275,19 @@ export function AthleteIdentity({
     </>
   );
 }
+
+// « Écrire » / « Inviter » de la carte d'identité : 44 px sur téléphone, bouton à libellé sur ordinateur.
+const identityAction =
+  "grid size-11 shrink-0 place-items-center rounded-[13px] bg-bg text-text transition-colors duration-150 lg:flex lg:h-10 lg:w-auto lg:gap-2 lg:rounded-[11px] lg:bg-transparent lg:px-3.5 lg:text-[14px] lg:font-medium lg:inset-ring lg:inset-ring-line-2 lg:hover:bg-surface-2";
+const writeContent = (
+  <>
+    <MessageCircle aria-hidden strokeWidth={1.8} className="size-[17px] lg:size-[15px]" />
+    <span className="max-lg:sr-only">Écrire</span>
+  </>
+);
+const inviteContent = (
+  <>
+    <Send aria-hidden strokeWidth={1.8} className="size-[17px] lg:size-[15px]" />
+    <span className="max-lg:sr-only">Inviter</span>
+  </>
+);

@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fieldErrors } from "./field-errors";
 import { getHomePath } from "./guards";
 import { newPasswordSchema, passwordResetRequestSchema } from "./schemas";
-import { requireUser } from "./session";
+import { getRecoveryUser } from "./session";
 
 export type ResetRequestState = {
   status: "idle" | "sent" | "error";
@@ -63,8 +63,14 @@ export async function updatePassword(
   _previous: NewPasswordState,
   formData: FormData,
 ): Promise<NewPasswordState> {
-  // La session de récupération ouverte par le lien e-mail est obligatoire.
-  const user = await requireUser();
+  // La session de récupération ouverte par le lien e-mail est obligatoire (pas une session ordinaire).
+  const user = await getRecoveryUser();
+  if (!user) {
+    return {
+      error: "Ce lien de réinitialisation n'est plus valable. Redemande un lien.",
+      fields: {},
+    };
+  }
 
   const parsed = newPasswordSchema.safeParse({
     password: String(formData.get("password") ?? ""),

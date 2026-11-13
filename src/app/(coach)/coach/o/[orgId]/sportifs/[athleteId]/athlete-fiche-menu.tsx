@@ -4,9 +4,11 @@ import { Ellipsis, Layers, MessageSquare, Pencil, RefreshCw, Send, Target } from
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { NotAvailableDialog } from "@/components/blocks/not-available";
 import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
 import { ActionMenu } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
+import { FEATURES } from "@/config/features";
 import { DISCIPLINES, disciplineLabels, type Discipline } from "@/domain/training/discipline";
 import { setAthletesProgramType, setAthletesStatus } from "@/features/athletes/actions";
 import type { AthleteStatus } from "@/features/athletes/schemas";
@@ -38,6 +40,8 @@ export function AthleteFicheMenu({
   phone?: boolean;
 }) {
   const [menu, setMenu] = useState<MenuKind | null>(null);
+  // MVP espace coach seul (D-167) : « Écrire » et « Inviter » ouvrent « pas encore disponible ».
+  const [unavailable, setUnavailable] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const toast = useToast();
@@ -75,7 +79,7 @@ export function AthleteFicheMenu({
               if (athlete.programType === discipline) return;
               apply(
                 () => setAthletesProgramType(organizationId, [athlete.id], discipline),
-                `Programme de ${athlete.name} : ${disciplineLabels[discipline]}.`,
+                `Discipline de ${athlete.name} : ${disciplineLabels[discipline]}.`,
               );
             },
           }))
@@ -87,7 +91,7 @@ export function AthleteFicheMenu({
               onSelect: () => setMenu("status"),
             },
             {
-              label: "Changer le programme",
+              label: "Changer la discipline",
               icon: Layers,
               chevron: true,
               onSelect: () => setMenu("type"),
@@ -107,7 +111,10 @@ export function AthleteFicheMenu({
                   {
                     label: "Écrire un message",
                     icon: MessageSquare,
-                    onSelect: () => router.push(`/coach/messages?sportif=${athlete.id}`),
+                    onSelect: () =>
+                      FEATURES.messages
+                        ? router.push(`/coach/messages?sportif=${athlete.id}`)
+                        : setUnavailable(true),
                   },
                 ]
               : athlete.status !== "archived"
@@ -115,7 +122,10 @@ export function AthleteFicheMenu({
                     {
                       label: "Inviter dans son espace",
                       icon: Send,
-                      onSelect: () => router.push(`${basePath}/inviter`),
+                      onSelect: () =>
+                        FEATURES.invitations
+                          ? router.push(`${basePath}/inviter`)
+                          : setUnavailable(true),
                     },
                   ]
                 : []),
@@ -144,7 +154,7 @@ export function AthleteFicheMenu({
           menu === "status"
             ? `Statut de ${athlete.name}`
             : menu === "type"
-              ? `Programme de ${athlete.name}`
+              ? `Discipline de ${athlete.name}`
               : athlete.name
         }
         // Kit (boîte 06) : « Actif · Confirmé · Hyrox » sous le nom.
@@ -161,6 +171,7 @@ export function AthleteFicheMenu({
         }
         items={items}
       />
+      <NotAvailableDialog open={unavailable} onClose={() => setUnavailable(false)} />
     </>
   );
 }

@@ -103,3 +103,15 @@ test("une destination non autorisée après le lien est refusée (pas de redirec
   await page.goto("/auth/confirm?code=x&next=https://exemple-malveillant.test");
   await expect(page).toHaveURL(/\/lien-invalide$/);
 });
+
+// Revue de sécurité du 13/11/2026 : une session ordinaire (ordinateur resté connecté) ne permet pas
+// de choisir un nouveau mot de passe sans l'ancien. Seul le lien de réinitialisation l'ouvre.
+test("connecté normalement, « Nouveau mot de passe » n'est pas accessible", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+  await page.goto("/nouveau-mot-de-passe");
+  await expect(page).toHaveURL(/\/lien-invalide$/);
+});

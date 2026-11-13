@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { FEATURES } from "../../src/config/features";
 import { goToCoachSection, isPhone, setAgendaFilter } from "./helpers";
 
 // Agenda du coach (P2-05, refonte 4a) et tableau de bord, sur les données du seed (supabase/seed.sql).
@@ -188,6 +189,7 @@ test("une tâche cochée quitte la carte du tableau de bord et passe dans « Ter
 test("les messages non lus : pastille sur la cloche ; ouvrir le fil les marque lus, et le coach répond", async ({
   page,
 }, testInfo) => {
+  test.skip(!FEATURES.messages, "MVP espace coach seul (D-167) : messagerie masquée.");
   const phone = testInfo.project.name === "telephone";
   const sender = phone ? "Inès Benali" : "Thomas Peeters";
   const reply = `Réponse ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;

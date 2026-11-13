@@ -38,8 +38,9 @@ export async function loadProgramPdfInput(
       light: week.light,
       monday: week.monday,
       sunday: week.sunday,
-      // v1 (sans mode enregistré) : jours fixés si au moins une séance a son jour.
-      fixed: week.fixed || week.sessions.some((session) => session.day !== null),
+      // Le mode enregistré de la semaine (revue MVP du 13/11, C18) : une séance avec le coach a un
+      // jour sans que la semaine soit « à jours fixes » (une v1 n'a jamais de jours fixes).
+      fixed: week.fixed,
       sessions: week.sessions.map((session) => ({
         content: session.content,
         headline: session.headline,

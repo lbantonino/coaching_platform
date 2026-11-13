@@ -76,8 +76,8 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await main.getByRole("button", { name: "Actions pour Inès Benali" }).click();
   const menu = page.getByRole("dialog", { name: "Inès Benali" });
   await expect(menu.getByRole("button", { name: "Écrire un message" })).toBeVisible();
-  await menu.getByRole("button", { name: "Changer le programme" }).click();
-  const type = page.getByRole("dialog", { name: "Programme de Inès Benali" });
+  await menu.getByRole("button", { name: "Changer la discipline" }).click();
+  const type = page.getByRole("dialog", { name: "Discipline de Inès Benali" });
   await expect(type.getByRole("button", { name: "Hyrox" })).toHaveAttribute("aria-current", "true");
   await type.getByRole("button", { name: "Retour" }).click();
   await menu.getByRole("button", { name: "Modifier l'objectif" }).click();
@@ -159,9 +159,10 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   // Sans programme (Julien, en pause), l'onglet Agenda montre ce qui a un jour, en trois vues.
   await page.goto(`/coach/o/${ORG_A}/sportifs/${JULIEN}?onglet=agenda&vue=mois&date=2026-12-01`);
   const agenda = page.getByRole("region", { name: "Agenda de Julien" });
+  // « Jour » (revue MVP du 13/11, B17) : la vue d'un jour, ouverte sur aujourd'hui.
   await expect(
     agenda.getByRole("navigation", { name: "Vue de l'agenda du sportif" }).getByRole("link"),
-  ).toHaveText(["Aujourd'hui", "Semaine", "Mois"]);
+  ).toHaveText(["Jour", "Semaine", "Mois"]);
   await agenda.getByRole("link", { name: /^Dimanche 20 décembre/ }).click();
   await expect(page).toHaveURL(/vue=jour&date=2026-12-20/);
   await expect(agenda.getByText("Rien de prévu pour Julien ce jour-là.")).toBeVisible();

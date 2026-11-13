@@ -1,16 +1,23 @@
 import { ChevronLeft, ChevronRight, FilePlus, Flag, Plus } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import { hyroxDivisionLabels } from "@/domain/training/hyrox-official";
+import { defaultWeekIndex, programStatusLabels } from "@/domain/training/program-status";
 import { weekdayLabels } from "@/domain/training/scheduling";
 import { sessionMomentLabels } from "@/domain/training/session-v2";
 import { sessionStats } from "@/domain/training/session-view";
 import { draftSessionKeys } from "@/features/programs/drafts";
 import { sessionEditHref } from "@/features/programs/edit-href";
-import type { AthleteProgram, ProgramSessionCard, ProgramWeek } from "@/features/programs/queries";
+import type {
+  AthleteProgram,
+  AthleteProgramRow,
+  ProgramSessionCard,
+  ProgramWeek,
+} from "@/features/programs/queries";
 import { createClient } from "@/lib/supabase/server";
 
 import { ProgramWeekBoard, type BoardSession } from "./program-week-board";
@@ -44,12 +51,16 @@ const range = (monday: string, sunday: string) =>
     : `${dayMonth.format(asDate(monday))} – ${dayMonth.format(asDate(sunday))}`;
 const DAY_INDEX = { mon: 0, tue: 1, wed: 2, thu: 3, fri: 4, sat: 5, sun: 6 } as const;
 
-// « Sam 7 nov. » : le jour d'une séance qui en a un (jours fixes ou rendez-vous du coach).
+// « Sam 7 nov. » : le jour d'une séance qui en a un (jours fixes ou rendez-vous RÉEL du coach, lu
+// dans l'agenda : revue MVP du 13/11, B3 et B4).
 function sessionDate(week: ProgramWeek, session: ProgramSessionCard): string | null {
   if (session.coachDate) return session.coachDate;
   return session.day ? addDays(week.monday, DAY_INDEX[session.day]) : null;
 }
 function when(week: ProgramWeek, session: ProgramSessionCard): string | null {
+  // Le rendez-vous n'existe plus dans l'agenda, ou pas cette semaine-là : on le dit.
+  if (session.coach?.status === "deleted") return "Avec le coach · Rendez-vous supprimé";
+  if (session.coach?.status === "absent") return "Avec le coach · Pas de rendez-vous cette semaine";
   const date = sessionDate(week, session);
   if (!date) return null;
   const day = session.day ? weekdayLabels[session.day] : "";
@@ -59,6 +70,61 @@ function when(week: ProgramWeek, session: ProgramSessionCard): string | null {
   return session.coachDate ? `Avec le coach · ${label}` : label;
 }
 
+// Les autres programmes du sportif (revue MVP du 13/11, B7) : brouillons, terminés, archivés, à
+// venir ; chacun s'ouvre dans l'éditeur, et la page Programmes les montre tous.
+function OtherPrograms({
+  rows,
+  editorBase,
+  returnTo,
+  allHref,
+}: {
+  rows: AthleteProgramRow[];
+  editorBase: string;
+  returnTo: string;
+  allHref: string;
+}) {
+  if (rows.length === 0) return null;
+  return (
+    <section
+      aria-labelledby="other-programs-title"
+      className="flex w-full flex-col gap-2 rounded-[20px] bg-surface p-4 lg:p-5"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="other-programs-title" className="text-[15.5px] font-semibold text-text">
+          Autres programmes
+        </h2>
+        <Link
+          href={allHref}
+          className="tap-44 text-[13px] font-medium whitespace-nowrap text-violet-text hover:underline"
+        >
+          Tous ses programmes
+        </Link>
+      </div>
+      <ul className="m-0 flex list-none flex-col p-0">
+        {rows.map((row) => (
+          <li key={row.id} className="border-t border-line first:border-t-0">
+            <Link
+              href={`${editorBase}/${row.id}?retour=${encodeURIComponent(returnTo)}`}
+              className="flex min-h-12 items-center justify-between gap-3 py-2 transition-colors duration-150 hover:text-violet-text"
+            >
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate text-[14px] font-medium">{row.title}</span>
+                <span className="text-[12.5px] text-muted">
+                  {dayMonth.format(asDate(row.startDate))} · {row.weeksCount} semaine
+                  {row.weeksCount > 1 ? "s" : ""}
+                </span>
+              </span>
+              <span className="inline-flex h-6 shrink-0 items-center rounded-[12px] bg-bg px-[9px] text-[11.5px] font-semibold text-text-2">
+                {programStatusLabels[row.listStatus]}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export async function ProgramTab({
   organizationId,
   name,
@@ -66,33 +132,67 @@ export async function ProgramTab({
   requestedWeek,
   today,
   basePath,
-  editorHref,
+  editorBase,
   newHref,
   copyHref,
   draft,
+  others,
+  allProgramsHref,
+  archived,
 }: {
   organizationId: string;
   name: string;
+  // Le programme publié en cours ou à venir (un programme terminé n'est plus montré ici : B2).
   program: AthleteProgram | null;
   requestedWeek: number | null;
   today: string;
   // Fiche du sportif (onglets en ?onglet=…).
   basePath: string;
-  editorHref: string | null;
+  // « …/programmes » : l'éditeur d'un programme est `${editorBase}/${id}`.
+  editorBase: string;
   newHref: string;
   copyHref: string | null;
   // Un brouillon pas encore publié (programme jamais publié).
   draft: { title: string; href: string } | null;
+  // Ses autres programmes (B7) et la page Programmes filtrée sur lui.
+  others: AthleteProgramRow[];
+  allProgramsHref: string;
+  // Fiche archivée (B11) : l'assistant ne s'ouvre pas pour elle.
+  archived: boolean;
 }) {
-  if (!program)
-    return <EmptyProgram name={name} newHref={newHref} copyHref={copyHref} draft={draft} />;
+  const tabHref = `${basePath}?onglet=programme`;
+  const otherPrograms = (
+    <OtherPrograms
+      rows={others.filter((row) => row.id !== program?.id)}
+      editorBase={editorBase}
+      returnTo={tabHref}
+      allHref={allProgramsHref}
+    />
+  );
+  const empty = (
+    <div className="flex w-full flex-col gap-3">
+      <EmptyProgram
+        name={name}
+        newHref={newHref}
+        copyHref={copyHref}
+        draft={draft}
+        archived={archived}
+      />
+      {otherPrograms}
+    </div>
+  );
+  if (!program) return empty;
 
+  const editorHref = `${editorBase}/${program.id}`;
   const current =
     program.weeks.find((week) => week.monday <= today && today <= week.sunday) ?? null;
+  // La même semaine par défaut que l'onglet Agenda (B2) : en cours, sinon la 1 (à venir).
+  const fallback = defaultWeekIndex(program.startDate, program.weeksCount, today);
   const shown =
-    program.weeks.find((week) => week.index === requestedWeek) ?? current ?? program.weeks[0];
-  if (!shown)
-    return <EmptyProgram name={name} newHref={newHref} copyHref={copyHref} draft={draft} />;
+    program.weeks.find((week) => week.index === requestedWeek) ??
+    program.weeks.find((week) => week.index === fallback) ??
+    program.weeks[0];
+  if (!shown) return empty;
   const isCurrent = shown.index === current?.index;
   const past = shown.sunday < today;
   // Prochaine séance de la semaine en cours : la première dont le jour n'est pas passé (sans jour :
@@ -113,19 +213,12 @@ export async function ProgramTab({
 
   // « Modifier la séance » : directement l'éditeur de la séance si elle est encore dans le brouillon
   // (le brouillon peut avoir changé depuis la publication) ; sinon l'éditeur, sur sa semaine.
-  const draftKeys = editorHref
-    ? new Set(await draftSessionKeys(await createClient(), organizationId, program.id))
-    : new Set<string>();
+  const draftKeys = new Set(
+    await draftSessionKeys(await createClient(), organizationId, program.id),
+  );
+  const weekTab = `${basePath}?onglet=programme&semaine=${shown.index}`;
   const editHref = (session: ProgramSessionCard) =>
-    editorHref
-      ? sessionEditHref(
-          editorHref,
-          draftKeys,
-          shown.index,
-          session.key,
-          `${basePath}?onglet=programme&semaine=${shown.index}`,
-        )
-      : null;
+    sessionEditHref(editorHref, draftKeys, shown.index, session.key, weekTab);
 
   // Carte du programme, épurée (demandes d'Antonino du 10/11) : le titre, les dates et la version,
   // l'objectif en petit dessous, l'avancement des semaines ; plus de « Séances faites ».
@@ -155,10 +248,15 @@ export async function ProgramTab({
         ) : null}
       </div>
       <div className="flex flex-col gap-2">
+        {/* Programme à venir (B2) : sa date de début plutôt qu'un avancement. */}
         <p className="flex justify-between text-[13px] font-medium">
-          <span className="text-muted">Semaine</span>
+          <span className="text-muted">
+            {program.timing === "upcoming" ? "À venir" : "Semaine"}
+          </span>
           <span className="font-semibold text-text">
-            {current ? current.index : shown.index} / {program.weeksCount}
+            {program.timing === "upcoming"
+              ? `commence le ${dayMonth.format(asDate(program.startDate))}`
+              : `${current ? current.index : shown.index} / ${program.weeksCount}`}
           </span>
         </p>
         <div aria-hidden className="flex gap-[3px]">
@@ -177,22 +275,19 @@ export async function ProgramTab({
         </div>
       </div>
       <div className="flex gap-2">
-        {editorHref ? (
-          <Link
-            href={editorHref}
-            className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98] lg:h-[42px] lg:rounded-[11px] lg:text-[14px]"
-          >
-            Ouvrir l&apos;éditeur
-          </Link>
-        ) : null}
-        {editorHref ? (
-          <ProgramPdfMenu
-            base={`${editorHref}/pdf`}
-            iconSize={14}
-            iconClassName="max-lg:hidden"
-            className="inline-flex h-12 items-center gap-1.5 rounded-[13px] px-4 text-[15px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98] lg:h-[42px] lg:rounded-[11px] lg:px-3.5 lg:text-[13.5px]"
-          />
-        ) : null}
+        {/* Le retour de l'éditeur ramène sur cet onglet (B15). */}
+        <Link
+          href={`${editorHref}?retour=${encodeURIComponent(weekTab)}`}
+          className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98] lg:h-[42px] lg:rounded-[11px] lg:text-[14px]"
+        >
+          Ouvrir l&apos;éditeur
+        </Link>
+        <ProgramPdfMenu
+          base={`${editorHref}/pdf`}
+          iconSize={14}
+          iconClassName="max-lg:hidden"
+          className="inline-flex h-12 items-center gap-1.5 rounded-[13px] px-4 text-[15px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98] lg:h-[42px] lg:rounded-[11px] lg:px-3.5 lg:text-[13.5px]"
+        />
       </div>
     </section>
   );
@@ -254,8 +349,10 @@ export async function ProgramTab({
           {meta} · {shown.sessions.length} séance{shown.sessions.length > 1 ? "s" : ""}
         </p>
       </div>
+      {/* B12 : le nombre de séances (« 0 / 4 » laissait croire à un suivi des séances faites). */}
       <span className="text-[12.5px] whitespace-nowrap text-muted lg:hidden">
-        {range(shown.monday, shown.sunday)} · 0 / {shown.sessions.length}
+        {range(shown.monday, shown.sunday)} · {shown.sessions.length} séance
+        {shown.sessions.length > 1 ? "s" : ""}
       </span>
       <div className="max-lg:hidden">{navigator}</div>
     </div>
@@ -291,16 +388,19 @@ export async function ProgramTab({
   });
 
   return (
-    <ProgramWeekBoard
-      key={shown.index}
-      programCard={programCard}
-      phoneTop={navigator}
-      weekHeader={weekHeader}
-      weekRing={isCurrent}
-      sessions={sessions}
-      initialId={next?.id ?? shown.sessions[0]?.id ?? null}
-      showTodo={!past}
-    />
+    <div className="flex w-full flex-col gap-3">
+      <ProgramWeekBoard
+        key={shown.index}
+        programCard={programCard}
+        phoneTop={navigator}
+        weekHeader={weekHeader}
+        weekRing={isCurrent}
+        sessions={sessions}
+        initialId={next?.id ?? shown.sessions[0]?.id ?? null}
+        showTodo={!past}
+      />
+      {otherPrograms}
+    </div>
   );
 }
 
@@ -309,25 +409,38 @@ function EmptyProgram({
   newHref,
   copyHref,
   draft,
+  archived,
 }: {
   name: string;
   newHref: string;
   copyHref: string | null;
   draft: { title: string; href: string } | null;
+  archived: boolean;
 }) {
+  // Fiche archivée (B11) : pas d'assistant (il ne propose que les sportifs actifs).
+  if (archived && !draft) {
+    return (
+      <EmptyCard title={`Aucun programme en cours pour ${name}`}>
+        La fiche est archivée : réactive-la (onglet Profil, statut) pour lui créer un programme.
+      </EmptyCard>
+    );
+  }
   return (
-    <section className="flex w-full flex-col items-center rounded-[20px] bg-surface px-6 py-12 text-center lg:px-10 lg:py-14">
-      <span className="grid size-16 place-items-center rounded-[20px] bg-lib-lavender text-violet-text">
-        <FilePlus aria-hidden size={24} strokeWidth={1.7} />
-      </span>
-      <h2 className="mt-5 text-[22px] leading-[1.2] font-bold tracking-[-0.02em] text-text">
-        {draft ? `Le programme de ${name} est en brouillon` : `Aucun programme pour ${name}`}
-      </h2>
-      <p className="mt-2 max-w-[440px] text-[14.5px] leading-[1.6] text-pretty text-muted">
-        {draft
-          ? `« ${draft.title} » n'est pas encore publié\u00a0: ${name} ne le voit pas. Termine-le puis publie-le depuis l'éditeur.`
-          : "Crée-lui un programme semaine par semaine. Tu pars d'un modèle ou de zéro, et tu le publies quand il est prêt."}
-      </p>
+    <EmptyCard
+      title={
+        draft ? `Le programme de ${name} est en brouillon` : `Aucun programme en cours pour ${name}`
+      }
+      footer={
+        draft ? null : (
+          <p className="mt-[18px] text-[12.5px] text-faint">
+            L&apos;assistant s&apos;ouvre avec {name} déjà choisi.
+          </p>
+        )
+      }
+    >
+      {draft
+        ? `« ${draft.title} » n'est pas encore publié\u00a0: termine-le puis publie-le depuis l'éditeur.`
+        : "Crée-lui un programme semaine par semaine. Tu pars d'un modèle, d'un ancien programme ou de zéro, et tu le publies quand il est prêt."}
       <div className="mt-6 flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row">
         {draft ? (
           <Link
@@ -354,11 +467,32 @@ function EmptyProgram({
           </Link>
         ) : null}
       </div>
-      {draft ? null : (
-        <p className="mt-[18px] text-[12.5px] text-faint">
-          L&apos;assistant s&apos;ouvre avec {name} déjà choisi.
-        </p>
-      )}
+    </EmptyCard>
+  );
+}
+
+// La carte de l'état vide, son icône, son titre et son texte.
+function EmptyCard({
+  title,
+  children,
+  footer = null,
+}: {
+  title: string;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  return (
+    <section className="flex w-full flex-col items-center rounded-[20px] bg-surface px-6 py-12 text-center lg:px-10 lg:py-14">
+      <span className="grid size-16 place-items-center rounded-[20px] bg-lib-lavender text-violet-text">
+        <FilePlus aria-hidden size={24} strokeWidth={1.7} />
+      </span>
+      <h2 className="mt-5 text-[22px] leading-[1.2] font-bold tracking-[-0.02em] text-text">
+        {title}
+      </h2>
+      <div className="mt-2 flex max-w-[440px] flex-col items-center text-[14.5px] leading-[1.6] text-pretty text-muted">
+        {children}
+      </div>
+      {footer}
     </section>
   );
 }

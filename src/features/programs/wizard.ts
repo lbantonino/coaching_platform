@@ -52,6 +52,8 @@ export type WizardTemplate = {
   source: "coory" | "mine";
   discipline: Discipline;
   weeksCount: number;
+  // Rythme du modèle (C15) : l'assistant le reprend quand on part de ce modèle.
+  sessionsPerWeek: number | null;
   detail: string;
 };
 
@@ -143,6 +145,7 @@ export async function loadWizardData(organizationId: string): Promise<WizardData
       source: template.source,
       discipline: template.discipline,
       weeksCount: template.weeksCount ?? 1,
+      sessionsPerWeek: template.sessionsPerWeek,
       detail: template.detail,
     })),
   };

@@ -132,7 +132,8 @@ export function TemplateCard({
 }: {
   template: TemplateItem;
   href: string;
-  useHref: string;
+  // null : un modèle de séance, qui s'ajoute depuis l'éditeur d'un programme (revue MVP, C9).
+  useHref: string | null;
 }) {
   return (
     <article className="relative flex min-w-0 flex-col gap-[9px] rounded-[20px] bg-surface p-4 transition-[scale,box-shadow] duration-150 active:scale-[0.99] lg:px-[18px] lg:hover:shadow-lift">
@@ -166,12 +167,14 @@ export function TemplateCard({
           un modèle ne pouvait alors pas servir depuis un téléphone). */}
       <div className="mt-[3px] flex items-center justify-between gap-3 border-t border-dlg-divider pt-3">
         <span className="min-w-0 truncate text-[13px] text-text-2">{template.footer}</span>
-        <Link
-          href={useHref}
-          className="tap-44 relative z-10 inline-flex h-[30px] shrink-0 items-center rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97]"
-        >
-          Utiliser
-        </Link>
+        {useHref ? (
+          <Link
+            href={useHref}
+            className="tap-44 relative z-10 inline-flex h-[30px] shrink-0 items-center rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97]"
+          >
+            Utiliser
+          </Link>
+        ) : null}
       </div>
     </article>
   );

@@ -59,6 +59,7 @@ import { Quoted } from "@/components/ui/quoted";
 import {
   DOCUMENT_ACCEPT,
   DOCUMENT_MAX_BYTES,
+  DOCUMENT_MAX_LABEL,
   DOCUMENT_NAME_MAX,
   foldText as fold,
   formatBytes,
@@ -590,7 +591,7 @@ export function DocumentsView({
                   <p className="text-[14px] leading-[normal] font-semibold">Aucun document</p>
                   <p className="max-w-[46ch] text-[14px] leading-[1.45] text-muted lg:text-[13px]">
                     Importe un programme, une facture, un contrat ou un bilan : PDF, image, Word ou
-                    Excel, 10 Mo maximum.
+                    Excel, {DOCUMENT_MAX_LABEL} maximum.
                   </p>
                 </>
               ) : (
@@ -616,7 +617,7 @@ export function DocumentsView({
           {/* Ordinateur : formats acceptés, et « Voir plus » en bouton gris, en bas de la carte. */}
           <div className="mt-auto hidden items-center gap-3 px-[22px] py-3 lg:flex">
             <p className="flex-1 text-[12px] leading-[normal] text-faint">
-              PDF, images et documents Office · 10 Mo maximum par fichier
+              PDF, images et documents Office · {DOCUMENT_MAX_LABEL} maximum par fichier
             </p>
             {moreButton(
               "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[9px] bg-dlg-tile px-3.5 text-[12.5px] leading-[normal] font-medium whitespace-nowrap text-text transition-[background-color,scale] duration-150 hover:bg-dlg-tile-hover active:scale-[0.97]",
@@ -692,7 +693,7 @@ export function DocumentsView({
         open={importing}
         onClose={() => setImporting(false)}
         title="Importer un fichier"
-        subtitle="10 Mo maximum. Stocké en privé."
+        subtitle={`${DOCUMENT_MAX_LABEL} maximum. Stocké en privé.`}
         bare
       >
         {importing ? (
@@ -1196,7 +1197,8 @@ function UploadForm({
     setLocalError(null);
     setFile(picked);
     if (!picked) return;
-    if (picked.size > DOCUMENT_MAX_BYTES) setLocalError("Fichier trop lourd : 10 Mo maximum.");
+    if (picked.size > DOCUMENT_MAX_BYTES)
+      setLocalError(`Fichier trop lourd : ${DOCUMENT_MAX_LABEL} maximum.`);
     // Nom et catégorie proposés d'après le fichier, s'ils n'ont pas encore été choisis.
     if (!name.trim()) setName(nameFromFile(picked.name));
     if (!categoryId) setCategoryId(guessCategoryId(picked.name, categories) ?? "");

@@ -11,6 +11,7 @@ import {
 } from "@/domain/documents/documents";
 import { requireOrgAccess } from "@/features/auth/guards";
 import type { CategoryResult } from "@/features/documents/actions";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 // Dépenses du coach (D-73) : ajouter, supprimer ; et leurs catégories (créer, renommer, couleur,
@@ -86,13 +87,11 @@ export async function deleteExpense(organizationId: string, expenseId: string): 
 }
 
 // Dépense mensuelle : « Arrêter » (le loyer s'arrête) la fait finir aujourd'hui, le passé reste.
-export async function stopExpense(
-  organizationId: string,
-  expenseId: string,
-  today: string,
-): Promise<void> {
+// « Aujourd'hui » est la date du serveur (Bruxelles), jamais une date envoyée par le navigateur.
+export async function stopExpense(organizationId: string, expenseId: string): Promise<void> {
   const { membership } = await requireOrgAccess(organizationId);
-  if (!z.uuid().safeParse(expenseId).success || !z.iso.date().safeParse(today).success) return;
+  if (!z.uuid().safeParse(expenseId).success) return;
+  const today = todayIsoInBrussels();
   const supabase = await createClient();
   await supabase
     .from("coach_expenses")

@@ -8,8 +8,16 @@ import { DialogBody, DialogFooter, Overlay, Sheet } from "@/components/ui/overla
 import { RadioMark } from "@/components/ui/radio-choice";
 import { SelectField } from "@/components/ui/select-field";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
-import type { Phase, Week } from "@/domain/training/program-plan";
+import { hyroxDivisionLabels } from "@/domain/training/hyrox-official";
+import {
+  HYROX_DIVISIONS,
+  type HyroxDivision,
+  type Phase,
+  type ProgramGoal,
+  type Week,
+} from "@/domain/training/program-plan";
 import type { PublishIssue } from "@/domain/training/program-publication";
+import { periodsOverlap, programEnd } from "@/domain/training/program-status";
 
 // Fenêtres de l'éditeur de programme (D-157), faites avec les composants de l'app (les 5 écrans non
 // dessinés, décision d'Antonino du 09/11) : feuille du bas sur téléphone, fenêtre sur ordinateur.
@@ -392,14 +400,19 @@ export function SessionTemplateSheet({
 // chacun avec « Voir » (la semaine concernée s'ouvre dans l'éditeur).
 const ISSUE_HINTS: Record<PublishIssue["code"], string> = {
   no_session: "Un programme publié a au moins une séance.",
-  overlap: "Change la date de début, ou archive l'autre programme.",
-  empty_week: "Le sportif verra une semaine sans séance. Normal si c'est du repos.",
+  overlap: "Change ses dates (menu « ··· », Modifier les dates), ou archive l'autre programme.",
+  empty_week: "Une semaine sans séance. Normal si c'est du repos.",
   moment_missing: "Indique le moment de chaque séance (matin, midi, après-midi, soir).",
   unavailable_day: "Vérifie ses disponibilités, ou change le jour de la séance.",
   pct_without_max: "Ajoute un repère relié à l'exercice dans sa fiche.",
-  official_without_division: "Choisis la catégorie Hyrox dans l'objectif du programme.",
+  official_without_division:
+    "Choisis la catégorie Hyrox avec « Modifier l'objectif » (menu « ··· » du programme).",
   hr_without_max: "Ajoute sa FC max dans ses repères, ou écris la plage en bpm.",
-  coach_session_missing: "Recrée le rendez-vous dans l'Agenda, ou retire « avec le coach ».",
+  coach_session_missing:
+    "Recrée le rendez-vous dans l'Agenda : sinon la séance s'affiche « Rendez-vous supprimé ».",
+  coach_date_mismatch:
+    "Les dates du programme ont changé : vérifie le rendez-vous dans l'Agenda, ou les dates.",
+  incomplete_session: "Ouvre la séance pour lui donner son titre et son contenu.",
 };
 
 // Plusieurs avertissements du même genre : une seule ligne avec leur nombre (maquette 08, recette du
@@ -414,6 +427,8 @@ const ISSUE_GROUPS: Record<PublishIssue["code"], (count: number) => string> = {
   official_without_division: (n) => `${n} séances aux charges officielles sans division Hyrox.`,
   hr_without_max: (n) => `${n} étapes en zone de FC sans plage en bpm (FC max inconnue).`,
   coach_session_missing: (n) => `${n} rendez-vous du coach n'existent plus.`,
+  coach_date_mismatch: (n) => `${n} rendez-vous du coach hors de leur semaine.`,
+  incomplete_session: (n) => `${n} séances à compléter.`,
 };
 
 export function PublishSheet({
@@ -422,7 +437,6 @@ export function PublishSheet({
   version,
   weeks,
   sessions,
-  firstName,
   issues,
   pending,
   error,
@@ -434,7 +448,6 @@ export function PublishSheet({
   version: number;
   weeks: number;
   sessions: number;
-  firstName: string;
   issues: PublishIssue[];
   pending: boolean;
   error: string | null;
@@ -460,9 +473,9 @@ export function PublishSheet({
             <h2 className="text-[22px] leading-[1.2] font-bold tracking-[-0.015em] text-text">
               Publier le programme ?
             </h2>
+            {/* MVP coach seul (D-167) : pas d'espace sportif, rien n'est « vu » par le sportif. */}
             <p className="text-[14px] leading-[1.45] text-muted">
-              {firstName} verra cette version dans son espace, et les PDF seront tirés de cette
-              version.
+              Les PDF seront tirés de cette version.
             </p>
           </div>
           <dl className="grid grid-cols-3 gap-2">
@@ -552,5 +565,242 @@ export function PublishSheet({
         </div>
       </DialogBody>
     </Overlay>
+  );
+}
+
+const dayMonthYear = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+const longDay = (iso: string) => dayMonthYear.format(new Date(`${iso}T00:00:00Z`));
+const shiftDays = (iso: string, days: number) => {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+// Les semaines se lisent du lundi au dimanche (C-9) : une date choisie revient au lundi de sa semaine.
+const mondayOf = (iso: string) =>
+  shiftDays(iso, -((new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7));
+
+// « Modifier les dates » (revue MVP du 13/11, C3) : le programme commence un autre lundi ; ses
+// semaines gardent leurs séances. Les dates chevauchant un autre programme publié du sportif sont
+// signalées tout de suite (la publication serait refusée).
+export function DatesSheet({
+  open,
+  onClose,
+  startDate,
+  weeksCount,
+  others,
+  published,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  startDate: string;
+  weeksCount: number;
+  // Les autres programmes PUBLIÉS du sportif.
+  others: { title: string; startDate: string; weeksCount: number }[];
+  // Le programme a déjà une version publiée : la fiche et les PDF changeront à la publication.
+  published: boolean;
+  onConfirm: (startDate: string) => void;
+}) {
+  const id = useId();
+  const [value, setValue] = useState(startDate);
+  const [shown, setShown] = useState(open);
+  if (open !== shown) {
+    setShown(open);
+    if (open) setValue(startDate);
+  }
+  const snapped = /^\d{4}-\d{2}-\d{2}$/.test(value) ? mondayOf(value) : startDate;
+  const end = shiftDays(programEnd(snapped, weeksCount), -1);
+  const overlapping = others.filter((other) =>
+    periodsOverlap({ startDate: snapped, weeksCount }, other),
+  );
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Modifier les dates"
+      footer={
+        <DialogFooter
+          onCancel={onClose}
+          primary={
+            <button
+              type="submit"
+              form={id}
+              disabled={snapped === startDate}
+              className={dlgPrimaryButtonClass}
+            >
+              Enregistrer
+            </button>
+          }
+        />
+      }
+    >
+      <form
+        id={id}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (snapped !== startDate) onConfirm(snapped);
+        }}
+        className="flex flex-col gap-3"
+      >
+        <label htmlFor={`${id}-start`} className="text-[13.5px] font-semibold text-text">
+          Date de début
+        </label>
+        <input
+          id={`${id}-start`}
+          type="date"
+          value={value}
+          onChange={(event) => event.target.value && setValue(event.target.value)}
+          className={fieldClass}
+        />
+        <p className="text-[12.5px] leading-[1.45] text-muted">
+          Du {longDay(snapped)} au {longDay(end)} · {weeksCount} semaine{weeksCount > 1 ? "s" : ""}
+          {snapped !== value ? " · les semaines commencent le lundi" : ""}. Les séances restent dans
+          leurs semaines.
+          {published ? " La fiche et les PDF changeront à la prochaine publication." : ""}
+        </p>
+        {overlapping.length > 0 ? (
+          <p
+            role="alert"
+            className="rounded-[12px] bg-warn-soft px-3 py-2.5 text-[12.5px] leading-[1.45] text-text-2"
+          >
+            Ces dates chevauchent {overlapping.map((other) => `« ${other.title} »`).join(", ")},
+            déjà publié : la publication sera refusée tant que les dates se chevauchent.
+          </p>
+        ) : null}
+      </form>
+    </Sheet>
+  );
+}
+
+// « Modifier l'objectif » (revue MVP du 13/11, C4) : la course visée et, pour l'Hyrox, la catégorie
+// qui donne les charges officielles. Avant, elle ne se choisissait qu'à la création.
+export function GoalSheet({
+  open,
+  onClose,
+  goal,
+  hyrox,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  goal: ProgramGoal | undefined;
+  // Le programme a des séances Hyrox (ou c'est sa discipline) : la catégorie compte.
+  hyrox: boolean;
+  onConfirm: (goal: ProgramGoal | undefined) => void;
+}) {
+  const id = useId();
+  const initial = () => ({
+    raceName: goal?.raceName ?? "",
+    raceDate: goal?.raceDate ?? "",
+    division: goal?.hyroxDivision ?? ("" as HyroxDivision | ""),
+    note: goal?.note ?? "",
+  });
+  const [values, setValues] = useState(initial);
+  const [shown, setShown] = useState(open);
+  if (open !== shown) {
+    setShown(open);
+    if (open) setValues(initial());
+  }
+  const set = (change: Partial<ReturnType<typeof initial>>) =>
+    setValues((current) => ({ ...current, ...change }));
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Modifier l'objectif"
+      footer={
+        <DialogFooter
+          onCancel={onClose}
+          primary={
+            <button type="submit" form={id} className={dlgPrimaryButtonClass}>
+              Enregistrer
+            </button>
+          }
+        />
+      }
+    >
+      <form
+        id={id}
+        onSubmit={(event) => {
+          event.preventDefault();
+          const next: ProgramGoal = {
+            ...(values.raceName.trim() ? { raceName: values.raceName.trim() } : {}),
+            ...(values.raceDate ? { raceDate: values.raceDate } : {}),
+            // Sans séance Hyrox, la catégorie n'est pas proposée : celle déjà choisie reste.
+            ...(hyrox
+              ? values.division
+                ? { hyroxDivision: values.division }
+                : {}
+              : goal?.hyroxDivision
+                ? { hyroxDivision: goal.hyroxDivision }
+                : {}),
+            ...(values.note.trim() ? { note: values.note.trim() } : {}),
+          };
+          onConfirm(Object.keys(next).length > 0 ? next : undefined);
+        }}
+        className="flex flex-col gap-4"
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex flex-col gap-2">
+            <span className="text-[13.5px] font-semibold text-text">
+              Course <span className="font-normal text-faint">(facultatif)</span>
+            </span>
+            <input
+              value={values.raceName}
+              maxLength={120}
+              placeholder="HYROX Gand"
+              onChange={(event) => set({ raceName: event.target.value })}
+              className={fieldClass}
+            />
+          </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-[13.5px] font-semibold text-text">Date de la course</span>
+            <input
+              type="date"
+              value={values.raceDate}
+              onChange={(event) => set({ raceDate: event.target.value })}
+              className={fieldClass}
+            />
+          </label>
+        </div>
+        {hyrox ? (
+          <label className="flex flex-col gap-2">
+            <span className="text-[13.5px] font-semibold text-text">Catégorie Hyrox</span>
+            <SelectField
+              value={values.division}
+              onChange={(event) => set({ division: event.target.value as HyroxDivision | "" })}
+            >
+              <option value="">Choisir la catégorie</option>
+              {HYROX_DIVISIONS.map((division) => (
+                <option key={division} value={division}>
+                  {hyroxDivisionLabels[division]}
+                </option>
+              ))}
+            </SelectField>
+            <span className="text-[12.5px] leading-[1.45] text-muted">
+              Elle donne les charges officielles des stations, recalculées à chaque publication.
+            </span>
+          </label>
+        ) : null}
+        <label className="flex flex-col gap-2">
+          <span className="text-[13.5px] font-semibold text-text">
+            Note <span className="font-normal text-faint">(facultatif)</span>
+          </span>
+          <textarea
+            value={values.note}
+            maxLength={300}
+            rows={3}
+            onChange={(event) => set({ note: event.target.value })}
+            className={`${fieldClass} h-auto min-h-[84px] resize-y py-3 leading-[1.5] font-normal`}
+          />
+        </label>
+      </form>
+    </Sheet>
   );
 }

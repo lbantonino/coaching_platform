@@ -11,8 +11,9 @@ import {
   InfoCard,
 } from "@/components/layout/entry-ui";
 import { initials } from "@/components/ui/avatar";
+import { FEATURES } from "@/config/features";
 import { logout } from "@/features/auth/actions";
-import { getHomePath } from "@/features/auth/guards";
+import { ACCESS_DENIED_PATH, getHomePath, isAthleteAccount } from "@/features/auth/guards";
 import { getCurrentUser } from "@/features/auth/session";
 
 export const metadata: Metadata = {
@@ -57,6 +58,9 @@ async function AccountActions() {
   }
   const home = await getHomePath(user.id);
   const space = spaceLabels[home];
+  // MVP espace coach seul (D-167) : un compte sportif apprend que son espace arrive plus tard.
+  const waitingAthlete =
+    !FEATURES.athleteSpace && home === ACCESS_DENIED_PATH && (await isAthleteAccount(user.id));
   return (
     <>
       <InfoCard>
@@ -70,6 +74,11 @@ async function AccountActions() {
           <span className="flex min-w-0 flex-col gap-0.5">
             <span className="truncate text-[15px] font-semibold">Ton compte : {user.email}</span>
             {space ? <span className="text-[13px] text-muted">{space}</span> : null}
+            {waitingAthlete ? (
+              <span className="text-[13px] text-muted">
+                L&apos;espace sportif n&apos;est pas encore disponible sur cette version.
+              </span>
+            ) : null}
           </span>
         </div>
       </InfoCard>

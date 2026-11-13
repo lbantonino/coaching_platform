@@ -1,6 +1,6 @@
 import { decimalClock } from "./clock-input";
 import { formatPace } from "./pace";
-import { localId } from "./plan-edit";
+import { localId } from "./local-id";
 import {
   SESSION_ITEMS_MAX,
   type RunMeasure,

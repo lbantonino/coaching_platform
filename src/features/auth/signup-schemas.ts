@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { FEATURES } from "@/config/features";
 import { isCurrency, type Currency } from "@/domain/billing/money";
 import { isCountryCode } from "@/domain/geo/countries";
 
@@ -13,6 +14,12 @@ export const TERMS_VERSION = "2026-11-06-provisoire";
 
 export const ACCOUNT_KINDS = ["coach", "athlete"] as const;
 export type AccountKind = (typeof ACCOUNT_KINDS)[number];
+// MVP espace coach seul (D-167) : sans espace sportif, seul un compte coach peut être créé.
+const accountKind = z
+  .enum(ACCOUNT_KINDS, { error: "Indique si tu es coach ou sportif." })
+  .refine((kind) => FEATURES.athleteSpace || kind === "coach", {
+    error: "Coory est réservé aux coachs pour l'instant.",
+  });
 const name = (label: string) =>
   z
     .string()
@@ -60,7 +67,7 @@ const accessCode = z
 // Inscription (maquette du 06/11/2026, D-139) : plus de téléphone, d'entreprise ni de confirmation
 // du mot de passe (décision d'Antonino) ; téléphone et entreprise se remplissent dans Paramètres.
 export const signupSchema = z.object({
-  kind: z.enum(ACCOUNT_KINDS, { error: "Indique si tu es coach ou sportif." }),
+  kind: accountKind,
   firstName: name("prénom"),
   lastName: name("nom"),
   email: emailField,
@@ -71,7 +78,7 @@ export const signupSchema = z.object({
 
 // Dernière étape (après confirmation de l'e-mail, ou après Google / Facebook / Apple).
 export const onboardingSchema = z.object({
-  kind: z.enum(ACCOUNT_KINDS, { error: "Indique si tu es coach ou sportif." }),
+  kind: accountKind,
   firstName: name("prénom"),
   lastName: name("nom"),
   phone,

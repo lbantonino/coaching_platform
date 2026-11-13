@@ -36,7 +36,11 @@ export type WeekSessionView = {
   dayLabel: string | null;
   // « Mer 18 », quand la carte est trop étroite pour « Mercredi 18 ».
   dayShort: string | null;
-  coach: { label: string | null; today: boolean } | null;
+  // Moment et heure fixée (« Soir · 18:00 », revue MVP du 13/11, B9).
+  when: string | null;
+  // Rendez-vous réel du coach (« Mar 3 · 07:00 », « Rendez-vous supprimé ») et la séance de l'agenda
+  // à cette date (B18), null quand elle n'existe plus.
+  coach: { label: string; today: boolean; href: string | null } | null;
   // « Semaine 2 · 2 nov. – 8 nov. · au jour choisi par Inès ».
   context: string;
 };
@@ -119,10 +123,11 @@ function SessionDetail({
             {content.steps.length} bloc{content.steps.length > 1 ? "s" : ""} · ≈{" "}
             {content.durationMinutes} min
           </span>
+          {/* Téléphone aussi (revue MVP du 13/11, B14) : 44 px de cible. */}
           <ProgramPdfMenu
             base={pdfBase}
             week={weekIndex}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] max-lg:hidden"
+            className="inline-flex h-11 items-center gap-1.5 rounded-[11px] bg-surface px-3 text-[13px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] lg:h-8 lg:rounded-[9px] lg:text-[12.5px]"
           />
           <button
             type="button"
@@ -284,9 +289,11 @@ export function WeekSessionCards({
 
   return (
     <div className="flex flex-col gap-3">
+      {/* 7 colonnes au plus (B10 : une semaine de 14 séances passe à la ligne au lieu de 14 colonnes
+          illisibles). */}
       <ol
         aria-label={`Séances de la semaine ${weekIndex}`}
-        style={{ "--n": sessions.length } as CSSProperties}
+        style={{ "--n": Math.min(sessions.length, 7) } as CSSProperties}
         className="m-0 grid list-none grid-cols-1 gap-2 p-0 lg:grid-cols-[repeat(var(--n),minmax(0,1fr))] lg:gap-2.5"
       >
         {sessions.map((session) => {
@@ -336,6 +343,11 @@ export function WeekSessionCards({
                     />
                   </button>
                 </div>
+                {session.when ? (
+                  <span className={`-mt-1 text-[12px] leading-[1.3] font-semibold ${styles.text}`}>
+                    {session.when}
+                  </span>
+                ) : null}
                 <span className="text-[15px] leading-[1.3] font-semibold [overflow-wrap:anywhere] text-text lg:text-[14.5px]">
                   {session.content.title}
                 </span>
@@ -374,21 +386,35 @@ export function WeekSessionCards({
                     )}
                   </span>
                 ) : null}
-                {session.coach ? (
-                  <span
-                    className={`flex items-center gap-1.5 pt-1 text-[12px] leading-[1.4] font-medium lg:mt-auto ${
-                      session.coach.today ? "text-violet-text" : "text-text"
-                    }`}
-                  >
-                    <UserRound aria-hidden size={13} strokeWidth={2} className="shrink-0" />
-                    {/* « Avec le coach » sur téléphone, « Coach » sur ordinateur (maquettes 2c). */}
-                    <span className="min-w-0">
-                      <span className="lg:hidden">Avec le </span>
-                      <span className="lg:capitalize">coach</span>
-                      {session.coach.label ? ` · ${session.coach.label}` : ""}
-                    </span>
-                  </span>
-                ) : null}
+                {session.coach
+                  ? (() => {
+                      const coachClass = `flex items-center gap-1.5 pt-1 text-[12px] leading-[1.4] font-medium lg:mt-auto ${
+                        session.coach.today ? "text-violet-text" : "text-text"
+                      }`;
+                      const coachText = (
+                        <>
+                          <UserRound aria-hidden size={13} strokeWidth={2} className="shrink-0" />
+                          {/* « Avec le coach » sur téléphone, « Coach » sur ordinateur (maquettes 2c). */}
+                          <span className="min-w-0">
+                            <span className="lg:hidden">Avec le </span>
+                            <span className="lg:capitalize">coach</span> · {session.coach.label}
+                          </span>
+                        </>
+                      );
+                      // B18 : la ligne ouvre la séance de l'agenda à cette date ; au-dessus du bouton
+                      // qui couvre la carte (z-10).
+                      return session.coach.href ? (
+                        <Link
+                          href={session.coach.href}
+                          className={`${coachClass} relative z-10 min-h-8 self-start hover:underline`}
+                        >
+                          {coachText}
+                        </Link>
+                      ) : (
+                        <span className={coachClass}>{coachText}</span>
+                      );
+                    })()
+                  : null}
               </div>
               {/* Téléphone : le détail se déplie en place. */}
               {isOpen ? (

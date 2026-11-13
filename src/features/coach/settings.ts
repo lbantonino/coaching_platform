@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { FEATURES } from "@/config/features";
 import { parseAmount } from "@/domain/billing/payments";
 import { emailField, newPasswordField } from "@/features/auth/schemas";
 
@@ -99,14 +100,13 @@ export function parsePreferences(
   };
 }
 
-export const NOTIFICATION_KINDS = [
-  "competitions",
-  "messages",
-  "tasks",
-  "unpaid",
-  "profiles",
-] as const;
-export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
+const ALL_NOTIFICATION_KINDS = ["competitions", "messages", "tasks", "unpaid", "profiles"] as const;
+export type NotificationKind = (typeof ALL_NOTIFICATION_KINDS)[number];
+// MVP espace coach seul (D-167) : pas de catégorie « Messages » tant que la messagerie est masquée
+// (ni dans Paramètres, ni sur la page Notifications, ni dans la cloche).
+export const NOTIFICATION_KINDS: readonly NotificationKind[] = ALL_NOTIFICATION_KINDS.filter(
+  (kind) => FEATURES.messages || kind !== "messages",
+);
 export const notificationKindLabels: Record<NotificationKind, { label: string; hint: string }> = {
   messages: {
     label: "Messages non lus",

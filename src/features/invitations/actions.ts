@@ -2,7 +2,9 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
+import { FEATURES, NOT_AVAILABLE_TEXT } from "@/config/features";
 import { fieldErrors } from "@/features/auth/field-errors";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { newPasswordSchema } from "@/features/auth/schemas";
@@ -35,6 +37,8 @@ export async function createInvitation(
   athleteId: string,
 ): Promise<CreateInvitationState> {
   const { user, membership } = await requireOrgAccess(organizationId);
+  // MVP espace coach seul (D-167) : l'action reste appelable directement, elle refuse donc aussi.
+  if (!FEATURES.invitations) return { error: NOT_AVAILABLE_TEXT, link: null, expiresAt: null };
   const origin = (await headers()).get("origin");
   if (!origin) return { error: "Requête invalide. Recharge la page.", link: null, expiresAt: null };
   return inviteOne(membership.organizationId, user.id, athleteId, origin);
@@ -50,6 +54,7 @@ export async function createInvitations(
   athleteIds: string[],
 ): Promise<BulkInvitation[]> {
   const { user, membership } = await requireOrgAccess(organizationId);
+  if (!FEATURES.invitations) return [];
   const origin = (await headers()).get("origin");
   const ids = [...new Set(athleteIds)].slice(0, 100);
   const results: BulkInvitation[] = [];
@@ -116,6 +121,7 @@ async function inviteOne(
 
 export async function revokeInvitation(organizationId: string, athleteId: string) {
   const { membership } = await requireOrgAccess(organizationId);
+  if (!z.uuid().safeParse(athleteId).success) return;
   const supabase = await createClient();
   await supabase
     .from("athlete_invites")
@@ -169,6 +175,7 @@ export async function acceptInvitation(
   _previous: AcceptInvitationState,
   formData: FormData,
 ): Promise<AcceptInvitationState> {
+  if (!FEATURES.invitations) return { error: NOT_AVAILABLE_TEXT, fields: {} };
   if (!invitationTokenSchema.safeParse(token).success) {
     return { error: acceptErrors.invitation_invalide, fields: {} };
   }

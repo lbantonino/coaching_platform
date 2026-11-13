@@ -205,7 +205,8 @@ test("un nouveau sportif tapé dans « Nouvelle séance » a aussitôt sa fiche,
 }, testInfo) => {
   const title = `Découverte ${unique(testInfo)}`;
   // Un seul mot : un prénom, sans nom de famille ni contact (unique, les tests tournent en parallèle).
-  const name = `John${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  // L'heure en chiffres sert aussi de marqueur au nettoyage de fin de suite (scripts/clean-test-data.sql).
+  const name = `John${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
   await loginAsCoachA(page);
   await page.goto(`/coach/o/${ORG_A}/agenda`);
   const dialog = await openNewSession(page);

@@ -88,7 +88,11 @@ export function guessCategoryId(
   return null;
 }
 
-export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+// 4 Mo (revue du 13/11/2026, était 10 Mo, D-60) : un hébergeur comme Vercel refuse les envois de plus
+// de 4,5 Mo vers le serveur ; au-delà, l'envoi échouerait sans explication. Pour remonter la limite,
+// il faudra envoyer le fichier directement au stockage (adresse d'envoi signée).
+export const DOCUMENT_MAX_BYTES = 4 * 1024 * 1024;
+export const DOCUMENT_MAX_LABEL = "4 Mo";
 export const DOCUMENT_NAME_MAX = 160;
 
 export type DocumentKind = "pdf" | "image" | "word" | "excel";
@@ -132,7 +136,7 @@ export type DocumentCheck = ({ ok: true } & DocumentFormat) | { ok: false; error
 export function checkDocument(bytes: Uint8Array, fileName: string): DocumentCheck {
   if (bytes.length === 0) return { ok: false, error: "Choisis un fichier." };
   if (bytes.length > DOCUMENT_MAX_BYTES) {
-    return { ok: false, error: "Fichier trop lourd : 10 Mo maximum." };
+    return { ok: false, error: `Fichier trop lourd : ${DOCUMENT_MAX_LABEL} maximum.` };
   }
   const format = detectDocumentFormat(bytes, fileName);
   if (!format) {

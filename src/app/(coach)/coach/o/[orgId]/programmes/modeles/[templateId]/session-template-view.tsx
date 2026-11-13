@@ -12,7 +12,9 @@ import { archiveTemplate, duplicateTemplate } from "@/features/programs/actions"
 
 // Un modèle de séance (écran d'appoint fait avec les composants de l'app, décision d'Antonino du
 // 09/11) : son détail, et ce qu'on peut en faire. Un modèle Coory se lit et se duplique ; un de Mes
-// modèles s'archive. Son contenu se modifie dans un programme, puis « Enregistrer comme modèle ».
+// modèles s'archive. Il n'a pas d'éditeur à lui (revue MVP du 13/11, C9, solution la plus simple) :
+// il s'ajoute à une semaine depuis l'éditeur d'un programme ; pour l'adapter, on modifie la séance
+// ajoutée, puis « Enregistrer comme modèle ». La page le dit honnêtement.
 export function SessionTemplateView({
   organizationId,
   base,
@@ -44,12 +46,16 @@ export function SessionTemplateView({
       <div className="rounded-[20px] bg-surface p-4 lg:p-[18px]">
         <SessionDetail session={session} />
       </div>
-      {source === "coory" ? (
-        <p className="flex items-center gap-2 px-1 text-[13px] text-muted">
-          <Lock aria-hidden size={14} strokeWidth={2} />
-          Modèle fourni par Coory, en lecture seule : duplique-le pour l&apos;adapter.
-        </p>
-      ) : null}
+      <p className="flex items-start gap-2 px-1 text-[13px] leading-[1.5] text-muted">
+        {source === "coory" ? (
+          <Lock aria-hidden size={14} strokeWidth={2} className="mt-[3px] shrink-0" />
+        ) : null}
+        <span>
+          {source === "coory" ? "Modèle fourni par Coory, en lecture seule. " : ""}
+          Pour t&apos;en servir, ouvre un programme et choisis « Depuis un modèle » dans une
+          semaine. Pour l&apos;adapter, modifie la séance ajoutée puis « Enregistrer comme modèle ».
+        </span>
+      </p>
       <div className="flex gap-2">
         <button
           type="button"

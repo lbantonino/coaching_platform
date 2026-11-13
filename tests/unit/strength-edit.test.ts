@@ -6,17 +6,23 @@ import {
   addSuperset,
   exerciseSummary,
   groupMeta,
+  newExercise,
   parseQuickFill,
   parseReps,
   parseRest,
+  parseSeconds,
   quickFill,
+  quickFillText,
   removeExercise,
+  setExerciseMeasure,
   setLoadMode,
   strengthSummary,
   ungroup,
 } from "@/domain/training/strength-edit";
+import { estimatedSessionSeconds } from "@/domain/training/session-duration";
 import {
   strengthContentSchema,
+  strengthExerciseSchema,
   type StrengthContent,
   type StrengthExercise,
 } from "@/domain/training/session-v2";
@@ -169,5 +175,96 @@ describe("ajouts (phase 4)", () => {
     };
     expect(addExercise(full, { name: "Un de trop" }).content.items).toHaveLength(40);
     expect(addSuperset(full, [{ name: "A" }, { name: "B" }])).toBeNull();
+  });
+});
+
+// Exercices tenus (D-166, demande d'Antonino du 13/11) : planche, gainage, équilibre se comptent en
+// secondes.
+describe("séries en secondes", () => {
+  const plank = (): StrengthExercise => ({
+    id: "x9",
+    kind: "exercise",
+    name: "Planche",
+    loadMode: "kg",
+    sets: [
+      { type: "normal", seconds: 30 },
+      { type: "normal", seconds: 30 },
+      { type: "normal", seconds: 30 },
+    ],
+    restSec: 60,
+  });
+
+  it("lit « 3 séries de 30 s », « 3 x 30-45 s », et « 3 x 45 » pour un exercice tenu", () => {
+    expect(parseQuickFill("3 séries de 30 s")).toEqual({ count: 3, seconds: 30 });
+    expect(parseQuickFill("3 x 30-45 s")).toEqual({ count: 3, seconds: 30, secondsMax: 45 });
+    expect(parseQuickFill("3 x 45", true)).toEqual({ count: 3, seconds: 45 });
+    expect(parseQuickFill("3 x 10")).toEqual({ count: 3, repsMin: 10 });
+    expect(parseQuickFill("3 x 2 s")).toBeNull();
+  });
+
+  it("lit une durée de série : « 45 s », « 30 à 45 »", () => {
+    expect(parseSeconds("45 s")).toEqual({ seconds: 45 });
+    expect(parseSeconds("30 à 45")).toEqual({ seconds: 30, secondsMax: 45 });
+    expect(parseSeconds("2")).toBeNull();
+    expect(parseSeconds("abc")).toBeNull();
+  });
+
+  it("résume « 3 × 30 s » et calcule la durée avec le temps tenu", () => {
+    expect(exerciseSummary(plank())).toBe("3 × 30 s · repos 60 s");
+    expect(quickFillText(plank())).toBe("3 séries de 30 s");
+    const content: StrengthContent = { discipline: "strength", items: [plank()] };
+    // 3 × 30 s de travail et 2 repos de 60 s : au moins 210 s, au plus quelques minutes.
+    const seconds = estimatedSessionSeconds(content) ?? 0;
+    expect(seconds).toBeGreaterThanOrEqual(210);
+    expect(seconds).toBeLessThanOrEqual(360);
+  });
+
+  it("passe un exercice des répétitions aux secondes, et retour", () => {
+    const timed = setExerciseMeasure(split(), true);
+    expect(timed.sets.every((set) => set.seconds === 30 && set.repsMin === undefined)).toBe(true);
+    // Pas de RIR pour un temps tenu.
+    expect(timed.sets.every((set) => set.rir === undefined)).toBe(true);
+    expect(timed.loadMode).toBe("kg");
+    expect(strengthExerciseSchema.safeParse(timed).success).toBe(true);
+    const back = setExerciseMeasure(timed, false);
+    expect(back.sets.every((set) => set.repsMin === 10 && set.seconds === undefined)).toBe(true);
+    expect(quickFill(plank(), { count: 4, seconds: 45 }).sets).toHaveLength(4);
+    // « 3 séries de 30 s » sur un exercice en répétitions : les secondes, sans le RIR d'avant.
+    const filled = quickFill(split(), { count: 3, seconds: 30 });
+    expect(filled.sets.every((set) => set.seconds === 30 && set.rir === undefined)).toBe(true);
+    expect(strengthExerciseSchema.safeParse(filled).success).toBe(true);
+  });
+
+  it("propose 3 × 30 s pour un exercice tenu de la Bibliothèque", () => {
+    const exercise = newExercise(
+      { discipline: "strength", items: [] },
+      { exerciseId: "f04352aa-2058-573f-a105-76a1fbf32543", name: "Planche", timed: true },
+      new Set(),
+      "pct",
+    );
+    expect(exercise.loadMode).toBe("kg");
+    expect(exercise.sets).toEqual([
+      { type: "normal", seconds: 30 },
+      { type: "normal", seconds: 30 },
+      { type: "normal", seconds: 30 },
+    ]);
+  });
+
+  it("refuse une série à la fois en répétitions et en secondes, ou un exercice mélangé", () => {
+    expect(
+      strengthExerciseSchema.safeParse({
+        ...plank(),
+        sets: [{ type: "normal", seconds: 30, repsMin: 10 }],
+      }).success,
+    ).toBe(false);
+    expect(
+      strengthExerciseSchema.safeParse({
+        ...plank(),
+        sets: [
+          { type: "normal", seconds: 30 },
+          { type: "normal", repsMin: 10 },
+        ],
+      }).success,
+    ).toBe(false);
   });
 });

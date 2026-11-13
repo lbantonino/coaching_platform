@@ -13,6 +13,8 @@ import {
 } from "@/domain/training/program-plan";
 import type { AimContext } from "@/domain/training/program-publication";
 import { draftFromPublication, type CoachSessionSlot } from "@/domain/training/program-upgrade";
+import { meetingResolver } from "@/features/agenda/coach-meeting";
+import { listSessions } from "@/features/sessions/queries";
 import { WEEKDAYS, type Weekday } from "@/domain/training/session-v2";
 import { createClient } from "@/lib/supabase/server";
 
@@ -221,13 +223,13 @@ export async function loadDraft(
   if (!publication)
     return { program, draft: null, revision: 0, activePublication, hasUnpublishedChanges: false };
 
-  const [sessions, coachSessions] = await Promise.all([
+  const [sessions, agenda] = await Promise.all([
     supabase
       .from("publication_sessions")
       .select("source_session_key, week_index, slot_index, session_json")
       .eq("organization_id", organizationId)
       .eq("publication_id", publication.id),
-    listCoachSessionSlots(supabase, organizationId),
+    listSessions(organizationId),
   ]);
   if (sessions.error) throw new Error("Lecture des séances du programme impossible.");
   const draft = draftFromPublication({
@@ -245,7 +247,13 @@ export async function loadDraft(
       slotIndex: session.slot_index,
       json: session.session_json,
     })),
-    coachSessions,
+    coachSessions: agenda.map((session) => ({
+      id: session.id,
+      startsOn: session.startsOn,
+      startTime: session.startTime,
+    })),
+    // Le vrai rendez-vous de chaque semaine, lu dans l'agenda (revue MVP du 13/11, B5).
+    meetingIn: meetingResolver(agenda),
   });
   return { program, draft, revision: 0, activePublication, hasUnpublishedChanges: false };
 }

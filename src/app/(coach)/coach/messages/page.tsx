@@ -1,5 +1,6 @@
 import { ArrowLeft, MessageSquare } from "lucide-react";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { z } from "zod";
@@ -19,6 +20,7 @@ import { getAthlete } from "@/features/athletes/queries";
 import { requireCoach } from "@/features/auth/guards";
 import { getThread, listConversations } from "@/features/messages/queries";
 import { listSessionAthletes } from "@/features/sessions/actions";
+import { FEATURES } from "@/config/features";
 import { brusselsDayOf, dayShortLabel, messageTime, todayIsoInBrussels } from "@/lib/format";
 
 import { Composer } from "./composer";
@@ -39,6 +41,8 @@ export const metadata: Metadata = {
 // dans la liste une fois lu) ; aucun fil ne s'ouvre tout seul. Le lien « Voir tous les messages non
 // lus » de la cloche y mène.
 export default function MessagesPage({ searchParams }: PageProps<"/coach/messages">) {
+  // MVP espace coach seul (D-167) : page masquée, le code reste.
+  if (!FEATURES.messages) notFound();
   return (
     <main className={`${pageMainClass} ${phoneScreenMainClass}`}>
       <Suspense fallback={<PageLoading />}>

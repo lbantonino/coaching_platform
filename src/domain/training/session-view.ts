@@ -1,5 +1,6 @@
 import { hyroxStationLabels } from "./hyrox-official";
 import { formatPace, formatPaceRange } from "./pace";
+import { setAmountText } from "./session-v2";
 import type {
   HyroxBlock,
   HyroxLine,
@@ -159,10 +160,8 @@ function runRepeatView(repeat: RunRepeat): ViewStep {
 // ---------------------------------------------------------------------------
 // Musculation
 // ---------------------------------------------------------------------------
-const repsText = (set: StrengthSet) =>
-  set.repsMax !== undefined && set.repsMax !== set.repsMin
-    ? `${set.repsMin}-${set.repsMax}`
-    : `${set.repsMin}`;
+// « 8-10 » ou, pour un exercice tenu, « 30 s » (D-166).
+const repsText = (set: StrengthSet) => setAmountText(set, "-");
 
 function loadText(set: StrengthSet): string | null {
   if (set.pct !== undefined)

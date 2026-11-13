@@ -1,0 +1,264 @@
+{
+  "Crée une séance avec Sarah mardi 24 novembre à 18h": [
+    [
+      {
+        "type": "text",
+        "text": "Je cherche Sarah.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1",
+        "name": "chercher_sportifs",
+        "input": {
+          "nom": "Sarah"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici la séance, valide-la si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2",
+        "name": "creer_seance",
+        "input": {
+          "kind": "individual",
+          "title": "Séance e2e 1700000000000",
+          "athlete": {
+            "athleteId": "db000000-0000-4000-8000-000000000001"
+          },
+          "startsOn": "2026-11-24",
+          "startTime": "18:00",
+          "durationMinutes": 60,
+          "location": "Parc"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Crée une séance avec Hugo jeudi à 7h": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_h1",
+        "name": "creer_seance",
+        "input": {
+          "kind": "individual",
+          "title": "Séance annulée 1700000000000",
+          "athlete": {
+            "athleteId": "db000000-0000-4000-8000-000000000002"
+          },
+          "startsOn": "2026-11-26",
+          "startTime": "07:00",
+          "durationMinutes": 45
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Note 40 euros de Sarah en espèces": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_p1",
+        "name": "noter_paiement",
+        "input": {
+          "athlete": {
+            "athleteId": "db000000-0000-4000-8000-000000000001"
+          },
+          "receivedOn": "2026-11-13",
+          "amount": 40,
+          "method": "cash",
+          "label": "Paiement e2e 1700000000000"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Crée la fiche de Zoé Test et une tâche pour l'appeler": [
+    [
+      {
+        "type": "text",
+        "text": "Deux cartes : la fiche, puis la tâche.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_z1",
+        "name": "creer_sportif",
+        "input": {
+          "firstName": "Zoé",
+          "lastName": "Test 1700000000000",
+          "phone": "+32 470 00 00 00"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_z2",
+        "name": "creer_tache",
+        "input": {
+          "title": "Appeler Zoé 1700000000000",
+          "athlete": {
+            "nouveauSportif": "Zoé Test 1700000000000"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Prépare un programme 10 km pour Sarah à partir d'un modèle": [
+    [
+      {
+        "type": "text",
+        "text": "Je regarde ses programmes et les modèles.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_m1",
+        "name": "voir_programmes",
+        "input": {
+          "sportif_id": "db000000-0000-4000-8000-000000000001"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_m2",
+        "name": "voir_modeles",
+        "input": {},
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici le brouillon, depuis le modèle Coory.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_m3",
+        "name": "creer_programme",
+        "input": {
+          "athlete": {
+            "athleteId": "db000000-0000-4000-8000-000000000001"
+          },
+          "title": "Objectif 10 km 1700000000000",
+          "discipline": "running",
+          "startDate": "2026-11-30",
+          "weeksCount": 8,
+          "sessionsPerWeek": 4,
+          "scheduling": "ordered",
+          "start": {
+            "kind": "template",
+            "templateId": "7a000000-0000-4000-8000-000000000002"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Écris un programme de reprise de 2 semaines pour Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici un programme de reprise sur deux semaines.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_r1",
+        "name": "creer_programme",
+        "input": {
+          "athlete": {
+            "athleteId": "db000000-0000-4000-8000-000000000002"
+          },
+          "title": "Reprise 1700000000000",
+          "discipline": "running",
+          "startDate": "2026-11-30",
+          "weeksCount": 2,
+          "sessionsPerWeek": 2,
+          "scheduling": "ordered",
+          "start": {
+            "kind": "blank"
+          },
+          "seances": [
+            {
+              "ref": "A",
+              "title": "Footing de reprise",
+              "sessionType": "Endurance",
+              "durationMinutes": 40,
+              "content": {
+                "discipline": "running",
+                "items": [
+                  {
+                    "id": "t1",
+                    "kind": "text",
+                    "title": "Footing de reprise",
+                    "lines": ["40 min en aisance respiratoire"]
+                  }
+                ]
+              }
+            },
+            {
+              "ref": "B",
+              "title": "Sortie longue douce",
+              "sessionType": "Endurance",
+              "durationMinutes": 60,
+              "content": {
+                "discipline": "running",
+                "items": [
+                  {
+                    "id": "t1",
+                    "kind": "text",
+                    "title": "Sortie longue douce",
+                    "lines": ["60 min très facile"]
+                  }
+                ]
+              }
+            }
+          ],
+          "semaines": [
+            {
+              "index": 1,
+              "seances": ["A", "B"]
+            },
+            {
+              "index": 2,
+              "light": true,
+              "seances": ["A"]
+            }
+          ]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ]
+}

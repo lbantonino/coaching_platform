@@ -13,6 +13,7 @@ import { todayIsoInBrussels } from "@/lib/format";
 
 import { EditorProvider } from "../../_editor/editor-provider";
 import { EditorHeaderActions, ProgramEditor, type EditorMeta } from "../../_editor/program-editor";
+import { SafeBack } from "../../_session/safe-leave";
 
 import { SessionTemplateView } from "./session-template-view";
 
@@ -76,6 +77,7 @@ async function Template({
       templateSource: program.source,
       focus,
       sessionTemplates,
+      returnTo: null,
       publishContext: null,
     };
     return (
@@ -87,13 +89,15 @@ async function Template({
         initialPlan={program.plan}
         initialRevision={program.version}
       >
-        <PageHeader
-          title={program.title}
-          back={back}
-          visibleTitle={false}
-          phoneBack={false}
-          actions={<EditorHeaderActions base={base} />}
-        />
+        <SafeBack>
+          <PageHeader
+            title={program.title}
+            back={back}
+            visibleTitle={false}
+            phoneBack={false}
+            actions={<EditorHeaderActions base={base} />}
+          />
+        </SafeBack>
         <PageBody fill>
           <ProgramEditor meta={meta} />
         </PageBody>

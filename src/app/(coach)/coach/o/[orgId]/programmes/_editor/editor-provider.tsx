@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -68,6 +69,7 @@ export function EditorProvider({
   initialRevision: number;
   children: ReactNode;
 }) {
+  const router = useRouter();
   const [plan, setPlan] = useState(initialPlan);
   const [status, setStatus] = useState<SaveStatus>("saved");
   const [error, setError] = useState<string | null>(null);
@@ -78,12 +80,28 @@ export function EditorProvider({
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const inFlight = useRef<Promise<boolean> | null>(null);
   const blocked = useRef(false);
+  // Le plan tel qu'il est enregistré (revue MVP du 13/11, C20) : une « modification » qui ne change
+  // rien (renommer avec le même titre, valider le même jour…) n'enregistre rien, et ne crée donc pas
+  // de « Modifications non publiées ».
+  const savedJson = useRef<string | null>(null);
+  // Dernière révision enregistrée dans cet onglet (C10) : la page rouverte par le retour arrière du
+  // navigateur peut sortir d'un cache, avec une révision plus ancienne ; on la relit alors.
+  const storeKey =
+    target.kind === "program"
+      ? `coory-revision:program:${target.programId}`
+      : `coory-revision:template:${target.templateId}`;
 
   const saveOnce = useCallback(async (): Promise<boolean> => {
     if (!dirty.current || blocked.current) return !blocked.current;
     dirty.current = false;
-    setStatus("saving");
     const current = planRef.current;
+    const json = JSON.stringify(current);
+    savedJson.current ??= JSON.stringify(initialPlan);
+    if (json === savedJson.current) {
+      setStatus("saved");
+      return true;
+    }
+    setStatus("saving");
     const result =
       target.kind === "program"
         ? await saveDraft(organizationId, target.programId, revisionRef.current, current).then(
@@ -108,11 +126,17 @@ export function EditorProvider({
       return false;
     }
     revisionRef.current = result.revision;
+    savedJson.current = json;
+    try {
+      sessionStorage.setItem(storeKey, String(result.revision));
+    } catch {
+      // Stockage bloqué : la page se relit seulement quand elle redevient visible.
+    }
     setRevision(result.revision);
     setError(null);
     setStatus(dirty.current ? "saving" : "saved");
     return true;
-  }, [organizationId, target]);
+  }, [organizationId, target, initialPlan, storeKey]);
 
   // Un seul enregistrement à la fois ; ce qui change pendant l'envoi part juste après.
   const flush = useCallback(async (): Promise<boolean> => {
@@ -143,6 +167,8 @@ export function EditorProvider({
   );
 
   // Quitter la page avec une modification qui attend : on l'envoie (et le navigateur prévient).
+  // Quitter par un lien de l'app (retour de l'en-tête, menu) démonte l'éditeur : la modification qui
+  // attendait ses 700 ms part quand même (revue MVP du 13/11, C7 ; avant, elle était perdue).
   useEffect(() => {
     const onLeave = (event: BeforeUnloadEvent) => {
       if (!dirty.current && !inFlight.current) return;
@@ -153,8 +179,26 @@ export function EditorProvider({
     return () => {
       window.removeEventListener("beforeunload", onLeave);
       clearTimeout(timer.current);
+      if (dirty.current && !blocked.current) void flush();
     };
   }, [flush]);
+
+  // C10 : rouverte depuis le cache (retour arrière), la page peut montrer une révision dépassée ;
+  // revenue au premier plan, elle relit le serveur (une modification faite ailleurs s'affiche).
+  useEffect(() => {
+    try {
+      if (Number(sessionStorage.getItem(storeKey) ?? 0) > initialRevision) router.refresh();
+    } catch {
+      // Stockage bloqué : rien à comparer.
+    }
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (dirty.current || inFlight.current || blocked.current) return;
+      router.refresh();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [router, storeKey, initialRevision]);
 
   const value: EditorValue = {
     organizationId,

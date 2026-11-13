@@ -1,7 +1,9 @@
 import { kgFromPercent } from "./aims";
-import { localId } from "./plan-edit";
+import { localId } from "./local-id";
 import {
+  isTimedExercise,
   SESSION_ITEMS_MAX,
+  setAmountText,
   type StrengthContent,
   type StrengthExercise,
   type StrengthSet,
@@ -16,43 +18,71 @@ export type StrengthItem = StrengthContent["items"][number];
 export type StrengthGroup = Extract<StrengthItem, { kind: "superset" | "emom" }>;
 
 // ---------------------------------------------------------------------------
-// Saisie rapide : « 3 séries de 8 à 10 », « 4 x 6 », « 5×5 », « 3 de 12 ».
+// Saisie rapide : « 3 séries de 8 à 10 », « 4 x 6 », « 5×5 », « 3 de 12 » ; en secondes (D-166) :
+// « 3 séries de 30 s », « 3 x 30-45 s ». Pour un exercice tenu (`timed`), « 3 x 30 » se lit en secondes.
 // ---------------------------------------------------------------------------
-export function parseQuickFill(
-  input: string,
-): { count: number; repsMin: number; repsMax?: number } | null {
+export type QuickFill = {
+  count: number;
+  repsMin?: number;
+  repsMax?: number;
+  seconds?: number;
+  secondsMax?: number;
+};
+
+export function parseQuickFill(input: string, timed = false): QuickFill | null {
   const match =
-    /^\s*(\d{1,2})\s*(?:séries?|series?|x|×)?\s*(?:de\s*)?(\d{1,3})(?:\s*(?:à|a|-|–)\s*(\d{1,3}))?\s*(?:rép\w*|reps?)?\s*$/i.exec(
+    /^\s*(\d{1,2})\s*(?:séries?|series?|x|×)?\s*(?:de\s*)?(\d{1,3})(?:\s*(?:à|a|-|–)\s*(\d{1,3}))?\s*(rép\w*|reps?|s|sec\w*)?\s*$/i.exec(
       input,
     );
   if (!match) return null;
   const count = Number(match[1]);
-  const repsMin = Number(match[2]);
-  const repsMax = match[3] ? Number(match[3]) : undefined;
-  if (count < 1 || count > 20 || repsMin < 1 || repsMin > 100) return null;
-  if (repsMax !== undefined && (repsMax < repsMin || repsMax > 100)) return null;
-  return { count, repsMin, ...(repsMax !== undefined && repsMax !== repsMin ? { repsMax } : {}) };
+  const low = Number(match[2]);
+  const high = match[3] ? Number(match[3]) : undefined;
+  const unit = (match[4] ?? "").toLowerCase();
+  const inSeconds = unit.startsWith("s") || (timed && !unit.startsWith("r"));
+  const max = inSeconds ? 600 : 100;
+  const min = inSeconds ? 5 : 1;
+  if (count < 1 || count > 20 || low < min || low > max) return null;
+  if (high !== undefined && (high < low || high > max)) return null;
+  const range = high !== undefined && high !== low ? high : undefined;
+  return inSeconds
+    ? { count, seconds: low, ...(range !== undefined ? { secondsMax: range } : {}) }
+    : { count, repsMin: low, ...(range !== undefined ? { repsMax: range } : {}) };
 }
 
 // « Remplir » : les séries d'échauffement restent, les séries normales sont remplacées ; la charge
 // et le RIR de la première série normale sont repris.
-export function quickFill(
-  exercise: StrengthExercise,
-  fill: { count: number; repsMin: number; repsMax?: number },
-): StrengthExercise {
-  const warmups = exercise.sets.filter((set) => set.type === "warmup");
+export function quickFill(current: StrengthExercise, fill: QuickFill): StrengthExercise {
+  const timed = fill.seconds !== undefined;
+  // Revue MVP du 13/11 (C6) : « 3 séries de 30 s » sur un exercice en % du max change d'abord sa
+  // mesure (D-166 : en secondes, la charge se met en kg, sans % ni RIR), sinon l'exercice gardait des
+  // séries tenues en % du max.
+  const exercise =
+    isTimedExercise(current) === timed ? current : setExerciseMeasure(current, timed);
+  // Les séries d'échauffement restent si elles se comptent de la même façon (répétitions ou secondes).
+  const warmups = exercise.sets.filter(
+    (set) => set.type === "warmup" && (set.seconds !== undefined) === timed,
+  );
   const model = exercise.sets.find((set) => set.type === "normal");
   const base: StrengthSet = {
     type: "normal",
-    repsMin: fill.repsMin,
-    ...(fill.repsMax !== undefined ? { repsMax: fill.repsMax } : {}),
+    ...(timed
+      ? {
+          seconds: fill.seconds,
+          ...(fill.secondsMax !== undefined ? { secondsMax: fill.secondsMax } : {}),
+        }
+      : {
+          repsMin: fill.repsMin ?? 10,
+          ...(fill.repsMax !== undefined ? { repsMax: fill.repsMax } : {}),
+        }),
     ...(model?.kg !== undefined ? { kg: model.kg } : {}),
     ...(model?.pct !== undefined
       ? { pct: model.pct }
       : exercise.loadMode === "pct"
         ? { pct: 70 }
         : {}),
-    ...(model?.rir !== undefined ? { rir: model.rir } : {}),
+    // Pas de RIR pour un temps tenu (D-166).
+    ...(model?.rir !== undefined && !timed ? { rir: model.rir } : {}),
   };
   return {
     ...exercise,
@@ -64,20 +94,16 @@ export const quickFillText = (exercise: StrengthExercise): string => {
   const work = exercise.sets.filter((set) => set.type === "normal");
   const first = work[0];
   if (!first) return "";
-  const range =
-    first.repsMax !== undefined && first.repsMax !== first.repsMin
-      ? `${first.repsMin} à ${first.repsMax}`
-      : `${first.repsMin}`;
+  // « 3 séries de 8 à 10 » ; tenu : « 3 séries de 30 s », « 3 séries de 30 à 45 s ».
+  const range = setAmountText(first, " à ");
   return `${work.length} série${work.length > 1 ? "s" : ""} de ${range}`;
 };
 
 // ---------------------------------------------------------------------------
 // Lecture : résumé d'un exercice, de la séance
 // ---------------------------------------------------------------------------
-export const repsText = (set: StrengthSet) =>
-  set.repsMax !== undefined && set.repsMax !== set.repsMin
-    ? `${set.repsMin}–${set.repsMax}`
-    : `${set.repsMin}`;
+// « 8–10 » ; un exercice tenu : « 30 s », « 30–45 s » (D-166).
+export const repsText = (set: StrengthSet) => setAmountText(set, "–");
 
 // 60 -> « 60 s » ; 90 -> « 90 s » ; 120 -> « 2 min » ; 150 -> « 2:30 min » (maquette : « repos 90 s »).
 export const restText = (seconds: number) =>
@@ -98,8 +124,10 @@ export function exerciseSummary(
   const sets = work.length > 0 ? work : exercise.sets;
   const reps = same(sets.map(repsText));
   const parts: string[] = [];
-  if (options.inGroup) parts.push(reps ? `${reps} répétitions` : sets.map(repsText).join("–"));
-  else if (reps) parts.push(`${sets.length} × ${reps}`);
+  if (options.inGroup) {
+    const timed = isTimedExercise(exercise);
+    parts.push(reps ? (timed ? reps : `${reps} répétitions`) : sets.map(repsText).join("–"));
+  } else if (reps) parts.push(`${sets.length} × ${reps}`);
   else parts.push(`Pyramide ${sets.map(repsText).join("–")}`);
   const load =
     exercise.loadMode === "pct"
@@ -222,14 +250,30 @@ function ids(content: StrengthContent): Set<string> {
 }
 
 // `loadMode` : la façon de viser par défaut du programme (BR-12) ; en % du max, 70 % pour commencer.
+// Exercice choisi dans la Bibliothèque : `timed` quand il se mesure en secondes (planche, gainage,
+// équilibre…, mesure « duration_s » du catalogue, D-166).
+export type PickedExercise = { exerciseId?: string; name: string; timed?: boolean };
+
 export function newExercise(
   content: StrengthContent,
-  picked: { exerciseId?: string; name: string },
+  picked: PickedExercise,
   taken = ids(content),
   loadMode: StrengthExercise["loadMode"] = "kg",
 ): StrengthExercise {
   const id = localId("x", taken);
   taken.add(id);
+  // Exercice tenu : 3 × 30 s, en kg (un % du max n'a pas de sens pour un temps), repos 60 s.
+  if (picked.timed) {
+    return {
+      id,
+      kind: "exercise",
+      ...(picked.exerciseId ? { exerciseId: picked.exerciseId } : {}),
+      name: picked.name.slice(0, 80),
+      loadMode: "kg",
+      sets: Array.from({ length: 3 }, () => ({ type: "normal" as const, seconds: 30 })),
+      restSec: 60,
+    };
+  }
   return {
     id,
     kind: "exercise",
@@ -247,7 +291,7 @@ export function newExercise(
 
 export function addExercise(
   content: StrengthContent,
-  picked: { exerciseId?: string; name: string },
+  picked: PickedExercise,
   groupId?: string,
   loadMode: StrengthExercise["loadMode"] = "kg",
 ): { content: StrengthContent; id: string } {
@@ -274,7 +318,7 @@ export function addExercise(
 // « Créer un superset » : les exercices choisis, reliés (3 tours, repos 90 s en fin de tour).
 export function addSuperset(
   content: StrengthContent,
-  picked: { exerciseId?: string; name: string }[],
+  picked: PickedExercise[],
   loadMode: StrengthExercise["loadMode"] = "kg",
 ): { content: StrengthContent; id: string } | null {
   if (picked.length < 2 || content.items.length >= SESSION_ITEMS_MAX) return null;
@@ -411,6 +455,39 @@ export function addSet(exercise: StrengthExercise): StrengthExercise {
 
 export function removeLastSet(exercise: StrengthExercise): StrengthExercise {
   return exercise.sets.length > 1 ? { ...exercise, sets: exercise.sets.slice(0, -1) } : exercise;
+}
+
+// « 30 », « 30 s », « 30-45 », « 30 à 45 s » -> secondes tenues (5 à 600) ; null si illisible (D-166).
+export function parseSeconds(input: string): { seconds: number; secondsMax?: number } | null {
+  const match =
+    /^\s*(\d{1,3})\s*(?:s|sec\w*)?\s*(?:(?:-|–|à|a)\s*(\d{1,3})\s*(?:s|sec\w*)?)?\s*$/i.exec(input);
+  if (!match) return null;
+  const seconds = Number(match[1]);
+  const secondsMax = match[2] ? Number(match[2]) : undefined;
+  if (seconds < 5 || seconds > 600) return null;
+  if (secondsMax !== undefined && (secondsMax < seconds || secondsMax > 600)) return null;
+  return secondsMax !== undefined && secondsMax !== seconds ? { seconds, secondsMax } : { seconds };
+}
+
+// « Mesure » de l'exercice (D-166) : répétitions ou secondes. Chaque série change de mesure (10
+// répétitions ou 30 s par défaut) et garde son type et sa charge ; un temps se met en kg, sans RIR
+// (les répétitions en réserve n'ont pas de sens pour un temps tenu).
+export function setExerciseMeasure(exercise: StrengthExercise, timed: boolean): StrengthExercise {
+  if (isTimedExercise(exercise) === timed) return exercise;
+  return {
+    ...exercise,
+    loadMode: timed ? "kg" : exercise.loadMode,
+    sets: exercise.sets.map((set) => {
+      const kept: StrengthSet = {
+        type: set.type,
+        ...(set.kg !== undefined ? { kg: set.kg } : {}),
+        ...(!timed && set.pct !== undefined ? { pct: set.pct } : {}),
+        ...(!timed && set.rir !== undefined ? { rir: set.rir } : {}),
+      };
+      return timed ? { ...kept, seconds: 30 } : { ...kept, repsMin: 10 };
+    }),
+    restSec: exercise.restSec ?? (timed ? 60 : 90),
+  };
 }
 
 // « 8 », « 8-10 », « 8 à 10 » -> répétitions ; null si illisible.

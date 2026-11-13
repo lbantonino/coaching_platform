@@ -12,7 +12,13 @@ import {
   type PdfWeekInput,
 } from "./pdf-agenda";
 import type { ProgramSessionContent } from "./program-session";
-import type { PublishedSession, StrengthContent, StrengthExercise } from "./session-v2";
+import {
+  isTimedExercise,
+  setAmountText,
+  type PublishedSession,
+  type StrengthContent,
+  type StrengthExercise,
+} from "./session-v2";
 import {
   ergLabels,
   formatKg,
@@ -213,11 +219,8 @@ export function blocksOf(content: ProgramSessionContent): FicheBlock[] {
 const repsOf = (exercise: StrengthExercise) => {
   const work = exercise.sets.filter((set) => set.type === "normal");
   const sets = work.length > 0 ? work : exercise.sets;
-  const reps = sets.map((set) =>
-    set.repsMax !== undefined && set.repsMax !== set.repsMin
-      ? `${set.repsMin}-${set.repsMax}`
-      : `${set.repsMin}`,
-  );
+  // Un exercice tenu se lit en secondes (« 30 s », D-166).
+  const reps = sets.map((set) => setAmountText(set, "-"));
   return { count: sets.length, reps: new Set(reps).size === 1 ? reps[0]! : reps.join("-") };
 };
 
@@ -308,7 +311,10 @@ function strengthTable(content: StrengthContent): FicheTableRow[] {
           tag: null,
           name: item.exercises.map((exercise) => exercise.name).join(" + "),
           text: `EMOM ${item.minutes} min · ${item.exercises
-            .map((exercise) => `${repsOf(exercise).reps} répét.`)
+            // Un exercice tenu (D-166) se lit « 30 s », pas « 30 s répét. » (revue MVP, C14).
+            .map((exercise) =>
+              isTimedExercise(exercise) ? repsOf(exercise).reps : `${repsOf(exercise).reps} répét.`,
+            )
             .join(" + ")}${work}`,
         },
       ];

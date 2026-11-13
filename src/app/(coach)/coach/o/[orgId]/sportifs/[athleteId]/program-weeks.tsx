@@ -2,6 +2,8 @@ import { ChevronLeft, ChevronRight, Flag, ListOrdered, Users } from "lucide-reac
 import Link from "next/link";
 
 import { cardLines } from "@/domain/training/card-lines";
+import { defaultWeekIndex } from "@/domain/training/program-status";
+import { sessionMomentLabels } from "@/domain/training/session-v2";
 import type { AgendaItem } from "@/features/agenda/items";
 import { draftSessionKeys } from "@/features/programs/drafts";
 import { sessionEditHref } from "@/features/programs/edit-href";
@@ -10,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dayShortLabel } from "@/lib/format";
 
 import { WeekPicker } from "./week-picker";
-import { OpenSessionProvider, WeekSessionCards } from "./week-session-cards";
+import { OpenSessionProvider, WeekSessionCards, type WeekSessionView } from "./week-session-cards";
 
 // Onglet « Agenda » quand le sportif a un programme (D-46), d'après la maquette « Sportifs » du
 // 03/11/2026 (page 2c). En haut, le programme (durée, dates, rythme) et sa règle : les séances n'ont
@@ -79,11 +81,13 @@ function WeekCoachItems({
   today,
   agendaPath,
   goalsHref,
+  returnTo,
 }: {
   items: AgendaItem[];
   today: string;
   agendaPath: string;
   goalsHref: string;
+  returnTo: string;
 }) {
   if (items.length === 0) return null;
   return (
@@ -91,7 +95,12 @@ function WeekCoachItems({
       {items.map((item) => (
         <li key={item.key}>
           <Link
-            href={item.type === "session" ? `${agendaPath}/seances/${item.sessionId}` : goalsHref}
+            // La date touchée s'ouvre (B6), et le retour ramène à la fiche (B15).
+            href={
+              item.type === "session"
+                ? `${agendaPath}/seances/${item.sessionId}?date=${item.date}&retour=${encodeURIComponent(returnTo)}`
+                : goalsHref
+            }
             className={`flex items-center gap-2 rounded-[12px] px-3 py-2.5 text-[13px] font-medium transition-[filter] duration-150 hover:brightness-[.97] ${
               item.type === "event" ? "bg-violet/7 text-violet-text" : "bg-surface-2 text-text-2"
             }`}
@@ -139,28 +148,44 @@ function WeekCard({
   last: boolean;
 }) {
   const count = week.sessions.length;
-  // Séances du programme faites avec le coach : leur rendez-vous de la semaine (jour et heure).
-  const coachSlots = new Map<string, { label: string | null; today: boolean }>();
+  const returnTo = `${basePath}?onglet=agenda&semaine=${week.index}`;
+  // Séances du programme faites avec le coach : leur rendez-vous RÉEL de la semaine, lu dans l'agenda
+  // (revue MVP du 13/11, B4 : la date figée à la publication pouvait ne plus être la bonne), ou ce
+  // qui lui est arrivé (supprimé, pas cette semaine). La ligne ouvre la séance de l'agenda à cette
+  // date (B18).
+  const coachSlots = new Map<string, NonNullable<WeekSessionView["coach"]>>();
   const linked = new Set<string>();
   for (const session of week.sessions) {
-    const coachSessionId = session.content.withCoach?.sessionId;
-    if (!coachSessionId) continue;
-    const meeting = coachItems.find(
-      (item) => item.type === "session" && item.sessionId === coachSessionId,
-    );
-    if (meeting) linked.add(meeting.key);
-    coachSlots.set(
-      session.id,
-      meeting && meeting.type === "session"
-        ? {
-            label: `${dayShortLabel(meeting.date, today)} · ${meeting.time}`,
-            today: meeting.date === today,
-          }
-        : { label: null, today: false },
-    );
+    if (!session.coach) continue;
+    const sessionPath = `${agendaPath}/seances/${session.coach.sessionId}`;
+    const back = `retour=${encodeURIComponent(returnTo)}`;
+    if (session.coach.status === "ok" && session.coachDate) {
+      linked.add(`${session.coach.sessionId}:${session.coachDate}`);
+      coachSlots.set(session.id, {
+        label: `${dayShortLabel(session.coachDate, today)}${session.time ? ` · ${session.time}` : ""}${
+          session.coach.moved ? " · déplacée" : ""
+        }`,
+        today: session.coachDate === today,
+        href: `${sessionPath}?date=${session.coachDate}&${back}`,
+      });
+    } else {
+      coachSlots.set(session.id, {
+        label:
+          session.coach.status === "deleted"
+            ? "Rendez-vous supprimé"
+            : "Pas de rendez-vous cette semaine",
+        today: false,
+        href: session.coach.status === "deleted" ? null : `${sessionPath}?${back}`,
+      });
+    }
   }
   const withCoach = coachSlots.size;
-  const others = coachItems.filter((item) => !linked.has(item.key));
+  const others = coachItems.filter(
+    (item) => item.type !== "session" || !linked.has(`${item.sessionId}:${item.date}`),
+  );
+  // B13 : en jours fixes, les séances ne sont pas « libres ».
+  const rest = week.fixed ? "aux jours fixés" : "libre";
+  const restOf = (n: number) => (week.fixed ? rest : `${rest}${n > 1 ? "s" : ""}`);
   const range = `${dayMonth.format(utc(week.monday))} – ${dayMonth.format(utc(week.sunday))}`;
   const titleId = `semaine-${week.index}`;
   return (
@@ -180,8 +205,8 @@ function WeekCard({
             {count === 0
               ? "semaine de repos"
               : withCoach === 0
-                ? `${plural(count, "séance")} libre${count > 1 ? "s" : ""}`
-                : `${withCoach} avec le coach · ${count - withCoach} libre${count - withCoach > 1 ? "s" : ""}`}
+                ? `${plural(count, "séance")} ${restOf(count)}`
+                : `${withCoach} avec le coach · ${count - withCoach} ${restOf(count - withCoach)}`}
           </p>
         </div>
         {current || week.label ? (
@@ -204,10 +229,18 @@ function WeekCard({
           weekIndex={week.index}
           pdfBase={pdfBase}
           sessions={week.sessions.map((session) => {
-            const slot = coachSlots.get(session.id);
+            const slot = coachSlots.get(session.id) ?? null;
             const date =
               session.coachDate ?? (session.day ? dayOfWeek(week.monday, session.day) : null);
             const dayLabel = date ? fullDay(date) : null;
+            // B9 : le moment (plusieurs séances le même jour) et l'heure fixée, sous le jour ; l'heure
+            // d'un rendez-vous du coach est sur sa ligne.
+            const when = [
+              session.moment ? sessionMomentLabels[session.moment] : null,
+              slot ? null : session.time,
+            ]
+              .filter(Boolean)
+              .join(" · ");
             return {
               id: session.id,
               slot: session.slotIndex,
@@ -216,14 +249,15 @@ function WeekCard({
               lines: cardLines(session.content),
               dayLabel,
               dayShort: date ? shortDay(date) : null,
-              coach: slot ? { label: slot.label, today: slot.today } : null,
+              when: when || null,
+              coach: slot,
               context: [
                 `Semaine ${week.index}`,
                 range,
                 slot
-                  ? `avec le coach${slot.label ? `, ${slot.label}` : ""}`
+                  ? `avec le coach, ${slot.label}`
                   : dayLabel
-                    ? `le ${dayLabel.toLowerCase()}`
+                    ? `le ${dayLabel.toLowerCase()}${when ? `, ${when.toLowerCase()}` : ""}`
                     : `au jour choisi par ${name}`,
               ].join(" · "),
             };
@@ -235,6 +269,7 @@ function WeekCard({
         today={today}
         agendaPath={agendaPath}
         goalsHref={`${basePath}?onglet=objectifs`}
+        returnTo={returnTo}
       />
     </section>
   );
@@ -311,11 +346,12 @@ export async function ProgramWeeksSection({
   const first = weeks[0];
   const last = weeks[weeks.length - 1];
   const current = weeks.find((week) => today >= week.monday && today <= week.sunday) ?? null;
-  // Semaine affichée : celle demandée, sinon l'actuelle ; avant le début, la première ; après la
-  // fin, la dernière.
+  // Semaine affichée : celle demandée, sinon la même que l'onglet Programme (B2) : l'actuelle ;
+  // avant le début, la première ; après la fin, la dernière.
+  const fallback = defaultWeekIndex(program.startDate, program.weeksCount, today);
   const shown =
     weeks.find((week) => week.index === requestedWeek) ??
-    current ??
+    weeks.find((week) => week.index === fallback) ??
     (today < first.monday ? first : last);
   const counts = [...new Set(weeks.map((week) => week.sessions.length).filter(Boolean))].sort(
     (a, b) => a - b,
@@ -340,8 +376,9 @@ export async function ProgramWeeksSection({
   ];
 
   const shownWeeks = view === "semaine" ? [shown] : weeks;
-  // Semaine affichée en jours fixes : une séance a un jour sans être un rendez-vous du coach.
-  const fixed = shown.sessions.some((session) => session.day !== null && !session.coachDate);
+  // Le mode enregistré de la semaine affichée (B13 : une séance avec le coach a un jour sans que la
+  // semaine soit à jours fixes).
+  const fixed = shown.fixed;
 
   return (
     // Ordinateur, vue « Toutes les semaines » : la colonne prend la hauteur restante et la dernière
@@ -431,6 +468,26 @@ export async function ProgramWeeksSection({
           </div>
         ) : null}
       </div>
+
+      {/* Programme à venir (B1) : l'agenda reste la vue par défaut de l'onglet ; on y revient d'ici. */}
+      {program.timing === "upcoming" ? (
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-[12px] bg-violet/7 px-3.5 py-2.5">
+          <p className="text-[13px] leading-[1.45] text-text-2">
+            Ce programme commence le{" "}
+            <strong className="font-semibold text-text">
+              {dayMonth.format(utc(program.startDate))}
+            </strong>
+            .
+          </p>
+          <Link
+            href={`${agendaHref}&vue=semaine`}
+            scroll={false}
+            className="flex min-h-11 items-center text-[13px] font-medium whitespace-nowrap text-violet-text hover:underline"
+          >
+            Revenir à l&apos;agenda
+          </Link>
+        </div>
+      ) : null}
 
       {view === "semaine" && current && shown.index !== current.index ? (
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-[12px] bg-violet/7 px-3.5 py-2.5">

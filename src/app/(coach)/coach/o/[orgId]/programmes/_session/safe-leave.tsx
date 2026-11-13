@@ -2,8 +2,9 @@
 
 import { CloudOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 
+import { BackGuardProvider } from "@/components/layout/back-link";
 import { ConfirmDialog } from "@/components/ui/overlay";
 
 import { saveStatusLabel, useEditor } from "../_editor/editor-provider";
@@ -44,6 +45,18 @@ export function useSafeLeave() {
   );
 
   return { leave, pending, dialog };
+}
+
+// Le retour de l'en-tête (ordinateur et téléphone) des éditeurs passe par `leave` (revue MVP du 13/11,
+// C7) : enregistrer d'abord, prévenir si l'enregistrement échoue.
+export function SafeBack({ children }: { children: ReactNode }) {
+  const { leave, dialog } = useSafeLeave();
+  return (
+    <BackGuardProvider value={leave}>
+      {children}
+      {dialog}
+    </BackGuardProvider>
+  );
 }
 
 // L'état de l'enregistrement, avec « Réessayer » (erreur) ou « Recharger » (modifié ailleurs).

@@ -17,9 +17,13 @@ import {
   orderForDashboard,
   pickCurrentProgram,
   programListStatus,
+  programTiming,
   type ProgramListStatus,
+  type ProgramTiming,
 } from "@/domain/training/program-status";
+import { findCoachMeeting, type MeetingSource } from "@/features/agenda/coach-meeting";
 import { addDays } from "@/features/agenda/items";
+import { listSessions } from "@/features/sessions/queries";
 import { formatDayMonth, todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,7 +45,15 @@ export type ProgramSessionCard = {
   time: string | null;
   // Moment choisi par le coach quand le jour a plusieurs séances (D-164) ; null sinon.
   moment: SessionMoment | null;
+  // Date du rendez-vous du coach tel qu'il est dans l'agenda (revue MVP du 13/11, B3 et B4).
   coachDate: string | null;
+  // Séance faite avec le coach : son rendez-vous RÉEL de la semaine (agenda), ou « supprimé » (la
+  // séance encadrée n'existe plus), ou « absent » (pas de date cette semaine-là) ; null sinon.
+  coach: {
+    sessionId: string;
+    status: "ok" | "deleted" | "absent";
+    moved: boolean;
+  } | null;
   // La séance structurée (v2) telle que publiée ; null pour une publication v1 (texte). Sert aux
   // fiches PDF (séries, charges, repos).
   published: PublishedSession | null;
@@ -67,6 +79,8 @@ export type AthleteProgram = {
   weeksCount: number;
   publicationNumber: number;
   publishedAt: string;
+  // En cours, à venir ou terminé, à la date du jour (revue MVP du 13/11, B1 et B2).
+  timing: ProgramTiming;
   discipline: Discipline | null;
   // Séances par semaine prévues à la création (v2) ; null en v1.
   sessionsPerWeek: number | null;
@@ -128,7 +142,13 @@ export async function getAthleteProgram(
   );
   const publication = program?.program_publications;
   if (!program || !publication) return null;
-  return readPublication(supabase, organizationId, program, publication);
+  return readPublication(supabase, organizationId, program, publication, today);
+}
+
+// Les séances encadrées de l'organisation, pour retrouver le vrai rendez-vous de chaque séance faite
+// avec le coach (coach-meeting.ts).
+async function meetingSources(organizationId: string): Promise<MeetingSource[]> {
+  return listSessions(organizationId);
 }
 
 type ProgramRow = {
@@ -147,15 +167,20 @@ async function readPublication(
   organizationId: string,
   program: ProgramRow,
   publication: PublicationRow,
+  today: string,
 ): Promise<AthleteProgram> {
-  const { data: rows, error: sessionsError } = await supabase
-    .from("publication_sessions")
-    .select("id, source_session_key, week_index, slot_index, session_json")
-    .eq("organization_id", organizationId)
-    .eq("publication_id", publication.id)
-    .order("week_index")
-    .order("slot_index");
+  const [{ data: rows, error: sessionsError }, coachSessions] = await Promise.all([
+    supabase
+      .from("publication_sessions")
+      .select("id, source_session_key, week_index, slot_index, session_json")
+      .eq("organization_id", organizationId)
+      .eq("publication_id", publication.id)
+      .order("week_index")
+      .order("slot_index"),
+    meetingSources(organizationId),
+  ]);
   if (sessionsError) throw new Error("Lecture des séances du programme impossible.");
+  const coachById = new Map(coachSessions.map((session) => [session.id, session]));
 
   const snapshot = snapshotSchema.safeParse(publication.snapshot_json).data;
   const labels = new Map((snapshot?.weeks ?? []).map((week) => [week.index, week.label ?? null]));
@@ -182,6 +207,15 @@ async function readPublication(
       // v2 : le jour, le rendez-vous et le résumé viennent de la séance structurée.
       const v2 = publishedSessionSchema.safeParse(row.session_json);
       const session = v2.success ? v2.data : null;
+      // Séance avec le coach (v2 : withCoach.coachSessionId et sa date figée ; v1 : seulement
+      // l'identifiant) : le rendez-vous réel de la semaine, lu dans l'agenda (B3, B4).
+      const coachSessionId = session
+        ? (session.withCoach?.coachSessionId ?? null)
+        : (content.withCoach?.sessionId ?? null);
+      const meeting = coachSessionId
+        ? findCoachMeeting(coachById.get(coachSessionId), week, session?.withCoach?.date ?? null)
+        : null;
+      const real = meeting?.status === "ok" ? meeting : null;
       week.sessions.push({
         id: row.id,
         key: row.source_session_key,
@@ -189,10 +223,14 @@ async function readPublication(
         slotIndex: row.slot_index,
         content,
         headline: session ? sessionHeadline(session) : `${content.durationMinutes} min`,
-        day: session?.withCoach ? weekdayOf(session.withCoach.date) : (session?.fixedDay ?? null),
-        time: session?.withCoach?.time ?? session?.fixedTime ?? null,
+        day: real ? weekdayOf(real.date) : coachSessionId ? null : (session?.fixedDay ?? null),
+        time: real ? real.time : coachSessionId ? null : (session?.fixedTime ?? null),
         moment: session?.moment ?? null,
-        coachDate: session?.withCoach?.date ?? null,
+        coachDate: real?.date ?? null,
+        coach:
+          coachSessionId && meeting
+            ? { sessionId: coachSessionId, status: meeting.status, moved: real?.moved ?? false }
+            : null,
         published: session,
       });
     }
@@ -206,6 +244,10 @@ async function readPublication(
     weeksCount: program.weeks_count,
     publicationNumber: publication.number,
     publishedAt: publication.published_at,
+    timing: programTiming(
+      { startDate: program.start_date, weeksCount: program.weeks_count },
+      today,
+    ),
     discipline: snapshot?.discipline ?? null,
     sessionsPerWeek: snapshot?.sessionsPerWeek ?? null,
     race: snapshot?.goal?.raceName
@@ -246,7 +288,13 @@ export async function getPublishedProgram(
     .eq("organization_id", organizationId)
     .eq("id", row.athlete_id)
     .maybeSingle();
-  const program = await readPublication(supabase, organizationId, row, publication);
+  const program = await readPublication(
+    supabase,
+    organizationId,
+    row,
+    publication,
+    todayIsoInBrussels(),
+  );
   return { program, athleteName: athlete?.display_name ?? "Sportif" };
 }
 
@@ -334,7 +382,8 @@ export type ProgramListItem = {
   hasUnpublishedChanges: boolean;
   // Semaine en cours (1 à N) d'un programme en cours.
   currentWeek: number | null;
-  // Séances de la version publiée, ou prévues par le brouillon (semaines × séances par semaine).
+  // Séances de la version publiée, sinon celles du brouillon (revue MVP du 13/11, C16 : un brouillon
+  // parti de zéro n'a encore aucune séance, il n'en annonçait pas moins « 48 séances »).
   sessionsTotal: number | null;
   // « HYROX Gand · 13 déc. » (objectif de course du brouillon), ou l'objectif écrit d'avant l'éditeur.
   goalLine: string | null;
@@ -345,6 +394,8 @@ const raceGoalSchema = z.object({
   raceName: z.string().optional(),
   raceDate: z.string().optional(),
 });
+// Les semaines d'un brouillon, juste assez pour compter ses séances.
+const draftWeeksSchema = z.array(z.object({ sessions: z.array(z.unknown()) }));
 
 export type ProgramListFilters = {
   status?: ProgramListStatus | "all";
@@ -370,7 +421,7 @@ export async function listPrograms(
   let query = supabase
     .from("programs")
     .select(
-      "id, title, goal, discipline, athlete_id, start_date, weeks_count, status, updated_at, athlete_profiles!inner ( first_name, display_name, photo_path, program_type ), program_drafts ( revision, sessionsPerWeek:draft_json->sessionsPerWeek, raceGoal:draft_json->goal ), program_publications!programs_active_publication_fkey ( number, source_revision, publication_sessions ( count ) )",
+      "id, title, goal, discipline, athlete_id, start_date, weeks_count, status, updated_at, athlete_profiles!inner ( first_name, display_name, photo_path, program_type ), program_drafts ( revision, draftWeeks:draft_json->weeks, raceGoal:draft_json->goal ), program_publications!programs_active_publication_fkey ( number, source_revision, publication_sessions ( count ) )",
     )
     .eq("organization_id", organizationId)
     .order("updated_at", { ascending: false })
@@ -398,9 +449,12 @@ export async function listPrograms(
         ? (row.program_drafts[0] ?? null)
         : row.program_drafts;
       const athleteName = row.athlete_profiles.display_name ?? row.athlete_profiles.first_name;
-      // Séances : celles de la version publiée ; pour un brouillon, le plan (semaines × séances voulues).
+      // Séances : celles de la version publiée ; pour un brouillon, celles qu'il contient vraiment.
       const published = publication?.publication_sessions?.[0]?.count;
-      const perWeek = typeof draft?.sessionsPerWeek === "number" ? draft.sessionsPerWeek : null;
+      const drafted = draftWeeksSchema.safeParse(draft?.draftWeeks).data;
+      const inDraft = drafted
+        ? drafted.reduce((total, week) => total + week.sessions.length, 0)
+        : null;
       const race = raceGoalSchema.safeParse(draft?.raceGoal).data;
       return {
         id: row.id,
@@ -419,12 +473,7 @@ export async function listPrograms(
           publication !== null && draft !== null && publication.source_revision !== draft.revision,
         currentWeek:
           status === "current" ? currentWeekIndex(row.start_date, row.weeks_count, today) : null,
-        sessionsTotal:
-          typeof published === "number" && published > 0
-            ? published
-            : perWeek !== null
-              ? perWeek * row.weeks_count
-              : null,
+        sessionsTotal: typeof published === "number" && published > 0 ? published : inDraft,
         goalLine: race?.raceName
           ? [race.raceName, race.raceDate ? formatDayMonth(race.raceDate) : null]
               .filter(Boolean)
@@ -445,24 +494,77 @@ export async function listPrograms(
     );
 }
 
+export type AthleteProgramRow = {
+  id: string;
+  title: string;
+  status: "draft" | "published" | "archived";
+  startDate: string;
+  weeksCount: number;
+  // Brouillon, en cours, à venir, terminé ou archivé (les pastilles de la page Programmes).
+  listStatus: ProgramListStatus;
+};
+
 // Programmes d'un sportif (organisation DÉJÀ vérifiée), du plus récent au plus ancien, archivés
 // compris (phase 4 : un ancien programme archivé reste un programme à copier) : l'onglet Programme y
-// cherche un brouillon jamais publié et un programme à copier.
+// cherche un brouillon jamais publié, un programme à copier, et liste ses autres programmes (B7).
 export async function listAthleteProgramRows(
   organizationId: string,
   athleteId: string,
-): Promise<{ id: string; title: string; status: "draft" | "published" | "archived" }[]> {
+  today: string = todayIsoInBrussels(),
+): Promise<AthleteProgramRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("programs")
-    .select("id, title, status, updated_at")
+    .select("id, title, status, start_date, weeks_count, updated_at")
     .eq("organization_id", organizationId)
     .eq("athlete_id", athleteId)
     .order("updated_at", { ascending: false });
   if (error) throw new Error("Lecture des programmes du sportif impossible.");
-  return (data ?? []).map((row) => ({
+  return (data ?? []).map((row) => {
+    const status =
+      row.status === "draft" ? "draft" : row.status === "archived" ? "archived" : "published";
+    return {
+      id: row.id,
+      title: row.title,
+      status,
+      startDate: row.start_date,
+      weeksCount: row.weeks_count,
+      listStatus: programListStatus(
+        { status, startDate: row.start_date, weeksCount: row.weeks_count },
+        today,
+      ),
+    };
+  });
+}
+
+// Programmes publiés dont la version active a une séance faite avec cette séance encadrée (revue MVP
+// du 13/11, B4) : la page d'une séance de l'agenda prévient avant de la supprimer.
+export async function listProgramsLinkedToCoachSession(
+  organizationId: string,
+  coachSessionId: string,
+): Promise<{ id: string; title: string; athleteName: string }[]> {
+  if (!z.uuid().safeParse(coachSessionId).success) return [];
+  const supabase = await createClient();
+  const { data: linked, error } = await supabase
+    .from("publication_sessions")
+    .select("publication_id")
+    .eq("organization_id", organizationId)
+    .or(
+      `session_json->withCoach->>coachSessionId.eq.${coachSessionId},session_json->withCoach->>sessionId.eq.${coachSessionId}`,
+    );
+  if (error) throw new Error("Lecture des programmes liés impossible.");
+  const publicationIds = [...new Set((linked ?? []).map((row) => row.publication_id))];
+  if (publicationIds.length === 0) return [];
+  const { data: programs, error: programsError } = await supabase
+    .from("programs")
+    .select("id, title, athlete_profiles ( first_name, display_name )")
+    .eq("organization_id", organizationId)
+    .eq("status", "published")
+    .in("active_publication_id", publicationIds);
+  if (programsError) throw new Error("Lecture des programmes liés impossible.");
+  return (programs ?? []).map((row) => ({
     id: row.id,
     title: row.title,
-    status: row.status === "draft" ? "draft" : row.status === "archived" ? "archived" : "published",
+    athleteName: row.athlete_profiles?.display_name ?? row.athlete_profiles?.first_name ?? "",
   }));
 }

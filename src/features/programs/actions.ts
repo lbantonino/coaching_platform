@@ -15,9 +15,11 @@ import {
   type Week,
 } from "@/domain/training/program-plan";
 import { buildPublication } from "@/domain/training/program-publication";
-import { resizePlan } from "@/domain/training/program-upgrade";
+import { firstFreeMonday } from "@/domain/training/program-status";
+import { resizePlan, sessionsPerWeekFor } from "@/domain/training/program-upgrade";
 import { MAX_SESSIONS_PER_WEEK, sessionBodySchema } from "@/domain/training/session-v2";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/database.types";
 
@@ -25,6 +27,7 @@ import { loadAthleteContext, loadDraft } from "./drafts";
 import { checkPublication } from "./publish-check";
 import { createProgramInputSchema, templateKindSchema, type CreateProgramInput } from "./schemas";
 import { getProgramTemplate, getSessionTemplate } from "./templates";
+import { nextMonday } from "./wizard";
 
 // Actions des programmes (D-155). Chaque action revérifie l'identité, l'organisation et la propriété
 // (requireOrgAccess), valide ses entrées avec Zod, puis écrit par les fonctions SQL contrôlées
@@ -47,6 +50,11 @@ const fail = (code: ProgramErrorCode, message: string, issues?: string[]): Actio
   message,
   ...(issues ? { issues } : {}),
 });
+
+// Messages de Zod en français (revue MVP du 13/11, C11) : l'assistant et l'éditeur affichent le
+// premier problème tel quel (« Trop grand : nombre doit être <=14 » plutôt que « Too big… »). Passé à
+// chaque validation, sans changer la configuration globale de Zod.
+const fr = { error: z.locales.fr().localeError };
 
 const invalid = (error: z.ZodError) =>
   fail(
@@ -100,7 +108,7 @@ export async function createProgram(
   input: CreateProgramInput,
 ): Promise<ActionResult<{ programId: string }>> {
   const { membership } = await requireOrgAccess(organizationId);
-  const parsed = createProgramInputSchema.safeParse(input);
+  const parsed = createProgramInputSchema.safeParse(input, fr);
   if (!parsed.success) return invalid(parsed.error);
   const values = parsed.data;
   const orgId = membership.organizationId;
@@ -112,17 +120,21 @@ export async function createProgram(
 
   let base: { weeks: Week[]; phases: Phase[] } = { weeks: [], phases: [] };
   let sourceTemplate: { id: string; version: number } | null = null;
+  // Rythme de la source (modèle, ancien programme), C15.
+  let sourcePlan: { sessionsPerWeek: number } | null = null;
   if (values.start.kind === "copy") {
     const source = await loadDraft(supabase, orgId, values.start.programId);
     if (!source?.draft || source.program.athleteId !== values.athleteId) {
       return fail("NOT_FOUND", "Programme à copier introuvable.");
     }
     base = resizePlan(source.draft, values.weeksCount, aims);
+    sourcePlan = source.draft;
   } else if (values.start.kind === "template") {
     const template = await getProgramTemplate(orgId, values.start.templateId);
     if (!template?.plan) return fail("NOT_FOUND", "Modèle introuvable.");
     base = resizePlan(template.plan, values.weeksCount, aims);
     sourceTemplate = { id: template.id, version: template.version };
+    sourcePlan = template.plan;
   } else {
     base = resizePlan({ weeks: [], phases: [] }, values.weeksCount, aims);
   }
@@ -145,17 +157,20 @@ export async function createProgram(
         : week.sessions,
   }));
 
-  const draft = programDraftSchema.safeParse({
-    schemaVersion: 2,
-    title: values.title,
-    discipline: values.discipline,
-    aimDefaults: values.aimDefaults,
-    sessionsPerWeek: values.sessionsPerWeek,
-    phases,
-    weeks,
-    startDate: values.startDate,
-    ...(values.goal ? { goal: values.goal } : {}),
-  });
+  const draft = programDraftSchema.safeParse(
+    {
+      schemaVersion: 2,
+      title: values.title,
+      discipline: values.discipline,
+      aimDefaults: values.aimDefaults,
+      sessionsPerWeek: sessionsPerWeekFor(values.sessionsPerWeek, sourcePlan),
+      phases,
+      weeks,
+      startDate: values.startDate,
+      ...(values.goal ? { goal: values.goal } : {}),
+    },
+    fr,
+  );
   if (!draft.success) return invalid(draft.error);
 
   const { data: programId, error } = await supabase.rpc("create_program", {
@@ -194,7 +209,7 @@ export async function saveDraft(
   if (!z.number().int().min(0).safeParse(expectedRevision).success) {
     return fail("INVALID", "Révision invalide.");
   }
-  const parsed = programDraftSchema.safeParse(draft);
+  const parsed = programDraftSchema.safeParse(draft, fr);
   if (!parsed.success) return invalid(parsed.error);
 
   const supabase = await createClient();
@@ -304,7 +319,9 @@ export async function unarchiveProgram(
   return { ok: true, status: data === "draft" ? "draft" : "published" };
 }
 
-// « Dupliquer le programme » : un nouveau brouillon pour le même sportif, aux mêmes dates.
+// « Dupliquer le programme » : un nouveau brouillon pour le même sportif, qui commence le lundi après
+// la fin de l'original (revue MVP du 13/11, C3 : aux mêmes dates, la copie ne pouvait jamais être
+// publiée, et ses dates ne se changeaient pas). Les rendez-vous du coach ne se copient pas.
 export async function duplicateProgram(
   organizationId: string,
   programId: string,
@@ -315,7 +332,21 @@ export async function duplicateProgram(
   const loaded = await loadDraft(supabase, orgId, programId);
   if (!loaded?.draft) return fail("NOT_FOUND", "Programme introuvable.");
   const title = `${loaded.draft.title} (copie)`.slice(0, 120);
-  const draft = { ...loaded.draft, title };
+  const startDate = firstFreeMonday(
+    [{ startDate: loaded.draft.startDate, weeksCount: loaded.draft.weeks.length }],
+    nextMonday(todayIsoInBrussels()),
+  );
+  const copied = programDraftSchema.safeParse(
+    {
+      ...loaded.draft,
+      ...resizePlan(loaded.draft, loaded.draft.weeks.length, { vmaKmh: null, hrMax: null }),
+      title,
+      startDate,
+    },
+    fr,
+  );
+  if (!copied.success) return invalid(copied.error);
+  const draft = copied.data;
   const { data: newId, error } = await supabase.rpc("create_program", {
     p_organization_id: orgId,
     p_athlete_id: loaded.program.athleteId,
@@ -343,12 +374,15 @@ export async function saveProgramAsTemplate(
 ): Promise<ActionResult<{ templateId: string }>> {
   const { user, membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
-  const name = templateTitle.safeParse(title);
+  const name = templateTitle.safeParse(title, fr);
   if (!name.success) return invalid(name.error);
   const supabase = await createClient();
   const loaded = await loadDraft(supabase, orgId, programId);
   if (!loaded?.draft) return fail("NOT_FOUND", "Programme introuvable.");
-  const plan = programPlanSchema.safeParse({ ...planFromDraft(loaded.draft), title: name.data });
+  const plan = programPlanSchema.safeParse(
+    { ...planFromDraft(loaded.draft), title: name.data },
+    fr,
+  );
   if (!plan.success) return invalid(plan.error);
 
   const { data, error } = await supabase
@@ -377,10 +411,10 @@ export async function saveSessionAsTemplate(
 ): Promise<ActionResult<{ templateId: string }>> {
   const { user, membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
-  const name = templateTitle.safeParse(title);
+  const name = templateTitle.safeParse(title, fr);
   if (!name.success) return invalid(name.error);
   // Seul le contenu de la séance devient un modèle : ni jour, ni rendez-vous, ni identifiant.
-  const body = sessionBodySchema.safeParse(session);
+  const body = sessionBodySchema.safeParse(session, fr);
   if (!body.success) return invalid(body.error);
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -409,7 +443,7 @@ export async function duplicateTemplate(
 ): Promise<ActionResult<{ templateId: string }>> {
   const { user, membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
-  const parsedKind = templateKindSchema.safeParse(kind);
+  const parsedKind = templateKindSchema.safeParse(kind, fr);
   if (!parsedKind.success) return invalid(parsedKind.error);
   const supabase = await createClient();
 
@@ -465,7 +499,7 @@ export async function updateTemplate(
 ): Promise<ActionResult<{ version: number }>> {
   const { membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
-  const parsedKind = templateKindSchema.safeParse(kind);
+  const parsedKind = templateKindSchema.safeParse(kind, fr);
   if (!parsedKind.success) return invalid(parsedKind.error);
   if (!z.uuid().safeParse(templateId).success) return fail("NOT_FOUND", "Modèle introuvable.");
   if (!z.number().int().min(1).safeParse(expectedVersion).success)
@@ -474,7 +508,7 @@ export async function updateTemplate(
 
   let query;
   if (parsedKind.data === "program") {
-    const plan = programPlanSchema.safeParse(content);
+    const plan = programPlanSchema.safeParse(content, fr);
     if (!plan.success) return invalid(plan.error);
     query = await supabase
       .from("program_templates")
@@ -490,7 +524,7 @@ export async function updateTemplate(
       .eq("version", expectedVersion)
       .select("version");
   } else {
-    const body = sessionBodySchema.safeParse(content);
+    const body = sessionBodySchema.safeParse(content, fr);
     if (!body.success) return invalid(body.error);
     query = await supabase
       .from("session_templates")
@@ -522,7 +556,7 @@ export async function archiveTemplate(
 ): Promise<ActionResult> {
   const { membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
-  const parsedKind = templateKindSchema.safeParse(kind);
+  const parsedKind = templateKindSchema.safeParse(kind, fr);
   if (!parsedKind.success) return invalid(parsedKind.error);
   if (!z.uuid().safeParse(templateId).success) return fail("NOT_FOUND", "Modèle introuvable.");
   const supabase = await createClient();
@@ -562,7 +596,7 @@ export async function previewStart(
   input: z.input<typeof previewInputSchema>,
 ): Promise<ActionResult<StartPreview>> {
   const { membership } = await requireOrgAccess(organizationId);
-  const parsed = previewInputSchema.safeParse(input);
+  const parsed = previewInputSchema.safeParse(input, fr);
   if (!parsed.success) return invalid(parsed.error);
   const { start, weeksCount, sessionsPerWeek } = parsed.data;
   const orgId = membership.organizationId;
@@ -622,7 +656,7 @@ export async function createProgramTemplate(
 ): Promise<ActionResult<{ templateId: string }>> {
   const { user, membership } = await requireOrgAccess(organizationId);
   const orgId = membership.organizationId;
-  const parsed = createTemplateInputSchema.safeParse(input);
+  const parsed = createTemplateInputSchema.safeParse(input, fr);
   if (!parsed.success) return invalid(parsed.error);
   const values = parsed.data;
 
@@ -636,30 +670,33 @@ export async function createProgramTemplate(
     if (!template?.plan) return fail("NOT_FOUND", "Modèle introuvable.");
     base = resizePlan(template.plan, values.weeksCount, { vmaKmh: null, hrMax: null });
   }
-  const plan = programPlanSchema.safeParse({
-    schemaVersion: 2,
-    title: values.title,
-    discipline: values.discipline,
-    aimDefaults: values.aimDefaults,
-    sessionsPerWeek: values.sessionsPerWeek,
-    phases:
-      values.phases.length > 0
-        ? values.phases.map((phase) => ({ id: shortId("p"), ...phase }))
-        : base.phases,
-    weeks: base.weeks.map((week) => ({
-      ...week,
-      scheduling: values.scheduling,
-      sessions:
-        values.scheduling === "ordered"
-          ? week.sessions.map((session) => ({
-              ...session,
-              fixedDay: undefined,
-              fixedTime: undefined,
-              moment: undefined,
-            }))
-          : week.sessions,
-    })),
-  });
+  const plan = programPlanSchema.safeParse(
+    {
+      schemaVersion: 2,
+      title: values.title,
+      discipline: values.discipline,
+      aimDefaults: values.aimDefaults,
+      sessionsPerWeek: values.sessionsPerWeek,
+      phases:
+        values.phases.length > 0
+          ? values.phases.map((phase) => ({ id: shortId("p"), ...phase }))
+          : base.phases,
+      weeks: base.weeks.map((week) => ({
+        ...week,
+        scheduling: values.scheduling,
+        sessions:
+          values.scheduling === "ordered"
+            ? week.sessions.map((session) => ({
+                ...session,
+                fixedDay: undefined,
+                fixedTime: undefined,
+                moment: undefined,
+              }))
+            : week.sessions,
+      })),
+    },
+    fr,
+  );
   if (!plan.success) return invalid(plan.error);
 
   const supabase = await createClient();
