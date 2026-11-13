@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { FEATURES } from "@/config/features";
 import { onboardingSchema, signupSchema } from "@/features/auth/signup-schemas";
 
 const base = {
@@ -47,7 +48,7 @@ describe("signupSchema", () => {
 describe("onboardingSchema", () => {
   it("demande les mêmes informations sans e-mail ni mot de passe", () => {
     const result = onboardingSchema.safeParse({
-      kind: "athlete",
+      kind: "coach",
       firstName: "Sam",
       lastName: "Lefort",
       phone: "+32 470 12 34 56",
@@ -55,8 +56,28 @@ describe("onboardingSchema", () => {
       terms: "on",
     });
     expect(result.success && result.data).toMatchObject({
-      kind: "athlete",
+      kind: "coach",
       phone: "+32 470 12 34 56",
     });
+  });
+});
+
+// MVP espace coach seul (D-167) : l'inscription « sportif » est refusée côté serveur aussi.
+describe("type de compte pendant le MVP coach seul", () => {
+  it.skipIf(FEATURES.athleteSpace)("refuse un compte sportif", () => {
+    const athlete = { ...base, kind: "athlete" };
+    expect(signupSchema.safeParse(athlete).error?.issues[0]?.message).toBe(
+      "Coory est réservé aux coachs pour l'instant.",
+    );
+    expect(
+      onboardingSchema.safeParse({
+        kind: "athlete",
+        firstName: "Sam",
+        lastName: "Lefort",
+        phone: "",
+        organizationName: "",
+        terms: "on",
+      }).success,
+    ).toBe(false);
   });
 });

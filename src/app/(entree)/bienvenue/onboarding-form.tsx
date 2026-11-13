@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import { entryInputClass } from "@/components/ui/form-styles";
 import { Spinner } from "@/components/ui/spinner";
+import { FEATURES } from "@/config/features";
 import {
   completeSignup,
   type OnboardingState,
@@ -57,11 +58,18 @@ function OnboardingFields({
   billing: BillingSetupInput;
   termsChecked: boolean;
 }) {
-  const [kind, setKind] = useState<AccountKind>(v.kind === "athlete" ? "athlete" : "coach");
+  const [kind, setKind] = useState<AccountKind>(
+    FEATURES.athleteSpace && v.kind === "athlete" ? "athlete" : "coach",
+  );
   return (
     <form action={formAction} className="flex flex-col gap-[22px]" noValidate>
       {error ? <FormAlert>{error}</FormAlert> : null}
-      <AccountKindCards value={kind} onChange={setKind} />
+      {/* MVP espace coach seul (D-167) : pas de choix Coach / Sportif, le compte est un compte coach. */}
+      {FEATURES.athleteSpace ? (
+        <AccountKindCards value={kind} onChange={setKind} />
+      ) : (
+        <input type="hidden" name="kind" value="coach" />
+      )}
 
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4">
@@ -95,7 +103,7 @@ function OnboardingFields({
             inputMode="tel"
             placeholder="+32 470 00 00 00"
             defaultValue={v.phone}
-            className={`${entryInputClass} font-mono`}
+            className={entryInputClass}
           />
         </Field>
         {kind === "coach" ? (

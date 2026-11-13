@@ -6,7 +6,14 @@ import { listLibraryExercises } from "@/features/exercises/queries";
 
 // Exercices de la Bibliothèque proposés dans l'éditeur Musculation (05) : le nom, une ligne
 // « Jambes · Haltères » et un texte de recherche sans accents (noms français, anglais, alias).
-export type LibraryChoice = { id: string; name: string; meta: string; search: string };
+export type LibraryChoice = {
+  id: string;
+  name: string;
+  meta: string;
+  search: string;
+  // Exercice tenu, mesuré en secondes (planche, gainage…, D-166).
+  timed: boolean;
+};
 
 const normalize = (value: string) =>
   value
@@ -38,6 +45,7 @@ export async function listLibraryChoices(
             .join(" "),
         ),
         rank: ORDER.indexOf(exercise.category),
+        timed: exercise.timed ?? false,
       };
     })
     .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name, "fr"))
@@ -46,5 +54,6 @@ export async function listLibraryChoices(
       name: choice.name,
       meta: choice.meta,
       search: choice.search,
+      timed: choice.timed,
     }));
 }

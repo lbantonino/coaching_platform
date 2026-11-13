@@ -1,4 +1,6 @@
+import { CalendarDays } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { z } from "zod";
@@ -18,7 +20,7 @@ import { getAthleteProgram, listAthleteProgramRows } from "@/features/programs/q
 import { pendingPublication } from "@/features/programs/publish-check";
 import { listSessions } from "@/features/sessions/queries";
 import { removeAthletePhoto, uploadAthletePhoto } from "@/features/photos/actions";
-import { todayIsoInBrussels } from "@/lib/format";
+import { formatDayMonth, todayIsoInBrussels } from "@/lib/format";
 
 import { PhotoForm } from "../../../../photo-form";
 
@@ -150,6 +152,8 @@ export default function AthletePage({
             programWeek={
               typeof query.semaine === "string" ? Number.parseInt(query.semaine, 10) || null : null
             }
+            // Programme à venir : sa vue « semaines » seulement si on l'a demandée (B1).
+            programAsked={typeof query.semaine === "string" || query.vue === "toutes"}
             creationIncomplete={query.creation === "incomplete"}
           />
         ))}
@@ -166,6 +170,7 @@ async function AthleteSection({
   agendaDate,
   programView,
   programWeek,
+  programAsked,
   creationIncomplete,
 }: {
   orgId: string;
@@ -176,6 +181,7 @@ async function AthleteSection({
   // Agenda d'un sportif avec programme (maquette 2c) : une semaine (?semaine=…) ou toutes (?vue=toutes).
   programView: ProgramView;
   programWeek: number | null;
+  programAsked: boolean;
   // Page « Nouveau sportif » (D-54) : la fiche est créée, mais son objectif ou son accord santé
   // n'a pas pu être enregistré.
   creationIncomplete: boolean;
@@ -191,12 +197,19 @@ async function AthleteSection({
   const today = todayIsoInBrussels();
   const { current: goals } = await listGoals(organizationId, athlete.id);
   const agendaDay = parseDay(agendaDate, today);
-  const program =
+  const picked =
     tab === "agenda" || tab === "programme"
       ? await getAthleteProgram(organizationId, athlete.id)
       : null;
-  // Modifications du brouillon que le sportif ne voit pas encore (demande d'Antonino du 10/11) : un
-  // bandeau propose de publier la version suivante, au-dessus des onglets Programme et Agenda.
+  // Revue MVP du 13/11 (B1, B2) : un programme TERMINÉ ne fige plus les onglets Programme et Agenda
+  // sur ses semaines passées : l'agenda redevient l'agenda (Jour, Semaine, Mois) et l'onglet Programme
+  // propose d'en créer un nouveau (l'ancien reste dans « Autres programmes »).
+  const program = picked && picked.timing !== "finished" ? picked : null;
+  // Programme à venir : l'onglet Agenda montre l'agenda, avec un lien vers sa semaine 1 ; ses semaines
+  // seulement si on les a demandées.
+  const showProgramAgenda = program !== null && (program.timing === "current" || programAsked);
+  // Modifications du brouillon pas encore publiées (demande d'Antonino du 10/11) : un bandeau propose
+  // de publier la version suivante, au-dessus des onglets Programme et Agenda.
   const pending = program ? await pendingPublication(organizationId, program.id) : null;
   const publishBanner =
     program && pending ? (
@@ -205,11 +218,13 @@ async function AthleteSection({
         firstName={athlete.firstName}
         pending={pending}
         editorHref={`/coach/o/${organizationId}/programmes/${program.id}`}
+        returnTo={`${basePath}?onglet=${tab}`}
       />
     ) : null;
-  // Onglet Programme : les autres programmes du sportif (brouillon jamais publié, programme à copier).
+  // Onglet Programme : les autres programmes du sportif (brouillon jamais publié, programme à copier,
+  // et leur liste, B7).
   const ownPrograms =
-    tab === "programme" ? await listAthleteProgramRows(organizationId, athlete.id) : [];
+    tab === "programme" ? await listAthleteProgramRows(organizationId, athlete.id, today) : [];
   const programsBase = `/coach/o/${organizationId}/programmes`;
   // Ordinateur (demandes d'Antonino du 04/11) : sur ces onglets, la dernière carte descend jusqu'au
   // bas du menu de gauche même quand la page ne défile pas. Agenda : seulement « Toutes les
@@ -219,7 +234,7 @@ async function AthleteSection({
     tab === "notes" ||
     tab === "documents" ||
     tab === "historique" ||
-    (tab === "agenda" && program !== null && programView === "toutes");
+    (tab === "agenda" && showProgramAgenda && programView === "toutes");
 
   return (
     <>
@@ -360,7 +375,7 @@ async function AthleteSection({
             // Onglet Objectifs (maquette « Sportifs », page 2f) : pleine largeur, deux cartes.
             <GoalsSection organizationId={organizationId} athleteId={athlete.id} today={today} />
           ) : tab === "agenda" ? (
-            program ? (
+            program && showProgramAgenda ? (
               <>
                 {publishBanner}
                 <ProgramWeeksSection
@@ -389,9 +404,24 @@ async function AthleteSection({
                 />
               </>
             ) : (
-              // Pas encore de programme : l'agenda de ce qui a un jour (séances avec le coach,
-              // compétitions), en trois vues.
-              <div className="flex w-full max-w-3xl flex-col gap-6">
+              // Pas de programme en cours : l'agenda de ce qui a un jour (séances avec le coach,
+              // compétitions), en trois vues ; un programme à venir y est annoncé (B1).
+              <div className="flex w-full max-w-3xl flex-col gap-3">
+                {program ? (
+                  <p className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-[14px] bg-violet/7 px-4 py-3 text-[13.5px] leading-[1.45] text-text-2">
+                    <span>
+                      <strong className="font-semibold text-text">« {program.title} »</strong>{" "}
+                      commence le {formatDayMonth(program.startDate)}.
+                    </span>
+                    <Link
+                      href={`${basePath}?onglet=agenda&semaine=1`}
+                      className="inline-flex min-h-11 items-center gap-1.5 font-medium whitespace-nowrap text-violet-text hover:underline"
+                    >
+                      <CalendarDays aria-hidden size={15} strokeWidth={2} />
+                      Voir la semaine 1
+                    </Link>
+                  </p>
+                ) : null}
                 <AthleteAgendaSection
                   name={athlete.firstName}
                   view={agendaView}
@@ -420,7 +450,7 @@ async function AthleteSection({
                 requestedWeek={programWeek}
                 today={today}
                 basePath={basePath}
-                editorHref={program ? `${programsBase}/${program.id}` : null}
+                editorBase={programsBase}
                 newHref={`${basePath}/nouveau-programme`}
                 copyHref={
                   ownPrograms.some((row) => row.status !== "draft")
@@ -432,9 +462,15 @@ async function AthleteSection({
                     ? null
                     : ownPrograms.find((row) => row.status === "draft");
                   return draftRow
-                    ? { title: draftRow.title, href: `${programsBase}/${draftRow.id}` }
+                    ? {
+                        title: draftRow.title,
+                        href: `${programsBase}/${draftRow.id}?retour=${encodeURIComponent(`${basePath}?onglet=programme`)}`,
+                      }
                     : null;
                 })()}
+                others={ownPrograms}
+                allProgramsHref={`${programsBase}?sportif=${athlete.id}`}
+                archived={athlete.status === "archived"}
               />
             </>
           ) : (

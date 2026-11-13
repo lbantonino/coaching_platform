@@ -29,7 +29,101 @@
 | 7. Recette finale | À faire |
 
 ## Dernière session
-- Date : 2026-11-11
+- Date : 2026-11-13
+
+### Dictée dans l'Assistant IA (D-173, 13/11/2026)
+```
+src/features/assistant/dictation.ts (nouveau, pur : speechRecognitionCtor, mergeDictation, dictationErrorText) ;
+  src/components/blocks/assistant-voice.ts (nouveau : useDictation, Web Speech API) ; assistant.tsx (bouton micro,
+  états, message sous la saisie) ; next.config.ts (microphone=(self)) ; playwright.config.ts (ANTHROPIC_API_KEY vide).
+Tests : assistant-dictation.test.ts (9) ; e2e assistant-actions.spec.ts : dictée avec un faux SpeechRecognition,
+  bouton absent sans dictée. Captures téléphone et ordinateur, sombre et clair, au repos et en écoute.
+```
+
+### L'Assistant IA crée des programmes : lot 3a (D-172, 13/11/2026)
+```
+src/features/assistant/program.ts (nouveau, pur : toCreateProgramInput, buildCustomWeeks, programRuleError,
+  customDraftFrom, placedSessions) ; proposals.ts (creer_programme : schéma strict, carte) ; tools/write.ts
+  (outil creer_programme avec le schéma exact d'une séance via z.toJSONSchema ; vérifications modèle, copie,
+  exercices, chevauchement) ; tools/definitions|read|shape.ts (voir_modeles, voir_programmes,
+  chercher_exercices) ; execute.ts (createProgram puis saveDraft, archivage si échec) ; rules.ts (8 000 jetons,
+  consigne programmes).
+Sans clé Claude : interface visible pour un coach autorisé (assistantComposerOpen, UNCONFIGURED_NOTE ;
+  assistant.tsx, assistant-view.tsx), test assistant.test.ts.
+Relecture finale (5 points importants corrigés, tests « relecture du lot 3a ») : programRuleError sans raccourci,
+  buildCustomWeeks sans doublon ni semaine hors programme, withSourceRhythm, shapeExercises en plusieurs mots,
+  ASSISTANT_TIMEOUT_MS 240 000 et ASSISTANT_MAX_RETRIES 0 (model.ts), maxDuration 300 (layout coach).
+Aucune migration. Tests : assistant-programmes.test.ts (17), assistant-read-tools (8) ; e2e
+  assistant-actions.spec.ts : programme depuis le modèle « Premier 10 km », programme écrit de 2 semaines.
+```
+
+### Assistant ouvert par adresse e-mail et corrections de la relecture (D-171, 13/11/2026)
+```
+Migration 20261114130000_assistant_acces_par_email (private.assistant_allowed_emails, private.assistant_allowed,
+  public.assistant_access_allowed, reserve_assistant_use) + pgTAP 44 ; continue_assistant_use(p_id,
+  p_organization_id) (migration 20261114120000 corrigée sur place, jamais déployée) + pgTAP 43.
+Graine : coach-c@example.test (organisation A, verrouillé) ; coach-a@example.test autorisé. Base locale mise à
+  jour à la main (sans réinitialisation).
+Relecture du lot 1 : formRuleError, checkAgainstSession, prepareToolInput, fiches traitées d'abord et échecs
+  affichés, réponse coupée non exécutée, bornes 60 000 / 80 000 caractères, trimHistory ; tests
+  assistant-review-fixes.test.ts.
+Tests : vitest 504 ; pgTAP 551 ; Playwright 216 passés, 0 échec, 38 ignorés. Un échec isolé (4 tests de
+  cartes « introuvables ») au tout premier passage après ces changements, non reproduit en 36 passages ensuite.
+```
+
+### L'Assistant IA agit : lot 1 (D-170, 13/11/2026)
+```
+Migration 20261114120000_assistant_etapes (assistant_usage.steps, continue_assistant_use, finish « step »
+  additionne les jetons) + pgTAP 43_assistant_etapes.
+src/features/assistant : model.ts (Claude ou faux Claude scripté), loop.ts (une étape), toolbox.ts,
+  tools/definitions.ts, tools/read.ts, tools/shape.ts (lectures), tools/write.ts + proposals.ts (cartes),
+  cards.ts (état des cartes), form-data.ts (champs des formulaires, pré-remplissage), execute.ts (Valider).
+src/features/athletes/create-athlete.ts : insertAthlete partagé par « Nouveau sportif » et l'assistant.
+Interface : assistant-card.tsx ; fenêtres séance, paiement et tâche pré-remplissables ; boîte de l'assistant
+  rendue dans ces fenêtres (layout) ; suggestions d'actions ; rappel santé sous la saisie.
+Tests : vitest (assistant-loop, assistant-read-tools, assistant-proposals, assistant-execute, assistant-cards) ;
+  e2e assistant-actions.spec.ts (faux Claude, coach B abonné : Valider, Annuler, Modifier, cartes liées).
+Base locale : migration appliquée sans réinitialisation ; organisation B passée en « premium » (et dans la graine).
+Non testé en réel : Claude lui-même (le premier essai avec la vraie clé demande l'accord d'Antonino).
+```
+
+### MVP coach seul, Assistant IA sur abonnement, revue avant la mise en ligne (D-167 à D-169, 13/11/2026)
+```
+MVP (D-167) : src/config/features.ts (messages, invitations, athleteSpace = false) ; proxy.ts mvpRedirect ;
+  notFound() en tête de /coach/messages, /invitation/[token], /sportifs/[id]/inviter, /app, /app/[module] ;
+  NotAvailableDialog / NotAvailableButton (components/blocks/not-available.tsx) ; actions refusées :
+  sendMessage, createInvitation(s), acceptInvitation, inscription « athlete » (signup-schemas) ;
+  NOTIFICATION_KINDS sans « messages », notify.messages forcé à false ; guards.isAthleteAccount.
+Assistant (D-168) : migration 20261113150000_assistant_abonnement (organizations.coory_plan, assistant_usage,
+  reserve_assistant_use, finish_assistant_use) ; src/features/assistant (rules, queries, actions) ;
+  @anthropic-ai/sdk 1.8.0 ; claude-opus-5-5, effort medium ; ANTHROPIC_API_KEY ajoutée à .env.example.
+Revue (D-169) : 43 points Programmes et fiche (B1 à B18, C1 à C25, agent dédié) ; sécurité :
+  getRecoveryUser (amr « recovery »), session-cookies httpOnly/Lax/Secure, en-têtes dans next.config.ts,
+  memberships triés, migration 20261113160000_durcissement_securite ; config.toml secure_password_change = true
+  (prise en compte au prochain redémarrage de Supabase local) ; documents 4 Mo, bodySizeLimit 5 Mo ;
+  modèles Coory dans supabase/content/modeles_coory.sql ([db.seed] sql_paths) ; docs/DEPLOIEMENT.md.
+Base locale : migrations appliquées par « supabase migration up » (sans réinitialisation).
+Tests : vitest 457 ; pgTAP 531 (41_assistant_abonnement, 42_durcissement_securite) ; e2e : mvp.spec.ts,
+  assistant.spec.ts (verrouillé), notification-states réécrit autour d'une tâche, messages / invitation /
+  espace sportif ignorés (drapeaux) ; tests/unit/assistant.test.ts, revue-mvp-programmes.test.ts.
+Non testé en réel : l'appel à Claude (aucune clé en local ; chaque demande coûte) ; Google en production.
+Base locale nettoyée (demande d'Antonino) : 521 sportifs, 84 comptes et 36 organisations créés par les tests
+  retirés (sauvegarde supabase/.temp/coory-avant-nettoyage-2026-11-13.sql) ; restent les 22 de la démo et
+  les fiches créées à la main. scripts/clean-test-data.sql (+ .mjs, npm run db:clean-tests) ne retire que
+  les données marquées par les tests ; lancé à la fin de chaque suite Playwright (tests/e2e/global-teardown.ts).
+```
+
+### Séries en secondes (D-166, 13/11/2026)
+```
+Schéma : strengthSetSchema (repsMin facultatif, seconds / secondsMax 5 à 600, l'un ou l'autre ; même mesure
+  pour toutes les séries d'un exercice) ; setAmountText (« 8–10 », « 30 s ») partagé par l'éditeur, la vue,
+  le PDF ; durée estimée = temps tenu.
+Éditeur : choix « Mesure », colonne « Durée », saisie rapide en secondes, % du max et RIR retirés en secondes ;
+  Bibliothèque : `timed` depuis exercises.metrics (duration_s sans reps) -> 3 × 30 s, repos 60 s.
+Navigateurs de Playwright effacés du Mac (cache vidé) : chromium-headless-shell réinstallé avec l'accord
+  d'Antonino (npx playwright install --only-shell chromium, 206 Mo).
+Tests : unitaires (6 nouveaux sur les secondes) ; TC-11 étendu (« Mesure : Secondes », « 3 séries de 45 s »).
+```
 
 ### Modèles de course : 10 km avec renfo, semi-marathon, marathon (D-165, 11/11/2026)
 ```

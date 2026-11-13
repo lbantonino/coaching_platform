@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { FEATURES, NOT_AVAILABLE_TEXT } from "@/config/features";
 import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
@@ -44,6 +45,8 @@ export async function sendMessage(
   const attempt = previous.attempt + 1;
   const rawBody = String(formData.get("body") ?? "");
   const fail = (error: string): SendMessageState => ({ error, attempt, body: rawBody });
+  // MVP espace coach seul (D-167) : l'action reste appelable directement, elle refuse donc aussi.
+  if (!FEATURES.messages) return fail(NOT_AVAILABLE_TEXT);
 
   const athlete = await getAthlete(membership.organizationId, athleteId);
   if (!athlete) return fail("Sportif introuvable.");

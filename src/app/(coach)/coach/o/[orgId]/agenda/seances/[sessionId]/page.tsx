@@ -7,12 +7,14 @@ import { z } from "zod";
 
 import { FitList } from "@/components/blocks/fit-list";
 import { DeleteMoreMenu } from "@/components/blocks/more-menu";
+import { NotAvailableButton } from "@/components/blocks/not-available";
 import { PageHeader, pageMainClass } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { SkeletonBar } from "@/components/ui/skeleton";
 import { Quoted } from "@/components/ui/quoted";
+import { FEATURES } from "@/config/features";
 import { formatMoney, formatVatRate } from "@/domain/billing/money";
 import { addVat, coveredByPackage, paymentMethodLabel, splitVat } from "@/domain/billing/payments";
 import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
@@ -21,6 +23,7 @@ import { addDays } from "@/features/agenda/items";
 import { mondayOf } from "@/features/agenda/week";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { listPackageCovers } from "@/features/billing/payment-queries";
+import { listProgramsLinkedToCoachSession } from "@/features/programs/queries";
 import { deleteSession, markSessionPaid, unmarkSessionPaid } from "@/features/sessions/actions";
 import { getSession, listSessionPayments } from "@/features/sessions/queries";
 import {
@@ -63,6 +66,7 @@ export default function SessionPage({
             dateParam={typeof query.date === "string" ? query.date : null}
             allDates={query.dates === "toutes"}
             enrolFailed={query.inscriptions === "echec"}
+            returnTo={typeof query.retour === "string" ? query.retour : null}
           />
         ))}
       </Suspense>
@@ -140,20 +144,24 @@ async function SessionDetail({
   dateParam,
   allDates,
   enrolFailed,
+  returnTo,
 }: {
   orgId: string;
   sessionId: string;
   dateParam: string | null;
   allDates: boolean;
   enrolFailed: boolean;
+  // Ouverte depuis la fiche d'un sportif (?retour=, revue MVP du 13/11, B15) : le retour y ramène.
+  returnTo: string | null;
 }) {
   const { membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
   if (!z.uuid().safeParse(sessionId).success) notFound();
-  const [session, payments, covers] = await Promise.all([
+  const [session, payments, covers, linkedPrograms] = await Promise.all([
     getSession(organizationId, sessionId),
     listSessionPayments(organizationId, sessionId),
     listPackageCovers(organizationId),
+    listProgramsLinkedToCoachSession(organizationId, sessionId),
   ]);
   if (!session) notFound();
   // Prix dans la devise de la séance (D-69).
@@ -167,6 +175,16 @@ async function SessionDetail({
       : addDays(today, 180);
   const agendaPath = `/coach/o/${organizationId}/agenda`;
   const sessionPath = `${agendaPath}/seances/${session.id}`;
+  // Retour vers la fiche : seulement une fiche de CETTE organisation, jamais une adresse quelconque.
+  const fichePrefix = `/coach/o/${organizationId}/sportifs/`;
+  const ficheReturn =
+    returnTo && returnTo.startsWith(fichePrefix) && !returnTo.includes("//") ? returnTo : null;
+  const ficheAthlete = ficheReturn
+    ? session.athletes.find((person) => ficheReturn.startsWith(`${fichePrefix}${person.id}`))
+    : undefined;
+  const back = ficheReturn
+    ? { href: ficheReturn, label: ficheAthlete?.name ?? "Fiche du sportif" }
+    : { href: agendaPath, label: "Agenda" };
   const period = describePeriod(session);
   const enrolled = session.athletes.length;
   const athlete = session.kind === "individual" ? (session.athletes[0] ?? null) : null;
@@ -192,8 +210,10 @@ async function SessionDetail({
   // Ordinateur : la carte montre autant de dates que sa hauteur en contient (FitList, 03/11), d'où
   // une trentaine envoyées ; téléphone : les quatre premières.
   const next = allDates ? others : others.slice(0, 30);
+  // Les liens de la page gardent le retour vers la fiche (B15).
+  const keepReturn = ficheReturn ? `retour=${encodeURIComponent(ficheReturn)}` : "";
   const datesHref = (all: boolean) =>
-    `${sessionPath}?${current ? `date=${current.date}&` : ""}${all ? "dates=toutes" : ""}`.replace(
+    `${sessionPath}?${current ? `date=${current.date}&` : ""}${all ? "dates=toutes&" : ""}${keepReturn}`.replace(
       /[?&]$/,
       "",
     );
@@ -275,15 +295,33 @@ async function SessionDetail({
     label: session.repeatsWeekly ? "Modifier toute la série" : "Modifier la séance",
     href: `${sessionPath}/modifier`,
   };
+  // Revue MVP du 13/11 (B4) : une séance reliée à des séances de programme (« avec le coach ») le
+  // dit avant d'être supprimée ; ces séances afficheront « Rendez-vous supprimé ».
+  const linkedText =
+    linkedPrograms.length > 0 ? (
+      <>
+        {" "}
+        Elle est reliée {linkedPrograms.length > 1 ? "aux programmes" : "au programme"}{" "}
+        {linkedPrograms
+          .map((program) =>
+            program.athleteName
+              ? `« ${program.title} » (${program.athleteName})`
+              : `« ${program.title} »`,
+          )
+          .join(", ")}{" "}
+        : leurs séances avec le coach afficheront « Rendez-vous supprimé ».
+      </>
+    ) : null;
   // Kit (boîte 18) : le nom de la séance en gras en tête du texte.
   const deleteText = session.repeatsWeekly ? (
     <>
       <Quoted>{session.title}</Quoted> : toutes ses dates seront supprimées. Pour l&apos;arrêter à
-      une date, utilise plutôt « Modifier ».
+      une date, utilise plutôt « Modifier ».{linkedText}
     </>
   ) : (
     <>
       <Quoted>{session.title}</Quoted> disparaîtra de l&apos;agenda et des sportifs inscrits.
+      {linkedText}
     </>
   );
 
@@ -349,7 +387,7 @@ async function SessionDetail({
           le titre de la séance est dans la carte héro. */}
       <PageHeader
         title={session.title}
-        back={{ href: agendaPath, label: "Agenda" }}
+        back={back}
         visibleTitle={false}
         actions={
           // Ordinateur : en haut ; téléphone : dans la barre fixe du bas.
@@ -537,8 +575,8 @@ async function SessionDetail({
               </details>
             )}
             {athlete ? (
-              <Link
-                href={`/coach/messages?sportif=${athlete.id}`}
+              <WriteButton
+                athleteId={athlete.id}
                 className={buttonClass({
                   variant: "outline",
                   className:
@@ -546,7 +584,7 @@ async function SessionDetail({
                 })}
               >
                 {writeLabel}
-              </Link>
+              </WriteButton>
             ) : null}
           </div>
         </section>
@@ -603,7 +641,7 @@ async function SessionDetail({
                         return (
                           <li key={occurrence.originalDate} className="group/date">
                             <Link
-                              href={`${sessionPath}?date=${occurrence.date}`}
+                              href={`${sessionPath}?date=${occurrence.date}${keepReturn ? `&${keepReturn}` : ""}`}
                               className="grid grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-x-2.5 transition-colors duration-150 hover:bg-surface-2 lg:gap-x-3.5"
                             >
                               {/* Le rail : il relie le centre du premier point à celui du dernier. */}
@@ -798,15 +836,15 @@ async function SessionDetail({
         }`}
       >
         {athlete ? (
-          <Link
-            href={`/coach/messages?sportif=${athlete.id}`}
+          <WriteButton
+            athleteId={athlete.id}
             className={buttonClass({
               variant: "outline",
               className: "h-12! rounded-[13px]! bg-surface text-[15px]! font-medium!",
             })}
           >
             {writeLabel}
-          </Link>
+          </WriteButton>
         ) : null}
         <Link
           href={`${sessionPath}/modifier`}
@@ -819,6 +857,25 @@ async function SessionDetail({
         </Link>
       </div>
     </>
+  );
+}
+
+// « Écrire » : le fil du sportif, ou (MVP espace coach seul, D-167) la fenêtre « pas encore ».
+function WriteButton({
+  athleteId,
+  className,
+  children,
+}: {
+  athleteId: string;
+  className: string;
+  children: ReactNode;
+}) {
+  return FEATURES.messages ? (
+    <Link href={`/coach/messages?sportif=${athleteId}`} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <NotAvailableButton className={className}>{children}</NotAvailableButton>
   );
 }
 

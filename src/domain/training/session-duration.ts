@@ -41,8 +41,17 @@ const STATION_REFERENCE: Record<HyroxStation, { amount: number; seconds: number 
 const RUN_PACE = 360;
 const ERG_PACE_500 = 135;
 
+// Durée d'une série : le temps tenu pour un exercice en secondes (D-166), sinon les répétitions.
 const setSeconds = (set: StrengthExercise["sets"][number]) =>
-  Math.min(90, Math.max(15, ((set.repsMin + (set.repsMax ?? set.repsMin)) / 2) * SECONDS_PER_REP));
+  set.seconds !== undefined
+    ? (set.seconds + (set.secondsMax ?? set.seconds)) / 2
+    : Math.min(
+        90,
+        Math.max(
+          15,
+          (((set.repsMin ?? 10) + (set.repsMax ?? set.repsMin ?? 10)) / 2) * SECONDS_PER_REP,
+        ),
+      );
 
 function exerciseSeconds(exercise: StrengthExercise): number {
   const work = exercise.sets.reduce((sum, set) => sum + setSeconds(set), 0);

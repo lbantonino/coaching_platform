@@ -4,6 +4,7 @@ import {
   Archive,
   ArchiveRestore,
   ArrowLeft,
+  CalendarClock,
   CalendarDays,
   CalendarRange,
   ChevronRight,
@@ -12,6 +13,7 @@ import {
   Eye,
   FileDown,
   FileText,
+  Flag,
   History,
   LayoutTemplate,
   ListFilter,
@@ -25,7 +27,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
-import { barBackClass, barBackIcon } from "@/components/layout/back-link";
+import {
+  BackGuardProvider,
+  BackLink,
+  barBackClass,
+  barBackIcon,
+} from "@/components/layout/back-link";
 import { MobileBarTitle, phoneFabClass } from "@/components/layout/mobile-bar";
 import { EditorSessionCard } from "@/components/programs/editor-session-card";
 import { useReorder } from "@/components/programs/use-reorder";
@@ -61,6 +68,7 @@ import {
   renamePhase,
   setPhaseRange,
   setWeekLight,
+  weekIsFull,
 } from "@/domain/training/plan-edit";
 import {
   phaseOfWeek,
@@ -82,6 +90,7 @@ import {
   type ScheduleScope,
 } from "@/domain/training/scheduling";
 import {
+  MAX_SESSIONS_PER_WEEK,
   sessionMomentLabels,
   type SessionBody,
   type SessionDiscipline,
@@ -100,6 +109,7 @@ import {
 } from "@/features/programs/actions";
 
 import { DropLine, Handle } from "../_session/running-parts";
+import { useSafeLeave } from "../_session/safe-leave";
 
 import { saveStatusLabel, useEditor } from "./editor-provider";
 import {
@@ -112,7 +122,9 @@ import {
   type DaysContext,
 } from "./fixed-days";
 import {
+  DatesSheet,
   DuplicateWeekSheet,
+  GoalSheet,
   PhaseRangeSheet,
   PublishSheet,
   SessionTemplateSheet,
@@ -139,7 +151,9 @@ export type EditorMeta = {
   templateSource: "coory" | "mine" | null;
   // Semaine (et séance) à ouvrir : retour de l'éditeur de séance.
   focus: { week: number | null; session: string | null };
-  sessionTemplates: (SessionTemplateOption & { body: SessionBody })[];
+  sessionTemplates: (SessionTemplateOption & { body: SessionBody; version: number })[];
+  // Venu de la fiche du sportif (?retour=, revue MVP du 13/11, B15) : le retour du téléphone y ramène.
+  returnTo: { href: string; label: string } | null;
   publishContext:
     | (Omit<PublishContext, "maxByExercise" | "coachSessionIds"> & {
         maxByExercise: [
@@ -211,6 +225,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   const { plan, update, readOnly, organizationId, target } = editor;
   const router = useRouter();
   const toast = useToast();
+  const { leave, dialog: leaveDialog } = useSafeLeave();
+  const backHref =
+    meta.returnTo?.href ?? (target.kind === "program" ? meta.base : `${meta.base}?onglet=modeles`);
+  const backLabel = meta.returnTo?.label ?? (target.kind === "program" ? "Programmes" : "Modèles");
   const draft = isDraft(plan) ? plan : null;
   const [weekIndex, setWeekIndex] = useState(() => {
     if (meta.focus.week && plan.weeks.some((item) => item.index === meta.focus.week))
@@ -242,6 +260,8 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     | "from-template"
     | "add-session"
     | "rename"
+    | "dates"
+    | "goal"
     | "save-template"
     | "archive"
     | "publish"
@@ -278,15 +298,13 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   useEffect(() => {
     const open = () => {
       if (nothingToPublish)
-        return toast(
-          `Rien à publier : ${athleteFirstName} voit déjà la version ${publishedNumber}.`,
-        );
+        return toast(`Rien à publier : la version ${publishedNumber} est déjà à jour.`);
       setPublishError(null);
       setSheet("publish");
     };
     window.addEventListener(PUBLISH_EVENT, open);
     return () => window.removeEventListener(PUBLISH_EVENT, open);
-  }, [nothingToPublish, athleteFirstName, publishedNumber, toast]);
+  }, [nothingToPublish, publishedNumber, toast]);
 
   const currentWeek = draft
     ? Math.floor((Date.parse(meta.today) - Date.parse(draft.startDate)) / (7 * 86_400_000)) + 1
@@ -301,7 +319,9 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     readOnly
       ? null
       : target.kind === "program"
-        ? `${meta.base}/${target.programId}/seances/${key}`
+        ? `${meta.base}/${target.programId}/seances/${key}${
+            meta.returnTo ? `?editeur=${encodeURIComponent(meta.returnTo.href)}` : ""
+          }`
         : `${meta.base}/modeles/${target.templateId}/seances/${key}`;
 
   // Ouvrir une séance seulement quand le brouillon est bien enregistré : sinon sa page ne la
@@ -326,9 +346,13 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   // « Ajouter une séance » : toutes les disciplines, quel que soit le programme (demande d'Antonino du
   // 11/11 : un programme running a aussi besoin de renfo jambes). La discipline du programme est
   // proposée en premier.
+  // Une semaine a 14 séances au plus (D-164) : au-delà, le brouillon serait refusé (revue MVP, C12).
+  const full = week ? weekIsFull(plan, week.index) : false;
+  const tooMany = () => toast(`${MAX_SESSIONS_PER_WEEK} séances au plus par semaine.`);
   const addBlank = (discipline: NewSessionDiscipline) => {
     if (!week) return;
-    let created = "";
+    if (full) return tooMany();
+    let created: string | null = null;
     update((current) => {
       const result = addSession(current, week.index, blankSession(discipline, current.aimDefaults));
       created = result.key;
@@ -395,6 +419,9 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               }),
           },
           { label: "Renommer", icon: Pencil, onSelect: () => setSheet("rename") },
+          // Revue MVP du 13/11 (C3, C4) : les dates et l'objectif se changent après la création.
+          { label: "Modifier les dates", icon: CalendarClock, onSelect: () => setSheet("dates") },
+          { label: "Modifier l'objectif", icon: Flag, onSelect: () => setSheet("goal") },
           {
             label: "Archiver",
             icon: Archive,
@@ -875,7 +902,8 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     <div className="flex gap-2">
       <button
         type="button"
-        onClick={() => setSheet("add-session")}
+        onClick={() => (full ? tooMany() : setSheet("add-session"))}
+        aria-disabled={full}
         className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[15px] text-[13.5px] font-medium text-text-2 inset-ring-[1.5px] inset-ring-line transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"
       >
         <Plus aria-hidden size={15} strokeWidth={2} />
@@ -883,7 +911,8 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       </button>
       <button
         type="button"
-        onClick={() => setSheet("from-template")}
+        onClick={() => (full ? tooMany() : setSheet("from-template"))}
+        aria-disabled={full}
         className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[15px] text-[13.5px] font-medium text-text-2 inset-ring-[1.5px] inset-ring-line transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"
       >
         <LayoutTemplate aria-hidden size={15} strokeWidth={1.8} />
@@ -901,6 +930,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
 
   const duplicateCurrent = () => {
     if (!week || !session) return;
+    if (full) return tooMany();
     let created: string | null = null;
     update((current) => {
       const result = duplicateSession(current, week.index, session.key);
@@ -922,19 +952,14 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       </p>
     ) : (
       <div className="flex gap-2">
-        {editHref(session.key) ? (
-          <button
-            type="button"
-            onClick={() => void openSession(session.key)}
-            className="inline-flex h-10 flex-1 items-center justify-center rounded-[11px] bg-cta px-4 text-[13.5px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
-          >
-            Modifier la séance
-          </button>
-        ) : (
-          <p className="flex flex-1 items-center text-[12.5px] text-muted">
-            Le détail des séances d&apos;un modèle se modifie depuis un programme.
-          </p>
-        )}
+        {/* Depuis la phase 4, les séances de Mes modèles se modifient aussi (revue MVP, C19). */}
+        <button
+          type="button"
+          onClick={() => void openSession(session.key)}
+          className="inline-flex h-10 flex-1 items-center justify-center rounded-[11px] bg-cta px-4 text-[13.5px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
+        >
+          Modifier la séance
+        </button>
         <button
           type="button"
           aria-label="Dupliquer la séance"
@@ -1055,14 +1080,19 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         onConfirm={(id) => {
           const template = meta.sessionTemplates.find((item) => item.id === id);
           if (!template || !week) return;
-          let created = "";
+          setSheet(null);
+          if (full) return tooMany();
+          let created: string | null = null;
           update((current) => {
-            const result = addSession(current, week.index, template.body);
+            // Le modèle d'origine est gardé (BR-10, revue MVP du 13/11, C23).
+            const result = addSession(current, week.index, template.body, {
+              sourceTemplate: { id: template.id, version: template.version },
+            });
             created = result.key;
             return result.plan;
           });
+          if (!created) return tooMany();
           setSessionKey(created);
-          setSheet(null);
           toast(`« ${template.title} » ajoutée à la semaine ${week.index}.`);
         }}
       />
@@ -1073,11 +1103,48 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         label="Titre"
         initial={plan.title}
         confirmLabel="Renommer"
+        // Revue MVP du 13/11 (C21) : un programme publié garde son ancien titre jusqu'à la publication.
+        hint={
+          meta.publication
+            ? "Le nouveau titre apparaîtra dans la fiche et les PDF à la prochaine publication."
+            : undefined
+        }
         onConfirm={(title) => {
           update((current) => ({ ...current, title }));
           setSheet(null);
         }}
       />
+      {draft ? (
+        <DatesSheet
+          open={sheet === "dates"}
+          onClose={() => setSheet(null)}
+          startDate={draft.startDate}
+          weeksCount={plan.weeks.length}
+          others={meta.publishContext?.otherPublished ?? []}
+          published={meta.publication !== null}
+          onConfirm={(startDate) => {
+            update((current) => ({ ...current, startDate }));
+            setSheet(null);
+            toast("Dates du programme modifiées.");
+          }}
+        />
+      ) : null}
+      {draft ? (
+        <GoalSheet
+          open={sheet === "goal"}
+          onClose={() => setSheet(null)}
+          goal={draft.goal}
+          hyrox={
+            plan.discipline === "hyrox" ||
+            plan.weeks.some((item) => item.sessions.some((s) => s.content.discipline === "hyrox"))
+          }
+          onConfirm={(goal) => {
+            update((current) => ({ ...current, goal }));
+            setSheet(null);
+            toast("Objectif du programme enregistré.");
+          }}
+        />
+      ) : null}
       <TextSheet
         open={sheetPhase("renamePhase") !== null}
         onClose={() => setSheet(null)}
@@ -1199,7 +1266,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         }
       >
         {target.kind === "program"
-          ? "Il quitte la liste et l'espace du sportif. Ses versions publiées restent conservées."
+          ? "Il quitte la liste des programmes et la fiche du sportif. Ses versions publiées restent conservées."
           : "Il ne sera plus proposé. Les programmes déjà créés avec lui ne changent pas."}
       </ConfirmDialog>
       <ConfirmDialog
@@ -1225,7 +1292,6 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           version={nextVersion}
           weeks={plan.weeks.length}
           sessions={sessionCount}
-          firstName={athleteFirstName}
           issues={issues}
           pending={pending}
           error={publishError}
@@ -1247,13 +1313,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       {/* Téléphone : le retour de la barre suit le niveau ouvert. */}
       <MobileBarTitle>
         {level === "weeks" ? (
-          <Link
-            href={target.kind === "program" ? meta.base : `${meta.base}?onglet=modeles`}
-            className={barBackClass}
-          >
-            <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />
-            <span className="truncate">{target.kind === "program" ? "Programmes" : "Modèles"}</span>
-          </Link>
+          // Le même retour que l'ordinateur (revue MVP du 13/11, C8) : la page d'où l'on vient, en
+          // enregistrant d'abord ce qui attend (C7) ; venu de la fiche du sportif, elle (B15).
+          <BackGuardProvider value={leave}>
+            <BackLink href={backHref} label={backLabel} variant="bar" />
+          </BackGuardProvider>
         ) : (
           <button
             type="button"
@@ -1533,6 +1597,15 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               {saveLabel ? <span className="mt-0.5">{saveLabel}</span> : null}
             </div>
             <div className="flex gap-2">
+              {target.kind === "template" ? (
+                // « Utiliser » (C25) : l'assistant, parti de ce modèle.
+                <Link
+                  href={`${meta.base}/nouveau?modele=${target.templateId}`}
+                  className={`${phoneButton} bg-surface text-text inset-ring inset-ring-field-ring`}
+                >
+                  Utiliser
+                </Link>
+              ) : null}
               {readOnly ? (
                 target.kind === "template" ? (
                   <button
@@ -1766,7 +1839,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                     {
                       label: "Ajouter depuis un modèle",
                       icon: LayoutTemplate,
-                      onSelect: () => setSheet("from-template"),
+                      onSelect: () => (full ? tooMany() : setSheet("from-template")),
                     },
                     ...weekMenu,
                   ]}
@@ -1786,7 +1859,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               <button
                 type="button"
                 aria-label="Ajouter une séance"
-                onClick={() => setSheet("add-session")}
+                onClick={() => (full ? tooMany() : setSheet("add-session"))}
                 data-phone-fab=""
                 className={phoneFabClass}
               >
@@ -1808,19 +1881,13 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               sessionActions
             ) : (
               <div className="flex gap-2">
-                {editHref(session.key) ? (
-                  <button
-                    type="button"
-                    onClick={() => void openSession(session.key)}
-                    className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta transition-[scale] duration-150 active:scale-[0.98]"
-                  >
-                    Modifier la séance
-                  </button>
-                ) : (
-                  <p className="flex flex-1 items-center px-1 text-[13px] text-muted">
-                    Le détail des séances d&apos;un modèle se modifie depuis un programme.
-                  </p>
-                )}
+                <button
+                  type="button"
+                  onClick={() => void openSession(session.key)}
+                  className="inline-flex h-12 flex-1 items-center justify-center rounded-[13px] bg-cta px-4 text-[15px] font-semibold text-on-cta transition-[scale] duration-150 active:scale-[0.98]"
+                >
+                  Modifier la séance
+                </button>
                 <MoreMenu
                   label="Plus d'actions sur la séance"
                   title={session.title}
@@ -1842,6 +1909,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       </div>
 
       {sheets}
+      {leaveDialog}
       <Overlay
         open={Boolean(dayPicker?.sheet && pickerSession)}
         onClose={() => setDayPicker(null)}
@@ -1874,29 +1942,43 @@ export function EditorHeaderActions({ base }: { base: string }) {
   const { target, organizationId } = editor;
   const button =
     "inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-cta px-3.5 text-[12.5px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.97] disabled:opacity-60 max-lg:hidden";
+  const secondary =
+    "inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-surface px-3.5 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] max-lg:hidden";
+  // « Utiliser » un modèle de programme (revue MVP du 13/11, C25) : l'assistant, parti de ce modèle.
+  const use =
+    target.kind === "template" ? (
+      <Link href={`${base}/nouveau?modele=${target.templateId}`} className={secondary}>
+        <Plus aria-hidden size={13} strokeWidth={2.2} />
+        Utiliser
+      </Link>
+    ) : null;
   // Modèle Coory (lecture seule) : l'action principale est de le copier dans Mes modèles.
   if (editor.readOnly && target.kind === "template") {
     return (
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            const result = await duplicateTemplate(organizationId, "program", target.templateId);
-            if (!result.ok) return toast(result.message);
-            toast("Modèle dupliqué dans Mes modèles.");
-            router.push(`${base}/modeles/${result.templateId}`);
-          })
-        }
-        className={button}
-      >
-        <Copy aria-hidden size={13} strokeWidth={2} />
-        Dupliquer dans Mes modèles
-      </button>
+      <span className="flex items-center gap-2 max-lg:hidden">
+        {use}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await duplicateTemplate(organizationId, "program", target.templateId);
+              if (!result.ok) return toast(result.message);
+              toast("Modèle dupliqué dans Mes modèles.");
+              router.push(`${base}/modeles/${result.templateId}`);
+            })
+          }
+          className={button}
+        >
+          <Copy aria-hidden size={13} strokeWidth={2} />
+          Dupliquer dans Mes modèles
+        </button>
+      </span>
     );
   }
   if (editor.readOnly && target.kind === "program") return <UnarchiveButton phone={false} />;
-  if (editor.readOnly || target.kind !== "program") return null;
+  if (target.kind === "template") return use;
+  if (editor.readOnly) return null;
   return (
     <button
       type="button"

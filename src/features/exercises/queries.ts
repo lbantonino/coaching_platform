@@ -49,7 +49,7 @@ export async function listLibraryExercises(
     supabase
       .from("exercises")
       .select(
-        "id, key, organization_id, name_fr, name_en, aliases_fr, aliases_en, category, hyrox_station, equipment, primary_muscles, image_main, image_start, updated_at",
+        "id, key, organization_id, name_fr, name_en, aliases_fr, aliases_en, category, hyrox_station, equipment, primary_muscles, metrics, image_main, image_start, updated_at",
       )
       .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
       .eq("visibility", "active")
@@ -73,6 +73,8 @@ export async function listLibraryExercises(
             hyroxStation: row.hyrox_station,
             equipment: row.equipment,
             primaryMuscles: row.primary_muscles,
+            // Mesuré en secondes seulement (planche, gainage…) : l'éditeur propose « 3 × 30 s » (D-166).
+            timed: row.metrics.includes("duration_s") && !row.metrics.includes("reps"),
             thumbnail: thumbnailOf(imagesOf(row)),
             favorite: favoriteIds.has(row.id),
             mine: row.organization_id !== null,

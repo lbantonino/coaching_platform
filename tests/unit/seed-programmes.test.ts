@@ -8,10 +8,17 @@ import { parseProgramSession } from "@/domain/training/program-session";
 import { publishedSessionSchema, sessionBodySchema } from "@/domain/training/session-v2";
 
 // Les documents v2 du seed (partie <programmes-v2>, D-155) doivent rester valides pour l'application :
-// une donnée de démo mal formée serait écartée en silence par les écrans.
+// une donnée de démo mal formée serait écartée en silence par les écrans. Les modèles Coory vivent
+// dans supabase/content/modeles_coory.sql depuis le 13/11/2026 (chargé avant la graine) : vérifiés ici aussi.
 
 const seed = readFileSync(path.resolve(import.meta.dirname, "../../supabase/seed.sql"), "utf8");
-const section = seed.slice(seed.indexOf("-- <programmes-v2>"), seed.indexOf("-- </programmes-v2>"));
+const cooryTemplates = readFileSync(
+  path.resolve(import.meta.dirname, "../../supabase/content/modeles_coory.sql"),
+  "utf8",
+);
+const section =
+  seed.slice(seed.indexOf("-- <programmes-v2>"), seed.indexOf("-- </programmes-v2>")) +
+  cooryTemplates;
 const documents = [...section.matchAll(/'(\{.*?\})'::jsonb/g)].map(
   (match) => JSON.parse((match[1] ?? "").replace(/''/g, "'")) as Record<string, unknown>,
 );

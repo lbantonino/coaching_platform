@@ -1,4 +1,4 @@
-import { localId } from "./plan-edit";
+import { localId } from "./local-id";
 import type { Phase, Week } from "./program-plan";
 import {
   MAX_SESSIONS_PER_DAY,
@@ -385,4 +385,35 @@ export function setWeekFixed(week: Week, days: ReadonlyMap<string, Weekday>): We
           },
     ),
   });
+}
+
+// Une séance qui perd son rendez-vous du coach (copie dans une autre semaine, programme copié, revue
+// MVP du 13/11, C5) : un rendez-vous est daté et appartient à l'agenda d'origine, il ne se copie
+// jamais. En jours fixes, la copie garde le jour (et l'heure) du rendez-vous comme jour fixé ; dans
+// l'ordre, elle n'a ni jour ni moment (sinon le brouillon serait refusé : un moment va avec un jour).
+export function detachCoach(session: SessionDraft, scheduling: Week["scheduling"]): SessionDraft {
+  if (!session.withCoach) return session;
+  const { withCoach, ...rest } = session;
+  if (scheduling === "ordered") {
+    return { ...rest, fixedDay: undefined, fixedTime: undefined, moment: undefined };
+  }
+  return {
+    ...rest,
+    fixedDay: session.fixedDay ?? weekdayOf(withCoach.date),
+    fixedTime: session.fixedTime ?? withCoach.time,
+  };
+}
+
+// Où placer la copie d'une séance dans sa semaine (« Dupliquer la séance », C12) : en jours fixes, le
+// même jour avec le premier moment libre ; si ce jour a déjà 4 séances, la copie reste sans jour (le
+// coach la place ensuite). Dans l'ordre : sans jour.
+export function copyPlacement(
+  week: Week,
+  original: SessionDraft,
+): Pick<SessionDraft, "fixedDay" | "fixedTime" | "moment"> {
+  const none = { fixedDay: undefined, fixedTime: undefined, moment: undefined };
+  if (week.scheduling !== "fixed") return none;
+  const day = sessionDay(original);
+  if (!day || !dayHasRoom(week, day)) return none;
+  return { fixedDay: day, fixedTime: undefined, moment: suggestedMoment(week, day) ?? undefined };
 }

@@ -63,7 +63,9 @@ type UpdateAction = (
 
 // Ouvre la fenêtre : sans argument pour une nouvelle tâche, avec la tâche pour la modifier ; `preset`
 // préremplit une nouvelle tâche (ex. la liste ouverte sur la page Tâches).
-type OpenTask = (task?: EditableTask, preset?: { listId?: string }) => void;
+// `preset` accepte aussi toute une tâche proposée par l'Assistant IA (« Modifier » une carte).
+type TaskPreset = Partial<TaskFormValues>;
+type OpenTask = (task?: EditableTask, preset?: TaskPreset) => void;
 const OpenContext = createContext<OpenTask | null>(null);
 
 export function useOpenTaskSheet() {
@@ -87,7 +89,7 @@ export function TaskSheetProvider({
 }) {
   const [open, setOpen] = useState(false);
   const [task, setTask] = useState<EditableTask | null>(null);
-  const [preset, setPreset] = useState<{ listId?: string }>({});
+  const [preset, setPreset] = useState<TaskPreset>({});
   const [options, setOptions] = useState<{ athletes: Athlete[]; lists: TaskListOption[] } | null>(
     null,
   );
@@ -153,7 +155,7 @@ function TaskForm({
   onDone,
 }: {
   task: EditableTask | null;
-  preset: { listId?: string };
+  preset: TaskPreset;
   athletes: Athlete[];
   lists: TaskListOption[];
   action: CreateAction;
@@ -174,12 +176,12 @@ function TaskForm({
   }, [state, task, toast, onDone, router]);
 
   const values: TaskFormValues = state.values ?? {
-    title: task?.title ?? "",
-    priority: task?.priority ?? "normal",
-    dueOn: task?.dueOn ?? "",
+    title: task?.title ?? preset.title ?? "",
+    priority: task?.priority ?? preset.priority ?? "normal",
+    dueOn: task?.dueOn ?? preset.dueOn ?? "",
     listId: task?.listId ?? preset.listId ?? "",
-    athleteId: task?.athleteId ?? "",
-    notes: task?.notes ?? "",
+    athleteId: task?.athleteId ?? preset.athleteId ?? "",
+    notes: task?.notes ?? preset.notes ?? "",
   };
   // Le sportif d'une tâche peut avoir été archivé depuis : il reste proposé pour cette tâche.
   const known = athletes.some((athlete) => athlete.id === values.athleteId);

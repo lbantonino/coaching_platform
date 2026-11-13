@@ -9,8 +9,13 @@ import {
   type ProgramPlan,
   type Week,
 } from "./program-plan";
-import { plannedDate, weekdayOf } from "./scheduling";
-import { publishedSessionSchema, type SessionContent, type SessionDraft } from "./session-v2";
+import { detachCoach, plannedDate, weekdayOf, weekMonday } from "./scheduling";
+import {
+  MAX_SESSIONS_PER_WEEK,
+  publishedSessionSchema,
+  type SessionContent,
+  type SessionDraft,
+} from "./session-v2";
 
 // Passer d'une version publiée à un brouillon, et d'un modèle au programme d'un sportif. Règles PURES.
 
@@ -19,6 +24,14 @@ export const LEGACY_AIM_DEFAULTS: AimDefaults = { running: "pace", strength: "kg
 
 // Séance encadrée du coach (agenda), pour dater une séance « avec le coach » d'une semaine donnée.
 export type CoachSessionSlot = { id: string; startsOn: string; startTime: string };
+
+// Le VRAI rendez-vous d'une séance encadrée dans une semaine (lundi à dimanche), lu dans l'agenda
+// (dates calculées, dates déplacées) ; null s'il n'y en a pas cette semaine-là.
+export type MeetingResolver = (
+  coachSessionId: string,
+  monday: string,
+  sunday: string,
+) => { date: string; time: string } | null;
 
 export type PublicationSource = {
   program: {
@@ -31,6 +44,17 @@ export type PublicationSource = {
   snapshot: unknown;
   sessions: { key: string; weekIndex: number; slotIndex: number; json: unknown }[];
   coachSessions: readonly CoachSessionSlot[];
+  // Revue MVP du 13/11 (B5) : sans lui, une séance v1 « avec le coach » était datée au jour de la
+  // semaine de la PREMIÈRE date de la séance encadrée, même si elle n'avait pas lieu cette semaine-là
+  // (séance ponctuelle, série terminée, date déplacée) : un rendez-vous inventé. Le serveur passe
+  // l'agenda réel ; sans résolveur (tests), on suppose une séance hebdomadaire.
+  meetingIn?: MeetingResolver;
+};
+
+const addDaysIso = (iso: string, days: number) => {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 };
 
 // Semaines consécutives de même étiquette (v1 : « Préparation », « Allègement »…) -> phases.
@@ -127,11 +151,21 @@ export function draftFromPublication(source: PublicationSource): ProgramDraft | 
         ? source.coachSessions.find((candidate) => candidate.id === v1.withCoach?.sessionId)
         : undefined;
       if (coach) {
-        withCoach = {
-          coachSessionId: coach.id,
-          date: plannedDate(program.startDate, row.weekIndex, weekdayOf(coach.startsOn)),
-          time: coach.startTime.slice(0, 5),
-        };
+        const monday = weekMonday(program.startDate, row.weekIndex);
+        const meeting = source.meetingIn
+          ? source.meetingIn(coach.id, monday, addDaysIso(monday, 6))
+          : {
+              date: plannedDate(program.startDate, row.weekIndex, weekdayOf(coach.startsOn)),
+              time: coach.startTime,
+            };
+        // Pas de rendez-vous cette semaine-là : la séance reste, sans date (jamais inventée).
+        if (meeting) {
+          withCoach = {
+            coachSessionId: coach.id,
+            date: meeting.date,
+            time: meeting.time.slice(0, 5),
+          };
+        }
       }
       session = upgradeV1Session(v1, row.key, withCoach);
     }
@@ -148,7 +182,10 @@ export function draftFromPublication(source: PublicationSource): ProgramDraft | 
     title: program.title,
     discipline: program.discipline ?? majority ?? "hybrid",
     aimDefaults: LEGACY_AIM_DEFAULTS,
-    sessionsPerWeek: Math.min(Math.max(...weeks.map((week) => week.sessions.length), 1), 7),
+    sessionsPerWeek: Math.min(
+      Math.max(...weeks.map((week) => week.sessions.length), 1),
+      MAX_SESSIONS_PER_WEEK,
+    ),
     phases:
       snapshotPhases(source.snapshot) ??
       phasesFromLabels(
@@ -198,8 +235,14 @@ function adaptContent(content: SessionContent, aims: AthleteAims): SessionConten
   };
 }
 
-export function adaptSession(session: SessionDraft, aims: AthleteAims): SessionDraft {
-  return { ...session, withCoach: undefined, content: adaptContent(session.content, aims) };
+// Le rendez-vous du coach ne se copie pas (detachCoach : en jours fixes, la séance garde son jour ;
+// dans l'ordre, elle perd jour et moment, sinon le brouillon serait refusé).
+export function adaptSession(
+  session: SessionDraft,
+  aims: AthleteAims,
+  scheduling: Week["scheduling"] = "ordered",
+): SessionDraft {
+  return { ...detachCoach(session, scheduling), content: adaptContent(session.content, aims) };
 }
 
 // Le plan ramené à N semaines : les semaines en trop sont retirées, les manquantes ajoutées vides ;
@@ -212,11 +255,24 @@ export function resizePlan(
   const weeks: Week[] = Array.from({ length: weeksCount }, (_, i) => {
     const week = plan.weeks[i];
     return week
-      ? { ...week, sessions: week.sessions.map((session) => adaptSession(session, aims)) }
+      ? {
+          ...week,
+          sessions: week.sessions.map((session) => adaptSession(session, aims, week.scheduling)),
+        }
       : { index: i + 1, light: false, scheduling: "ordered", sessions: [] };
   });
   const phases = plan.phases
     .filter((phase) => phase.weekFrom <= weeksCount)
     .map((phase) => ({ ...phase, weekTo: Math.min(phase.weekTo, weeksCount) }));
   return { weeks, phases };
+}
+
+// Séances par semaine d'un nouveau programme (revue MVP du 13/11, C15) : parti d'un modèle ou d'un
+// ancien programme, il reprend le rythme de sa source (sinon le bandeau annonçait « 3 séances par
+// semaine » pour des semaines qui en ont 4) ; parti de zéro, celui choisi dans l'assistant.
+export function sessionsPerWeekFor(
+  requested: number,
+  source: Pick<ProgramPlan, "sessionsPerWeek"> | null,
+): number {
+  return source ? source.sessionsPerWeek : requested;
 }

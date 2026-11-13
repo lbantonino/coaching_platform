@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 
 // Retour « là où j'étais » (demande d'Antonino du 29/10/2026) : une séance ouverte depuis le tableau
 // de bord ramène au tableau de bord, pas à l'agenda, et la flèche porte le nom de cette page
@@ -70,7 +70,8 @@ function previousPage() {
   const previousPath = previous?.split("?")[0];
   // Une page de création (« Créer un exercice », « Nouveau sportif »…) n'est jamais une destination de
   // retour : après l'enregistrement, revenir sur un formulaire vide n'a pas de sens.
-  const creation = /\/(nouveau|nouvelle)$/.test(previousPath ?? "");
+  // « …/nouveau-programme » aussi (revue MVP du 13/11, C8 : l'assistant depuis la fiche).
+  const creation = /\/(nouveau|nouvelle)(-[a-z]+)?$/.test(previousPath ?? "");
   if (
     !previous ||
     !previousPath ||
@@ -82,6 +83,12 @@ function previousPage() {
   }
   return { href: previous, title: sessionStorage.getItem(TITLE + previousPath) };
 }
+
+// Une page qui enregistre toute seule (éditeur de programme, de séance) donne son propre départ
+// (revue MVP du 13/11, C7) : le retour de l'en-tête enregistre d'abord ce qui attend, et prévient si
+// l'enregistrement échoue, au lieu de quitter la page en perdant la dernière modification.
+const BackGuardContext = createContext<((href: string) => void) | null>(null);
+export const BackGuardProvider = BackGuardContext.Provider;
 
 // Retour dans la barre du haut du téléphone, entre ☰ et les outils (D-117) : aussi pour les retours
 // propres à une page (« ← Conversations » de Messages, « ← Paramètres »). Violet, 16 px (kit
@@ -113,6 +120,7 @@ export function BackLink({
   variant?: "bar" | "path";
 }) {
   const router = useRouter();
+  const guard = useContext(BackGuardContext);
   // Libellé : le titre de la page précédente, lu dans le navigateur (le serveur rend le libellé
   // habituel). Relu à chaque rendu, donc à chaque changement de page.
   const shown = useSyncExternalStore(noSubscription, previousTitle, () => null) ?? label;
@@ -120,14 +128,18 @@ export function BackLink({
     <Link
       href={href}
       onClick={(event) => {
+        let target: string | null = null;
         try {
-          const previous = previousPage();
-          if (previous) {
-            event.preventDefault();
-            router.push(previous.href);
-          }
+          target = previousPage()?.href ?? null;
         } catch {
           // Stockage bloqué : lien normal.
+        }
+        if (guard) {
+          event.preventDefault();
+          guard(target ?? href);
+        } else if (target) {
+          event.preventDefault();
+          router.push(target);
         }
       }}
       className={

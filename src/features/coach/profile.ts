@@ -1,5 +1,6 @@
 import "server-only";
 
+import { FEATURES } from "@/config/features";
 import { createClient } from "@/lib/supabase/server";
 
 export type CoachPreferences = {
@@ -39,7 +40,14 @@ export const DEFAULT_PREFERENCES: CoachPreferences = {
   defaultPaymentMethod: "transfer",
   agendaFirstHour: 6,
   agendaLastHour: 22,
-  notify: { competitions: true, messages: true, tasks: true, unpaid: true, profiles: true },
+  // MVP espace coach seul (D-167) : « Messages » éteint tant que la messagerie est masquée.
+  notify: {
+    competitions: true,
+    messages: FEATURES.messages,
+    tasks: true,
+    unpaid: true,
+    profiles: true,
+  },
 };
 
 // Profil du coach connecté (la RLS ne laisse lire que le sien et ceux de ses collègues).
@@ -77,7 +85,7 @@ export async function getCoachProfile(user: {
           agendaLastHour: data.agenda_last_hour,
           notify: {
             competitions: data.notify_competitions,
-            messages: data.notify_messages,
+            messages: FEATURES.messages && data.notify_messages,
             tasks: data.notify_tasks,
             unpaid: data.notify_unpaid,
             profiles: data.notify_profiles,

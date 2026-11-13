@@ -20,6 +20,7 @@ import { AuthCardImage } from "@/components/layout/entry-visuals";
 import { authInputCompactClass, authPasswordCompactClass } from "@/components/ui/form-styles";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Spinner } from "@/components/ui/spinner";
+import { FEATURES } from "@/config/features";
 import { signUp, type SignupState } from "@/features/auth/signup-actions";
 import type { AccountKind } from "@/features/auth/signup-schemas";
 import { PASSWORD_MIN_LENGTH } from "@/features/auth/schemas";
@@ -121,6 +122,8 @@ function RoleSwitch({
   onChange: (k: AccountKind) => void;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  // MVP espace coach seul (D-167) : pas de choix « Je suis sportif », le compte est un compte coach.
+  if (!FEATURES.athleteSpace) return <input type="hidden" name="kind" value="coach" />;
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
     event.preventDefault();

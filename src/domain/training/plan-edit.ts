@@ -1,19 +1,15 @@
+import { localId } from "./local-id";
 import type { AimDefaults, Phase, ProgramPlan, Week } from "./program-plan";
-import type { SessionBody, SessionDraft } from "./session-v2";
+import { copyPlacement, detachCoach, fillMoments } from "./scheduling";
+import { MAX_SESSIONS_PER_WEEK, type SessionBody, type SessionDraft } from "./session-v2";
+
+export { localId };
 
 // Opérations de l'éditeur de programme (03, D-157) sur le plan (semaines, phases, séances) : règles
 // PURES, testées par Vitest. Chacune renvoie un nouveau plan, sans modifier l'ancien (l'éditeur garde
 // l'historique simple : enregistrement automatique du nouveau plan).
 
 type Plan = Pick<ProgramPlan, "weeks" | "phases">;
-
-// Identifiant local court, unique dans le programme (clé d'une séance, d'une phase).
-export function localId(prefix: string, taken: ReadonlySet<string> = new Set()): string {
-  for (;;) {
-    const id = `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
-    if (!taken.has(id)) return id;
-  }
-}
 
 export function sessionKeys(plan: Plan): Set<string> {
   return new Set(plan.weeks.flatMap((week) => week.sessions.map((session) => session.key)));
@@ -71,6 +67,8 @@ function copySession(session: SessionDraft, taken: Set<string>): SessionDraft {
 }
 
 // « Dupliquer vers… » : les séances de la semaine source REMPLACENT celles des semaines choisies.
+// Les rendez-vous du coach ne se copient pas (revue MVP du 13/11, C5) : ils sont datés dans la semaine
+// source ; la copie garde leur jour en jours fixes (detachCoach).
 export function duplicateWeekTo<T extends Plan>(plan: T, source: number, targets: number[]): T {
   const from = plan.weeks.find((week) => week.index === source);
   if (!from) return plan;
@@ -82,26 +80,43 @@ export function duplicateWeekTo<T extends Plan>(plan: T, source: number, targets
         ? {
             ...week,
             scheduling: from.scheduling,
-            sessions: from.sessions.map((session) => copySession(session, taken)),
+            sessions: from.sessions.map((session) =>
+              copySession(detachCoach(session, from.scheduling), taken),
+            ),
           }
         : week,
     ),
   };
 }
 
+// Une semaine pleine (14 séances, D-164) n'en reçoit plus : le brouillon serait refusé.
+export function weekIsFull(plan: Plan, weekIndex: number): boolean {
+  const week = plan.weeks.find((item) => item.index === weekIndex);
+  return (week?.sessions.length ?? 0) >= MAX_SESSIONS_PER_WEEK;
+}
+
 // ---------------------------------------------------------------------------
 // Séances
 // ---------------------------------------------------------------------------
+// Ajouter une séance à une semaine ; key = null si la semaine est pleine (rien n'est ajouté).
+// `extra` : ce que la séance garde en plus de son contenu (modèle d'origine, C23).
 export function addSession<T extends Plan>(
   plan: T,
   weekIndex: number,
   body: SessionBody,
+  extra: Pick<SessionDraft, "sourceTemplate"> = {},
 ): {
   plan: T;
-  key: string;
+  key: string | null;
 } {
+  if (weekIsFull(plan, weekIndex)) return { plan, key: null };
   const key = localId("s", sessionKeys(plan));
-  const session: SessionDraft = { ...body, key, athleteCanMove: false };
+  const session: SessionDraft = {
+    ...body,
+    key,
+    athleteCanMove: false,
+    ...(extra.sourceTemplate ? { sourceTemplate: extra.sourceTemplate } : {}),
+  };
   return {
     plan: updateWeek(plan, weekIndex, (week) => ({
       ...week,
@@ -146,23 +161,29 @@ export function moveSessionTo<T extends Plan>(
   });
 }
 
-// Dupliquer une séance : la copie arrive juste après l'originale, dans la même semaine.
+// Dupliquer une séance : la copie arrive juste après l'originale, dans la même semaine, sans le
+// rendez-vous du coach. En jours fixes, elle prend le même jour avec le premier moment libre ; si ce
+// jour a déjà 4 séances, elle reste sans jour (C12). Semaine pleine (14) : rien n'est copié.
 export function duplicateSession<T extends Plan>(
   plan: T,
   weekIndex: number,
   key: string,
 ): { plan: T; key: string | null } {
+  if (weekIsFull(plan, weekIndex)) return { plan, key: null };
   const taken = sessionKeys(plan);
   let created: string | null = null;
   const next = updateWeek(plan, weekIndex, (week) => {
     const at = week.sessions.findIndex((session) => session.key === key);
     const original = week.sessions[at];
     if (!original) return week;
-    const copy = copySession({ ...original, withCoach: undefined }, taken);
+    const copy = copySession(
+      { ...original, withCoach: undefined, ...copyPlacement(week, original) },
+      taken,
+    );
     created = copy.key;
     const sessions = [...week.sessions];
     sessions.splice(at + 1, 0, copy);
-    return { ...week, sessions };
+    return fillMoments({ ...week, sessions });
   });
   return { plan: next, key: created };
 }
@@ -283,6 +304,11 @@ export function removePhase<T extends Plan>(plan: T, id: string): T {
   };
 }
 
+// Ce qu'une séance vide porte tant que le coach ne l'a pas complétée (avertissement de publication,
+// revue MVP du 13/11, C24).
+export const BLANK_SESSION_TITLE = "Nouvelle séance";
+export const BLANK_EXERCISE_NAME = "Exercice à choisir";
+
 // Séance vide d'une discipline (« Ajouter une séance ») : valide pour le schéma, à compléter dans
 // l'éditeur de séance (04 à 06). Elle suit la façon de viser par défaut du programme (BR-12) :
 // Running en zones de FC (Z2, les bpm se calculent depuis la FC max), Musculation en % du max (70 %).
@@ -293,7 +319,7 @@ export function blankSession(
   switch (discipline) {
     case "running":
       return {
-        title: "Nouvelle séance",
+        title: BLANK_SESSION_TITLE,
         sessionType: "Endurance",
         durationMinutes: 45,
         content: {
@@ -311,7 +337,7 @@ export function blankSession(
       };
     case "strength":
       return {
-        title: "Nouvelle séance",
+        title: BLANK_SESSION_TITLE,
         sessionType: "Force",
         durationMinutes: 60,
         content: {
@@ -320,7 +346,7 @@ export function blankSession(
             {
               id: "x1",
               kind: "exercise",
-              name: "Exercice à choisir",
+              name: BLANK_EXERCISE_NAME,
               loadMode: aims.strength,
               sets: [
                 { type: "normal", repsMin: 10, ...(aims.strength === "pct" ? { pct: 70 } : {}) },
@@ -331,7 +357,7 @@ export function blankSession(
       };
     case "hyrox":
       return {
-        title: "Nouvelle séance",
+        title: BLANK_SESSION_TITLE,
         sessionType: "Circuit",
         durationMinutes: 60,
         content: {

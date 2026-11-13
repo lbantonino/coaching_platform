@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
+import { FEATURES } from "../../src/config/features";
+
 // Inscription libre (D-30), e-mail de confirmation compris (Mailpit, http://127.0.0.1:54324).
 const MAILPIT = "http://127.0.0.1:54324/api/v1";
 const PASSWORD = "un-mot-de-passe-solide";
@@ -34,10 +36,13 @@ async function fillSignup(
   },
 ) {
   await page.goto("/inscription");
-  // « Je suis coach » sur ordinateur, « Coach » sur téléphone : on vise le bouton radio.
-  await page
-    .getByRole("radio", { name: values.kind === "Je suis coach" ? /coach/i : /sportif/i })
-    .check({ force: true });
+  // « Je suis coach » sur ordinateur, « Coach » sur téléphone : on vise le bouton radio. MVP espace
+  // coach seul (D-167) : pas de choix, le compte est un compte coach.
+  if (FEATURES.athleteSpace) {
+    await page
+      .getByRole("radio", { name: values.kind === "Je suis coach" ? /coach/i : /sportif/i })
+      .check({ force: true });
+  }
   await page.getByRole("textbox", { name: /^Prénom/ }).fill(values.first);
   await page.getByLabel("Nom", { exact: true }).fill(values.last);
   await page.getByLabel("Adresse e-mail").fill(values.email);
@@ -122,10 +127,20 @@ test("un coach qui déménage change de devise : le futur passe en francs suisse
   );
 });
 
+// MVP espace coach seul (D-167) : l'inscription ne propose plus « Je suis sportif ».
+test("l'inscription ne propose que le compte coach", async ({ page }) => {
+  test.skip(FEATURES.athleteSpace, "Espace sportif ouvert : le choix Coach / Sportif revient.");
+  await page.goto("/inscription");
+  await expect(page.getByRole("heading", { name: "Créer ton compte" })).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "Type de compte" })).toHaveCount(0);
+  await expect(page.getByText(/Je suis sportif|^Sportif$/)).toHaveCount(0);
+});
+
 test("un sportif s'inscrit seul et attend que son coach le rattache", async ({
   page,
   request,
 }, testInfo) => {
+  test.skip(!FEATURES.athleteSpace, "MVP espace coach seul (D-167) : inscription sportif masquée.");
   const email = `inscription-sportif-${unique(testInfo)}@example.test`;
   await fillSignup(page, { kind: "Je suis sportif", first: "Sam", last: "Lefort", email });
   await expect(page.getByLabel(/entreprise/)).toHaveCount(0);
@@ -145,7 +160,7 @@ test("l'e-mail de confirmation peut être renvoyé depuis « Vérifie ta boîte 
   page,
 }, testInfo) => {
   const email = `inscription-renvoi-${unique(testInfo)}@example.test`;
-  await fillSignup(page, { kind: "Je suis sportif", first: "Noa", last: "Renvoi", email });
+  await fillSignup(page, { kind: "Je suis coach", first: "Noa", last: "Renvoi", email });
   await page.getByRole("button", { name: "Créer mon compte" }).click();
   await expect(page).toHaveURL(/\/verifier-email$/);
   // Supabase limite l'envoi à un e-mail par seconde et par adresse (max_frequency).

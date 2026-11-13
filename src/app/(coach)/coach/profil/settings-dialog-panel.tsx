@@ -4,6 +4,7 @@ import { Check, ChevronDown, X } from "lucide-react";
 import { useId, useState } from "react";
 
 import type { SettingsSection } from "@/components/blocks/settings-context";
+import { FEATURES } from "@/config/features";
 import type { SettingsData } from "@/features/coach/settings-data";
 import { removeCoachPhoto, uploadCoachPhoto, type PhotoState } from "@/features/photos/actions";
 
@@ -29,7 +30,8 @@ import {
 // La rubrique Profil (ProfileDialogSection) n'est pas modifiée : seule son entrée dans le menu prend
 // le style des autres.
 const intros: Partial<Record<SettingsSection, string>> = {
-  profil: "Ce que tes sportifs voient de toi.",
+  // MVP espace coach seul (D-167) : les sportifs n'ont pas encore d'espace où te voir.
+  profil: FEATURES.athleteSpace ? "Ce que tes sportifs voient de toi." : "Ton identité dans Coory.",
 };
 
 // Ligne courte de chaque rubrique dans le menu (kit).

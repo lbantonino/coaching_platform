@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { aimDefaultsSchema, programGoalSchema } from "@/domain/training/program-plan";
+import { MAX_SESSIONS_PER_WEEK } from "@/domain/training/session-v2";
 
 // Entrées des actions des programmes (validées côté serveur, CLAUDE.md : Zod à chaque frontière).
 
@@ -19,7 +20,8 @@ export const createProgramInputSchema = z
     // Étape 3
     startDate: z.iso.date(),
     weeksCount: z.number().int().min(1).max(52),
-    sessionsPerWeek: z.number().int().min(1).max(7),
+    // Jusqu'à 14 séances par semaine (D-164 : « 8+ » dans l'assistant), comme le brouillon.
+    sessionsPerWeek: z.number().int().min(1).max(MAX_SESSIONS_PER_WEEK),
     phases: z
       .array(
         z.object({

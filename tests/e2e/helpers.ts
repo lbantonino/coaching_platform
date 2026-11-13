@@ -100,7 +100,7 @@ export async function chooseAthleteFilter(
   group: "Statut" | "Programme",
   label: string,
 ) {
-  // « Programme : Tous » (le menu), pas « Programme : Hyrox. Changer le programme de … » (une ligne).
+  // « Programme : Tous » (le menu), pas « Programme : Hyrox. Changer la discipline de … » (une ligne).
   await page.getByRole("button", { name: new RegExp(`^${group} : [^.]+$`) }).click();
   await page
     .getByRole("listbox", { name: group })

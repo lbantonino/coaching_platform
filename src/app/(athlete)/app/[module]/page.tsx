@@ -6,6 +6,7 @@ import { ModulePage } from "@/components/layout/module-page";
 import { ATHLETE_MODULES, type AthleteModule } from "@/components/layout/modules";
 import { PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { LogoutButton } from "@/components/ui/logout-button";
+import { FEATURES } from "@/config/features";
 import { requireAthleteAccount } from "@/features/auth/guards";
 
 // Modules de l'espace sportif pas encore construits (D-32) : /app/programme, /app/progression…
@@ -23,6 +24,8 @@ export async function generateMetadata({ params }: PageProps<"/app/[module]">): 
 }
 
 export default function AthleteModulePage({ params }: PageProps<"/app/[module]">) {
+  // MVP espace coach seul (D-167) : page masquée, le code reste.
+  if (!FEATURES.athleteSpace) notFound();
   return (
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading />}>

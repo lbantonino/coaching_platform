@@ -62,12 +62,14 @@ export function sessionToDisplay(session: PublishedSession): ProgramSessionConte
 }
 
 // Contenu d'une séance publiée, v1 ou v2 ; null s'il est mal formé (écarté plutôt qu'affiché de travers).
+// Une séance v2 n'est validée QUE par son propre schéma (publishedSessionSchema) : sa traduction en
+// lignes n'est pas revalidée avec les plafonds de la v1 (30 étapes, 20 lignes de 200 caractères…),
+// sinon une séance publiée valide (échauffement de 250 caractères, 11 exercices, course de 31
+// étapes) disparaissait de la fiche et du PDF (revue MVP du 13/11, C2).
 export function parseProgramSession(value: unknown): ProgramSessionContent | null {
   if (typeof value === "object" && value !== null && "schemaVersion" in value) {
     const parsed = publishedSessionSchema.safeParse(value);
-    if (!parsed.success) return null;
-    const display = programSessionSchema.safeParse(sessionToDisplay(parsed.data));
-    return display.success ? display.data : null;
+    return parsed.success ? sessionToDisplay(parsed.data) : null;
   }
   const parsed = programSessionSchema.safeParse(value);
   return parsed.success ? parsed.data : null;

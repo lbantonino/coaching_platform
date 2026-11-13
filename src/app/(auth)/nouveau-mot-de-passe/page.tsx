@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { EntryTitle } from "@/components/layout/entry-ui";
 import { SkeletonLines } from "@/components/ui/skeleton";
-import { requireUser } from "@/features/auth/session";
+import { getRecoveryUser } from "@/features/auth/session";
 
 import { NewPasswordForm } from "./new-password-form";
 
@@ -23,9 +24,11 @@ export default function NewPasswordPage() {
   );
 }
 
-// Accessible uniquement avec la session ouverte par le lien de réinitialisation (ou une session normale).
+// Accessible uniquement avec la session ouverte par le lien de réinitialisation (moins d'une heure) :
+// une session ordinaire change son mot de passe dans les Paramètres, avec l'ancien.
 async function RecoverySession() {
-  const user = await requireUser();
+  const user = await getRecoveryUser();
+  if (!user) redirect("/lien-invalide");
   return (
     <>
       <EntryTitle sub={`Compte : ${user.email}`}>Nouveau mot de passe</EntryTitle>

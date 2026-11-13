@@ -1,6 +1,28 @@
 import type { NextConfig } from "next";
 
+// En-têtes de sécurité (revue du 13/11/2026), sur toutes les pages : pas d'affichage dans un cadre
+// d'un autre site (clickjacking ; Coory lui-même affiche l'aperçu PDF des Documents dans un cadre), pas de devinette du type des fichiers, adresse d'origine réduite
+// pour les autres sites, ni caméra, ni micro, ni position. HTTPS imposé en production (HSTS). Pas de
+// politique stricte des scripts : Next.js en écrit dans la page, elle demanderait des nonces.
+const securityHeaders = [
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  {
+    key: "Content-Security-Policy",
+    value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+  },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // Micro : Coory seulement, pour la dictée de l'Assistant IA (D-173).
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=()" },
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]
+    : []),
+];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   /* config options here */
   cacheComponents: true,
   // Pas de logo « N » des outils de développement de Next.js sur les écrans (demande d'Antonino).
@@ -17,9 +39,10 @@ const nextConfig: NextConfig = {
     "/coach/o/[orgId]/programmes/[programId]/pdf/*": ["./src/features/programs/pdf/fonts/*"],
   },
   experimental: {
-    // Photos de profil jusqu'à 2 Mo (D-28), documents jusqu'à 10 Mo (D-60) : 1 Mo par défaut pour une
-    // action serveur, plus la marge du formulaire. La taille réelle est revérifiée dans l'action.
-    serverActions: { bodySizeLimit: "11mb" },
+    // Photos de profil jusqu'à 2 Mo (D-28), documents jusqu'à 4 Mo (D-60, revue du 13/11/2026 : la
+    // limite d'envoi de Vercel est 4,5 Mo) : 1 Mo par défaut pour une action serveur, plus la marge du
+    // formulaire. La taille réelle est revérifiée dans l'action.
+    serverActions: { bodySizeLimit: "5mb" },
   },
   turbopack: {
     rules: {

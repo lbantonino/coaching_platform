@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { FEATURES } from "../../src/config/features";
 import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Disponibilités (P2-02 partie 3), puis les blessures et points d'attention avec l'accord du sportif
@@ -87,6 +88,7 @@ test("le sportif donne son accord depuis son espace, voit ce que le coach note, 
 }, testInfo) => {
   // Compte de démo partagé : un seul navigateur à la fois, pour ne pas se marcher dessus.
   test.skip(testInfo.project.name !== "ordinateur", "Compte de démo partagé entre les profils");
+  test.skip(!FEATURES.athleteSpace, "MVP espace coach seul (D-167) : espace sportif masqué.");
 
   await login(page, "thomas.peeters@example.test");
   await expect(page).toHaveURL(/\/app$/);

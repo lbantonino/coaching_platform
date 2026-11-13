@@ -24,6 +24,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { FEATURES } from "@/config/features";
+
 import { ADMIN_MODULES, ATHLETE_MODULES, COACH_MODULES, type ModuleInfo } from "./modules";
 
 // Menus des trois espaces (prompt Claude Design §5.2 et §5.3), dans l'ordre des prototypes.
@@ -91,9 +93,10 @@ export function coachNav(orgBase: string | null): { main: NavEntry[]; secondary:
   // D-38 : Assistant IA, puis Messages juste en dessous (demande d'Antonino du 24/10), Tâches,
   // Documents, Notifications ; Paramètres passe dans la roue dentée en bas du menu (avec Thème,
   // Compte, Se déconnecter).
+  // MVP espace coach seul (D-167) : pas de Messages tant que l'espace sportif n'existe pas.
   const secondary: NavEntry[] = [
     moduleEntry("assistant", Sparkles),
-    moduleEntry("messages", MessageSquare),
+    ...(FEATURES.messages ? [moduleEntry("messages", MessageSquare)] : []),
     moduleEntry("taches", ListChecks),
     moduleEntry("documents", Folder),
     moduleEntry("notifications", Bell),

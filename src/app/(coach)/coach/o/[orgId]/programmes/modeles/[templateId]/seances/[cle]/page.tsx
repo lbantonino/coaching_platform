@@ -10,6 +10,7 @@ import { listLibraryChoices } from "@/features/programs/library-choices";
 import { getProgramTemplate } from "@/features/programs/templates";
 
 import { EditorProvider } from "../../../../_editor/editor-provider";
+import { SafeBack } from "../../../../_session/safe-leave";
 import { programHref } from "../../../../_session/links";
 import {
   SessionEditor,
@@ -69,7 +70,7 @@ async function TemplateSession({
     athlete: { firstName: nobody, vmaKmh: null, hrMax: null },
     hyrox:
       found.session.content.discipline === "hyrox"
-        ? { firstName: nobody, division: null, sex: null }
+        ? { firstName: nobody, division: null, sex: null, inTemplate: true }
         : null,
     strength: isStrength ? { athlete: { firstName: nobody, maxes: {} }, library } : null,
     returnTo: null,
@@ -85,13 +86,15 @@ async function TemplateSession({
       initialPlan={template.plan}
       initialRevision={template.version}
     >
-      <PageHeader
-        title={`Séance ${meta.position}`}
-        back={{ href: back, label: template.title }}
-        visibleTitle={false}
-        phoneBack={false}
-        actions={<SessionHeaderActions href={back} />}
-      />
+      <SafeBack>
+        <PageHeader
+          title={`Séance ${meta.position}`}
+          back={{ href: back, label: template.title }}
+          visibleTitle={false}
+          phoneBack={false}
+          actions={<SessionHeaderActions href={back} />}
+        />
+      </SafeBack>
       <PageBody>
         <SessionEditor meta={meta} />
       </PageBody>

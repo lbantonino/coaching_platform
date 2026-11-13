@@ -19,11 +19,14 @@ export function PublishBanner({
   firstName,
   pending,
   editorHref,
+  returnTo,
 }: {
   organizationId: string;
   firstName: string;
   pending: PendingPublication;
   editorHref: string;
+  // La fiche (onglet) où revenir depuis l'éditeur (« Voir » d'un avertissement, B15).
+  returnTo: string;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -47,7 +50,8 @@ export function PublishBanner({
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5 rounded-[14px] bg-violet/7 px-4 py-3">
         <p className="text-[13.5px] leading-[1.45] text-text-2">
           <strong className="font-semibold text-text">Modifications non publiées.</strong>{" "}
-          {firstName} voit encore la version {pending.currentVersion}.
+          {/* MVP coach seul (D-167) : pas d'espace sportif, c'est la fiche et les PDF qui suivent. */}
+          La fiche de {firstName} et les PDF montrent encore la version {pending.currentVersion}.
         </p>
         <button
           type="button"
@@ -67,12 +71,13 @@ export function PublishBanner({
         version={next}
         weeks={pending.weeks}
         sessions={pending.sessions}
-        firstName={firstName}
         issues={pending.issues}
         pending={busy}
         error={error}
         onConfirm={publish}
-        onSee={(weekIndex) => router.push(`${editorHref}?semaine=${weekIndex}`)}
+        onSee={(weekIndex) =>
+          router.push(`${editorHref}?semaine=${weekIndex}&retour=${encodeURIComponent(returnTo)}`)
+        }
       />
     </>
   );

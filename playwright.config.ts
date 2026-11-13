@@ -24,9 +24,17 @@ export default defineConfig({
     { name: "ordinateur", use: { ...devices["Desktop Chrome"] } },
     { name: "telephone", use: { ...devices["Pixel 7"] } },
   ],
-  // Fin de suite : TVA de l'organisation A remise à 0 % (les tests TVA la règlent à 21 %).
+  // Fin de suite : les données créées par les tests sont retirées de la base locale (13/11/2026).
+  globalTeardown: "./tests/e2e/global-teardown.ts",
   webServer: {
     command: `npm run build && npx next start -p ${PORT}`,
+    // Assistant IA : un FAUX Claude scripté (aucun appel payant ; jamais actif sur Vercel).
+    env: {
+      ...(process.env as Record<string, string>),
+      ASSISTANT_FAKE_SCRIPT: "tests/e2e/fixtures/assistant-script.json",
+      // Jamais d'appel payant pendant les tests, même avec une clé dans .env.local (D-173).
+      ANTHROPIC_API_KEY: "",
+    },
     url: `http://localhost:${PORT}/login`,
     reuseExistingServer: false,
     timeout: 180_000,

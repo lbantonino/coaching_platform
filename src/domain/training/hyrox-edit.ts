@@ -7,7 +7,7 @@ import {
   type AthleteSex,
 } from "./hyrox-official";
 import { formatPace } from "./pace";
-import { localId } from "./plan-edit";
+import { localId } from "./local-id";
 import type { HyroxDivision } from "./program-plan";
 import {
   HYROX_STATIONS,

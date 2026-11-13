@@ -209,6 +209,28 @@ test("TC-11 : séries en saisie rapide, et % du max sans max connu", async ({ pa
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
+
+  // D-166 (demande d'Antonino du 13/11) : un exercice tenu se compte en secondes. « Mesure :
+  // Secondes », puis « 3 séries de 45 s » ; le % du max disparaît (un temps se met en kg).
+  if (phone) await page.getByRole("button", { name: /^Soulevé de terre barre/ }).click();
+  const measure = page
+    .getByRole("group", { name: "Mesure de l'exercice" })
+    .filter({ visible: true });
+  if (phone) await measure.getByRole("radio", { name: "Secondes" }).dispatchEvent("click");
+  else await measure.getByText("Secondes", { exact: true }).click();
+  await expect(
+    page.getByRole("group", { name: "Charge de l'exercice" }).filter({ visible: true }),
+  ).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Saisie rapide" }).fill("3 séries de 45 s");
+  await page.getByRole("button", { name: "Remplir" }).click();
+  await expect(page.getByRole("textbox", { name: "Secondes de la série 3" })).toHaveValue("45");
+  if (phone) await page.getByRole("button", { name: "Valider l'exercice" }).click();
+  await expect(
+    page
+      .getByText(/^3 × 45 s/)
+      .filter({ visible: true })
+      .first(),
+  ).toBeVisible();
 });
 
 // D-164 (demande d'Antonino du 11/11) : plus de 7 séances par semaine. « 8+ » ouvre un compteur de 8 à
@@ -253,7 +275,8 @@ test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, pub
   // Onglet Programme vide : « Créer un programme » ouvre l'assistant dans la fiche (D-163), le
   // sportif fixé : ni liste ni recherche de sportifs, et le retour ramène chez lui.
   await page.goto(`${fiche}?onglet=programme`);
-  await expect(page.getByRole("heading", { name: /^Aucun programme pour/ })).toBeVisible();
+  // Revue MVP du 13/11 (B2) : « en cours » (un programme terminé laisse aussi cet état vide).
+  await expect(page.getByRole("heading", { name: /^Aucun programme en cours pour/ })).toBeVisible();
   await page.getByRole("link", { name: "Créer un programme" }).click();
   await expect(page).toHaveURL(/\/sportifs\/[0-9a-f-]{36}\/nouveau-programme$/);
   await expect(

@@ -27,6 +27,8 @@ export type TemplateCard = {
   // (« Fourni par Coory ») ou l'usage d'un de Mes modèles (« Utilisé 3 fois »).
   footer: string;
   weeksCount: number | null;
+  // Séances par semaine d'un modèle de programme (l'assistant reprend ce rythme, C15) ; null sinon.
+  sessionsPerWeek: number | null;
   version: number;
   updatedAt: string;
 };
@@ -112,6 +114,7 @@ export async function listTemplates(
               ? "Fourni par Coory"
               : usedLabel(useCount.get(row.id) ?? 0),
         weeksCount: row.weeks_count,
+        sessionsPerWeek: row.sessions_per_week,
         version: row.version,
         updatedAt: row.updated_at,
       };
@@ -129,6 +132,7 @@ export async function listTemplates(
         // L'usage d'un modèle de séance n'est pas encore compté : on dit d'où il vient.
         footer: source === "coory" ? "Fourni par Coory" : "Créé par toi",
         weeksCount: null,
+        sessionsPerWeek: null,
         version: row.version,
         updatedAt: row.updated_at,
       };
@@ -227,6 +231,8 @@ export type SessionTemplateChoice = {
   discipline: Discipline;
   detail: string;
   body: SessionBody;
+  // Version copiée (BR-10 : la séance garde son modèle d'origine, revue MVP du 13/11, C23).
+  version: number;
 };
 
 // « Depuis un modèle » (éditeur de programme) : les modèles de séance lisibles, avec leur contenu
@@ -238,7 +244,7 @@ export async function listSessionTemplateChoices(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("session_templates")
-    .select("id, organization_id, title, discipline, updated_at, content_json")
+    .select("id, organization_id, title, discipline, version, updated_at, content_json")
     .or(`organization_id.is.null,organization_id.eq.${organizationId}`)
     .is("archived_at", null);
   if (error) throw new Error("Lecture des modèles impossible.");
@@ -254,6 +260,7 @@ export async function listSessionTemplateChoices(
           discipline: DISCIPLINE.parse(row.discipline),
           detail: sessionHeadline(body.data),
           body: body.data,
+          version: row.version,
           updatedAt: row.updated_at,
         },
       ];
@@ -271,5 +278,6 @@ export async function listSessionTemplateChoices(
       discipline: choice.discipline,
       detail: choice.detail,
       body: choice.body,
+      version: choice.version,
     }));
 }

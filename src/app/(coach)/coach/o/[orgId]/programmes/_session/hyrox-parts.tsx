@@ -51,7 +51,25 @@ import { BASE, DropLine, Handle, SELECTED, field, label } from "./running-parts"
 // CooryEditeurPanneau). Blocs avec un format ; lignes Run (barre Running), Station (vignette),
 // Ergomètre en min/500 m, Transition (barre grise). Aucune barre de séance ni courbe.
 
-export type HyroxAthlete = { firstName: string; division: HyroxDivision | null; sex: AthleteSex };
+export type HyroxAthlete = {
+  firstName: string;
+  division: HyroxDivision | null;
+  sex: AthleteSex;
+  // Séance d'un modèle : pas de sportif, la catégorie viendra du programme qui l'utilisera.
+  inTemplate?: boolean;
+};
+
+// Où se choisit la catégorie (revue MVP du 13/11, C4 : « Modifier l'objectif » de l'éditeur).
+const divisionHint = (athlete: HyroxAthlete) =>
+  athlete.inTemplate
+    ? "la catégorie du sportif s'appliquera quand le modèle servira à un programme"
+    : `choisis la catégorie de ${athlete.firstName} avec « Modifier l'objectif » (menu « ··· » de l'éditeur du programme)`;
+
+// Repos entre les tours : 30 min au plus (le schéma refuse au-delà, revue MVP du 13/11, C22).
+const parseRest = (text: string) => {
+  const value = parseClock(text);
+  return value !== null && value <= 1800 ? value : null;
+};
 
 const RUN_TINT = "bg-[color-mix(in_srgb,var(--run-fill)_9%,var(--surface))]";
 const HYROX_TINT = "bg-[color-mix(in_srgb,var(--hyrox-fill)_9%,var(--surface))]";
@@ -537,7 +555,7 @@ export function HyroxBlockPanel({
           <p className="text-[12.5px] leading-[1.45] text-muted">
             {division
               ? `Officielles = catégorie de ${athlete.firstName} (${division}).`
-              : `Officielles : choisis la catégorie de ${athlete.firstName} dans l'objectif du programme.`}
+              : `Officielles : ${divisionHint(athlete)}.`}
           </p>
         </div>
       ) : null}
@@ -560,7 +578,7 @@ export function HyroxBlockPanel({
             unit="min"
             initial={clockOf(block.restSec)}
             placeholder="1:00"
-            parse={parseClock}
+            parse={parseRest}
             kind="clock"
             onValue={(value) => onChange({ ...block, restSec: value })}
           />
@@ -942,7 +960,7 @@ export function SimulationSheet({
             <p className="text-[12.5px] leading-[1.45] text-muted">
               {division
                 ? `Officielles = catégorie de ${athlete.firstName} (${division}). Un seul choix remplit toutes les stations ; corrige ensuite chaque ligne si besoin.`
-                : `Choisis la catégorie de ${athlete.firstName} dans l'objectif du programme pour avoir les charges officielles.`}
+                : `Charges officielles : ${divisionHint(athlete)}.`}
             </p>
           </div>
           <div className="flex flex-col overflow-hidden rounded-[14px] inset-ring inset-ring-line">

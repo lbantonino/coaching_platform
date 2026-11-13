@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/toast";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import { hyroxDivisionLabels } from "@/domain/training/hyrox-official";
 import { HYROX_DIVISIONS, type HyroxDivision } from "@/domain/training/program-plan";
+import { firstFreeMonday, periodsOverlap } from "@/domain/training/program-status";
 import {
   createProgram,
   createProgramTemplate,
@@ -83,6 +84,15 @@ function mainDiscipline(value: Discipline | null | undefined): MainDiscipline | 
   return value === "running" || value === "strength" || value === "hyrox" ? value : null;
 }
 
+// Début proposé pour ce sportif (revue MVP du 13/11, B8) : le prochain lundi, ou le lundi qui suit son
+// dernier programme publié, pour ne pas le chevaucher.
+function freeStart(athlete: WizardAthlete | undefined, fallback: string): string {
+  return firstFreeMonday(
+    (athlete?.programs ?? []).filter((program) => program.status === "published"),
+    fallback,
+  );
+}
+
 export function ProgramWizard({
   organizationId,
   base,
@@ -130,11 +140,19 @@ export function ProgramWizard({
   );
   const [aim, setAim] = useState(aimFor(initialAthlete));
   const [note, setNote] = useState("");
-  const [startDate, setStartDate] = useState(defaultStartDate);
+  const [startDate, setStartDate] = useState(() => freeStart(initialAthlete, defaultStartDate));
+  // La date a été choisie à la main : changer de sportif ne la remplace plus.
+  const [dateTouched, setDateTouched] = useState(false);
   const [snapped, setSnapped] = useState(false);
   const [weeksCount, setWeeksCount] = useState(initialTemplate?.weeksCount ?? 12);
+  // Parti d'un modèle (« Utiliser »), son rythme (C15) ; sinon celui du sportif.
   const [perWeek, setPerWeek] = useState(
-    String(Math.min(Math.max(initialAthlete?.sessionsPerWeek ?? 4, 1), MAX_PER_WEEK)),
+    String(
+      Math.min(
+        Math.max(initialTemplate?.sessionsPerWeek ?? initialAthlete?.sessionsPerWeek ?? 4, 1),
+        MAX_PER_WEEK,
+      ),
+    ),
   );
   const [phases, setPhases] = useState<PhaseDraft[]>([]);
   const [editedPhase, setEditedPhase] = useState<number | null>(null);
@@ -166,6 +184,7 @@ export function ProgramWizard({
     }
     if (!discipline) setDiscipline(mainDiscipline(next.programType));
     setSourceProgramId(next.programs[0]?.id ?? "");
+    if (!dateTouched) setStartDate(freeStart(next, defaultStartDate));
   };
 
   // Les phases ne dépassent jamais le programme.
@@ -206,6 +225,11 @@ export function ProgramWizard({
   };
 
   const endDate = addDays(startDate, weeksCount * 7 - 1);
+  // C3 : des dates qui chevauchent un programme publié du sportif ne pourront pas être publiées.
+  const overlapping = (athlete?.programs ?? []).filter(
+    (program) =>
+      program.status === "published" && periodsOverlap({ startDate, weeksCount }, program),
+  );
   const raceRelation = useMemo(() => {
     if (!raceOn || !raceDate) return null;
     const weeks = Math.round((Date.parse(endDate) - Date.parse(raceDate)) / (7 * 86_400_000));
@@ -299,14 +323,14 @@ export function ProgramWizard({
         athleteId,
         title: title.trim(),
         discipline,
-        ...(raceOn || note.trim()
+        ...(raceOn || note.trim() || (discipline === "hyrox" && division)
           ? {
               goal: {
                 ...(raceOn && raceName.trim() ? { raceName: raceName.trim() } : {}),
                 ...(raceOn && raceDate ? { raceDate } : {}),
-                ...(raceOn && discipline === "hyrox" && division
-                  ? { hyroxDivision: division }
-                  : {}),
+                // C4 : la catégorie compte dès que le programme est Hyrox (charges officielles),
+                // course visée ou non.
+                ...(discipline === "hyrox" && division ? { hyroxDivision: division } : {}),
                 ...(note.trim() ? { note: note.trim() } : {}),
               },
             }
@@ -536,25 +560,26 @@ export function ProgramWizard({
                               className={`${inputClass} h-11`}
                             />
                           </div>
-                          {discipline === "hyrox" ? (
-                            <Field label="Catégorie" htmlFor="wizard-division">
-                              <SelectField
-                                id="wizard-division"
-                                value={division}
-                                onChange={(event) =>
-                                  setDivision(event.target.value as HyroxDivision | "")
-                                }
-                              >
-                                <option value="">Choisir la catégorie</option>
-                                {HYROX_DIVISIONS.map((value) => (
-                                  <option key={value} value={value}>
-                                    {hyroxDivisionLabels[value]}
-                                  </option>
-                                ))}
-                              </SelectField>
-                            </Field>
-                          ) : null}
                         </>
+                      ) : null}
+                      {/* C4 : la catégorie Hyrox, même sans course visée (charges officielles). */}
+                      {discipline === "hyrox" ? (
+                        <Field label="Catégorie Hyrox" htmlFor="wizard-division">
+                          <SelectField
+                            id="wizard-division"
+                            value={division}
+                            onChange={(event) =>
+                              setDivision(event.target.value as HyroxDivision | "")
+                            }
+                          >
+                            <option value="">Choisir la catégorie</option>
+                            {HYROX_DIVISIONS.map((value) => (
+                              <option key={value} value={value}>
+                                {hyroxDivisionLabels[value]}
+                              </option>
+                            ))}
+                          </SelectField>
+                        </Field>
                       ) : null}
                     </div>
                   )}
@@ -622,6 +647,7 @@ export function ProgramWizard({
                             const monday = mondayOf(event.target.value);
                             setSnapped(monday !== event.target.value);
                             setStartDate(monday);
+                            setDateTouched(true);
                           }}
                           className={inputClass}
                         />
@@ -667,6 +693,17 @@ export function ProgramWizard({
                       {snapped ? " · les semaines commencent le lundi" : ""}
                     </p>
                   )}
+                  {!templateMode && overlapping.length > 0 ? (
+                    <p
+                      role="status"
+                      className="-mt-1 rounded-[12px] bg-warn-soft px-3 py-2.5 text-[12.5px] leading-[1.45] text-text-2"
+                    >
+                      Ces dates chevauchent{" "}
+                      {overlapping.map((program) => `« ${program.title} »`).join(", ")}, déjà
+                      publié. Le brouillon se crée, mais il ne pourra être publié qu&apos;après un
+                      changement de dates (menu « ··· » de l&apos;éditeur, « Modifier les dates »).
+                    </p>
+                  ) : null}
 
                   <Field label="Séances par semaine">
                     <ChipGroup
@@ -907,7 +944,14 @@ export function ProgramWizard({
                     <SourceSelect
                       label="Modèle"
                       value={templateId}
-                      onChange={setTemplateId}
+                      onChange={(id) => {
+                        setTemplateId(id);
+                        // C15 : le programme reprend le rythme du modèle.
+                        const chosen = data.templates.find((template) => template.id === id);
+                        if (chosen?.sessionsPerWeek) {
+                          setPerWeek(String(Math.min(chosen.sessionsPerWeek, MAX_PER_WEEK)));
+                        }
+                      }}
                       options={[...data.templates]
                         .sort(
                           (a, b) =>
@@ -923,6 +967,12 @@ export function ProgramWizard({
                     />
                   ) : null}
 
+                  {start === "copy" ? (
+                    <p className="text-[12.5px] leading-[1.45] text-muted">
+                      La copie garde le rythme du programme copié (séances par semaine), sans ses
+                      rendez-vous avec le coach.
+                    </p>
+                  ) : null}
                   <StartPreviewGrid
                     preview={preview}
                     weeksCount={weeksCount}

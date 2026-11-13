@@ -1,5 +1,6 @@
 import { Clock, Link2Off } from "lucide-react";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 
@@ -16,6 +17,7 @@ import { SkeletonLines } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/features/auth/session";
 import { getPublicInvitation } from "@/features/invitations/queries";
 import { invitationTokenSchema } from "@/features/invitations/token";
+import { FEATURES } from "@/config/features";
 import { formatDay } from "@/lib/format";
 
 import { AcceptForm } from "./accept-form";
@@ -29,6 +31,8 @@ export const metadata: Metadata = {
 // Présentation : prompt Claude Design §7.1. La carte montre l'organisation du coach (le nom du coach
 // lui-même n'est pas transmis par la fonction d'invitation).
 export default function InvitationPage({ params }: PageProps<"/invitation/[token]">) {
+  // MVP espace coach seul (D-167) : page masquée, le code reste.
+  if (!FEATURES.invitations) notFound();
   return (
     <div className="flex flex-col gap-[22px]">
       <Suspense fallback={<SkeletonLines label="Vérification de l'invitation…" />}>

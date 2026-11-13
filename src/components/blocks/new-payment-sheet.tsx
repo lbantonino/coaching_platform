@@ -47,7 +47,8 @@ import type { PaymentFormState, PaymentFormValues } from "@/features/billing/pay
 type Athlete = { id: string; name: string };
 type Action = (previous: PaymentFormState, formData: FormData) => Promise<PaymentFormState>;
 
-const OpenContext = createContext<(() => void) | null>(null);
+// `prefill` : « Modifier » une carte de l'Assistant IA, le paiement proposé pré-rempli.
+const OpenContext = createContext<((prefill?: Partial<PaymentFormValues>) => void) | null>(null);
 
 export function useOpenNewPayment() {
   return useContext(OpenContext);
@@ -67,11 +68,16 @@ export function NewPaymentSheet({
 }) {
   const [open, setOpen] = useState(false);
   const [athletes, setAthletes] = useState<Athlete[] | null>(null);
-  const openSheet = useCallback(() => {
-    setAthletes(null);
-    setOpen(true);
-    loadAthletes().then(setAthletes, () => setAthletes([]));
-  }, [loadAthletes]);
+  const [prefill, setPrefill] = useState<Partial<PaymentFormValues>>({});
+  const openSheet = useCallback(
+    (wanted?: Partial<PaymentFormValues>) => {
+      setPrefill(wanted ?? {});
+      setAthletes(null);
+      setOpen(true);
+      loadAthletes().then(setAthletes, () => setAthletes([]));
+    },
+    [loadAthletes],
+  );
 
   return (
     <OpenContext.Provider value={openSheet}>
@@ -93,6 +99,7 @@ export function NewPaymentSheet({
           <PaymentForm
             action={action}
             athletes={athletes}
+            prefill={prefill}
             onSaved={() => setOpen(false)}
             onCancel={() => setOpen(false)}
           />
@@ -107,11 +114,13 @@ const initial: PaymentFormState = { error: null, attempt: 0, values: null, saved
 function PaymentForm({
   action,
   athletes,
+  prefill,
   onSaved,
   onCancel,
 }: {
   action: Action;
   athletes: Athlete[];
+  prefill: Partial<PaymentFormValues>;
   onSaved: () => void;
   onCancel: () => void;
 }) {
@@ -142,6 +151,7 @@ function PaymentForm({
           package: false,
           coversFrom: "",
           coversTo: "",
+          ...prefill,
         }
       }
       athletes={athletes}

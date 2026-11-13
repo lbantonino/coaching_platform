@@ -1,7 +1,9 @@
 import { ArrowUpRight, CalendarDays, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
+import { NotAvailableButton } from "@/components/blocks/not-available";
 import { Avatar } from "@/components/ui/avatar";
+import { FEATURES } from "@/config/features";
 import { disciplineLabels } from "@/domain/training/discipline";
 import type { WeekBlock } from "@/features/agenda/week";
 
@@ -202,7 +204,17 @@ export function NextSessionCard({
                 />
               </Link>
             ) : null}
-            {messageHref ? (
+            {messageHref && !FEATURES.messages ? (
+              // MVP espace coach seul (D-167) : « Écrire » ouvre la fenêtre « pas encore disponible ».
+              <NotAvailableButton label={`Écrire à ${block.title}`} className={iconLink}>
+                <MessageCircle
+                  aria-hidden
+                  size={14}
+                  strokeWidth={1.8}
+                  className="size-[18px] lg:size-3.5"
+                />
+              </NotAvailableButton>
+            ) : messageHref ? (
               <Link
                 href={messageHref}
                 aria-label={`Écrire à ${block.title}`}

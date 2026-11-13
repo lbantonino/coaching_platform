@@ -3,6 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { FEATURES } from "@/config/features";
 import { createClient } from "@/lib/supabase/server";
 
 import {
@@ -93,13 +94,23 @@ async function getSignupKind(
 
 // Espace d'arrivée après connexion, selon les rôles réellement détenus. Un compte tout juste créé
 // (inscription ou Google / Facebook / Apple) sans rôle termine son inscription sur « Bienvenue ».
+// MVP espace coach seul (D-167) : un compte sportif n'a pas encore d'espace, il arrive sur « Accès
+// refusé ».
 export async function getHomePath(userId: string, client?: SupabaseServerClient): Promise<string> {
   if ((await getCoachMemberships(userId, client)).length > 0) return "/coach";
-  if ((await getAthleteLinks(userId, client)).length > 0) return "/app";
+  const athleteHome = FEATURES.athleteSpace ? "/app" : ACCESS_DENIED_PATH;
+  if ((await getAthleteLinks(userId, client)).length > 0) return athleteHome;
   if (await isPlatformAdmin(client)) return "/admin";
   const kind = await getSignupKind(userId, client);
-  if (kind === "athlete") return "/app";
+  if (kind === "athlete") return athleteHome;
   return kind === "coach" ? ACCESS_DENIED_PATH : "/bienvenue";
+}
+
+// Compte sportif (fiche liée ou inscription « sportif ») : pendant le MVP coach seul (D-167), la page
+// « Accès refusé » lui dit que son espace n'existe pas encore.
+export async function isAthleteAccount(userId: string): Promise<boolean> {
+  if ((await getAthleteLinks(userId)).length > 0) return true;
+  return (await getSignupKind(userId)) === "athlete";
 }
 
 // Espace sportif : fiche liée par un coach, ou sportif inscrit seul qui attend l'invitation d'un coach.

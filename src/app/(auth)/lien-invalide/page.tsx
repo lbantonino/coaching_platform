@@ -10,6 +10,7 @@ import {
   InfoCard,
   InfoRow,
 } from "@/components/layout/entry-ui";
+import { FEATURES } from "@/config/features";
 import { INVITATION_VALIDITY_DAYS } from "@/features/invitations/token";
 
 export const metadata: Metadata = {
@@ -24,16 +25,21 @@ export default function InvalidLinkPage() {
     <div className="flex flex-col gap-[22px]">
       <EntryIcon icon={Link2Off} />
       <EntryTitle
-        sub={`Il a expiré, a déjà été utilisé, ou a été ouvert dans un autre navigateur que celui de la demande. Les liens reçus par e-mail sont valables 1 h et les invitations ${INVITATION_VALIDITY_DAYS} jours.`}
+        sub={`Il a expiré, a déjà été utilisé, ou a été ouvert dans un autre navigateur que celui de la demande. Les liens reçus par e-mail sont valables 1 h${
+          FEATURES.invitations ? ` et les invitations ${INVITATION_VALIDITY_DAYS} jours` : ""
+        }.`}
       >
         Ce lien n&apos;est plus valide
       </EntryTitle>
-      <InfoCard>
-        <InfoRow icon={Info}>
-          Invitation d&apos;un coach ? Demande-lui de t&apos;en envoyer une nouvelle depuis ta
-          fiche.
-        </InfoRow>
-      </InfoCard>
+      {/* MVP espace coach seul (D-167) : pas d'invitation, pas de conseil à ce sujet. */}
+      {FEATURES.invitations ? (
+        <InfoCard>
+          <InfoRow icon={Info}>
+            Invitation d&apos;un coach ? Demande-lui de t&apos;en envoyer une nouvelle depuis ta
+            fiche.
+          </InfoRow>
+        </InfoCard>
+      ) : null}
       <Link href="/mot-de-passe-oublie" className={entryPrimaryClass}>
         Demander un nouveau lien
       </Link>

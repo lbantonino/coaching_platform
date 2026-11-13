@@ -112,18 +112,30 @@ export const runningContentSchema = z.object({
 export const strengthSetSchema = z
   .object({
     type: z.enum(["warmup", "normal"]),
-    // « 8 » ou « 8 à 10 ».
-    repsMin: z.number().int().min(1).max(100),
+    // Une série se compte en répétitions (« 8 » ou « 8 à 10 »)…
+    repsMin: z.number().int().min(1).max(100).optional(),
     repsMax: z.number().int().min(1).max(100).optional(),
+    // …ou en secondes tenues (D-166 : planche, gainage, équilibre, chaise) : « 30 s » ou « 30 à 45 s ».
+    seconds: z.number().int().min(5).max(600).optional(),
+    secondsMax: z.number().int().min(5).max(600).optional(),
     // En kg : la charge. En % du max : le %, et les kg calculés au moment du calcul (figés à la
     // publication), absents si le max du sportif n'est pas connu.
     kg: z.number().min(0).max(1000).optional(),
     pct: z.number().min(1).max(150).optional(),
     rir: z.number().int().min(0).max(10).optional(),
   })
-  .refine((set) => set.repsMax === undefined || set.repsMax >= set.repsMin, {
-    message: "La plage de répétitions va du plus petit au plus grand.",
-  });
+  .refine((set) => (set.repsMin === undefined) !== (set.seconds === undefined), {
+    message: "Une série se compte en répétitions ou en secondes.",
+  })
+  .refine(
+    (set) => set.repsMax === undefined || (set.repsMin !== undefined && set.repsMax >= set.repsMin),
+    { message: "La plage de répétitions va du plus petit au plus grand." },
+  )
+  .refine(
+    (set) =>
+      set.secondsMax === undefined || (set.seconds !== undefined && set.secondsMax >= set.seconds),
+    { message: "La plage de secondes va du plus petit au plus grand." },
+  );
 
 export const strengthExerciseSchema = z
   .object({
@@ -145,6 +157,13 @@ export const strengthExerciseSchema = z
         ? exercise.sets.every((set) => set.pct === undefined)
         : exercise.sets.every((set) => set.pct !== undefined || set.type === "warmup"),
     "En kg, pas de % ; en % du max, chaque série normale a son %.",
+  )
+  .refine(
+    (exercise) =>
+      exercise.sets.every(
+        (set) => (set.seconds !== undefined) === (exercise.sets[0]?.seconds !== undefined),
+      ),
+    "Toutes les séries d'un exercice se comptent de la même façon (répétitions ou secondes).",
   );
 
 // Superset : exercices reliés, repos en fin de tour.
@@ -367,6 +386,23 @@ export type RunMeasure = z.infer<typeof runMeasureSchema>;
 export type RunningContent = z.infer<typeof runningContentSchema>;
 export type StrengthSet = z.infer<typeof strengthSetSchema>;
 export type StrengthExercise = z.infer<typeof strengthExerciseSchema>;
+
+// Exercice tenu (D-166) : ses séries se comptent en secondes.
+export const isTimedExercise = (exercise: StrengthExercise) =>
+  exercise.sets.some((set) => set.seconds !== undefined);
+
+// Le volume d'une série : « 8 », « 8-10 » ; tenue : « 30 s », « 30-45 s » (séparateur au choix).
+export function setAmountText(set: StrengthSet, dash = "-"): string {
+  if (set.seconds !== undefined) {
+    return set.secondsMax !== undefined && set.secondsMax !== set.seconds
+      ? `${set.seconds}${dash}${set.secondsMax} s`
+      : `${set.seconds} s`;
+  }
+  const reps = set.repsMin ?? 0;
+  return set.repsMax !== undefined && set.repsMax !== reps
+    ? `${reps}${dash}${set.repsMax}`
+    : `${reps}`;
+}
 export type StrengthContent = z.infer<typeof strengthContentSchema>;
 export type HyroxLine = z.infer<typeof hyroxLineSchema>;
 export type HyroxBlock = z.infer<typeof hyroxBlockSchema>;

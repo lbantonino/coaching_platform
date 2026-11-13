@@ -219,6 +219,89 @@ export function PhoneProgramFilters({
   );
 }
 
+// Téléphone, onglet Modèles (revue MVP du 13/11, C17) : le type et la discipline, dans le même bouton
+// « Filtres » que l'onglet Programmes (feuille du bas).
+export function PhoneTemplateFilters({
+  type,
+  typeOptions,
+  discipline,
+  disciplineOptions,
+}: {
+  type: string;
+  typeOptions: FilterOption[];
+  discipline: string;
+  disciplineOptions: FilterOption[];
+}) {
+  const update = useQueryUpdate();
+  const [open, setOpen] = useState(false);
+  const active = (type ? 1 : 0) + (discipline ? 1 : 0);
+  return (
+    <div className="flex lg:hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[12px] bg-surface px-3.5 text-[14px] font-medium text-text inset-ring inset-ring-field-ring transition-[scale] duration-150 active:scale-[0.98]"
+      >
+        <SlidersHorizontal aria-hidden size={16} strokeWidth={2} />
+        Filtres
+        {active > 0 ? (
+          <span className="grid size-5 place-items-center rounded-full bg-cta text-[11.5px] font-semibold text-on-cta">
+            {active}
+          </span>
+        ) : null}
+      </button>
+      <Sheet
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Filtres"
+        footer={
+          <DialogFooter
+            onCancel={() => setOpen(false)}
+            primary={
+              <button
+                type="button"
+                className={dlgPrimaryButtonClass}
+                onClick={() => setOpen(false)}
+              >
+                Voir les modèles
+              </button>
+            }
+          />
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <label className="flex flex-col gap-2 text-[13.5px] font-semibold text-text">
+            Type de modèle
+            <SelectField
+              value={type}
+              onChange={(event) => update({ type: event.target.value || null })}
+            >
+              {typeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectField>
+          </label>
+          <label className="flex flex-col gap-2 text-[13.5px] font-semibold text-text">
+            Discipline
+            <SelectField
+              value={discipline}
+              onChange={(event) => update({ discipline: event.target.value || null })}
+            >
+              {disciplineOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectField>
+          </label>
+        </div>
+      </Sheet>
+    </div>
+  );
+}
+
 // Téléphone, onglet Modèles : pastilles de source (Tous, Coory, Mes modèles) avec leur nombre.
 export function PhoneSourceChips({
   value,

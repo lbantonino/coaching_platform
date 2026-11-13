@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react";
 
 import { AccordionChevron, accordionClass, accordionSummaryClass } from "@/components/ui/accordion";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
+import { FEATURES } from "@/config/features";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import { withdrawHealthConsentByCoach } from "@/features/consents/actions";
 import { listConsentEvents } from "@/features/consents/queries";
@@ -91,9 +92,12 @@ export async function HealthNotesBlock({
           <p className="text-[13.5px] leading-[1.5] text-pretty text-muted">
             Les blessures sont des données de santé : on ne les note qu&apos;avec l&apos;accord
             explicite du sportif.{" "}
-            {athlete.hasAccount
-              ? "Il peut le donner lui-même depuis son espace sportif, ou tu peux noter ici l'accord qu'il t'a donné."
-              : "Note ici l'accord qu'il t'a donné ; une fois son compte activé, il pourra aussi le gérer depuis son espace."}
+            {/* MVP espace coach seul (D-167) : pas d'espace sportif où donner l'accord soi-même. */}
+            {!FEATURES.athleteSpace
+              ? "Note ici l'accord qu'il t'a donné."
+              : athlete.hasAccount
+                ? "Il peut le donner lui-même depuis son espace sportif, ou tu peux noter ici l'accord qu'il t'a donné."
+                : "Note ici l'accord qu'il t'a donné ; une fois son compte activé, il pourra aussi le gérer depuis son espace."}
           </p>
           <HealthConsentForm organizationId={organizationId} athleteId={athlete.id} />
         </>

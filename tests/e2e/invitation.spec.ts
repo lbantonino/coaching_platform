@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
+import { FEATURES } from "../../src/config/features";
 import {
   fillAthleteName,
   goToCoachSection,
@@ -7,6 +8,13 @@ import {
   logoutAthlete,
   openAthleteTab,
 } from "./helpers";
+
+// MVP espace coach seul (D-167) : invitations et espace sportif masqués, ces tests attendent leur
+// réouverture.
+test.skip(
+  !FEATURES.invitations || !FEATURES.athleteSpace,
+  "MVP espace coach seul (D-167) : invitations masquées.",
+);
 
 // Parcours d'invitation (P1-05) : le coach invite, le sportif crée son accès dans un AUTRE navigateur.
 const DEMO_PASSWORD = "demo-coach-local";

@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { FEATURES } from "../../src/config/features";
 import { fillAthleteName, openAthleteTab } from "./helpers";
 
 // Notes du coach et historique (P2-04 étape 2).
@@ -55,6 +56,7 @@ test("le coach écrit une note libre, visible dans la vue d'ensemble et l'histor
 });
 
 test("l'espace du sportif n'affiche plus de message du coach", async ({ page }) => {
+  test.skip(!FEATURES.athleteSpace, "MVP espace coach seul (D-167) : espace sportif masqué.");
   // Le seed garde un message « visible par le sportif » pour Thomas Peeters (données dormantes depuis
   // le retrait de la carte, 04/11) : il ne doit plus apparaître.
   await login(page, "thomas.peeters@example.test");

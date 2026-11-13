@@ -14,7 +14,13 @@ import { listPrograms } from "@/features/programs/queries";
 import { listTemplates, type TemplateSource } from "@/features/programs/templates";
 
 import { ProgramCard, TemplateCard } from "./cards";
-import { ListSearch, PhoneProgramFilters, PhoneSourceChips, QuerySelect } from "./list-filters";
+import {
+  ListSearch,
+  PhoneProgramFilters,
+  PhoneSourceChips,
+  PhoneTemplateFilters,
+  QuerySelect,
+} from "./list-filters";
 
 export const metadata: Metadata = {
   title: "Programmes",
@@ -407,6 +413,20 @@ async function TemplatesTab({
           count: count(sourceSlugs[slug]),
         }))}
       />
+      {/* Téléphone (revue MVP du 13/11, C17) : les mêmes filtres et la recherche que l'ordinateur. */}
+      <div className="flex flex-col gap-3 lg:hidden">
+        <PhoneTemplateFilters
+          type={typeSlug === "tous" ? "" : typeSlug}
+          typeOptions={[
+            { value: "", label: "Programmes et séances" },
+            { value: "programmes", label: "Programmes" },
+            { value: "seances", label: "Séances" },
+          ]}
+          discipline={disciplineSlug === "toutes" ? "" : disciplineSlug}
+          disciplineOptions={disciplineOptions("Toutes les disciplines")}
+        />
+        <ListSearch initial={search} placeholder="Rechercher un modèle" />
+      </div>
 
       {shown.length === 0 ? (
         <NoResult href={`${base}?onglet=modeles`} label="Aucun modèle trouvé" />
@@ -417,11 +437,9 @@ async function TemplatesTab({
               key={`${template.kind}-${template.id}`}
               template={template}
               href={`${base}/modeles/${template.id}`}
-              useHref={
-                template.kind === "program"
-                  ? `${base}/nouveau?modele=${template.id}`
-                  : `${base}/modeles/${template.id}`
-              }
+              // Un modèle de séance n'a pas de « Utiliser » : il s'ajoute à une semaine depuis
+              // l'éditeur d'un programme (revue MVP du 13/11, C9 ; avant, le bouton rouvrait sa page).
+              useHref={template.kind === "program" ? `${base}/nouveau?modele=${template.id}` : null}
             />
           ))}
         </div>

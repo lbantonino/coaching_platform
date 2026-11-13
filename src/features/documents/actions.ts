@@ -6,6 +6,7 @@ import { z } from "zod";
 import {
   checkDocument,
   DOCUMENT_MAX_BYTES,
+  DOCUMENT_MAX_LABEL,
   isCategoryColor,
   nextCategoryColor,
   parseCategoryName,
@@ -71,7 +72,8 @@ export async function uploadDocument(
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return fail("Choisis un fichier.");
   // Refus avant lecture : on ne charge pas en mémoire un fichier déjà trop lourd.
-  if (file.size > DOCUMENT_MAX_BYTES) return fail("Fichier trop lourd : 10 Mo maximum.");
+  if (file.size > DOCUMENT_MAX_BYTES)
+    return fail(`Fichier trop lourd : ${DOCUMENT_MAX_LABEL} maximum.`);
   const parsed = parseDocumentForm(values);
   if (!parsed.ok) return fail(parsed.error);
   const bytes = new Uint8Array(await file.arrayBuffer());

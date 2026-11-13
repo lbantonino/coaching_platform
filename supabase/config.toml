@@ -69,7 +69,8 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# Les modèles Coory (supabase/content, source unique) d'abord, puis la graine de démonstration.
+sql_paths = ["./content/modeles_coory.sql", "./seed.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.
@@ -233,7 +234,8 @@ double_confirm_changes = true
 # Activé avec l'inscription libre (D-30) : pas d'espace tant que l'adresse n'est pas confirmée.
 enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
-secure_password_change = false
+# Activé (revue de sécurité du 13/11/2026) : à reporter dans le projet Supabase de production.
+secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
@@ -343,6 +345,7 @@ client_id = ""
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 redirect_uri = ""
 url = ""
+# Nécessaire pour Google en LOCAL seulement ; en production, laisser « Skip nonce checks » désactivé.
 skip_nonce_check = true
 email_optional = false
 

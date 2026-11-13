@@ -18,12 +18,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 
+import { NotAvailableDialog } from "@/components/blocks/not-available";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
 import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
 import { ActionMenu, Sheet } from "@/components/ui/overlay";
 import { SexMark } from "@/components/ui/sex-mark";
 import { useToast } from "@/components/ui/toast";
+import { FEATURES } from "@/config/features";
 import {
   DISCIPLINES,
   disciplineLabels,
@@ -113,6 +115,9 @@ export function AthleteTable({
   const [selected, setSelected] = useState<string[]>([]);
   const [menu, setMenu] = useState<Menu>(null);
   const [invitations, setInvitations] = useState<BulkInvitation[] | null>(null);
+  // MVP espace coach seul (D-167) : « Écrire » et « Inviter » restent visibles mais ouvrent la
+  // fenêtre « pas encore disponible ».
+  const [unavailable, setUnavailable] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
   const toast = useToast();
@@ -144,12 +149,17 @@ export function AthleteTable({
   };
 
   // Invitation groupée : un lien par sportif coché, à copier (Coory n'envoie pas d'e-mail).
-  const inviteSelected = () =>
+  const inviteSelected = () => {
+    if (!FEATURES.invitations) {
+      setUnavailable(true);
+      return;
+    }
     startTransition(async () => {
       const results = await createInvitations(organizationId, visible);
       setInvitations(results);
       router.refresh();
     });
+  };
 
   const menuFor = (row: AthleteTableRow, kind: MenuKind, fromActions = false): Menu => ({
     kind,
@@ -159,7 +169,7 @@ export function AthleteTable({
       kind === "status"
         ? `Statut de ${row.name}`
         : kind === "type"
-          ? `Programme de ${row.name}`
+          ? `Discipline de ${row.name}`
           : row.name,
   });
 
@@ -178,7 +188,7 @@ export function AthleteTable({
           onSelect: () => setMenu(menuFor(single, "status", true)),
         },
         {
-          label: "Changer le programme",
+          label: "Changer la discipline",
           icon: Layers,
           chevron: true,
           onSelect: () => setMenu(menuFor(single, "type", true)),
@@ -198,7 +208,10 @@ export function AthleteTable({
               {
                 label: "Écrire un message",
                 icon: MessageCircle,
-                onSelect: () => router.push(`/coach/messages?sportif=${single.id}`),
+                onSelect: () =>
+                  FEATURES.messages
+                    ? router.push(`/coach/messages?sportif=${single.id}`)
+                    : setUnavailable(true),
               },
             ]
           : single.status !== "archived"
@@ -206,7 +219,8 @@ export function AthleteTable({
                 {
                   label: "Inviter dans son espace",
                   icon: Send,
-                  onSelect: () => router.push(`${href}/inviter`),
+                  onSelect: () =>
+                    FEATURES.invitations ? router.push(`${href}/inviter`) : setUnavailable(true),
                 },
               ]
             : []),
@@ -238,7 +252,7 @@ export function AthleteTable({
         apply(
           menu.ids,
           () => setAthletesProgramType(organizationId, menu.ids, discipline),
-          `Programme de ${who(menu.ids)} : ${disciplineLabels[discipline]}.`,
+          `Discipline de ${who(menu.ids)} : ${disciplineLabels[discipline]}.`,
         );
       },
     }));
@@ -279,7 +293,7 @@ export function AthleteTable({
   const statusMenu = (ids: string[]) =>
     setMenu({ kind: "status", ids, title: `Statut de ${who(ids)}` });
   const typeMenu = (ids: string[]) =>
-    setMenu({ kind: "type", ids, title: `Programme de ${who(ids)}` });
+    setMenu({ kind: "type", ids, title: `Discipline de ${who(ids)}` });
   const selectionLabel = `${visible.length} sportif${visible.length > 1 ? "s" : ""} sélectionné${visible.length > 1 ? "s" : ""}`;
 
   return (
@@ -320,7 +334,7 @@ export function AthleteTable({
                 Changer le statut
               </BulkButton>
               <BulkButton disabled={pending} onClick={() => typeMenu(visible)}>
-                Changer le programme
+                Changer la discipline
               </BulkButton>
               <BulkButton disabled={pending} onClick={inviteSelected}>
                 Inviter
@@ -364,6 +378,7 @@ export function AthleteTable({
                   checked={visible.includes(row.id)}
                   onToggle={() => toggle(row.id)}
                   onMenu={(kind) => setMenu(menuFor(row, kind))}
+                  onUnavailable={() => setUnavailable(true)}
                   pending={pending}
                   today={today}
                 />
@@ -399,6 +414,8 @@ export function AthleteTable({
         items={menuItems()}
       />
 
+      <NotAvailableDialog open={unavailable} onClose={() => setUnavailable(false)} />
+
       <InvitationLinks
         results={invitations}
         onClose={() => {
@@ -430,6 +447,11 @@ function BulkButton({
     </button>
   );
 }
+
+const writeClass =
+  "relative z-10 grid size-8 place-items-center rounded-[9px] text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2";
+const inviteClass =
+  "relative z-10 flex h-8 items-center rounded-[9px] px-3 text-[13px] font-medium text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2";
 
 // Case à cocher de la maquette : 22 px sur téléphone (dans une zone tactile de 44), 18 px sur
 // ordinateur ; violette une fois cochée. Vraie case native (clavier, lecteurs d'écran).
@@ -487,6 +509,7 @@ function Row({
   checked,
   onToggle,
   onMenu,
+  onUnavailable,
   pending,
   today,
 }: {
@@ -495,6 +518,7 @@ function Row({
   checked: boolean;
   onToggle: () => void;
   onMenu: (kind: MenuKind) => void;
+  onUnavailable: () => void;
   pending: boolean;
   today: string;
 }) {
@@ -589,7 +613,7 @@ function Row({
             type="button"
             disabled={pending}
             onClick={() => onMenu("type")}
-            aria-label={`Programme : ${disciplineLabels[row.programType]}. Changer le programme de ${row.name}`}
+            aria-label={`Programme : ${disciplineLabels[row.programType]}. Changer la discipline de ${row.name}`}
             className="relative z-10 -mx-2 inline-flex items-center gap-[7px] rounded-lg px-2 py-1 text-[13.5px] font-medium whitespace-nowrap text-text transition-colors duration-150 hover:bg-chip"
           >
             <span
@@ -603,7 +627,7 @@ function Row({
             type="button"
             disabled={pending}
             onClick={() => onMenu("type")}
-            aria-label={`Choisir le programme de ${row.name}`}
+            aria-label={`Choisir la discipline de ${row.name}`}
             className="relative z-10 inline-flex h-[30px] items-center rounded-[9px] border border-dashed border-line-2 px-3 text-[13px] font-medium text-text-2 transition-colors duration-150 hover:bg-surface-2"
           >
             Choisir
@@ -629,14 +653,37 @@ function Row({
 
       <span className="col-start-4 row-start-1 flex items-center justify-end gap-1.5 lg:col-start-auto lg:row-start-auto">
         {row.hasAccount ? (
-          <Link
-            href={`/coach/messages?sportif=${row.id}`}
-            aria-label={`Écrire à ${row.name}`}
-            title="Compte activé : écrire un message"
-            className={`relative z-10 grid size-8 place-items-center rounded-[9px] text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2 ${desktop}`}
-          >
-            <MessageCircle aria-hidden size={15} strokeWidth={1.8} />
-          </Link>
+          FEATURES.messages ? (
+            <Link
+              href={`/coach/messages?sportif=${row.id}`}
+              aria-label={`Écrire à ${row.name}`}
+              title="Compte activé : écrire un message"
+              className={`${writeClass} ${desktop}`}
+            >
+              <MessageCircle aria-hidden size={15} strokeWidth={1.8} />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onUnavailable}
+              aria-label={`Écrire à ${row.name}`}
+              className={`${writeClass} ${desktop}`}
+            >
+              <MessageCircle aria-hidden size={15} strokeWidth={1.8} />
+            </button>
+          )
+        ) : !FEATURES.invitations ? (
+          // Sans invitations, pas d'« Invité » en attente : le même bouton « Inviter » pour tous.
+          canInvite ? (
+            <button
+              type="button"
+              onClick={onUnavailable}
+              aria-label={`Inviter ${row.name}`}
+              className={`${inviteClass} ${desktop}`}
+            >
+              Inviter
+            </button>
+          ) : null
         ) : row.hasPendingInvite ? (
           <Link
             href={`${href}/inviter`}
@@ -651,7 +698,7 @@ function Row({
           <Link
             href={`${href}/inviter`}
             aria-label={`Inviter ${row.name}`}
-            className={`relative z-10 flex h-8 items-center rounded-[9px] px-3 text-[13px] font-medium text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2 ${desktop}`}
+            className={`${inviteClass} ${desktop}`}
           >
             Inviter
           </Link>

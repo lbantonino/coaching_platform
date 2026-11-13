@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { revokeInvitation } from "@/features/invitations/actions";
 import { getInviteTarget } from "@/features/invitations/queries";
+import { FEATURES } from "@/config/features";
 import { INVITATION_VALIDITY_DAYS } from "@/features/invitations/token";
 
 import { InvitePanel } from "./invite-form";
@@ -23,6 +25,8 @@ export const metadata: Metadata = {
 export default function InviteAthletePage({
   params,
 }: PageProps<"/coach/o/[orgId]/sportifs/[athleteId]/inviter">) {
+  // MVP espace coach seul (D-167) : page masquée, le code reste.
+  if (!FEATURES.invitations) notFound();
   return (
     <main className={pageMainClass}>
       <Suspense fallback={<PageLoading />}>

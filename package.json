@@ -18,6 +18,7 @@
     "db:stop": "supabase stop",
     "db:status": "supabase status",
     "db:reset": "node scripts/db-reset.mjs",
+    "db:clean-tests": "node scripts/clean-test-data.mjs",
     "db:new": "supabase migration new",
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts && prettier --write src/lib/supabase/database.types.ts",
@@ -25,6 +26,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0",
     "@react-pdf/renderer": "4.9.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",

@@ -23,6 +23,7 @@ import {
   labelClass,
 } from "@/components/ui/form-styles";
 import { FieldCheck } from "@/components/ui/field-check";
+import { FEATURES } from "@/config/features";
 import type {
   AddressFormValues,
   AthleteFormValues,
@@ -217,7 +218,9 @@ export function ContactFields({
           </p>
         ) : optional ? (
           <p id="email-invite-hint" className={s.hint}>
-            Elle servira à l&apos;inviter dans son espace sportif.
+            {FEATURES.invitations
+              ? "Elle servira à l'inviter dans son espace sportif."
+              : "Pour garder un moyen de contact."}
           </p>
         ) : null}
       </div>

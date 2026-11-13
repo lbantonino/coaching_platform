@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { FEATURES } from "@/config/features";
 import { publicEnv } from "@/lib/env";
 import { REMEMBER_COOKIE, remembers, sessionCookieOptions } from "@/lib/supabase/session-cookies";
 
@@ -46,6 +47,10 @@ export async function proxy(request: NextRequest) {
   // de bord. Redirection HTTP, AVANT la page : faite par la page elle-même (dans un bloc Suspense),
   // elle partait au milieu du rendu et pouvait rester bloquée sur une page vide (tâche 3, 05/11).
   // La rubrique est revérifiée par la fenêtre (rubrique inconnue -> Profil).
+  // MVP espace coach seul (D-167) : les pages qui supposent un sportif connecté sont coupées ici, avant
+  // la page (même raison que ci-dessous). Chaque page refuse aussi d'elle-même (notFound).
+  const cut = mvpRedirect(pathname);
+  if (cut) return redirectWithCookies(request, response, cut);
   if (isSignedIn && pathname === "/coach/profil") {
     const wanted = request.nextUrl.searchParams.get("onglet") ?? "";
     const section = /^[a-z]{1,20}$/.test(wanted) ? wanted : "profil";
@@ -53,6 +58,23 @@ export async function proxy(request: NextRequest) {
   }
 
   return response;
+}
+
+// Où renvoyer une adresse masquée par le MVP coach seul (null si l'adresse reste ouverte).
+function mvpRedirect(pathname: string): string | null {
+  if (
+    !FEATURES.messages &&
+    (pathname === "/coach/messages" || pathname.startsWith("/coach/messages/"))
+  )
+    return "/coach";
+  if (!FEATURES.invitations) {
+    const invite = /^(\/coach\/o\/[^/]+\/sportifs\/[^/]+)\/inviter\/?$/.exec(pathname);
+    if (invite) return invite[1] ?? "/coach";
+    if (pathname.startsWith("/invitation/")) return "/login";
+  }
+  if (!FEATURES.athleteSpace && (pathname === "/app" || pathname.startsWith("/app/")))
+    return "/acces-refuse";
+  return null;
 }
 
 // Une redirection doit conserver les cookies éventuellement rafraîchis par getClaims().
