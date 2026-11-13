@@ -116,7 +116,11 @@ export async function askAssistant(
     // Le détail reste dans les journaux du serveur (clé refusée, service surchargé…), jamais à l'écran.
     console.error(
       "Assistant IA : étape échouée",
-      error instanceof AnthropicSdk.APIError ? `(${error.status ?? "réseau"})` : error,
+      // Le message d'Anthropic dit pourquoi (clé sans espace de travail, crédits épuisés…) ; il ne
+      // contient ni la clé ni la demande du coach.
+      error instanceof AnthropicSdk.APIError
+        ? `(${error.status ?? "réseau"}) ${error.message}`
+        : error,
     );
     return fail("unavailable", remaining);
   }
