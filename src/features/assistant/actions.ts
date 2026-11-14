@@ -59,6 +59,9 @@ export async function askAssistant(
 
   let usageId: string;
   let messages: Anthropic.MessageParam[];
+  // Lot 2 : le nom, le type et la taille du fichier joint (jamais son contenu), pour importer_document.
+  const attachment =
+    "start" in parsed.data ? parsed.data.start.attachment : parsed.data.next.attachment;
   if ("start" in parsed.data) {
     const { data, error } = await supabase.rpc("reserve_assistant_use", {
       p_organization_id: orgId,
@@ -97,7 +100,7 @@ export async function askAssistant(
         todayIso: todayIsoInBrussels(),
         model,
         runTool: (name, toolInput, pending) =>
-          runAssistantTool(orgId, name, toolInput, pending, user.id),
+          runAssistantTool(orgId, name, toolInput, pending, user.id, attachment),
       },
       messages,
       assistantTools(),

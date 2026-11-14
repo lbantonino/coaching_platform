@@ -7,7 +7,12 @@ import { dlgPrimaryButtonClass } from "@/components/ui/dialog-styles";
 import { DialogBody, DialogFooter, Overlay, Sheet } from "@/components/ui/overlay";
 import { RadioMark } from "@/components/ui/radio-choice";
 import { SelectField } from "@/components/ui/select-field";
-import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
+import {
+  DISCIPLINES,
+  disciplineLabels,
+  disciplineStyles,
+  type Discipline,
+} from "@/domain/training/discipline";
 import { hyroxDivisionLabels } from "@/domain/training/hyrox-official";
 import {
   HYROX_DIVISIONS,
@@ -95,6 +100,97 @@ export function TextSheet({
           className={fieldClass}
         />
         {hint ? <p className="text-[12.5px] leading-[1.45] text-muted">{hint}</p> : null}
+      </form>
+    </Sheet>
+  );
+}
+
+// « Changer la discipline » (D-180, demande d'Antonino du 14/11) : un même programme change d'objectif
+// dans l'année (marathon, force, Hyrox) ; la discipline principale se lit dans les filtres, la fiche et
+// les PDF. Les séances ne changent pas. À chaque ouverture, le choix repart de la discipline actuelle.
+export function DisciplineSheet({
+  open,
+  onClose,
+  title,
+  initial,
+  hint,
+  onConfirm,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  initial: Discipline;
+  hint?: string;
+  onConfirm: (discipline: Discipline) => void;
+}) {
+  const id = useId();
+  const [value, setValue] = useState<Discipline>(initial);
+  const [shown, setShown] = useState(open);
+  if (open !== shown) {
+    setShown(open);
+    if (open) setValue(initial);
+  }
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={title}
+      footer={
+        <DialogFooter
+          onCancel={onClose}
+          primary={
+            <button
+              type="submit"
+              form={id}
+              disabled={value === initial}
+              className={dlgPrimaryButtonClass}
+            >
+              Changer
+            </button>
+          }
+        />
+      }
+    >
+      <form
+        id={id}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (value !== initial) onConfirm(value);
+        }}
+        className="flex flex-col gap-2.5"
+      >
+        <fieldset className="m-0 flex flex-col overflow-hidden rounded-[13px] border-0 p-0 inset-ring inset-ring-field-ring">
+          <legend className="sr-only">Discipline principale</legend>
+          {DISCIPLINES.map((discipline) => (
+            <label
+              key={discipline}
+              className={`relative flex min-h-[52px] cursor-pointer items-center gap-3 border-b border-dlg-divider px-3.5 py-2 last:border-b-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-violet ${
+                value === discipline ? "bg-surface-2" : ""
+              }`}
+            >
+              <input
+                type="radio"
+                name={`${id}-discipline`}
+                value={discipline}
+                checked={value === discipline}
+                onChange={() => setValue(discipline)}
+                className="sr-only"
+              />
+              <span
+                aria-hidden
+                className={`size-2.5 shrink-0 rounded-full ${disciplineStyles[discipline].dot}`}
+              />
+              <span className="min-w-0 flex-1 text-[14.5px] font-semibold text-text">
+                {disciplineLabels[discipline]}
+              </span>
+              <RadioMark checked={value === discipline} />
+            </label>
+          ))}
+        </fieldset>
+        <p className="text-[12.5px] leading-[1.45] text-muted">
+          Les séances ne changent pas : chacune garde sa discipline.
+          {hint ? ` ${hint}` : ""}
+        </p>
       </form>
     </Sheet>
   );

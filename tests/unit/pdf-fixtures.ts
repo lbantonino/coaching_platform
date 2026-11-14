@@ -186,6 +186,7 @@ export function demoProgram(weeks = 6, today = "2026-11-10"): PdfProgramInput {
   });
   return {
     title: "Prépa test",
+    discipline: "hybrid",
     athleteName: "Anaïs Test",
     coachName: "Coach Test",
     version: 1,

@@ -188,3 +188,128 @@ test("sans dictée dans le navigateur, le bouton micro n'apparaît pas", async (
   await expect(box.getByLabel("Ta demande à l'assistant")).toBeVisible();
   await expect(box.getByRole("button", { name: "Dicter ta demande" })).toHaveCount(0);
 });
+
+// Lot 2 (D-181) : « Compléter la fiche ». Le faux Claude lit la fiche (voir_fiche), puis propose le
+// champ manquant ; la carte montre « ancien → nouveau ». Une fiche par appareil (Sarah sur ordinateur,
+// Hugo sur téléphone), remise à vide par le nettoyage de fin de suite.
+test("lot 2 : compléter la fiche d'un sportif", async ({ page }, testInfo) => {
+  const who = testInfo.project.name === "telephone" ? "Hugo" : "Sarah";
+  const full = who === "Hugo" ? "Hugo Lefèvre" : "Sarah Vermeulen";
+  const box = await openAssistant(page);
+  await ask(box, `Ajoute le tapis de course au matériel de ${who}`);
+  const card = box.getByRole("region", { name: "Compléter la fiche" });
+  await expect(card).toContainText(full, STEPS);
+  await expect(card).toContainText("Matériel : — → Tapis de course (test assistant)");
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  const href = await card.getByRole("link", { name: "Voir" }).getAttribute("href");
+  expect(href).toMatch(/\/sportifs\/db000000-[^?]+\?onglet=profil$/);
+  await page.goto(href ?? "/");
+  await expect(page.getByText("Tapis de course (test assistant)").first()).toBeVisible();
+});
+
+// Lot 2 (D-181) : « Nouvel exercice » dans la Bibliothèque du coach, par la même création que le
+// formulaire (le nom porte le marqueur : l'exercice est retiré en fin de suite).
+test("lot 2 : créer un exercice dans la Bibliothèque", async ({ page }) => {
+  const box = await openAssistant(page);
+  await ask(box, "Crée l'exercice Fentes sautées");
+  const card = box.getByRole("region", { name: "Nouvel exercice" });
+  await expect(card).toContainText(`Fentes sautées ${MARK}`, STEPS);
+  await expect(card).toContainText("Musculation · Quadriceps, Fessiers");
+  await expect(card).toContainText("Poids du corps");
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  const href = await card.getByRole("link", { name: "Voir" }).getAttribute("href");
+  expect(href).toMatch(/^\/coach\/bibliotheque\/[0-9a-f-]{36}$/);
+  await page.goto(href ?? "/");
+  await expect(page.getByText(`Fentes sautées ${MARK}`).first()).toBeVisible();
+  await expect(page.getByText("Saute et change de jambe en l'air.").first()).toBeVisible();
+});
+
+// Lot 2 (D-181) : « PDF du programme ». Les deux liens de la version publiée, à la place de « Valider ».
+test("lot 2 : les PDF d'un programme publié, en liens", async ({ page }) => {
+  const box = await openAssistant(page);
+  await ask(box, "Donne-moi les PDF du programme de Sarah");
+  const card = box.getByRole("region", { name: "PDF du programme" });
+  await expect(card).toContainText("Programme test PDF", STEPS);
+  await expect(card).toContainText("Sarah Vermeulen");
+  await expect(card).toContainText("Version 1 publiée le dimanche 4 janvier 2026");
+  await expect(card.getByRole("button", { name: "Valider" })).toHaveCount(0);
+  for (const name of ["Agenda du programme", "Fiches et repères"]) {
+    const href = await card.getByRole("link", { name }).getAttribute("href");
+    const response = await page.request.get(href ?? "/");
+    expect(response.status(), name).toBe(200);
+    expect(response.headers()["content-type"]).toContain("application/pdf");
+  }
+});
+
+// Un programme d'une autre organisation (celui de Léa, coach A) : refusé, aucune carte (le faux Claude
+// ne mène qu'une question par conversation, d'où ce test à part).
+test("lot 2 : pas de PDF pour le programme d'une autre organisation", async ({ page }) => {
+  const box = await openAssistant(page);
+  await ask(box, "Donne-moi les PDF du programme de Léa");
+  // Le refus repart à Claude, qui l'explique ; surtout, aucune carte n'apparaît.
+  await expect(box).toContainText("Je ne trouve pas ce programme dans ton organisation.", STEPS);
+  await expect(box.getByRole("region", { name: "PDF du programme" })).toHaveCount(0);
+});
+
+// Lot 2 (D-181) : « Importer un document ». Le fichier joint reste dans le navigateur (Claude ne reçoit
+// que son nom, son type et sa taille) et part avec la carte validée ; il arrive dans la fiche.
+const PDF = Buffer.from("%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n");
+
+test("lot 2 : importer un document joint dans la fiche d'un sportif", async ({ page }) => {
+  const box = await openAssistant(page);
+  await box.locator('input[type="file"]').setInputFiles({
+    name: "bilan-test.pdf",
+    mimeType: "application/pdf",
+    buffer: PDF,
+  });
+  await expect(
+    box.getByRole("button", { name: "Retirer le fichier joint : bilan-test.pdf" }),
+  ).toBeVisible();
+  await ask(box, "Range ce document dans la fiche de Sarah");
+  const card = box.getByRole("region", { name: "Importer un document" });
+  await expect(card).toContainText(`Bilan test ${MARK}`, STEPS);
+  await expect(card).toContainText("Fichier : bilan-test.pdf");
+  await expect(card).toContainText("Sportif : Sarah Vermeulen");
+  // Relecture : une catégorie de DOCUMENTS (pas de dépenses) est acceptée.
+  await expect(card).toContainText("Catégorie : Bilans de test");
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  // Rangé : la pastille quitte la saisie (avant, elle reste pour la suite de la conversation).
+  await expect(box.getByRole("button", { name: /^Retirer le fichier joint/ })).toHaveCount(0);
+  const href = await card.getByRole("link", { name: "Voir" }).getAttribute("href");
+  expect(href).toMatch(/\/sportifs\/db000000-0000-4000-8000-000000000001\?onglet=documents$/);
+  await page.goto(href ?? "/");
+  await expect(page.getByText(`Bilan test ${MARK}`).first()).toBeVisible();
+});
+
+test("lot 2 : sans fichier joint, aucune carte d'import", async ({ page }) => {
+  const box = await openAssistant(page);
+  await ask(box, "Range ce document chez Hugo");
+  await expect(box).toContainText("Joins d'abord le fichier avec le bouton « Joindre ».", STEPS);
+  await expect(box.getByRole("region", { name: "Importer un document" })).toHaveCount(0);
+});
+
+// Relecture du lot 2 : le fichier joint reste pour toute la conversation. Après « Modifier » (ou une
+// question de l'assistant), la demande suivante garde le fichier et une nouvelle carte apparaît.
+test("lot 2 : le fichier joint reste pour la demande suivante", async ({ page }) => {
+  const box = await openAssistant(page);
+  await box.locator('input[type="file"]').setInputFiles({
+    name: "bilan-test.pdf",
+    mimeType: "application/pdf",
+    buffer: PDF,
+  });
+  await ask(box, "Range ce document dans la fiche de Sarah");
+  const first = box.getByRole("region", { name: "Importer un document" }).first();
+  await expect(first).toContainText("Sportif : Sarah Vermeulen", STEPS);
+  await expect(
+    box.getByRole("button", { name: "Retirer le fichier joint : bilan-test.pdf" }),
+  ).toBeVisible();
+  await first.getByRole("button", { name: "Modifier" }).click();
+  await expect(box).toContainText("Que veux-tu changer ?");
+  await ask(box, "Mets-le plutôt chez Hugo");
+  await expect(
+    box.getByRole("region", { name: "Importer un document" }).filter({ hasText: "Hugo Lefèvre" }),
+  ).toContainText(`Bilan Hugo ${MARK}`, STEPS);
+});

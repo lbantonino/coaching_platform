@@ -5,7 +5,30 @@ import { PAYMENT_METHODS } from "@/domain/billing/payments";
 import { DISCIPLINES } from "@/domain/training/discipline";
 import { programGoalSchema } from "@/domain/training/program-plan";
 import { SESSION_MOMENTS, sessionBodySchema, WEEKDAYS } from "@/domain/training/session-v2";
-import { ATHLETE_LEVELS, SEXES } from "@/features/athletes/schemas";
+import {
+  EQUIPMENT_KEYS,
+  EXERCISE_CATEGORIES,
+  equipmentInfo,
+  exerciseCategoryLabels,
+  muscleGroupLabels,
+  type ExerciseCategory,
+  type MuscleGroup,
+} from "@/domain/exercises/vocabulary";
+import { COUNTRY_NAMES } from "@/domain/geo/country-names";
+import {
+  ATHLETE_LEVELS,
+  CONTACT_CHANNELS,
+  SEXES,
+  TRAINING_PLACES,
+  athleteLevelLabels,
+  contactChannelLabels,
+  sexLabels,
+  trainingPlaceLabels,
+  type AthleteLevel,
+  type ContactChannel,
+  type Sex,
+  type TrainingPlace,
+} from "@/features/athletes/schemas";
 import { GOAL_TYPES, goalTypeLabels, type GoalType } from "@/features/goals/schemas";
 import { SESSION_KINDS, SESSION_PAYMENT_METHODS } from "@/features/sessions/schemas";
 
@@ -26,7 +49,11 @@ export type AssistantActionKind =
   | "noter_depense"
   | "creer_tache"
   | "creer_liste_de_taches"
-  | "creer_programme";
+  | "creer_programme"
+  | "completer_fiche"
+  | "creer_exercice"
+  | "preparer_pdf"
+  | "importer_document";
 
 export type AssistantAction = { kind: AssistantActionKind; params: Record<string, unknown> };
 
@@ -39,6 +66,9 @@ export type AssistantProposal = AssistantAction & {
   summary: string[];
   // Carte dont celle-ci attend l'exécution (sportif créé par une autre carte), ou null.
   dependsOn: string | null;
+  // Liens préparés par le serveur (lot 2 : les deux PDF d'un programme publié) : la carte les montre
+  // à la place de « Valider », il n'y a rien à exécuter.
+  links?: { label: string; href: string }[];
 };
 
 const isoDay = z.iso.date();
@@ -135,6 +165,55 @@ export const PARAMS = {
     notes: z.string().trim().max(1000).optional(),
   }),
   creer_liste_de_taches: z.strictObject({ name: text(40) }),
+  // Lot 2 (D-181) : ranger le fichier JOINT par le coach dans ses Documents. Le fichier n'est jamais
+  // dans la proposition (il reste dans le navigateur) : seulement son nom de document, sa catégorie et
+  // son sportif.
+  importer_document: z.strictObject({
+    name: text(160),
+    categoryId: z.uuid().optional(),
+    athleteId: z.uuid().optional(),
+  }),
+  // Lot 2 (D-181) : les PDF d'un programme PUBLIÉ (dernière version), en liens ; jamais d'envoi.
+  preparer_pdf: z.strictObject({ programId: z.uuid() }),
+  // Lot 2 (D-181) : un exercice du coach dans sa Bibliothèque, sans photo (elle s'ajoute ensuite dans la
+  // page de l'exercice). Muscles, matériel et lien vidéo passent par les règles du formulaire.
+  creer_exercice: z.strictObject({
+    name: text(80),
+    category: z.enum(EXERCISE_CATEGORIES),
+    muscleGroups: z.array(z.string().max(40)).max(13).optional(),
+    equipment: z
+      .enum(EQUIPMENT_KEYS, {
+        error: `Matériel inconnu : choisis parmi ${EQUIPMENT_KEYS.join(", ")}.`,
+      })
+      .optional(),
+    instructions: z.array(text(300)).max(15).optional(),
+    videoUrl: z.string().trim().max(300).optional(),
+  }),
+  // Lot 2 (D-181) : compléter une fiche, seulement les champs manquants ou demandés. Jamais le statut
+  // (archiver), la santé, les notes ni les accords : ils ne sont pas dans la liste.
+  completer_fiche: z.strictObject({
+    athleteId: z.uuid(),
+    changes: z
+      .strictObject({
+        firstName: text(80).optional(),
+        lastName: text(80).optional(),
+        sex: z.enum(SEXES).optional(),
+        email: z.email().max(254).optional(),
+        phone: z.string().trim().min(6).max(24).optional(),
+        preferredContact: z.enum(CONTACT_CHANNELS).optional(),
+        level: z.enum(ATHLETE_LEVELS).optional(),
+        experience: text(500).optional(),
+        trainingPlaces: z.array(z.enum(TRAINING_PLACES)).min(1).max(5).optional(),
+        equipment: text(500).optional(),
+        addressLine: text(160).optional(),
+        postalCode: text(10).optional(),
+        city: text(80).optional(),
+        country: z.string().length(2).optional(),
+      })
+      .refine((changes) => Object.keys(changes).length > 0, {
+        error: "Indique au moins un champ à compléter.",
+      }),
+  }),
   // Lot 3a : un BROUILLON de programme, depuis un modèle, une copie, vide, ou écrit par l'assistant
   // (séances décrites une fois avec une référence, puis placées semaine par semaine).
   creer_programme: z
@@ -202,6 +281,10 @@ export const assistantActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("creer_tache"), params: PARAMS.creer_tache }),
   z.object({ kind: z.literal("creer_liste_de_taches"), params: PARAMS.creer_liste_de_taches }),
   z.object({ kind: z.literal("creer_programme"), params: PARAMS.creer_programme }),
+  z.object({ kind: z.literal("completer_fiche"), params: PARAMS.completer_fiche }),
+  z.object({ kind: z.literal("creer_exercice"), params: PARAMS.creer_exercice }),
+  z.object({ kind: z.literal("preparer_pdf"), params: PARAMS.preparer_pdf }),
+  z.object({ kind: z.literal("importer_document"), params: PARAMS.importer_document }),
 ]);
 export type ParsedAssistantAction = z.infer<typeof assistantActionSchema>;
 
@@ -217,7 +300,57 @@ const TITLES: Record<AssistantActionKind, string> = {
   creer_tache: "Nouvelle tâche",
   creer_liste_de_taches: "Nouvelle liste de tâches",
   creer_programme: "Nouveau programme",
+  completer_fiche: "Compléter la fiche",
+  creer_exercice: "Nouvel exercice",
+  preparer_pdf: "PDF du programme",
+  importer_document: "Importer un document",
 };
+
+// Les PDF viennent de la version publiée : rien pour un programme introuvable ou jamais publié.
+export function pdfRefusal(program: { published: boolean } | null): string | null {
+  if (!program) return "Programme introuvable : regarde voir_programmes.";
+  return program.published
+    ? null
+    : "Ce programme n'est pas encore publié : publie-le d'abord dans l'éditeur.";
+}
+
+// « Compléter la fiche » : nom de chaque champ et valeur lisible (« Niveau : Débutant → Confirmé »).
+export const ATHLETE_FIELD_LABELS: Record<string, string> = {
+  firstName: "Prénom",
+  lastName: "Nom",
+  sex: "Sexe",
+  email: "E-mail",
+  phone: "Téléphone",
+  preferredContact: "Contact préféré",
+  level: "Niveau",
+  experience: "Expérience",
+  trainingPlaces: "Lieux d'entraînement",
+  equipment: "Matériel",
+  addressLine: "Adresse",
+  postalCode: "Code postal",
+  city: "Ville",
+  country: "Pays",
+};
+const countryNames = new Map(COUNTRY_NAMES);
+export function athleteFieldText(field: string, value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map((place) => trainingPlaceLabels[place as TrainingPlace] ?? place).join(", ");
+  }
+  const text = typeof value === "string" ? value : "";
+  if (!text) return "";
+  switch (field) {
+    case "sex":
+      return sexLabels[text as Sex] ?? text;
+    case "level":
+      return athleteLevelLabels[text as AthleteLevel] ?? text;
+    case "preferredContact":
+      return contactChannelLabels[text as ContactChannel] ?? text;
+    case "country":
+      return countryNames.get(text) ?? text;
+    default:
+      return text;
+  }
+}
 
 const METHOD: Record<string, string> = {
   cash: "espèces",
@@ -348,6 +481,55 @@ export function summarize(
     case "creer_liste_de_taches":
       lines.push(str(p.name));
       break;
+    case "importer_document":
+      lines.push(str(p.name));
+      lines.push(names.fichier ? `Fichier : ${names.fichier}` : null);
+      lines.push(
+        p.categoryId ? `Catégorie : ${names[str(p.categoryId)] ?? "?"}` : "Sans catégorie",
+      );
+      lines.push(p.athleteId ? `Sportif : ${names[str(p.athleteId)] ?? "?"}` : null);
+      break;
+    case "preparer_pdf":
+      lines.push(
+        names[str(p.programId)] ?? "Programme",
+        names.sportif ?? null,
+        names.version ?? null,
+      );
+      break;
+    case "creer_exercice": {
+      lines.push(str(p.name));
+      const muscles = ((p.muscleGroups as string[] | undefined) ?? []).map(
+        (group) => muscleGroupLabels[group as MuscleGroup] ?? group,
+      );
+      lines.push(
+        [exerciseCategoryLabels[str(p.category) as ExerciseCategory], muscles.join(", ")]
+          .filter(Boolean)
+          .join(" · "),
+      );
+      lines.push(
+        p.equipment
+          ? `Matériel : ${equipmentInfo[str(p.equipment)]?.label ?? str(p.equipment)}`
+          : "Poids du corps",
+      );
+      const steps = ((p.instructions as string[] | undefined) ?? []).length;
+      lines.push(steps > 0 && `${steps} consigne${steps > 1 ? "s" : ""}`);
+      lines.push(str(p.videoUrl) ? "Avec une vidéo" : null);
+      // Mis par le serveur quand un exercice du coach porte déjà ce nom (doublon possible).
+      lines.push(names.doublon ? "Un exercice porte déjà ce nom dans ta Bibliothèque" : null);
+      break;
+    }
+    case "completer_fiche": {
+      lines.push(names[str(p.athleteId)] ?? "Sportif");
+      // Chaque changement « ancien → nouveau » (« — » pour un champ vide) : le coach voit ce qui
+      // remplace une valeur déjà écrite.
+      for (const [field, value] of Object.entries((p.changes ?? {}) as Record<string, unknown>)) {
+        const before = athleteFieldText(field, names[`avant:${field}`]) || "—";
+        lines.push(
+          `${ATHLETE_FIELD_LABELS[field] ?? field} : ${before} → ${athleteFieldText(field, value)}`,
+        );
+      }
+      break;
+    }
     case "creer_programme": {
       lines.push(str(p.title));
       lines.push(athleteName(p.athlete, names));

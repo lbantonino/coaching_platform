@@ -1,7 +1,16 @@
 "use client";
 
 import { ArrowLeft, Check, ChevronRight, TriangleAlert, X, type LucideIcon } from "lucide-react";
-import { Fragment, useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  Fragment,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   SHEET_SPRING,
@@ -620,10 +629,16 @@ export function Sheet({
           {children}
         </div>
       )}
+      {/* Un pied du kit (DialogFooter) a déjà son filet et ses marges : l'entourer d'un second pied
+          doublait le filet et la hauteur (Renommer, Modifier les dates, filtres… D-180). */}
       {footer ? (
-        <div className="flex shrink-0 gap-2.5 border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:px-6 md:py-3.5 [&>*]:flex-1">
-          {footer}
-        </div>
+        isValidElement(footer) && footer.type === DialogFooter ? (
+          footer
+        ) : (
+          <div className="flex shrink-0 gap-2.5 border-t border-dlg-divider bg-dlg px-5 pt-3.5 pb-[22px] md:px-6 md:py-3.5 [&>*]:flex-1">
+            {footer}
+          </div>
+        )
       ) : null}
     </Overlay>
   );

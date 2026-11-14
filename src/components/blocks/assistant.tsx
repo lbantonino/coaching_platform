@@ -10,6 +10,7 @@ import {
   Lock,
   Maximize2,
   Mic,
+  Paperclip,
   Square,
   UserRound,
   X,
@@ -42,6 +43,7 @@ import {
   type CardState,
 } from "@/features/assistant/cards";
 import type { ExecuteResult } from "@/features/assistant/execute";
+import { DOCUMENT_ACCEPT, DOCUMENT_MAX_BYTES, formatBytes } from "@/domain/documents/documents";
 import type { AssistantAction } from "@/features/assistant/proposals";
 import type { StepResult } from "@/features/assistant/loop";
 import {
@@ -88,6 +90,10 @@ type AssistantState = {
   messages: AssistantMessage[];
   draft: string;
   athlete: Athlete | null;
+  // Fichier joint à la prochaine demande (lot 2, D-181) : il reste dans le navigateur ; seuls son nom,
+  // son type et sa taille partent chez Claude.
+  attachment: File | null;
+  setAttachment: (file: File | null) => void;
   openDialog: () => void;
   closeDialog: () => void;
   setDraft: (text: string) => void;
@@ -115,6 +121,7 @@ export function AssistantProvider({
   access: initialAccess,
   ask,
   execute,
+  executeDocument,
   loadAthletes,
   children,
 }: {
@@ -124,6 +131,8 @@ export function AssistantProvider({
   // Actions serveur (organisation déjà liée) ; sans organisation, pas d'assistant.
   ask?: (input: AskRequest) => Promise<AskAssistantResult>;
   execute?: (action: AssistantAction) => Promise<ExecuteResult>;
+  // « Importer un document » (lot 2) : le fichier joint part avec la carte validée.
+  executeDocument?: (formData: FormData) => Promise<ExecuteResult>;
   // Action serveur (organisation déjà liée) ; sans organisation, aucun sportif.
   loadAthletes?: () => Promise<Athlete[]>;
   children: ReactNode;
@@ -132,6 +141,10 @@ export function AssistantProvider({
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [athlete, setAthlete] = useState<Athlete | null>(null);
+  const [attachment, setAttachment] = useState<File | null>(null);
+  // Fichier joint à chaque réponse de l'assistant (id du message) : la carte « Importer un document »
+  // de cette réponse l'envoie au « Valider ». Oublié quand la conversation recommence.
+  const files = useRef(new Map<number, File>());
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   // La réponse du serveur met à jour les demandes restantes (ou verrouille si l'abonnement a pris fin).
@@ -149,6 +162,8 @@ export function AssistantProvider({
       if (!body || pending || !assistantComposerOpen(access) || !ask) return;
       const about = athlete ? ` (sportif : ${athlete.name})` : "";
       const question = `${body}${about}`;
+      const file = attachment;
+      const meta = file ? { name: file.name, type: file.type, size: file.size } : undefined;
       const history = trimHistory(
         messages
           .filter((message) => !message.failed)
@@ -156,18 +171,30 @@ export function AssistantProvider({
       );
       const asked = next.current++;
       const round = conversation.current;
-      setMessages((current) => [...current, { id: asked, from: "coach", text: question }]);
+      setMessages((current) => [
+        ...current,
+        {
+          id: asked,
+          from: "coach",
+          text: file ? `${question}\nFichier joint : ${file.name}` : question,
+        },
+      ]);
       setDraft("");
+      // Le fichier joint reste pour toute la conversation (relecture du lot 2) : une correction ou la
+      // réponse à une question de l'assistant le garde. Il part avec l'import validé, la croix de la
+      // pastille ou une conversation recommencée.
       setPending(true);
       const answer = (result: AskAssistantResult) => {
         if (round !== conversation.current) return;
         const step = result.ok ? result.step : null;
+        const answerId = next.current++;
+        if (file && result.ok) files.current.set(answerId, file);
         setMessages((current) => [
           ...current.map((message) =>
             message.id === asked && !result.ok ? { ...message, failed: true } : message,
           ),
           {
-            id: next.current++,
+            id: answerId,
             from: "assistant",
             text: result.ok ? stepText(result.step) : result.error,
             failed: !result.ok,
@@ -187,12 +214,18 @@ export function AssistantProvider({
       // Une demande se fait en étapes (un appel au modèle chacune) : tant que l'assistant cherche
       // (outils de lecture), on relance l'étape suivante avec la conversation qu'il a renvoyée.
       const drive = async () => {
-        let result = await ask({ start: { history, question } });
+        let result = await ask({
+          start: { history, question, ...(meta ? { attachment: meta } : {}) },
+        });
         while (result.ok && result.step.kind === "continue") {
           if (round !== conversation.current) return;
           setProgress(result.step.progress);
           result = await ask({
-            next: { usageId: result.usageId, messages: result.step.messages },
+            next: {
+              usageId: result.usageId,
+              messages: result.step.messages,
+              ...(meta ? { attachment: meta } : {}),
+            },
           });
         }
         answer(result);
@@ -201,7 +234,7 @@ export function AssistantProvider({
         answer({ ok: false, kind: "unavailable", error: UNAVAILABLE, remaining: null }),
       );
     },
-    [athlete, access, ask, messages, pending],
+    [athlete, access, ask, attachment, messages, pending],
   );
 
   // Met à jour les cartes d'un message, et ajoute éventuellement une note pour l'assistant.
@@ -235,11 +268,29 @@ export function AssistantProvider({
       running.current.add(cardId);
       updateCards(messageId, (list) => startCard(list, cardId));
       const blocked = (who: string) => `Impossible : la fiche de ${who} n'a pas été créée.`;
-      execute({ kind: card.kind, params: card.params })
+      // « Importer un document » : le fichier joint à cette réponse part avec la carte ; sans lui
+      // (page rechargée, autre conversation), on le dit au lieu d'échouer en silence.
+      const run = (): Promise<ExecuteResult> => {
+        if (card.kind !== "importer_document")
+          return execute({ kind: card.kind, params: card.params });
+        const file = files.current.get(messageId);
+        if (!file || !executeDocument) {
+          return Promise.resolve({
+            ok: false,
+            error: "Joins à nouveau le fichier, puis redemande à l'assistant.",
+          });
+        }
+        const form = new FormData();
+        form.set("params", JSON.stringify(card.params));
+        form.set("file", file);
+        return executeDocument(form);
+      };
+      run()
         .catch((): ExecuteResult => ({ ok: false, error: UNAVAILABLE }))
         .then((result) => {
           running.current.delete(cardId);
           if (result.ok) {
+            if (card.kind === "importer_document") setAttachment(null);
             updateCards(
               messageId,
               (list) => resolveCard(list, cardId, result.href, result.createdAthleteId),
@@ -259,7 +310,7 @@ export function AssistantProvider({
           }
         });
     },
-    [messages, execute, updateCards, router],
+    [messages, execute, executeDocument, updateCards, router],
   );
 
   const cancelCard = useCallback(
@@ -322,6 +373,8 @@ export function AssistantProvider({
       messages,
       draft,
       athlete,
+      attachment,
+      setAttachment,
       openDialog: () => setOpen(true),
       closeDialog: () => setOpen(false),
       setDraft,
@@ -332,6 +385,8 @@ export function AssistantProvider({
         setMessages([]);
         setDraft("");
         setAthlete(null);
+        setAttachment(null);
+        files.current.clear();
         setPending(false);
         setProgress(null);
       },
@@ -349,6 +404,7 @@ export function AssistantProvider({
       messages,
       draft,
       athlete,
+      attachment,
       send,
       loadAthletes,
       validateCard,
@@ -554,7 +610,7 @@ export function AssistantThread({ className = "" }: { className?: string }) {
           message.from === "coach" ? (
             <li
               key={message.id}
-              className="max-w-[85%] self-end rounded-[16px_16px_4px_16px] bg-cta px-4 py-2.5 text-[14.5px] leading-[1.45] font-medium text-on-cta"
+              className="max-w-[85%] self-end rounded-[16px_16px_4px_16px] bg-cta px-4 py-2.5 text-[14.5px] leading-[1.45] font-medium break-words whitespace-pre-line text-on-cta"
             >
               <span className="sr-only">Toi : </span>
               {message.text}
@@ -614,8 +670,8 @@ export function AssistantThread({ className = "" }: { className?: string }) {
 }
 
 // Zone de saisie (boîte et page) : le texte, le sportif concerné, Envoyer (rond violet, grisé si
-// vide). Entrée envoie, Maj + Entrée passe à la ligne. « Joindre » et « Dicter » de la maquette
-// attendent le branchement : pas de bouton qui ne fait rien.
+// vide). Entrée envoie, Maj + Entrée passe à la ligne. « Dicter » (D-173) écrit la voix dans la saisie ;
+// « Joindre » (lot 2, D-181) garde un fichier dans le navigateur pour « Importer un document ».
 export function AssistantComposer({
   rows,
   placeholder,
@@ -632,6 +688,8 @@ export function AssistantComposer({
   const empty = assistant.draft.trim() === "" || assistant.pending;
   // Dictée (D-173) : la voix s'écrit dans la saisie ; envoyer coupe l'écoute.
   const dictation = useDictation(() => assistant.draft, assistant.setDraft);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const submit = () => {
     dictation.cancel();
     assistant.send(assistant.draft);
@@ -661,6 +719,26 @@ export function AssistantComposer({
         enterKeyHint="send"
         className="w-full resize-none bg-transparent px-1 text-[16px] leading-[1.5] text-text outline-none placeholder:text-faint md:text-[14.5px]"
       />
+      {assistant.attachment ? (
+        <div className="flex min-w-0">
+          <button
+            type="button"
+            onClick={() => assistant.setAttachment(null)}
+            aria-label={`Retirer le fichier joint : ${assistant.attachment.name}`}
+            className="tap-44 inline-flex h-9 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
+          >
+            <Paperclip aria-hidden size={14} strokeWidth={1.9} className="shrink-0" />
+            <span className="truncate">{assistant.attachment.name}</span>
+            <span className="shrink-0 font-normal">· {formatBytes(assistant.attachment.size)}</span>
+            <X aria-hidden size={13} strokeWidth={2.2} className="shrink-0" />
+          </button>
+        </div>
+      ) : null}
+      {fileError ? (
+        <p role="alert" className="px-1 text-[12.5px] leading-[1.4] text-alert">
+          {fileError}
+        </p>
+      ) : null}
       <div className="flex items-center gap-2">
         {assistant.athlete ? (
           <button
@@ -694,6 +772,33 @@ export function AssistantComposer({
           </button>
         )}
         <span aria-hidden className="flex-1" />
+        <input
+          ref={fileInput}
+          type="file"
+          accept={DOCUMENT_ACCEPT}
+          tabIndex={-1}
+          aria-label="Fichier à joindre"
+          className="sr-only"
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null;
+            event.target.value = "";
+            if (!file) return;
+            if (file.size > DOCUMENT_MAX_BYTES) {
+              setFileError("Fichier trop lourd : 4 Mo maximum.");
+              return;
+            }
+            setFileError(null);
+            assistant.setAttachment(file);
+          }}
+        />
+        <button
+          type="button"
+          aria-label="Joindre un fichier"
+          onClick={() => fileInput.current?.click()}
+          className="relative grid size-9 shrink-0 place-items-center rounded-full text-text-2 inset-ring inset-ring-line-2 transition-[background-color,scale] duration-150 after:absolute after:-inset-1 after:rounded-full hover:bg-surface-2 active:scale-95"
+        >
+          <Paperclip aria-hidden size={17} strokeWidth={1.9} />
+        </button>
         {dictation.supported ? (
           <button
             type="button"

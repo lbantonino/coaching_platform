@@ -19,6 +19,8 @@ import { isDemoAccount } from "@/features/demo/queries";
 import { DEMO_NO_FILES } from "@/features/demo/rules";
 import { createClient } from "@/lib/supabase/server";
 
+import { insertCoachExercise } from "./create-exercise";
+
 // Exercices du coach (D-76) : créer, modifier, supprimer. Chaque action revérifie l'accès à
 // l'organisation et valide le formulaire ; la RLS n'autorise l'écriture que sur les exercices de
 // SON organisation (le catalogue commun reste en lecture seule). La photo va dans le stockage privé.
@@ -74,39 +76,15 @@ export async function createCoachExercise(
     variantOf = data.id;
   }
 
-  const id = randomUUID();
-  const orgId = membership.organizationId;
-  const imagePath = read.photo ? `org/${orgId}/${randomUUID()}.${read.photo.ext}` : null;
-  if (read.photo && imagePath) {
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(imagePath, read.photo.bytes, { contentType: read.photo.contentType });
-    if (error) return fail("La photo n'a pas pu être enregistrée. Réessaie.");
-  }
-  const values = parsed.values;
-  const { error } = await supabase.from("exercises").insert({
-    id,
-    organization_id: orgId,
-    name_fr: values.nameFr,
-    category: values.category,
-    equipment: values.equipment,
-    primary_muscles: values.primaryMuscles,
-    bodyweight: values.bodyweight,
-    instructions_fr: values.instructions,
-    image_main: imagePath,
-    image_source: imagePath ? "coach" : null,
-    video_url: values.videoUrl,
-    variant_of: variantOf,
-    source: "coach",
-    created_by: user.id,
+  // Le MÊME enregistrement que la carte « Nouvel exercice » de l'Assistant IA (lot 2, D-181).
+  const created = await insertCoachExercise(membership.organizationId, user.id, parsed.values, {
+    photo: read.photo,
+    variantOf,
   });
-  if (error) {
-    if (imagePath) await supabase.storage.from(BUCKET).remove([imagePath]);
-    return fail("L'exercice n'a pas pu être enregistré. Réessaie.");
-  }
+  if (!created.ok) return fail(created.error);
 
   revalidateLibrary();
-  redirect(`/coach/bibliotheque/${id}`);
+  redirect(`/coach/bibliotheque/${created.id}`);
 }
 
 export async function updateCoachExercise(

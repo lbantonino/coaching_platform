@@ -6,7 +6,11 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
 import { currencyOf, formatMoney } from "@/domain/billing/money";
+import { formatBytes } from "@/domain/documents/documents";
+import { EQUIPMENT_KEYS } from "@/domain/exercises/vocabulary";
 import { SESSION_MOMENTS, sessionBodySchema, WEEKDAYS } from "@/domain/training/session-v2";
+import { getAthlete } from "@/features/athletes/queries";
+import { addressSchema, athleteUpdateSchema } from "@/features/athletes/schemas";
 import { loadDraft } from "@/features/programs/drafts";
 import { listAthleteProgramRows } from "@/features/programs/queries";
 import { getProgramTemplate } from "@/features/programs/templates";
@@ -14,13 +18,15 @@ import { getSession } from "@/features/sessions/queries";
 import { sessionAmountCents } from "@/features/sessions/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
-import { dayInWords } from "../rules";
+import { dayInWords, type AssistantAttachment } from "../rules";
 import { createClient } from "@/lib/supabase/server";
 
-import { checkAgainstSession, formRuleError } from "../form-data";
+import { athleteFormValues, checkAgainstSession, formRuleError } from "../form-data";
 import { withSourceRhythm } from "../program";
 import {
   ACTION_KINDS,
+  athleteFieldText,
+  pdfRefusal,
   prepareToolInput,
   summarize,
   type AssistantProposal,
@@ -188,6 +194,114 @@ export const WRITE_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "importer_document",
+    description:
+      "Propose de ranger le fichier JOINT par le coach (ligne « [Fichier joint : …] » de sa demande) dans ses Documents, avec un nom, une catégorie (voir_categories_de_documents) et un sportif si utile. Tu ne vois jamais le contenu du fichier. Sans fichier joint, demande au coach de le joindre avec le bouton « Joindre ».",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Nom du document (160 caractères au plus)." },
+        categoryId: { type: "string", description: "Id de voir_categories_de_documents." },
+        athleteId: { type: "string", description: "Id trouvé avec chercher_sportifs." },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "preparer_pdf",
+    description:
+      "Donne les deux PDF (Agenda du programme, Fiches et repères) de la dernière version PUBLIÉE d'un programme, en liens dans une carte. Rien n'est envoyé au sportif. Trouve l'id avec voir_programmes.",
+    input_schema: {
+      type: "object",
+      properties: { programId: { type: "string", description: "Id trouvé avec voir_programmes." } },
+      required: ["programId"],
+    },
+  },
+  {
+    name: "creer_exercice",
+    description:
+      "Propose un nouvel exercice dans la Bibliothèque du coach (carte à valider), sans photo. Cherche d'abord avec chercher_exercices s'il n'existe pas déjà.",
+    input_schema: {
+      type: "object",
+      properties: {
+        name: { type: "string", description: "Nom en français (80 caractères au plus)." },
+        category: { type: "string", enum: ["strength", "cardio", "hyrox", "mobility"] },
+        muscleGroups: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: [
+              "chest",
+              "back",
+              "shoulders",
+              "biceps",
+              "triceps",
+              "forearms",
+              "abs",
+              "lower_back",
+              "glutes",
+              "hips",
+              "quads",
+              "hamstrings",
+              "calves",
+            ],
+          },
+        },
+        equipment: {
+          type: "string",
+          enum: [...EQUIPMENT_KEYS],
+          description: "Matériel principal ; à omettre pour le poids du corps.",
+        },
+        instructions: {
+          type: "array",
+          items: { type: "string" },
+          description: "Consignes, une par élément (15 au plus).",
+        },
+        videoUrl: {
+          type: "string",
+          description: "Lien https vers une vidéo, si le coach en donne un.",
+        },
+      },
+      required: ["name", "category"],
+    },
+  },
+  {
+    name: "completer_fiche",
+    description:
+      "Propose de compléter la fiche d'un sportif existant (carte à valider) : seulement les champs vides, ou ceux que le coach demande de changer. Regarde d'abord la fiche avec voir_fiche. Jamais de santé, de blessure, de note privée ni de statut.",
+    input_schema: {
+      type: "object",
+      properties: {
+        athleteId: { type: "string", description: "Id trouvé avec chercher_sportifs." },
+        changes: {
+          type: "object",
+          description: "Les champs à écrire, et seulement eux.",
+          properties: {
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            sex: { type: "string", enum: ["female", "male", "unspecified"] },
+            email: { type: "string" },
+            phone: { type: "string", description: "Format international conseillé : +32 …" },
+            preferredContact: { type: "string", enum: ["email", "phone", "sms", "whatsapp"] },
+            level: { type: "string", enum: ["beginner", "intermediate", "advanced", "competitor"] },
+            experience: { type: "string" },
+            trainingPlaces: {
+              type: "array",
+              items: { type: "string", enum: ["gym", "outdoor", "track", "home", "box"] },
+              description: "TOUS les lieux (la liste remplace l'ancienne).",
+            },
+            equipment: { type: "string" },
+            addressLine: { type: "string" },
+            postalCode: { type: "string" },
+            city: { type: "string" },
+            country: { type: "string", description: "Code ISO à 2 lettres (BE, FR…)." },
+          },
+        },
+      },
+      required: ["athleteId", "changes"],
+    },
+  },
+  {
     name: "creer_liste_de_taches",
     description: "Propose une nouvelle liste de tâches (40 caractères au plus).",
     input_schema: {
@@ -323,6 +437,7 @@ export async function proposeAction(
   name: string,
   input: unknown,
   pending: AssistantProposal[],
+  context: { attachment?: AssistantAttachment } = {},
 ): Promise<Proposed> {
   // Schéma strict, renvoi à une carte seulement par le nom d'un sportif à créer (relecture n°11).
   const prepared = prepareToolInput(name, input, pending);
@@ -343,6 +458,8 @@ export async function proposeAction(
       ? [String(p.athlete.athleteId)]
       : []),
     ...((p.athleteIds as string[] | undefined) ?? []),
+    // Lot 2 : le sportif d'un document ou d'une fiche à compléter.
+    ...(typeof p.athleteId === "string" ? [p.athleteId] : []),
   ];
   if (athleteIds.length > 0) {
     const { data } = await supabase
@@ -383,7 +500,9 @@ export async function proposeAction(
     if (!data) return refuse("Liste introuvable : regarde voir_listes_de_taches.");
     names[p.listId] = data.name;
   }
-  if (typeof p.categoryId === "string") {
+  // Catégorie de DÉPENSES : seulement pour une dépense (relecture du lot 2 : un document a ses propres
+  // catégories, vérifiées plus bas ; ce contrôle les refusait toutes).
+  if (kind === "noter_depense" && typeof p.categoryId === "string") {
     const { data } = await supabase
       .from("expense_categories")
       .select("name")
@@ -392,6 +511,101 @@ export async function proposeAction(
       .maybeSingle();
     if (!data) return refuse("Catégorie introuvable : regarde voir_categories_de_depenses.");
     names[p.categoryId] = data.name;
+  }
+
+  if (kind === "importer_document") {
+    // Le fichier doit être JOINT à la demande (il part au « Valider », depuis le navigateur).
+    if (!context.attachment) {
+      return refuse(
+        "Aucun fichier joint : demande au coach de le joindre avec le bouton « Joindre », puis de redemander.",
+      );
+    }
+    names.fichier = `${context.attachment.name} (${formatBytes(context.attachment.size)})`;
+    if (typeof p.categoryId === "string") {
+      const { data } = await supabase
+        .from("document_categories")
+        .select("name")
+        .eq("organization_id", organizationId)
+        .eq("id", p.categoryId)
+        .maybeSingle();
+      if (!data) return refuse("Catégorie introuvable : regarde voir_categories_de_documents.");
+      names[p.categoryId] = data.name;
+    }
+  }
+
+  let links: AssistantProposal["links"];
+  if (kind === "preparer_pdf") {
+    // Seulement un programme de l'organisation, publié : les PDF viennent de sa dernière version.
+    const { data: program } = await supabase
+      .from("programs")
+      .select(
+        "id, title, athlete_profiles ( display_name ), program_publications!programs_active_publication_fkey ( number, published_at )",
+      )
+      .eq("organization_id", organizationId)
+      .eq("id", String(p.programId))
+      .maybeSingle();
+    const publication = program?.program_publications ?? null;
+    const refusal = pdfRefusal(program ? { published: publication !== null } : null);
+    if (refusal || !program || !publication) return refuse(refusal ?? "Programme introuvable.");
+    names[program.id] = program.title;
+    names.sportif = program.athlete_profiles?.display_name ?? "";
+    names.version = `Version ${publication.number} publiée le ${dayInWords(
+      publication.published_at.slice(0, 10),
+    )}`;
+    const pdf = `/coach/o/${organizationId}/programmes/${program.id}/pdf`;
+    links = [
+      { label: "Agenda du programme", href: `${pdf}/agenda` },
+      { label: "Fiches et repères", href: `${pdf}/fiches` },
+    ];
+  }
+
+  if (kind === "creer_exercice") {
+    // Doublon possible : un exercice du coach au même nom (sans casse). La carte le dit ; le coach décide.
+    const { data } = await supabase
+      .from("exercises")
+      .select("id")
+      .eq("organization_id", organizationId)
+      .is("archived_at", null)
+      // Nom exact sans casse : « % » et « _ » d'un nom ne sont pas des jokers.
+      .ilike(
+        "name_fr",
+        String(p.name)
+          .trim()
+          .replace(/[\\%_]/g, (char) => `\\${char}`),
+      )
+      .limit(1);
+    if ((data ?? []).length > 0) names.doublon = "oui";
+  }
+
+  if (kind === "completer_fiche") {
+    // La fiche doit être de l'organisation et active ; le résultat passe par les MÊMES règles que le
+    // formulaire Profil (schémas de la fiche et de l'adresse), sur la fiche complète.
+    const detail = await getAthlete(organizationId, String(p.athleteId));
+    if (!detail || detail.status === "archived") {
+      return refuse("Sportif introuvable ou archivé : cherche-le avec chercher_sportifs.");
+    }
+    const changes = p.changes as Record<string, string | string[]>;
+    if (changes.email !== undefined && detail.hasAccount) {
+      return refuse(
+        "Le sportif a activé son compte : son adresse e-mail ne peut plus être modifiée ici.",
+      );
+    }
+    const current = athleteFormValues(detail) as Record<string, string | string[]>;
+    if (
+      Object.entries(changes).every(([f, v]) => JSON.stringify(current[f]) === JSON.stringify(v))
+    ) {
+      return refuse("Ces informations sont déjà sur la fiche : rien à compléter.");
+    }
+    const merged = { ...current, ...changes };
+    const profile = athleteUpdateSchema.safeParse(merged);
+    const address = addressSchema.safeParse(merged);
+    if (!profile.success || !address.success) {
+      return refuse((profile.error ?? address.error)?.issues[0]?.message ?? "Fiche invalide.");
+    }
+    names[detail.id] = detail.displayName;
+    for (const field of Object.keys(changes)) {
+      names[`avant:${field}`] = athleteFieldText(field, current[field]);
+    }
   }
 
   if (kind === "creer_programme") {
@@ -452,6 +666,14 @@ export async function proposeAction(
   );
   return {
     ok: true,
-    proposal: { id: randomUUID(), kind, params: p, title, summary, dependsOn },
+    proposal: {
+      id: randomUUID(),
+      kind,
+      params: p,
+      title,
+      summary,
+      dependsOn,
+      ...(links ? { links } : {}),
+    },
   };
 }

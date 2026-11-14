@@ -10,6 +10,17 @@ export const disciplineLabels: Record<Discipline, string> = {
   hybrid: "Hybride",
 };
 
+// « Programme hybride » (D-180, demande d'Antonino du 14/11) : ce que le sportif lit dans les PDF de
+// son programme. null : ancien programme sans discipline (v1).
+const programKindLabels: Record<Discipline, string> = {
+  running: "Programme running",
+  strength: "Programme musculation",
+  hyrox: "Programme Hyrox",
+  hybrid: "Programme hybride",
+};
+export const programKindLabel = (discipline: Discipline | null): string | null =>
+  discipline ? programKindLabels[discipline] : null;
+
 // Classes de couleur par discipline (D-24), écrites en entier pour que Tailwind les trouve :
 // carte neutre au contour légèrement coloré (29/10/2026 : la couleur va au titre et à l'icône, pas à
 // la carte), fond d'avatar, cadre d'objectif, icône dans son cercle, texte coloré.

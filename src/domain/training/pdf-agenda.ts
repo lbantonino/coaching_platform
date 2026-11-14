@@ -1,5 +1,5 @@
 import { cardLines, type CardLine } from "./card-lines";
-import type { Discipline } from "./discipline";
+import { programKindLabel, type Discipline } from "./discipline";
 import type { ProgramSessionContent } from "./program-session";
 import { sessionMomentLabels, type PublishedSession, type Weekday } from "./session-v2";
 import { formatMinutes } from "./session-view";
@@ -65,6 +65,8 @@ export type PdfWeekInput = {
 
 export type PdfProgramInput = {
   title: string;
+  // Discipline de la version publiée (D-180) ; null pour un ancien programme (v1).
+  discipline: Discipline | null;
   athleteName: string;
   coachName: string;
   version: number;
@@ -108,6 +110,8 @@ export type AgendaTocRow = {
 type PageBase = { anchor: string; nav: PdfNav; bookmark: string; pageNumber: number };
 export type AgendaTocPage = PageBase & {
   kind: "toc";
+  // « Programme hybride · Sommaire » (D-180), « Sommaire » sans discipline.
+  kicker: string;
   title: string;
   subtitle: string;
   rows: AgendaTocRow[];
@@ -361,12 +365,14 @@ export function agendaPdf(input: PdfProgramInput): AgendaPdf {
     };
   });
 
+  const kind = programKindLabel(input.discipline);
   const toc: AgendaTocPage[] = Array.from({ length: tocPages }, (_, i) => ({
     kind: "toc",
     anchor: tocAnchor(i),
     nav: nav(i, "Sommaire"),
     bookmark: tocPages > 1 ? `Sommaire (${i + 1})` : "Sommaire",
     pageNumber: i + 1,
+    kicker: kind ? `${kind} · Sommaire` : "Sommaire",
     title: input.title,
     subtitle: [
       `${pdfDayMonthYear(input.startDate)} → ${pdfDayMonthYear(end)}`,
@@ -407,7 +413,9 @@ export function agendaPdf(input: PdfProgramInput): AgendaPdf {
     documentTitle: `${header} · Agenda du programme`,
     fileName: `Agenda du programme - ${input.title} - ${input.athleteName} - v${input.version}.pdf`,
     headerTitle: header,
-    headerSubtitle: `Agenda du programme · ${plural(input.weeksCount, "semaine")}`,
+    headerSubtitle: kind
+      ? `${kind} · Agenda · ${plural(input.weeksCount, "semaine")}`
+      : `Agenda du programme · ${plural(input.weeksCount, "semaine")}`,
     footer: `Coory · ${input.coachName} · Version ${input.version}`,
     hasFiches,
     pages: [...toc, ...weeks],

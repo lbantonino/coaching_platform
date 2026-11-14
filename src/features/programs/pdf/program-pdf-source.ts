@@ -24,6 +24,7 @@ export async function loadProgramPdfInput(
   );
   return {
     title: program.title,
+    discipline: program.discipline,
     athleteName,
     coachName: coach.displayName,
     version: program.publicationNumber,

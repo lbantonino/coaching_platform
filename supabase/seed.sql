@@ -1471,6 +1471,25 @@ update public.organizations set coory_plan = 'premium' where id = '0b000000-0000
 insert into private.assistant_allowed_emails (email, note)
 values ('coach-a@example.test', 'Démo : compte de travail local');
 
+-- Assistant IA, lot 2 (D-181) : un programme PUBLIÉ du coach B (organisation abonnée), pour tester la
+-- carte « PDF du programme » avec le faux Claude. En janvier 2026 : il ne chevauche aucun programme
+-- créé par les autres tests.
+insert into public.programs (id, organization_id, athlete_id, title, start_date, weeks_count, status, created_by)
+values ('fb000000-0000-4000-8000-000000000001', '0b000000-0000-4000-8000-0000000000b1', 'db000000-0000-4000-8000-000000000001', 'Programme test PDF', '2026-01-05', 2, 'published', 'b0000000-0000-4000-8000-00000000000b');
+insert into public.program_publications (id, organization_id, program_id, number, snapshot_json, published_at, published_by)
+values ('fc000000-0000-4000-8000-000000000001', '0b000000-0000-4000-8000-0000000000b1', 'fb000000-0000-4000-8000-000000000001', 1, '{"title": "Programme test PDF", "weeks": [{"index": 1, "label": "Base"}, {"index": 2, "label": "Base"}]}'::jsonb, '2026-01-04 18:00+01', 'b0000000-0000-4000-8000-00000000000b');
+update public.programs set active_publication_id = 'fc000000-0000-4000-8000-000000000001' where id = 'fb000000-0000-4000-8000-000000000001';
+
+-- Assistant IA, lot 2 (D-181) : une catégorie de documents à identifiant FIXE pour le coach B (les
+-- catégories par défaut ont des id tirés au hasard), pour tester « Importer un document » avec une
+-- catégorie (faux Claude des tests).
+insert into public.document_categories (id, organization_id, name, color, created_by)
+values ('dc000000-0000-4000-8000-0000000000b1', '0b000000-0000-4000-8000-0000000000b1', 'Bilans de test', 'blue', 'b0000000-0000-4000-8000-00000000000b');
+insert into public.publication_sessions (organization_id, publication_id, source_session_key, week_index, slot_index, session_json)
+values
+  ('0b000000-0000-4000-8000-0000000000b1', 'fc000000-0000-4000-8000-000000000001', 's1-1', 1, 1, '{"title": "Endurance", "discipline": "running", "sessionType": "Endurance", "durationMinutes": 40, "steps": [{"title": "Course", "badge": "40 min", "short": "40 min en endurance", "lines": ["Allure facile, zone 2"]}]}'::jsonb),
+  ('0b000000-0000-4000-8000-0000000000b1', 'fc000000-0000-4000-8000-000000000001', 's2-1', 2, 1, '{"title": "Endurance", "discipline": "running", "sessionType": "Endurance", "durationMinutes": 45, "steps": [{"title": "Course", "badge": "45 min", "short": "45 min en endurance", "lines": ["Allure facile, zone 2"]}]}'::jsonb);
+
 -- Compte de démonstration partagé (OPEN-24) : créé comme en ligne (l'utilisateur d'abord, puis
 -- private.setup_demo_account), et autorisé à utiliser l'Assistant IA par son adresse.
 insert into auth.users (

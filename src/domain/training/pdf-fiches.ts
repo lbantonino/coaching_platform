@@ -1,5 +1,5 @@
 import { abbreviate, cardText } from "./card-lines";
-import type { Discipline } from "./discipline";
+import { programKindLabel, type Discipline } from "./discipline";
 import { hyroxStationLabels } from "./hyrox-official";
 import { formatPaceRange, paceToSpeedKmh } from "./pace";
 import {
@@ -748,7 +748,10 @@ export function fichesPdf(input: PdfProgramInput): FichesPdf {
     documentTitle: `${header} · Fiches et repères`,
     fileName: `Fiches et repères - ${input.title} - ${input.athleteName} - v${input.version}.pdf`,
     headerTitle: header,
-    headerSubtitle: "Fiches et repères",
+    // D-180 : « Programme hybride · Fiches et repères ».
+    headerSubtitle: [programKindLabel(input.discipline), "Fiches et repères"]
+      .filter(Boolean)
+      .join(" · "),
     footer: `Coory · ${input.coachName} · Version ${input.version}`,
     pages: [toc, ...pages],
   };

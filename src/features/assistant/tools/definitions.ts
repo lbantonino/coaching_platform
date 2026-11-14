@@ -48,6 +48,21 @@ export const READ_TOOLS: Anthropic.Tool[] = [
     input_schema: { type: "object", properties: {} },
   },
   {
+    name: "voir_categories_de_documents",
+    description: "Liste les catégories de documents du coach (id et nom).",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "voir_fiche",
+    description:
+      "Montre la fiche d'un sportif (identité, contact, niveau, expérience, lieux, matériel, adresse ; ni santé ni notes) : pour savoir ce qui manque avant completer_fiche.",
+    input_schema: {
+      type: "object",
+      properties: { sportif_id: { type: "string" } },
+      required: ["sportif_id"],
+    },
+  },
+  {
     name: "voir_modeles",
     description:
       "Liste les modèles de programme (Coory et ceux du coach) : id, titre, discipline, semaines, séances par semaine. À regarder avant de créer un programme : partir d'un modèle qui convient est plus sûr et moins long.",

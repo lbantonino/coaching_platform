@@ -26,11 +26,13 @@ const useCard = (page: Page, title: string) =>
     .getByRole("link", { name: "Utiliser" })
     .click();
 
+// Prénoms des sportifs de test : jamais un mot de libellé (« Discipline… » faisait échouer un autre
+// parcours, qui cherche le champ « Discipline » pendant que celui-ci tourne en parallèle).
 test("D-177, D-178 : modèles dans l'ordre, « Utiliser » en direct pour un sportif", async ({
   page,
 }, testInfo) => {
   const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const athlete = `Hybride ${suffix}`;
+  const athlete = `Lina ${suffix}`;
 
   await login(page);
   await goToCoachSection(page, "Sportifs");
@@ -166,7 +168,7 @@ test("D-178 : choisir un sportif en bas de la liste ne fait pas remonter la fen�
 test("D-179 : renommer une étape de course et un exercice", async ({ page }, testInfo) => {
   const phone = testInfo.project.name === "telephone";
   const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const athlete = `Renommer ${suffix}`;
+  const athlete = `Rémi ${suffix}`;
   await login(page);
   await goToCoachSection(page, "Sportifs");
   await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
@@ -268,4 +270,58 @@ test("D-179 : renommer une étape de course et un exercice", async ({ page }, te
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
+});
+
+// D-180 (demande d'Antonino du 14/11) : un même programme change d'objectif dans l'année (marathon,
+// force, Hyrox) ; le coach en change la discipline depuis le menu « ··· », et le retrouve sous le
+// bon filtre de la page Programmes.
+test("D-180 : changer la discipline d'un programme", async ({ page }, testInfo) => {
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const athlete = `Nora ${suffix}`;
+  await login(page);
+  await goToCoachSection(page, "Sportifs");
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
+  await fillAthleteName(page, athlete);
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  await expect(page.getByRole("heading", { name: athlete, level: 1 })).toBeVisible();
+
+  await page.goto(`/coach/o/${ORG}/programmes/modeles/${TEN_K}?utiliser=1`);
+  const use = page.getByRole("dialog", { name: "Utiliser ce modèle" });
+  await use.getByPlaceholder("Rechercher un sportif").fill(athlete);
+  await use.getByText(athlete, { exact: true }).click();
+  await use.getByLabel("Titre du programme").fill(athlete);
+  await use.getByRole("button", { name: "Créer le programme" }).click();
+  await expect(page).toHaveURL(/\/programmes\/[0-9a-f-]{36}$/);
+
+  const openSheet = async () => {
+    await page
+      .getByRole("button", { name: "Plus d'actions sur le programme" })
+      .filter({ visible: true })
+      .first()
+      .click();
+    // Ordinateur : un menu ; téléphone : une feuille de boutons.
+    await page
+      .getByRole("menuitem", { name: "Changer la discipline" })
+      .or(page.getByRole("button", { name: "Changer la discipline" }))
+      .first()
+      .click();
+    return page.getByRole("dialog", { name: "Changer la discipline" });
+  };
+  let sheet = await openSheet();
+  await expect(sheet.getByRole("radio", { name: "Running" })).toBeChecked();
+  await sheet.getByText("Hybride", { exact: true }).click();
+  await sheet.getByRole("button", { name: "Changer" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(
+    page.getByText("Enregistré", { exact: true }).filter({ visible: true }).first(),
+  ).toBeVisible();
+
+  // Rouverte, la fenêtre part de la discipline actuelle.
+  sheet = await openSheet();
+  await expect(sheet.getByRole("radio", { name: "Hybride" })).toBeChecked();
+  await sheet.getByRole("button", { name: "Fermer" }).click();
+
+  // La page Programmes, filtrée sur Hybride, montre le programme.
+  await page.goto(`/coach/o/${ORG}/programmes?discipline=hybride`);
+  await expect(page.getByRole("link", { name: athlete }).first()).toBeVisible();
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clock, X } from "lucide-react";
+import { Check, Clock, FileDown, X } from "lucide-react";
 import Link from "next/link";
 
 import { useOpenNewPayment } from "@/components/blocks/new-payment-sheet";
@@ -86,7 +86,23 @@ export function AssistantCard({
         </p>
       ) : null}
 
-      {card.status === "pending" ? (
+      {card.links && card.links.length > 0 ? (
+        // Lot 2 (D-181) : les PDF d'un programme publié, à ouvrir ; rien à valider.
+        <div className="flex flex-wrap items-center gap-2">
+          {card.links.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[12px] px-3.5 text-[14px] font-medium text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2 md:h-9 md:rounded-[10px] md:text-[13.5px]"
+            >
+              <FileDown aria-hidden size={15} strokeWidth={1.9} className="shrink-0" />
+              {link.label}
+            </a>
+          ))}
+        </div>
+      ) : card.status === "pending" ? (
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"

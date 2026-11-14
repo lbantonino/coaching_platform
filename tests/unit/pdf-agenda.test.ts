@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { agendaPdf, fitWeek, hasFiche, type AgendaWeekPage } from "@/domain/training/pdf-agenda";
+import { programKindLabel } from "@/domain/training/discipline";
 import { sessionToDisplay } from "@/domain/training/program-session";
 
 import { demoProgram, hyrox, running, strength } from "./pdf-fixtures";
@@ -120,5 +121,27 @@ describe("PDF Agenda du programme", () => {
     const sessions = fitWeek(Array.from({ length: 7 }, () => day)).flatMap((d) => d.sessions);
     expect(sessions.some((session) => session.cut)).toBe(true);
     expect(sessions.filter((s) => s.cut).every((s) => s.lines.length <= 3)).toBe(true);
+  });
+});
+
+// D-180 (demande d'Antonino du 14/11) : la discipline du programme se lit dans le PDF, pour toutes les
+// disciplines ; un ancien programme (v1, sans discipline) garde les textes d'avant.
+describe("PDF : discipline du programme", () => {
+  it("un libellé par discipline", () => {
+    expect(programKindLabel("running")).toBe("Programme running");
+    expect(programKindLabel("strength")).toBe("Programme musculation");
+    expect(programKindLabel("hyrox")).toBe("Programme Hyrox");
+    expect(programKindLabel("hybrid")).toBe("Programme hybride");
+    expect(programKindLabel(null)).toBeNull();
+  });
+  it("en-tête et sommaire de l'agenda", () => {
+    const pdf = agendaPdf(demoProgram(6));
+    expect(pdf.headerSubtitle).toBe("Programme hybride · Agenda · 6 semaines");
+    expect(pdf.pages[0]).toMatchObject({ kind: "toc", kicker: "Programme hybride · Sommaire" });
+  });
+  it("sans discipline (v1) : les textes d'avant", () => {
+    const pdf = agendaPdf({ ...demoProgram(6), discipline: null });
+    expect(pdf.headerSubtitle).toBe("Agenda du programme · 6 semaines");
+    expect(pdf.pages[0]).toMatchObject({ kind: "toc", kicker: "Sommaire" });
   });
 });

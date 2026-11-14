@@ -54,6 +54,8 @@ const PROGRESS: Record<string, string> = {
   voir_modeles: "Je regarde tes modèles de programme…",
   voir_programmes: "Je regarde les programmes du sportif…",
   chercher_exercices: "Je cherche les exercices dans ta Bibliothèque…",
+  voir_fiche: "Je regarde la fiche du sportif…",
+  voir_categories_de_documents: "Je regarde tes catégories de documents…",
 };
 export const progressFor = (name: string) => PROGRESS[name] ?? "Je prépare ta demande…";
 
