@@ -57,6 +57,8 @@ type Actions = {
     change: { name?: string; color?: string },
   ) => Promise<{ ok: boolean; error?: string }>;
   deleteList: (listId: string) => Promise<{ ok: boolean; error?: string }>;
+  deleteTask: (taskId: string) => Promise<{ ok: boolean }>;
+  deleteDone: () => Promise<{ ok: boolean; count: number }>;
 };
 
 const SMART: { key: TaskTab; label: string; icon: LucideIcon; tile: string; empty: string }[] = [
@@ -128,6 +130,11 @@ export function TasksView({
   actions: Actions;
 }) {
   const [done, setDone] = useState<Record<string, boolean>>({});
+  // Suppression (demande d'Antonino du 14/11) : une tâche depuis sa ligne, ou toutes les terminées.
+  const [removed, setRemoved] = useState<ReadonlySet<string>>(new Set());
+  const [removingTask, setRemovingTask] = useState<TasksViewTask | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [deleting, startDeleting] = useTransition();
   const [draft, setDraft] = useState("");
   const [adding, startAdding] = useTransition();
   const [, startTransition] = useTransition();
@@ -144,7 +151,9 @@ export function TasksView({
   // Vue inconnue (liste supprimée…) : « Toutes ».
   const shownView = (smart ?? list) ? current : "toutes";
 
-  const shown = tasks.map((task) => ({ ...task, done: done[task.id] ?? task.done }));
+  const shown = tasks
+    .filter((task) => !removed.has(task.id))
+    .map((task) => ({ ...task, done: done[task.id] ?? task.done }));
   const inView = (task: TasksViewTask, key: string) => {
     const smartKey = SMART.find((item) => item.key === key)?.key;
     if (smartKey) return smartKey === "toutes" ? !task.done : inTab(task, smartKey, today);
@@ -154,6 +163,43 @@ export function TasksView({
   const rows = shown.filter((task) => inView(task, shownView));
   const title = smart?.label ?? list?.name ?? "Toutes";
   const canQuickAdd = shownView !== "terminees";
+  const canClear = shownView === "terminees" && rows.length > 0;
+
+  const removeTask = (task: TasksViewTask) =>
+    startDeleting(async () => {
+      const { ok } = await actions.deleteTask(task.id);
+      setRemovingTask(null);
+      if (!ok) {
+        toast("La tâche n'a pas pu être supprimée. Réessaie.");
+        return;
+      }
+      setRemoved((value) => new Set(value).add(task.id));
+      toast("Tâche supprimée.");
+      router.refresh();
+    });
+  const clearDone = () =>
+    startDeleting(async () => {
+      const ids = rows.map((task) => task.id);
+      const result = await actions.deleteDone();
+      setClearing(false);
+      if (!result.ok) {
+        toast("Les tâches n'ont pas pu être supprimées. Réessaie.");
+        return;
+      }
+      setRemoved((value) => new Set([...value, ...ids]));
+      toast(`${plural(result.count)} supprimée${result.count > 1 ? "s" : ""}.`);
+      router.refresh();
+    });
+  const clearButton = canClear ? (
+    <button
+      type="button"
+      onClick={() => setClearing(true)}
+      className="tap-44 inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[9px] px-2.5 text-[13px] leading-[normal] font-medium text-status-danger transition-[background-color] duration-150 hover:bg-dlg-danger-soft"
+    >
+      <Trash2 aria-hidden size={14} strokeWidth={1.8} />
+      Tout supprimer
+    </button>
+  ) : null;
 
   // « + Nouvelle tâche » (en-tête, bouton flottant) : le curseur dans l'ajout rapide. Depuis
   // « Terminées » ou l'accueil du téléphone, on passe d'abord dans « Toutes » (?ajout=1).
@@ -229,6 +275,7 @@ export function TasksView({
           showList={!list}
           onToggle={() => toggle(task)}
           onOpen={openTask ? () => openTask(task.edit) : undefined}
+          onDelete={() => setRemovingTask(task)}
         />
       ))}
       {canQuickAdd ? (
@@ -297,8 +344,11 @@ export function TasksView({
             >
               {title}
             </h2>
-            <span className="shrink-0 text-[13.5px] leading-[normal] text-muted tabular">
-              {plural(rows.length)}
+            <span className="flex shrink-0 items-center gap-3">
+              {clearButton}
+              <span className="text-[13.5px] leading-[normal] text-muted tabular">
+                {plural(rows.length)}
+              </span>
             </span>
           </div>
           <div className="flex-1">
@@ -340,7 +390,10 @@ export function TasksView({
             >
               {title}
             </h2>
-            <span className="shrink-0 text-[14px] text-muted tabular">{plural(rows.length)}</span>
+            <span className="flex shrink-0 items-center gap-2">
+              {clearButton}
+              <span className="text-[14px] text-muted tabular">{plural(rows.length)}</span>
+            </span>
           </div>
           <nav
             aria-label="Listes"
@@ -390,6 +443,33 @@ export function TasksView({
       >
         <Plus aria-hidden size={24} strokeWidth={2.2} />
       </button>
+
+      <ConfirmDialog
+        open={removingTask !== null}
+        onClose={() => setRemovingTask(null)}
+        onConfirm={() => removingTask && removeTask(removingTask)}
+        title="Supprimer cette tâche ?"
+        confirmLabel="Supprimer"
+        pending={deleting}
+      >
+        « {removingTask?.title} » sera supprimée définitivement.
+      </ConfirmDialog>
+      <ConfirmDialog
+        open={clearing}
+        onClose={() => setClearing(false)}
+        onConfirm={clearDone}
+        title={
+          rows.length > 1
+            ? `Supprimer les ${rows.length} tâches terminées ?`
+            : "Supprimer la tâche terminée ?"
+        }
+        confirmLabel="Tout supprimer"
+        pending={deleting}
+      >
+        {rows.length > 1
+          ? "Elles seront supprimées définitivement."
+          : "Elle sera supprimée définitivement."}
+      </ConfirmDialog>
     </>
   );
 }
@@ -766,12 +846,14 @@ function TaskRow({
   showList,
   onToggle,
   onOpen,
+  onDelete,
 }: {
   task: TasksViewTask;
   today: string;
   showList: boolean;
   onToggle: () => void;
   onOpen?: () => void;
+  onDelete?: () => void;
 }) {
   const due = task.dueOn
     ? task.dueOn < today && !task.done
@@ -862,6 +944,16 @@ function TaskRow({
       ) : (
         <span aria-hidden className="w-[92px] shrink-0 max-lg:hidden" />
       )}
+      {onDelete ? (
+        <button
+          type="button"
+          aria-label={`Supprimer la tâche : ${task.title}`}
+          onClick={onDelete}
+          className="tap-44 -mr-1.5 grid size-9 shrink-0 place-items-center rounded-full text-faint transition-[background-color,color] duration-150 hover:bg-dlg-danger-soft hover:text-status-danger focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <Trash2 aria-hidden size={16} strokeWidth={1.8} />
+        </button>
+      ) : null}
     </li>
   );
 }

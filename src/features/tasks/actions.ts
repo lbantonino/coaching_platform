@@ -184,6 +184,24 @@ export async function deleteTask(organizationId: string, taskId: string): Promis
   return { ok: true };
 }
 
+// « Tout supprimer » dans « Terminées » (demande d'Antonino du 14/11) : les tâches faites de
+// l'organisation, définitivement ; l'interface demande confirmation avant.
+export async function deleteDoneTasks(
+  organizationId: string,
+): Promise<{ ok: boolean; count: number }> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("coach_tasks")
+    .delete()
+    .eq("organization_id", membership.organizationId)
+    .not("done_at", "is", null)
+    .select("id");
+  if (error) return { ok: false, count: 0 };
+  revalidateTasks();
+  return { ok: true, count: data?.length ?? 0 };
+}
+
 // --- Ajout rapide et listes (kit « Coory Pages », page 01, D-129) ---------------------------------
 
 // Vue de la page Tâches où l'on ajoute : une vue « intelligente » ou une liste du coach.
