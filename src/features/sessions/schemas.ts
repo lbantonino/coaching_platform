@@ -5,6 +5,8 @@ import { addVat, parseAmount } from "@/domain/billing/payments";
 import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
 import { formatDate } from "@/lib/format";
 
+import type { CoachSession } from "./queries";
+
 // Séances encadrées du coach, en présentiel (P2-05b, D-27). Règles PURES, testées par Vitest.
 // Individuelle d'abord (demande d'Antonino, 23/10) : un coach fait surtout du coaching individuel.
 export const SESSION_KINDS = ["individual", "group"] as const;
@@ -38,6 +40,48 @@ export type SessionFormInput = {
   vatIncluded: boolean;
   paymentMethod: string;
 };
+
+// « Modifier la séance » : seuls les sportifs AJOUTÉS doivent être des fiches actives ; un inscrit
+// archivé depuis reste inscrit et ne bloque pas l'enregistrement (relecture du lot 4, n°1).
+export function newlyAddedAthletes(enrolled: Iterable<string>, next: readonly string[]): string[] {
+  const before = new Set(enrolled);
+  return next.filter((athleteId) => !before.has(athleteId));
+}
+
+// « Modifier la séance » pré-remplie depuis la séance enregistrée : la page du formulaire et l'Assistant
+// IA (lot 4, qui fusionne ses changements dans ces valeurs) partagent cette règle. `enrolledIds` : les
+// inscrits d'une séance collective.
+export function sessionFormInitial(
+  session: CoachSession,
+  enrolledIds: Iterable<string>,
+): SessionFormInput {
+  return {
+    kind: session.kind,
+    title: session.title,
+    discipline: session.discipline ?? "",
+    location: session.location ?? "",
+    startsOn: session.startsOn,
+    startTime: session.startTime,
+    durationMinutes: String(session.durationMinutes),
+    repeatsWeekly: session.repeatsWeekly,
+    endsOn: session.endsOn ?? "",
+    athleteId: session.kind === "individual" ? (session.athletes[0]?.id ?? "") : "",
+    athleteIds: session.kind === "group" ? [...enrolledIds] : [],
+    newClient: false,
+    newAthleteName: "",
+    notes: session.notes ?? "",
+    // 6500 -> « 65 » ; 6550 -> « 65,50 ».
+    price:
+      session.priceCents === null
+        ? ""
+        : (session.priceCents / 100).toFixed(2).replace(".", ",").replace(/,00$/, ""),
+    // TVA de la séance (D-163) : cochée si elle en a une, avec son taux (« 8,1 »).
+    applyVat: session.vatRate > 0,
+    vatRate: session.vatRate > 0 ? String(session.vatRate).replace(".", ",") : "",
+    vatIncluded: session.priceVatIncluded,
+    paymentMethod: session.paymentMethod ?? "transfer",
+  };
+}
 
 // Valeurs prêtes à enregistrer (noms de colonnes) ; les inscrits d'une séance collective sont à part.
 export type SessionValues = {

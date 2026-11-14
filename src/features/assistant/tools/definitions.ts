@@ -105,6 +105,50 @@ export const READ_TOOLS: Anthropic.Tool[] = [
     input_schema: { type: "object", properties: {} },
   },
   {
+    name: "voir_taches",
+    description:
+      "Liste les tâches du coach (100 au plus) : id, titre, échéance, priorité, liste, sportif, faite, note. Par défaut celles à faire ; statut « terminees » ou « toutes ».",
+    input_schema: {
+      type: "object",
+      properties: {
+        statut: { type: "string", enum: ["a_faire", "terminees", "toutes"] },
+        sportif_id: { type: "string" },
+        liste_id: { type: "string" },
+      },
+    },
+  },
+  {
+    name: "voir_paiements",
+    description:
+      "Liste les paiements reçus (100 au plus, les plus récents d'abord) : id, date, montant, sportif, moyen, libellé. Filtres : sportif, période (du, au : AAAA-MM-JJ).",
+    input_schema: {
+      type: "object",
+      properties: {
+        sportif_id: { type: "string" },
+        du: { type: "string" },
+        au: { type: "string" },
+      },
+    },
+  },
+  {
+    name: "voir_depenses",
+    description:
+      "Liste les dépenses (100 au plus) : id, libellé, montant, date, mensuelle, jusqu_au, catégorie. Période facultative (du, au).",
+    input_schema: {
+      type: "object",
+      properties: { du: { type: "string" }, au: { type: "string" } },
+    },
+  },
+  {
+    name: "voir_documents",
+    description:
+      "Liste les documents (100 au plus) : id, nom, catégorie, sportif, taille, date. Jamais leur contenu. Filtres : sportif, catégorie.",
+    input_schema: {
+      type: "object",
+      properties: { sportif_id: { type: "string" }, categorie_id: { type: "string" } },
+    },
+  },
+  {
     name: "voir_programmes",
     description:
       "Liste les programmes d'un sportif avec leurs dates (début, fin) et leur statut : pour choisir une date de début qui ne chevauche rien, ou copier un ancien programme.",

@@ -4,8 +4,9 @@ import { z } from "zod";
 
 import { getAthlete, listAthletes } from "@/features/athletes/queries";
 import { listUnpaidDates } from "@/features/billing/collect-queries";
-import { listExpenseCategories } from "@/features/billing/expense-queries";
-import { listDocumentCategories } from "@/features/documents/queries";
+import { listExpenseCategories, listExpenses } from "@/features/billing/expense-queries";
+import { listPayments } from "@/features/billing/payment-queries";
+import { listDocumentCategories, listDocuments } from "@/features/documents/queries";
 import { listLibraryExercises } from "@/features/exercises/queries";
 import { loadDraft } from "@/features/programs/drafts";
 import { listAthleteProgramRows } from "@/features/programs/queries";
@@ -14,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { draftReading, draftReadInput, templateReadInput } from "../program-edit";
 import { listSessions } from "@/features/sessions/queries";
-import { listTaskLists } from "@/features/tasks/queries";
+import { listTaskLists, listTasks } from "@/features/tasks/queries";
 
 import {
   shapeAgenda,
@@ -22,7 +23,11 @@ import {
   shapeAthletes,
   shapeExercises,
   shapePrograms,
+  shapeDocuments,
+  shapeExpenses,
+  shapePayments,
   shapeSessionTemplates,
+  shapeTasks,
   shapeTemplates,
   shapeUnpaid,
 } from "./shape";
@@ -47,6 +52,19 @@ const inputs = {
   voir_categories_de_depenses: z.object({}),
   voir_modeles: z.object({}),
   voir_modeles_de_seance: z.object({}),
+  // Lot 4 (D-183) : le quotidien, 100 lignes au plus.
+  voir_taches: z.object({
+    statut: z.enum(["a_faire", "terminees", "toutes"]).optional(),
+    sportif_id: z.uuid().optional(),
+    liste_id: z.uuid().optional(),
+  }),
+  voir_paiements: z.object({
+    sportif_id: z.uuid().optional(),
+    du: isoDay.optional(),
+    au: isoDay.optional(),
+  }),
+  voir_depenses: z.object({ du: isoDay.optional(), au: isoDay.optional() }),
+  voir_documents: z.object({ sportif_id: z.uuid().optional(), categorie_id: z.uuid().optional() }),
   voir_programmes: z.object({ sportif_id: z.uuid() }),
   voir_fiche: z.object({ sportif_id: z.uuid() }),
   voir_brouillon: draftReadInput,
@@ -97,6 +115,43 @@ export async function runReadTool(
       return json(shapeTemplates(await listTemplates(organizationId, { kind: "program" })));
     case "voir_modeles_de_seance":
       return json(shapeSessionTemplates(await listTemplates(organizationId, { kind: "session" })));
+    case "voir_taches": {
+      const { statut, sportif_id, liste_id } = inputs.voir_taches.parse(input ?? {});
+      const { open, done } = await listTasks(organizationId);
+      const tasks = (
+        statut === "terminees" ? done : statut === "toutes" ? [...open, ...done] : open
+      )
+        .filter((task) => !sportif_id || task.athleteId === sportif_id)
+        .filter((task) => !liste_id || task.list?.id === liste_id);
+      return json(shapeTasks(tasks));
+    }
+    case "voir_paiements": {
+      const { sportif_id, du, au } = inputs.voir_paiements.parse(input ?? {});
+      const payments = (await listPayments(organizationId, du))
+        .filter((payment) => !au || payment.receivedOn <= au)
+        .filter((payment) => !sportif_id || payment.athleteId === sportif_id);
+      return json(shapePayments(payments));
+    }
+    case "voir_depenses": {
+      // Une dépense mensuelle compte tant qu'elle n'est pas finie : elle reste dans la période.
+      const { du, au } = inputs.voir_depenses.parse(input ?? {});
+      const expenses = (await listExpenses(organizationId)).filter(
+        (expense) =>
+          (!au || expense.spentOn <= au) &&
+          (!du ||
+            (expense.repeatsMonthly
+              ? expense.endsOn === null || expense.endsOn >= du
+              : expense.spentOn >= du)),
+      );
+      return json(shapeExpenses(expenses));
+    }
+    case "voir_documents": {
+      const { sportif_id, categorie_id } = inputs.voir_documents.parse(input ?? {});
+      const documents = (await listDocuments(organizationId, sportif_id)).filter(
+        (document) => !categorie_id || document.categoryId === categorie_id,
+      );
+      return json(shapeDocuments(documents));
+    }
     case "voir_programmes": {
       const { sportif_id } = inputs.voir_programmes.parse(input);
       return json(shapePrograms(await listAthleteProgramRows(organizationId, sportif_id)));

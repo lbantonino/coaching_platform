@@ -1,11 +1,17 @@
 import { formatMoney } from "@/domain/billing/money";
+import { paymentMethodLabels } from "@/domain/billing/payments";
+import { formatBytes } from "@/domain/documents/documents";
 import type { LibraryExercise } from "@/domain/exercises/library";
 import type { AthleteDetail, AthleteListItem } from "@/features/athletes/queries";
 import type { UnpaidDate } from "@/features/billing/collect-queries";
+import type { CoachExpense } from "@/features/billing/expense-queries";
+import type { AthletePayment } from "@/features/billing/payment-queries";
+import type { CoachDocument } from "@/features/documents/queries";
 import type { AthleteProgramRow } from "@/features/programs/queries";
 import type { TemplateCard } from "@/features/programs/templates";
 import type { CoachSession } from "@/features/sessions/queries";
 import { sessionOccurrences } from "@/features/sessions/schemas";
+import type { CoachTask } from "@/features/tasks/queries";
 
 // Mise en forme des outils de lecture de l'Assistant IA (lot 1 des actions) : ce qui part chez
 // Anthropic. Court, utile à l'action, jamais d'e-mail, de téléphone, de note ni de donnée de santé.
@@ -239,4 +245,56 @@ export function shapeAthleteSheet(fiche: SheetSource) {
     statut: fiche.status,
     compte_active: fiche.hasAccount,
   };
+}
+
+// --- Lot 4 (D-183) : le quotidien. 100 lignes au plus par lecture ; jamais le fichier d'un document.
+const MAX_ROWS = 100;
+const amountText = (cents: number, currency: Parameters<typeof formatMoney>[1]) =>
+  formatMoney(cents, currency).replace(/\s/g, " ");
+
+export function shapeTasks(tasks: readonly CoachTask[]) {
+  return tasks.slice(0, MAX_ROWS).map((task) => ({
+    id: task.id,
+    titre: task.title,
+    echeance: task.dueOn,
+    priorite: task.priority === "high" ? "haute" : "normale",
+    liste: task.list?.name ?? null,
+    sportif: task.athleteName,
+    faite: task.done,
+    note: task.notes ? task.notes.slice(0, 200) : null,
+  }));
+}
+
+export function shapePayments(payments: readonly AthletePayment[]) {
+  return payments.slice(0, MAX_ROWS).map((payment) => ({
+    id: payment.id,
+    date: payment.receivedOn,
+    montant: amountText(payment.amountCents, payment.currency ?? "EUR"),
+    sportif: payment.athleteName,
+    moyen: paymentMethodLabels[payment.method],
+    libelle: payment.label,
+  }));
+}
+
+export function shapeExpenses(expenses: readonly CoachExpense[]) {
+  return expenses.slice(0, MAX_ROWS).map((expense) => ({
+    id: expense.id,
+    libelle: expense.label,
+    montant: amountText(expense.amountCents, expense.currency),
+    date: expense.spentOn,
+    mensuelle: expense.repeatsMonthly,
+    jusqu_au: expense.endsOn,
+    categorie: expense.categoryName,
+  }));
+}
+
+export function shapeDocuments(documents: readonly CoachDocument[]) {
+  return documents.slice(0, MAX_ROWS).map((document) => ({
+    id: document.id,
+    nom: document.name,
+    categorie: document.categoryName,
+    sportif: document.athleteName,
+    taille: formatBytes(document.sizeBytes),
+    modifie_le: document.updatedAt.slice(0, 10),
+  }));
 }

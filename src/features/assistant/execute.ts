@@ -34,6 +34,7 @@ import { createTask, createTaskList } from "@/features/tasks/actions";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
+import { executeDaily } from "./execute-daily";
 import { hasUnknownExercise, UNKNOWN_EXERCISE } from "./exercise-check";
 import {
   athleteFormValues,
@@ -315,6 +316,24 @@ export async function executeAssistantAction(
       if (!created.ok) return fail(created.message);
       return { ok: true, href: `${base}/programmes/modeles/${created.templateId}` };
     }
+    // Lot 4 (D-183) : le quotidien, par execute-daily.ts (server-only), après requireOrgAccess.
+    case "modifier_seance_agenda":
+    case "supprimer_seance_agenda":
+    case "marquer_seance_non_payee":
+    case "supprimer_paiement":
+    case "supprimer_depense":
+    case "arreter_depense":
+    case "categorie_depenses":
+    case "cocher_tache":
+    case "modifier_tache":
+    case "supprimer_tache":
+    case "supprimer_taches_terminees":
+    case "modifier_liste_de_taches":
+    case "supprimer_liste_de_taches":
+    case "modifier_document":
+    case "supprimer_document":
+    case "categorie_documents":
+      return executeDaily(orgId, user.id, action);
     case "creer_programme": {
       // Lot 3a : la MÊME création que l'assistant « Créer un programme » (brouillon, jamais publié),
       // puis, pour un programme écrit, le MÊME enregistrement que l'éditeur.

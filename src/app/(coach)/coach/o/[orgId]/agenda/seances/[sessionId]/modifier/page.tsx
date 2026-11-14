@@ -11,6 +11,7 @@ import { Quoted } from "@/components/ui/quoted";
 import { listAthletes } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { deleteSession, updateSession } from "@/features/sessions/actions";
+import { sessionFormInitial } from "@/features/sessions/schemas";
 import { getSession } from "@/features/sessions/queries";
 
 export const metadata: Metadata = {
@@ -106,32 +107,7 @@ async function EditSession({ orgId, sessionId }: { orgId: string; sessionId: str
           cancelHref={sessionPath}
           athletesPath={`/coach/o/${organizationId}/sportifs`}
           footer={deleteButton("link")}
-          initial={{
-            kind: session.kind,
-            title: session.title,
-            discipline: session.discipline ?? "",
-            location: session.location ?? "",
-            startsOn: session.startsOn,
-            startTime: session.startTime,
-            durationMinutes: String(session.durationMinutes),
-            repeatsWeekly: session.repeatsWeekly,
-            endsOn: session.endsOn ?? "",
-            athleteId: session.kind === "individual" ? (session.athletes[0]?.id ?? "") : "",
-            athleteIds: session.kind === "group" ? [...enrolledIds] : [],
-            newClient: false,
-            newAthleteName: "",
-            notes: session.notes ?? "",
-            // 6500 -> « 65 » ; 6550 -> « 65,50 ».
-            price:
-              session.priceCents === null
-                ? ""
-                : (session.priceCents / 100).toFixed(2).replace(".", ",").replace(/,00$/, ""),
-            // TVA de la séance (D-163) : cochée si elle en a une, avec son taux (« 8,1 »).
-            applyVat: session.vatRate > 0,
-            vatRate: session.vatRate > 0 ? String(session.vatRate).replace(".", ",") : "",
-            vatIncluded: session.priceVatIncluded,
-            paymentMethod: session.paymentMethod ?? "transfer",
-          }}
+          initial={sessionFormInitial(session, enrolledIds)}
           locked
           submitLabel="Enregistrer"
         />

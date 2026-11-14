@@ -2,11 +2,14 @@ import { parseExpenseForm } from "@/domain/billing/expenses";
 import { parseCoachExerciseForm, type CoachExerciseInput } from "@/domain/exercises/coach-exercise";
 import { parseVatRate } from "@/domain/billing/money";
 import { parseAmount } from "@/domain/billing/payments";
+import type { DocumentFormValues } from "@/domain/documents/documents";
 import { parseTaskForm, readTaskForm, type TaskFormValues } from "@/domain/tasks/task-form";
 import { parseNewAthleteForm, type NewAthleteFormInput } from "@/features/athletes/new-athlete";
 import type { AddressFormValues, AthleteFormValues } from "@/features/athletes/actions";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import type { PaymentFormValues } from "@/features/billing/payment-actions";
+import type { CoachDocument } from "@/features/documents/queries";
+import type { CoachTask } from "@/features/tasks/queries";
 import {
   occursOn,
   parseSessionForm,
@@ -374,4 +377,129 @@ export function checkAgainstSession(
     }
   }
   return { ok: true, params: action.params };
+}
+
+// --- Lot 4 (D-183) : au « Valider », les changements d'une carte dans les valeurs ACTUELLES ---------
+// (relues au clic), puis le formulaire habituel : seuls les champs de la carte changent.
+
+// « Modifier la séance » : `initial` vient de sessionFormInitial (la page du formulaire).
+export function mergeSessionChanges(
+  initial: SessionFormInput,
+  changes: Record<string, unknown>,
+): SessionFormInput {
+  const next: SessionFormInput = { ...initial };
+  for (const [field, value] of Object.entries(changes)) {
+    switch (field) {
+      case "title":
+      case "startsOn":
+      case "startTime":
+      case "paymentMethod":
+        next[field] = String(value);
+        break;
+      case "discipline":
+      case "location":
+      case "endsOn":
+      case "notes":
+        next[field] = value === null ? "" : String(value);
+        break;
+      case "durationMinutes":
+        next.durationMinutes = String(value);
+        break;
+      case "repeatsWeekly":
+      case "vatIncluded":
+        next[field] = value === true;
+        break;
+      case "athleteIds":
+        next.athleteIds = [...(value as string[])];
+        break;
+      case "price":
+        next.price = value === null ? "" : amountText(Number(value));
+        break;
+      case "vatRate": {
+        const rate = Number(value);
+        next.applyVat = rate > 0;
+        next.vatRate = rate > 0 ? String(rate).replace(".", ",") : "";
+        break;
+      }
+    }
+  }
+  return next;
+}
+
+// Les noms des champs que lit readForm (sessions/session-core.ts).
+export function sessionInputFormData(input: SessionFormInput): FormData {
+  const form = new FormData();
+  const check = (name: string, on: boolean) => {
+    if (on) form.set(name, "on");
+  };
+  form.set("title", input.title);
+  form.set("discipline", input.discipline);
+  form.set("location", input.location);
+  form.set("startsOn", input.startsOn);
+  form.set("startTime", input.startTime);
+  form.set("durationMinutes", input.durationMinutes);
+  check("repeatsWeekly", input.repeatsWeekly);
+  form.set("endsOn", input.endsOn);
+  form.set("athleteId", input.athleteId);
+  for (const id of input.athleteIds) form.append("athleteIds", id);
+  check("newClient", input.newClient);
+  form.set("newAthleteName", input.newAthleteName);
+  form.set("notes", input.notes);
+  form.set("price", input.price);
+  check("applyVat", input.applyVat);
+  form.set("vatRate", input.vatRate);
+  check("vatIncluded", input.vatIncluded);
+  form.set("paymentMethod", input.paymentMethod);
+  return form;
+}
+
+// « Modifier la tâche » : les valeurs de la fenêtre (editableTask), puis les changements ; null efface.
+export function mergeTaskChanges(
+  task: CoachTask,
+  changes: Record<string, unknown>,
+): TaskFormValues {
+  const current: TaskFormValues = {
+    title: task.title,
+    priority: task.priority,
+    dueOn: task.dueOn ?? "",
+    listId: task.list?.id ?? "",
+    athleteId: task.athleteId ?? "",
+    notes: task.notes ?? "",
+  };
+  for (const [field, value] of Object.entries(changes)) {
+    if (field in current) {
+      current[field as keyof TaskFormValues] = value === null ? "" : String(value);
+    }
+  }
+  return current;
+}
+
+export function taskFormData(values: TaskFormValues): FormData {
+  const form = new FormData();
+  for (const [field, value] of Object.entries(values)) form.set(field, value);
+  return form;
+}
+
+// « Modifier le document » : nom, catégorie et sportif (jamais le fichier).
+export function mergeDocumentChanges(
+  document: Pick<CoachDocument, "name" | "categoryId" | "athleteId">,
+  changes: Record<string, unknown>,
+): DocumentFormValues {
+  const current: DocumentFormValues = {
+    name: document.name,
+    categoryId: document.categoryId ?? "",
+    athleteId: document.athleteId ?? "",
+  };
+  for (const [field, value] of Object.entries(changes)) {
+    if (field in current) {
+      current[field as keyof DocumentFormValues] = value === null ? "" : String(value);
+    }
+  }
+  return current;
+}
+
+export function documentFormData(values: DocumentFormValues): FormData {
+  const form = new FormData();
+  for (const [field, value] of Object.entries(values)) form.set(field, value);
+  return form;
 }

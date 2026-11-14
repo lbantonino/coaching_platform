@@ -76,6 +76,23 @@ export async function listDocuments(
   return ((data ?? []) as unknown as Row[]).map(toDocument);
 }
 
+// Un document de l'organisation, ou null (Assistant IA, lot 4 : jamais son fichier, seulement sa
+// fiche : nom, catégorie, sportif, taille).
+export async function getDocument(
+  organizationId: string,
+  documentId: string,
+): Promise<CoachDocument | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("coach_documents")
+    .select(SELECT)
+    .eq("organization_id", organizationId)
+    .eq("id", documentId)
+    .maybeSingle();
+  if (error) throw new Error("Lecture du document impossible.");
+  return data ? toDocument(data as unknown as Row) : null;
+}
+
 // Catégories de l'organisation (D-67), par ordre alphabétique.
 export async function listDocumentCategories(organizationId: string): Promise<DocumentCategory[]> {
   const supabase = await createClient();

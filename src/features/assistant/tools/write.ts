@@ -25,9 +25,11 @@ import { todayIsoInBrussels } from "@/lib/format";
 import { dayInWords, type AssistantAttachment } from "../rules";
 import { createClient } from "@/lib/supabase/server";
 
+import { isDailyKind } from "../daily";
 import { hasUnknownExercise, UNKNOWN_EXERCISE } from "../exercise-check";
 import { athleteFormValues, checkAgainstSession, formRuleError } from "../form-data";
 import { withSourceRhythm } from "../program";
+import { DAILY_TOOLS, proposeDaily } from "./daily";
 import {
   actionCardNames,
   pendingConflict,
@@ -590,6 +592,9 @@ WRITE_TOOLS.push(
   },
 );
 
+// Lot 4 (D-183) : le quotidien (tools/daily.ts).
+WRITE_TOOLS.push(...DAILY_TOOLS);
+
 export const WRITE_TOOL_NAMES = new Set<string>(ACTION_KINDS);
 
 const DAY_MS = 86_400_000;
@@ -1013,6 +1018,12 @@ export async function proposeAction(
         ? "Une phase va d'une semaine à une suivante."
         : planIssues({ phases, weeks })[0]?.message;
     if (issue) return refuse(issue);
+  }
+
+  if (isDailyKind(kind)) {
+    const checked = await proposeDaily(organizationId, kind, p, names);
+    if (!checked.ok) return refuse(checked.error);
+    if (checked.params) p = { ...p, ...checked.params };
   }
 
   const { data: organization } = await supabase
