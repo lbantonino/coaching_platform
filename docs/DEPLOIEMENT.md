@@ -65,10 +65,13 @@ l'offre Pro.
 
    Sans code enregistré, les inscriptions sont fermées (sûr par défaut). Tu donnes le code aux coachs
    que tu invites.
-8. **Modèles Coory** (Prépa Hyrox, 10 km, semi-marathon, marathon, trois séances) : ils ne sont pas
-   dans les migrations (D-155 : leur contenu se valide avec Gianluca). Quand Gianluca a validé les
-   allures, colle le contenu de `supabase/content/modeles_coory.sql` dans **SQL Editor** et exécute-le
-   une fois (le rejouer ne crée pas de doublon). Avant cela, l'onglet « Modèles Coory » est vide.
+8. **Modèles Coory** (11 modèles de programme et 3 modèles de séance, D-177) : ils ne sont pas dans
+   les migrations (D-155 : leur contenu se valide avec Gianluca). Colle tout le contenu de
+   `supabase/content/modeles_coory.sql` dans **SQL Editor** et exécute-le. Le fichier est gros
+   (environ 470 Ko) : si l'éditeur le refuse, exécute-le en deux fois, d'abord tout ce qui précède la
+   ligne `-- <modeles-generes>`, puis tout ce qui suit à partir de cette ligne. Rejouable : relancé
+   après les corrections de Gianluca, il met les modèles Coory à jour sans doublon et ne touche jamais
+   un modèle de coach. Avant cela, l'onglet « Modèles » ne montre aucun modèle Coory.
 
 ## 2. Connexion Google
 

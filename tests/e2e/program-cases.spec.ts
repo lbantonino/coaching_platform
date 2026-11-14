@@ -11,7 +11,7 @@ import { fillAthleteName, goToCoachSection } from "./helpers";
 // les ajoute) ; le cas attend donc 12 semaines vides, pas 48 séances vides.
 
 const ORG = "0a000000-0000-4000-8000-0000000000a1";
-// Modèle Coory « Premier 10 km · 8 semaines » (graine de développement).
+// Modèle Coory « Préparation 10 km » (graine de développement).
 const COORY_TEMPLATE = "7a000000-0000-4000-8000-000000000002";
 
 async function login(page: Page) {

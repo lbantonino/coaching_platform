@@ -6,6 +6,7 @@ import type { Discipline } from "@/domain/training/discipline";
 import { programPlanSchema, type ProgramPlan } from "@/domain/training/program-plan";
 import { sessionBodySchema, type SessionBody } from "@/domain/training/session-v2";
 import { sessionHeadline } from "@/domain/training/session-view";
+import { compareTemplateCards } from "@/domain/training/template-order";
 import { createClient } from "@/lib/supabase/server";
 
 import type { TemplateKind } from "./schemas";
@@ -146,13 +147,8 @@ export async function listTemplates(
       )
       .filter((card) => (filters.discipline ? card.discipline === filters.discipline : true))
       .filter((card) => (search ? normalize(card.title).includes(search) : true))
-      // Coory d'abord (comme la maquette), puis les plus récents.
-      .sort(
-        (a, b) =>
-          Number(a.source === "mine") - Number(b.source === "mine") ||
-          Number(a.kind === "session") - Number(b.kind === "session") ||
-          b.updatedAt.localeCompare(a.updatedAt),
-      )
+      // Coory d'abord (comme la maquette), dans l'ordre fixé de ses modèles, puis les plus récents.
+      .sort(compareTemplateCards)
   );
 }
 

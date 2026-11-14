@@ -5,7 +5,7 @@ import { fillAthleteName, goToCoachSection } from "./helpers";
 // Éditeur de programmes (phase 3b, D-157) : l'assistant crée un brouillon depuis un modèle Coory, le
 // brouillon s'ouvre dans l'éditeur, une séance Running se modifie, « Terminer » revient au programme.
 const ORG = "0a000000-0000-4000-8000-0000000000a1";
-// Modèle Coory « Premier 10 km · 8 semaines » (graine de développement).
+// Modèle Coory « Préparation 10 km » (graine de développement).
 const TEMPLATE = "7a000000-0000-4000-8000-000000000002";
 
 async function login(page: Page) {
@@ -289,7 +289,7 @@ test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, pub
       `${fiche}?onglet=programme`,
     );
   }
-  // Depuis un modèle : on repart de l'adresse avec le modèle Coory « Premier 10 km ».
+  // Depuis un modèle : on repart de l'adresse avec le modèle Coory « Préparation 10 km ».
   await page.goto(`${page.url()}?modele=${TEMPLATE}`);
   await page.getByLabel("Titre du programme").fill(title);
   for (let step = 1; step < 4; step += 1) {

@@ -99,7 +99,7 @@ test("un programme proposé depuis un modèle Coory s'ouvre dans l'éditeur", as
   await expect(card).toContainText("Sarah Vermeulen");
   await expect(card).toContainText("Running · 8 semaines · 4 séances par semaine");
   await expect(card).toContainText("Dès le lundi 30 novembre 2026, dans l'ordre");
-  await expect(card).toContainText("Depuis le modèle « Premier 10 km · 8 semaines »");
+  await expect(card).toContainText("Depuis le modèle « Préparation 10 km »");
   await expect(card).toContainText("Brouillon : à relire et publier dans l'éditeur");
 
   await card.getByRole("button", { name: "Valider" }).click();
