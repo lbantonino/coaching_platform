@@ -26,6 +26,7 @@ import {
   parseRest,
   parseSeconds,
   quickFill,
+  renameExercise,
   quickFillText,
   removeLastSet,
   repsText,
@@ -567,6 +568,8 @@ export function StrengthExercisePanel({
 }) {
   // Le panneau existe deux fois (colonne d'ordinateur, feuille du téléphone) : identifiant unique.
   const quickId = useId();
+  const nameId = useId();
+  const [nameInput, setNameInput] = useState(exercise.name);
   const [quick, setQuick] = useState(quickFillText(exercise));
   const [quickError, setQuickError] = useState(false);
   // Les lignes du tableau repartent des séries quand leur nombre ou la charge change.
@@ -601,6 +604,27 @@ export function StrengthExercisePanel({
         <p className="text-[13px] text-muted">
           {meta ? `Bibliothèque · ${meta}` : "Exercice écrit à la main"}
         </p>
+      </div>
+
+      {/* Nom de l'exercice (D-179, demande d'Antonino) : seul le nom affiché change, l'exercice reste
+          relié à la Bibliothèque. Laissé vide, il garde son nom. */}
+      <div className="flex flex-col gap-2">
+        <label htmlFor={nameId} className={label}>
+          Nom de l&apos;exercice
+        </label>
+        <input
+          id={nameId}
+          value={nameInput}
+          maxLength={80}
+          onChange={(event) => {
+            setNameInput(event.target.value);
+            onChange(renameExercise(exercise, event.target.value));
+          }}
+          onBlur={() => {
+            if (!nameInput.trim()) setNameInput(exercise.name);
+          }}
+          className={field}
+        />
       </div>
 
       <div className="flex flex-col gap-2">

@@ -53,6 +53,11 @@ async function NewProgram({
       ? query.sportif
       : null;
 
+  // Chaque arrivée sur l'assistant repart de zéro (D-178) : Next 16 garde l'état d'une page déjà
+  // visitée (Cache Components) ; sans cette clé, « Utiliser » un 2e modèle rouvrait l'assistant du 1er
+  // à l'étape et avec la discipline laissées. Un retour arrière, lui, garde la saisie (même rendu).
+  const visit = crypto.randomUUID();
+
   return (
     <>
       <PageHeader
@@ -62,6 +67,7 @@ async function NewProgram({
       />
       <PageBody fill>
         <ProgramWizard
+          key={visit}
           organizationId={organizationId}
           base={base}
           data={data}

@@ -518,3 +518,10 @@ export function parseRest(input: string): number | null {
   const total = Number(seconds[1]);
   return total <= 1800 ? total : null;
 }
+
+// Renommer un exercice (D-179) : seul le nom affiché change ; l'exercice reste relié à la
+// Bibliothèque (photo, consignes, max du sportif). Un nom vide ne remplace rien. 80 caractères au plus.
+export function renameExercise(exercise: StrengthExercise, text: string): StrengthExercise {
+  const name = text.trim().slice(0, 80);
+  return name ? { ...exercise, name } : exercise;
+}

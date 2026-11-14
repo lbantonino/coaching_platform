@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  renameStep,
   addRepeat,
   addStep,
   distanceField,
@@ -152,5 +153,26 @@ describe("plafond de la séance (phase 4)", () => {
     expect(addStep(full).content.items).toHaveLength(40);
     expect(addRepeat(full).content.items).toHaveLength(40);
     expect(runningContentSchema.safeParse(addStep(full).content).success).toBe(true);
+  });
+});
+
+// Renommer une étape (demande d'Antonino du 14/11/2026, D-179) : un nom écrit remplace celui du type ;
+// vidé, ou identique au type, l'étape reprend le nom de son type (et le suit s'il change).
+describe("renameStep", () => {
+  const step = {
+    id: "s1",
+    kind: "step" as const,
+    role: "run" as const,
+    measure: { type: "time" as const, seconds: 600 },
+  };
+  it("donne le nom écrit, sans espaces autour", () => {
+    expect(renameStep(step, "  Footing de Lucas ")).toEqual({ ...step, label: "Footing de Lucas" });
+  });
+  it("vidé ou égal au type : l'étape reprend le nom de son type", () => {
+    expect(renameStep({ ...step, label: "Footing" }, "   ").label).toBeUndefined();
+    expect(renameStep({ ...step, label: "Footing" }, "Course").label).toBeUndefined();
+  });
+  it("coupe un nom trop long (60 caractères au plus)", () => {
+    expect(renameStep(step, "x".repeat(70)).label).toHaveLength(60);
   });
 });

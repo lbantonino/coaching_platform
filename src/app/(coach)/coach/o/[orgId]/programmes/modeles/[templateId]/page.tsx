@@ -9,6 +9,7 @@ import {
   getSessionTemplate,
   listSessionTemplateChoices,
 } from "@/features/programs/templates";
+import { loadWizardData, nextMonday } from "@/features/programs/wizard";
 import { todayIsoInBrussels } from "@/lib/format";
 
 import { EditorProvider } from "../../_editor/editor-provider";
@@ -16,6 +17,7 @@ import { EditorHeaderActions, ProgramEditor, type EditorMeta } from "../../_edit
 import { SafeBack } from "../../_session/safe-leave";
 
 import { SessionTemplateView } from "./session-template-view";
+import { UseTemplateSheet } from "./use-template-sheet";
 
 export const metadata: Metadata = {
   title: "Modèle",
@@ -40,6 +42,8 @@ export default function TemplatePage({
               week: Number(typeof query.semaine === "string" ? query.semaine : NaN) || null,
               session: typeof query.seance === "string" ? query.seance : null,
             }}
+            // « Utiliser » depuis la carte de la liste (D-178) : la fenêtre s'ouvre dès l'arrivée.
+            openUse={query.utiliser === "1"}
           />
         ))}
       </Suspense>
@@ -51,10 +55,12 @@ async function Template({
   orgId,
   templateId,
   focus,
+  openUse,
 }: {
   orgId: string;
   templateId: string;
   focus: EditorMeta["focus"];
+  openUse: boolean;
 }) {
   const { membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
@@ -63,10 +69,13 @@ async function Template({
 
   const program = await getProgramTemplate(organizationId, templateId);
   if (program?.plan) {
-    const sessionTemplates = await listSessionTemplateChoices(
-      organizationId,
-      program.plan.discipline,
-    );
+    const [sessionTemplates, wizard] = await Promise.all([
+      listSessionTemplateChoices(organizationId, program.plan.discipline),
+      loadWizardData(organizationId),
+    ]);
+    const useTemplate = wizard.templates.find((template) => template.id === program.id);
+    // Chaque arrivée repart d'une fenêtre neuve (Next 16 garde l'état d'une page déjà visitée).
+    const visit = crypto.randomUUID();
     const meta: EditorMeta = {
       base,
       mode: "template",
@@ -101,6 +110,17 @@ async function Template({
         <PageBody fill>
           <ProgramEditor meta={meta} />
         </PageBody>
+        {useTemplate ? (
+          <UseTemplateSheet
+            key={visit}
+            organizationId={organizationId}
+            base={base}
+            template={useTemplate}
+            athletes={wizard.athletes}
+            defaultStartDate={nextMonday(todayIsoInBrussels())}
+            openOnLoad={openUse}
+          />
+        ) : null}
       </EditorProvider>
     );
   }
