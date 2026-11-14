@@ -20,6 +20,7 @@ import {
   Lock,
   Pencil,
   Plus,
+  Shapes,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -124,6 +125,7 @@ import {
 } from "./fixed-days";
 import {
   DatesSheet,
+  DisciplineSheet,
   DuplicateWeekSheet,
   GoalSheet,
   PhaseRangeSheet,
@@ -261,6 +263,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     | "from-template"
     | "add-session"
     | "rename"
+    | "discipline"
     | "dates"
     | "goal"
     | "save-template"
@@ -420,6 +423,8 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               }),
           },
           { label: "Renommer", icon: Pencil, onSelect: () => setSheet("rename") },
+          // D-180 : un même programme change d'objectif dans l'année (marathon, force, Hyrox).
+          { label: "Changer la discipline", icon: Shapes, onSelect: () => setSheet("discipline") },
           // Revue MVP du 13/11 (C3, C4) : les dates et l'objectif se changent après la création.
           { label: "Modifier les dates", icon: CalendarClock, onSelect: () => setSheet("dates") },
           { label: "Modifier l'objectif", icon: Flag, onSelect: () => setSheet("goal") },
@@ -432,6 +437,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         ]
       : [
           { label: "Renommer", icon: Pencil, onSelect: () => setSheet("rename") },
+          { label: "Changer la discipline", icon: Shapes, onSelect: () => setSheet("discipline") },
           {
             label: "Archiver le modèle",
             icon: Archive,
@@ -1112,6 +1118,21 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         }
         onConfirm={(title) => {
           update((current) => ({ ...current, title }));
+          setSheet(null);
+        }}
+      />
+      <DisciplineSheet
+        open={sheet === "discipline"}
+        onClose={() => setSheet(null)}
+        title="Changer la discipline"
+        initial={plan.discipline}
+        hint={
+          meta.publication
+            ? "La nouvelle discipline apparaîtra dans la fiche et les PDF à la prochaine publication."
+            : undefined
+        }
+        onConfirm={(discipline) => {
+          update((current) => ({ ...current, discipline }));
           setSheet(null);
         }}
       />

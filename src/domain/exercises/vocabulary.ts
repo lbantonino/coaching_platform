@@ -386,6 +386,10 @@ export const equipmentInfo: Record<string, { label: string; group: EquipmentGrou
   },
 };
 
+// Toutes les clés de matériel (« Nouvel exercice » de l'Assistant IA, relecture du lot 2) : Claude reçoit
+// la liste complète, au lieu de deviner parmi quelques exemples.
+export const EQUIPMENT_KEYS = Object.keys(equipmentInfo) as [string, ...string[]];
+
 export type MuscleGroup =
   | "chest"
   | "back"

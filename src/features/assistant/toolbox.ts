@@ -4,6 +4,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 
 import type { ToolOutcome } from "./loop";
 import type { AssistantProposal } from "./proposals";
+import type { AssistantAttachment } from "./rules";
 import { READ_TOOL_NAMES, READ_TOOLS } from "./tools/definitions";
 import { runReadTool, type ReadToolName } from "./tools/read";
 import { proposeAction, WRITE_TOOL_NAMES, WRITE_TOOLS } from "./tools/write";
@@ -21,6 +22,7 @@ export async function runAssistantTool(
   input: unknown,
   pending: AssistantProposal[] = [],
   userId = "",
+  attachment?: AssistantAttachment,
 ): Promise<ToolOutcome> {
   if (READ_TOOL_NAMES.has(name)) {
     try {
@@ -34,7 +36,7 @@ export async function runAssistantTool(
   }
   if (WRITE_TOOL_NAMES.has(name)) {
     try {
-      const result = await proposeAction(organizationId, name, input, pending);
+      const result = await proposeAction(organizationId, name, input, pending, { attachment });
       return result.ok
         ? { type: "proposal", proposal: result.proposal }
         : { type: "error", content: result.error };

@@ -63,6 +63,13 @@ begin
   get diagnostics n = row_count;
   if n > 0 then raise notice 'exercices du coach : %', n; end if;
 
+  -- 3 bis. « Compléter la fiche » (assistant, lot 2) : le matériel écrit par le test sur Sarah et Hugo
+  --    (graine du coach B) redevient vide. Une valeur fixe, SANS le marqueur : avec lui, l'étape 3
+  --    supprimerait la fiche entière.
+  update public.athlete_profiles set equipment = null
+  where id in ('db000000-0000-4000-8000-000000000001', 'db000000-0000-4000-8000-000000000002')
+    and equipment = 'Tapis de course (test assistant)';
+
   -- 4. Demandes à l'Assistant IA du coach B (faux Claude des tests) : sa limite mensuelle repart à zéro.
   delete from public.assistant_usage where user_id = 'b0000000-0000-4000-8000-00000000000b';
   get diagnostics n = row_count;

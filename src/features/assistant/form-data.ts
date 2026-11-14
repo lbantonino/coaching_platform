@@ -1,8 +1,11 @@
 import { parseExpenseForm } from "@/domain/billing/expenses";
+import { parseCoachExerciseForm, type CoachExerciseInput } from "@/domain/exercises/coach-exercise";
 import { parseVatRate } from "@/domain/billing/money";
 import { parseAmount } from "@/domain/billing/payments";
 import { parseTaskForm, readTaskForm, type TaskFormValues } from "@/domain/tasks/task-form";
 import { parseNewAthleteForm, type NewAthleteFormInput } from "@/features/athletes/new-athlete";
+import type { AddressFormValues, AthleteFormValues } from "@/features/athletes/actions";
+import type { AthleteDetail } from "@/features/athletes/queries";
 import type { PaymentFormValues } from "@/features/billing/payment-actions";
 import {
   occursOn,
@@ -117,6 +120,56 @@ export function toFormData(action: ParsedAssistantAction): FormData {
     }
     default:
       break;
+  }
+  return form;
+}
+
+// « Nouvel exercice » (lot 2, D-181) : les champs du formulaire « Créer un exercice » (consignes une par
+// ligne, matériel principal ou rien pour le poids du corps).
+export function toCoachExerciseInput(params: Record<string, unknown>): CoachExerciseInput {
+  return {
+    name: text(params.name),
+    category: text(params.category),
+    muscleGroups: (params.muscleGroups as string[] | undefined) ?? [],
+    equipment: text(params.equipment),
+    instructions: ((params.instructions as string[] | undefined) ?? []).join("\n"),
+    videoUrl: text(params.videoUrl),
+  };
+}
+
+// « Compléter la fiche » (lot 2, D-181) : la fiche actuelle telle que le formulaire Profil l'enverrait.
+export type AthleteEditValues = AthleteFormValues & AddressFormValues;
+export function athleteFormValues(detail: AthleteDetail): AthleteEditValues {
+  return {
+    firstName: detail.firstName,
+    lastName: detail.lastName ?? "",
+    sex: detail.sex ?? "",
+    email: detail.email ?? "",
+    phone: detail.phone ?? "",
+    status: detail.status,
+    preferredContact: detail.preferredContact ?? "",
+    level: detail.level ?? "",
+    experience: detail.experience ?? "",
+    trainingPlaces: [...detail.trainingPlaces],
+    equipment: detail.equipment ?? "",
+    addressLine: detail.addressLine ?? "",
+    postalCode: detail.postalCode ?? "",
+    city: detail.city ?? "",
+    country: detail.country,
+  };
+}
+
+// Le formulaire Profil COMPLET : chaque champ actuel, puis ceux de la carte par-dessus. updateAthlete
+// enregistre tous les champs reçus : un champ absent serait vidé, d'où ce départ de la fiche actuelle.
+export function athleteUpdateFormData(
+  current: AthleteEditValues,
+  changes: Partial<Record<keyof AthleteEditValues, string | string[]>>,
+): FormData {
+  const merged = { ...current, ...changes } as AthleteEditValues;
+  const form = new FormData();
+  for (const [name, value] of Object.entries(merged)) {
+    if (Array.isArray(value)) value.forEach((item) => form.append(name, item));
+    else form.set(name, value);
   }
   return form;
 }
@@ -265,6 +318,10 @@ export function formRuleError(action: ParsedAssistantAction, todayIso: string): 
     }
     case "creer_programme":
       return programRuleError(action.params);
+    case "creer_exercice": {
+      const parsed = parseCoachExerciseForm(toCoachExerciseInput(action.params));
+      return parsed.ok ? null : parsed.error;
+    }
     default:
       return null;
   }

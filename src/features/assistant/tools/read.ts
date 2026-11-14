@@ -2,9 +2,10 @@ import "server-only";
 
 import { z } from "zod";
 
-import { listAthletes } from "@/features/athletes/queries";
+import { getAthlete, listAthletes } from "@/features/athletes/queries";
 import { listUnpaidDates } from "@/features/billing/collect-queries";
 import { listExpenseCategories } from "@/features/billing/expense-queries";
+import { listDocumentCategories } from "@/features/documents/queries";
 import { listLibraryExercises } from "@/features/exercises/queries";
 import { listAthleteProgramRows } from "@/features/programs/queries";
 import { listTemplates } from "@/features/programs/templates";
@@ -40,6 +41,8 @@ const inputs = {
   voir_categories_de_depenses: z.object({}),
   voir_modeles: z.object({}),
   voir_programmes: z.object({ sportif_id: z.uuid() }),
+  voir_fiche: z.object({ sportif_id: z.uuid() }),
+  voir_categories_de_documents: z.object({}),
   chercher_exercices: z.object({ nom: z.string().trim().min(1).max(60) }),
 };
 
@@ -87,10 +90,43 @@ export async function runReadTool(
       const { sportif_id } = inputs.voir_programmes.parse(input);
       return json(shapePrograms(await listAthleteProgramRows(organizationId, sportif_id)));
     }
+    case "voir_fiche": {
+      // Lot 2 : ce qui est rempli ou vide, sans santé, notes, accords ni historique.
+      const { sportif_id } = inputs.voir_fiche.parse(input);
+      const fiche = await getAthlete(organizationId, sportif_id);
+      if (!fiche)
+        return { ok: false, content: "Sportif introuvable : cherche-le avec chercher_sportifs." };
+      return json({
+        id: fiche.id,
+        prenom: fiche.firstName,
+        nom: fiche.lastName,
+        sexe: fiche.sex,
+        email: fiche.email,
+        telephone: fiche.phone,
+        contact_prefere: fiche.preferredContact,
+        niveau: fiche.level,
+        experience: fiche.experience,
+        lieux: fiche.trainingPlaces,
+        materiel: fiche.equipment,
+        adresse: fiche.addressLine,
+        code_postal: fiche.postalCode,
+        ville: fiche.city,
+        pays: fiche.country,
+        statut: fiche.status,
+        compte_active: fiche.hasAccount,
+      });
+    }
     case "chercher_exercices": {
       const { nom } = inputs.chercher_exercices.parse(input);
       return json(shapeExercises(await listLibraryExercises(userId, organizationId), nom));
     }
+    case "voir_categories_de_documents":
+      return json(
+        (await listDocumentCategories(organizationId)).map((category) => ({
+          id: category.id,
+          nom: category.name,
+        })),
+      );
     case "voir_categories_de_depenses":
       return json(
         (await listExpenseCategories(organizationId)).map((category) => ({

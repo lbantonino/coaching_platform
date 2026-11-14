@@ -2,17 +2,29 @@
 
 import { revalidatePath } from "next/cache";
 
+import { updateAthlete } from "@/features/athletes/actions";
 import { insertAthlete } from "@/features/athletes/create-athlete";
+import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { parseCoachExerciseForm } from "@/domain/exercises/coach-exercise";
+import { insertCoachExercise } from "@/features/exercises/create-exercise";
 import { createExpense } from "@/features/billing/expense-actions";
 import { createPayment } from "@/features/billing/payment-actions";
 import { createSession, markSessionPaid, moveSession } from "@/features/sessions/actions";
 import { archiveProgram, createProgram, saveDraft } from "@/features/programs/actions";
 import { loadDraft } from "@/features/programs/drafts";
+import { uploadDocument } from "@/features/documents/actions";
 import { createTask, createTaskList } from "@/features/tasks/actions";
 import { createClient } from "@/lib/supabase/server";
 
-import { requireResolved, toFormData, toNewAthleteValues } from "./form-data";
+import {
+  athleteFormValues,
+  athleteUpdateFormData,
+  requireResolved,
+  toCoachExerciseInput,
+  toFormData,
+  toNewAthleteValues,
+} from "./form-data";
 import { customDraftFrom, toCreateProgramInput } from "./program";
 import { assistantActionSchema } from "./proposals";
 
@@ -87,6 +99,34 @@ export async function executeAssistantAction(
       if (!state.saved) return fail(state.error ?? "La tâche n'a pas pu être créée.");
       return { ok: true, href: "/coach/taches" };
     }
+    case "importer_document":
+      // Lot 2 : le fichier vient du navigateur, par executeDocumentImport (ci-dessous).
+      return fail("Joins à nouveau le fichier, puis redemande à l'assistant.");
+    case "preparer_pdf":
+      // Lot 2 : la carte donne les liens des PDF ; il n'y a rien à exécuter.
+      return fail("Rien à valider : ouvre les PDF depuis la carte.");
+    case "creer_exercice": {
+      // Lot 2 : les MÊMES règles et le MÊME enregistrement que « Créer un exercice » (sans photo).
+      const parsedForm = parseCoachExerciseForm(toCoachExerciseInput(action.params));
+      if (!parsedForm.ok) return fail(parsedForm.error);
+      const created = await insertCoachExercise(orgId, user.id, parsedForm.values);
+      if (!created.ok) return fail(created.error);
+      revalidatePath("/coach/bibliotheque", "layout");
+      return { ok: true, href: `/coach/bibliotheque/${created.id}` };
+    }
+    case "completer_fiche": {
+      // Lot 2 : le formulaire Profil COMPLET (fiche actuelle + champs de la carte), par updateAthlete.
+      const current = await getAthlete(orgId, action.params.athleteId);
+      if (!current || current.status === "archived") return fail("Sportif introuvable ou archivé.");
+      const state = await updateAthlete(
+        orgId,
+        current.id,
+        { error: null, saved: false, attempt: 0, values: null },
+        athleteUpdateFormData(athleteFormValues(current), action.params.changes),
+      );
+      if (!state.saved) return fail(state.error ?? "La fiche n'a pas pu être complétée.");
+      return { ok: true, href: `${base}/sportifs/${current.id}?onglet=profil` };
+    }
     case "creer_liste_de_taches": {
       const list = await createTaskList(orgId, action.params.name);
       if (!list.ok) return fail(list.error ?? "La liste n'a pas pu être créée.");
@@ -118,4 +158,47 @@ export async function executeAssistantAction(
       return { ok: true, href };
     }
   }
+}
+
+// « Valider » une carte « Importer un document » (lot 2, D-181) : le fichier, resté dans le navigateur,
+// arrive ici avec les paramètres de la carte (champ `params`, en JSON). Aucune confiance : accès,
+// schéma strict, puis le MÊME dépôt que la page Documents (taille, format, sportif de l'organisation,
+// compte de démonstration refusé).
+export async function executeDocumentImport(
+  organizationId: string,
+  formData: FormData,
+): Promise<ExecuteResult> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
+  let raw: unknown = null;
+  try {
+    raw = JSON.parse(String(formData.get("params") ?? "null"));
+  } catch {
+    raw = null;
+  }
+  const parsed = assistantActionSchema.safeParse({ kind: "importer_document", params: raw });
+  if (!parsed.success || parsed.data.kind !== "importer_document") {
+    return fail("Cette action n'est pas valable. Redemande-la à l'assistant.");
+  }
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return fail("Joins à nouveau le fichier, puis redemande à l'assistant.");
+  }
+  const form = new FormData();
+  form.set("name", parsed.data.params.name);
+  form.set("categoryId", parsed.data.params.categoryId ?? "");
+  form.set("athleteId", parsed.data.params.athleteId ?? "");
+  form.set("file", file);
+  const state = await uploadDocument(
+    orgId,
+    { error: null, attempt: 0, values: null, saved: false },
+    form,
+  );
+  if (!state.saved) return fail(state.error ?? "Le document n'a pas pu être enregistré.");
+  return {
+    ok: true,
+    href: parsed.data.params.athleteId
+      ? `/coach/o/${orgId}/sportifs/${parsed.data.params.athleteId}?onglet=documents`
+      : "/coach/documents",
+  };
 }

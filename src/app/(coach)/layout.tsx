@@ -9,7 +9,7 @@ import { DemoBanner } from "@/components/blocks/demo-banner";
 import { TaskSheetProvider } from "@/components/blocks/task-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { askAssistant } from "@/features/assistant/actions";
-import { executeAssistantAction } from "@/features/assistant/execute";
+import { executeAssistantAction, executeDocumentImport } from "@/features/assistant/execute";
 import { getAssistantAccess } from "@/features/assistant/queries";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
 import { isDemoAccount } from "@/features/demo/queries";
@@ -71,6 +71,9 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
           access={assistantAccess}
           ask={first ? askAssistant.bind(null, first.organizationId) : undefined}
           execute={first ? executeAssistantAction.bind(null, first.organizationId) : undefined}
+          executeDocument={
+            first ? executeDocumentImport.bind(null, first.organizationId) : undefined
+          }
           loadAthletes={first ? listSessionAthletes.bind(null, first.organizationId) : undefined}
         >
           <AppShell

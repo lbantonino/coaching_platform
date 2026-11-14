@@ -147,3 +147,13 @@ describe("PDF Fiches et repères", () => {
     );
   });
 });
+
+// D-180 : la discipline du programme dans l'en-tête des fiches.
+describe("PDF Fiches : discipline du programme", () => {
+  it("« Programme hybride · Fiches et repères », ou les textes d'avant sans discipline", () => {
+    expect(fichesPdf(demoProgram(6)).headerSubtitle).toBe("Programme hybride · Fiches et repères");
+    expect(fichesPdf({ ...demoProgram(6), discipline: null }).headerSubtitle).toBe(
+      "Fiches et repères",
+    );
+  });
+});

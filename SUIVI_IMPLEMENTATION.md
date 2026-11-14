@@ -31,6 +31,40 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Assistant IA, lot 2 : fiche, exercice, PDF, document (D-181, 14/11/2026)
+```
+src/features/assistant/proposals.ts (completer_fiche, creer_exercice, preparer_pdf, importer_document ;
+  ATHLETE_FIELD_LABELS, athleteFieldText, pdfRefusal ; liens d'une carte) ; form-data.ts (athleteFormValues,
+  athleteUpdateFormData, toCoachExerciseInput) ; rules.ts (attachmentSchema, attachmentLine, consigne) ;
+  loop.ts ; actions.ts et toolbox.ts (fichier joint transmis jusqu'à proposeAction) ; tools/write.ts,
+  read.ts (voir_fiche, voir_categories_de_documents), definitions.ts ; execute.ts (exécutions + action
+  executeDocumentImport) ; src/features/exercises/create-exercise.ts (nouveau, cœur partagé) et
+  coach-actions.ts ; src/components/blocks/assistant.tsx (Joindre, pastille, fichier par réponse) et
+  assistant-card.tsx (liens des PDF) ; layout coach ; seed.sql (programme publié du coach B) ;
+  clean-test-data.sql (matériel de test remis à vide).
+Tests : assistant-lot2.test.ts (16) ; unitaires 585 ; e2e assistant-actions.spec.ts : compléter la fiche,
+  créer un exercice, PDF en liens, PDF d'une autre organisation refusé, importer un document joint (avec
+  catégorie), sans fichier aucune carte, fichier gardé pour la demande suivante (ordinateur et
+  téléphone) ; suite complète 260 passés / 38 ignorés ; captures pastille, import, PDF.
+Relecture indépendante : 1 critique (catégorie de document refusée par le contrôle des catégories de
+  dépenses) et 2 importants (fichier joint perdu après une demande, matériel d'exercice deviné) corrigés,
+  chacun avec un test vu en échec puis vert ; 10 mineurs notés (registre .superpowers/sdd/…-lot2).
+```
+
+### Discipline d'un programme : PDF et « Changer la discipline » (D-180, 14/11/2026)
+```
+src/domain/training/discipline.ts (programKindLabel) ; pdf-agenda.ts et pdf-fiches.ts (discipline dans
+  l'en-tête et le surtitre du sommaire) ; agenda-pdf.tsx ; program-pdf-source.ts (discipline publiée) ;
+  editor-sheets.tsx (DisciplineSheet) ; program-editor.tsx (menu « Changer la discipline ») ;
+  overlay.tsx (un pied DialogFooter n'est plus entouré d'un second pied).
+Tests : pdf-agenda.test.ts (+3), pdf-fiches.test.ts (+1) ; unitaires 569 ; e2e modeles-coory.spec.ts « D-180 »
+  (Running coché, Hybride choisi, rouvert sur Hybride, retrouvé sous le filtre Hybride) ordinateur et
+  téléphone ; suite complète 246 passés / 38 ignorés (après un premier passage à 3 échecs : un prénom de
+  sportif de test, « Discipline… », trompait le parcours des séances ; renommé ; tasks.spec instable une
+  fois, vert sur 3 rejeux) ; captures de la fenêtre et de « Renommer »
+  (pied unique), téléphone et ordinateur.
+```
+
 ### Renommer un exercice ou une étape (D-179, 14/11/2026)
 ```
 src/domain/training/strength-edit.ts (renameExercise) et running-edit.ts (renameStep) ; strength-parts.tsx

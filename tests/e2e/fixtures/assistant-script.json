@@ -260,5 +260,255 @@
         }
       }
     ]
+  ],
+  "Ajoute le tapis de course au matériel de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Je regarde la fiche de Sarah.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_f1a",
+        "name": "voir_fiche",
+        "input": {
+          "sportif_id": "db000000-0000-4000-8000-000000000001"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici ce que je complète, valide si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_f1b",
+        "name": "completer_fiche",
+        "input": {
+          "athleteId": "db000000-0000-4000-8000-000000000001",
+          "changes": {
+            "equipment": "Tapis de course (test assistant)"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Ajoute le tapis de course au matériel de Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Je regarde la fiche de Hugo.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_f2a",
+        "name": "voir_fiche",
+        "input": {
+          "sportif_id": "db000000-0000-4000-8000-000000000002"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici ce que je complète, valide si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_f2b",
+        "name": "completer_fiche",
+        "input": {
+          "athleteId": "db000000-0000-4000-8000-000000000002",
+          "changes": {
+            "equipment": "Tapis de course (test assistant)"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Crée l'exercice Fentes sautées": [
+    [
+      {
+        "type": "text",
+        "text": "Je crée l'exercice, valide si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_x1",
+        "name": "creer_exercice",
+        "input": {
+          "name": "Fentes sautées 1700000000000",
+          "category": "strength",
+          "muscleGroups": ["quads", "glutes"],
+          "instructions": [
+            "Pieds écartés de la largeur des hanches.",
+            "Saute et change de jambe en l'air."
+          ]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Donne-moi les PDF du programme de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Je regarde les programmes de Sarah.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_d1",
+        "name": "voir_programmes",
+        "input": {
+          "sportif_id": "db000000-0000-4000-8000-000000000001"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici les PDF de son programme publié.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_d2",
+        "name": "preparer_pdf",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000001"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Donne-moi les PDF du programme de Léa": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_d3",
+        "name": "preparer_pdf",
+        "input": {
+          "programId": "f1000000-0000-4000-8000-000000000008"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Je ne trouve pas ce programme dans ton organisation.",
+        "citations": null
+      }
+    ]
+  ],
+  "Range ce document dans la fiche de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Je regarde tes catégories de documents.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_g1",
+        "name": "voir_categories_de_documents",
+        "input": {},
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici où je range le fichier, valide si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_g2",
+        "name": "importer_document",
+        "input": {
+          "name": "Bilan test 1700000000000",
+          "athleteId": "db000000-0000-4000-8000-000000000001",
+          "categoryId": "dc000000-0000-4000-8000-0000000000b1"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Range ce document chez Hugo": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_g3",
+        "name": "importer_document",
+        "input": {
+          "name": "Sans fichier 1700000000000",
+          "athleteId": "db000000-0000-4000-8000-000000000002"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Joins d'abord le fichier avec le bouton « Joindre ».",
+        "citations": null
+      }
+    ]
+  ],
+  "Mets-le plutôt chez Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "D'accord, je le range chez Hugo.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_g4",
+        "name": "importer_document",
+        "input": {
+          "name": "Bilan Hugo 1700000000000",
+          "athleteId": "db000000-0000-4000-8000-000000000002"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
   ]
 }

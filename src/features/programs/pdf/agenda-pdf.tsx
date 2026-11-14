@@ -143,7 +143,7 @@ function TocPage({ page, total, model }: { page: AgendaTocPage; total: number; m
       totalPages={total}
     >
       <View style={s.tocHead}>
-        <Text style={titleStyles.kicker}>Sommaire</Text>
+        <Text style={titleStyles.kicker}>{pdfText(page.kicker)}</Text>
         <Text style={s.tocTitle}>{pdfText(page.title)}</Text>
         <Text style={titleStyles.subtitle}>{pdfText(page.subtitle)}</Text>
       </View>
