@@ -50,12 +50,16 @@ export function blockDependents(cards: CardState[], id: string, reason: string):
 }
 
 // Ce que l'assistant apprend à la demande suivante.
-// « Compléter la fiche » : seulement les noms des champs (décision d'Antonino du 14/11) ; les anciennes
-// valeurs (e-mail, téléphone, adresse…) restent sur la carte et ne partent jamais chez Claude.
+// « Compléter la fiche » et « Modifier ton profil » (lot 6) : seulement les noms des champs (décision
+// d'Antonino du 14/11) ; les valeurs (e-mail, téléphone, adresse…) restent sur la carte et ne partent
+// jamais chez Claude.
 export function noteFor(card: AssistantProposal, outcome: "done" | "cancelled"): string {
+  const label = (line: string) => line.split(" : ")[0] ?? line;
   const lines =
     card.kind === "completer_fiche"
-      ? card.summary.map((line, index) => (index === 0 ? line : (line.split(" : ")[0] ?? line)))
-      : card.summary;
+      ? card.summary.map((line, index) => (index === 0 ? line : label(line)))
+      : card.kind === "modifier_profil"
+        ? card.summary.map(label)
+        : card.summary;
   return `[${outcome === "done" ? "Fait" : "Annulé"} : ${[card.title, ...lines].join(" · ")}]`;
 }

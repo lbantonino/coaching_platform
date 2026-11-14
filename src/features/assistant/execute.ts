@@ -36,6 +36,7 @@ import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 import { executeDaily } from "./execute-daily";
+import { executeReglages } from "./execute-reglages";
 import { executeSportifs } from "./execute-sportifs";
 import { hasUnknownExercise, UNKNOWN_EXERCISE } from "./exercise-check";
 import {
@@ -355,6 +356,15 @@ export async function executeAssistantAction(
     case "photo":
     case "ajouter_note":
       return executeSportifs(orgId, action);
+    // Lot 6 (D-185) : les réglages, par execute-reglages.ts (server-only), après requireOrgAccess.
+    case "modifier_profil":
+    case "nom_organisation":
+    case "pays_organisation":
+    case "devise_organisation":
+    case "preferences":
+    case "preference_notification":
+    case "notifications":
+      return executeReglages(orgId, action);
     case "creer_programme": {
       // Lot 3a : la MÊME création que l'assistant « Créer un programme » (brouillon, jamais publié),
       // puis, pour un programme écrit, le MÊME enregistrement que l'éditeur.

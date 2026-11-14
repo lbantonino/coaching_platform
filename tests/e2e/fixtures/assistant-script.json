@@ -1714,5 +1714,154 @@
         "citations": null
       }
     ]
+  ],
+  "Passe ma durée par défaut à 75 minutes": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la préférence.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_r1",
+        "name": "preferences",
+        "input": {
+          "changes": {
+            "defaultSessionMinutes": 75
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Coupe les notifications des tâches": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le réglage.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_r2",
+        "name": "preference_notification",
+        "input": {
+          "sorte": "tasks",
+          "active": false
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Renomme mon organisation en Organisation Réglages modifiée": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le nouveau nom.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_r3",
+        "name": "nom_organisation",
+        "input": {
+          "nom": "Organisation Réglages modifiée"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Masque la notification de la fiche de Zoé": [
+    [
+      {
+        "type": "text",
+        "text": "Voici.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_r4",
+        "name": "notifications",
+        "input": {
+          "action": "masquer",
+          "cles": ["profile:c6000000-0000-4000-8000-0000000000a1"]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Réaffiche la notification de la fiche de Zoé": [
+    [
+      {
+        "type": "text",
+        "text": "Voici.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_r5",
+        "name": "notifications",
+        "input": {
+          "action": "afficher",
+          "cles": ["profile:c6000000-0000-4000-8000-0000000000a1"]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Passe ma devise en CHF au taux zéro": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_r6",
+        "name": "devise_organisation",
+        "input": {
+          "devise": "CHF",
+          "taux": "0"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Le taux doit être plus grand que 0 : donne-moi le taux de ta banque.",
+        "citations": null
+      }
+    ]
+  ],
+  "Passe ma devise en CHF au taux 0,94": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le changement de devise.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_r7",
+        "name": "devise_organisation",
+        "input": {
+          "devise": "CHF",
+          "taux": "0,94"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
   ]
 }
