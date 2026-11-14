@@ -132,7 +132,8 @@ Coût indicatif : modèle Claude Opus 5.5 (4 $ par million de jetons envoyés, 2
 
 1. vercel.com → « Add New Project » → importer `lbantonino/coaching_platform`. Framework Next.js
    (détecté). Node 24 (Settings → General → Node.js Version).
-2. **Settings → Functions → Region** : Francfort (`fra1`) ou Paris (`cdg1`), près de Supabase.
+2. **Settings → Functions → Region** : la région la plus proche de la base Supabase (bêta : base en
+   Irlande, donc **Dublin `dub1`**).
    Vérifie aussi **Settings → Functions → Fluid Compute** activé : l'espace coach demande jusqu'à
    300 s par fonction (`maxDuration`), car l'Assistant IA peut écrire un programme pendant 4 minutes
    au plus (D-172).
@@ -148,8 +149,9 @@ Coût indicatif : modèle Claude Opus 5.5 (4 $ par million de jetons envoyés, 2
    **Pas** de `SUPABASE_SECRET_KEY` pour ce MVP : elle ne sert qu'aux invitations, masquées. Moins
    de clé secrète en ligne, moins de risque.
 4. « Deploy ». Puis **Settings → Domains** : ajouter ton domaine et suivre les indications DNS.
-5. Mise à jour plus tard : `git push` sur `main` redéploie. Si une nouvelle migration arrive, lance
-   `npx supabase db push` **avant** de pousser le code qui en a besoin.
+5. Mise à jour plus tard : `git push` sur `main` redéploie le site (Vercel) **et** applique les
+   nouvelles migrations (intégration GitHub de Supabase), en même temps. Ne pas utiliser l'intégration
+   Vercel de Supabase : elle copierait aussi des clés secrètes dans Vercel.
 
 **Limite connue** : Vercel refuse les envois de plus de 4,5 Mo. Les documents sont donc limités à
 **4 Mo** (photos : 2 Mo). Pour aller au-delà, il faudra envoyer les fichiers directement au stockage
