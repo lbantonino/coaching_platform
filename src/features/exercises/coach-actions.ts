@@ -15,6 +15,8 @@ import {
 } from "@/domain/exercises/coach-exercise";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { checkPhoto } from "@/features/photos/validate";
+import { isDemoAccount } from "@/features/demo/queries";
+import { DEMO_NO_FILES } from "@/features/demo/rules";
 import { createClient } from "@/lib/supabase/server";
 
 // Exercices du coach (D-76) : créer, modifier, supprimer. Chaque action revérifie l'accès à
@@ -35,6 +37,8 @@ type Photo = { bytes: Uint8Array; contentType: string; ext: string };
 async function readPhoto(formData: FormData): Promise<{ photo: Photo | null } | { error: string }> {
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) return { photo: null };
+  // Compte de démonstration partagé (OPEN-24) : l'exercice oui, sa photo non.
+  if (await isDemoAccount()) return { error: DEMO_NO_FILES };
   const bytes = new Uint8Array(await file.arrayBuffer());
   const check = checkPhoto(bytes, EXERCISE_PHOTO_MAX_BYTES);
   if (!check.ok) return { error: check.error };

@@ -6,6 +6,9 @@ import { getAthlete } from "@/features/athletes/queries";
 import { requireCoach, requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
+import { isDemoAccount } from "@/features/demo/queries";
+import { DEMO_NO_FILES } from "@/features/demo/rules";
+
 import { checkPhoto, PHOTO_MAX_BYTES } from "./validate";
 
 const BUCKET = "profile-photos";
@@ -16,6 +19,8 @@ export type PhotoState = { error: string | null; saved: boolean; attempt: number
 async function readPhoto(formData: FormData) {
   const file = formData.get("photo");
   if (!(file instanceof File) || file.size === 0) return { error: "Choisis une photo." } as const;
+  // Compte de démonstration partagé (OPEN-24) : aucun fichier (la base refuse aussi le dépôt).
+  if (await isDemoAccount()) return { error: DEMO_NO_FILES } as const;
   // Refus avant lecture : on ne charge pas en mémoire un fichier déjà trop lourd.
   if (file.size > PHOTO_MAX_BYTES) return { error: "Photo trop lourde : 2 Mo maximum." } as const;
   const bytes = new Uint8Array(await file.arrayBuffer());

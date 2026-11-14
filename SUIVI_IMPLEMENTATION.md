@@ -31,6 +31,19 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Compte de démonstration partagé (D-176, 14/11/2026)
+```
+Migration 20261114150000_compte_demo (pg_cron, private.demo_accounts, déclencheur protect_demo_account sur
+  auth.users, private.set_demo_password, public.is_demo_account, règles restrictives storage.objects,
+  protect_issued_invoice permissive pendant la remise à zéro d'une démo, demo_program_plan, seed_demo_data,
+  reset_demo_data, setup_demo_account, tâche coory-demo-reset) ; src/features/demo (rules, queries) ;
+  src/components/blocks/demo-banner.tsx ; layout coach ; refus dans settings-actions, password-actions,
+  photos, documents, coach-actions ; graine : coach-demo@example.test ; types régénérés.
+Tests : SQL 575/575 (dont 45 : 24 ; 41 rendu précis sur son propre coach) ; unitaires 542 ; parcours
+  demo.spec.ts 8/8, suite complète 234 passés ; captures téléphone et ordinateur, sombre et clair.
+Relecture indépendante : 4 points importants corrigés (déconnexion, métadonnées, profil, tests du stockage).
+```
+
 ### Photo de profil réduite avant l'envoi (D-174, 14/11/2026)
 ```
 src/lib/shrink-photo.ts (nouveau : fitWithin, needsShrink purs ; shrinkPhoto dans le navigateur) ; photo-form.tsx

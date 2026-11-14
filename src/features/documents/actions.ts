@@ -14,6 +14,8 @@ import {
   type DocumentFormValues,
 } from "@/domain/documents/documents";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { isDemoAccount } from "@/features/demo/queries";
+import { DEMO_NO_FILES } from "@/features/demo/rules";
 import { createClient } from "@/lib/supabase/server";
 
 // Documents du coach (4e, D-60) : importer, renommer / reclasser, supprimer ; et leurs catégories
@@ -71,6 +73,8 @@ export async function uploadDocument(
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) return fail("Choisis un fichier.");
+  // Compte de démonstration partagé (OPEN-24) : aucun fichier (la base refuse aussi le dépôt).
+  if (await isDemoAccount()) return fail(DEMO_NO_FILES);
   // Refus avant lecture : on ne charge pas en mémoire un fichier déjà trop lourd.
   if (file.size > DOCUMENT_MAX_BYTES)
     return fail(`Fichier trop lourd : ${DOCUMENT_MAX_LABEL} maximum.`);

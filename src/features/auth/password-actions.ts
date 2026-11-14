@@ -3,6 +3,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { isDemoAccount } from "@/features/demo/queries";
+import { DEMO_DISABLED } from "@/features/demo/rules";
 import { createClient } from "@/lib/supabase/server";
 
 import { fieldErrors } from "./field-errors";
@@ -79,6 +81,7 @@ export async function updatePassword(
   if (!parsed.success) {
     return { error: null, fields: fieldErrors(parsed.error) };
   }
+  if (await isDemoAccount()) return { error: DEMO_DISABLED, fields: {} };
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
