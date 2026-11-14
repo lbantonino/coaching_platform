@@ -5,6 +5,8 @@ import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/l
 import { requireCoach } from "@/features/auth/guards";
 import {
   createTaskList,
+  deleteDoneTasks,
+  deleteTask,
   deleteTaskList,
   quickAddTask,
   setTaskDone,
@@ -76,6 +78,8 @@ async function Tasks({ view }: { view: string | null }) {
             createList: createTaskList.bind(null, organizationId),
             updateList: updateTaskList.bind(null, organizationId),
             deleteList: deleteTaskList.bind(null, organizationId),
+            deleteTask: deleteTask.bind(null, organizationId),
+            deleteDone: deleteDoneTasks.bind(null, organizationId),
           }}
         />
       </PageBody>

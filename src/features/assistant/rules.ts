@@ -25,8 +25,9 @@ export const ASSISTANT_MAX_STEPS = 6;
 export type AssistantAccess =
   { status: "locked" } | { status: "unconfigured" } | { status: "ready"; remaining: number };
 
-export const LOCKED_TEXT = "L'Assistant IA est disponible avec l'abonnement mensuel Coory.";
-export const LOCKED_DETAIL = "Il n'est pas activé pour ton organisation.";
+// Message de la bêta (demande d'Antonino du 14/11) : l'abonnement viendra après les tests.
+export const LOCKED_TEXT = "L'Assistant IA n'est pas encore disponible sur la version bêta.";
+export const LOCKED_DETAIL = "Il sera disponible prochainement avec l'abonnement mensuel Coory.";
 export const UNCONFIGURED_TEXT = "L'Assistant IA n'est pas encore branché sur ce serveur.";
 export const UNCONFIGURED_NOTE = "Pas encore branché : aucune demande ne part pour l'instant";
 

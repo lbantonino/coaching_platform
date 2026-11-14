@@ -32,7 +32,7 @@ async function deleteTask(page: Page, title: string) {
   await page
     .getByRole("listitem")
     .filter({ hasText: title })
-    .getByRole("button", { name: title })
+    .getByRole("button", { name: title, exact: true })
     .click();
   await page
     .getByRole("dialog", { name: "Modifier la tâche" })

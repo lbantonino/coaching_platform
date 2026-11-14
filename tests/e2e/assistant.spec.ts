@@ -5,7 +5,8 @@ import { expect, test, type Page } from "@playwright/test";
 // boîte et la page verrouillées, sans saisie ni suggestion : aucune demande ne peut partir chez
 // Claude. La base refuse aussi toute demande (supabase/tests/database/41 et 44).
 // Rien n'est écrit : les deux projets peuvent tourner en même temps.
-const LOCKED = "L'Assistant IA est disponible avec l'abonnement mensuel Coory.";
+// Message de la bêta (demande d'Antonino du 14/11).
+const LOCKED = "L'Assistant IA n'est pas encore disponible sur la version bêta.";
 
 async function loginAsCoachC(page: Page) {
   await page.goto("/login");
@@ -27,7 +28,9 @@ test("sans abonnement Coory, l'assistant est verrouillé dans la boîte et sur s
   await button.click();
   const box = page.getByRole("dialog", { name: "Assistant IA" });
   await expect(box).toContainText(LOCKED);
-  await expect(box).toContainText("Il n'est pas activé pour ton organisation.");
+  await expect(box).toContainText(
+    "Il sera disponible prochainement avec l'abonnement mensuel Coory.",
+  );
   await expect(page).toHaveURL(/\/coach$/);
 
   // Ni saisie, ni « Envoyer », ni suggestions : aucune demande ne peut partir.

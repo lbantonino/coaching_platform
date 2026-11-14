@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 
 // Remplit prénom et nom de famille à partir d'un nom complet, coupé au premier espace
 // (« Camille Test 123 » -> « Camille » + « Test 123 »). Le nom complet affiché reste identique.
@@ -164,4 +164,46 @@ export async function chooseSettingsSection(page: Page, name: string) {
     .getByRole("navigation", { name: "Sections des paramètres" })
     .getByRole("button", { name: new RegExp(`^${name}`) })
     .click();
+}
+
+// Un coach NEUF, inscrit et confirmé (Mailpit local), dans sa propre organisation vide : pour les
+// tests qui suppriment en masse sans toucher aux données des autres tests. L'adresse porte le nom du
+// projet et l'heure : le nettoyage de fin de suite la retire.
+export async function signUpFreshCoach(
+  page: Page,
+  request: APIRequestContext,
+  testInfo: { project: { name: string } },
+) {
+  const stamp = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const email = `coach-neuf-${stamp}@example.test`;
+  await page.goto("/inscription");
+  await page.getByRole("textbox", { name: /^Prénom/ }).fill("Nina");
+  await page.getByLabel("Nom", { exact: true }).fill("Renard");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByLabel("Mot de passe", { exact: true }).fill("un-mot-de-passe-solide");
+  await page.getByLabel("Code d'accès").fill("coory-dev-2026");
+  await page.getByRole("checkbox", { name: /J'ai 18 ans ou plus/ }).check({ force: true });
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await expect(page).toHaveURL(/\/verifier-email$/);
+  let link: string | undefined;
+  for (let attempt = 0; attempt < 30 && !link; attempt++) {
+    const search = await request.get("http://127.0.0.1:54324/api/v1/search", {
+      params: { query: `to:"${email}"` },
+    });
+    const { messages } = (await search.json()) as { messages: { ID: string }[] };
+    if (messages.length > 0) {
+      const message = await request.get(`http://127.0.0.1:54324/api/v1/message/${messages[0].ID}`);
+      const { HTML, Text } = (await message.json()) as { HTML: string; Text: string };
+      link = `${Text}\n${HTML}`
+        .replaceAll("&amp;", "&")
+        .match(/http:\/\/127\.0\.0\.1:54321\/auth\/v1\/verify\?[^\s)\]"<>]+/)?.[0];
+    }
+    if (!link) await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  if (!link) throw new Error(`Aucun e-mail de confirmation reçu pour ${email}`);
+  await page.goto(link);
+  await expect(page).toHaveURL(/\/bienvenue$/);
+  await page.getByRole("button", { name: "Ouvrir mon espace" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+  return email;
 }
