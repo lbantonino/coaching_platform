@@ -11,8 +11,9 @@ import {
 } from "@/domain/documents/documents";
 import { requireOrgAccess } from "@/features/auth/guards";
 import type { CategoryResult } from "@/features/documents/actions";
-import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
+
+import { endExpense, removeExpense } from "./billing-core";
 
 // Dépenses du coach (D-73) : ajouter, supprimer ; et leurs catégories (créer, renommer, couleur,
 // supprimer). Chaque action revérifie l'accès à l'organisation ; la RLS protège en plus (une
@@ -77,13 +78,7 @@ export async function createExpense(
 export async function deleteExpense(organizationId: string, expenseId: string): Promise<void> {
   const { membership } = await requireOrgAccess(organizationId);
   if (!z.uuid().safeParse(expenseId).success) return;
-  const supabase = await createClient();
-  await supabase
-    .from("coach_expenses")
-    .delete()
-    .eq("id", expenseId)
-    .eq("organization_id", membership.organizationId);
-  refresh();
+  await removeExpense(membership.organizationId, expenseId);
 }
 
 // Dépense mensuelle : « Arrêter » (le loyer s'arrête) la fait finir aujourd'hui, le passé reste.
@@ -91,16 +86,7 @@ export async function deleteExpense(organizationId: string, expenseId: string): 
 export async function stopExpense(organizationId: string, expenseId: string): Promise<void> {
   const { membership } = await requireOrgAccess(organizationId);
   if (!z.uuid().safeParse(expenseId).success) return;
-  const today = todayIsoInBrussels();
-  const supabase = await createClient();
-  await supabase
-    .from("coach_expenses")
-    .update({ ends_on: today })
-    .eq("id", expenseId)
-    .eq("organization_id", membership.organizationId)
-    .eq("repeats_monthly", true)
-    .lte("spent_on", today);
-  refresh();
+  await endExpense(membership.organizationId, expenseId);
 }
 
 // --- Catégories ------------------------------------------------------------------------------

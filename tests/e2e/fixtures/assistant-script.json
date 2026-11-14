@@ -943,5 +943,383 @@
         }
       }
     ]
+  ],
+  "Renomme la séance test de Sarah en Séance test modifiée Sarah et passe-la à 19h": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la modification, valide-la si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1a",
+        "name": "modifier_seance_agenda",
+        "input": {
+          "sessionId": "e4000000-0000-4000-8000-000000000011",
+          "changes": {
+            "title": "Séance test modifiée Sarah",
+            "startTime": "19:00"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Supprime la séance à supprimer de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la suppression.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1b",
+        "name": "supprimer_seance_agenda",
+        "input": {
+          "sessionId": "e4000000-0000-4000-8000-000000000021"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Coche, décale et range les tâches test de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les trois changements.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1c",
+        "name": "cocher_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-000000000071",
+          "faite": true
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1d",
+        "name": "modifier_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-000000000081",
+          "changes": {
+            "dueOn": "2026-11-25"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1e",
+        "name": "supprimer_liste_de_taches",
+        "input": {
+          "listId": "e4000000-0000-4000-8000-000000000061"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Supprime le paiement test de Sarah et arrête son abonnement test": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux changements.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1f",
+        "name": "supprimer_paiement",
+        "input": {
+          "paymentId": "e4000000-0000-4000-8000-000000000031"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1g",
+        "name": "arreter_depense",
+        "input": {
+          "expenseId": "e4000000-0000-4000-8000-000000000051"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Renomme le document test de Sarah en Document renommé Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le nouveau nom.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1h",
+        "name": "modifier_document",
+        "input": {
+          "documentId": "e4000000-0000-4000-8000-0000000000a1",
+          "changes": {
+            "name": "Document renommé Sarah"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Modifie puis supprime la tâche double de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux cartes.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1i",
+        "name": "modifier_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-0000000000b1",
+          "changes": {
+            "title": "Tâche double renommée Sarah"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q1j",
+        "name": "supprimer_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-0000000000b1"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Renomme la séance test de Hugo en Séance test modifiée Hugo et passe-la à 19h": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la modification, valide-la si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2a",
+        "name": "modifier_seance_agenda",
+        "input": {
+          "sessionId": "e4000000-0000-4000-8000-000000000012",
+          "changes": {
+            "title": "Séance test modifiée Hugo",
+            "startTime": "19:00"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Supprime la séance à supprimer de Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la suppression.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2b",
+        "name": "supprimer_seance_agenda",
+        "input": {
+          "sessionId": "e4000000-0000-4000-8000-000000000022"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Coche, décale et range les tâches test de Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les trois changements.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2c",
+        "name": "cocher_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-000000000072",
+          "faite": true
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2d",
+        "name": "modifier_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-000000000082",
+          "changes": {
+            "dueOn": "2026-11-25"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2e",
+        "name": "supprimer_liste_de_taches",
+        "input": {
+          "listId": "e4000000-0000-4000-8000-000000000062"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Supprime le paiement test de Hugo et arrête son abonnement test": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux changements.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2f",
+        "name": "supprimer_paiement",
+        "input": {
+          "paymentId": "e4000000-0000-4000-8000-000000000032"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2g",
+        "name": "arreter_depense",
+        "input": {
+          "expenseId": "e4000000-0000-4000-8000-000000000052"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Renomme le document test de Hugo en Document renommé Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le nouveau nom.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2h",
+        "name": "modifier_document",
+        "input": {
+          "documentId": "e4000000-0000-4000-8000-0000000000a2",
+          "changes": {
+            "name": "Document renommé Hugo"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Modifie puis supprime la tâche double de Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux cartes.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2i",
+        "name": "modifier_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-0000000000b2",
+          "changes": {
+            "title": "Tâche double renommée Hugo"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_q2j",
+        "name": "supprimer_tache",
+        "input": {
+          "taskId": "e4000000-0000-4000-8000-0000000000b2"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Supprime la tâche de l'autre coach": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_q0a",
+        "name": "supprimer_tache",
+        "input": {
+          "taskId": "7a000000-0000-4000-8000-0000000000a1"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Je ne trouve pas cette tâche.",
+        "citations": null
+      }
+    ]
   ]
 }

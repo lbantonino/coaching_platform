@@ -31,6 +31,25 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Assistant IA, lot 4 : le quotidien, agenda, comptabilité, tâches, documents (D-183, 14/11/2026)
+```
+src/features/assistant/daily.ts (nouveau : 16 schémas, refus purs, cartes) ; tools/daily.ts (nouveau,
+  server-only : outils et contrôles) ; execute-daily.ts (nouveau, server-only : exécution) ; form-data.ts
+  (fusion des changements dans les valeurs actuelles) ; proposals.ts, tools/write.ts, execute.ts, read.ts,
+  definitions.ts, shape.ts (voir_taches, voir_paiements, voir_depenses, voir_documents), loop.ts, rules.ts
+  (consigne) ; src/features/sessions/session-core.ts (nouveau : cœurs sans redirection) et schemas.ts
+  (sessionFormInitial, partagé avec la page « Modifier la séance ») ; src/features/billing/billing-core.ts
+  (nouveau) ; tasks/queries.ts (getTask) ; documents/queries.ts (getDocument) ;
+  supabase/seed-tests-assistant.sql (lignes de test du lot 4).
+Tests : assistant-lot4.test.ts (21) ; unitaires 651 ; e2e assistant-actions.spec.ts : modifier une séance
+  répétée, supprimer une séance, cocher + décaler + supprimer une liste en une réponse, supprimer un
+  paiement + arrêter un abonnement, renommer un document, aucune carte pour une autre organisation,
+  tâche supprimée puis modifiée (message clair) (ordinateur et téléphone) ; suite complète 282 passés /
+  38 ignorés ; captures des cartes « Modifier la séance » et « Supprimer le paiement ».
+Relecture indépendante : 3 importants corrigés avec tests (inscrit archivé, « Vider les terminées »
+  limité aux tâches comptées, début d'une série commencée) ; 4 mineurs reportés.
+```
+
 ### Assistant IA, lot 3b : tout faire sur les programmes et les modèles (D-182, 14/11/2026)
 ```
 src/features/assistant/program-edit.ts (nouveau : voir_brouillon, moteur des opérations, révision, refus,

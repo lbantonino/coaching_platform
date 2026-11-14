@@ -9,6 +9,8 @@ import { getAthlete } from "@/features/athletes/queries";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 
+import { removePayment } from "./billing-core";
+
 // Saisie telle que reçue (chaînes brutes), renvoyée en cas d'erreur ; `attempt` reconstruit le
 // formulaire après chaque réponse (React remet sinon les menus à leur valeur de départ).
 export type PaymentFormValues = {
@@ -113,12 +115,5 @@ export async function createPayment(
 export async function deletePayment(organizationId: string, paymentId: string): Promise<void> {
   const { membership } = await requireOrgAccess(organizationId);
   if (!z.uuid().safeParse(paymentId).success) return;
-  const supabase = await createClient();
-  await supabase
-    .from("athlete_payments")
-    .delete()
-    .eq("id", paymentId)
-    .eq("organization_id", membership.organizationId);
-  revalidatePath("/coach");
-  revalidatePath("/coach/comptabilite");
+  await removePayment(membership.organizationId, paymentId);
 }

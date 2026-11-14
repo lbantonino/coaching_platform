@@ -100,6 +100,20 @@ export async function listTasks(
   };
 }
 
+// Une tâche de l'organisation, ou null (Assistant IA, lot 4 : la carte et le « Valider » repartent
+// de la tâche actuelle).
+export async function getTask(organizationId: string, taskId: string): Promise<CoachTask | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("coach_tasks")
+    .select(SELECT)
+    .eq("organization_id", organizationId)
+    .eq("id", taskId)
+    .maybeSingle();
+  if (error) throw new Error("Lecture de la tâche impossible.");
+  return data ? toTask(data as unknown as Row) : null;
+}
+
 // Listes du coach, dans leur ordre (puis de création). Aucune au départ (décision 8).
 export async function listTaskLists(organizationId: string): Promise<TaskList[]> {
   const supabase = await createClient();

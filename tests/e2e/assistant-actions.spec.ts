@@ -423,3 +423,121 @@ test("lot 3b : dupliquer un modèle Coory dans Mes modèles", async ({ page }) =
   await page.goto(href ?? "/");
   await expect(page.getByText("Mes modèles").filter({ visible: true }).first()).toBeVisible();
 });
+
+// Lot 4 (D-183) : le quotidien. Chaque appareil a ses lignes de test (Sarah sur ordinateur, Hugo sur
+// téléphone), remises en état en fin de suite (supabase/seed-tests-assistant.sql).
+const lot4 = (phone: boolean) => (phone ? { who: "Hugo", k: "2" } : { who: "Sarah", k: "1" });
+const visibleText = (page: Page, text: string | RegExp) =>
+  page.getByText(text).filter({ visible: true }).first();
+
+test("lot 4 : modifier une séance répétée de l'agenda", async ({ page }, testInfo) => {
+  const { who } = lot4(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(
+    box,
+    `Renomme la séance test de ${who} en Séance test modifiée ${who} et passe-la à 19h`,
+  );
+  const card = box.getByRole("region", { name: "Modifier la séance" });
+  await expect(card).toContainText(
+    `Titre : Séance test ${who} → Séance test modifiée ${who}`,
+    STEPS,
+  );
+  await expect(card).toContainText("Heure : 18:00 → 19:00");
+  await expect(card).toContainText("Toute la série (chaque semaine)");
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  await page.goto((await card.getByRole("link", { name: "Voir" }).getAttribute("href")) ?? "/");
+  await expect(visibleText(page, `Séance test modifiée ${who}`)).toBeVisible();
+});
+
+test("lot 4 : supprimer une séance de l'agenda", async ({ page }, testInfo) => {
+  const { who } = lot4(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Supprime la séance à supprimer de ${who}`);
+  const card = box.getByRole("region", { name: "Supprimer la séance" });
+  await expect(card).toContainText(
+    "Elle disparaîtra de l'agenda et des sportifs inscrits (définitif)",
+    STEPS,
+  );
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  await page.goto("/coach/o/0b000000-0000-4000-8000-0000000000b1/agenda?vue=liste");
+  await expect(page.getByText(`Séance à supprimer ${who}`)).toHaveCount(0);
+});
+
+test("lot 4 : cocher, décaler, et supprimer une liste en une réponse", async ({
+  page,
+}, testInfo) => {
+  const { who } = lot4(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Coche, décale et range les tâches test de ${who}`);
+  const done = box.getByRole("region", { name: "Tâche faite" });
+  const moved = box.getByRole("region", { name: "Modifier la tâche" });
+  const list = box.getByRole("region", { name: "Supprimer la liste" });
+  await expect(done).toContainText(`Tâche à cocher ${who}`, STEPS);
+  await expect(moved).toContainText(
+    "Échéance : vendredi 20 novembre 2026 → mercredi 25 novembre 2026",
+  );
+  await expect(list).toContainText("Sa tâche reste, sans liste (définitif)");
+  for (const card of [done, moved, list]) {
+    await card.getByRole("button", { name: "Valider" }).click();
+    await expect(card).toContainText("Fait");
+  }
+  // Sur téléphone, la page Tâches s'ouvre sur le menu des vues : la vue « Toutes » directement.
+  await page.goto("/coach/taches?vue=toutes");
+  await expect(page.getByText(`Liste test ${who}`)).toHaveCount(0);
+  await expect(visibleText(page, `Tâche rangée ${who}`)).toBeVisible();
+});
+
+test("lot 4 : supprimer un paiement et arrêter un abonnement", async ({ page }, testInfo) => {
+  const { who } = lot4(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Supprime le paiement test de ${who} et arrête son abonnement test`);
+  const payment = box.getByRole("region", { name: "Supprimer le paiement" });
+  const expense = box.getByRole("region", { name: "Arrêter la dépense" });
+  await expect(payment).toContainText(
+    "La séance du lundi 9 novembre 2026 redevient à encaisser",
+    STEPS,
+  );
+  await expect(expense).toContainText("Ne compte plus après aujourd'hui");
+  for (const card of [payment, expense]) {
+    await card.getByRole("button", { name: "Valider" }).click();
+    await expect(card).toContainText("Fait");
+  }
+  await page.goto("/coach/comptabilite");
+  await expect(page.getByText(`Paiement test ${who}`)).toHaveCount(0);
+});
+
+test("lot 4 : renommer un document", async ({ page }, testInfo) => {
+  const { who } = lot4(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Renomme le document test de ${who} en Document renommé ${who}`);
+  const card = box.getByRole("region", { name: "Modifier le document" });
+  await expect(card).toContainText(`Nom : Document test ${who} → Document renommé ${who}`, STEPS);
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  await page.goto("/coach/documents");
+  await expect(visibleText(page, `Document renommé ${who}`)).toBeVisible();
+});
+
+test("lot 4 : aucune carte pour la tâche d'une autre organisation", async ({ page }) => {
+  const box = await openAssistant(page);
+  await ask(box, "Supprime la tâche de l'autre coach");
+  await expect(box).toContainText("Je ne trouve pas cette tâche.", STEPS);
+  await expect(box.getByRole("region", { name: "Supprimer la tâche" })).toHaveCount(0);
+});
+
+test("lot 4 : une tâche supprimée ne se modifie plus, rien de faux n'est écrit", async ({
+  page,
+}, testInfo) => {
+  const { who } = lot4(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Modifie puis supprime la tâche double de ${who}`);
+  const edit = box.getByRole("region", { name: "Modifier la tâche" });
+  const remove = box.getByRole("region", { name: "Supprimer la tâche" });
+  await expect(remove).toContainText(`Tâche double ${who}`, STEPS);
+  await remove.getByRole("button", { name: "Valider" }).click();
+  await expect(remove).toContainText("Fait");
+  await edit.getByRole("button", { name: "Valider" }).click();
+  await expect(edit).toContainText("Tâche introuvable : elle a peut-être été supprimée.");
+});
