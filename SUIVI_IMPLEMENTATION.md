@@ -31,6 +31,33 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Renommer un exercice ou une étape (D-179, 14/11/2026)
+```
+src/domain/training/strength-edit.ts (renameExercise) et running-edit.ts (renameStep) ; strength-parts.tsx
+  (champ « Nom de l'exercice ») ; running-parts.tsx (champ « Nom de l'étape »).
+Tests : strength-edit.test.ts (+3), running-edit.test.ts (+3) ; unitaires 565 ; e2e modeles-coory.spec.ts
+  « D-179 » (étape puis exercice renommés, retrouvés après rechargement) ordinateur et téléphone ;
+  suite complète 244 passés / 38 ignorés ; captures du panneau téléphone et ordinateur, sombre et clair.
+Aussi (D-178, retour d'Antonino) : fenêtre « Utiliser ce modèle » qui remontait au choix d'un sportif :
+  label relative dans AthletePicker (program-wizard.tsx), corps des fenêtres relative (overlay.tsx) ; test
+  « choisir un sportif en bas de la liste ne fait pas remonter la fenêtre » (601 px avant, 0 après).
+```
+
+### « Utiliser » un modèle en direct (D-178, 14/11/2026)
+```
+src/features/programs/template-use.ts (nouveau, pur : aimFor, freeStart, mondayOf, templateUseInput) ;
+  modeles/[templateId]/use-template-sheet.tsx (nouveau : fenêtre « Utiliser ce modèle ») et page.tsx
+  (données des sportifs, ?utiliser=1) ; program-editor.tsx (boutons « Utiliser » → fenêtre) ; page.tsx
+  de la liste (carte → modeles/<id>?utiliser=1) ; program-wizard.tsx (titre du modèle, discipline et
+  rythme du modèle d'abord, AthletePicker exporté) ; programmes/nouveau/page.tsx et
+  sportifs/[athleteId]/nouveau-programme/page.tsx (clé neuve à chaque arrivée) ;
+  src/components/ui/overlay.tsx (la fenêtre d'une page mise de côté se ferme).
+Tests : template-use.test.ts (5) ; unitaires 559 ; e2e modeles-coory.spec.ts (2 parcours : Utiliser en
+  direct jusqu'au brouillon ; carte → Plus d'options → assistant, puis 10 km après un hybride : étape 1,
+  titre et Running) ordinateur et téléphone ; suite complète 240 passés / 38 ignorés ; captures de la fenêtre
+  téléphone et ordinateur, sombre et clair.
+```
+
 ### Modèles de programme Coory (D-177, 14/11/2026)
 ```
 scripts/modeles-coory/briques.ts et modeles.ts (nouveaux : générateur des 7 nouveaux modèles) ;

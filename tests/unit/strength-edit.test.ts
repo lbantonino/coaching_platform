@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  renameExercise,
   addExercise,
   addSet,
   addSuperset,
@@ -266,5 +267,30 @@ describe("séries en secondes", () => {
         ],
       }).success,
     ).toBe(false);
+  });
+});
+
+// Renommer un exercice (demande d'Antonino du 14/11/2026, D-179) : le nom affiché change, l'exercice
+// reste relié à la Bibliothèque (photo, consignes, max du sportif) ; jamais de nom vide.
+describe("renameExercise", () => {
+  const exercise = {
+    id: "x1",
+    kind: "exercise" as const,
+    exerciseId: "23bb6605-e34b-5e09-a775-823e52f1ef10",
+    name: "Back squat",
+    loadMode: "kg" as const,
+    sets: [{ type: "normal" as const, repsMin: 5 }],
+  };
+  it("donne le nom écrit, sans espaces autour, et garde le lien à la Bibliothèque", () => {
+    expect(renameExercise(exercise, " Squat arrière ")).toEqual({
+      ...exercise,
+      name: "Squat arrière",
+    });
+  });
+  it("un nom vide ne remplace rien", () => {
+    expect(renameExercise(exercise, "   ")).toBe(exercise);
+  });
+  it("coupe un nom trop long (80 caractères au plus)", () => {
+    expect(renameExercise(exercise, "y".repeat(90)).name).toHaveLength(80);
   });
 });

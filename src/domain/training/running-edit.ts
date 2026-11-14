@@ -116,6 +116,15 @@ export function stepDetail(step: RunStep): string {
 
 export const stepTitle = (step: RunStep) => step.label ?? RUN_ROLE_LABELS[step.role];
 
+// Renommer une étape (D-179) : le nom écrit remplace celui du type ; vidé, ou identique au type,
+// l'étape reprend le nom de son type (et le suit s'il change). 60 caractères au plus (schéma).
+export function renameStep(step: RunStep, text: string): RunStep {
+  const name = text.trim().slice(0, 60);
+  const rest = { ...step };
+  delete rest.label;
+  return name && name !== RUN_ROLE_LABELS[step.role] ? { ...rest, label: name } : rest;
+}
+
 // « 15 min + 5 × (2 min + 2 min) + 10 min » (Aperçu en direct, sans graphique).
 export function runningSummary(content: RunningContent): string {
   return content.items

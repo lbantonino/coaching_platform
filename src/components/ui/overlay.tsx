@@ -281,14 +281,18 @@ export function Overlay({
     }
   }, [open, enter, leave]);
 
-  // Copie restante si la page change pendant une sortie.
-  useEffect(
-    () => () => {
+  // Copie restante si la page change pendant une sortie. Et la vraie fenêtre se ferme quand la page
+  // est mise de côté (Next 16 garde la page précédente cachée, Cache Components) : restée « modale »,
+  // invisible, elle bloquait toute la page suivante (D-178, lien « Plus d'options » d'une fenêtre).
+  // Si on revient sur la page, la fenêtre encore ouverte se rouvre (effet ci-dessus).
+  useEffect(() => {
+    const dialog = ref.current;
+    return () => {
       ghost.current?.sheet.remove();
       ghost.current?.backdrop.remove();
-    },
-    [],
-  );
+      if (dialog?.open) dialog.close();
+    };
+  }, []);
 
   // Glisser vers le bas pour fermer (téléphone), depuis la poignée ou un en-tête [data-sheet-grab].
   const onPointerDown = (event: React.PointerEvent<HTMLDialogElement>) => {
@@ -510,8 +514,11 @@ export function DialogHeader({
 // `flex-auto` (et non `flex-1`) dans toute la colonne d'une fenêtre : sa hauteur suit son contenu, et
 // Safari (iOS 26) écrase à 0 une colonne dont les parties partent de 0 (`flex-1` = base 0 %) ; Chrome
 // mesurait le contenu. Constaté sur le vrai iPhone d'Antonino le 05/11 (fond sombre, feuille de 0 px).
+// relative : un élément en position absolue du contenu (case invisible « sr-only » d'une liste de
+// choix) reste dans ce corps qui défile ; sinon il débordait sous la fenêtre et la faisait défiler
+// tout entière quand on le choisissait (D-178).
 const bodyClass =
-  "min-h-0 flex-auto overflow-x-hidden overflow-y-auto overscroll-contain px-5 pt-2.5 pb-[22px] md:px-6";
+  "relative min-h-0 flex-auto overflow-x-hidden overflow-y-auto overscroll-contain px-5 pt-2.5 pb-[22px] md:px-6";
 
 // Corps qui défile d'un formulaire qui pose lui-même son pied (Sheet `bare`) : le formulaire et ses
 // boutons vivent dans le même composant, le pied reste hors de la zone qui défile.

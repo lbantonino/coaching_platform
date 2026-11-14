@@ -108,6 +108,7 @@ import {
   unarchiveProgram,
 } from "@/features/programs/actions";
 
+import { openUseTemplate } from "../modeles/[templateId]/use-template-sheet";
 import { DropLine, Handle } from "../_session/running-parts";
 import { useSafeLeave } from "../_session/safe-leave";
 
@@ -1598,13 +1599,14 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
             </div>
             <div className="flex gap-2">
               {target.kind === "template" ? (
-                // « Utiliser » (C25) : l'assistant, parti de ce modèle.
-                <Link
-                  href={`${meta.base}/nouveau?modele=${target.templateId}`}
+                // « Utiliser » (C25, D-178) : la fenêtre « Utiliser ce modèle » de la page.
+                <button
+                  type="button"
+                  onClick={openUseTemplate}
                   className={`${phoneButton} bg-surface text-text inset-ring inset-ring-field-ring`}
                 >
                   Utiliser
-                </Link>
+                </button>
               ) : null}
               {readOnly ? (
                 target.kind === "template" ? (
@@ -1944,13 +1946,14 @@ export function EditorHeaderActions({ base }: { base: string }) {
     "inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-cta px-3.5 text-[12.5px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.97] disabled:opacity-60 max-lg:hidden";
   const secondary =
     "inline-flex h-8 items-center gap-1.5 rounded-[9px] bg-surface px-3.5 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] max-lg:hidden";
-  // « Utiliser » un modèle de programme (revue MVP du 13/11, C25) : l'assistant, parti de ce modèle.
+  // « Utiliser » un modèle de programme (revue MVP du 13/11, C25 ; D-178) : la fenêtre « Utiliser ce
+  // modèle » de la page (choisir le sportif, puis le brouillon).
   const use =
     target.kind === "template" ? (
-      <Link href={`${base}/nouveau?modele=${target.templateId}`} className={secondary}>
+      <button type="button" onClick={openUseTemplate} className={secondary}>
         <Plus aria-hidden size={13} strokeWidth={2.2} />
         Utiliser
-      </Link>
+      </button>
     ) : null;
   // Modèle Coory (lecture seule) : l'action principale est de le copier dans Mes modèles.
   if (editor.readOnly && target.kind === "template") {

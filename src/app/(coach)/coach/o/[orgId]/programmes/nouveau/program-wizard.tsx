@@ -19,13 +19,14 @@ import { useToast } from "@/components/ui/toast";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import { hyroxDivisionLabels } from "@/domain/training/hyrox-official";
 import { HYROX_DIVISIONS, type HyroxDivision } from "@/domain/training/program-plan";
-import { firstFreeMonday, periodsOverlap } from "@/domain/training/program-status";
+import { periodsOverlap } from "@/domain/training/program-status";
 import {
   createProgram,
   createProgramTemplate,
   previewStart,
   type StartPreview,
 } from "@/features/programs/actions";
+import { aimFor, freeStart } from "@/features/programs/template-use";
 import type { WizardAthlete, WizardData } from "@/features/programs/wizard";
 
 // Assistant « Créer un programme » (maquette 02, WIZ-01 à 05, D-157), 4 étapes navigables : une étape
@@ -72,28 +73,10 @@ function mondayOf(iso: string): string {
   return addDays(iso, -((day + 6) % 7));
 }
 
-// Façon de viser pré-choisie (WIZ-F06) : allure si la VMA est connue, sinon zones de FC ; % du max si
-// des maxima sont reliés à un exercice, sinon kg.
-function aimFor(athlete: WizardAthlete | undefined) {
-  return {
-    running: athlete?.hasVma ? ("pace" as const) : ("hr" as const),
-    strength: athlete?.hasLinkedMaxes ? ("pct" as const) : ("kg" as const),
-  };
-}
-
 function mainDiscipline(value: Discipline | null | undefined): MainDiscipline | null {
   return value === "running" || value === "strength" || value === "hyrox" || value === "hybrid"
     ? value
     : null;
-}
-
-// Début proposé pour ce sportif (revue MVP du 13/11, B8) : le prochain lundi, ou le lundi qui suit son
-// dernier programme publié, pour ne pas le chevaucher.
-function freeStart(athlete: WizardAthlete | undefined, fallback: string): string {
-  return firstFreeMonday(
-    (athlete?.programs ?? []).filter((program) => program.status === "published"),
-    fallback,
-  );
 }
 
 export function ProgramWizard({
@@ -122,7 +105,8 @@ export function ProgramWizard({
   const router = useRouter();
   const toast = useToast();
   const initialAthlete = data.athletes.find((a) => a.id === initialAthleteId);
-  // « Utiliser » un modèle : sa discipline et sa durée sont proposées (le sportif passe avant).
+  // « Utiliser » un modèle : son nom, sa discipline, sa durée et son rythme sont repris (D-178 : le
+  // modèle passe avant le sportif, un modèle 10 km reste un programme Running).
   const initialTemplate = data.templates.find((t) => t.id === initialTemplateId);
 
   // Depuis la fiche d'un sportif, l'étape 1 est déjà remplie : on commence à l'étape 1 quand même
@@ -131,9 +115,9 @@ export function ProgramWizard({
   const [seen, setSeen] = useState<StepIndex>(1);
   const [athleteId, setAthleteId] = useState<string | null>(initialAthleteId);
   const [query, setQuery] = useState("");
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(initialTemplate?.title ?? "");
   const [discipline, setDiscipline] = useState<MainDiscipline | null>(
-    mainDiscipline(initialAthlete?.programType) ?? mainDiscipline(initialTemplate?.discipline),
+    mainDiscipline(initialTemplate?.discipline) ?? mainDiscipline(initialAthlete?.programType),
   );
   const [raceOn, setRaceOn] = useState(false);
   const [raceName, setRaceName] = useState("");
@@ -182,7 +166,8 @@ export function ProgramWizard({
     setAthleteId(next.id);
     setAim(aimFor(next));
     setDivision(next.defaultDivision ?? "");
-    if (next.sessionsPerWeek) {
+    // Parti d'un modèle, son rythme reste (C15) ; sinon celui du sportif.
+    if (next.sessionsPerWeek && !initialTemplate) {
       setPerWeek(String(Math.min(Math.max(next.sessionsPerWeek, 1), MAX_PER_WEEK)));
     }
     if (!discipline) setDiscipline(mainDiscipline(next.programType));
@@ -1102,8 +1087,8 @@ function FixedAthlete({ athlete }: { athlete: WizardAthlete }) {
   );
 }
 
-// Étape 1 : recherche et liste des sportifs (un seul choisi).
-function AthletePicker({
+// Étape 1 : recherche et liste des sportifs (un seul choisi). Reprise par « Utiliser ce modèle ».
+export function AthletePicker({
   athletes,
   selected,
   query,
@@ -1155,9 +1140,12 @@ function AthletePicker({
           shown.map((athlete) => {
             const checked = athlete.id === selected;
             return (
+              // relative : la case invisible (sr-only, en position absolue) reste DANS sa ligne. Sans
+              // cela, elle se plaçait par rapport à la fenêtre « Utiliser ce modèle », débordait sous la
+              // liste, et la choisir faisait défiler toute la fenêtre (D-178, retour d'Antonino).
               <label
                 key={athlete.id}
-                className={`flex min-h-[56px] cursor-pointer items-center gap-3 border-b border-dlg-divider px-3.5 py-2 last:border-b-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-violet ${
+                className={`relative flex min-h-[56px] cursor-pointer items-center gap-3 border-b border-dlg-divider px-3.5 py-2 last:border-b-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-violet ${
                   checked ? "bg-lib-lavender" : ""
                 }`}
               >

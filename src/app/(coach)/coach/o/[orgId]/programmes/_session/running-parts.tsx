@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, GripVertical, Plus, Repeat2, Sparkles, Trash2 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { useReorder } from "@/components/programs/use-reorder";
 import { ChipGroup } from "@/components/ui/chip-group";
@@ -24,6 +24,7 @@ import {
   repeatSeconds,
   setRepeatTimes,
   stepDetail,
+  renameStep,
   stepTitle,
   type RunItem,
 } from "@/domain/training/running-edit";
@@ -410,6 +411,9 @@ export function RunStepPanel({
   onDone: () => void;
   onDelete: () => void;
 }) {
+  // Le panneau existe deux fois (colonne d'ordinateur, feuille du téléphone) : identifiant unique.
+  const nameId = useId();
+  const [nameInput, setNameInput] = useState(step.label ?? "");
   const time = step.measure.type === "time" ? durationField(step.measure.seconds) : null;
   const distance = step.measure.type === "distance" ? distanceField(step.measure.meters) : null;
   const [measureInput, setMeasureInput] = useState(time?.value ?? distance?.value ?? "");
@@ -594,6 +598,24 @@ export function RunStepPanel({
             Le changement s&apos;applique aux {place.repeatTimes} répétitions.
           </p>
         ) : null}
+      </div>
+
+      {/* Nom de l'étape (D-179, demande d'Antonino) : vide, l'étape porte le nom de son type. */}
+      <div className="flex flex-col gap-2">
+        <label htmlFor={nameId} className={label}>
+          Nom de l&apos;étape
+        </label>
+        <input
+          id={nameId}
+          value={nameInput}
+          maxLength={60}
+          placeholder={RUN_ROLE_LABELS[step.role]}
+          onChange={(event) => {
+            setNameInput(event.target.value);
+            onChange(renameStep(step, event.target.value));
+          }}
+          className={field}
+        />
       </div>
 
       <label className="flex flex-col gap-2">

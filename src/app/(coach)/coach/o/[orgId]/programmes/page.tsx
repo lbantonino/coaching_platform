@@ -439,7 +439,10 @@ async function TemplatesTab({
               href={`${base}/modeles/${template.id}`}
               // Un modèle de séance n'a pas de « Utiliser » : il s'ajoute à une semaine depuis
               // l'éditeur d'un programme (revue MVP du 13/11, C9 ; avant, le bouton rouvrait sa page).
-              useHref={template.kind === "program" ? `${base}/nouveau?modele=${template.id}` : null}
+              // « Utiliser » (D-178) : la page du modèle, fenêtre « Utiliser ce modèle » ouverte.
+              useHref={
+                template.kind === "program" ? `${base}/modeles/${template.id}?utiliser=1` : null
+              }
             />
           ))}
         </div>
