@@ -12,6 +12,14 @@ import type { TemplateCard } from "@/features/programs/templates";
 import type { CoachSession } from "@/features/sessions/queries";
 import { sessionOccurrences } from "@/features/sessions/schemas";
 import type { CoachTask } from "@/features/tasks/queries";
+import type { AthleteGoals } from "@/features/goals/queries";
+import { goalStatusLabels, goalTypeLabels } from "@/features/goals/schemas";
+import type { AthleteRecords } from "@/features/records/queries";
+import { formatRaceTime, recordEventLabels } from "@/features/records/schemas";
+import type { AthleteReferences } from "@/features/references/queries";
+import { referenceKindLabels } from "@/features/references/schemas";
+
+import { referenceValueText } from "../sportifs";
 
 // Mise en forme des outils de lecture de l'Assistant IA (lot 1 des actions) : ce qui part chez
 // Anthropic. Court, utile à l'action, jamais d'e-mail, de téléphone, de note ni de donnée de santé.
@@ -222,6 +230,11 @@ type SheetSource = Pick<
   | "country"
   | "status"
   | "hasAccount"
+  | "programType"
+  | "sessionsPerWeek"
+  | "maxSessionMinutes"
+  | "availableDays"
+  | "scheduleConstraints"
 >;
 const filled = (value: string | null) => (value?.trim() ? "rempli" : "vide");
 
@@ -244,6 +257,14 @@ export function shapeAthleteSheet(fiche: SheetSource) {
     pays: fiche.country,
     statut: fiche.status,
     compte_active: fiche.hasAccount,
+    // Lot 5 (D-184) : discipline et disponibilités, JAMAIS les blessures (donnée de santé).
+    discipline: fiche.programType,
+    disponibilites: {
+      seances_par_semaine: fiche.sessionsPerWeek,
+      duree_max_min: fiche.maxSessionMinutes,
+      jours: fiche.availableDays,
+      contraintes: fiche.scheduleConstraints,
+    },
   };
 }
 
@@ -297,4 +318,40 @@ export function shapeDocuments(documents: readonly CoachDocument[]) {
     taille: formatBytes(document.sizeBytes),
     modifie_le: document.updatedAt.slice(0, 10),
   }));
+}
+
+// --- Lot 5 (D-184) : objectifs, repères et records d'un sportif (jamais de santé).
+export function shapeGoals(goals: AthleteGoals) {
+  return [...goals.current, ...goals.past].slice(0, MAX_ROWS).map((goal) => ({
+    id: goal.id,
+    objectif: goalTypeLabels[goal.type],
+    date: goal.targetDate,
+    temps_vise: goal.targetTimeSeconds ? formatRaceTime(goal.targetTimeSeconds) : null,
+    priorite: goal.priority === "main" ? "principal" : "secondaire",
+    statut: goalStatusLabels[goal.status],
+    competition: goal.competitionName,
+  }));
+}
+
+export function shapeReferences(references: AthleteReferences, records: AthleteRecords) {
+  const seen = new Set<string>();
+  const all = [...references.current, ...references.history].filter((reference) => {
+    if (seen.has(reference.id)) return false;
+    seen.add(reference.id);
+    return true;
+  });
+  return {
+    reperes: all.slice(0, MAX_ROWS).map((reference) => ({
+      id: reference.id,
+      repere: referenceKindLabels[reference.kind],
+      valeur: referenceValueText(reference),
+      mesure_le: reference.measuredOn,
+    })),
+    records: records.history.slice(0, MAX_ROWS).map((record) => ({
+      id: record.id,
+      epreuve: recordEventLabels[record.event],
+      temps: formatRaceTime(record.timeSeconds),
+      le: record.achievedOn,
+    })),
+  };
 }

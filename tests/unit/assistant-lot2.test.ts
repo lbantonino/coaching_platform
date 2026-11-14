@@ -289,6 +289,12 @@ describe("compléter une fiche : contact jamais envoyé à Claude", () => {
       country: "BE",
       status: "active",
       hasAccount: false,
+      // Lot 5 : discipline et disponibilités (jamais les blessures).
+      programType: "running",
+      sessionsPerWeek: null,
+      maxSessionMinutes: null,
+      availableDays: [],
+      scheduleConstraints: null,
     });
     expect(sheet).toMatchObject({
       prenom: "Sarah",

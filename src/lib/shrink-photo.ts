@@ -3,6 +3,10 @@
 // et menait à une page d'erreur. Partagée par la photo de profil et la photo d'un exercice.
 // Les deux règles de calcul sont pures (Vitest) ; le dessin sur un canvas est vérifié par Playwright.
 
+// Une photo de profil n'a pas besoin de plus de 1 024 px (l'avatar le plus grand en affiche ~200) :
+// onglet Profil et Assistant IA (lot 5).
+export const PROFILE_PHOTO_SIDE = 1024;
+
 // Au-delà de ce poids, une photo est réencodée même si ses dimensions sont déjà petites.
 const HEAVY_BYTES = 1024 * 1024;
 

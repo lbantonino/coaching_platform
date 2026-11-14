@@ -30,11 +30,13 @@ import { loadDraft } from "@/features/programs/drafts";
 import { aimFor } from "@/features/programs/template-use";
 import { getProgramTemplate } from "@/features/programs/templates";
 import { uploadDocument } from "@/features/documents/actions";
+import { uploadAthletePhoto, uploadCoachPhoto } from "@/features/photos/actions";
 import { createTask, createTaskList } from "@/features/tasks/actions";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 import { executeDaily } from "./execute-daily";
+import { executeSportifs } from "./execute-sportifs";
 import { hasUnknownExercise, UNKNOWN_EXERCISE } from "./exercise-check";
 import {
   athleteFormValues,
@@ -334,6 +336,25 @@ export async function executeAssistantAction(
     case "supprimer_document":
     case "categorie_documents":
       return executeDaily(orgId, user.id, action);
+    // Lot 5 (D-184) : les sportifs, par execute-sportifs.ts (server-only), après requireOrgAccess.
+    case "statut_sportif":
+    case "discipline_sportif":
+    case "disponibilites":
+    case "ajouter_objectif":
+    case "modifier_objectif":
+    case "statut_objectif":
+    case "supprimer_objectif":
+    case "ajouter_repere":
+    case "reperes_depuis_test":
+    case "supprimer_repere":
+    case "ajouter_record":
+    case "supprimer_record":
+    case "favori_exercice":
+    case "modifier_exercice":
+    case "supprimer_exercice":
+    case "photo":
+    case "ajouter_note":
+      return executeSportifs(orgId, action);
     case "creer_programme": {
       // Lot 3a : la MÊME création que l'assistant « Créer un programme » (brouillon, jamais publié),
       // puis, pour un programme écrit, le MÊME enregistrement que l'éditeur.
@@ -362,11 +383,12 @@ export async function executeAssistantAction(
   }
 }
 
-// « Valider » une carte « Importer un document » (lot 2, D-181) : le fichier, resté dans le navigateur,
-// arrive ici avec les paramètres de la carte (champ `params`, en JSON). Aucune confiance : accès,
-// schéma strict, puis le MÊME dépôt que la page Documents (taille, format, sportif de l'organisation,
-// compte de démonstration refusé).
-export async function executeDocumentImport(
+// « Valider » une carte qui part avec le fichier JOINT, resté dans le navigateur : « Importer un
+// document » (lot 2, D-181) ou « Photo » mettre (lot 5, D-184). Le fichier arrive ici avec la sorte de
+// carte (`kind`) et ses paramètres (`params`, en JSON). Aucune confiance : accès, schéma strict, puis
+// le MÊME dépôt que la page habituelle (taille, format, sportif de l'organisation, compte de
+// démonstration refusé).
+export async function executeWithFile(
   organizationId: string,
   formData: FormData,
 ): Promise<ExecuteResult> {
@@ -378,14 +400,29 @@ export async function executeDocumentImport(
   } catch {
     raw = null;
   }
-  const parsed = assistantActionSchema.safeParse({ kind: "importer_document", params: raw });
-  if (!parsed.success || parsed.data.kind !== "importer_document") {
-    return fail("Cette action n'est pas valable. Redemande-la à l'assistant.");
-  }
+  const kind = formData.get("kind") === "photo" ? "photo" : "importer_document";
+  const parsed = assistantActionSchema.safeParse({ kind, params: raw });
+  if (!parsed.success) return fail("Cette action n'est pas valable. Redemande-la à l'assistant.");
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return fail("Joins à nouveau le fichier, puis redemande à l'assistant.");
   }
+  if (parsed.data.kind === "photo") {
+    if (parsed.data.params.action !== "mettre") return fail(INVALID);
+    const photo = new FormData();
+    photo.set("photo", file);
+    const state = { error: null, saved: false, attempt: 0 };
+    const athleteId = parsed.data.params.athleteId;
+    const saved = athleteId
+      ? await uploadAthletePhoto(orgId, athleteId, state, photo)
+      : await uploadCoachPhoto(state, photo);
+    if (!saved.saved) return fail(saved.error ?? "La photo n'a pas pu être enregistrée.");
+    return {
+      ok: true,
+      href: athleteId ? `/coach/o/${orgId}/sportifs/${athleteId}?onglet=profil` : "/coach",
+    };
+  }
+  if (parsed.data.kind !== "importer_document") return fail(INVALID);
   const form = new FormData();
   form.set("name", parsed.data.params.name);
   form.set("categoryId", parsed.data.params.categoryId ?? "");

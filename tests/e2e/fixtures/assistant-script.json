@@ -1321,5 +1321,398 @@
         "citations": null
       }
     ]
+  ],
+  "Passe Léa Test à 3 séances par semaine, lundi mercredi vendredi": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les disponibilités.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1a",
+        "name": "disponibilites",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000001",
+          "changes": {
+            "sessionsPerWeek": 3,
+            "availableDays": ["mon", "wed", "fri"]
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Note pour Léa Test : préfère courir le matin": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la note.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1b",
+        "name": "ajouter_note",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000001",
+          "texte": "Préfère courir le matin"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Ajoute un objectif semi-marathon à Léa Test et rends principal son objectif forme": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux objectifs.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1c",
+        "name": "ajouter_objectif",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000001",
+          "objectif": {
+            "goalType": "run_half",
+            "targetDate": "2027-10-17"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1d",
+        "name": "statut_objectif",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000001",
+          "goalId": "e5000000-0000-4000-8000-000000000031",
+          "statut": "principal"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Supprime la FC max de Léa Test et ajoute son record 5 km en 21:30": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux changements.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1e",
+        "name": "supprimer_repere",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000001",
+          "referenceId": "e5000000-0000-4000-8000-000000000041"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1f",
+        "name": "ajouter_record",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000001",
+          "record": {
+            "event": "run_5k",
+            "time": "21:30",
+            "achievedOn": "2026-11-08"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Archive Léa Archive": [
+    [
+      {
+        "type": "text",
+        "text": "Voici l'archivage.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1g",
+        "name": "statut_sportif",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000091",
+          "statut": "archived"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Renomme mon exercice test Léa en Exercice test renommé Léa": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le nouveau nom.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1h",
+        "name": "modifier_exercice",
+        "input": {
+          "exerciseId": "e5000000-0000-4000-8000-000000000061",
+          "changes": {
+            "name": "Exercice test renommé Léa"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Mets cette photo pour Léa Test": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la photo.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s1i",
+        "name": "photo",
+        "input": {
+          "action": "mettre",
+          "athleteId": "e5000000-0000-4000-8000-000000000001"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Passe Noah Test à 3 séances par semaine, lundi mercredi vendredi": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les disponibilités.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2a",
+        "name": "disponibilites",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000002",
+          "changes": {
+            "sessionsPerWeek": 3,
+            "availableDays": ["mon", "wed", "fri"]
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Note pour Noah Test : préfère courir le matin": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la note.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2b",
+        "name": "ajouter_note",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000002",
+          "texte": "Préfère courir le matin"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Ajoute un objectif semi-marathon à Noah Test et rends principal son objectif forme": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux objectifs.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2c",
+        "name": "ajouter_objectif",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000002",
+          "objectif": {
+            "goalType": "run_half",
+            "targetDate": "2027-10-17"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2d",
+        "name": "statut_objectif",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000002",
+          "goalId": "e5000000-0000-4000-8000-000000000032",
+          "statut": "principal"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Supprime la FC max de Noah Test et ajoute son record 5 km en 21:30": [
+    [
+      {
+        "type": "text",
+        "text": "Voici les deux changements.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2e",
+        "name": "supprimer_repere",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000002",
+          "referenceId": "e5000000-0000-4000-8000-000000000042"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2f",
+        "name": "ajouter_record",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000002",
+          "record": {
+            "event": "run_5k",
+            "time": "21:30",
+            "achievedOn": "2026-11-08"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Archive Noah Archive": [
+    [
+      {
+        "type": "text",
+        "text": "Voici l'archivage.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2g",
+        "name": "statut_sportif",
+        "input": {
+          "athleteId": "e5000000-0000-4000-8000-000000000092",
+          "statut": "archived"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Renomme mon exercice test Noah en Exercice test renommé Noah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le nouveau nom.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2h",
+        "name": "modifier_exercice",
+        "input": {
+          "exerciseId": "e5000000-0000-4000-8000-000000000062",
+          "changes": {
+            "name": "Exercice test renommé Noah"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Mets cette photo pour Noah Test": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la photo.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_s2i",
+        "name": "photo",
+        "input": {
+          "action": "mettre",
+          "athleteId": "e5000000-0000-4000-8000-000000000002"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Modifie la presse à cuisses de Coory": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_s0a",
+        "name": "modifier_exercice",
+        "input": {
+          "exerciseId": "e9844c81-7922-5862-b902-f3daa687154f",
+          "changes": {
+            "name": "Presse"
+          }
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "C'est un exercice Coory : je ne peux que le mettre en favori.",
+        "citations": null
+      }
+    ]
   ]
 }

@@ -149,6 +149,26 @@ export const READ_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "voir_objectifs",
+    description:
+      "Liste les objectifs d'un sportif (en cours puis passés) : id, objectif, date, temps visé, priorité, statut, compétition.",
+    input_schema: {
+      type: "object",
+      properties: { sportif_id: { type: "string" } },
+      required: ["sportif_id"],
+    },
+  },
+  {
+    name: "voir_reperes",
+    description:
+      "Liste les repères d'entraînement (allures, FC, charges) et les records d'un sportif, avec leurs id.",
+    input_schema: {
+      type: "object",
+      properties: { sportif_id: { type: "string" } },
+      required: ["sportif_id"],
+    },
+  },
+  {
     name: "voir_programmes",
     description:
       "Liste les programmes d'un sportif avec leurs dates (début, fin) et leur statut : pour choisir une date de début qui ne chevauche rien, ou copier un ancien programme.",

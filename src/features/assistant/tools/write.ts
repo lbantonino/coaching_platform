@@ -26,10 +26,12 @@ import { dayInWords, type AssistantAttachment } from "../rules";
 import { createClient } from "@/lib/supabase/server";
 
 import { isDailyKind } from "../daily";
+import { isSportifsKind } from "../sportifs";
 import { hasUnknownExercise, UNKNOWN_EXERCISE } from "../exercise-check";
 import { athleteFormValues, checkAgainstSession, formRuleError } from "../form-data";
 import { withSourceRhythm } from "../program";
 import { DAILY_TOOLS, proposeDaily } from "./daily";
+import { proposeSportifs, SPORTIFS_TOOLS } from "./sportifs";
 import {
   actionCardNames,
   pendingConflict,
@@ -594,6 +596,8 @@ WRITE_TOOLS.push(
 
 // Lot 4 (D-183) : le quotidien (tools/daily.ts).
 WRITE_TOOLS.push(...DAILY_TOOLS);
+// Lot 5 (D-184) : les sportifs (tools/sportifs.ts).
+WRITE_TOOLS.push(...SPORTIFS_TOOLS);
 
 export const WRITE_TOOL_NAMES = new Set<string>(ACTION_KINDS);
 
@@ -638,8 +642,9 @@ export async function proposeAction(
       ? [String(p.athlete.athleteId)]
       : []),
     ...((p.athleteIds as string[] | undefined) ?? []),
-    // Lot 2 : le sportif d'un document ou d'une fiche à compléter.
-    ...(typeof p.athleteId === "string" ? [p.athleteId] : []),
+    // Lot 2 : le sportif d'un document ou d'une fiche à compléter. Lot 5 : « Statut du sportif »
+    // vérifie lui-même son sportif (un archivé se réactive).
+    ...(typeof p.athleteId === "string" && kind !== "statut_sportif" ? [p.athleteId] : []),
   ];
   if (athleteIds.length > 0) {
     const { data } = await supabase
@@ -1022,6 +1027,11 @@ export async function proposeAction(
 
   if (isDailyKind(kind)) {
     const checked = await proposeDaily(organizationId, kind, p, names);
+    if (!checked.ok) return refuse(checked.error);
+    if (checked.params) p = { ...p, ...checked.params };
+  }
+  if (isSportifsKind(kind)) {
+    const checked = await proposeSportifs(organizationId, kind, p, names, context);
     if (!checked.ok) return refuse(checked.error);
     if (checked.params) p = { ...p, ...checked.params };
   }

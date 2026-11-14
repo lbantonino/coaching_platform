@@ -1,25 +1,20 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
-
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import {
-  EXERCISE_PHOTO_MAX_BYTES,
   isExercisePhotoPath,
   parseCoachExerciseForm,
   readCoachExerciseForm,
   type CoachExerciseInput,
 } from "@/domain/exercises/coach-exercise";
 import { requireOrgAccess } from "@/features/auth/guards";
-import { checkPhoto } from "@/features/photos/validate";
-import { isDemoAccount } from "@/features/demo/queries";
-import { DEMO_NO_FILES } from "@/features/demo/rules";
 import { createClient } from "@/lib/supabase/server";
 
 import { insertCoachExercise } from "./create-exercise";
+import { readPhoto, saveCoachExercise } from "./exercise-core";
 
 // Exercices du coach (D-76) : créer, modifier, supprimer. Chaque action revérifie l'accès à
 // l'organisation et valide le formulaire ; la RLS n'autorise l'écriture que sur les exercices de
@@ -32,20 +27,6 @@ export type CoachExerciseFormState = {
 };
 
 const BUCKET = "exercise-images";
-
-type Photo = { bytes: Uint8Array; contentType: string; ext: string };
-
-// On ne croit ni le nom ni le type annoncé du fichier : on lit ses premiers octets.
-async function readPhoto(formData: FormData): Promise<{ photo: Photo | null } | { error: string }> {
-  const file = formData.get("photo");
-  if (!(file instanceof File) || file.size === 0) return { photo: null };
-  // Compte de démonstration partagé (OPEN-24) : l'exercice oui, sa photo non.
-  if (await isDemoAccount()) return { error: DEMO_NO_FILES };
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const check = checkPhoto(bytes, EXERCISE_PHOTO_MAX_BYTES);
-  if (!check.ok) return { error: check.error };
-  return { photo: { bytes, contentType: check.contentType, ext: check.ext } };
-}
 
 function revalidateLibrary() {
   revalidatePath("/coach/bibliotheque", "layout");
@@ -94,63 +75,16 @@ export async function updateCoachExercise(
   formData: FormData,
 ): Promise<CoachExerciseFormState> {
   const { membership } = await requireOrgAccess(organizationId);
-  const input = readCoachExerciseForm(formData);
-  const fail = (error: string) => ({ error, attempt: previous.attempt + 1, values: input });
-  if (!z.uuid().safeParse(exerciseId).success) return fail("Exercice introuvable.");
-  const parsed = parseCoachExerciseForm(input);
-  if (!parsed.ok) return fail(parsed.error);
-  const read = await readPhoto(formData);
-  if ("error" in read) return fail(read.error);
-
-  const orgId = membership.organizationId;
-  const supabase = await createClient();
-  const { data: current } = await supabase
-    .from("exercises")
-    .select("id, image_main")
-    .eq("id", exerciseId)
-    .eq("organization_id", orgId)
-    .maybeSingle();
-  if (!current) return fail("Exercice introuvable.");
-
-  // Nouvelle photo : remplace l'ancienne ; « Retirer la photo » : plus de photo.
-  const newPath = read.photo ? `org/${orgId}/${randomUUID()}.${read.photo.ext}` : null;
-  if (read.photo && newPath) {
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(newPath, read.photo.bytes, { contentType: read.photo.contentType });
-    if (error) return fail("La photo n'a pas pu être enregistrée. Réessaie.");
+  if (!z.uuid().safeParse(exerciseId).success) {
+    return {
+      error: "Exercice introuvable.",
+      attempt: previous.attempt + 1,
+      values: readCoachExerciseForm(formData),
+    };
   }
-  const imagePath = newPath ?? (formData.get("removePhoto") === "on" ? null : current.image_main);
-  const values = parsed.values;
-  const { data: updated, error } = await supabase
-    .from("exercises")
-    .update({
-      name_fr: values.nameFr,
-      category: values.category,
-      equipment: values.equipment,
-      primary_muscles: values.primaryMuscles,
-      bodyweight: values.bodyweight,
-      instructions_fr: values.instructions,
-      image_main: imagePath,
-      image_source: imagePath ? "coach" : null,
-      video_url: values.videoUrl,
-    })
-    .eq("id", exerciseId)
-    .eq("organization_id", orgId)
-    .select("id");
-  if (error || !updated?.length) {
-    if (newPath) await supabase.storage.from(BUCKET).remove([newPath]);
-    return fail("L'exercice n'a pas pu être enregistré. Réessaie.");
-  }
-  if (
-    current.image_main &&
-    current.image_main !== imagePath &&
-    isExercisePhotoPath(current.image_main)
-  ) {
-    await supabase.storage.from(BUCKET).remove([current.image_main]);
-  }
-
-  revalidateLibrary();
+  // Le cœur partagé avec l'Assistant IA (lot 5) : exercise-core.ts.
+  const saved = await saveCoachExercise(membership.organizationId, exerciseId, formData);
+  if (!saved.ok) return { error: saved.error, attempt: previous.attempt + 1, values: saved.values };
   redirect(`/coach/bibliotheque/${exerciseId}`);
 }
 
