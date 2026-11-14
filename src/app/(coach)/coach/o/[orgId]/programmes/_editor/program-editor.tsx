@@ -81,6 +81,7 @@ import { validateForPublish, type PublishContext } from "@/domain/training/progr
 import {
   applySessionDay,
   applyWeekSchedule,
+  dayApplicationReach,
   isPastWeek,
   orderedSessions,
   sessionMoment,
@@ -753,12 +754,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         scope,
         dates,
       );
-      weeks.forEach((item, i) => {
-        const before = current.weeks[i];
-        if (item === before || item.index === week.index) return;
-        others += 1;
-        copies += item.sessions.length - (before?.sessions.length ?? 0);
-      });
+      ({ others, copies } = dayApplicationReach(current.weeks, weeks, week.index));
       return { ...current, weeks };
     });
     setDayPicker(null);

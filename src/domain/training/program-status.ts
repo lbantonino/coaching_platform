@@ -105,10 +105,25 @@ export function periodsOverlap(a: Period, b: Period): boolean {
   );
 }
 
+// Début proposé : le lundi qui commence la semaine prochaine (aujourd'hui si c'est un lundi).
+export function nextMonday(today: string): string {
+  const date = new Date(`${today}T00:00:00Z`);
+  const offset = (8 - date.getUTCDay()) % 7;
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
+}
+
 // Début proposé pour un nouveau programme : `from` (le prochain lundi), ou le lundi qui suit la fin
 // du dernier programme publié encore en cours ou à venir, pour ne pas le chevaucher.
 export function firstFreeMonday(published: readonly Period[], from: string): string {
   return published
     .map((program) => programEnd(program.startDate, program.weeksCount))
     .reduce((latest, end) => (end > latest ? end : latest), from);
+}
+
+// « Dupliquer le programme » (revue MVP du 13/11, C3) : la copie commence le lundi qui suit la fin de
+// l'original, ou le prochain lundi si l'original est déjà fini. Le bouton de l'éditeur et l'Assistant
+// IA (lot 3b) utilisent cette règle.
+export function copyStartDate(source: Period, today: string): string {
+  return firstFreeMonday([source], nextMonday(today));
 }

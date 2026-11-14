@@ -8,12 +8,16 @@ import { z } from "zod";
 import { currencyOf, formatMoney } from "@/domain/billing/money";
 import { formatBytes } from "@/domain/documents/documents";
 import { EQUIPMENT_KEYS } from "@/domain/exercises/vocabulary";
+import { findSession } from "@/domain/training/plan-edit";
+import { planIssues } from "@/domain/training/program-plan";
+import { copyStartDate } from "@/domain/training/program-status";
 import { SESSION_MOMENTS, sessionBodySchema, WEEKDAYS } from "@/domain/training/session-v2";
 import { getAthlete } from "@/features/athletes/queries";
 import { addressSchema, athleteUpdateSchema } from "@/features/athletes/schemas";
 import { loadDraft } from "@/features/programs/drafts";
 import { listAthleteProgramRows } from "@/features/programs/queries";
-import { getProgramTemplate } from "@/features/programs/templates";
+import { checkPublication } from "@/features/programs/publish-check";
+import { getProgramTemplate, getSessionTemplate } from "@/features/programs/templates";
 import { getSession } from "@/features/sessions/queries";
 import { sessionAmountCents } from "@/features/sessions/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
@@ -21,8 +25,26 @@ import { todayIsoInBrussels } from "@/lib/format";
 import { dayInWords, type AssistantAttachment } from "../rules";
 import { createClient } from "@/lib/supabase/server";
 
+import { hasUnknownExercise, UNKNOWN_EXERCISE } from "../exercise-check";
 import { athleteFormValues, checkAgainstSession, formRuleError } from "../form-data";
 import { withSourceRhythm } from "../program";
+import {
+  actionCardNames,
+  pendingConflict,
+  programActionRefusal,
+  publicationRefusal,
+  templateActionRefusal,
+  type ProgramActionKind,
+} from "../program-actions";
+import {
+  applyProgramEdits,
+  editCardNames,
+  programEditRefusal,
+  programEditsToolSchema,
+  staleReading,
+  templateEditRefusal,
+  type ProgramEdit,
+} from "../program-edit";
 import {
   ACTION_KINDS,
   athleteFieldText,
@@ -411,25 +433,178 @@ WRITE_TOOLS.push({
   },
 });
 
-export const WRITE_TOOL_NAMES = new Set<string>(ACTION_KINDS);
+// Lot 3b (D-182) : chaque geste de l'éditeur, en UNE carte par programme ou modèle.
+const editTool = (target: "programme" | "modele") =>
+  [
+    target === "programme"
+      ? "Propose UNE carte qui modifie le brouillon d'un programme, comme dans l'éditeur."
+      : "Propose UNE carte qui modifie un de Mes modèles (jamais un modèle Coory : duplique-le d'abord), comme dans l'éditeur.",
+    "Gestes : séances (modifier_seance, ajouter_seance, dupliquer_seance, supprimer_seance, deplacer_seance, jour_seance), semaines (ajouter_semaine, retirer_semaine, semaine_allegee, dupliquer_semaine, organisation_semaine), phases (ajouter_phase, renommer_phase, semaines_phase, retirer_phase), titre, discipline, façon de viser (viser)",
+    target === "programme"
+      ? ", date de début (debut, ramenée au lundi) et objectif."
+      : " (un modèle n'a ni date de début ni objectif).",
+    target === "programme"
+      ? " Avant : voir_brouillon (sommaire : clés des séances, phases et révision), puis voir_brouillon avec `semaines` pour le contenu d'une séance à modifier."
+      : " Avant : voir_modele (sommaire : clés, phases, révision), puis voir_modele avec `semaines` pour le contenu d'une séance.",
+    " Mets TOUS les changements demandés dans une seule carte (20 au plus), dans l'ordre où ils s'appliquent ; une suppression est définitive.",
+    " Les numéros de semaine sont ceux de ta lecture, même après un retrait plus haut dans la carte ; une semaine ajoutée prend le numéro qui suit la dernière ; jamais d'ajout et de retrait de semaines dans la même carte.",
+    " Un jour (jour_seance) se fixe seulement dans une semaine à jours fixes : passe-la d'abord en jours fixes (organisation_semaine) ; jamais sur une séance avec le coach.",
+    target === "programme"
+      ? " Programme publié : les changements vont dans son brouillon (publier est une autre carte, seulement si le coach le demande)."
+      : "",
+  ].join("");
 
-// Identifiants d'exercices cités dans des séances écrites (à vérifier dans la Bibliothèque).
-function exerciseIds(value: unknown, found = new Set<string>()): Set<string> {
-  if (Array.isArray(value)) value.forEach((item) => exerciseIds(item, found));
-  else if (value && typeof value === "object") {
-    for (const [key, inner] of Object.entries(value)) {
-      if (key === "exerciseId" && typeof inner === "string") found.add(inner);
-      else exerciseIds(inner, found);
-    }
-  }
-  return found;
-}
+WRITE_TOOLS.push(
+  {
+    name: "modifier_programme",
+    description: editTool("programme"),
+    input_schema: {
+      type: "object",
+      properties: {
+        programId: { type: "string", description: "Id trouvé avec voir_programmes." },
+        revision: { type: "integer", description: "La `revision` donnée par voir_brouillon." },
+        operations: programEditsToolSchema,
+      },
+      required: ["programId", "revision", "operations"],
+    },
+  },
+  {
+    name: "modifier_modele",
+    description: editTool("modele"),
+    input_schema: {
+      type: "object",
+      properties: {
+        templateId: { type: "string", description: "Id trouvé avec voir_modeles." },
+        version: { type: "integer", description: "La `revision` donnée par voir_modele." },
+        operations: programEditsToolSchema,
+      },
+      required: ["templateId", "version", "operations"],
+    },
+  },
+);
+
+// Lot 3b (D-182) : les actions d'un programme et des modèles, comme leurs boutons.
+const programIdField = {
+  programId: { type: "string", description: "Id trouvé avec voir_programmes." },
+} as const;
+const templateFields = {
+  templateId: {
+    type: "string",
+    description: "Id trouvé avec voir_modeles ou voir_modeles_de_seance.",
+  },
+  sorte: {
+    type: "string",
+    enum: ["programme", "seance"],
+    description: "programme (par défaut) ou seance (voir_modeles_de_seance).",
+  },
+} as const;
+WRITE_TOOLS.push(
+  {
+    name: "publier_programme",
+    description:
+      "Propose de PUBLIER le brouillon d'un programme (nouvelle version : fiche, agenda et PDF la suivent). Seulement si le coach le demande. Les contrôles de « Publier » sont faits : un problème bloquant refuse la carte (explique-le au coach), un avertissement s'affiche sur la carte.",
+    input_schema: { type: "object", properties: programIdField, required: ["programId"] },
+  },
+  {
+    name: "archiver_programme",
+    description:
+      "Propose d'archiver un programme (il quitte la liste et la fiche du sportif ; ses versions publiées restent ; se désarchive ensuite).",
+    input_schema: { type: "object", properties: programIdField, required: ["programId"] },
+  },
+  {
+    name: "desarchiver_programme",
+    description:
+      "Propose de désarchiver un programme archivé : il reprend son état d'avant (brouillon, ou publié avec sa version).",
+    input_schema: { type: "object", properties: programIdField, required: ["programId"] },
+  },
+  {
+    name: "dupliquer_programme",
+    description:
+      "Propose de dupliquer un programme : un nouveau brouillon pour le même sportif, qui commence le lundi après la fin de l'original.",
+    input_schema: { type: "object", properties: programIdField, required: ["programId"] },
+  },
+  {
+    name: "enregistrer_comme_modele",
+    description:
+      "Propose d'enregistrer un programme dans Mes modèles (sans sportif ni dates), sous un titre.",
+    input_schema: {
+      type: "object",
+      properties: { ...programIdField, titre: { type: "string" } },
+      required: ["programId", "titre"],
+    },
+  },
+  {
+    name: "enregistrer_seance_comme_modele",
+    description:
+      "Propose d'enregistrer UNE séance d'un programme dans Mes modèles (séances), sous un titre (80 caractères au plus). La clé vient de voir_brouillon.",
+    input_schema: {
+      type: "object",
+      properties: { ...programIdField, cle: { type: "string" }, titre: { type: "string" } },
+      required: ["programId", "cle", "titre"],
+    },
+  },
+  {
+    name: "dupliquer_modele",
+    description:
+      "Propose de copier un modèle (Coory ou du coach) dans Mes modèles : la copie se modifie ensuite (modifier_modele), l'original ne change pas.",
+    input_schema: { type: "object", properties: templateFields, required: ["templateId"] },
+  },
+  {
+    name: "archiver_modele",
+    description:
+      "Propose d'archiver un de Mes modèles (il n'est plus proposé ; les programmes déjà créés avec lui ne changent pas). Jamais un modèle Coory.",
+    input_schema: { type: "object", properties: templateFields, required: ["templateId"] },
+  },
+  {
+    name: "creer_modele",
+    description:
+      "Propose un nouveau modèle de programme dans Mes modèles : vide (à remplir ensuite avec modifier_modele), ou repris d'un autre modèle (depuisModele, redimensionné).",
+    input_schema: {
+      type: "object",
+      properties: {
+        titre: { type: "string" },
+        discipline: { type: "string", enum: ["running", "strength", "hyrox", "hybrid"] },
+        semaines: { type: "integer" },
+        seancesParSemaine: { type: "integer" },
+        organisation: {
+          type: "string",
+          enum: ["ordered", "fixed"],
+          description: "ordered (dans l'ordre, par défaut) ou fixed (jours fixés).",
+        },
+        depuisModele: { type: "string", description: "Id d'un modèle de voir_modeles." },
+        phases: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              nom: { type: "string" },
+              de: { type: "integer" },
+              a: { type: "integer" },
+            },
+            required: ["nom", "de", "a"],
+          },
+        },
+      },
+      required: ["titre", "discipline", "semaines", "seancesParSemaine"],
+    },
+  },
+);
+
+export const WRITE_TOOL_NAMES = new Set<string>(ACTION_KINDS);
 
 const DAY_MS = 86_400_000;
 const isoPlus = (day: string, days: number) =>
   new Date(Date.parse(`${day}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 
 type Proposed = { ok: true; proposal: AssistantProposal } | { ok: false; error: string };
+const PROGRAM_ACTIONS = new Set<string>([
+  "publier_programme",
+  "archiver_programme",
+  "desarchiver_programme",
+  "dupliquer_programme",
+  "enregistrer_comme_modele",
+  "enregistrer_seance_comme_modele",
+]);
 const refuse = (error: string): Proposed => ({ ok: false, error });
 
 export async function proposeAction(
@@ -630,13 +805,7 @@ export async function proposeAction(
       names[start.programId] = source.program.title;
       p = withSourceRhythm(p, source.draft);
     }
-    const ids = [...exerciseIds(p.seances)];
-    if (ids.length > 0) {
-      const { data } = await supabase.from("exercises").select("id").in("id", ids);
-      if ((data ?? []).length !== ids.length) {
-        return refuse("Exercice introuvable : prends les id donnés par chercher_exercices.");
-      }
-    }
+    if (await hasUnknownExercise(supabase, p.seances)) return refuse(UNKNOWN_EXERCISE);
     // Un brouillon peut chevaucher un programme publié, mais il ne pourra pas être publié tel quel :
     // la carte le dit (comme l'assistant de création).
     const from = String(p.startDate);
@@ -652,6 +821,198 @@ export async function proposeAction(
         isoPlus(clash.startDate, clash.weeksCount * 7 - 1),
       )}.`;
     }
+  }
+
+  if (kind === "modifier_programme") {
+    // Le brouillon de l'organisation (repris de la version publiée s'il n'existe pas encore), à la
+    // révision que Claude a lue ; les changements passent par les fonctions de l'éditeur, pour VALIDER
+    // et décrire la carte. Rien n'est enregistré ici.
+    const conflict = pendingConflict(kind, String(p.programId), pending);
+    if (conflict) return refuse(conflict);
+    const loaded = await loadDraft(supabase, organizationId, String(p.programId));
+    const refusal = programEditRefusal(
+      loaded ? { status: loaded.program.status, hasDraft: loaded.draft !== null } : null,
+    );
+    if (refusal || !loaded?.draft) return refuse(refusal ?? "Programme introuvable.");
+    const stale = staleReading(Number(p.revision), loaded.revision);
+    if (stale) return refuse(stale);
+    const applied = applyProgramEdits(loaded.draft, p.operations as ProgramEdit[], {
+      today: todayIsoInBrussels(),
+    });
+    if (!applied.ok) return refuse(applied.error);
+    if (await hasUnknownExercise(supabase, p.operations)) return refuse(UNKNOWN_EXERCISE);
+    const { data: athleteRow } = await supabase
+      .from("athlete_profiles")
+      .select("display_name")
+      .eq("organization_id", organizationId)
+      .eq("id", loaded.program.athleteId)
+      .maybeSingle();
+    Object.assign(
+      names,
+      editCardNames({
+        title: loaded.draft.title,
+        athlete: athleteRow?.display_name ?? null,
+        status: loaded.program.status === "published" ? "published" : "draft",
+        lines: applied.lines,
+      }),
+    );
+  }
+
+  if (kind === "modifier_modele") {
+    // Seulement un de Mes modèles (un modèle Coory se lit seulement, comme dans l'interface).
+    const template = await getProgramTemplate(organizationId, String(p.templateId));
+    const refusal = templateEditRefusal(
+      template ? { source: template.source, hasPlan: template.plan !== null } : null,
+    );
+    if (refusal || !template?.plan) return refuse(refusal ?? "Modèle introuvable.");
+    const stale = staleReading(Number(p.version), template.version, "modele");
+    if (stale) return refuse(stale);
+    const applied = applyProgramEdits(template.plan, p.operations as ProgramEdit[]);
+    if (!applied.ok) return refuse(applied.error);
+    if (await hasUnknownExercise(supabase, p.operations)) return refuse(UNKNOWN_EXERCISE);
+    Object.assign(
+      names,
+      editCardNames({
+        title: template.plan.title,
+        athlete: null,
+        status: "template",
+        lines: applied.lines,
+      }),
+    );
+  }
+
+  if (PROGRAM_ACTIONS.has(kind)) {
+    // Lot 3b : comme les boutons du programme (un programme archivé ne fait que « Désarchiver »).
+    const conflict = pendingConflict(kind, String(p.programId), pending);
+    if (conflict) return refuse(conflict);
+    const loaded = await loadDraft(supabase, organizationId, String(p.programId));
+    const refusal = programActionRefusal(
+      kind as ProgramActionKind,
+      loaded
+        ? {
+            status: loaded.program.status,
+            hasDraft: loaded.draft !== null,
+            revision: loaded.revision,
+            upToDate: loaded.activePublication !== null && !loaded.hasUnpublishedChanges,
+          }
+        : null,
+    );
+    if (refusal || !loaded) return refuse(refusal ?? "Programme introuvable.");
+    const draft = loaded.draft;
+    const { data: athleteRow } = await supabase
+      .from("athlete_profiles")
+      .select("display_name")
+      .eq("organization_id", organizationId)
+      .eq("id", loaded.program.athleteId)
+      .maybeSingle();
+    const athlete = athleteRow?.display_name ?? null;
+    const title = draft?.title ?? loaded.program.title;
+    if (kind === "publier_programme" && draft) {
+      // Les MÊMES contrôles que la fenêtre « Publier » ; la révision publiée est celle lue ici.
+      const checked = await checkPublication(supabase, organizationId, loaded.program.id, {
+        ...loaded,
+        draft,
+      });
+      if (!checked) return refuse("Sportif introuvable ou archivé.");
+      const blocked = publicationRefusal(checked.issues);
+      if (blocked) return refuse(blocked);
+      p = { ...p, revision: loaded.revision };
+      Object.assign(
+        names,
+        actionCardNames.publier({
+          title,
+          athlete,
+          version: (loaded.activePublication?.number ?? 0) + 1,
+          issues: checked.issues,
+        }),
+      );
+    } else if (kind === "desarchiver_programme") {
+      Object.assign(
+        names,
+        actionCardNames.desarchiver({
+          title,
+          athlete,
+          version: loaded.activePublication?.number ?? null,
+        }),
+      );
+    } else if (kind === "dupliquer_programme" && draft) {
+      Object.assign(
+        names,
+        actionCardNames.dupliquer({
+          title,
+          athlete,
+          startDate: copyStartDate(
+            { startDate: draft.startDate, weeksCount: draft.weeks.length },
+            todayIsoInBrussels(),
+          ),
+        }),
+      );
+    } else if (kind === "enregistrer_comme_modele" && draft) {
+      Object.assign(names, actionCardNames.versModele({ title, weeks: draft.weeks.length }));
+    } else if (kind === "enregistrer_seance_comme_modele" && draft) {
+      const found = findSession(draft, String(p.cle));
+      if (!found) {
+        return refuse(
+          `Séance « ${String(p.cle)} » introuvable : regarde les clés avec voir_brouillon.`,
+        );
+      }
+      p = { ...p, revision: loaded.revision };
+      Object.assign(
+        names,
+        actionCardNames.seanceVersModele({
+          session: found.session.title,
+          week: found.week.index,
+          program: title,
+        }),
+      );
+    } else {
+      Object.assign(names, actionCardNames.programme({ title, athlete }));
+    }
+  }
+
+  if (kind === "dupliquer_modele" || kind === "archiver_modele") {
+    const template =
+      p.sorte === "seance"
+        ? await getSessionTemplate(organizationId, String(p.templateId))
+        : await getProgramTemplate(organizationId, String(p.templateId));
+    const refusal = templateActionRefusal(kind, template ? { source: template.source } : null);
+    if (refusal || !template) return refuse(refusal ?? "Modèle introuvable.");
+    const readable = "plan" in template ? template.plan !== null : template.session !== null;
+    if (kind === "dupliquer_modele" && !readable) {
+      return refuse("Ce modèle ne peut pas être lu : le coach doit l'ouvrir dans l'éditeur.");
+    }
+    Object.assign(
+      names,
+      actionCardNames.modele({ title: template.title, source: template.source }),
+    );
+  }
+
+  if (kind === "creer_modele") {
+    if (typeof p.depuisModele === "string") {
+      const template = await getProgramTemplate(organizationId, p.depuisModele);
+      if (!template?.plan) return refuse("Modèle introuvable : regarde voir_modeles.");
+      names[p.depuisModele] = template.title;
+    }
+    // Les phases suivent la règle des plans (dans le modèle, contiguës, sans se chevaucher).
+    const phases = ((p.phases as { nom: string; de: number; a: number }[] | undefined) ?? []).map(
+      (phase, index) => ({
+        id: `p${index + 1}`,
+        name: phase.nom,
+        weekFrom: phase.de,
+        weekTo: phase.a,
+      }),
+    );
+    const weeks = Array.from({ length: Number(p.semaines) }, (_, index) => ({
+      index: index + 1,
+      light: false,
+      scheduling: "ordered" as const,
+      sessions: [],
+    }));
+    const issue =
+      phases.find((phase) => phase.weekFrom > phase.weekTo) !== undefined
+        ? "Une phase va d'une semaine à une suivante."
+        : planIssues({ phases, weeks })[0]?.message;
+    if (issue) return refuse(issue);
   }
 
   const { data: organization } = await supabase

@@ -70,7 +70,13 @@ export function AssistantCard({
             <li
               key={`${index}-${line}`}
               className={`text-[13.5px] leading-[1.45] break-words ${
-                index === 0 ? "font-medium text-text" : "text-text-2"
+                index === 0
+                  ? "font-medium text-text"
+                  : // Lot 3b : un avertissement (publication, chevauchement) dans la couleur de ceux de
+                    // la fenêtre « Publier ».
+                    line.startsWith("Attention : ")
+                    ? "text-warn"
+                    : "text-text-2"
               }`}
             >
               {line}

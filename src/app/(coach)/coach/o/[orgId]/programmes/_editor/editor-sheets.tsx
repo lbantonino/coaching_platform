@@ -21,7 +21,7 @@ import {
   type ProgramGoal,
   type Week,
 } from "@/domain/training/program-plan";
-import type { PublishIssue } from "@/domain/training/program-publication";
+import { groupPublishIssues, type PublishIssue } from "@/domain/training/program-publication";
 import { periodsOverlap, programEnd } from "@/domain/training/program-status";
 
 // Fenêtres de l'éditeur de programme (D-157), faites avec les composants de l'app (les 5 écrans non
@@ -513,20 +513,6 @@ const ISSUE_HINTS: Record<PublishIssue["code"], string> = {
 
 // Plusieurs avertissements du même genre : une seule ligne avec leur nombre (maquette 08, recette du
 // 11/11 : la liste détaillée débordait de la fenêtre, surtout sur téléphone).
-const ISSUE_GROUPS: Record<PublishIssue["code"], (count: number) => string> = {
-  no_session: () => "Ajoute au moins une séance avant de publier.",
-  overlap: (n) => `Les dates chevauchent ${n} programmes publiés.`,
-  empty_week: (n) => `${n} semaines sans séance.`,
-  moment_missing: (n) => `${n} semaines avec plusieurs séances un même jour, sans moment.`,
-  unavailable_day: (n) => `${n} séances tombent un jour où le sportif n'est pas disponible.`,
-  pct_without_max: (n) => `${n} exercices en % sans max connu (les kg ne sont pas calculés).`,
-  official_without_division: (n) => `${n} séances aux charges officielles sans division Hyrox.`,
-  hr_without_max: (n) => `${n} étapes en zone de FC sans plage en bpm (FC max inconnue).`,
-  coach_session_missing: (n) => `${n} rendez-vous du coach n'existent plus.`,
-  coach_date_mismatch: (n) => `${n} rendez-vous du coach hors de leur semaine.`,
-  incomplete_session: (n) => `${n} séances à compléter.`,
-};
-
 export function PublishSheet({
   open,
   onClose,
@@ -551,16 +537,8 @@ export function PublishSheet({
   onSee: (weekIndex: number) => void;
 }) {
   const blocking = issues.filter((issue) => issue.level === "blocking");
-  const sorted = [...blocking, ...issues.filter((issue) => issue.level === "warning")];
   // Un groupe par genre d'avertissement, dans l'ordre (bloquants d'abord) ; « Voir » mène au premier.
-  const groups = [...new Set(sorted.map((issue) => issue.code))].map((code) => {
-    const items = sorted.filter((issue) => issue.code === code);
-    const first = items[0] as PublishIssue;
-    return {
-      ...first,
-      message: items.length > 1 ? ISSUE_GROUPS[code](items.length) : first.message,
-    };
-  });
+  const groups = groupPublishIssues(issues);
   return (
     <Overlay open={open} onClose={onClose} label="Publier le programme" size="menu">
       <DialogBody>
@@ -632,7 +610,7 @@ export function PublishSheet({
           <p className="text-[12.5px] leading-[1.45] text-muted">
             {blocking.length > 0
               ? "À corriger avant de publier : le reste peut attendre."
-              : sorted.length > 0
+              : groups.length > 0
                 ? `Rien n'est bloquant : tu peux publier et compléter ensuite (cela créera une version ${version + 1}).`
                 : `Tout est prêt. Tu pourras continuer à modifier le brouillon ; publier à nouveau créera une version ${version + 1}.`}
           </p>

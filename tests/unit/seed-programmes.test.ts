@@ -16,9 +16,15 @@ const cooryTemplates = readFileSync(
   path.resolve(import.meta.dirname, "../../supabase/content/modeles_coory.sql"),
   "utf8",
 );
+// Et les deux brouillons que l'Assistant IA modifie dans les tests (lot 3b, D-182).
+const assistantDrafts = readFileSync(
+  path.resolve(import.meta.dirname, "../../supabase/seed-tests-assistant.sql"),
+  "utf8",
+);
 const section =
   seed.slice(seed.indexOf("-- <programmes-v2>"), seed.indexOf("-- </programmes-v2>")) +
-  cooryTemplates;
+  cooryTemplates +
+  assistantDrafts;
 const documents = [...section.matchAll(/'(\{.*?\})'::jsonb/g)].map(
   (match) => JSON.parse((match[1] ?? "").replace(/''/g, "'")) as Record<string, unknown>,
 );
@@ -35,7 +41,8 @@ const isSessionBody = (doc: Record<string, unknown>) =>
 describe("seed : programmes au schéma v2", () => {
   it("contient les documents attendus", () => {
     expect(section.length).toBeGreaterThan(0);
-    expect(documents.filter(isDraft)).toHaveLength(2);
+    // Inès, Nadia, puis les quatre brouillons de test de Sarah et Hugo (coach B).
+    expect(documents.filter(isDraft)).toHaveLength(6);
     expect(documents.filter(isSnapshot)).toHaveLength(1);
     // 11 modèles Coory (4 écrits à la main, 7 générés, D-177) et le plan de la graine.
     expect(documents.filter(isPlan)).toHaveLength(12);

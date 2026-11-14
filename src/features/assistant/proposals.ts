@@ -33,6 +33,7 @@ import { GOAL_TYPES, goalTypeLabels, type GoalType } from "@/features/goals/sche
 import { SESSION_KINDS, SESSION_PAYMENT_METHODS } from "@/features/sessions/schemas";
 
 import { placedSessions } from "./program";
+import { MAX_PROGRAM_EDITS, programEditSchema } from "./program-edit";
 import { dayInWords } from "./rules";
 
 // Propositions de l'Assistant IA (lot 1 des actions, spec §5.2 et §5.3) : une action préparée par
@@ -53,7 +54,18 @@ export type AssistantActionKind =
   | "completer_fiche"
   | "creer_exercice"
   | "preparer_pdf"
-  | "importer_document";
+  | "importer_document"
+  | "modifier_programme"
+  | "modifier_modele"
+  | "publier_programme"
+  | "archiver_programme"
+  | "desarchiver_programme"
+  | "dupliquer_programme"
+  | "enregistrer_comme_modele"
+  | "enregistrer_seance_comme_modele"
+  | "dupliquer_modele"
+  | "archiver_modele"
+  | "creer_modele";
 
 export type AssistantAction = { kind: AssistantActionKind; params: Record<string, unknown> };
 
@@ -79,6 +91,8 @@ const quarter = z.string().regex(/^([01]\d|2[0-3]):(00|15|30|45)$/, {
 const amount = z.number().positive().max(1_000_000);
 const vatRate = z.number().min(0).max(100);
 const text = (max: number) => z.string().trim().min(1).max(max);
+
+const EDITS_LIMIT = `${MAX_PROGRAM_EDITS} changements au plus par carte : propose les suivants une fois celle-ci validée.`;
 
 // Sportif existant (son id) ou fiche créée par une autre carte de la même réponse.
 export const athleteRefSchema = z.union([
@@ -267,6 +281,64 @@ export const PARAMS = {
       (p) => p.start.kind === "blank" || (p.seances === undefined && p.semaines === undefined),
       { error: "Des séances écrites seulement pour un programme parti de zéro (start blank)." },
     ),
+  // Lot 3b (D-182) : chaque geste de l'éditeur sur le BROUILLON d'un programme, ou sur un de Mes
+  // modèles. `revision` (ou `version`) : celle que Claude a lue ; le serveur la compare à la sienne à
+  // la proposition, puis au « Valider » (rien n'écrase un brouillon modifié entre-temps).
+  modifier_programme: z.strictObject({
+    programId: z.uuid(),
+    revision: z.number().int().min(0),
+    operations: z.array(programEditSchema).min(1).max(MAX_PROGRAM_EDITS, { error: EDITS_LIMIT }),
+  }),
+  modifier_modele: z.strictObject({
+    templateId: z.uuid(),
+    version: z.number().int().min(1),
+    operations: z.array(programEditSchema).min(1).max(MAX_PROGRAM_EDITS, { error: EDITS_LIMIT }),
+  }),
+  // Lot 3b (D-182) : les actions d'un programme, comme ses boutons. `revision` : notée par le SERVEUR
+  // à la proposition (ce que la carte publie ou copie), revérifiée au « Valider ».
+  publier_programme: z.strictObject({
+    programId: z.uuid(),
+    revision: z.number().int().min(1).optional(),
+  }),
+  archiver_programme: z.strictObject({ programId: z.uuid() }),
+  desarchiver_programme: z.strictObject({ programId: z.uuid() }),
+  dupliquer_programme: z.strictObject({ programId: z.uuid() }),
+  enregistrer_comme_modele: z.strictObject({ programId: z.uuid(), titre: text(120) }),
+  // Le titre devient celui de la séance du modèle (80 caractères, comme toute séance).
+  enregistrer_seance_comme_modele: z.strictObject({
+    programId: z.uuid(),
+    cle: z.string().regex(/^[A-Za-z0-9_-]{1,80}$/),
+    titre: text(80),
+    revision: z.number().int().min(0).optional(),
+  }),
+  // Modèles : de programme (par défaut) ou de séance, comme les deux sortes de l'onglet Modèles.
+  dupliquer_modele: z.strictObject({
+    templateId: z.uuid(),
+    sorte: z.enum(["programme", "seance"]).optional(),
+  }),
+  archiver_modele: z.strictObject({
+    templateId: z.uuid(),
+    sorte: z.enum(["programme", "seance"]).optional(),
+  }),
+  // « Créer un modèle » (assistant de création, mode modèle) : vide, ou repris d'un autre modèle.
+  creer_modele: z.strictObject({
+    titre: text(120),
+    discipline: z.enum(DISCIPLINES),
+    semaines: z.number().int().min(1).max(52),
+    seancesParSemaine: z.number().int().min(1).max(14),
+    organisation: z.enum(["ordered", "fixed"]).optional(),
+    depuisModele: z.uuid().optional(),
+    phases: z
+      .array(
+        z.strictObject({
+          nom: text(40),
+          de: z.number().int().min(1).max(52),
+          a: z.number().int().min(1).max(52),
+        }),
+      )
+      .max(12)
+      .optional(),
+  }),
 } as const;
 
 export const ACTION_KINDS = Object.keys(PARAMS) as AssistantActionKind[];
@@ -285,6 +357,23 @@ export const assistantActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("creer_exercice"), params: PARAMS.creer_exercice }),
   z.object({ kind: z.literal("preparer_pdf"), params: PARAMS.preparer_pdf }),
   z.object({ kind: z.literal("importer_document"), params: PARAMS.importer_document }),
+  z.object({ kind: z.literal("modifier_programme"), params: PARAMS.modifier_programme }),
+  z.object({ kind: z.literal("modifier_modele"), params: PARAMS.modifier_modele }),
+  z.object({ kind: z.literal("publier_programme"), params: PARAMS.publier_programme }),
+  z.object({ kind: z.literal("archiver_programme"), params: PARAMS.archiver_programme }),
+  z.object({ kind: z.literal("desarchiver_programme"), params: PARAMS.desarchiver_programme }),
+  z.object({ kind: z.literal("dupliquer_programme"), params: PARAMS.dupliquer_programme }),
+  z.object({
+    kind: z.literal("enregistrer_comme_modele"),
+    params: PARAMS.enregistrer_comme_modele,
+  }),
+  z.object({
+    kind: z.literal("enregistrer_seance_comme_modele"),
+    params: PARAMS.enregistrer_seance_comme_modele,
+  }),
+  z.object({ kind: z.literal("dupliquer_modele"), params: PARAMS.dupliquer_modele }),
+  z.object({ kind: z.literal("archiver_modele"), params: PARAMS.archiver_modele }),
+  z.object({ kind: z.literal("creer_modele"), params: PARAMS.creer_modele }),
 ]);
 export type ParsedAssistantAction = z.infer<typeof assistantActionSchema>;
 
@@ -304,6 +393,17 @@ const TITLES: Record<AssistantActionKind, string> = {
   creer_exercice: "Nouvel exercice",
   preparer_pdf: "PDF du programme",
   importer_document: "Importer un document",
+  modifier_programme: "Modifier le programme",
+  modifier_modele: "Modifier le modèle",
+  publier_programme: "Publier le programme",
+  archiver_programme: "Archiver le programme",
+  desarchiver_programme: "Désarchiver le programme",
+  dupliquer_programme: "Dupliquer le programme",
+  enregistrer_comme_modele: "Enregistrer comme modèle",
+  enregistrer_seance_comme_modele: "Enregistrer la séance comme modèle",
+  dupliquer_modele: "Dupliquer dans Mes modèles",
+  archiver_modele: "Archiver le modèle",
+  creer_modele: "Nouveau modèle",
 };
 
 // Les PDF viennent de la version publiée : rien pour un programme introuvable ou jamais publié.
@@ -528,6 +628,73 @@ export function summarize(
           `${ATHLETE_FIELD_LABELS[field] ?? field} : ${before} → ${athleteFieldText(field, value)}`,
         );
       }
+      break;
+    }
+    case "modifier_programme":
+    case "modifier_modele": {
+      // Lignes préparées par le serveur (editCardNames) : l'état lu au moment de la proposition.
+      lines.push(names.titre ?? "Programme", names.sportif ?? null);
+      for (let index = 0; names[`ligne:${index}`] !== undefined; index++) {
+        lines.push(names[`ligne:${index}`] ?? null);
+      }
+      lines.push(names.statut ?? null);
+      break;
+    }
+    // Lot 3b : lignes préparées par le serveur (actionCardNames), phrases des fenêtres de l'éditeur.
+    case "publier_programme":
+      lines.push(names.ligne ?? "Programme");
+      for (let index = 0; names[`attention:${index}`] !== undefined; index++) {
+        lines.push(names[`attention:${index}`] ?? null);
+      }
+      lines.push("Les PDF seront tirés de cette version.");
+      break;
+    case "archiver_programme":
+      lines.push(
+        names.ligne ?? "Programme",
+        "Il quitte la liste des programmes et la fiche du sportif. Ses versions publiées restent conservées.",
+      );
+      break;
+    case "desarchiver_programme":
+      lines.push(names.ligne ?? "Programme", names.etat ?? null);
+      break;
+    case "dupliquer_programme":
+      lines.push(
+        names.ligne ?? "Programme",
+        names.debut ?? null,
+        "Les rendez-vous du coach ne se copient pas",
+      );
+      break;
+    case "enregistrer_comme_modele":
+      lines.push(`« ${str(p.titre)} » dans Mes modèles`, names.depuis ?? null);
+      break;
+    case "enregistrer_seance_comme_modele":
+      lines.push(`« ${str(p.titre)} » dans Mes modèles (séances)`, names.depuis ?? null);
+      break;
+    case "dupliquer_modele":
+      lines.push(
+        names.ligne ?? "Modèle",
+        "La copie va dans Mes modèles ; l'original ne change pas",
+      );
+      break;
+    case "archiver_modele":
+      lines.push(
+        names.ligne ?? "Modèle",
+        "Il ne sera plus proposé. Les programmes déjà créés avec lui ne changent pas.",
+      );
+      break;
+    case "creer_modele": {
+      lines.push(`« ${str(p.titre)} »`);
+      const per = num(p.seancesParSemaine);
+      lines.push(
+        `${DISCIPLINE[str(p.discipline)]} · ${num(p.semaines)} semaines · ${per} séance${per > 1 ? "s" : ""} par semaine${p.organisation === "fixed" ? " · jours fixés" : ""}`,
+      );
+      const phases = (p.phases as { nom: string }[] | undefined) ?? [];
+      lines.push(phases.length > 0 && `Phases : ${phases.map((phase) => phase.nom).join(", ")}`);
+      lines.push(
+        p.depuisModele
+          ? `Depuis le modèle « ${names[str(p.depuisModele)] ?? "?"} »`
+          : "Vide, à remplir dans l'éditeur",
+      );
       break;
     }
     case "creer_programme": {

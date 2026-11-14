@@ -8,7 +8,12 @@ import path from "node:path";
 
 // Conteneur de la base locale de Supabase : « supabase_db_ » + project_id de supabase/config.toml.
 const CONTAINER = "supabase_db_coaching-platform";
-const sql = readFileSync(path.join(import.meta.dirname, "clean-test-data.sql"), "utf8");
+// Puis les brouillons que l'Assistant IA modifie dans les tests (lot 3b) reviennent à leur état de
+// graine : le même fichier que celui chargé par `supabase db reset`.
+const sql = [
+  readFileSync(path.join(import.meta.dirname, "clean-test-data.sql"), "utf8"),
+  readFileSync(path.join(import.meta.dirname, "../supabase/seed-tests-assistant.sql"), "utf8"),
+].join("\n");
 
 const result = spawnSync(
   "docker",
