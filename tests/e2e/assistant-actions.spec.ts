@@ -313,3 +313,113 @@ test("lot 2 : le fichier joint reste pour la demande suivante", async ({ page })
     box.getByRole("region", { name: "Importer un document" }).filter({ hasText: "Hugo Lefèvre" }),
   ).toContainText(`Bilan Hugo ${MARK}`, STEPS);
 });
+
+// Lot 3b (D-182) : « Modifier le programme ». Le faux Claude lit le brouillon (voir_brouillon), puis
+// propose UNE carte : un exercice remplacé, une semaine retirée, le programme renommé. Un brouillon par
+// appareil (Sarah sur ordinateur, Hugo sur téléphone), remis dans son état de graine en fin de suite
+// (supabase/seed-tests-assistant.sql, relancé par le nettoyage).
+test("lot 3b : modifier un programme en une carte (exercice, semaine, titre)", async ({
+  page,
+}, testInfo) => {
+  const who = testInfo.project.name === "telephone" ? "Hugo" : "Sarah";
+  const full = who === "Hugo" ? "Hugo Lefèvre" : "Sarah Vermeulen";
+  const box = await openAssistant(page);
+  await ask(
+    box,
+    `Dans le bloc force de ${who}, remplace le soulevé de terre par la presse à cuisses, retire la semaine 4 et renomme-le Bloc force · version 2`,
+  );
+  const card = box.getByRole("region", { name: "Modifier le programme" });
+  await expect(card).toContainText("Bloc force · test assistant", STEPS);
+  await expect(card).toContainText(full);
+  await expect(card).toContainText(
+    "Semaine 1 · Force A : Soulevé de terre barre → Presse à cuisses",
+  );
+  await expect(card).toContainText("Semaine 4 retirée (2 séances, définitif)");
+  await expect(card).toContainText(
+    "Titre : « Bloc force · test assistant » → « Bloc force · version 2 »",
+  );
+  await expect(card).toContainText("Brouillon : à relire et publier dans l'éditeur");
+
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  const href = await card.getByRole("link", { name: "Voir" }).getAttribute("href");
+  expect(href).toMatch(/\/programmes\/fb000000-0000-4000-8000-00000000000[23]\?semaine=1$/);
+  const visible = (text: string | RegExp) => page.getByText(text).filter({ visible: true }).first();
+  // L'éditeur (ouvert en haut : sur téléphone, la liste des semaines) : nouveau titre, et 3 semaines dès
+  // le lundi 1er mars, qui se terminent avant le lundi 22 mars.
+  const editor = (href ?? "/").split("?")[0] ?? "/";
+  await page.goto(editor);
+  await expect(visible("Bloc force · version 2")).toBeVisible();
+  await expect(visible(/→ 22 mars/)).toBeVisible();
+  // La séance 1 de la semaine 1 : la presse à cuisses à la place du soulevé de terre.
+  await page.goto(`${editor}/seances/ta-s1-1`);
+  await expect(visible("Presse à cuisses")).toBeVisible();
+  await expect(page.getByText("Soulevé de terre barre")).toHaveCount(0);
+});
+
+test("lot 3b : aucune carte pour le programme d'une autre organisation", async ({ page }) => {
+  const box = await openAssistant(page);
+  await ask(box, "Retire la semaine 2 du bloc de force de Nadia");
+  await expect(box).toContainText("Je ne trouve pas ce programme parmi les tiens.", STEPS);
+  await expect(box.getByRole("region", { name: "Modifier le programme" })).toHaveCount(0);
+});
+
+// Lot 3b (D-182) : les actions d'un programme, en cartes, dans une même conversation : publier (les
+// contrôles de « Publier » : l'avertissement s'affiche sur la carte), archiver puis désarchiver. Le
+// programme publié apparaît dans l'onglet Programme de la fiche (à venir, en juin 2027). Remis en
+// brouillon en fin de suite (supabase/seed-tests-assistant.sql).
+test("lot 3b : publier, archiver puis désarchiver un programme", async ({ page }, testInfo) => {
+  const phone = testInfo.project.name === "telephone";
+  const who = phone ? "Hugo" : "Sarah";
+  const full = phone ? "Hugo Lefèvre" : "Sarah Vermeulen";
+  const box = await openAssistant(page);
+
+  await ask(box, `Publie le bloc de juin de ${who}`);
+  const publish = box.getByRole("region", { name: "Publier le programme" });
+  await expect(publish).toContainText(
+    `« Bloc juin · test assistant » · version 1 · ${full}`,
+    STEPS,
+  );
+  await expect(publish).toContainText("Attention :");
+  await expect(publish).toContainText("% sans max connu");
+  await expect(publish).toContainText("Les PDF seront tirés de cette version.");
+  await publish.getByRole("button", { name: "Valider" }).click();
+  await expect(publish).toContainText("Fait");
+
+  await ask(box, `Archive le bloc de juin de ${who}`);
+  const archive = box.getByRole("region", { name: "Archiver le programme" });
+  await expect(archive).toContainText("Ses versions publiées restent conservées.", STEPS);
+  await archive.getByRole("button", { name: "Valider" }).click();
+  await expect(archive).toContainText("Fait");
+
+  await ask(box, `Désarchive le bloc de juin de ${who}`);
+  const restore = box.getByRole("region", { name: "Désarchiver le programme" });
+  await expect(restore).toContainText("Il redevient publié (version 1)", STEPS);
+  await restore.getByRole("button", { name: "Valider" }).click();
+  await expect(restore).toContainText("Fait");
+
+  const href = (await restore.getByRole("link", { name: "Voir" }).getAttribute("href")) ?? "/";
+  await page.goto(href);
+  await expect(page.getByText("Publié v1").filter({ visible: true }).first()).toBeVisible();
+  const athlete = phone
+    ? "db000000-0000-4000-8000-000000000002"
+    : "db000000-0000-4000-8000-000000000001";
+  await page.goto(href.replace(/\/programmes\/.*$/, `/sportifs/${athlete}?onglet=programme`));
+  await expect(
+    page.getByText("Bloc juin · test assistant").filter({ visible: true }).first(),
+  ).toBeVisible();
+});
+
+test("lot 3b : dupliquer un modèle Coory dans Mes modèles", async ({ page }) => {
+  const box = await openAssistant(page);
+  await ask(box, "Copie le modèle Coory Préparation 10 km dans mes modèles");
+  const card = box.getByRole("region", { name: "Dupliquer dans Mes modèles" });
+  await expect(card).toContainText("« Préparation 10 km » · modèle Coory", STEPS);
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  const href = await card.getByRole("link", { name: "Voir" }).getAttribute("href");
+  expect(href).toMatch(/\/programmes\/modeles\/[0-9a-f-]{36}$/);
+  expect(href).not.toContain("7a000000-0000-4000-8000-000000000002");
+  await page.goto(href ?? "/");
+  await expect(page.getByText("Mes modèles").filter({ visible: true }).first()).toBeVisible();
+});

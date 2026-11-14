@@ -227,6 +227,38 @@ export type PublishIssue = {
   sessionKey?: string;
 };
 
+// Un groupe par genre de problème, bloquants d'abord (« 3 semaines sans séance. ») : la fenêtre
+// « Publier » de l'éditeur et la carte « Publier le programme » de l'Assistant IA (lot 3b). Le groupe
+// garde la semaine du premier problème (« Voir »).
+const ISSUE_GROUPS: Record<PublishIssue["code"], (count: number) => string> = {
+  no_session: () => "Ajoute au moins une séance avant de publier.",
+  overlap: (n) => `Les dates chevauchent ${n} programmes publiés.`,
+  empty_week: (n) => `${n} semaines sans séance.`,
+  moment_missing: (n) => `${n} semaines avec plusieurs séances un même jour, sans moment.`,
+  unavailable_day: (n) => `${n} séances tombent un jour où le sportif n'est pas disponible.`,
+  pct_without_max: (n) => `${n} exercices en % sans max connu (les kg ne sont pas calculés).`,
+  official_without_division: (n) => `${n} séances aux charges officielles sans division Hyrox.`,
+  hr_without_max: (n) => `${n} étapes en zone de FC sans plage en bpm (FC max inconnue).`,
+  coach_session_missing: (n) => `${n} rendez-vous du coach n'existent plus.`,
+  coach_date_mismatch: (n) => `${n} rendez-vous du coach hors de leur semaine.`,
+  incomplete_session: (n) => `${n} séances à compléter.`,
+};
+
+export function groupPublishIssues(issues: PublishIssue[]): PublishIssue[] {
+  const sorted = [
+    ...issues.filter((issue) => issue.level === "blocking"),
+    ...issues.filter((issue) => issue.level === "warning"),
+  ];
+  return [...new Set(sorted.map((issue) => issue.code))].map((code) => {
+    const items = sorted.filter((issue) => issue.code === code);
+    const first = items[0] as PublishIssue;
+    return {
+      ...first,
+      message: items.length > 1 ? ISSUE_GROUPS[code](items.length) : first.message,
+    };
+  });
+}
+
 export type PublishContext = AimContext & {
   // Autres programmes PUBLIÉS du même sportif (C-8 : pas de chevauchement).
   otherPublished: { title: string; startDate: string; weeksCount: number }[];

@@ -15,7 +15,7 @@ import {
   type Week,
 } from "@/domain/training/program-plan";
 import { buildPublication } from "@/domain/training/program-publication";
-import { firstFreeMonday } from "@/domain/training/program-status";
+import { copyStartDate } from "@/domain/training/program-status";
 import { resizePlan, sessionsPerWeekFor } from "@/domain/training/program-upgrade";
 import { MAX_SESSIONS_PER_WEEK, sessionBodySchema } from "@/domain/training/session-v2";
 import { requireOrgAccess } from "@/features/auth/guards";
@@ -27,7 +27,6 @@ import { loadAthleteContext, loadDraft } from "./drafts";
 import { checkPublication } from "./publish-check";
 import { createProgramInputSchema, templateKindSchema, type CreateProgramInput } from "./schemas";
 import { getProgramTemplate, getSessionTemplate } from "./templates";
-import { nextMonday } from "./wizard";
 
 // Actions des programmes (D-155). Chaque action revérifie l'identité, l'organisation et la propriété
 // (requireOrgAccess), valide ses entrées avec Zod, puis écrit par les fonctions SQL contrôlées
@@ -332,9 +331,9 @@ export async function duplicateProgram(
   const loaded = await loadDraft(supabase, orgId, programId);
   if (!loaded?.draft) return fail("NOT_FOUND", "Programme introuvable.");
   const title = `${loaded.draft.title} (copie)`.slice(0, 120);
-  const startDate = firstFreeMonday(
-    [{ startDate: loaded.draft.startDate, weeksCount: loaded.draft.weeks.length }],
-    nextMonday(todayIsoInBrussels()),
+  const startDate = copyStartDate(
+    { startDate: loaded.draft.startDate, weeksCount: loaded.draft.weeks.length },
+    todayIsoInBrussels(),
   );
   const copied = programDraftSchema.safeParse(
     {

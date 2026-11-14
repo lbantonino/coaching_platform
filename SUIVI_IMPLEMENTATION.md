@@ -31,6 +31,27 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Assistant IA, lot 3b : tout faire sur les programmes et les modèles (D-182, 14/11/2026)
+```
+src/features/assistant/program-edit.ts (nouveau : voir_brouillon, moteur des opérations, révision, refus,
+  lignes de carte) ; program-actions.ts (nouveau : refus et lignes des actions) ; exercise-check.ts
+  (nouveau, server-only : exercices cités vérifiés à la proposition et au « Valider ») ; proposals.ts
+  (11 cartes : modifier_programme, modifier_modele, publier, archiver, désarchiver, dupliquer, enregistrer
+  comme modèle, enregistrer une séance comme modèle, dupliquer / archiver un modèle, créer un modèle) ;
+  tools/write.ts, read.ts, definitions.ts, shape.ts (voir_brouillon, voir_modele, voir_modeles_de_seance) ;
+  execute.ts ; rules.ts (consigne) ; loop.ts ; assistant-card.tsx (avertissement en ambre) ;
+  src/domain/training/program-publication.ts (groupPublishIssues, déplacé de la fenêtre « Publier ») et
+  program-status.ts (nextMonday, copyStartDate) ; programs/actions.ts, wizard.ts, editor-sheets.tsx ;
+  supabase/seed-tests-assistant.sql (nouveau) + config.toml + scripts/clean-test-data.mjs.
+Tests : assistant-lot3b.test.ts (43) ; unitaires 630 ; e2e assistant-actions.spec.ts : modifier un
+  programme en une carte (exercice, semaine, titre), aucune carte pour une autre organisation, publier /
+  archiver / désarchiver dans une conversation, dupliquer un modèle Coory (ordinateur et téléphone) ;
+  suite complète 268 passés / 38 ignorés ; captures des cartes « Modifier » et « Publier ».
+Relecture indépendante : 1 critique (numéros de semaine qui glissaient après un retrait) et 6
+  importants (détail d'une séance modifiée, publication à côté d'une modification, copie vers une
+  semaine passée, jours, « Rien à publier », révision du détail) corrigés avec tests ; 5 mineurs reportés.
+```
+
 ### Assistant IA, lot 2 : fiche, exercice, PDF, document (D-181, 14/11/2026)
 ```
 src/features/assistant/proposals.ts (completer_fiche, creer_exercice, preparer_pdf, importer_document ;

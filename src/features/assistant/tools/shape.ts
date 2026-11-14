@@ -1,6 +1,6 @@
 import { formatMoney } from "@/domain/billing/money";
 import type { LibraryExercise } from "@/domain/exercises/library";
-import type { AthleteListItem } from "@/features/athletes/queries";
+import type { AthleteDetail, AthleteListItem } from "@/features/athletes/queries";
 import type { UnpaidDate } from "@/features/billing/collect-queries";
 import type { AthleteProgramRow } from "@/features/programs/queries";
 import type { TemplateCard } from "@/features/programs/templates";
@@ -143,6 +143,20 @@ export function shapeTemplates(cards: TemplateCard[]) {
     }));
 }
 
+// Lot 3b : les modèles de SÉANCE (Coory et Mes modèles), pour dupliquer_modele / archiver_modele
+// avec sorte « seance ».
+export function shapeSessionTemplates(cards: TemplateCard[]) {
+  return cards
+    .filter((card) => card.kind === "session")
+    .map((card) => ({
+      id: card.id,
+      titre: card.title,
+      discipline: card.discipline,
+      detail: card.detail,
+      origine: card.source,
+    }));
+}
+
 const addDaysIso = (day: string, days: number) =>
   new Date(Date.parse(`${day}T00:00:00Z`) + days * 86_400_000).toISOString().slice(0, 10);
 
@@ -178,4 +192,51 @@ export function shapeExercises(items: LibraryExercise[], nom: string) {
       nom: item.nameFr,
       mesure: item.timed ? ("secondes" as const) : ("repetitions" as const),
     }));
+}
+
+// « voir_fiche » (lot 2, décision d'Antonino du 14/11/2026) : ce que Claude sait d'une fiche pour la
+// compléter. L'e-mail, le téléphone et l'adresse ne disent que « rempli » ou « vide » : leur valeur ne
+// part jamais chez Claude (la carte « ancien → nouveau » est calculée par le serveur).
+type SheetSource = Pick<
+  AthleteDetail,
+  | "id"
+  | "firstName"
+  | "lastName"
+  | "sex"
+  | "email"
+  | "phone"
+  | "preferredContact"
+  | "level"
+  | "experience"
+  | "trainingPlaces"
+  | "equipment"
+  | "addressLine"
+  | "postalCode"
+  | "city"
+  | "country"
+  | "status"
+  | "hasAccount"
+>;
+const filled = (value: string | null) => (value?.trim() ? "rempli" : "vide");
+
+export function shapeAthleteSheet(fiche: SheetSource) {
+  return {
+    id: fiche.id,
+    prenom: fiche.firstName,
+    nom: fiche.lastName,
+    sexe: fiche.sex,
+    email: filled(fiche.email),
+    telephone: filled(fiche.phone),
+    contact_prefere: fiche.preferredContact,
+    niveau: fiche.level,
+    experience: fiche.experience,
+    lieux: fiche.trainingPlaces,
+    materiel: fiche.equipment,
+    adresse: filled(fiche.addressLine),
+    code_postal: filled(fiche.postalCode),
+    ville: filled(fiche.city),
+    pays: fiche.country,
+    statut: fiche.status,
+    compte_active: fiche.hasAccount,
+  };
 }

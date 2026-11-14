@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { EQUIPMENT_KEYS, equipmentInfo } from "@/domain/exercises/vocabulary";
+import { noteFor } from "@/features/assistant/cards";
 import {
   athleteUpdateFormData,
   formRuleError,
@@ -14,6 +15,7 @@ import {
   systemPrompt,
   toApiMessages,
 } from "@/features/assistant/rules";
+import { shapeAthleteSheet } from "@/features/assistant/tools/shape";
 
 // Assistant IA, lot 2 (D-181) : compléter une fiche, créer un exercice, donner les PDF, importer un
 // document. Toujours une carte à valider ; jamais de santé, de statut ni d'organisation.
@@ -261,5 +263,57 @@ describe("creer_exercice : matériel", () => {
   it("la liste partagée (schéma de l'action et outil de Claude) est celle de la Bibliothèque", () => {
     expect(EQUIPMENT_KEYS).toEqual(Object.keys(equipmentInfo));
     expect(EQUIPMENT_KEYS.length).toBeGreaterThan(50);
+  });
+});
+
+// Décision d'Antonino du 14/11 : pour compléter une fiche, Claude sait seulement si l'e-mail, le
+// téléphone et l'adresse sont remplis, jamais leur valeur ; la note « [Fait : …] » renvoyée à Claude ne
+// garde que les noms des champs changés.
+describe("compléter une fiche : contact jamais envoyé à Claude", () => {
+  it("la fiche lue par Claude dit « rempli » ou « vide » pour le contact et l'adresse", () => {
+    const sheet = shapeAthleteSheet({
+      id: ATHLETE,
+      firstName: "Sarah",
+      lastName: "Vermeulen",
+      sex: "female",
+      email: "sarah@example.test",
+      phone: null,
+      preferredContact: "email",
+      level: "intermediate",
+      experience: null,
+      trainingPlaces: ["outdoor"],
+      equipment: null,
+      addressLine: "Rue de test 1",
+      postalCode: "1000",
+      city: null,
+      country: "BE",
+      status: "active",
+      hasAccount: false,
+    });
+    expect(sheet).toMatchObject({
+      prenom: "Sarah",
+      email: "rempli",
+      telephone: "vide",
+      adresse: "rempli",
+      code_postal: "rempli",
+      ville: "vide",
+      niveau: "intermediate",
+    });
+    expect(JSON.stringify(sheet)).not.toContain("sarah@example.test");
+    expect(JSON.stringify(sheet)).not.toContain("Rue de test");
+  });
+  it("la note d'une fiche complétée ne garde que les noms des champs", () => {
+    const note = noteFor(
+      {
+        id: "c1",
+        kind: "completer_fiche",
+        params: { athleteId: ATHLETE, changes: { phone: "0470 12 34 56" } },
+        title: "Compléter la fiche",
+        summary: ["Sarah Vermeulen", "Téléphone : 0479 00 00 00 → 0470 12 34 56"],
+        dependsOn: null,
+      },
+      "done",
+    );
+    expect(note).toBe("[Fait : Compléter la fiche · Sarah Vermeulen · Téléphone]");
   });
 });

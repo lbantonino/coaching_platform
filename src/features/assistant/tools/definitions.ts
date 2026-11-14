@@ -63,9 +63,45 @@ export const READ_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "voir_brouillon",
+    description:
+      "Lit un programme (son brouillon, ce que l'éditeur montre) : sans `semaines`, le SOMMAIRE (titre, dates, phases, chaque séance en une ligne avec sa clé) ; avec `semaines` (2 au plus), le contenu COMPLET des séances de ces semaines. Indispensable avant modifier_programme.",
+    input_schema: {
+      type: "object",
+      properties: {
+        programme_id: { type: "string", description: "Id trouvé avec voir_programmes." },
+        semaines: {
+          type: "array",
+          items: { type: "integer" },
+          description: "1 ou 2 numéros de semaine.",
+        },
+      },
+      required: ["programme_id"],
+    },
+  },
+  {
+    name: "voir_modele",
+    description:
+      "Lit un modèle de programme (Coory ou du coach), comme voir_brouillon : sommaire, ou 2 semaines détaillées. Avant modifier_modele.",
+    input_schema: {
+      type: "object",
+      properties: {
+        modele_id: { type: "string", description: "Id trouvé avec voir_modeles." },
+        semaines: { type: "array", items: { type: "integer" } },
+      },
+      required: ["modele_id"],
+    },
+  },
+  {
     name: "voir_modeles",
     description:
       "Liste les modèles de programme (Coory et ceux du coach) : id, titre, discipline, semaines, séances par semaine. À regarder avant de créer un programme : partir d'un modèle qui convient est plus sûr et moins long.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "voir_modeles_de_seance",
+    description:
+      "Liste les modèles de SÉANCE (Coory et ceux du coach) : id, titre, discipline, détail, origine. Pour dupliquer_modele ou archiver_modele avec sorte « seance ».",
     input_schema: { type: "object", properties: {} },
   },
   {

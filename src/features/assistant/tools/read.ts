@@ -7,16 +7,22 @@ import { listUnpaidDates } from "@/features/billing/collect-queries";
 import { listExpenseCategories } from "@/features/billing/expense-queries";
 import { listDocumentCategories } from "@/features/documents/queries";
 import { listLibraryExercises } from "@/features/exercises/queries";
+import { loadDraft } from "@/features/programs/drafts";
 import { listAthleteProgramRows } from "@/features/programs/queries";
-import { listTemplates } from "@/features/programs/templates";
+import { getProgramTemplate, listTemplates } from "@/features/programs/templates";
+import { createClient } from "@/lib/supabase/server";
+
+import { draftReading, draftReadInput, templateReadInput } from "../program-edit";
 import { listSessions } from "@/features/sessions/queries";
 import { listTaskLists } from "@/features/tasks/queries";
 
 import {
   shapeAgenda,
+  shapeAthleteSheet,
   shapeAthletes,
   shapeExercises,
   shapePrograms,
+  shapeSessionTemplates,
   shapeTemplates,
   shapeUnpaid,
 } from "./shape";
@@ -40,8 +46,11 @@ const inputs = {
   voir_listes_de_taches: z.object({}),
   voir_categories_de_depenses: z.object({}),
   voir_modeles: z.object({}),
+  voir_modeles_de_seance: z.object({}),
   voir_programmes: z.object({ sportif_id: z.uuid() }),
   voir_fiche: z.object({ sportif_id: z.uuid() }),
+  voir_brouillon: draftReadInput,
+  voir_modele: templateReadInput,
   voir_categories_de_documents: z.object({}),
   chercher_exercices: z.object({ nom: z.string().trim().min(1).max(60) }),
 };
@@ -86,9 +95,43 @@ export async function runReadTool(
       );
     case "voir_modeles":
       return json(shapeTemplates(await listTemplates(organizationId, { kind: "program" })));
+    case "voir_modeles_de_seance":
+      return json(shapeSessionTemplates(await listTemplates(organizationId, { kind: "session" })));
     case "voir_programmes": {
       const { sportif_id } = inputs.voir_programmes.parse(input);
       return json(shapePrograms(await listAthleteProgramRows(organizationId, sportif_id)));
+    }
+    case "voir_brouillon": {
+      // Lot 3b : le brouillon (ce que l'éditeur montre), sommaire ou 2 semaines détaillées.
+      const { programme_id, semaines } = inputs.voir_brouillon.parse(input);
+      const loaded = await loadDraft(await createClient(), organizationId, programme_id);
+      if (!loaded?.draft) {
+        return { ok: false, content: "Programme introuvable : regarde voir_programmes." };
+      }
+      return json(
+        draftReading(
+          loaded.draft,
+          { revision: loaded.revision, status: loaded.program.status },
+          semaines,
+        ),
+      );
+    }
+    case "voir_modele": {
+      const { modele_id, semaines } = inputs.voir_modele.parse(input);
+      const template = await getProgramTemplate(organizationId, modele_id);
+      if (!template?.plan) {
+        return { ok: false, content: "Modèle introuvable : regarde voir_modeles." };
+      }
+      return json(
+        draftReading(
+          template.plan,
+          {
+            revision: template.version,
+            status: template.source === "coory" ? "modèle Coory (lecture seule)" : "modèle",
+          },
+          semaines,
+        ),
+      );
     }
     case "voir_fiche": {
       // Lot 2 : ce qui est rempli ou vide, sans santé, notes, accords ni historique.
@@ -96,25 +139,7 @@ export async function runReadTool(
       const fiche = await getAthlete(organizationId, sportif_id);
       if (!fiche)
         return { ok: false, content: "Sportif introuvable : cherche-le avec chercher_sportifs." };
-      return json({
-        id: fiche.id,
-        prenom: fiche.firstName,
-        nom: fiche.lastName,
-        sexe: fiche.sex,
-        email: fiche.email,
-        telephone: fiche.phone,
-        contact_prefere: fiche.preferredContact,
-        niveau: fiche.level,
-        experience: fiche.experience,
-        lieux: fiche.trainingPlaces,
-        materiel: fiche.equipment,
-        adresse: fiche.addressLine,
-        code_postal: fiche.postalCode,
-        ville: fiche.city,
-        pays: fiche.country,
-        statut: fiche.status,
-        compte_active: fiche.hasAccount,
-      });
+      return json(shapeAthleteSheet(fiche));
     }
     case "chercher_exercices": {
       const { nom } = inputs.chercher_exercices.parse(input);

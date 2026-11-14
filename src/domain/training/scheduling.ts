@@ -355,6 +355,27 @@ export function applySessionDay(
   });
 }
 
+// Ce que « Appliquer ce jour à » a changé HORS de la semaine de la séance : semaines touchées, copies
+// créées (semaines où la séance n'était pas) et semaines passées en jours fixes. Le message de
+// l'éditeur et la carte de l'Assistant IA (lot 3b) disent la même chose.
+export function dayApplicationReach(
+  before: readonly Week[],
+  after: readonly Week[],
+  sourceIndex: number,
+): { others: number; copies: number; nowFixed: number } {
+  let others = 0;
+  let copies = 0;
+  let nowFixed = 0;
+  after.forEach((week, i) => {
+    const previous = before[i];
+    if (week === previous || week.index === sourceIndex) return;
+    others += 1;
+    copies += week.sessions.length - (previous?.sessions.length ?? 0);
+    if (previous?.scheduling === "ordered" && week.scheduling === "fixed") nowFixed += 1;
+  });
+  return { others, copies, nowFixed };
+}
+
 // « Dans l'ordre » : la semaine perd ses jours (les rendez-vous du coach restent).
 export function setWeekOrdered(week: Week): Week {
   return {

@@ -69,8 +69,9 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-# Les modèles Coory (supabase/content, source unique) d'abord, puis la graine de démonstration.
-sql_paths = ["./content/modeles_coory.sql", "./seed.sql"]
+# Les modèles Coory (supabase/content, source unique) d'abord, puis la graine de démonstration, puis
+# les brouillons que l'Assistant IA modifie dans les tests (remis à zéro en fin de suite Playwright).
+sql_paths = ["./content/modeles_coory.sql", "./seed.sql", "./seed-tests-assistant.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.

@@ -11,12 +11,30 @@ import { insertCoachExercise } from "@/features/exercises/create-exercise";
 import { createExpense } from "@/features/billing/expense-actions";
 import { createPayment } from "@/features/billing/payment-actions";
 import { createSession, markSessionPaid, moveSession } from "@/features/sessions/actions";
-import { archiveProgram, createProgram, saveDraft } from "@/features/programs/actions";
+import { findSession } from "@/domain/training/plan-edit";
+import {
+  archiveProgram,
+  archiveTemplate,
+  createProgram,
+  createProgramTemplate,
+  duplicateProgram,
+  duplicateTemplate,
+  publishProgram,
+  saveDraft,
+  saveProgramAsTemplate,
+  saveSessionAsTemplate,
+  unarchiveProgram,
+  updateTemplate,
+} from "@/features/programs/actions";
 import { loadDraft } from "@/features/programs/drafts";
+import { aimFor } from "@/features/programs/template-use";
+import { getProgramTemplate } from "@/features/programs/templates";
 import { uploadDocument } from "@/features/documents/actions";
 import { createTask, createTaskList } from "@/features/tasks/actions";
+import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
+import { hasUnknownExercise, UNKNOWN_EXERCISE } from "./exercise-check";
 import {
   athleteFormValues,
   athleteUpdateFormData,
@@ -26,6 +44,14 @@ import {
   toNewAthleteValues,
 } from "./form-data";
 import { customDraftFrom, toCreateProgramInput } from "./program";
+import { programActionRefusal } from "./program-actions";
+import {
+  applyProgramEdits,
+  changedSinceProposal,
+  programEditRefusal,
+  revisionConflict,
+  templateEditRefusal,
+} from "./program-edit";
 import { assistantActionSchema } from "./proposals";
 
 // Clic « Valider » sur une carte de l'Assistant IA (lot 1 des actions, spec §5.2). N'appelle JAMAIS
@@ -36,6 +62,10 @@ export type ExecuteResult =
   { ok: true; href: string; createdAthleteId?: string } | { ok: false; error: string };
 
 const fail = (error: string): ExecuteResult => ({ ok: false, error });
+const INVALID = "Cette action n'est pas valable. Redemande-la à l'assistant.";
+// L'éditeur ouvert sur la première semaine touchée (sans semaine : en haut du programme).
+const onWeek = (path: string, weeks: number[]) =>
+  weeks[0] !== undefined ? `${path}?semaine=${weeks[0]}` : path;
 const blank = { error: null, attempt: 0, values: null } as const;
 
 export async function executeAssistantAction(
@@ -131,6 +161,159 @@ export async function executeAssistantAction(
       const list = await createTaskList(orgId, action.params.name);
       if (!list.ok) return fail(list.error ?? "La liste n'a pas pu être créée.");
       return { ok: true, href: "/coach/taches" };
+    }
+    case "modifier_programme": {
+      // Lot 3b : le brouillon RELU au clic ; une autre révision que celle de la carte = refus, rien
+      // n'est écrit. Puis les MÊMES fonctions que l'éditeur et le MÊME enregistrement (saveDraft, qui
+      // revérifie la révision dans la base). Programme publié : seul son brouillon change.
+      const { programId, revision, operations } = action.params;
+      const loaded = await loadDraft(await createClient(), orgId, programId);
+      const refusal = programEditRefusal(
+        loaded ? { status: loaded.program.status, hasDraft: loaded.draft !== null } : null,
+      );
+      if (refusal || !loaded?.draft) return fail(refusal ?? "Programme introuvable.");
+      const conflict = revisionConflict(revision, loaded.revision);
+      if (conflict) return fail(conflict);
+      const applied = applyProgramEdits(loaded.draft, operations, { today: todayIsoInBrussels() });
+      if (!applied.ok) return fail(applied.error);
+      if (await hasUnknownExercise(await createClient(), operations)) return fail(UNKNOWN_EXERCISE);
+      const saved = await saveDraft(orgId, programId, revision, applied.plan);
+      if (!saved.ok) {
+        return fail(saved.code === "REVISION_CONFLICT" ? changedSinceProposal() : saved.message);
+      }
+      const path = `${base}/programmes/${programId}`;
+      revalidatePath(path, "layout");
+      revalidatePath(`${base}/sportifs/${loaded.program.athleteId}`);
+      return { ok: true, href: onWeek(path, applied.weeks) };
+    }
+    case "modifier_modele": {
+      // Lot 3b : un de Mes modèles, à la version de la carte (updateTemplate la revérifie aussi).
+      const { templateId, version, operations } = action.params;
+      const template = await getProgramTemplate(orgId, templateId);
+      const refusal = templateEditRefusal(
+        template ? { source: template.source, hasPlan: template.plan !== null } : null,
+      );
+      if (refusal || !template?.plan) return fail(refusal ?? "Modèle introuvable.");
+      const conflict = revisionConflict(version, template.version, "modele");
+      if (conflict) return fail(conflict);
+      const applied = applyProgramEdits(template.plan, operations);
+      if (!applied.ok) return fail(applied.error);
+      if (await hasUnknownExercise(await createClient(), operations)) return fail(UNKNOWN_EXERCISE);
+      const saved = await updateTemplate(orgId, "program", templateId, version, applied.plan);
+      if (!saved.ok) {
+        return fail(
+          saved.code === "REVISION_CONFLICT" ? changedSinceProposal("modele") : saved.message,
+        );
+      }
+      return { ok: true, href: onWeek(`${base}/programmes/modeles/${templateId}`, applied.weeks) };
+    }
+    // Lot 3b : les actions d'un programme. Le programme est RELU (un programme archivé entre-temps ne
+    // fait plus que « Désarchiver »), puis l'action du bouton de l'éditeur fait le travail, avec ses
+    // propres contrôles (organisation, état, révision, publication).
+    case "publier_programme":
+    case "archiver_programme":
+    case "desarchiver_programme":
+    case "dupliquer_programme":
+    case "enregistrer_comme_modele":
+    case "enregistrer_seance_comme_modele": {
+      const { programId } = action.params;
+      const loaded = await loadDraft(await createClient(), orgId, programId);
+      const refusal = programActionRefusal(
+        action.kind,
+        loaded
+          ? {
+              status: loaded.program.status,
+              hasDraft: loaded.draft !== null,
+              revision: loaded.revision,
+              upToDate: loaded.activePublication !== null && !loaded.hasUnpublishedChanges,
+            }
+          : null,
+      );
+      if (refusal || !loaded) return fail(refusal ?? "Programme introuvable.");
+      const editor = `${base}/programmes/${programId}`;
+      switch (action.kind) {
+        case "publier_programme": {
+          const { revision } = action.params;
+          if (revision === undefined) return fail(INVALID);
+          const published = await publishProgram(orgId, programId, revision);
+          if (!published.ok) {
+            return fail(
+              published.code === "REVISION_CONFLICT" ? changedSinceProposal() : published.message,
+            );
+          }
+          revalidatePath(`${base}/sportifs/${loaded.program.athleteId}`);
+          return { ok: true, href: editor };
+        }
+        case "archiver_programme": {
+          const archived = await archiveProgram(orgId, programId);
+          if (!archived.ok) return fail(archived.message);
+          return { ok: true, href: `${base}/programmes` };
+        }
+        case "desarchiver_programme": {
+          const restored = await unarchiveProgram(orgId, programId);
+          if (!restored.ok) return fail(restored.message);
+          return { ok: true, href: editor };
+        }
+        case "dupliquer_programme": {
+          const copied = await duplicateProgram(orgId, programId);
+          if (!copied.ok) return fail(copied.message);
+          return { ok: true, href: `${base}/programmes/${copied.programId}` };
+        }
+        case "enregistrer_comme_modele": {
+          const saved = await saveProgramAsTemplate(orgId, programId, action.params.titre);
+          if (!saved.ok) return fail(saved.message);
+          return { ok: true, href: `${base}/programmes/modeles/${saved.templateId}` };
+        }
+        case "enregistrer_seance_comme_modele": {
+          // La séance telle que la carte l'a lue : même révision du brouillon.
+          const { revision, cle, titre } = action.params;
+          if (revision === undefined || !loaded.draft) return fail(INVALID);
+          const conflict = revisionConflict(revision, loaded.revision);
+          if (conflict) return fail(conflict);
+          const found = findSession(loaded.draft, cle);
+          if (!found) return fail("Cette séance n'est plus dans le programme.");
+          const saved = await saveSessionAsTemplate(orgId, found.session, titre);
+          if (!saved.ok) return fail(saved.message);
+          return { ok: true, href: `${base}/programmes/modeles/${saved.templateId}` };
+        }
+      }
+      return fail(INVALID);
+    }
+    case "dupliquer_modele": {
+      const sorte = action.params.sorte === "seance" ? "session" : "program";
+      const copied = await duplicateTemplate(orgId, sorte, action.params.templateId);
+      if (!copied.ok) return fail(copied.message);
+      return { ok: true, href: `${base}/programmes/modeles/${copied.templateId}` };
+    }
+    case "archiver_modele": {
+      // archiveTemplate ne touche qu'aux modèles de l'organisation (jamais un modèle Coory).
+      const sorte = action.params.sorte === "seance" ? "session" : "program";
+      const archived = await archiveTemplate(orgId, sorte, action.params.templateId);
+      if (!archived.ok) return fail(archived.message);
+      return { ok: true, href: `${base}/programmes?onglet=modeles` };
+    }
+    case "creer_modele": {
+      // La MÊME création que l'assistant « Créer un modèle » ; sans sportif, la façon de viser par
+      // défaut de l'assistant (aimFor).
+      const p = action.params;
+      const created = await createProgramTemplate(orgId, {
+        title: p.titre,
+        discipline: p.discipline,
+        aimDefaults: aimFor(undefined),
+        weeksCount: p.semaines,
+        sessionsPerWeek: p.seancesParSemaine,
+        phases: (p.phases ?? []).map((phase) => ({
+          name: phase.nom,
+          weekFrom: phase.de,
+          weekTo: phase.a,
+        })),
+        scheduling: p.organisation ?? "ordered",
+        start: p.depuisModele
+          ? { kind: "template", templateId: p.depuisModele }
+          : { kind: "blank" },
+      });
+      if (!created.ok) return fail(created.message);
+      return { ok: true, href: `${base}/programmes/modeles/${created.templateId}` };
     }
     case "creer_programme": {
       // Lot 3a : la MÊME création que l'assistant « Créer un programme » (brouillon, jamais publié),

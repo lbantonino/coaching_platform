@@ -510,5 +510,438 @@
         }
       }
     ]
+  ],
+  "Dans le bloc force de Sarah, remplace le soulevé de terre par la presse à cuisses, retire la semaine 4 et renomme-le Bloc force · version 2": [
+    [
+      {
+        "type": "text",
+        "text": "Je regarde le programme.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_m1a",
+        "name": "voir_brouillon",
+        "input": {
+          "programme_id": "fb000000-0000-4000-8000-000000000002"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici les trois changements, valide-les si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_m1b",
+        "name": "modifier_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000002",
+          "revision": 1,
+          "operations": [
+            {
+              "op": "modifier_seance",
+              "cle": "ta-s1-1",
+              "seance": {
+                "title": "Force A",
+                "sessionType": "Force",
+                "durationMinutes": 60,
+                "content": {
+                  "items": [
+                    {
+                      "id": "x1",
+                      "kind": "exercise",
+                      "name": "Presse à cuisses",
+                      "sets": [
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        },
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        },
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        },
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        }
+                      ],
+                      "restSec": 180,
+                      "loadMode": "pct",
+                      "exerciseId": "e9844c81-7922-5862-b902-f3daa687154f"
+                    },
+                    {
+                      "id": "x2",
+                      "kind": "exercise",
+                      "name": "Développé couché barre",
+                      "sets": [
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        },
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        },
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        },
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        }
+                      ],
+                      "restSec": 150,
+                      "loadMode": "pct",
+                      "exerciseId": "922f5540-60d1-5443-bc49-55c3f5964cf3"
+                    }
+                  ],
+                  "warmup": "Mobilité, puis montée en charge sur le premier exercice",
+                  "discipline": "strength"
+                }
+              }
+            },
+            {
+              "op": "retirer_semaine",
+              "semaine": 4
+            },
+            {
+              "op": "titre",
+              "titre": "Bloc force · version 2"
+            }
+          ]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Dans le bloc force de Hugo, remplace le soulevé de terre par la presse à cuisses, retire la semaine 4 et renomme-le Bloc force · version 2": [
+    [
+      {
+        "type": "text",
+        "text": "Je regarde le programme.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_m2a",
+        "name": "voir_brouillon",
+        "input": {
+          "programme_id": "fb000000-0000-4000-8000-000000000003"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Voici les trois changements, valide-les si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_m2b",
+        "name": "modifier_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000003",
+          "revision": 1,
+          "operations": [
+            {
+              "op": "modifier_seance",
+              "cle": "ta-s1-1",
+              "seance": {
+                "title": "Force A",
+                "sessionType": "Force",
+                "durationMinutes": 60,
+                "content": {
+                  "items": [
+                    {
+                      "id": "x1",
+                      "kind": "exercise",
+                      "name": "Presse à cuisses",
+                      "sets": [
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        },
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        },
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        },
+                        {
+                          "pct": 70,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 5
+                        }
+                      ],
+                      "restSec": 180,
+                      "loadMode": "pct",
+                      "exerciseId": "e9844c81-7922-5862-b902-f3daa687154f"
+                    },
+                    {
+                      "id": "x2",
+                      "kind": "exercise",
+                      "name": "Développé couché barre",
+                      "sets": [
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        },
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        },
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        },
+                        {
+                          "pct": 65,
+                          "rir": 2,
+                          "type": "normal",
+                          "repsMin": 6
+                        }
+                      ],
+                      "restSec": 150,
+                      "loadMode": "pct",
+                      "exerciseId": "922f5540-60d1-5443-bc49-55c3f5964cf3"
+                    }
+                  ],
+                  "warmup": "Mobilité, puis montée en charge sur le premier exercice",
+                  "discipline": "strength"
+                }
+              }
+            },
+            {
+              "op": "retirer_semaine",
+              "semaine": 4
+            },
+            {
+              "op": "titre",
+              "titre": "Bloc force · version 2"
+            }
+          ]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Retire la semaine 2 du bloc de force de Nadia": [
+    [
+      {
+        "type": "tool_use",
+        "id": "toolu_m3a",
+        "name": "modifier_programme",
+        "input": {
+          "programId": "f1000000-0000-4000-8000-000000000021",
+          "revision": 1,
+          "operations": [
+            {
+              "op": "retirer_semaine",
+              "semaine": 2
+            }
+          ]
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ],
+    [
+      {
+        "type": "text",
+        "text": "Je ne trouve pas ce programme parmi les tiens.",
+        "citations": null
+      }
+    ]
+  ],
+  "Publie le bloc de juin de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la publication, valide-la si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_ps1",
+        "name": "publier_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000004"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Archive le bloc de juin de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici l'archivage.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_ps2",
+        "name": "archiver_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000004"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Désarchive le bloc de juin de Sarah": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le désarchivage.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_ps3",
+        "name": "desarchiver_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000004"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Publie le bloc de juin de Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la publication, valide-la si c'est bon.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_ph1",
+        "name": "publier_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000005"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Archive le bloc de juin de Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici l'archivage.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_ph2",
+        "name": "archiver_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000005"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Désarchive le bloc de juin de Hugo": [
+    [
+      {
+        "type": "text",
+        "text": "Voici le désarchivage.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_ph3",
+        "name": "desarchiver_programme",
+        "input": {
+          "programId": "fb000000-0000-4000-8000-000000000005"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Copie le modèle Coory Préparation 10 km dans mes modèles": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la copie.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_p4",
+        "name": "dupliquer_modele",
+        "input": {
+          "templateId": "7a000000-0000-4000-8000-000000000002"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
   ]
 }
