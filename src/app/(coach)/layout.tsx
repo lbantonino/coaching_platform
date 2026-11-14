@@ -5,12 +5,14 @@ import { MoneyProvider } from "@/components/blocks/money-context";
 import { NewPaymentSheet } from "@/components/blocks/new-payment-sheet";
 import { NewSessionSheet } from "@/components/blocks/new-session-sheet";
 import { AssistantDialog, AssistantProvider } from "@/components/blocks/assistant";
+import { DemoBanner } from "@/components/blocks/demo-banner";
 import { TaskSheetProvider } from "@/components/blocks/task-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { askAssistant } from "@/features/assistant/actions";
 import { executeAssistantAction } from "@/features/assistant/execute";
 import { getAssistantAccess } from "@/features/assistant/queries";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
+import { isDemoAccount } from "@/features/demo/queries";
 import { createPayment } from "@/features/billing/payment-actions";
 import { loadSettings } from "@/features/coach/settings-actions";
 import { DEFAULT_PREFERENCES, getCoachProfile } from "@/features/coach/profile";
@@ -43,11 +45,13 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
   const memberships = user ? await getCoachMemberships(user.id) : [];
   // Une organisation suffit au lancement ; le choix entre plusieurs organisations viendra plus tard.
   const first = memberships[0];
-  const [profile, counts, assistantAccess] = await Promise.all([
+  const [profile, counts, assistantAccess, demo] = await Promise.all([
     user ? getCoachProfile(user) : null,
     first ? countNotifications(first.organizationId, todayIsoInBrussels()) : null,
     // Assistant IA (D-168) : verrouillé sans abonnement Coory ; sans organisation, verrouillé aussi.
     first ? getAssistantAccess(first.organizationId) : ({ status: "locked" } as const),
+    // Compte de démonstration partagé (OPEN-24) : un bandeau en tête de chaque page.
+    first ? isDemoAccount() : false,
   ]);
   // La fenêtre des Paramètres (D-58) enveloppe toute la coquille : le menu du compte l'ouvre.
   // Devise et pays (D-69) de l'organisation pour tous les écrans d'argent (la TVA se choisit à chaque
@@ -96,6 +100,7 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
                 : null,
             }}
           >
+            {demo ? <DemoBanner /> : null}
             {/* Les fenêtres « Nouvelle séance » (D-35), « Nouveau paiement » (D-36) et « Tâche » (D-59), les mêmes sur toutes
           les pages coach. Les actions revérifient elles-mêmes l'accès à l'organisation. */}
             {first ? (

@@ -7,6 +7,8 @@ import { requireCoach, requireOrgAccess } from "@/features/auth/guards";
 import { isCurrency, parseExchangeRate } from "@/domain/billing/money";
 import { isCountryCode } from "@/domain/geo/countries";
 import { todayIsoInBrussels } from "@/lib/format";
+import { isDemoAccount } from "@/features/demo/queries";
+import { DEMO_DISABLED } from "@/features/demo/rules";
 import { createClient } from "@/lib/supabase/server";
 
 import { getSettingsData, type SettingsData } from "./settings-data";
@@ -307,6 +309,7 @@ export async function changeEmail(
   const { user } = await requireCoach();
   const values = { email: field(formData, "email").trim() };
   const attempt = previous.attempt + 1;
+  if (await isDemoAccount()) return { error: DEMO_DISABLED, saved: false, attempt, values };
   const parsed = emailChangeSchema.safeParse(values);
   if (!parsed.success) {
     return {
@@ -345,6 +348,7 @@ export async function changePassword(
 ): Promise<SettingsState<null>> {
   const { user } = await requireCoach();
   const attempt = previous.attempt + 1;
+  if (await isDemoAccount()) return { error: DEMO_DISABLED, saved: false, attempt, values: null };
   const parsed = passwordChangeSchema.safeParse({
     current: field(formData, "current"),
     password: field(formData, "password"),
@@ -378,10 +382,12 @@ export async function changePassword(
   return { error: null, saved: true, attempt, values: null, message: "Mot de passe changé." };
 }
 
-// Déconnecte tous les appareils, celui-ci compris (après confirmation dans la page).
+// Déconnecte tous les appareils, celui-ci compris (après confirmation dans la page). Sur le compte de
+// démonstration partagé (OPEN-24), seulement ce visiteur : sinon un clic sortirait tous les autres.
 export async function signOutEverywhere(): Promise<void> {
   await requireCoach();
+  const scope = (await isDemoAccount()) ? "local" : "global";
   const supabase = await createClient();
-  await supabase.auth.signOut({ scope: "global" });
+  await supabase.auth.signOut({ scope });
   redirect("/login");
 }

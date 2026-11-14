@@ -2151,6 +2151,7 @@ export type Database = {
         Args: { p_athlete_id: string; p_coach_proof?: string };
         Returns: undefined;
       };
+      is_demo_account: { Args: Record<PropertyKey, never>; Returns: boolean };
       issue_athlete_invoice: { Args: { p_invoice_id: string }; Returns: string };
       mark_athlete_invoice_paid: {
         Args: { p_invoice_id: string; p_method: string; p_received_on: string };

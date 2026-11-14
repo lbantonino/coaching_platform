@@ -77,7 +77,9 @@ select 'aaaaaaaa-0000-4000-8000-000000000001', '11111111-1111-4111-8111-11111111
 from generate_series(1, 99);
 -- Une demande du mois dernier ne compte pas.
 update public.assistant_usage set created_at = private.assistant_month_start() - interval '1 day'
-where id = (select id from public.assistant_usage where status = 'done' limit 1);
+-- (son propre coach : la base locale peut garder des demandes d'autres comptes de démonstration)
+where id = (select id from public.assistant_usage
+            where status = 'done' and user_id = '11111111-1111-4111-8111-111111111111' limit 1);
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';

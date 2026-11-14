@@ -20,6 +20,8 @@
 --   coach-reset@example.test -> coach de « Organisation Démo A », réservé au test E2E « mot de passe oublié »
 --   coach-c@example.test     -> coach de « Organisation Démo A » sans accès à l'Assistant IA (test du verrou, D-171)
 --                               (son mot de passe change à chaque exécution du test)
+--   coach-demo@example.test  -> compte de démonstration partagé (OPEN-24) : « Démo Coory », données fictives
+--                               remises à zéro, mot de passe et adresse figés, aucun fichier
 --   thomas.peeters@example.test -> sportif de « Organisation Démo A » (compte activé) : ouvre l'espace sportif
 --   ines.benali@example.test, nadia.elamrani@example.test -> sportives de « Organisation Démo A » (comptes
 --                               activés, comme Thomas : on leur écrit depuis la liste et les Messages)
@@ -1468,3 +1470,23 @@ select private.set_signup_access_code('COORY-DEV-2026');
 update public.organizations set coory_plan = 'premium' where id = '0b000000-0000-4000-8000-0000000000b1';
 insert into private.assistant_allowed_emails (email, note)
 values ('coach-a@example.test', 'Démo : compte de travail local');
+
+-- Compte de démonstration partagé (OPEN-24) : créé comme en ligne (l'utilisateur d'abord, puis
+-- private.setup_demo_account), et autorisé à utiliser l'Assistant IA par son adresse.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+)
+values
+  ('00000000-0000-0000-0000-000000000000', '0d000000-0000-4000-8000-0000000000de', 'authenticated', 'authenticated',
+   'coach-demo@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Compte de démo"}', now(), now(), '', '', '', '');
+insert into auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+values
+  (gen_random_uuid(), '0d000000-0000-4000-8000-0000000000de', '0d000000-0000-4000-8000-0000000000de',
+   '{"sub":"0d000000-0000-4000-8000-0000000000de","email":"coach-demo@example.test","email_verified":true}',
+   'email', now(), now(), now());
+select private.setup_demo_account('coach-demo@example.test');
+insert into private.assistant_allowed_emails (email, note)
+values ('coach-demo@example.test', 'Démo : compte de démonstration partagé');

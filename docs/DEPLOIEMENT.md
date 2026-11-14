@@ -174,6 +174,39 @@ Sur téléphone puis sur ordinateur :
       compteur « demandes restantes » baisse.
 - [ ] Les en-têtes de sécurité sont là (securityheaders.com sur ton domaine).
 
+## 5 bis. Le compte de démonstration pour Synode (OPEN-24, D-176)
+
+La migration `20261114150000_compte_demo` arrive avec le `git push` (intégration GitHub). Ensuite :
+
+1. **Authentication → Users → Add user → Create new user** : adresse `demo@synode-agency.com`, le mot
+   de passe public de la démo (10 caractères au moins), **Auto Confirm User** coché.
+2. **SQL Editor** : crée son espace et ses données fictives, et ouvre-lui l'Assistant IA :
+
+   ```sql
+   select private.setup_demo_account('demo@synode-agency.com');
+   insert into private.assistant_allowed_emails (email, note)
+   values ('demo@synode-agency.com', 'Démo Synode');
+   ```
+
+3. Vérifie : connexion avec ces identifiants, bandeau « Compte de démonstration partagé », six
+   sportifs fictifs, Paramètres → Sécurité refuse le changement de mot de passe.
+4. Changer plus tard le mot de passe de la démo (lui seul est figé pour tout le monde, sauf ici) :
+   `select private.set_demo_password('demo@synode-agency.com', 'nouveau-mot-de-passe');`
+5. La remise à zéro tourne seule chaque nuit (tâche `coory-demo-reset`, 2 h UTC). Pour la lancer à la
+   main : `select private.reset_demo_data();`. Les 100 demandes du mois de l'assistant ne sont jamais
+   remises à zéro.
+6. Synode : la page Coory affiche l'adresse, le mot de passe et le **code d'accès** de la bêta (variables
+   Netlify, jamais dans le code du site).
+7. Recommandé (relecture du 14/11) :
+   - **Authentication → Multi-Factor → TOTP désactivé** : Coory n'utilise pas la double
+     authentification, et un visiteur pourrait en activer une sur le compte partagé.
+   - **Un alias `demo@synode-agency.com`** chez Hostinger, redirigé vers `contact@synode-agency.com` :
+     les e-mails « mot de passe oublié » demandés par des visiteurs arrivent quelque part et montrent
+     les abus.
+   - **Surveiller la remise à zéro** : `select * from cron.job_run_details order by start_time desc limit 5;`
+   - Risque restant, accepté : un visiteur qui appelle directement l'API d'authentification peut encore
+     déconnecter les autres visiteurs (ils se reconnectent avec le mot de passe public).
+
 ## 6. Avant d'ouvrir les inscriptions au public
 
 - **CAPTCHA** (Cloudflare Turnstile) sur l'inscription et la connexion : Supabase → Authentication →

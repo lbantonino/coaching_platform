@@ -1,7 +1,7 @@
-# Accès de démonstration pour les visiteurs de Synode (à faire)
+# Accès de démonstration pour les visiteurs de Synode
 
-Demande d'Antonino du 14/11/2026. Rien n'est construit : ce fichier garde la demande, le plan
-proposé et les décisions attendues. Même note côté site : `livrables/Site-Web/Synode-agency/docs/SITE_A_COMPLETER.md`.
+Demande d'Antonino du 14/11/2026. **Construit le 14/11 côté Coory (D-176)** ; mise en service :
+`docs/DEPLOIEMENT.md` §5 bis. Reste : la page Coory du site Synode. Même note côté site : `livrables/Site-Web/Synode-agency/docs/SITE_A_COMPLETER.md`.
 
 ## La demande
 
@@ -24,12 +24,35 @@ proposé et les décisions attendues. Même note côté site : `livrables/Site-W
 Adresse proposée : `demo@synode-agency.com` (domaine d'Antonino et Killian ; aucune boîte nécessaire, le
 compte est confirmé par l'administrateur). Jamais une adresse sur un domaine qui ne lui appartient pas.
 
-## Décisions attendues d'Antonino
+## Décisions d'Antonino (14/11/2026)
 
-1. Fréquence de remise à zéro des données de démo : chaque nuit (proposé), chaque semaine, jamais.
-2. Inscription libre des prospects : publier le code d'accès de la bêta sur Synode (proposé, simple),
-   ou ouvrir les inscriptions sans code.
-3. L'adresse et le mot de passe du compte de démonstration.
+1. **Remise à zéro des données de démo chaque nuit, à 3 h (heure de Bruxelles)**, par une tâche planifiée
+   dans Supabase (pg_cron, gratuite). Chaque heure était possible et gratuit, écarté : un visiteur
+   perdrait ce qu'il crée en pleine visite.
+2. **Le code d'accès de la bêta est publié sur Synode** : les inscriptions deviennent libres pour qui
+   visite le site ; l'Assistant IA reste fermé à ces comptes. Le code n'est jamais écrit dans le code
+   du site : variable Netlify, changeable sans toucher au code.
+3. **Adresse du compte de démo : `demo@synode-agency.com`.** `demo@coory.app` refusé : `coory.app` est
+   libre (vérifié le 14/11) mais n'appartient pas à Antonino ; un futur propriétaire recevrait les
+   e-mails « mot de passe oublié » et prendrait le compte. Le mot de passe (public par nature) est
+   choisi par Antonino à la création du compte dans Supabase et saisi dans Netlify, jamais dans Git.
+
+Point technique : Supabase laisse un utilisateur connecté changer son mot de passe directement par
+l'API d'authentification, sans passer par l'app. La vraie protection sera donc dans la base (un
+déclencheur sur `auth.users` qui garde le mot de passe et l'e-mail du compte de démo), en plus des
+refus dans l'app.
+
+## Relecture indépendante du 14/11
+
+Corrigés : « Déconnecter partout » ne sort que le visiteur sur la démo ; métadonnées du compte figées ;
+profil du coach remis entièrement à ses réglages par défaut ; tests SQL du blocage des fichiers et des
+factures d'une autre organisation. Reportés (mineurs) : double authentification (à désactiver dans
+Supabase, voir le guide) ; le compte de démo peut accepter une invitation de sportif d'une autre
+organisation (invitations masquées pour l'instant) ; pas de boîte e-mail pour l'adresse de démo (alias
+recommandé) ; `set_demo_password` ne coupe pas les sessions ouvertes ; la tâche terminée de la démo n'a
+pas d'auteur ; un échec de remise à zéro bloque toutes les démos sans alerte (surveiller
+`cron.job_run_details`) ; catégories par défaut recopiées depuis les déclencheurs ; 2 h UTC = 3 h l'hiver,
+4 h l'été à Bruxelles.
 
 ## Ce qu'il faudra faire ensuite
 
