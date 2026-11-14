@@ -31,6 +31,24 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Assistant IA, lot 5 : les sportifs (D-184, 14/11/2026)
+```
+src/features/assistant/sportifs.ts (nouveau : 17 schémas, fusions, refus, cartes) ; tools/sportifs.ts
+  (nouveau, server-only) ; execute-sportifs.ts (nouveau, server-only) ; execute.ts (executeWithFile :
+  document ou photo) ; proposals.ts, tools/write.ts, read.ts, definitions.ts, shape.ts (voir_fiche avec
+  discipline et disponibilités sans santé, voir_objectifs, voir_reperes), loop.ts, rules.ts ;
+  src/components/blocks/assistant.tsx (la photo part avec le fichier joint) ; layout coach ;
+  src/features/goals/form-values.ts (nouveau, partagé avec edit-goal-sheet.tsx) ;
+  src/features/exercises/exercise-core.ts (nouveau : cœur de « Modifier l'exercice ») ;
+  supabase/seed-tests-assistant.sql (sportifs de test du lot 5).
+Tests : assistant-lot5.test.ts (15) ; unitaires 666 ; e2e : disponibilités (blessure intacte), note
+  ajoutée sous l'ancienne, objectif ajouté + principal, repère supprimé + record ajouté, archiver,
+  renommer un exercice du coach (exercice Coory refusé), photo jointe (ordinateur et téléphone, rejoués
+  deux fois) ; captures « Disponibilités » et « Ajouter à la note privée ».
+Relecture indépendante : 4 importants corrigés avec tests (consigne des notes, photo réduite avant
+  l'envoi, compétition nommée, note jamais écrasée) ; 5 mineurs reportés.
+```
+
 ### Assistant IA, lot 4 : le quotidien, agenda, comptabilité, tâches, documents (D-183, 14/11/2026)
 ```
 src/features/assistant/daily.ts (nouveau : 16 schémas, refus purs, cartes) ; tools/daily.ts (nouveau,

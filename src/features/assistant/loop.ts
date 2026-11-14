@@ -57,6 +57,8 @@ const PROGRESS: Record<string, string> = {
   voir_paiements: "Je regarde tes paiements…",
   voir_depenses: "Je regarde tes dépenses…",
   voir_documents: "Je regarde tes documents…",
+  voir_objectifs: "Je regarde les objectifs du sportif…",
+  voir_reperes: "Je regarde les repères du sportif…",
   voir_programmes: "Je regarde les programmes du sportif…",
   chercher_exercices: "Je cherche les exercices dans ta Bibliothèque…",
   voir_fiche: "Je regarde la fiche du sportif…",

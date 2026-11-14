@@ -31,6 +31,7 @@ import {
 import { AssistantCard } from "@/components/blocks/assistant-card";
 import { useDictation } from "@/components/blocks/assistant-voice";
 import { MenuDialog, Overlay, type MenuAnchor } from "@/components/ui/overlay";
+import { PROFILE_PHOTO_SIDE, shrinkPhoto } from "@/lib/shrink-photo";
 import { Spinner } from "@/components/ui/spinner";
 import type { AskAssistantResult } from "@/features/assistant/actions";
 import {
@@ -268,11 +269,14 @@ export function AssistantProvider({
       running.current.add(cardId);
       updateCards(messageId, (list) => startCard(list, cardId));
       const blocked = (who: string) => `Impossible : la fiche de ${who} n'a pas été créée.`;
-      // « Importer un document » : le fichier joint à cette réponse part avec la carte ; sans lui
-      // (page rechargée, autre conversation), on le dit au lieu d'échouer en silence.
+      // « Importer un document » et « Photo » mettre (lot 5) : le fichier joint à cette réponse part
+      // avec la carte ; sans lui (page rechargée, autre conversation), on le dit au lieu d'échouer en
+      // silence.
+      const withFile =
+        card.kind === "importer_document" ||
+        (card.kind === "photo" && card.params.action === "mettre");
       const run = (): Promise<ExecuteResult> => {
-        if (card.kind !== "importer_document")
-          return execute({ kind: card.kind, params: card.params });
+        if (!withFile) return execute({ kind: card.kind, params: card.params });
         const file = files.current.get(messageId);
         if (!file || !executeDocument) {
           return Promise.resolve({
@@ -280,17 +284,24 @@ export function AssistantProvider({
             error: "Joins à nouveau le fichier, puis redemande à l'assistant.",
           });
         }
-        const form = new FormData();
-        form.set("params", JSON.stringify(card.params));
-        form.set("file", file);
-        return executeDocument(form);
+        const send = (upload: File) => {
+          const form = new FormData();
+          form.set("kind", card.kind);
+          form.set("params", JSON.stringify(card.params));
+          form.set("file", upload);
+          return executeDocument(form);
+        };
+        // Une photo est réduite ici avant l'envoi, comme dans l'onglet Profil (relecture n°2).
+        return card.kind === "photo"
+          ? shrinkPhoto(file, { maxSide: PROFILE_PHOTO_SIDE }).then(send)
+          : send(file);
       };
       run()
         .catch((): ExecuteResult => ({ ok: false, error: UNAVAILABLE }))
         .then((result) => {
           running.current.delete(cardId);
           if (result.ok) {
-            if (card.kind === "importer_document") setAttachment(null);
+            if (withFile) setAttachment(null);
             updateCards(
               messageId,
               (list) => resolveCard(list, cardId, result.href, result.createdAthleteId),

@@ -30,25 +30,11 @@ import {
   type GoalFormInput,
   type GoalPriority,
 } from "@/features/goals/schemas";
-import { formatRaceTime } from "@/features/records/schemas";
+import { goalFormValues } from "@/features/goals/form-values";
 
 // « Modifier » un objectif en cours (demande d'Antonino du 26/10) : la fenêtre reprend les champs de
 // l'ajout, remplis avec l'objectif. Corriger une date ou un nom ne demande plus de le supprimer.
 const initialState: EditGoalState = { error: null, saved: 0, attempt: 0, values: null };
-
-function toForm(goal: GoalEntry): GoalFormInput {
-  return {
-    goalType: goal.type,
-    priority: goal.priority,
-    targetDate: goal.targetDate ?? "",
-    targetTime: goal.targetTimeSeconds ? formatRaceTime(goal.targetTimeSeconds) : "",
-    isCompetition: goal.competitionName !== null,
-    competitionName: goal.competitionName ?? "",
-    competitionLocation: goal.competitionLocation ?? "",
-    hyroxCategory: goal.hyroxCategory ?? "",
-    description: goal.description ?? "",
-  };
-}
 
 // Fenêtre « Modifier l'objectif », ouverte depuis le menu « ··· » de la carte (choix d'Antonino du
 // 03/11 : les actions d'un objectif sont dans ce menu).
@@ -100,7 +86,7 @@ export function EditGoalSheet({
           minDate={minDate}
           hasMain={otherMain}
           error={state.error}
-          values={state.values ?? toForm(goal)}
+          values={state.values ?? goalFormValues(goal)}
           onCancel={onClose}
         />
       ) : null}

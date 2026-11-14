@@ -16,6 +16,9 @@ import { createClient } from "@/lib/supabase/server";
 import { draftReading, draftReadInput, templateReadInput } from "../program-edit";
 import { listSessions } from "@/features/sessions/queries";
 import { listTaskLists, listTasks } from "@/features/tasks/queries";
+import { listGoals } from "@/features/goals/queries";
+import { listRecords } from "@/features/records/queries";
+import { listReferences } from "@/features/references/queries";
 
 import {
   shapeAgenda,
@@ -25,6 +28,8 @@ import {
   shapePrograms,
   shapeDocuments,
   shapeExpenses,
+  shapeGoals,
+  shapeReferences,
   shapePayments,
   shapeSessionTemplates,
   shapeTasks,
@@ -65,6 +70,9 @@ const inputs = {
   }),
   voir_depenses: z.object({ du: isoDay.optional(), au: isoDay.optional() }),
   voir_documents: z.object({ sportif_id: z.uuid().optional(), categorie_id: z.uuid().optional() }),
+  // Lot 5 (D-184) : objectifs, repères et records d'un sportif.
+  voir_objectifs: z.object({ sportif_id: z.uuid() }),
+  voir_reperes: z.object({ sportif_id: z.uuid() }),
   voir_programmes: z.object({ sportif_id: z.uuid() }),
   voir_fiche: z.object({ sportif_id: z.uuid() }),
   voir_brouillon: draftReadInput,
@@ -144,6 +152,20 @@ export async function runReadTool(
               : expense.spentOn >= du)),
       );
       return json(shapeExpenses(expenses));
+    }
+    case "voir_objectifs":
+    case "voir_reperes": {
+      const { sportif_id } = inputs[name].parse(input ?? {});
+      const athlete = await getAthlete(organizationId, sportif_id);
+      if (!athlete)
+        return { ok: false, content: "Sportif introuvable : cherche-le avec chercher_sportifs." };
+      if (name === "voir_objectifs")
+        return json(shapeGoals(await listGoals(organizationId, athlete.id)));
+      const [references, records] = await Promise.all([
+        listReferences(organizationId, athlete.id),
+        listRecords(organizationId, athlete.id),
+      ]);
+      return json(shapeReferences(references, records));
     }
     case "voir_documents": {
       const { sportif_id, categorie_id } = inputs.voir_documents.parse(input ?? {});

@@ -33,6 +33,12 @@ import { GOAL_TYPES, goalTypeLabels, type GoalType } from "@/features/goals/sche
 import { SESSION_KINDS, SESSION_PAYMENT_METHODS } from "@/features/sessions/schemas";
 
 import { DAILY_ACTIONS, DAILY_PARAMS, summarizeDaily, type DailyKind } from "./daily";
+import {
+  SPORTIFS_ACTIONS,
+  SPORTIFS_PARAMS,
+  summarizeSportifs,
+  type SportifsKind,
+} from "./sportifs";
 import { placedSessions } from "./program";
 import { MAX_PROGRAM_EDITS, programEditSchema } from "./program-edit";
 import { dayInWords } from "./rules";
@@ -68,7 +74,9 @@ export type AssistantActionKind =
   | "archiver_modele"
   | "creer_modele"
   // Lot 4 (D-183) : le quotidien (daily.ts).
-  | DailyKind;
+  | DailyKind
+  // Lot 5 (D-184) : les sportifs (sportifs.ts).
+  | SportifsKind;
 
 export type AssistantAction = { kind: AssistantActionKind; params: Record<string, unknown> };
 
@@ -344,6 +352,8 @@ export const PARAMS = {
   }),
   // Lot 4 (D-183) : agenda, comptabilité, tâches, documents (daily.ts).
   ...DAILY_PARAMS,
+  // Lot 5 (D-184) : les sportifs (sportifs.ts).
+  ...SPORTIFS_PARAMS,
 } as const;
 
 export const ACTION_KINDS = Object.keys(PARAMS) as AssistantActionKind[];
@@ -380,13 +390,14 @@ export const assistantActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("archiver_modele"), params: PARAMS.archiver_modele }),
   z.object({ kind: z.literal("creer_modele"), params: PARAMS.creer_modele }),
   ...DAILY_ACTIONS,
+  ...SPORTIFS_ACTIONS,
 ]);
 export type ParsedAssistantAction = z.infer<typeof assistantActionSchema>;
 
 // --- Résumés de carte --------------------------------------------------------------------------
 
 // Lot 4 : le titre d'une carte du quotidien vient de summarizeDaily (il dépend de l'action).
-const TITLES: Record<Exclude<AssistantActionKind, DailyKind>, string> = {
+const TITLES: Record<Exclude<AssistantActionKind, DailyKind | SportifsKind>, string> = {
   creer_sportif: "Nouvelle fiche sportif",
   creer_seance: "Nouvelle séance",
   deplacer_seance: "Déplacer une séance",
@@ -499,9 +510,9 @@ export function summarize(
   names: Record<string, string>,
   currency: Currency,
 ): { title: string; summary: string[] } {
-  const daily = summarizeDaily(action, names, currency);
+  const daily = summarizeDaily(action, names, currency) ?? summarizeSportifs(action, names);
   if (daily) return daily;
-  const kind = action.kind as Exclude<AssistantActionKind, DailyKind>;
+  const kind = action.kind as Exclude<AssistantActionKind, DailyKind | SportifsKind>;
   const p = action.params;
   const lines: (string | null | false)[] = [];
   switch (kind) {

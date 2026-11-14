@@ -541,3 +541,153 @@ test("lot 4 : une tâche supprimée ne se modifie plus, rien de faux n'est écri
   await edit.getByRole("button", { name: "Valider" }).click();
   await expect(edit).toContainText("Tâche introuvable : elle a peut-être été supprimée.");
 });
+
+// Lot 5 (D-184) : les sportifs. Par appareil : « Léa Test » (ordinateur) / « Noah Test » (téléphone),
+// « Léa Archive » / « Noah Archive », un exercice du coach ; remis en état en fin de suite.
+const lot5 = (phone: boolean) =>
+  phone
+    ? { who: "Noah", athlete: "e5000000-0000-4000-8000-000000000002" }
+    : { who: "Léa", athlete: "e5000000-0000-4000-8000-000000000001" };
+const sheet = (athlete: string, tab: string) =>
+  `/coach/o/0b000000-0000-4000-8000-0000000000b1/sportifs/${athlete}?onglet=${tab}`;
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+test("lot 5 : disponibilités changées, blessure intacte", async ({ page }, testInfo) => {
+  const { who, athlete } = lot5(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Passe ${who} Test à 3 séances par semaine, lundi mercredi vendredi`);
+  const card = box.getByRole("region", { name: "Disponibilités" });
+  await expect(card).toContainText("Séances par semaine : 2 → 3", STEPS);
+  await expect(card).toContainText("Jours : lundi, jeudi → lundi, mercredi, vendredi");
+  await expect(card).not.toContainText("Genou");
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  await page.goto(sheet(athlete, "disponibilites"));
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (document.querySelector('input[name="sessionsPerWeek"]') as HTMLInputElement)?.value,
+      ),
+    )
+    .toBe("3");
+  await page.goto(sheet(athlete, "notes"));
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (text) =>
+          [...document.querySelectorAll("textarea")].some((area) => area.value.includes(text)),
+        `Genou droit fragile (test ${who})`,
+      ),
+    )
+    .toBe(true);
+});
+
+test("lot 5 : une note s'ajoute sous l'ancienne", async ({ page }, testInfo) => {
+  const { who, athlete } = lot5(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Note pour ${who} Test : préfère courir le matin`);
+  const card = box.getByRole("region", { name: "Ajouter à la note privée" });
+  await expect(card).toContainText("« Préfère courir le matin »", STEPS);
+  await expect(card).not.toContainText("Note existante");
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  await page.goto(sheet(athlete, "notes"));
+  await expect(page.getByRole("textbox", { name: "Notes libres" })).toHaveValue(
+    new RegExp(
+      `^Note existante de ${who} \\(test\\)\\.\\n\\n\\d\\d/\\d\\d/\\d{4} : Préfère courir le matin$`,
+    ),
+  );
+});
+
+test("lot 5 : un objectif ajouté, un autre rendu principal", async ({ page }, testInfo) => {
+  const { who, athlete } = lot5(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(
+    box,
+    `Ajoute un objectif semi-marathon à ${who} Test et rends principal son objectif forme`,
+  );
+  const added = box.getByRole("region", { name: "Nouvel objectif" });
+  const main = box.getByRole("region", { name: "Objectif principal" });
+  await expect(added).toContainText("Semi-marathon le dimanche 17 octobre 2027", STEPS);
+  for (const card of [added, main]) {
+    await card.getByRole("button", { name: "Valider" }).click();
+    await expect(card).toContainText("Fait");
+  }
+  await page.goto(sheet(athlete, "objectifs"));
+  await expect(page.getByText("Semi-marathon").filter({ visible: true }).first()).toBeVisible();
+});
+
+test("lot 5 : un repère supprimé, un record ajouté", async ({ page }, testInfo) => {
+  const { who, athlete } = lot5(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Supprime la FC max de ${who} Test et ajoute son record 5 km en 21:30`);
+  const removed = box.getByRole("region", { name: "Supprimer le repère" });
+  const record = box.getByRole("region", { name: "Nouveau record" });
+  await expect(removed).toContainText("FC max : 192 bpm", STEPS);
+  await expect(record).toContainText("5 km : 21:30");
+  for (const card of [removed, record]) {
+    await card.getByRole("button", { name: "Valider" }).click();
+    await expect(card).toContainText("Fait");
+  }
+  await page.goto(sheet(athlete, "reperes"));
+  await expect(page.getByText("21:30").filter({ visible: true }).first()).toBeVisible();
+});
+
+test("lot 5 : archiver un sportif", async ({ page }, testInfo) => {
+  const { who } = lot5(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Archive ${who} Archive`);
+  const card = box.getByRole("region", { name: "Statut du sportif" });
+  await expect(card).toContainText("Statut : Actif → Archivé", STEPS);
+  await expect(card).toContainText("Il quitte la liste active sans rien effacer");
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  // La liste montre aussi les archivés, avec leur statut : la ligne du sportif dit « Archivé ».
+  await page.goto("/coach/o/0b000000-0000-4000-8000-0000000000b1/sportifs");
+  await expect(
+    page
+      .getByRole("listitem")
+      .filter({ hasText: `${who} Archive` })
+      .filter({ visible: true })
+      .first(),
+  ).toContainText("Archivé");
+});
+
+test("lot 5 : renommer un exercice du coach ; un exercice Coory, aucune carte", async ({
+  page,
+}, testInfo) => {
+  const { who } = lot5(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await ask(box, `Renomme mon exercice test ${who} en Exercice test renommé ${who}`);
+  const card = box.getByRole("region", { name: "Modifier l'exercice" });
+  await expect(card).toContainText(
+    `Nom : Exercice test ${who} → Exercice test renommé ${who}`,
+    STEPS,
+  );
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+  await ask(box, "Modifie la presse à cuisses de Coory");
+  await expect(box).toContainText(
+    "C'est un exercice Coory : je ne peux que le mettre en favori.",
+    STEPS,
+  );
+  await expect(box.getByRole("region", { name: "Modifier l'exercice" })).toHaveCount(1);
+});
+
+test("lot 5 : la photo jointe devient celle du sportif", async ({ page }, testInfo) => {
+  const { who } = lot5(testInfo.project.name === "telephone");
+  const box = await openAssistant(page);
+  await box.locator('input[type="file"]').setInputFiles({
+    name: "photo-test.png",
+    mimeType: "image/png",
+    buffer: PNG,
+  });
+  await ask(box, `Mets cette photo pour ${who} Test`);
+  const card = box.getByRole("region", { name: "Photo du sportif" });
+  await expect(card).toContainText("Nouvelle photo : photo-test.png", STEPS);
+  await card.getByRole("button", { name: "Valider" }).click();
+  await expect(card).toContainText("Fait");
+});

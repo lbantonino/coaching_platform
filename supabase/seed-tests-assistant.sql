@@ -83,3 +83,51 @@ insert into public.coach_documents (id, organization_id, athlete_id, name, stora
 on conflict (id) do update set
   name = excluded.name, athlete_id = excluded.athlete_id, category_id = excluded.category_id;
 -- </assistant-tests-lot4>
+
+-- Lot 5 (D-184) : les sportifs. Par appareil (ordinateur, téléphone) : « Léa Test » / « Noah Test »
+-- (disponibilités, blessure notée avec accord, note privée, deux objectifs, un repère, un record) et
+-- « Léa Archive » / « Noah Archive » (archivés par un test), plus un exercice du coach. Les lignes
+-- AJOUTÉES par les tests (objectifs, repères, records) sont retirées ; les autres reviennent ici.
+-- <assistant-tests-lot5>
+delete from public.athlete_goals where athlete_id in ('e5000000-0000-4000-8000-000000000001', 'e5000000-0000-4000-8000-000000000002') and id not in ('e5000000-0000-4000-8000-000000000021', 'e5000000-0000-4000-8000-000000000031', 'e5000000-0000-4000-8000-000000000022', 'e5000000-0000-4000-8000-000000000032');
+delete from public.athlete_reference_metrics where athlete_id in ('e5000000-0000-4000-8000-000000000001', 'e5000000-0000-4000-8000-000000000002') and id not in ('e5000000-0000-4000-8000-000000000041', 'e5000000-0000-4000-8000-000000000042');
+delete from public.athlete_personal_records where athlete_id in ('e5000000-0000-4000-8000-000000000001', 'e5000000-0000-4000-8000-000000000002') and id not in ('e5000000-0000-4000-8000-000000000051', 'e5000000-0000-4000-8000-000000000052');
+-- Un seul objectif principal par sportif (contrainte) : tout repasse en secondaire avant la remise en état.
+update public.athlete_goals set priority = 'secondary' where athlete_id in ('e5000000-0000-4000-8000-000000000001', 'e5000000-0000-4000-8000-000000000002');
+insert into public.athlete_profiles (id, organization_id, first_name, last_name, email, preferred_contact, level, experience, training_places, equipment, status, created_by, sessions_per_week, available_days, max_session_minutes, schedule_constraints, health_consent_at, health_constraints, program_type, photo_path) values
+  ('e5000000-0000-4000-8000-000000000001', '0b000000-0000-4000-8000-0000000000b1', 'Léa', 'Test', null, null, 'intermediate', null, '{outdoor}', null, 'active', 'b0000000-0000-4000-8000-00000000000b', 2, '{mon,thu}', 60, null, '2026-09-01 10:00+02', 'Genou droit fragile (test Léa)', 'running', null),
+  ('e5000000-0000-4000-8000-000000000091', '0b000000-0000-4000-8000-0000000000b1', 'Léa', 'Archive', null, null, 'beginner', null, '{gym}', null, 'active', 'b0000000-0000-4000-8000-00000000000b', null, '{}', null, null, null, null, 'strength', null),
+  ('e5000000-0000-4000-8000-000000000002', '0b000000-0000-4000-8000-0000000000b1', 'Noah', 'Test', null, null, 'intermediate', null, '{outdoor}', null, 'active', 'b0000000-0000-4000-8000-00000000000b', 2, '{mon,thu}', 60, null, '2026-09-01 10:00+02', 'Genou droit fragile (test Noah)', 'running', null),
+  ('e5000000-0000-4000-8000-000000000092', '0b000000-0000-4000-8000-0000000000b1', 'Noah', 'Archive', null, null, 'beginner', null, '{gym}', null, 'active', 'b0000000-0000-4000-8000-00000000000b', null, '{}', null, null, null, null, 'strength', null)
+on conflict (id) do update set
+  first_name = excluded.first_name, last_name = excluded.last_name, status = excluded.status,
+  sessions_per_week = excluded.sessions_per_week, available_days = excluded.available_days,
+  max_session_minutes = excluded.max_session_minutes, schedule_constraints = excluded.schedule_constraints,
+  health_consent_at = excluded.health_consent_at, health_constraints = excluded.health_constraints,
+  program_type = excluded.program_type, photo_path = null;
+insert into public.athlete_notes (id, organization_id, athlete_id, visibility, body, created_by, updated_by) values
+  ('e5000000-0000-4000-8000-000000000011', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'coach', 'Note existante de Léa (test).', 'b0000000-0000-4000-8000-00000000000b', 'b0000000-0000-4000-8000-00000000000b'),
+  ('e5000000-0000-4000-8000-000000000012', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000002', 'coach', 'Note existante de Noah (test).', 'b0000000-0000-4000-8000-00000000000b', 'b0000000-0000-4000-8000-00000000000b')
+on conflict (id) do update set body = excluded.body;
+insert into public.athlete_goals (id, organization_id, athlete_id, goal_type, description, target_date, priority, status, competition_name, competition_location, hyrox_category, target_time_seconds, created_by) values
+  ('e5000000-0000-4000-8000-000000000021', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'run_10k', null, '2027-04-11', 'main', 'active', null, null, null, 2700, 'b0000000-0000-4000-8000-00000000000b'),
+  ('e5000000-0000-4000-8000-000000000031', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'fitness', null, null, 'secondary', 'active', null, null, null, null, 'b0000000-0000-4000-8000-00000000000b'),
+  ('e5000000-0000-4000-8000-000000000022', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000002', 'run_10k', null, '2027-04-11', 'main', 'active', null, null, null, 2700, 'b0000000-0000-4000-8000-00000000000b'),
+  ('e5000000-0000-4000-8000-000000000032', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000002', 'fitness', null, null, 'secondary', 'active', null, null, null, null, 'b0000000-0000-4000-8000-00000000000b')
+on conflict (id) do update set
+  goal_type = excluded.goal_type, target_date = excluded.target_date, priority = excluded.priority,
+  status = excluded.status, target_time_seconds = excluded.target_time_seconds;
+insert into public.athlete_reference_metrics (id, organization_id, athlete_id, kind, pace_min_sec_per_km, pace_max_sec_per_km, bpm, exercise_label, load_kg, reps, source, measured_on, coach_note, created_by) values
+  ('e5000000-0000-4000-8000-000000000041', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'hr_max', null, null, 192, null, null, null, 'test', '2026-10-01', null, 'b0000000-0000-4000-8000-00000000000b'),
+  ('e5000000-0000-4000-8000-000000000042', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000002', 'hr_max', null, null, 192, null, null, null, 'test', '2026-10-01', null, 'b0000000-0000-4000-8000-00000000000b')
+on conflict (id) do update set bpm = excluded.bpm, measured_on = excluded.measured_on;
+insert into public.athlete_personal_records (id, organization_id, athlete_id, event, hyrox_category, time_seconds, achieved_on, race_name, created_by) values
+  ('e5000000-0000-4000-8000-000000000051', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'run_10k', null, 2700, '2026-10-04', null, 'b0000000-0000-4000-8000-00000000000b'),
+  ('e5000000-0000-4000-8000-000000000052', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000002', 'run_10k', null, 2700, '2026-10-04', null, 'b0000000-0000-4000-8000-00000000000b')
+on conflict (id) do update set time_seconds = excluded.time_seconds, achieved_on = excluded.achieved_on;
+insert into public.exercises (id, organization_id, name_fr, category, equipment, primary_muscles, bodyweight, instructions_fr, source, created_by) values
+  ('e5000000-0000-4000-8000-000000000061', '0b000000-0000-4000-8000-0000000000b1', 'Exercice test Léa', 'strength', '{}', '{quads}', true, '{}', 'coach', 'b0000000-0000-4000-8000-00000000000b'),
+  ('e5000000-0000-4000-8000-000000000062', '0b000000-0000-4000-8000-0000000000b1', 'Exercice test Noah', 'strength', '{}', '{quads}', true, '{}', 'coach', 'b0000000-0000-4000-8000-00000000000b')
+on conflict (id) do update set name_fr = excluded.name_fr, category = excluded.category,
+  primary_muscles = excluded.primary_muscles;
+-- </assistant-tests-lot5>

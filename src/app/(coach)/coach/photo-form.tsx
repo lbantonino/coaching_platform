@@ -8,10 +8,7 @@ import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, hintClass } from "@/components/ui/form-styles";
 import type { PhotoState } from "@/features/photos/actions";
 import { PHOTO_MAX_BYTES } from "@/features/photos/validate";
-import { shrinkPhoto } from "@/lib/shrink-photo";
-
-// Une photo de profil n'a pas besoin de plus de 1 024 px (l'avatar le plus grand en affiche ~200).
-const PROFILE_PHOTO_SIDE = 1024;
+import { PROFILE_PHOTO_SIDE, shrinkPhoto } from "@/lib/shrink-photo";
 
 type Props = {
   name: string;
