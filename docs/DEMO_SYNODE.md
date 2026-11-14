@@ -1,7 +1,7 @@
 # Accès de démonstration pour les visiteurs de Synode
 
-Demande d'Antonino du 14/11/2026. **Construit le 14/11 côté Coory (D-176)** ; mise en service :
-`docs/DEPLOIEMENT.md` §5 bis. Reste : la page Coory du site Synode. Même note côté site : `livrables/Site-Web/Synode-agency/docs/SITE_A_COMPLETER.md`.
+Demande d'Antonino du 14/11/2026. **Construit le 14/11 (D-176)** ; mise en service : `docs/DEPLOIEMENT.md` §5 bis. Page Coory du
+site Synode : encadré des accès fait le 14/11, en attente des 4 variables Netlify et d'un déploiement. Même note côté site : `livrables/Site-Web/Synode-agency/docs/SITE_A_COMPLETER.md`.
 
 ## La demande
 
