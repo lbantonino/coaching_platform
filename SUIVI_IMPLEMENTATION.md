@@ -31,6 +31,20 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Assistant IA, lot 6 : les réglages (D-185, 14/11/2026)
+```
+src/features/assistant/reglages.ts (nouveau : 7 schémas, fusions, cartes) ; tools/reglages.ts (nouveau,
+  server-only) ; execute-reglages.ts (nouveau, server-only) ; proposals.ts, cards.ts (note du profil sans
+  valeurs), tools/write.ts, read.ts, definitions.ts, shape.ts (voir_parametres sans e-mail ni numéro,
+  voir_notifications), loop.ts, rules.ts ; supabase/seed-tests-assistant.sql (coach « Réglages »).
+Tests : assistant-lot6.test.ts (9) ; unitaires 675 ; e2e : préférence + notification coupée (ordinateur),
+  nom de l'organisation + notification masquée puis réaffichée (téléphone), taux de devise invalide sans
+  carte (les deux), rejoués deux fois ; captures « Changer de devise » et « Préférences ».
+Relecture indépendante, 2 corrections : la carte de devise note la devise de départ (« depuis ») et refuse
+  au clic si elle a changé (currencyConflict) ; plus de « rétablir » des notifications (une supprimée
+  n'apparaît plus nulle part), la carte « Supprimer » dit « (définitif) ». 4 mineurs reportés (registre).
+```
+
 ### Assistant IA, lot 5 : les sportifs (D-184, 14/11/2026)
 ```
 src/features/assistant/sportifs.ts (nouveau : 17 schémas, fusions, refus, cartes) ; tools/sportifs.ts

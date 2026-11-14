@@ -691,3 +691,80 @@ test("lot 5 : la photo jointe devient celle du sportif", async ({ page }, testIn
   await card.getByRole("button", { name: "Valider" }).click();
   await expect(card).toContainText("Fait");
 });
+
+// Lot 6 (D-185) : les réglages, avec un coach À PART (« Coach Réglages », organisation abonnée) pour
+// ne gêner aucun autre test ; chaque appareil touche ses propres réglages (pas deux écritures en même
+// temps sur la même ligne). Remis en état en fin de suite (supabase/seed-tests-assistant.sql).
+async function openAssistantAsSettingsCoach(page: Page): Promise<Locator> {
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-reglages@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+  await page
+    .getByRole("button", { name: "Assistant IA" })
+    .filter({ visible: true })
+    .first()
+    .click();
+  return page.getByRole("dialog", { name: "Assistant IA" });
+}
+
+test("lot 6 : une préférence, puis une sorte de notifications coupée", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name === "telephone",
+    "Préférences du coach Réglages : un seul projet.",
+  );
+  const box = await openAssistantAsSettingsCoach(page);
+  await ask(box, "Passe ma durée par défaut à 75 minutes");
+  const prefs = box.getByRole("region", { name: "Préférences" });
+  await expect(prefs).toContainText("Durée par défaut : 60 min → 75 min", STEPS);
+  await prefs.getByRole("button", { name: "Valider" }).click();
+  await expect(prefs).toContainText("Fait");
+  await ask(box, "Coupe les notifications des tâches");
+  const notify = box.getByRole("region", { name: "Couper une notification" });
+  await expect(notify).toContainText("Tâches du jour et en retard", STEPS);
+  await notify.getByRole("button", { name: "Valider" }).click();
+  await expect(notify).toContainText("Fait");
+  await page.goto("/coach/profil?onglet=preferences");
+  const dialog = page.getByRole("dialog", { name: "Paramètres" });
+  await expect(
+    dialog.getByRole("region", { name: "Valeurs par défaut" }).getByLabel("Durée", { exact: true }),
+  ).toHaveValue("75");
+});
+
+test("lot 6 : renommer l'organisation, masquer puis réafficher une notification", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "telephone",
+    "Organisation du coach Réglages : un seul projet.",
+  );
+  const box = await openAssistantAsSettingsCoach(page);
+  await ask(box, "Renomme mon organisation en Organisation Réglages modifiée");
+  const name = box.getByRole("region", { name: "Nom de l'organisation" });
+  await expect(name).toContainText(
+    "Nom : Organisation Réglages → Organisation Réglages modifiée",
+    STEPS,
+  );
+  await name.getByRole("button", { name: "Valider" }).click();
+  await expect(name).toContainText("Fait");
+  await ask(box, "Masque la notification de la fiche de Zoé");
+  const hide = box.getByRole("region", { name: "Masquer des notifications" });
+  await expect(hide).toContainText("Fiche à compléter : Zoé Réglages", STEPS);
+  await hide.getByRole("button", { name: "Valider" }).click();
+  await expect(hide).toContainText("Fait");
+  await ask(box, "Réaffiche la notification de la fiche de Zoé");
+  const show = box.getByRole("region", { name: "Afficher des notifications" });
+  await expect(show).toContainText("1 notification affichée", STEPS);
+  await show.getByRole("button", { name: "Valider" }).click();
+  await expect(show).toContainText("Fait");
+});
+
+test("lot 6 : un taux de devise invalide, aucune carte", async ({ page }) => {
+  const box = await openAssistantAsSettingsCoach(page);
+  await ask(box, "Passe ma devise en CHF au taux zéro");
+  await expect(box).toContainText("Le taux doit être plus grand que 0", STEPS);
+  await expect(box.getByRole("region", { name: "Changer de devise" })).toHaveCount(0);
+});

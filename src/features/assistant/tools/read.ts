@@ -17,6 +17,9 @@ import { draftReading, draftReadInput, templateReadInput } from "../program-edit
 import { listSessions } from "@/features/sessions/queries";
 import { listTaskLists, listTasks } from "@/features/tasks/queries";
 import { listGoals } from "@/features/goals/queries";
+import { loadSettings } from "@/features/coach/settings-actions";
+import { getNotifications } from "@/features/notifications/queries";
+import { todayIsoInBrussels } from "@/lib/format";
 import { listRecords } from "@/features/records/queries";
 import { listReferences } from "@/features/references/queries";
 
@@ -29,7 +32,9 @@ import {
   shapeDocuments,
   shapeExpenses,
   shapeGoals,
+  shapeNotifications,
   shapeReferences,
+  shapeSettings,
   shapePayments,
   shapeSessionTemplates,
   shapeTasks,
@@ -73,6 +78,9 @@ const inputs = {
   // Lot 5 (D-184) : objectifs, repères et records d'un sportif.
   voir_objectifs: z.object({ sportif_id: z.uuid() }),
   voir_reperes: z.object({ sportif_id: z.uuid() }),
+  // Lot 6 (D-185) : les réglages (jamais l'e-mail de connexion ni le numéro du coach).
+  voir_parametres: z.object({}),
+  voir_notifications: z.object({}),
   voir_programmes: z.object({ sportif_id: z.uuid() }),
   voir_fiche: z.object({ sportif_id: z.uuid() }),
   voir_brouillon: draftReadInput,
@@ -153,6 +161,10 @@ export async function runReadTool(
       );
       return json(shapeExpenses(expenses));
     }
+    case "voir_parametres":
+      return json(shapeSettings(await loadSettings()));
+    case "voir_notifications":
+      return json(shapeNotifications(await getNotifications(organizationId, todayIsoInBrussels())));
     case "voir_objectifs":
     case "voir_reperes": {
       const { sportif_id } = inputs[name].parse(input ?? {});

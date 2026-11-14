@@ -131,3 +131,41 @@ insert into public.exercises (id, organization_id, name_fr, category, equipment,
 on conflict (id) do update set name_fr = excluded.name_fr, category = excluded.category,
   primary_muscles = excluded.primary_muscles;
 -- </assistant-tests-lot5>
+
+-- Lot 6 (D-185) : les réglages. Un coach À PART, « Coach Réglages » (coach-reglages@example.test,
+-- organisation abonnée), pour que ses changements (préférences, nom de l'organisation, notifications)
+-- ne gênent aucun autre test en parallèle. Une sportive à la fiche incomplète donne une notification.
+-- Tout revient ici à l'état de départ.
+-- <assistant-tests-lot6>
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change, email_change_token_new
+)
+values
+  ('00000000-0000-0000-0000-000000000000', 'c6000000-0000-4000-8000-0000000000c6', 'authenticated', 'authenticated',
+   'coach-reglages@example.test', extensions.crypt('demo-coach-local', extensions.gen_salt('bf')), now(),
+   '{"provider":"email","providers":["email"]}', '{"display_name":"Coach Réglages"}', now(), now(), '', '', '', '')
+on conflict (id) do nothing;
+insert into auth.identities (id, provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+values
+  ('c6000000-0000-4000-8000-0000000000d6', 'c6000000-0000-4000-8000-0000000000c6', 'c6000000-0000-4000-8000-0000000000c6',
+   '{"sub":"c6000000-0000-4000-8000-0000000000c6","email":"coach-reglages@example.test","email_verified":true}',
+   'email', now(), now(), now())
+on conflict do nothing;
+insert into public.organizations (id, name, slug, vat_rate, created_by)
+values ('0c600000-0000-4000-8000-0000000000c6', 'Organisation Réglages', 'reglages-test', 0, 'c6000000-0000-4000-8000-0000000000c6')
+on conflict (id) do update set name = excluded.name;
+update public.organizations set coory_plan = 'premium', country = 'BE' where id = '0c600000-0000-4000-8000-0000000000c6';
+insert into public.organization_members (organization_id, user_id, role)
+values ('0c600000-0000-4000-8000-0000000000c6', 'c6000000-0000-4000-8000-0000000000c6', 'owner')
+on conflict do nothing;
+delete from public.coach_profiles where user_id = 'c6000000-0000-4000-8000-0000000000c6';
+insert into public.coach_profiles (user_id, first_name, last_name, company_name)
+values ('c6000000-0000-4000-8000-0000000000c6', 'Coach', 'Réglages', null);
+insert into public.athlete_profiles (id, organization_id, first_name, last_name, email, preferred_contact, level, experience, training_places, equipment, status, created_by)
+values ('c6000000-0000-4000-8000-0000000000a1', '0c600000-0000-4000-8000-0000000000c6', 'Zoé', 'Réglages', null, null, null, null, '{}', null, 'active', 'c6000000-0000-4000-8000-0000000000c6')
+on conflict (id) do update set status = 'active', email = null;
+delete from public.coach_notification_states where organization_id = '0c600000-0000-4000-8000-0000000000c6';
+delete from public.assistant_usage where user_id = 'c6000000-0000-4000-8000-0000000000c6';
+-- </assistant-tests-lot6>

@@ -13,6 +13,9 @@ import type { CoachSession } from "@/features/sessions/queries";
 import { sessionOccurrences } from "@/features/sessions/schemas";
 import type { CoachTask } from "@/features/tasks/queries";
 import type { AthleteGoals } from "@/features/goals/queries";
+import { NOTIFICATION_KINDS } from "@/features/coach/settings";
+import type { SettingsData } from "@/features/coach/settings-data";
+import type { Notifications } from "@/features/notifications/queries";
 import { goalStatusLabels, goalTypeLabels } from "@/features/goals/schemas";
 import type { AthleteRecords } from "@/features/records/queries";
 import { formatRaceTime, recordEventLabels } from "@/features/records/schemas";
@@ -354,4 +357,92 @@ export function shapeReferences(references: AthleteReferences, records: AthleteR
       le: record.achievedOn,
     })),
   };
+}
+
+// --- Lot 6 (D-185) : réglages. Jamais l'e-mail de connexion ni le numéro du coach (« rempli »/« vide »).
+export function shapeSettings(data: SettingsData) {
+  return {
+    profil: {
+      prenom: data.profile.firstName,
+      nom: data.profile.lastName,
+      entreprise: data.profile.companyName,
+      telephone: filled(data.profile.phone),
+    },
+    organisation: {
+      nom: data.organization.name,
+      pays: data.organization.country,
+      devise: data.organization.currency,
+      proprietaire: data.organization.isOwner,
+    },
+    preferences: {
+      duree_par_defaut_min: data.preferences.defaultSessionMinutes,
+      lieu_par_defaut: data.preferences.defaultLocation,
+      prix_par_defaut: data.preferences.defaultPrice,
+      paiement_par_defaut: data.preferences.defaultPaymentMethod,
+      agenda_debut_h: data.preferences.agendaFirstHour,
+      agenda_fin_h: data.preferences.agendaLastHour,
+    },
+    notifications: Object.fromEntries(NOTIFICATION_KINDS.map((kind) => [kind, data.notify[kind]])),
+  };
+}
+
+// Une ligne par notification (clé pour agir dessus), dans l'ordre des sortes visibles.
+export function shapeNotifications(notifications: Notifications) {
+  const rows: { cle: string; sorte: string; texte: string; lue: boolean; masquee: boolean }[] = [];
+  const push = (sorte: string, key: string, texte: string, read: boolean, dismissed: boolean) =>
+    rows.push({ cle: key, sorte, texte, lue: read, masquee: dismissed });
+  for (const kind of NOTIFICATION_KINDS) {
+    switch (kind) {
+      case "competitions":
+        for (const event of notifications.competitions) {
+          push(
+            kind,
+            event.key,
+            `Compétition : ${event.athleteName} · ${event.title} (${event.date})`,
+            event.read,
+            event.dismissed,
+          );
+        }
+        break;
+      case "messages":
+        for (const conversation of notifications.messages) {
+          push(
+            kind,
+            conversation.key,
+            `Message : ${conversation.athlete.name}`,
+            conversation.read,
+            conversation.dismissed,
+          );
+        }
+        break;
+      case "tasks":
+        for (const task of notifications.tasks) {
+          push(kind, task.key, `Tâche : ${task.title} (${task.dueOn})`, task.read, task.dismissed);
+        }
+        break;
+      case "unpaid":
+        for (const date of notifications.unpaid) {
+          push(
+            kind,
+            date.key,
+            `À encaisser : ${date.title}${date.athleteName ? ` · ${date.athleteName}` : ""} (${date.date})`,
+            date.read,
+            date.dismissed,
+          );
+        }
+        break;
+      case "profiles":
+        for (const profile of notifications.profiles) {
+          push(
+            kind,
+            profile.key,
+            `Fiche à compléter : ${profile.name}`,
+            profile.read,
+            profile.dismissed,
+          );
+        }
+        break;
+    }
+  }
+  return rows.slice(0, MAX_ROWS);
 }

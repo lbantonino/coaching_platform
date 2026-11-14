@@ -34,6 +34,12 @@ import { SESSION_KINDS, SESSION_PAYMENT_METHODS } from "@/features/sessions/sche
 
 import { DAILY_ACTIONS, DAILY_PARAMS, summarizeDaily, type DailyKind } from "./daily";
 import {
+  REGLAGES_ACTIONS,
+  REGLAGES_PARAMS,
+  summarizeReglages,
+  type ReglagesKind,
+} from "./reglages";
+import {
   SPORTIFS_ACTIONS,
   SPORTIFS_PARAMS,
   summarizeSportifs,
@@ -76,7 +82,9 @@ export type AssistantActionKind =
   // Lot 4 (D-183) : le quotidien (daily.ts).
   | DailyKind
   // Lot 5 (D-184) : les sportifs (sportifs.ts).
-  | SportifsKind;
+  | SportifsKind
+  // Lot 6 (D-185) : les réglages (reglages.ts).
+  | ReglagesKind;
 
 export type AssistantAction = { kind: AssistantActionKind; params: Record<string, unknown> };
 
@@ -354,6 +362,8 @@ export const PARAMS = {
   ...DAILY_PARAMS,
   // Lot 5 (D-184) : les sportifs (sportifs.ts).
   ...SPORTIFS_PARAMS,
+  // Lot 6 (D-185) : les réglages (reglages.ts).
+  ...REGLAGES_PARAMS,
 } as const;
 
 export const ACTION_KINDS = Object.keys(PARAMS) as AssistantActionKind[];
@@ -391,13 +401,17 @@ export const assistantActionSchema = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("creer_modele"), params: PARAMS.creer_modele }),
   ...DAILY_ACTIONS,
   ...SPORTIFS_ACTIONS,
+  ...REGLAGES_ACTIONS,
 ]);
 export type ParsedAssistantAction = z.infer<typeof assistantActionSchema>;
 
 // --- Résumés de carte --------------------------------------------------------------------------
 
 // Lot 4 : le titre d'une carte du quotidien vient de summarizeDaily (il dépend de l'action).
-const TITLES: Record<Exclude<AssistantActionKind, DailyKind | SportifsKind>, string> = {
+const TITLES: Record<
+  Exclude<AssistantActionKind, DailyKind | SportifsKind | ReglagesKind>,
+  string
+> = {
   creer_sportif: "Nouvelle fiche sportif",
   creer_seance: "Nouvelle séance",
   deplacer_seance: "Déplacer une séance",
@@ -510,9 +524,12 @@ export function summarize(
   names: Record<string, string>,
   currency: Currency,
 ): { title: string; summary: string[] } {
-  const daily = summarizeDaily(action, names, currency) ?? summarizeSportifs(action, names);
+  const daily =
+    summarizeDaily(action, names, currency) ??
+    summarizeSportifs(action, names) ??
+    summarizeReglages(action, names, currency);
   if (daily) return daily;
-  const kind = action.kind as Exclude<AssistantActionKind, DailyKind | SportifsKind>;
+  const kind = action.kind as Exclude<AssistantActionKind, DailyKind | SportifsKind | ReglagesKind>;
   const p = action.params;
   const lines: (string | null | false)[] = [];
   switch (kind) {

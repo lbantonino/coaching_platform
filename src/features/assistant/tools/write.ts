@@ -26,11 +26,13 @@ import { dayInWords, type AssistantAttachment } from "../rules";
 import { createClient } from "@/lib/supabase/server";
 
 import { isDailyKind } from "../daily";
+import { isReglagesKind } from "../reglages";
 import { isSportifsKind } from "../sportifs";
 import { hasUnknownExercise, UNKNOWN_EXERCISE } from "../exercise-check";
 import { athleteFormValues, checkAgainstSession, formRuleError } from "../form-data";
 import { withSourceRhythm } from "../program";
 import { DAILY_TOOLS, proposeDaily } from "./daily";
+import { proposeReglages, REGLAGES_TOOLS } from "./reglages";
 import { proposeSportifs, SPORTIFS_TOOLS } from "./sportifs";
 import {
   actionCardNames,
@@ -598,6 +600,8 @@ WRITE_TOOLS.push(
 WRITE_TOOLS.push(...DAILY_TOOLS);
 // Lot 5 (D-184) : les sportifs (tools/sportifs.ts).
 WRITE_TOOLS.push(...SPORTIFS_TOOLS);
+// Lot 6 (D-185) : les réglages (tools/reglages.ts).
+WRITE_TOOLS.push(...REGLAGES_TOOLS);
 
 export const WRITE_TOOL_NAMES = new Set<string>(ACTION_KINDS);
 
@@ -1027,6 +1031,11 @@ export async function proposeAction(
 
   if (isDailyKind(kind)) {
     const checked = await proposeDaily(organizationId, kind, p, names);
+    if (!checked.ok) return refuse(checked.error);
+    if (checked.params) p = { ...p, ...checked.params };
+  }
+  if (isReglagesKind(kind)) {
+    const checked = await proposeReglages(organizationId, kind, p, names);
     if (!checked.ok) return refuse(checked.error);
     if (checked.params) p = { ...p, ...checked.params };
   }

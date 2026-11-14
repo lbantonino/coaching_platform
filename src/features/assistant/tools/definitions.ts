@@ -169,6 +169,18 @@ export const READ_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "voir_parametres",
+    description:
+      "Lit les réglages : profil du coach (téléphone : rempli ou vide), organisation (nom, pays, devise, propriétaire), préférences, notifications voulues par sorte.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "voir_notifications",
+    description:
+      "Liste les notifications (100 au plus) : clé, sorte, texte, lue, masquée. Les clés servent à l'outil notifications.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
     name: "voir_programmes",
     description:
       "Liste les programmes d'un sportif avec leurs dates (début, fin) et leur statut : pour choisir une date de début qui ne chevauche rien, ou copier un ancien programme.",
