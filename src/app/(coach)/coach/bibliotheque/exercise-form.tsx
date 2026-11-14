@@ -4,6 +4,8 @@ import { Camera, Check, GitBranch, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { useActionState, useEffect, useId, useRef, useState, type DragEvent } from "react";
 
+import { shrinkPhoto } from "@/lib/shrink-photo";
+
 import {
   MobileActionBar,
   mobileActionPrimaryClass,
@@ -44,33 +46,11 @@ type Action = (
 const PHOTO_SIDE_MAX = 1200;
 const PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-// Réduit une photo trop grande (JPEG). Le fond transparent prend le bleu des illustrations.
-async function shrinkPhoto(file: File): Promise<File> {
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, PHOTO_SIDE_MAX / Math.max(bitmap.width, bitmap.height));
-    if (scale === 1 && file.size < 1024 * 1024) return file;
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    const context = canvas.getContext("2d");
-    if (!context) return file;
-    const tile = getComputedStyle(document.documentElement)
-      .getPropertyValue("--illustration")
-      .trim();
-    if (tile) {
-      context.fillStyle = tile;
-      context.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/jpeg", 0.85),
-    );
-    return blob ? new File([blob], "photo.jpg", { type: "image/jpeg" }) : file;
-  } catch {
-    // Format que le navigateur ne sait pas lire : le serveur dira lequel est accepté.
-    return file;
-  }
+// Réduit une photo trop grande (JPEG, réduction partagée avec la photo de profil). Le fond
+// transparent prend le bleu des illustrations.
+function shrinkExercisePhoto(file: File): Promise<File> {
+  const tile = getComputedStyle(document.documentElement).getPropertyValue("--illustration").trim();
+  return shrinkPhoto(file, { maxSide: PHOTO_SIDE_MAX, ...(tile ? { background: tile } : {}) });
 }
 
 const equipmentByGroup = Object.entries(equipmentInfo).reduce<Record<string, [string, string][]>>(
@@ -160,7 +140,7 @@ export function ExerciseForm({
     if (!file) return;
     setPhotoError(null);
     setPreparing(true);
-    const small = await shrinkPhoto(file);
+    const small = await shrinkExercisePhoto(file);
     if (small !== file) {
       const transfer = new DataTransfer();
       transfer.items.add(small);

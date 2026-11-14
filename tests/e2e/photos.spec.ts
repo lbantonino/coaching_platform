@@ -58,6 +58,51 @@ test("le coach ajoute puis retire la photo d'un sportif ; un autre coach ne peut
   expect((await page.request.get(src!)).status()).toBe(404);
 });
 
+// Demande d'Antonino du 14/11 : une photo de téléphone (3552 × 4879, plusieurs Mo) menait à une page
+// d'erreur. Elle est réduite dans le navigateur avant l'envoi, puis enregistrée.
+test("une grande photo de téléphone est réduite puis enregistrée", async ({ page }, testInfo) => {
+  const name = `Grande photo ${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  await login(page, "coach-a@example.test");
+  await goToCoachSection(page, "Sportifs");
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
+  await fillAthleteName(page, name);
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
+  await openAthleteTab(page, "Profil");
+  const photo = page.getByRole("region", { name: "Photo" });
+
+  // Une photo de 3552 × 4879 pleine de détails (bruit), donc lourde, fabriquée dans le navigateur.
+  const bytes = await photo.getByLabel("Photo de profil").evaluate(async (input) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 3552;
+    canvas.height = 4879;
+    const context = canvas.getContext("2d")!;
+    const image = context.createImageData(canvas.width, canvas.height);
+    for (let i = 0; i < image.data.length; i += 4) {
+      image.data[i] = Math.random() * 255;
+      image.data[i + 1] = Math.random() * 255;
+      image.data[i + 2] = Math.random() * 255;
+      image.data[i + 3] = 255;
+    }
+    context.putImageData(image, 0, 0);
+    const blob = await new Promise<Blob>((resolve) =>
+      canvas.toBlob((result) => resolve(result!), "image/jpeg", 0.95),
+    );
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([blob], "IMG_0001.jpg", { type: "image/jpeg" }));
+    const field = input as HTMLInputElement;
+    field.files = transfer.files;
+    field.dispatchEvent(new Event("change", { bubbles: true }));
+    return blob.size;
+  });
+  expect(bytes).toBeGreaterThan(5 * 1024 * 1024);
+
+  await expect(photo.getByRole("status")).toContainText("Photo enregistrée.", { timeout: 30_000 });
+  await expect(page.getByText("Une erreur est survenue")).toHaveCount(0);
+  await photo.getByRole("button", { name: "Retirer la photo" }).click();
+  await expect(photo.locator("img")).toHaveCount(0);
+});
+
 test("le coach renseigne son identité et son entreprise dans Paramètres", async ({ page }) => {
   // Coach de démo B : le profil du coach A est celui qu'Antonino utilise pour regarder l'app.
   await login(page, "coach-b@example.test");

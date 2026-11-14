@@ -1,12 +1,17 @@
 "use client";
 
 import { Camera, Trash2 } from "lucide-react";
-import { useActionState, useId, useRef } from "react";
+import { startTransition, useActionState, useId, useState } from "react";
 
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
 import { errorTextClass, hintClass } from "@/components/ui/form-styles";
 import type { PhotoState } from "@/features/photos/actions";
+import { PHOTO_MAX_BYTES } from "@/features/photos/validate";
+import { shrinkPhoto } from "@/lib/shrink-photo";
+
+// Une photo de profil n'a pas besoin de plus de 1 024 px (l'avatar le plus grand en affiche ~200).
+const PROFILE_PHOTO_SIDE = 1024;
 
 type Props = {
   name: string;
@@ -31,24 +36,45 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
     saved: false,
     attempt: 0,
   });
-  const form = useRef<HTMLFormElement>(null);
+  // Réduction de la photo dans le navigateur avant l'envoi (14/11) : une photo de téléphone dépassait
+  // la limite d'un envoi sur Vercel et menait à une page d'erreur.
+  const [preparing, setPreparing] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const busy = pending || preparing;
   const inputId = useId();
+
+  const send = async (file: File) => {
+    setLocalError(null);
+    setPreparing(true);
+    const small = await shrinkPhoto(file, { maxSide: PROFILE_PHOTO_SIDE });
+    setPreparing(false);
+    if (small.size > PHOTO_MAX_BYTES) {
+      setLocalError("Photo trop lourde : 2 Mo maximum.");
+      return;
+    }
+    const data = new FormData();
+    data.set("photo", small);
+    startTransition(() => formAction(data));
+  };
   const fiche = look === "fiche";
   const dialog = look === "dialog";
 
   // Le champ fichier (caché) et son bouton, partagés par les deux habillages.
   const picker = (
     // Reconstruit après chaque réponse : le champ fichier se vide.
-    <form ref={form} key={state.attempt} action={formAction} className="flex">
+    <form key={state.attempt} action={formAction} className="flex">
       <input
         id={inputId}
         name="photo"
         type="file"
         accept="image/jpeg,image/png,image/webp"
         aria-label="Photo de profil"
-        disabled={pending}
+        disabled={busy}
         onChange={(event) => {
-          if (event.currentTarget.files?.length) form.current?.requestSubmit();
+          const file = event.currentTarget.files?.[0];
+          // Vidé tout de suite : la même photo peut être choisie à nouveau après un refus.
+          event.currentTarget.value = "";
+          if (file) void send(file);
         }}
         className="peer sr-only"
       />
@@ -66,13 +92,13 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
                 })
               : buttonClass({ variant: "inverse", size: "sm" })
         } cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-accent peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-bg ${
-          pending ? "pointer-events-none opacity-60" : ""
+          busy ? "pointer-events-none opacity-60" : ""
         }`}
       >
         {fiche ? null : (
           <Camera aria-hidden size={dialog ? 16 : 14} strokeWidth={dialog ? 1.9 : 1.8} />
         )}
-        {pending
+        {busy
           ? "Envoi…"
           : dialog
             ? photoPath
@@ -84,9 +110,10 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
       </label>
     </form>
   );
-  const message = state.error ? (
+  const error = localError ?? state.error;
+  const message = error ? (
     <p role="alert" className={errorTextClass}>
-      {state.error}
+      {error}
     </p>
   ) : state.saved ? (
     <p role="status" className="text-small text-ok">
@@ -110,7 +137,7 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
             Photo de profil
           </h4>
           <p className="text-[13px] leading-[normal] text-pretty text-muted">
-            JPEG, PNG ou WebP, 2 Mo maximum. Stockée en privé.
+            JPEG, PNG ou WebP, réduite automatiquement. Stockée en privé.
           </p>
           {message}
         </div>
@@ -156,7 +183,7 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
             Photo de profil
           </h2>
           <p className="text-[12.5px] leading-[1.45] text-pretty text-muted">
-            JPEG, PNG ou WebP, 2 Mo maximum. Stockée en privé.
+            JPEG, PNG ou WebP, réduite automatiquement. Stockée en privé.
           </p>
           {message}
         </div>
@@ -189,7 +216,7 @@ export function PhotoForm({ name, photoPath, upload, remove, look = "app", color
       <Avatar name={name} size="xl" photoPath={photoPath} />
       <div className="flex flex-col items-start gap-2">
         {picker}
-        <p className={hintClass}>JPEG, PNG ou WebP, 2 Mo maximum. Stockée en privé.</p>
+        <p className={hintClass}>JPEG, PNG ou WebP, réduite automatiquement. Stockée en privé.</p>
         {message}
         {photoPath ? (
           <form action={remove}>
