@@ -31,6 +31,21 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Modèles de programme Coory (D-177, 14/11/2026)
+```
+scripts/modeles-coory/briques.ts et modeles.ts (nouveaux : générateur des 7 nouveaux modèles) ;
+  supabase/content/modeles_coory.sql (4 renommages, on conflict do update réservé aux modèles Coory,
+  partie générée) ; package.json (content:modeles) ; src/domain/training/template-order.ts (ordre de
+  l'onglet Modèles) ; src/features/programs/templates.ts ; program-wizard.tsx, schemas.ts, actions.ts
+  (discipline principale « Hybride ») ; tests/e2e/assistant-actions.spec.ts (nouveau nom du modèle 10 km).
+Tests : modeles-coory.test.ts (9), template-order.test.ts (2), revue-mvp-programmes (programme hybride),
+  seed-programmes (12 plans) ; unitaires 554 ; e2e modeles-coory.spec.ts (ordre, ouvrir, Utiliser, brouillon
+  de 8 semaines) ordinateur et téléphone ; suite complète 238 passés / 38 ignorés ; captures de l'étape
+  Objectif téléphone et ordinateur, sombre et clair.
+Base locale : fichier chargé deux fois (versions stables) ; le modèle « Bloc force 4 semaines » de la graine,
+  écrasé par un premier essai (identifiant …011 en double), restauré, et 6 doublons d'essai retirés.
+```
+
 ### Compte de démonstration partagé (D-176, 14/11/2026)
 ```
 Migration 20261114150000_compte_demo (pg_cron, private.demo_accounts, déclencheur protect_demo_account sur

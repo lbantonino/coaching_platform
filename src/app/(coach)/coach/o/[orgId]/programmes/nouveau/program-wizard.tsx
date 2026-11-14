@@ -35,7 +35,7 @@ import type { WizardAthlete, WizardData } from "@/features/programs/wizard";
 // une carte, la barre d'actions fixe en bas. Mode « modèle » (?modele=nouveau) : sans sportif ni dates.
 
 type StepIndex = 1 | 2 | 3 | 4;
-type MainDiscipline = "running" | "strength" | "hyrox";
+type MainDiscipline = "running" | "strength" | "hyrox" | "hybrid";
 type StartKind = "blank" | "copy" | "template";
 type PhaseDraft = { name: string; length: number };
 
@@ -43,7 +43,8 @@ const PHASE_NAMES = ["Base", "Spécifique", "Affûtage"];
 // Séances par semaine (D-164) : 1 à 7 en puces ; « 8+ » ouvre un compteur jusqu'à 14 (certains jours
 // ont alors plusieurs séances : matin, midi, après-midi, soir).
 const MAX_PER_WEEK = 14;
-const DISCIPLINE_CHOICES: MainDiscipline[] = ["running", "strength", "hyrox"];
+// D-177 : « Hybride » (prévu « plus tard » par le brief) pour les modèles Coory hybrides.
+const DISCIPLINE_CHOICES: MainDiscipline[] = ["running", "strength", "hyrox", "hybrid"];
 
 const kicker = "text-[12px] leading-[normal] font-semibold tracking-[0.05em] text-faint uppercase";
 const fieldLabel = "text-[13.5px] leading-[normal] font-semibold text-text";
@@ -81,7 +82,9 @@ function aimFor(athlete: WizardAthlete | undefined) {
 }
 
 function mainDiscipline(value: Discipline | null | undefined): MainDiscipline | null {
-  return value === "running" || value === "strength" || value === "hyrox" ? value : null;
+  return value === "running" || value === "strength" || value === "hyrox" || value === "hybrid"
+    ? value
+    : null;
 }
 
 // Début proposé pour ce sportif (revue MVP du 13/11, B8) : le prochain lundi, ou le lundi qui suit son
@@ -503,7 +506,7 @@ export function ProgramWizard({
                 <>
                   <fieldset className="m-0 flex min-w-0 flex-col gap-2.5 border-0 p-0">
                     <legend className={`${fieldLabel} mb-2.5`}>Discipline principale</legend>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
                       {DISCIPLINE_CHOICES.map((choice) => (
                         <label
                           key={choice}

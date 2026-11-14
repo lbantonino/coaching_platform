@@ -630,7 +630,8 @@ export async function previewStart(
 // ---------------------------------------------------------------------------
 const createTemplateInputSchema = z.object({
   title: z.string().trim().min(1).max(120),
-  discipline: z.enum(["running", "strength", "hyrox"]),
+  // D-177 : « Hybride » aussi, comme pour un programme.
+  discipline: z.enum(["running", "strength", "hyrox", "hybrid"]),
   aimDefaults: z.object({ running: z.enum(["pace", "hr"]), strength: z.enum(["kg", "pct"]) }),
   weeksCount: z.number().int().min(1).max(52),
   sessionsPerWeek: z.number().int().min(1).max(MAX_SESSIONS_PER_WEEK),

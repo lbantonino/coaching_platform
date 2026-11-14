@@ -13,8 +13,9 @@ export const createProgramInputSchema = z
     // Étape 1
     athleteId: z.uuid(),
     title: text(120),
-    // Étape 2 : Running, Musculation ou Hyrox (l'éditeur hybride n'est pas dessiné).
-    discipline: z.enum(["running", "strength", "hyrox"]),
+    // Étape 2 : Running, Musculation, Hyrox ou Hybride (D-177 : le programme d'un modèle hybride ;
+    // ses séances restent de course ou de musculation, l'éditeur de séance hybride n'est pas dessiné).
+    discipline: z.enum(["running", "strength", "hyrox", "hybrid"]),
     goal: programGoalSchema.optional(),
     aimDefaults: aimDefaultsSchema,
     // Étape 3

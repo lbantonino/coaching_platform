@@ -64,6 +64,13 @@ describe("C1 : jusqu'à 14 séances par semaine dès la création", () => {
       false,
     );
   });
+  // D-177 : un modèle Coory hybride (course et musculation) donne un programme « Hybride ».
+  it("accepte un programme hybride", () => {
+    expect(
+      createProgramInputSchema.safeParse({ ...input, sessionsPerWeek: 4, discipline: "hybrid" })
+        .success,
+    ).toBe(true);
+  });
 });
 
 describe("C2 : une séance v2 publiée n'est jamais écartée par les plafonds de la v1", () => {

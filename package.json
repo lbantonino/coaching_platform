@@ -21,6 +21,7 @@
     "db:clean-tests": "node scripts/clean-test-data.mjs",
     "db:new": "supabase migration new",
     "db:test": "supabase test db",
+    "content:modeles": "ECRIRE_MODELES=1 vitest run tests/unit/modeles-coory.test.ts",
     "db:types": "supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts && prettier --write src/lib/supabase/database.types.ts",
     "test:e2e": "playwright test",
     "test": "vitest run"

@@ -37,7 +37,8 @@ describe("seed : programmes au schéma v2", () => {
     expect(section.length).toBeGreaterThan(0);
     expect(documents.filter(isDraft)).toHaveLength(2);
     expect(documents.filter(isSnapshot)).toHaveLength(1);
-    expect(documents.filter(isPlan)).toHaveLength(5);
+    // 11 modèles Coory (4 écrits à la main, 7 générés, D-177) et le plan de la graine.
+    expect(documents.filter(isPlan)).toHaveLength(12);
     expect(documents.filter(isPublishedSession)).toHaveLength(23);
     expect(documents.filter(isSessionBody)).toHaveLength(4);
   });
