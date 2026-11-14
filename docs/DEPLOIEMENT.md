@@ -28,8 +28,17 @@ l'offre Pro.
 
 1. supabase.com, « New project » : nom `coory-prod`, **région UE** (Francfort ou Paris), mot de passe
    de base long (garde-le dans ton gestionnaire de mots de passe).
-2. Envoie toutes les migrations (tables, sécurité, catalogue d'exercices). Dans le dossier du
-   projet, avec Node 24 :
+2. Envoie toutes les migrations (tables, sécurité, catalogue d'exercices) par l'**intégration GitHub**
+   (gratuite depuis avril 2026, choisie le 14/11) : **Project Settings → Integrations → GitHub**,
+   dépôt `lbantonino/coaching_platform`, **Working directory** `.`, **Deploy to production** activé,
+   branche `main`, branches automatiques désactivées (payantes). Ensuite, **chaque `git push` sur
+   `main` applique les nouvelles migrations** à la base en ligne. Les réglages de connexion (`[auth]`
+   de `config.toml`) et la graine de démonstration sont ignorés : la base en ligne n'a jamais de faux
+   sportifs. Vérification après un envoi : « Last migration » sur l'accueil du projet, et la table
+   `organizations` vide tant qu'aucun coach ne s'est inscrit. Règle : ne pousser une migration
+   qu'après `npm run db:test` en local, car elle part directement en production.
+
+   Sans l'intégration (solution de secours), avec Node 24 :
 
    ```bash
    npx supabase login
@@ -37,8 +46,7 @@ l'offre Pro.
    npx supabase db push
    ```
 
-   **Jamais la graine** (`seed.sql`) en production : ce sont des données de démonstration. `db push`
-   ne l'envoie pas.
+   Projet de la bêta (14/11/2026) : `Coory-beta`, région **eu-west-1 (Irlande, UE)**, plan gratuit.
 3. **Authentication → URL Configuration** : Site URL `https://<ton domaine>` ; Redirect URLs
    `https://<ton domaine>/**`.
 4. **Authentication → Sign In / Providers → Email** : confirmation de l'e-mail **activée**,
