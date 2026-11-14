@@ -31,6 +31,14 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Photo de profil réduite avant l'envoi (D-174, 14/11/2026)
+```
+src/lib/shrink-photo.ts (nouveau : fitWithin, needsShrink purs ; shrinkPhoto dans le navigateur) ; photo-form.tsx
+  (réduction à 1 024 px, message clair) ; exercise-form.tsx (même réduction, partagée). Tests :
+  shrink-photo.test.ts (4) ; e2e photos.spec.ts : photo de 3552 × 4879 (plus de 5 Mo) réduite puis enregistrée,
+  ordinateur et téléphone.
+```
+
 ### Dictée dans l'Assistant IA (D-173, 13/11/2026)
 ```
 src/features/assistant/dictation.ts (nouveau, pur : speechRecognitionCtor, mergeDictation, dictationErrorText) ;
