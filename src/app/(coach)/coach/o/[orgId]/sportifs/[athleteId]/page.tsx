@@ -16,7 +16,7 @@ import { listGoals } from "@/features/goals/queries";
 import { goalDiscipline, goalTypeLabels } from "@/features/goals/schemas";
 import { getAthleteNotes } from "@/features/notes/queries";
 import { listReferences } from "@/features/references/queries";
-import { getAthleteProgram, listAthleteProgramRows } from "@/features/programs/queries";
+import { getAthleteProgram, listPrograms } from "@/features/programs/queries";
 import { pendingPublication } from "@/features/programs/publish-check";
 import { listSessions } from "@/features/sessions/queries";
 import { removeAthletePhoto, uploadAthletePhoto } from "@/features/photos/actions";
@@ -221,10 +221,11 @@ async function AthleteSection({
         returnTo={`${basePath}?onglet=${tab}`}
       />
     ) : null;
-  // Onglet Programme : les autres programmes du sportif (brouillon jamais publié, programme à copier,
-  // et leur liste, B7).
+  // Onglet Programme (15/11/2026) : les cartes de TOUS ses programmes, archivés compris.
   const ownPrograms =
-    tab === "programme" ? await listAthleteProgramRows(organizationId, athlete.id, today) : [];
+    tab === "programme"
+      ? await listPrograms(organizationId, { athleteId: athlete.id, includeArchived: true }, today)
+      : [];
   const programsBase = `/coach/o/${organizationId}/programmes`;
   // Ordinateur (demandes d'Antonino du 04/11) : sur ces onglets, la dernière carte descend jusqu'au
   // bas du menu de gauche même quand la page ne défile pas. Agenda : seulement « Toutes les
@@ -440,16 +441,13 @@ async function AthleteSection({
               </div>
             )
           ) : tab === "programme" ? (
-            // Onglet Programme (maquette 07, D-157) : le programme publié et sa semaine, sinon l'état vide.
+            // Onglet Programme (15/11/2026) : les cartes de ses programmes ; un appui ouvre le programme.
             <>
               {publishBanner}
               <ProgramTab
-                organizationId={organizationId}
                 name={athlete.firstName}
-                program={program}
-                requestedWeek={programWeek}
-                today={today}
-                basePath={basePath}
+                programs={ownPrograms}
+                tabHref={`${basePath}?onglet=programme`}
                 editorBase={programsBase}
                 newHref={`${basePath}/nouveau-programme`}
                 copyHref={
@@ -457,19 +455,6 @@ async function AthleteSection({
                     ? `${basePath}/nouveau-programme?depart=copie`
                     : null
                 }
-                draft={(() => {
-                  const draftRow = program
-                    ? null
-                    : ownPrograms.find((row) => row.status === "draft");
-                  return draftRow
-                    ? {
-                        title: draftRow.title,
-                        href: `${programsBase}/${draftRow.id}?retour=${encodeURIComponent(`${basePath}?onglet=programme`)}`,
-                      }
-                    : null;
-                })()}
-                others={ownPrograms}
-                allProgramsHref={`${programsBase}?sportif=${athlete.id}`}
                 archived={athlete.status === "archived"}
               />
             </>

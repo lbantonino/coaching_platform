@@ -8,7 +8,8 @@ import type { ProgramListItem } from "@/features/programs/queries";
 import type { TemplateCard as TemplateItem } from "@/features/programs/templates";
 import { formatDayMonth } from "@/lib/format";
 
-// Cartes de la page Programmes (maquette 01, PRG-01 / 02 / 05 / 06, D-157). Rayon 20, fond de carte ;
+// Cartes de la page Programmes (maquette 01, PRG-01 / 02 / 05 / 06, D-157) ; la carte d'un programme est
+// aussi celle de l'onglet Programme de la fiche d'un sportif (15/11/2026 : une seule carte). Rayon 20, fond de carte ;
 // ordinateur 18 px de marge et 12 d'écart, téléphone 16 et 10. Toute la carte ouvre le programme (un
 // lien étendu sous le titre) ; « Utiliser » reste un lien à part.
 
