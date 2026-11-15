@@ -275,8 +275,8 @@ test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, pub
   // Onglet Programme vide : « Créer un programme » ouvre l'assistant dans la fiche (D-163), le
   // sportif fixé : ni liste ni recherche de sportifs, et le retour ramène chez lui.
   await page.goto(`${fiche}?onglet=programme`);
-  // Revue MVP du 13/11 (B2) : « en cours » (un programme terminé laisse aussi cet état vide).
-  await expect(page.getByRole("heading", { name: /^Aucun programme en cours pour/ })).toBeVisible();
+  // Aucun programme (15/11/2026 : d'anciens programmes s'afficheraient en cartes).
+  await expect(page.getByRole("heading", { name: /^Aucun programme pour/ })).toBeVisible();
   await page.getByRole("link", { name: "Créer un programme" }).click();
   await expect(page).toHaveURL(/\/sportifs\/[0-9a-f-]{36}\/nouveau-programme$/);
   await expect(
@@ -345,25 +345,26 @@ test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, pub
   await page.getByRole("button", { name: "Publier la version 1" }).click();
   await expect(page.getByText("Programme publié (version 1).")).toBeVisible();
 
-  // La fiche du sportif montre le programme publié.
+  // La fiche du sportif montre le programme publié : sa carte, la même que la page Programmes (15/11).
   await page.goto(`${fiche}?onglet=programme`);
-  await expect(page.getByText(title).filter({ visible: true }).first()).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Ouvrir l'éditeur" }).filter({ visible: true }),
-  ).toBeVisible();
+  // (Il commence lundi prochain : sa pastille dit « À venir », comme sur la page Programmes.)
+  const card = page.getByRole("article").filter({ hasText: title }).filter({ visible: true });
+  await expect(card.getByRole("link", { name: title })).toBeVisible();
+  await expect(card.getByText(/^(À venir|Publié v1)$/)).toBeVisible();
   if (phone) return;
 
-  // Synchronisation (demande d'Antonino du 10/11) : une séance modifiée depuis la fiche va dans le
-  // brouillon ; « Terminer » ramène à la fiche, qui propose de publier ; une fois publié, la fiche
-  // montre la nouvelle valeur.
-  const week = page.getByRole("region", { name: /Semaine/ });
-  await week.locator("button[aria-pressed]").first().click();
-  await page.getByRole("link", { name: "Modifier la séance" }).filter({ visible: true }).click();
+  // Synchronisation (demande d'Antonino du 10/11) : une séance modifiée depuis l'AGENDA de la fiche (le
+  // programme tel que le sportif le reçoit, 15/11) va dans le brouillon ; « Terminer » ramène à l'agenda,
+  // à la même semaine, qui propose de publier ; une fois publié, l'agenda montre la nouvelle valeur.
+  await page.goto(`${fiche}?onglet=agenda&semaine=1`);
+  const week = page.getByRole("region", { name: "Semaine 1", exact: true });
+  await week.getByRole("button", { name: /^Déplier la séance 1 : / }).click();
+  await week.getByRole("link", { name: "Modifier la séance" }).filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/seances\/[^/?]+\?retour=/);
   await page.getByRole("textbox", { name: "Durée de l'étape" }).fill("12");
   await expect(page.getByText("Enregistré", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Terminer" }).click();
-  await expect(page).toHaveURL(/onglet=programme/);
+  await expect(page).toHaveURL(/onglet=agenda&semaine=1/);
   await expect(page.getByText("Modifications non publiées.")).toBeVisible();
   await page.getByRole("button", { name: "Publier la version 2" }).click();
   await page
@@ -372,17 +373,11 @@ test("TC-06, TC-07, TC-13, TC-16 : depuis la fiche, jours fixes à la phase, pub
     .click();
   await expect(page.getByText("Programme publié (version 2).")).toBeVisible();
   await expect(page.getByText("Modifications non publiées.")).toHaveCount(0);
+  await week.getByRole("button", { name: /^(Déplier|Replier) la séance 1 : / }).click();
   await expect(
-    page
-      .getByText(/Publié v2/)
+    week
+      .getByText(/\b12 min\b/)
       .filter({ visible: true })
-      .first(),
-  ).toBeVisible();
-  await week.locator("button[aria-pressed]").first().click();
-  await expect(
-    page
-      .getByRole("region", { name: /^Détail de la séance/ })
-      .getByText("12 min", { exact: true })
       .first(),
   ).toBeVisible();
 

@@ -142,6 +142,38 @@ import {
 // du haut (« ← Programmes », « ← Semaines », « ← Semaine 2 »). Un modèle s'ouvre ici aussi, sans
 // sportif ni dates (« Semaine 1 à N ») ; un modèle Coory en lecture seule.
 
+// Téléphone : chaque niveau ouvert de la pile est aussi une étape de l'historique du navigateur, pour
+// que le geste de retour de l'iPhone (balayage depuis le bord) remonte d'un niveau comme le retour de
+// la barre, au lieu de quitter le programme (test d'Antonino sur iPhone, 15/11/2026). L'adresse garde
+// ?semaine= (et ?seance=), comme au retour d'une séance. L'ordinateur n'a pas de niveaux : rien n'y
+// change.
+type EditorLevel = "weeks" | "week" | "session";
+const LEVEL_STATE = "cooryEditorLevel";
+const isPhone = () => !window.matchMedia("(min-width: 1024px)").matches;
+
+function writeLevel(
+  mode: "push" | "replace",
+  level: EditorLevel,
+  week: number | null,
+  session: string | null,
+) {
+  if (!isPhone()) return;
+  const url = new URL(window.location.href);
+  url.searchParams.delete("semaine");
+  url.searchParams.delete("seance");
+  if (level !== "weeks" && week) url.searchParams.set("semaine", String(week));
+  if (level === "session" && session) url.searchParams.set("seance", session);
+  const href = `${url.pathname}${url.search}`;
+  if (mode === "push") window.history.pushState({ [LEVEL_STATE]: level }, "", href);
+  // Remplacer garde la marque « ouvert par la pile » : le retour de la barre reste un retour arrière.
+  else
+    window.history.replaceState(
+      window.history.state?.[LEVEL_STATE] ? { [LEVEL_STATE]: level } : null,
+      "",
+      href,
+    );
+}
+
 export type EditorMeta = {
   base: string;
   mode: "program" | "template";
@@ -254,9 +286,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   );
   const session = ordered.find((item) => item.key === sessionKey) ?? null;
   // Téléphone : le niveau ouvert de la pile.
-  const [level, setLevel] = useState<"weeks" | "week" | "session">(
-    meta.focus.week ? "week" : "weeks",
-  );
+  const [level, setLevel] = useState<EditorLevel>(meta.focus.week ? "week" : "weeks");
 
   const [sheet, setSheet] = useState<
     | null
@@ -300,6 +330,35 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [level]);
+  // Téléphone : le geste de retour (ou d'avance) du navigateur rouvre le niveau de cette étape.
+  useEffect(() => {
+    const onPop = (event: PopStateEvent) => {
+      const params = new URLSearchParams(window.location.search);
+      const index = Number(params.get("semaine")) || null;
+      const target = index ? plan.weeks.find((item) => item.index === index) : undefined;
+      const sessions = target ? orderedSessions(target) : [];
+      const key = params.get("seance");
+      const known = sessions.some((item) => item.key === key);
+      const stored = (event.state as Record<string, unknown> | null)?.[LEVEL_STATE];
+      if (target && target.index !== weekIndex) {
+        setWeekIndex(target.index);
+        setSessionKey(known ? key : (sessions[0]?.key ?? null));
+      } else if (target && known) setSessionKey(key);
+      setLevel(!target ? "weeks" : stored === "session" && known ? "session" : "week");
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [plan.weeks, weekIndex]);
+  // Remonter d'un niveau (retour de la barre, semaine retirée, séance supprimée) : un retour arrière
+  // si ce niveau a été ouvert par la pile, sinon l'étape actuelle devient le niveau du dessus.
+  const closeLevel = (parent: EditorLevel) => {
+    if (isPhone() && window.history.state?.[LEVEL_STATE]) {
+      window.history.back();
+      return;
+    }
+    setLevel(parent);
+    writeLevel("replace", parent, week?.index ?? null, sessionKey);
+  };
   useEffect(() => {
     const open = () => {
       if (nothingToPublish)
@@ -346,6 +405,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     const next = plan.weeks.find((item) => item.index === index);
     setSessionKey(next ? (orderedSessions(next)[0]?.key ?? null) : null);
     setLevel("week");
+    writeLevel(level === "weeks" ? "push" : "replace", "week", index, null);
   };
 
   // « Ajouter une séance » : toutes les disciplines, quel que soit le programme (demande d'Antonino du
@@ -857,7 +917,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           readOnly={readOnly}
           onSelect={() => {
             setSessionKey(item.key);
-            if (mobile) setLevel("session");
+            if (mobile) {
+              setLevel("session");
+              if (week) writeLevel("push", "session", week.index, item.key);
+            }
           }}
           onMoveUp={
             !readOnly && week?.scheduling === "ordered" && i > 0
@@ -1221,7 +1284,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           if (week) {
             update((current) => removeWeek(current, week.index));
             setWeekIndex(Math.max(1, week.index - 1));
-            setLevel("weeks");
+            closeLevel("weeks");
           }
           setSheet(null);
         }}
@@ -1298,7 +1361,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           update((current) => removeSession(current, week.index, session.key));
           setSessionKey(ordered.find((item) => item.key !== session.key)?.key ?? null);
           setSheet(null);
-          setLevel("week");
+          closeLevel("week");
         }}
       >
         {session ? `« ${session.title} » sort du brouillon de la semaine ${week?.index}.` : null}
@@ -1339,7 +1402,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         ) : (
           <button
             type="button"
-            onClick={() => setLevel(level === "session" ? "week" : "weeks")}
+            onClick={() => closeLevel(level === "session" ? "week" : "weeks")}
             className={barBackClass}
           >
             <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />

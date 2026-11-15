@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Flag, ListOrdered, Users } from "lucide-react";
 import Link from "next/link";
 
+import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 import { cardLines } from "@/domain/training/card-lines";
 import { defaultWeekIndex } from "@/domain/training/program-status";
 import { sessionMomentLabels } from "@/domain/training/session-v2";
@@ -390,18 +391,26 @@ export async function ProgramWeeksSection({
         aria-labelledby="program-weeks-title"
         className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-[20px] bg-surface px-5 py-4 inset-ring inset-ring-line-soft"
       >
-        <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-[3px]">
-          <h2
-            id="program-weeks-title"
-            className="text-[15.5px] leading-[19.5px] font-semibold tracking-[-0.01em]"
-          >
-            {program.title}
-          </h2>
-          <p className="text-[13px] leading-[16.5px] text-muted">
-            {plural(program.weeksCount, "semaine")} · {dayMonth.format(utc(first.monday))} →{" "}
-            {dayMonth.format(utc(last.sunday))}
-            {pace ? ` · ${pace}` : ""}
-          </p>
+        <div className="flex min-w-0 flex-[1_1_260px] items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-[3px]">
+            <h2
+              id="program-weeks-title"
+              className="text-[15.5px] leading-[19.5px] font-semibold tracking-[-0.01em]"
+            >
+              {program.title}
+            </h2>
+            <p className="text-[13px] leading-[16.5px] text-muted">
+              {plural(program.weeksCount, "semaine")} · {dayMonth.format(utc(first.monday))} →{" "}
+              {dayMonth.format(utc(last.sunday))}
+              {pace ? ` · ${pace}` : ""}
+            </p>
+          </div>
+          {/* Les PDF que le coach envoie au sportif (D-186 : ils étaient sur la carte de l'ancienne vue
+              de l'onglet Programme) ; 44 px de cible sur téléphone. */}
+          <ProgramPdfMenu
+            base={pdfBase}
+            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-[11px] bg-surface px-3 text-[13px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] lg:h-8 lg:rounded-[9px] lg:text-[12.5px]"
+          />
         </div>
         <p className="flex min-w-0 flex-[1_1_300px] items-start gap-2.5 rounded-[12px] bg-surface-2 px-3.5 py-2.5 text-[13px] leading-[1.5] text-text-2">
           <ListOrdered

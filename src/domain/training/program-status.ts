@@ -33,6 +33,24 @@ export function programListStatus(
   return "current";
 }
 
+// Onglet Programme de la fiche (15/11/2026) : les cartes des programmes d'un sportif, en cours d'abord,
+// puis à venir, brouillons, terminés et archivés ; dans chaque groupe, le plus récemment modifié.
+const STATUS_RANK: Record<ProgramListStatus, number> = {
+  current: 0,
+  upcoming: 1,
+  draft: 2,
+  finished: 3,
+  archived: 4,
+};
+export function sortAthletePrograms<T extends { status: ProgramListStatus; updatedAt: string }>(
+  programs: readonly T[],
+): T[] {
+  return [...programs].sort(
+    (a, b) =>
+      STATUS_RANK[a.status] - STATUS_RANK[b.status] || b.updatedAt.localeCompare(a.updatedAt),
+  );
+}
+
 // Le programme publié à montrer pour un sportif : celui en cours ; sinon le prochain à venir ;
 // sinon le dernier terminé.
 export function pickCurrentProgram<T extends { startDate: string; weeksCount: number }>(

@@ -31,6 +31,33 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Une seule vue d'un programme : l'onglet Programme en cartes (D-186, 15/11/2026)
+```
+sportifs/[athleteId]/program-tab.tsx (réécrit : cartes de ses programmes, état vide, « Créer » et
+  « Copier » quand rien n'est en cours ni à venir) ; page.tsx (listPrograms du sportif, archivés compris) ;
+  program-week-board.tsx supprimé ; programmes/cards.tsx déplacé en src/components/programs/program-cards.tsx
+  (une seule carte, page Programmes et fiche) ; domain/training/program-status.ts (sortAthletePrograms).
+L'agenda de la fiche avait déjà « Modifier la séance » (retour à la même semaine) : couvert par les tests.
+Le bouton PDF du programme (agenda, fiches et repères) passe dans l'en-tête de l'onglet Agenda
+  (program-weeks.tsx) ; test program-pdf.spec.ts déplacé sur cet onglet.
+Tests : program-status-order.test.ts ; e2e athlete-program-cards.spec.ts (nouveau), athlete-overview et
+  program-editor (TC-06 : la synchronisation passe maintenant par l'agenda) mis à jour. Vitest 676/676 ;
+  Playwright 300 passés, 41 ignorés, 3 échecs (PDF : corrigé et relancé 22/22 ; tasks.spec : raté connu).
+```
+
+### Retour au pouce dans l'éditeur de programme (test sur iPhone, 15/11/2026)
+```
+Constat (test en direct sur iPhone, coory-beta.vercel.app) : sur la page d'un programme, depuis le détail
+  d'une semaine, le geste de retour de l'iPhone ramenait à la liste des Programmes au lieu des semaines.
+Cause : la pile du téléphone (semaines → une semaine → une séance) n'était qu'un état React, sans étape
+  dans l'historique du navigateur. Correction : chaque niveau ouvert est une étape (pushState, ?semaine= et
+  ?seance= dans l'adresse) ; le retour de la barre fait un retour arrière ; le navigateur rouvre le niveau
+  (popstate). Ordinateur inchangé. Fichier : programmes/_editor/program-editor.tsx (programmes et modèles).
+Test : tests/e2e/program-editor-back.spec.ts (téléphone) vu en échec puis au vert ; specs de l'éditeur 24/24.
+Reste (signalé, pas corrigé) : après « Modifier la séance » puis « ← Semaine N », le geste de retour rouvre
+  la page de la séance (son retour ajoute une étape au lieu de revenir).
+```
+
 ### Assistant IA, lot 6 : les réglages (D-185, 14/11/2026)
 ```
 src/features/assistant/reglages.ts (nouveau : 7 schémas, fusions, cartes) ; tools/reglages.ts (nouveau,

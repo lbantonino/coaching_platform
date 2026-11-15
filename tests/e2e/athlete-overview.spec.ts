@@ -84,34 +84,19 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(page).toHaveURL(/onglet=objectifs/);
   await expect(page.getByText("Temps visé 1:15:00")).toBeVisible();
 
-  // Onglet Programme (maquette 07, D-157) : le programme publié d'Inès (version 1), sa semaine
-  // et l'accès à l'éditeur.
+  // Onglet Programme (15/11/2026) : la carte de son programme publié (version 1), la même que la page
+  // Programmes ; un appui ouvre le programme, dont le retour ramène à l'onglet. Le détail des séances,
+  // semaine par semaine, est dans l'agenda (ci-dessous).
   await openAthleteTab(page, "Programme");
+  const programCard = page
+    .getByRole("article")
+    .filter({ hasText: "Prépa Hyrox Bruxelles · bloc 1" })
+    .filter({ visible: true });
+  await expect(programCard.getByText("Publié v1")).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Prépa Hyrox Bruxelles · bloc 1" }).filter({ visible: true }),
-  ).toBeVisible();
-  await expect(
-    page
-      .getByText(/Publié v1/)
-      .filter({ visible: true })
-      .first(),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Ouvrir l'éditeur" }).filter({ visible: true }),
-  ).toBeVisible();
-  // Une séance de la semaine s'affiche en détail sur place (colonne de droite sur ordinateur, feuille
-  // sur téléphone, demande du 10/11), avec « Modifier la séance » ; on ne quitte pas la fiche.
-  const fiche = page.url();
-  await page
-    .getByRole("region", { name: /Semaine/ })
-    .locator("button[aria-pressed]")
-    .first()
-    .click();
-  await expect(
-    page.getByRole("link", { name: "Modifier la séance" }).filter({ visible: true }),
-  ).toHaveAttribute("href", /\/programmes\/.+(\/seances\/|\?semaine=)/);
-  expect(page.url()).toBe(fiche);
-  await page.keyboard.press("Escape");
+    programCard.getByRole("link", { name: "Prépa Hyrox Bruxelles · bloc 1" }),
+  ).toHaveAttribute("href", /\/programmes\/f1000000-0000-4000-8000-000000000001\?retour=/);
+  await expect(page.getByRole("link", { name: "Ouvrir l'éditeur" })).toHaveCount(0);
   // Agenda d'Inès = son programme (D-46), une semaine à la fois (maquette 2c du 03/11) : 5 séances
   // numérotées sans jour. Ses 5 séances par semaine COMPRENNENT ses 2 rendez-vous avec le coach (pas
   // 5 + 2) : coaching du mardi 7 h et circuit collectif du samedi 10 h, écrits sur leur carte.

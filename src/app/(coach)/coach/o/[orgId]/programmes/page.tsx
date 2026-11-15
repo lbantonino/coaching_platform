@@ -13,7 +13,7 @@ import { requireOrgAccess } from "@/features/auth/guards";
 import { listPrograms } from "@/features/programs/queries";
 import { listTemplates, type TemplateSource } from "@/features/programs/templates";
 
-import { ProgramCard, TemplateCard } from "./cards";
+import { ProgramCard, TemplateCard } from "@/components/programs/program-cards";
 import {
   ListSearch,
   PhoneProgramFilters,

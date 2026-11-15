@@ -1,7 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { openAthleteTab } from "./helpers";
-
 // PDF des programmes (phase 5) : « Agenda du programme » et « Fiches et repères », tirés de la
 // version publiée, servis seulement au coach de l'organisation.
 const ORG = "0a000000-0000-4000-8000-0000000000a1";
@@ -52,10 +50,13 @@ test("sans session, un PDF renvoie à la connexion", async ({ request }) => {
   expect(response.headers()["content-type"]).not.toBe("application/pdf");
 });
 
-test("onglet Programme : le bouton PDF propose l'agenda et les fiches", async ({ page }) => {
+// Onglet Agenda de la fiche (15/11/2026, D-186) : le programme tel que le sportif le reçoit, et son
+// bouton PDF dans l'en-tête (il était sur la carte de l'ancienne vue de l'onglet Programme).
+test("onglet Agenda : le bouton PDF du programme propose l'agenda et les fiches", async ({
+  page,
+}) => {
   await login(page);
-  await page.goto(`/coach/o/${ORG}/sportifs/${LEA}`);
-  await openAthleteTab(page, "Programme");
+  await page.goto(`/coach/o/${ORG}/sportifs/${LEA}?onglet=agenda&semaine=1`);
   await page.getByRole("button", { name: "PDF du programme" }).filter({ visible: true }).click();
   const agenda = page
     .getByRole("button", { name: "Agenda du programme" })
