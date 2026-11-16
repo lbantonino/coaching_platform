@@ -52,7 +52,7 @@ describe("sessionSteps (une info par ligne, format de la v1)", () => {
   it("Musculation : échauffement, exercices sur une ligne chacun, superset répété", () => {
     const steps = sessionSteps(strengthSession(EXERCISE));
     expect(steps[0]).toEqual({ title: "Échauffement", lines: ["Mobilité hanches et épaules"] });
-    expect(steps[1]?.lines[0]).toBe("Back squat · 2 × 6 · 70 % · RIR 2 · repos 2:30");
+    expect(steps[1]?.lines[0]).toBe("Back squat · 2 × 6 · 70 % · repos 2:30");
     expect(steps[2]).toMatchObject({
       title: "Superset",
       badge: "3 tours",

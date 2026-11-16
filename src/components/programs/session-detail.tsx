@@ -1,21 +1,14 @@
-import { detailItems } from "@/domain/training/card-lines";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
+import { sessionCards, type SessionCard } from "@/domain/training/session-cards";
 import type { SessionBody } from "@/domain/training/session-v2";
-import {
-  sessionHeadline,
-  sessionStats,
-  sessionSteps,
-  type ViewStep,
-} from "@/domain/training/session-view";
+import { sessionHeadline, sessionStats } from "@/domain/training/session-view";
 
-import { SessionLine } from "./session-line";
+import { SessionCardsView, type CardActions } from "./session-cards";
 
 // Détail d'une séance (maquette 03 : panneau de droite EDT-01 sur ordinateur, page « Une séance »
-// EDT-05 sur téléphone ; page d'un modèle de séance ; onglet Programme de la fiche d'un sportif) :
-// titre, deux chiffres clés, puis chaque étape (jamais de graphique : règle 2 du dossier de design).
-// Le filet suit la discipline ; échauffement et retour au calme restent neutres. Dans une étape, une
-// info par ligne avec les règles des cartes de l'agenda (demande d'Antonino du 10/11 : puces, gras),
-// en entier : noms complets, et en musculation la charge, le RIR et le repos.
+// EDT-05 sur téléphone ; page d'un modèle de séance ; récap de l'éditeur de séance) : titre, deux
+// chiffres clés, puis la séance en CARTES (D-187, test sur iPhone du 15/11/2026 : une carte par étape,
+// une grande carte pour ce qui se répète ; plus de pastilles ni de RIR ; jamais de graphique).
 
 type Place = { position?: number; week?: string };
 
@@ -28,17 +21,15 @@ export type SessionDetailModel = {
   // « Circuit · Semaine 1 ».
   line: string;
   stats: { label: string; value: string }[];
-  steps: ViewStep[];
+  cards: SessionCard[];
 };
 
 function Heading({ model, variant }: { model: SessionDetailModel; variant: "panel" | "page" }) {
   return (
     <div className={`flex flex-col ${variant === "page" ? "gap-1.5 px-1" : "gap-1"}`}>
-      <span className="flex items-center gap-[7px] text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase">
-        <span
-          aria-hidden
-          className={`size-[7px] rounded-full ${disciplineStyles[model.discipline].dot}`}
-        />
+      <span
+        className={`text-[11.5px] font-semibold tracking-[0.05em] uppercase ${disciplineStyles[model.discipline].text}`}
+      >
         {model.kicker}
       </span>
       <h2
@@ -55,9 +46,13 @@ function Heading({ model, variant }: { model: SessionDetailModel; variant: "pane
   );
 }
 
-function StepBlocks({ model, variant }: { model: SessionDetailModel; variant: "panel" | "page" }) {
-  const { discipline } = model;
-  const page = variant === "page";
+function StepBlocks({
+  model,
+  actions,
+}: {
+  model: SessionDetailModel;
+  actions?: CardActions | undefined;
+}) {
   return (
     <>
       {model.stats.length > 0 ? (
@@ -73,46 +68,11 @@ function StepBlocks({ model, variant }: { model: SessionDetailModel; variant: "p
           ))}
         </dl>
       ) : null}
-      <ol className="flex flex-col gap-1.5">
-        {model.steps.map((step, i) => {
-          const neutral = /^(échauffement|retour au calme)/i.test(step.title);
-          const items = detailItems(step, discipline);
-          return (
-            <li
-              key={i}
-              className={`flex min-w-0 gap-2.5 rounded-[12px] px-3 inset-ring inset-ring-line ${page ? "py-[11px]" : "py-2.5"}`}
-            >
-              <span
-                aria-hidden
-                className={`w-[3px] shrink-0 rounded-[2px] ${neutral ? "bg-dlg-disabled" : disciplineStyles[discipline].dot}`}
-              />
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span
-                  className={`flex justify-between gap-2 font-semibold text-text ${page ? "text-[14px]" : "text-[13.5px]"}`}
-                >
-                  <span className="min-w-0">{step.title}</span>
-                  {step.badge ? <span className="whitespace-nowrap">{step.badge}</span> : null}
-                </span>
-                {items.length > 0 ? (
-                  <span
-                    className={`mt-0.5 flex flex-col gap-0.5 text-text ${page ? "text-[13px]" : "text-[12.5px]"}`}
-                  >
-                    {items.map((item, j) => (
-                      <SessionLine
-                        key={j}
-                        text={item.text}
-                        discipline={discipline}
-                        dot={disciplineStyles[discipline].dot}
-                        item={item}
-                      />
-                    ))}
-                  </span>
-                ) : null}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      <SessionCardsView
+        cards={model.cards}
+        discipline={model.discipline}
+        {...(actions ? { actions } : {})}
+      />
     </>
   );
 }
@@ -123,18 +83,21 @@ export function SessionDetailView({
   model,
   variant = "panel",
   heading = true,
+  actions,
 }: {
   model: SessionDetailModel;
   variant?: "panel" | "page";
   // Sans titre : dans une feuille dont l'en-tête porte déjà le nom de la séance.
   heading?: boolean;
+  // « ⋯ » des cartes : Dupliquer et Supprimer (page du programme, brouillon modifiable).
+  actions?: CardActions | undefined;
 }) {
   if (variant === "page") {
     return (
       <div className="flex flex-col gap-3">
         <Heading model={model} variant="page" />
-        <section className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-4">
-          <StepBlocks model={model} variant="page" />
+        <section className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-3 lg:p-4">
+          <StepBlocks model={model} actions={actions} />
         </section>
       </div>
     );
@@ -142,7 +105,7 @@ export function SessionDetailView({
   return (
     <div className="flex flex-col gap-3.5">
       {heading ? <Heading model={model} variant="panel" /> : null}
-      <StepBlocks model={model} variant="panel" />
+      <StepBlocks model={model} actions={actions} />
     </div>
   );
 }
@@ -169,7 +132,7 @@ export function sessionDetailModel(
         ? [session.sessionType, week].filter(Boolean).join(" · ")
         : `${session.sessionType} · ${sessionHeadline(session)}`,
     stats: sessionStats(session),
-    steps: sessionSteps(session),
+    cards: sessionCards(session.content),
   };
 }
 
@@ -180,15 +143,24 @@ export function SessionBlocks({
   session: SessionBody;
   variant: "panel" | "page";
 }) {
-  return <StepBlocks model={sessionDetailModel(session, variant, {})} variant={variant} />;
+  return <StepBlocks model={sessionDetailModel(session, variant, {})} />;
 }
 
 export function SessionDetail({
   session,
   variant = "panel",
+  actions,
   ...place
-}: { session: SessionBody; variant?: "panel" | "page" } & Place) {
+}: {
+  session: SessionBody;
+  variant?: "panel" | "page";
+  actions?: CardActions | undefined;
+} & Place) {
   return (
-    <SessionDetailView model={sessionDetailModel(session, variant, place)} variant={variant} />
+    <SessionDetailView
+      model={sessionDetailModel(session, variant, place)}
+      variant={variant}
+      actions={actions}
+    />
   );
 }

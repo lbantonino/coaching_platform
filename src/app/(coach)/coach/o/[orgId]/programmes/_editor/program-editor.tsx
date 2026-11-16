@@ -7,6 +7,8 @@ import {
   CalendarClock,
   CalendarDays,
   CalendarRange,
+  ChevronDown,
+  ChevronLeft,
   ChevronRight,
   ClipboardList,
   Copy,
@@ -26,7 +28,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import {
   BackGuardProvider,
@@ -38,6 +40,7 @@ import { MobileBarTitle, phoneFabClass } from "@/components/layout/mobile-bar";
 import { EditorSessionCard } from "@/components/programs/editor-session-card";
 import { useReorder } from "@/components/programs/use-reorder";
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
+import type { CardActions } from "@/components/programs/session-cards";
 import { SessionDetail } from "@/components/programs/session-detail";
 import { Avatar } from "@/components/ui/avatar";
 import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
@@ -54,12 +57,21 @@ import { SelectField } from "@/components/ui/select-field";
 import { useToast } from "@/components/ui/toast";
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import {
+  canDuplicateAt,
+  canRemoveAt,
+  duplicateAt,
+  removeAt,
+} from "@/domain/training/session-items";
+import type { SessionContent } from "@/domain/training/session-v2";
+import { withEstimatedDuration } from "@/domain/training/session-duration";
+import {
   addPhase,
   addSession,
   addWeek,
   blankSession,
   duplicateSession,
   duplicateWeekTo,
+  findSession,
   moveSession,
   moveSessionTo,
   phaseRangeBounds,
@@ -67,6 +79,7 @@ import {
   removeSession,
   removeWeek,
   renamePhase,
+  replaceSession,
   setPhaseRange,
   setWeekLight,
   weekIsFull,
@@ -161,7 +174,7 @@ function writeLevel(
   const url = new URL(window.location.href);
   url.searchParams.delete("semaine");
   url.searchParams.delete("seance");
-  if (level !== "weeks" && week) url.searchParams.set("semaine", String(week));
+  if (week) url.searchParams.set("semaine", String(week));
   if (level === "session" && session) url.searchParams.set("seance", session);
   const href = `${url.pathname}${url.search}`;
   if (mode === "push") window.history.pushState({ [LEVEL_STATE]: level }, "", href);
@@ -266,15 +279,20 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     meta.returnTo?.href ?? (target.kind === "program" ? meta.base : `${meta.base}?onglet=modeles`);
   const backLabel = meta.returnTo?.label ?? (target.kind === "program" ? "Programmes" : "Modèles");
   const draft = isDraft(plan) ? plan : null;
-  const [weekIndex, setWeekIndex] = useState(() => {
-    if (meta.focus.week && plan.weeks.some((item) => item.index === meta.focus.week))
-      return meta.focus.week;
-    if (draft) {
-      const days = Math.floor((Date.parse(meta.today) - Date.parse(draft.startDate)) / 86_400_000);
+  // La semaine d'accueil : celle en cours d'un programme, sinon la première.
+  const startDate = draft?.startDate ?? null;
+  const homeWeek = useMemo(() => {
+    if (startDate) {
+      const days = Math.floor((Date.parse(meta.today) - Date.parse(startDate)) / 86_400_000);
       return Math.min(Math.max(Math.floor(days / 7) + 1, 1), plan.weeks.length);
     }
     return 1;
-  });
+  }, [startDate, meta.today, plan.weeks.length]);
+  const [weekIndex, setWeekIndex] = useState(() =>
+    meta.focus.week && plan.weeks.some((item) => item.index === meta.focus.week)
+      ? meta.focus.week
+      : homeWeek,
+  );
   const week = plan.weeks.find((item) => item.index === weekIndex) ?? plan.weeks[0];
   const ordered = useMemo(() => (week ? orderedSessions(week) : []), [week]);
   // Glisser une séance par sa poignée (ordinateur, semaine « dans l'ordre ») : EDT-F06.
@@ -286,7 +304,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   );
   const session = ordered.find((item) => item.key === sessionKey) ?? null;
   // Téléphone : le niveau ouvert de la pile.
-  const [level, setLevel] = useState<EditorLevel>(meta.focus.week ? "week" : "weeks");
+  // Téléphone (D-187, « la même page » que l'ordinateur) : il ouvre sur la semaine, comme la colonne du
+  // milieu de l'ordinateur ; la liste des semaines (sa colonne de gauche) s'ouvre par « Semaine N ⌄ ».
+  const [level, setLevel] = useState<EditorLevel>("week");
+  // Une semaine choisie dans la liste : on revient en arrière jusqu'à la semaine, puis on l'applique.
+  const pendingWeek = useRef<number | null>(null);
 
   const [sheet, setSheet] = useState<
     | null
@@ -334,8 +356,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   useEffect(() => {
     const onPop = (event: PopStateEvent) => {
       const params = new URLSearchParams(window.location.search);
-      const index = Number(params.get("semaine")) || null;
-      const target = index ? plan.weeks.find((item) => item.index === index) : undefined;
+      const pending = pendingWeek.current;
+      pendingWeek.current = null;
+      const asked = pending ?? (Number(params.get("semaine")) || homeWeek);
+      const target = plan.weeks.find((item) => item.index === asked) ?? plan.weeks[0];
       const sessions = target ? orderedSessions(target) : [];
       const key = params.get("seance");
       const known = sessions.some((item) => item.key === key);
@@ -343,12 +367,28 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       if (target && target.index !== weekIndex) {
         setWeekIndex(target.index);
         setSessionKey(known ? key : (sessions[0]?.key ?? null));
-      } else if (target && known) setSessionKey(key);
-      setLevel(!target ? "weeks" : stored === "session" && known ? "session" : "week");
+      } else if (known) setSessionKey(key);
+      if (pending !== null) {
+        // Revenu de la liste des semaines : la semaine choisie remplace celle de cette étape.
+        writeLevel("replace", "week", target?.index ?? null, null);
+        setLevel("week");
+        return;
+      }
+      setLevel(stored === "weeks" ? "weeks" : stored === "session" && known ? "session" : "week");
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, [plan.weeks, weekIndex]);
+  }, [plan.weeks, weekIndex, homeWeek]);
+  // Page rechargée sur une étape de la pile (Safari recharge souvent un onglet) : l'historique garde la
+  // marque de l'étape (liste des semaines, séance) ; on rouvre ce niveau-là (relecture).
+  useEffect(() => {
+    if (!isPhone()) return;
+    const stored = window.history.state?.[LEVEL_STATE];
+    if (stored === "weeks") setLevel("weeks");
+    else if (stored === "session" && meta.focus.session) setLevel("session");
+    // Au montage seulement.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Remonter d'un niveau (retour de la barre, semaine retirée, séance supprimée) : un retour arrière
   // si ce niveau a été ouvert par la pile, sinon l'étape actuelle devient le niveau du dessus.
   const closeLevel = (parent: EditorLevel) => {
@@ -404,8 +444,26 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     setWeekIndex(index);
     const next = plan.weeks.find((item) => item.index === index);
     setSessionKey(next ? (orderedSessions(next)[0]?.key ?? null) : null);
+    if (!isPhone()) return;
+    // Depuis la liste ouverte par « Semaine N ⌄ » : retour à la semaine, sans étape en trop.
+    if (level === "weeks" && window.history.state?.[LEVEL_STATE] === "weeks") {
+      pendingWeek.current = index;
+      window.history.back();
+      return;
+    }
     setLevel("week");
-    writeLevel(level === "weeks" ? "push" : "replace", "week", index, null);
+    writeLevel("replace", "week", index, null);
+  };
+  // Téléphone : « Semaine N ⌄ » ouvre la liste des semaines (une étape de l'historique) ; ‹ › change
+  // de semaine sur place.
+  const openWeeks = () => {
+    setLevel("weeks");
+    writeLevel("push", "weeks", week?.index ?? null, null);
+  };
+  const stepWeek = (delta: number) => {
+    if (!week) return;
+    const index = Math.min(Math.max(week.index + delta, 1), plan.weeks.length);
+    if (index !== week.index) chooseWeek(index);
   };
 
   // « Ajouter une séance » : toutes les disciplines, quel que soit le programme (demande d'Antonino du
@@ -988,8 +1046,41 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   );
 
   const sessionPosition = session ? ordered.findIndex((item) => item.key === session.key) + 1 : 0;
+  // « ⋯ » des cartes de la séance (D-187) : dupliquer ou supprimer une étape du brouillon, avec les
+  // règles de l'éditeur de séance ; une suppression se défait avec « Annuler ».
+  const editContent = (key: string, change: (content: SessionContent) => SessionContent) =>
+    update((current) => {
+      const found = findSession(current, key);
+      // La durée estimée suit la séance, comme dans l'éditeur de séance (sauf durée écrite à la main).
+      return found
+        ? replaceSession(
+            current,
+            withEstimatedDuration({ ...found.session, content: change(found.session.content) }),
+          )
+        : current;
+    });
+  const cardActions: CardActions | undefined =
+    readOnly || !session
+      ? undefined
+      : {
+          duplicate: (path) => editContent(session.key, (content) => duplicateAt(content, path)),
+          remove: (path) => {
+            const before = session.content;
+            editContent(session.key, (content) => removeAt(content, path));
+            toast("Étape supprimée.", {
+              action: { label: "Annuler", onClick: () => editContent(session.key, () => before) },
+            });
+          },
+          canDuplicate: (path) => canDuplicateAt(session.content, path),
+          canRemove: (path) => canRemoveAt(session.content, path),
+        };
   const sessionDetail = session ? (
-    <SessionDetail session={session} position={sessionPosition} week={`Semaine ${week?.index}`} />
+    <SessionDetail
+      session={session}
+      position={sessionPosition}
+      week={`Semaine ${week?.index}`}
+      actions={cardActions}
+    />
   ) : (
     <p className="text-[14px] text-muted">Choisis une séance pour voir son détail.</p>
   );
@@ -1283,8 +1374,9 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         onConfirm={() => {
           if (week) {
             update((current) => removeWeek(current, week.index));
-            setWeekIndex(Math.max(1, week.index - 1));
-            closeLevel("weeks");
+            const previous = Math.max(1, week.index - 1);
+            setWeekIndex(previous);
+            writeLevel("replace", "week", previous, null);
           }
           setSheet(null);
         }}
@@ -1386,6 +1478,118 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     </>
   );
 
+  // Téléphone : l'en-tête du programme (titre, dates, version, actions), en tête de la semaine.
+  const phoneHead = (
+    <>
+      <div className="flex flex-col gap-1.5 px-1">
+        <h2 className="text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">
+          {plan.title}
+        </h2>
+        <p className="text-[13.5px] text-muted">
+          {[
+            meta.athlete?.name,
+            draft
+              ? `${dayMonth.format(asDate(draft.startDate))} → ${dayMonth.format(asDate(weekMonday(draft.startDate, plan.weeks.length + 1)))}`
+              : `${plan.weeks.length} semaines`,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+        {phonePills}
+        {saveLabel ? <span className="mt-0.5">{saveLabel}</span> : null}
+      </div>
+      <div className="flex gap-2">
+        {target.kind === "template" ? (
+          // « Utiliser » (C25, D-178) : la fenêtre « Utiliser ce modèle » de la page.
+          <button
+            type="button"
+            onClick={openUseTemplate}
+            className={`${phoneButton} bg-surface text-text inset-ring inset-ring-field-ring`}
+          >
+            Utiliser
+          </button>
+        ) : null}
+        {readOnly ? (
+          target.kind === "template" ? (
+            <button
+              type="button"
+              onClick={copyCoory}
+              disabled={pending}
+              className={`${phoneButton} bg-cta text-on-cta`}
+            >
+              Dupliquer dans Mes modèles
+            </button>
+          ) : (
+            <UnarchiveButton phone />
+          )
+        ) : (
+          <>
+            {target.kind === "program" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent(PUBLISH_EVENT))}
+                  className={`${phoneButton} bg-cta text-on-cta`}
+                >
+                  Publier
+                </button>
+                <Link
+                  href={meta.athleteHref ?? "#"}
+                  aria-disabled={!meta.publication}
+                  className={`${phoneButton} bg-surface inset-ring inset-ring-field-ring ${meta.publication ? "text-text" : "pointer-events-none text-faint"}`}
+                >
+                  Aperçu
+                </Link>
+              </>
+            ) : null}
+            <MoreMenu
+              label={
+                target.kind === "program"
+                  ? "Plus d'actions sur le programme"
+                  : "Plus d'actions sur le modèle"
+              }
+              title={plan.title}
+              items={phoneMenuItems}
+            />
+          </>
+        )}
+      </div>
+    </>
+  );
+  // « ‹ Semaine 3 / 12 ⌄ › » : changer de semaine, ou ouvrir la liste des semaines par phase.
+  const weekPicker = week ? (
+    <div className="flex gap-2">
+      <button
+        type="button"
+        aria-label="Semaine précédente"
+        disabled={week.index <= 1}
+        onClick={() => stepWeek(-1)}
+        className="grid size-12 shrink-0 place-items-center rounded-[13px] text-text-2 inset-ring inset-ring-field-ring transition-[scale] duration-150 active:scale-[0.97] disabled:text-faint"
+      >
+        <ChevronLeft aria-hidden size={18} strokeWidth={2} />
+      </button>
+      <button
+        type="button"
+        aria-label={`Choisir une semaine (semaine ${week.index} sur ${plan.weeks.length})`}
+        onClick={openWeeks}
+        className="flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-[13px] text-[16px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale] duration-150 active:scale-[0.99]"
+      >
+        Semaine {week.index}
+        <span className="text-[14px] font-medium text-muted">/ {plan.weeks.length}</span>
+        <ChevronDown aria-hidden size={16} strokeWidth={2} className="text-muted" />
+      </button>
+      <button
+        type="button"
+        aria-label="Semaine suivante"
+        disabled={week.index >= plan.weeks.length}
+        onClick={() => stepWeek(1)}
+        className="grid size-12 shrink-0 place-items-center rounded-[13px] text-text-2 inset-ring inset-ring-field-ring transition-[scale] duration-150 active:scale-[0.97] disabled:text-faint"
+      >
+        <ChevronRight aria-hidden size={18} strokeWidth={2} />
+      </button>
+    </div>
+  ) : null;
+
   // ---------------------------------------------------------------------------
   // Rendu
   // ---------------------------------------------------------------------------
@@ -1393,22 +1597,17 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     <>
       {/* Téléphone : le retour de la barre suit le niveau ouvert. */}
       <MobileBarTitle>
-        {level === "weeks" ? (
+        {level === "week" ? (
           // Le même retour que l'ordinateur (revue MVP du 13/11, C8) : la page d'où l'on vient, en
           // enregistrant d'abord ce qui attend (C7) ; venu de la fiche du sportif, elle (B15).
           <BackGuardProvider value={leave}>
             <BackLink href={backHref} label={backLabel} variant="bar" />
           </BackGuardProvider>
         ) : (
-          <button
-            type="button"
-            onClick={() => closeLevel(level === "session" ? "week" : "weeks")}
-            className={barBackClass}
-          >
+          // Liste des semaines ou une séance : retour à la semaine.
+          <button type="button" onClick={() => closeLevel("week")} className={barBackClass}>
             <ArrowLeft aria-hidden {...barBackIcon} className="shrink-0" />
-            <span className="truncate">
-              {level === "session" ? `Semaine ${week?.index}` : "Semaines"}
-            </span>
+            <span className="truncate">Semaine {week?.index}</span>
           </button>
         )}
       </MobileBarTitle>
@@ -1660,79 +1859,9 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       <div className="flex flex-col gap-3 lg:hidden">
         {level === "weeks" ? (
           <>
-            <div className="flex flex-col gap-1.5 px-1">
-              <h2 className="text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">
-                {plan.title}
-              </h2>
-              <p className="text-[13.5px] text-muted">
-                {[
-                  meta.athlete?.name,
-                  draft
-                    ? `${dayMonth.format(asDate(draft.startDate))} → ${dayMonth.format(asDate(weekMonday(draft.startDate, plan.weeks.length + 1)))}`
-                    : `${plan.weeks.length} semaines`,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-              {phonePills}
-              {saveLabel ? <span className="mt-0.5">{saveLabel}</span> : null}
-            </div>
-            <div className="flex gap-2">
-              {target.kind === "template" ? (
-                // « Utiliser » (C25, D-178) : la fenêtre « Utiliser ce modèle » de la page.
-                <button
-                  type="button"
-                  onClick={openUseTemplate}
-                  className={`${phoneButton} bg-surface text-text inset-ring inset-ring-field-ring`}
-                >
-                  Utiliser
-                </button>
-              ) : null}
-              {readOnly ? (
-                target.kind === "template" ? (
-                  <button
-                    type="button"
-                    onClick={copyCoory}
-                    disabled={pending}
-                    className={`${phoneButton} bg-cta text-on-cta`}
-                  >
-                    Dupliquer dans Mes modèles
-                  </button>
-                ) : (
-                  <UnarchiveButton phone />
-                )
-              ) : (
-                <>
-                  {target.kind === "program" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => window.dispatchEvent(new CustomEvent(PUBLISH_EVENT))}
-                        className={`${phoneButton} bg-cta text-on-cta`}
-                      >
-                        Publier
-                      </button>
-                      <Link
-                        href={meta.athleteHref ?? "#"}
-                        aria-disabled={!meta.publication}
-                        className={`${phoneButton} bg-surface inset-ring inset-ring-field-ring ${meta.publication ? "text-text" : "pointer-events-none text-faint"}`}
-                      >
-                        Aperçu
-                      </Link>
-                    </>
-                  ) : null}
-                  <MoreMenu
-                    label={
-                      target.kind === "program"
-                        ? "Plus d'actions sur le programme"
-                        : "Plus d'actions sur le modèle"
-                    }
-                    title={plan.title}
-                    items={phoneMenuItems}
-                  />
-                </>
-              )}
-            </div>
+            <h2 className="px-1 text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">
+              Semaines
+            </h2>
             <label className="flex items-center gap-2.5 px-1">
               <ListFilter aria-hidden size={18} strokeWidth={2} className="shrink-0 text-muted" />
               <span className="sr-only">Semaine à afficher</span>
@@ -1876,6 +2005,8 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
 
         {level === "week" && week ? (
           <>
+            {phoneHead}
+            {weekPicker}
             <div className="flex flex-col gap-1.5 px-1">
               <h2 className="flex items-center gap-2 text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">
                 Semaine {week.index}
@@ -1958,6 +2089,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               variant="page"
               position={sessionPosition}
               week={`Semaine ${week?.index}`}
+              actions={cardActions}
             />
             {readOnly ? (
               sessionActions

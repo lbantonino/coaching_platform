@@ -72,7 +72,9 @@ test("TC-01, TC-14, TC-05, TC-04 : de zéro, publication bloquée, phases, modè
   const programUrl = page.url();
 
   if (phone) {
-    // Téléphone : 12 semaines vides, et « + Semaine », « + Phase » sous la liste (phase 4).
+    // Téléphone : l'accueil est la semaine 1 (D-187) ; « Semaine 1 ⌄ » ouvre la liste : 12 semaines
+    // vides, et « + Semaine », « + Phase » sous la liste (phase 4).
+    await page.getByRole("button", { name: /^Choisir une semaine/ }).click();
     await expect(page.getByRole("button", { name: /^Semaine \d+ / })).toHaveCount(12);
     await expect(
       page.getByText("Aucune séance", { exact: true }).filter({ visible: true }).first(),
@@ -84,7 +86,9 @@ test("TC-01, TC-14, TC-05, TC-04 : de zéro, publication bloquée, phases, modè
 
   const weeks = page.getByRole("navigation", { name: "Semaines" });
   await expect(weeks.getByRole("button", { name: /^Semaine \d+/ })).toHaveCount(12);
-  await expect(page.getByText("Aucune séance cette semaine.")).toBeVisible();
+  await expect(
+    page.getByText("Aucune séance cette semaine.").filter({ visible: true }),
+  ).toBeVisible();
 
   // TC-14 : sans séance, la publication est bloquée.
   await page.getByRole("button", { name: "Publier" }).first().click();

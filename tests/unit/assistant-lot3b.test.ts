@@ -715,7 +715,7 @@ describe("relecture n°2 : « modifier une séance » dit ce qui change vraiment
 
     expect(result.lines).toEqual([
       expect.stringMatching(/^Semaine 1 · Force · Full body A : durée \d+ → \d+ min$/),
-      "Semaine 1 · Force · Full body A : Back squat : 3 × 6-8 · RIR 3 · repos 2:30 → 1 × 1-8 · 200 kg · RIR 3 · repos 2:30",
+      "Semaine 1 · Force · Full body A : Back squat : 3 × 6-8 · repos 2:30 → 1 × 1-8 · 200 kg · repos 2:30",
     ]);
   });
 

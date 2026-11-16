@@ -60,15 +60,29 @@ export function MoreMenu({
       if (!box.current?.contains(event.target as Node)) setOpen(null);
     };
     const close = () => setOpen(null);
+    // Défilement de la page ou d'une liste : le menu ne suivrait pas son bouton, il se ferme… mais
+    // seulement si le bouton a vraiment bougé. Un défilement en attente (une carte ajoutée juste
+    // avant, l'inertie du pavé tactile) fermait le menu à peine ouvert : il fallait cliquer deux fois
+    // (D-187, « ⋯ » des cartes d'une séance).
+    const origin = trigger.current?.getBoundingClientRect();
+    const onScroll = () => {
+      const now = trigger.current?.getBoundingClientRect();
+      if (
+        !origin ||
+        !now ||
+        Math.abs(now.top - origin.top) > 2 ||
+        Math.abs(now.left - origin.left) > 2
+      )
+        close();
+    };
     document.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("resize", close);
-    // Défilement de la page ou d'une liste : le menu ne suivrait pas son bouton, il se ferme.
-    window.addEventListener("scroll", close, true);
+    window.addEventListener("scroll", onScroll, true);
     box.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus({ preventScroll: true });
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("resize", close);
-      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [open]);
 

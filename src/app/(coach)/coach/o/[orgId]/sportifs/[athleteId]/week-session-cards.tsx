@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, MessageSquareQuote, Pencil, Repeat2, UserRound } from "lucide-react";
+import { ChevronDown, MessageSquareQuote, Pencil, UserRound } from "lucide-react";
 import Link from "next/link";
 import {
   createContext,
@@ -15,7 +15,9 @@ import {
 
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
+import { SessionCardsView } from "@/components/programs/session-cards";
 import { SessionLine } from "@/components/programs/session-line";
+import type { SessionCard } from "@/domain/training/session-cards";
 import type { CardLine } from "@/domain/training/card-lines";
 import type { ProgramSessionContent } from "@/domain/training/program-session";
 
@@ -43,49 +45,15 @@ export type WeekSessionView = {
   coach: { label: string; today: boolean; href: string | null } | null;
   // « Semaine 2 · 2 nov. – 8 nov. · au jour choisi par Inès ».
   context: string;
+  // Le détail en cartes (session-cards.ts, D-187) : depuis la version publiée structurée, sinon la v1.
+  cards: SessionCard[];
 };
 
 const discipline = (content: ProgramSessionContent): Discipline => content.discipline ?? "hybrid";
 
 // Une ligne de carte : le composant commun aux cartes et au détail des séances (session-line.tsx).
-function CardItem({
-  text,
-  discipline,
-  dot,
-}: {
-  text: string;
-  discipline: Discipline;
-  dot: string;
-}) {
-  return <SessionLine text={text} discipline={discipline} dot={dot} />;
-}
-
-// Une ligne d'un bloc répété : « 4 min @4:55 min/km » -> Effort · 4:55 min/km · 4 min ;
-// « 1:45 min de récupération (trot lent) » -> Récupération · Trot lent · 1:45 min.
-function repeatRow(line: string): { title: string; sub: string; right: string } {
-  const recovery = /^(\S+(?: min| s)?) de (récupération|repos)(?: \((.+)\))?/i.exec(line);
-  if (recovery) {
-    const note = recovery[3] ?? "";
-    return {
-      title: /repos/i.test(recovery[2] ?? "") ? "Repos" : "Récupération",
-      sub: note ? note.charAt(0).toUpperCase() + note.slice(1) : "",
-      right:
-        recovery[1]?.includes("min") || recovery[1]?.includes(" s")
-          ? (recovery[1] ?? "")
-          : `${recovery[1]} min`,
-    };
-  }
-  const effort = /^(\S+ (?:min|s|m|km))\s*@\s*(.+)$/.exec(line);
-  if (effort) return { title: "Effort", sub: effort[2] ?? "", right: effort[1] ?? "" };
-  return { title: line, sub: "", right: "" };
-}
-
-// Une ligne d'exercice : « Back squat · 4 × 6 · 60 kg · repos 2:30 » -> titre + détail + repos.
-function exerciseRow(line: string): { title: string; sub: string; right: string } {
-  const [title = line, ...rest] = line.split(" · ");
-  const rest2 = rest.filter((part) => !part.startsWith("repos "));
-  const rest3 = rest.find((part) => part.startsWith("repos "));
-  return { title, sub: rest2.join(" · "), right: rest3 ? rest3.replace("repos ", "") : "" };
+function CardItem({ text, discipline }: { text: string; discipline: Discipline }) {
+  return <SessionLine text={text} discipline={discipline} />;
 }
 
 function SessionDetail({
@@ -141,87 +109,8 @@ function SessionDetail({
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <ol className="m-0 flex list-none flex-col gap-2 p-0">
-          {content.steps.map((step, index) => {
-            const nested = step.repeat
-              ? step.repeat.lines.map(repeatRow)
-              : step.lines.length > 1
-                ? step.lines.map(exerciseRow)
-                : null;
-            return (
-              <li
-                key={index}
-                className={`flex flex-col gap-2.5 rounded-[14px] p-3 lg:p-3.5 ${nested ? styles.tint : "bg-surface"}`}
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={`grid size-[26px] shrink-0 place-items-center rounded-full text-[12px] font-bold ${
-                      nested ? styles.number : "text-text inset-ring-[1.5px] inset-ring-field-ring"
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="text-[15px] font-semibold text-text">{step.title}</span>
-                      {step.repeat ? (
-                        <span
-                          className={`inline-flex h-7 items-center gap-1.5 rounded-[9px] bg-surface px-2.5 text-[12.5px] font-semibold whitespace-nowrap ${styles.text}`}
-                        >
-                          <Repeat2 aria-hidden size={13} strokeWidth={2} />
-                          Répéter {step.repeat.times} fois
-                        </span>
-                      ) : nested && step.badge ? (
-                        <span
-                          className={`inline-flex h-7 items-center rounded-[9px] bg-surface px-2.5 text-[12.5px] font-semibold whitespace-nowrap ${styles.text}`}
-                        >
-                          {step.badge}
-                        </span>
-                      ) : step.badge ? (
-                        <span className="text-[14px] font-semibold whitespace-nowrap text-text">
-                          {step.badge}
-                        </span>
-                      ) : null}
-                    </span>
-                    {!nested && step.lines[0] ? (
-                      <span className="text-[13px] leading-[1.45] text-muted">
-                        {step.lines.join(" · ")}
-                      </span>
-                    ) : null}
-                  </span>
-                </div>
-                {nested ? (
-                  <ul className="m-0 flex list-none flex-col gap-1.5 p-0 lg:pl-[38px]">
-                    {nested.map((row, i) => (
-                      <li
-                        key={i}
-                        className="flex items-center gap-3 rounded-[12px] bg-surface px-3 py-2.5"
-                      >
-                        <span
-                          aria-hidden
-                          className={`h-8 w-[3px] shrink-0 rounded-[2px] ${row.title === "Récupération" || row.title === "Repos" ? "bg-dlg-disabled" : styles.dot}`}
-                        />
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate text-[14px] font-semibold text-text">
-                            {row.title}
-                          </span>
-                          {row.sub ? (
-                            <span className="text-[13px] text-muted">{row.sub}</span>
-                          ) : null}
-                        </span>
-                        {row.right ? (
-                          <span className="text-[14px] font-semibold whitespace-nowrap text-text">
-                            {row.right}
-                          </span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
+        {/* La séance en cartes, la même vue que la page du programme (D-187). */}
+        <SessionCardsView cards={session.cards} discipline={kind} onTint />
         <div className="flex flex-col gap-3">
           {content.coachTips ? (
             <div className="flex items-start gap-3 rounded-[14px] bg-surface p-4">
@@ -360,7 +249,7 @@ export function WeekSessionCards({
                   <span className="flex flex-col gap-1 border-t border-line pt-2.5 text-[12px] leading-[1.4] font-normal [overflow-wrap:anywhere] text-text lg:text-[11.5px]">
                     {session.lines.map((line, i) =>
                       line.kind === "line" ? (
-                        <CardItem key={i} text={line.text} discipline={kind} dot={styles.dot} />
+                        <CardItem key={i} text={line.text} discipline={kind} />
                       ) : (
                         // Bloc répété : « 4 × » puis, derrière un trait, l'effort et la récup qui le
                         // suit, pour lire que la récup fait partie de chaque répétition. Un bloc Hyrox
@@ -369,16 +258,15 @@ export function WeekSessionCards({
                           <span className={`text-[11.5px] font-bold ${styles.text}`}>
                             {line.kind === "repeat" ? `${line.times} ×` : line.label}
                           </span>
-                          {/* Le trait du bloc passe sous les puces des exercices (des perles sur un
-                              fil discret) : le bloc se lit d'un coup d'œil sans prendre une colonne
-                              de plus, et chaque puce reste nette. */}
-                          <span className="relative flex flex-col gap-0.5">
+                          {/* Le trait du bloc, à gauche des lignes répétées (plus de puces depuis
+                              D-187 : les lignes sont décalées pour ne pas passer sur le trait). */}
+                          <span className="relative flex flex-col gap-0.5 pl-2.5">
                             <span
                               aria-hidden
                               className={`absolute inset-y-0 left-[1.5px] w-0.5 rounded-full opacity-50 ${styles.dot}`}
                             />
                             {line.lines.map((text, j) => (
-                              <CardItem key={j} text={text} discipline={kind} dot={styles.dot} />
+                              <CardItem key={j} text={text} discipline={kind} />
                             ))}
                           </span>
                         </span>

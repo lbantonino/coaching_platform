@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 import { cardLines } from "@/domain/training/card-lines";
+import { sessionCards, viewStepCards } from "@/domain/training/session-cards";
 import { defaultWeekIndex } from "@/domain/training/program-status";
 import { sessionMomentLabels } from "@/domain/training/session-v2";
 import type { AgendaItem } from "@/features/agenda/items";
@@ -248,6 +249,10 @@ function WeekCard({
               editHref: editHref(week.index, session.key),
               content: session.content,
               lines: cardLines(session.content),
+              // La même vue en cartes que la page du programme (D-187).
+              cards: session.published
+                ? sessionCards(session.published.content)
+                : viewStepCards(session.content.steps),
               dayLabel,
               dayShort: date ? shortDay(date) : null,
               when: when || null,

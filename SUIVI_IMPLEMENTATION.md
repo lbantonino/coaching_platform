@@ -31,6 +31,28 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Séances en cartes, même page sur ordinateur et téléphone (D-187, 15/11/2026)
+```
+src/domain/training/session-cards.ts (nouveau : une séance en cartes, toutes disciplines, v1 comprise) ;
+  session-items.ts (nouveau : Dupliquer / Supprimer une étape par son chemin, règles de l'éditeur) ;
+  session-view.ts (plus de RIR dans la ligne d'un exercice) ; src/components/programs/session-cards.tsx
+  (nouveau : la vue en cartes, barre de couleur, « ⋯ ») ; session-detail.tsx (cartes), session-line.tsx
+  (sans pastille), editor-session-card.tsx (barre, ligne du type sur téléphone) ; program-editor.tsx
+  (« ⋯ » branchés ; téléphone ouvert sur la semaine, « ‹ Semaine N / 12 ⌄ › », liste en étape de
+  l'historique) ; week-session-cards.tsx + program-weeks.tsx (agenda de la fiche en cartes) ;
+  more-menu.tsx (ne se ferme plus sur un défilement qui ne bouge pas son bouton : il fallait cliquer deux
+  fois) ; bibliotheque/[cle] + exercises/queries.ts (ouvrir un exercice du catalogue par son identifiant).
+Tests : session-cards.test.ts (9), session-items.test.ts (6) ; e2e session-cards.spec.ts,
+  session-card-actions.spec.ts (nouveaux), program-editor-back.spec.ts réécrit, et les parcours téléphone
+  de program-editor, program-cases, modeles-coory, athlete-overview mis à jour.
+Relecture indépendante (0 critique) : corrigés avec un test vu en échec : Hyrox (temps cible, limite,
+  exercice lié, format d'un AMRAP renommé), faux « Supprimer » sur une ligne v1, durée recalculée, retour de
+  la fiche de la Bibliothèque vers le programme (la redirection devenait la « page précédente »),
+  rechargement sur la liste des semaines ; vérifiés par capture : barre coupée aux coins, cartes de l'agenda
+  visibles sur fond teinté, trait des blocs répétés de l'agenda. 8 mineurs reportés (registre).
+Hors lot : éditeur « Modifier la séance » en cartes, PDF, champs RIR de l'éditeur (maquettes à venir).
+```
+
 ### Une seule vue d'un programme : l'onglet Programme en cartes (D-186, 15/11/2026)
 ```
 sportifs/[athleteId]/program-tab.tsx (réécrit : cartes de ses programmes, état vide, « Créer » et

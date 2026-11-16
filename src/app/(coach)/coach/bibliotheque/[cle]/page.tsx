@@ -37,21 +37,48 @@ export const metadata: Metadata = {
 // un exercice de l'organisation (D-76) se modifie, se supprime et peut avoir un lien vidéo.
 const KEY = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-export default function ExercisePage({ params }: PageProps<"/coach/bibliotheque/[cle]">) {
+// Ouverte depuis une séance (« ⋯ » → « Voir dans la Bibliothèque », D-187) : le retour ramène au
+// programme ou au modèle, comme le geste de retour (règle D-124). Seulement une adresse de l'app.
+function backFrom(retour: string | string[] | undefined): { href: string; label: string } {
+  if (
+    typeof retour === "string" &&
+    /^\/coach\/o\/[0-9a-f-]{36}\/(programmes|sportifs)\//.test(retour) &&
+    !retour.includes("//")
+  ) {
+    const label = /\/programmes\/modeles\//.test(retour)
+      ? "Modèle"
+      : /\/sportifs\//.test(retour)
+        ? "Sportif"
+        : "Programme";
+    return { href: retour, label };
+  }
+  return { href: "/coach/bibliotheque", label: "Bibliothèque" };
+}
+
+export default function ExercisePage({
+  params,
+  searchParams,
+}: PageProps<"/coach/bibliotheque/[cle]">) {
   return (
     // Très grand écran : la fiche s'arrête à 1 180 px de large, centrée (lignes de consignes lisibles,
     // PROPOSED validé le 06/11).
     <main className={`${pageMainClass} min-[1440px]:mx-auto min-[1440px]:max-w-[1214px]`}>
       <Suspense fallback={<PageLoading />}>
-        {params.then(({ cle }) => (
-          <Exercise exerciseKey={cle} />
+        {Promise.all([params, searchParams]).then(([{ cle }, query]) => (
+          <Exercise exerciseKey={cle} back={backFrom(query.retour)} />
         ))}
       </Suspense>
     </main>
   );
 }
 
-async function Exercise({ exerciseKey }: { exerciseKey: string }) {
+async function Exercise({
+  exerciseKey,
+  back,
+}: {
+  exerciseKey: string;
+  back: { href: string; label: string };
+}) {
   const { user, memberships } = await requireCoach();
   if (!KEY.test(exerciseKey)) notFound();
   const sheet = await getExerciseSheet(exerciseKey, user.id);
@@ -112,7 +139,7 @@ async function Exercise({ exerciseKey }: { exerciseKey: string }) {
   return (
     <>
       <PageHeader
-        back={{ href: "/coach/bibliotheque", label: "Bibliothèque" }}
+        back={back}
         title={sheet.nameFr}
         // Téléphone : le nom est écrit dans la carte du haut ; la barre garde le retour.
         visibleTitle={false}
