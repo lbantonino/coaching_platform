@@ -5,11 +5,13 @@ import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/tr
 
 // Carte d'une séance dans l'éditeur de programme (maquette 03, EDT-01 à 05, D-156). Mesures exactes :
 // - ordinateur : rayon 15, 14 / 12 / 14 / 8 px, écart 12, filet .08 ; poignée (6 points) ; « SÉANCE n »
-//   11,5/600 espacé gris clair ; pastille 8 et nom 15/600 ; « Running · Endurance » 12,5 gris ;
+//   11,5/600 espacé gris clair ; nom 15/600 ; « Running · Endurance » 12,5 gris ;
 //   résumé 12,5/500 (plusieurs infos, chacune sur une ligne, qui passent à la ligne entre elles) ; badge
 //   du coach 22 px rayon 11 ; flèches ↑ ↓ de 28 × 24 rayon 7, désactivées en gris très clair ;
-// - téléphone : rayon 18, 14 / 10 / 14 / 16 px, écart 10, sans filet ni poignée ni ligne de type ; nom
+// - téléphone : rayon 18, 14 / 10 / 14 / 16 px, écart 10, sans filet ni poignée ; nom
 //   16/600, résumé 13, badge 24 px ; flèches de 44 × 40 (cible tactile).
+// D-187 (test sur iPhone du 15/11/2026, « la même page » partout) : la discipline est une barre de
+// couleur à gauche, plus une pastille, et la ligne « Running · Endurance » s'affiche aussi sur téléphone.
 // Choisie : anneau violet 1,5 px (et une ombre douce sur ordinateur). Lecture seule (modèle Coory) : ni
 // poignée ni flèches. Toute la carte choisit la séance (un bouton étendu sous le texte) ; les flèches
 // restent des boutons à part.
@@ -67,14 +69,24 @@ export function EditorSessionCard({
     <div
       className={`relative flex items-center rounded-[18px] bg-surface transition-shadow duration-150 lg:rounded-[15px] ${
         dayPad
-          ? "gap-3 py-2.5 pr-3.5 pl-2.5 lg:py-[9px] lg:pr-3 lg:pl-[9px]"
-          : "gap-2.5 py-3.5 pr-2.5 pl-4 lg:gap-3 lg:pr-3 lg:pl-2"
+          ? "gap-3 py-2.5 pr-3.5 pl-3.5 lg:py-[9px] lg:pr-3 lg:pl-3"
+          : "gap-2.5 py-3.5 pr-2.5 pl-5 lg:gap-3 lg:pr-3 lg:pl-3"
       } ${
         selected
           ? "inset-ring-[1.5px] inset-ring-violet/55 lg:shadow-lift"
           : "lg:inset-ring lg:inset-ring-line"
       } ${dragging ? "opacity-60" : ""}`}
     >
+      {/* La discipline : une barre à gauche (D-187, test sur iPhone du 15/11 : plus de pastilles), la
+          même que sur les cartes des étapes. */}
+      {/* Coupée par les coins arrondis de la carte (relecture : elle dépassait), sans couper le contour
+          de focus de la carte elle-même. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+      >
+        <span className={`absolute inset-y-0 left-0 w-[5px] ${styles.dot}`} />
+      </span>
       {dayPad ?? null}
       {handle ? (
         <span className="relative z-10 hidden lg:flex">{handle}</span>
@@ -99,7 +111,6 @@ export function EditorSessionCard({
           ) : null}
         </span>
         <span className="flex min-w-0 items-center gap-2">
-          <span aria-hidden className={`size-2 shrink-0 rounded-full ${styles.dot}`} />
           {onSelect ? (
             <button
               type="button"
@@ -115,7 +126,8 @@ export function EditorSessionCard({
             </span>
           )}
         </span>
-        <span className="hidden truncate text-[12.5px] leading-[normal] text-muted lg:block">
+        {/* Aussi sur téléphone (D-187 : la même carte sur les deux appareils). */}
+        <span className="truncate text-[13px] leading-[normal] text-muted lg:text-[12.5px]">
           {disciplineLabels[discipline]} · {sessionType}
         </span>
         {summary.length > 0 ? (

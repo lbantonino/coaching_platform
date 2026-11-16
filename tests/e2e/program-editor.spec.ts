@@ -44,10 +44,8 @@ test("TC-02, TC-10 : brouillon depuis un modèle Coory, séance Running modifié
   const programUrl = page.url();
 
   // L'éditeur : semaine 1, sa première séance (« Endurance »), puis l'éditeur de séance.
-  if (phone) {
-    await page.getByRole("button", { name: /^Semaine 1 / }).click();
-    await page.getByRole("button", { name: "Endurance", exact: true }).click();
-  }
+  // Téléphone : la page ouvre sur la semaine 1 (D-187) ; sa séance s'ouvre depuis sa carte.
+  if (phone) await page.getByRole("button", { name: "Endurance", exact: true }).click();
   await page.getByRole("button", { name: "Modifier la séance" }).click();
   await expect(page).toHaveURL(/\/seances\/[^/]+$/);
   await expect(page.getByRole("heading", { name: "Endurance", level: 2 })).toBeVisible();
@@ -141,7 +139,6 @@ test("TC-02, TC-10 : brouillon depuis un modèle Coory, séance Running modifié
   ).toBeVisible();
   // La modification est enregistrée dans le brouillon : la séance l'affiche au retour.
   await page.goto(programUrl);
-  if (phone) await page.getByRole("button", { name: /^Semaine 1 / }).click();
   await expect(
     page
       .getByText(/12 min/)
@@ -183,10 +180,7 @@ test("TC-11 : séries en saisie rapide, et % du max sans max connu", async ({ pa
   await page.getByRole("button", { name: "Créer le brouillon" }).click();
   await expect(page).toHaveURL(/\/programmes\/[0-9a-f-]{36}$/);
 
-  if (phone) {
-    await page.getByRole("button", { name: /^Semaine 1 / }).click();
-    await page.getByRole("button", { name: "Force A", exact: true }).click();
-  }
+  if (phone) await page.getByRole("button", { name: "Force A", exact: true }).click();
   await page.getByRole("button", { name: "Modifier la séance" }).click();
   await expect(page.getByRole("heading", { name: "Force A", level: 2 })).toBeVisible();
 

@@ -111,7 +111,9 @@ const SHEET =
   "id, key, organization_id, name_fr, category, hyrox_station, equipment, primary_muscles, secondary_muscles, difficulty, unilateral, instructions_fr, image_main, image_start, image_end, video_url, variant_of, attribution_required, updated_at";
 
 // Fiche d'un exercice visible : par sa clé (catalogue commun) ou par son identifiant (exercice de
-// l'organisation). null si inconnu, masqué, ou d'une autre organisation (RLS).
+// l'organisation, ou du catalogue depuis un programme : « Voir dans la Bibliothèque », D-187 ; pas de
+// redirection vers sa clé : la page intermédiaire deviendrait la « page précédente » du retour).
+// null si inconnu, masqué, ou d'une autre organisation (RLS).
 export async function getExerciseSheet(
   param: string,
   userId: string,
@@ -124,9 +126,7 @@ export async function getExerciseSheet(
     .eq("visibility", "active")
     .is("archived_at", null);
   const { data: row } = await (
-    byId
-      ? base.eq("id", param).not("organization_id", "is", null)
-      : base.eq("key", param).is("organization_id", null)
+    byId ? base.eq("id", param) : base.eq("key", param).is("organization_id", null)
   ).maybeSingle();
   if (!row) return null;
   const [{ data: favorite }, { data: parent }] = await Promise.all([

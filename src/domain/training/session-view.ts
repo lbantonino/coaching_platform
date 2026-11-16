@@ -172,7 +172,7 @@ function loadText(set: StrengthSet): string | null {
 const uniform = (values: (string | null)[]) =>
   values.every((value) => value === values[0]) ? (values[0] ?? null) : null;
 
-// « Back squat · 4 × 6 · 60 kg · RIR 2 · repos 2:30 » ; pyramide : « Leg curl assis · 20-15-10-8 ».
+// « Back squat · 4 × 6 · 60 kg · repos 2:30 » ; pyramide : « Leg curl assis · 20-15-10-8 ».
 export function exerciseLine(exercise: StrengthExercise, options?: { withSets?: boolean }): string {
   const work = exercise.sets.filter((set) => set.type === "normal");
   const sets = work.length > 0 ? work : exercise.sets;
@@ -183,8 +183,7 @@ export function exerciseLine(exercise: StrengthExercise, options?: { withSets?: 
   else parts.push(sameReps ? `${sets.length} × ${sameReps}` : reps.join("-"));
   const load = uniform(sets.map(loadText));
   if (load) parts.push(load);
-  const rir = uniform(sets.map((set) => (set.rir !== undefined ? `RIR ${set.rir}` : null)));
-  if (rir) parts.push(rir);
+  // Plus de RIR à l'affichage (test sur iPhone du 15/11/2026, D-187 : personne ne le comprend).
   if (exercise.restSec) {
     // « repos 2:30 » (maquette) mais « repos 2 min » : l'unité ne tombe qu'avec les secondes.
     const rest = formatSeconds(exercise.restSec);

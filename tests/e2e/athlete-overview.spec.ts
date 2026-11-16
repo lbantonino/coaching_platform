@@ -128,13 +128,17 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await page.getByRole("link", { name: "Toutes les semaines" }).click();
   await expect(page.getByRole("region", { name: /^Semaine \d+$/ })).toHaveCount(12);
 
-  // Une séance se déplie (maquette 2c, D-157) : étapes, bloc répété ; « Modifier la séance » ouvre
-  // son éditeur (la page d'une séance a été retirée le 10/11, décision d'Antonino).
+  // Une séance se déplie (maquette 2c, D-157) : ses étapes en cartes (D-187), le bloc répété en
+  // grande carte (« Répéter », « 5 fois ») ; « Modifier la séance » ouvre son éditeur (la page d'une
+  // séance a été retirée le 10/11, décision d'Antonino).
   await firstWeek
     .getByRole("button", { name: /^Déplier la séance \d+ : Endurance rapide$/ })
     .click();
+  // (Séance v1, en texte : la grande carte porte le nom du bloc et son volume.)
+  const repeat = firstWeek.getByRole("list", { name: "Bloc principal" }).filter({ visible: true });
+  await expect(repeat.getByText("4 min @4:55 min/km")).toBeVisible();
   await expect(
-    firstWeek.getByText("Répéter 5 fois").filter({ visible: true }).first(),
+    firstWeek.getByRole("list", { name: "Étapes de la séance" }).getByText("5 × 4 min"),
   ).toBeVisible();
   await expect(
     firstWeek.getByRole("link", { name: "Modifier la séance" }).filter({ visible: true }),

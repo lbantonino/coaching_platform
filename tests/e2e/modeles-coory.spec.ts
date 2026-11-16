@@ -84,8 +84,11 @@ test("D-177, D-178 : modèles dans l'ordre, « Utiliser » en direct pour un spo
   await sheet.getByRole("button", { name: "Créer le programme" }).click();
   await expect(page).toHaveURL(/\/programmes\/[0-9a-f-]{36}$/);
 
-  // Le brouillon a les 8 semaines du modèle (téléphone : la liste des semaines ; ordinateur : la
-  // colonne des semaines) et ses séances de course et de musculation.
+  // Le brouillon a les 8 semaines du modèle (téléphone : la liste des semaines, ouverte par
+  // « Semaine 1 ⌄ », D-187 ; ordinateur : la colonne des semaines) et ses séances de course et de
+  // musculation.
+  if (testInfo.project.name === "telephone")
+    await page.getByRole("button", { name: /^Choisir une semaine/ }).click();
   const weeks =
     testInfo.project.name === "telephone"
       ? page.getByRole("option", { name: /^Semaine \d+ ·/ })
@@ -185,11 +188,7 @@ test("D-179 : renommer une étape de course et un exercice", async ({ page }, te
   const programUrl = page.url();
 
   const openSession = async (title: string) => {
-    // Téléphone : depuis la liste des semaines, on ouvre la semaine 1 (après « Terminer », la page
-    // revient déjà sur elle : ?semaine=1).
-    if (phone && !page.url().includes("semaine=")) {
-      await page.getByRole("button", { name: /^Semaine 1 \d/ }).click();
-    }
+    // Téléphone : la page ouvre sur la semaine 1 (D-187), comme au retour de « Terminer ».
     await page
       .getByRole("button", { name: new RegExp(`^${title}`) })
       .filter({ visible: true })
