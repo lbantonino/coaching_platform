@@ -51,4 +51,25 @@ describe("rendu des PDF du programme", () => {
     expect(pages.a4).toBe(true);
     expect(pages.outlines).toBe(true);
   }, 30_000);
+
+  // Relecture du 16/11 : « % du max » en entier ne doit pas faire passer les cellules à la ligne sans
+  // que le modèle le sache (sinon une page en plus, et tous les numéros du sommaire décalés).
+  it("Fiches : 7 exercices en % du max (sans max connu) sur 8 semaines, exactement les pages prévues", async () => {
+    const program = demoProgram(8);
+    for (const week of program.weeks) {
+      const published = week.sessions[1]!.published!;
+      if (published.content.discipline !== "strength") continue;
+      published.content.items = Array.from({ length: 7 }, (_, i) => ({
+        id: `p${i}`,
+        kind: "exercise" as const,
+        name: `Exercice numéro ${i + 1}`,
+        loadMode: "pct" as const,
+        sets: [70, 75, 80, 85].map((pct) => ({ type: "normal" as const, repsMin: 5, pct })),
+        restSec: 120,
+      }));
+    }
+    const model = fichesPdf(program);
+    const pdf = await renderFichesPdf(model, "Coach Test");
+    expect(pagesOf(pdf).count).toBe(model.pages.length);
+  }, 30_000);
 });

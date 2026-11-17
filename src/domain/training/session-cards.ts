@@ -25,7 +25,7 @@ import {
 // étape (échauffement, chaque exercice, retour au calme), une grande carte pour ce qui se répète
 // (superset, EMOM, « Répéter », circuit Hyrox) avec une petite carte par exercice. Dans une carte : le
 // nom, le volume en haut à droite (« 4 séries »), la ligne (« 5 répétitions · 70 kg », « 1 km ·
-// @5:30 »), puis en gris le repos, le tempo ou la consigne. Jamais de RIR (personne ne le comprend) ;
+// 5:30 /km »), puis en gris le repos, le tempo ou la consigne. Jamais de RIR (personne ne le comprend) ;
 // les kilos si le max est connu, sinon « % du max ». Règles PURES, les mêmes partout.
 
 export type CardRole = "warmup" | "work" | "rest" | "cooldown";
@@ -217,7 +217,8 @@ function runMeasureText(step: RunStep): string {
 function runTargetText(step: RunStep): string | null {
   if (!step.target) return null;
   if (step.target.kind === "pace") {
-    return `@${formatPaceRange(step.target.fromSecPerKm, step.target.toSecPerKm)}`;
+    // Allure écrite comme dans les applications de sport (Antonino, 16/11) : « 5:30 /km ».
+    return `${formatPaceRange(step.target.fromSecPerKm, step.target.toSecPerKm)} /km`;
   }
   const bpm =
     step.target.bpmFrom !== undefined ? ` · ${step.target.bpmFrom}–${step.target.bpmTo} bpm` : "";
@@ -260,7 +261,7 @@ function hyroxCard(line: HyroxLine, path: string[]): StepCard {
         lines: [
           [
             formatMeters(line.meters),
-            line.paceSecPerKm ? `@${formatPace(line.paceSecPerKm)}` : null,
+            line.paceSecPerKm ? `${formatPace(line.paceSecPerKm)} /km` : null,
           ]
             .filter(Boolean)
             .join(" · "),
@@ -280,7 +281,7 @@ function hyroxCard(line: HyroxLine, path: string[]): StepCard {
             ? `2 × ${formatKg(line.loadKg)}`
             : formatKg(line.loadKg)
           : null;
-      const pace = line.pacePer500m ? `@${formatPace(line.pacePer500m)} /500 m` : null;
+      const pace = line.pacePer500m ? `${formatPace(line.pacePer500m)} /500 m` : null;
       return card(hyroxStationLabels[line.station], path, {
         role: "work",
         lines: [[amount, load, pace].filter(Boolean).join(" · ")].filter(Boolean),
@@ -294,7 +295,7 @@ function hyroxCard(line: HyroxLine, path: string[]): StepCard {
           : line.seconds !== undefined
             ? formatSeconds(line.seconds)
             : null;
-      const pace = line.pacePer500m ? `@${formatPace(line.pacePer500m)} /500 m` : null;
+      const pace = line.pacePer500m ? `${formatPace(line.pacePer500m)} /500 m` : null;
       return card(ergLabels[line.machine], path, {
         role: "work",
         lines: [[amount, pace].filter(Boolean).join(" · ")].filter(Boolean),
@@ -333,7 +334,7 @@ function hyroxBlockCard(block: HyroxBlock): SessionCard {
     return card(title, [block.id], {
       ...(block.targetSec ? { aside: formatClock(block.targetSec) } : {}),
       // Chaque ligne écrite comme une carte, en une ligne, son temps cible compris (relecture) :
-      // « Course 1 km · @6:00 », « Course 1 km · Temps cible 6:00 », « Rameur 1 km ».
+      // « Course 1 km · 6:00 /km », « Course 1 km · Temps cible 6:00 », « Rameur 1 km ».
       lines: steps.map((step) =>
         [[step.title, step.lines.join(" · ")].filter(Boolean).join(" "), ...step.sub].join(" · "),
       ),
@@ -378,18 +379,33 @@ function hyroxBlockCard(block: HyroxBlock): SessionCard {
 // ---------------------------------------------------------------------------
 // Blocs texte (notes libres, séances v1 converties)
 // ---------------------------------------------------------------------------
+// Une ligne écrite en texte (séance v1) : son allure comme dans les applications de sport (Antonino,
+// 16/11) : « 4 min @4:55 min/km » -> « 4 min · 4:55 /km » ; « @2:10 min/500 m » -> « · 2:10 /500 m ».
+const PACE = /\s*@\s*(\d+:\d{2}(?:\s?[–-]\s?\d+:\d{2})?)\s?min\s?\/\s?(km|500 ?m)/g;
+const paceText = (text: string) =>
+  text.replace(
+    PACE,
+    (_, pace: string, unit: string) => ` · ${pace} /${unit === "km" ? "km" : "500 m"}`,
+  );
+const paceLines = (lines: string[]) => lines.map(paceText);
+
 function textCard(block: TextBlock): SessionCard {
   if (!block.repeat) {
     return card(block.title, [block.id], {
       ...(block.badge ? { aside: block.badge } : {}),
-      lines: block.lines,
+      lines: paceLines(block.lines),
     });
   }
   return group(
     block.title,
     [block.id],
-    block.repeat.lines.map((line, i) => card(line, [block.id, String(i)], { role: "work" })),
-    { aside: block.badge ?? `${block.repeat.times} fois`, footer: block.lines.join(" · ") || null },
+    block.repeat.lines.map((line, i) =>
+      card(paceText(line), [block.id, String(i)], { role: "work" }),
+    ),
+    {
+      aside: block.badge ?? `${block.repeat.times} fois`,
+      footer: paceLines(block.lines).join(" · ") || null,
+    },
   );
 }
 
@@ -426,16 +442,18 @@ export function viewStepCards(steps: ViewStep[]): SessionCard[] {
       ? group(
           step.title,
           [String(i)],
-          step.repeat.lines.map((line, j) => card(line, [String(i), String(j)], { role: "work" })),
+          step.repeat.lines.map((line, j) =>
+            card(paceText(line), [String(i), String(j)], { role: "work" }),
+          ),
           {
             aside: step.badge ?? `${step.repeat.times} fois`,
-            footer: step.lines.join(" · ") || null,
+            footer: paceLines(step.lines).join(" · ") || null,
           },
         )
       : card(step.title, [String(i)], {
           // « 20 min » en haut à droite ET en début de ligne : une seule fois, dans la ligne.
           ...(step.badge && !step.lines[0]?.startsWith(step.badge) ? { aside: step.badge } : {}),
-          lines: step.lines,
+          lines: paceLines(step.lines),
         }),
   );
 }

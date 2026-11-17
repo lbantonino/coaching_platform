@@ -21,6 +21,7 @@ import {
 } from "./session-v2";
 import {
   ergLabels,
+  formatClock,
   formatKg,
   formatMinutes,
   formatSeconds,
@@ -33,8 +34,9 @@ import {
 // PUBLIÉE. Fonctions pures, testées par Vitest ; le document React-PDF ne fait que mettre en page.
 //
 // - Musculation : une fiche par séance (même nom d'une semaine à l'autre) : échauffement, tableau des
-//   exercices (séries, répétitions, repos, commentaire ; A1/A2 pour un superset ; EMOM sur une ligne),
-//   retour au calme, conseil, puis les CHARGES SEMAINE PAR SEMAINE (décision d'Antonino du 10/11).
+//   exercices (séries, répétitions, charge, repos, commentaire ; plus de RIR), le superset et l'EMOM
+//   dans un CADRE à leur place comme leur carte dans l'app (A1/A2, tours, repos en bas ; décisions
+//   d'Antonino du 16/11), retour au calme, conseil, puis les CHARGES SEMAINE PAR SEMAINE (10/11).
 // - Hyrox : un « workload » par séance trop longue pour une carte : une carte par semaine, ses blocs
 //   numérotés (Échauffement, 3 tours, AMRAP 20 min…).
 // - Allures : celles figées dans les séances (course en min/km, ergomètres en min/500 m), avec la
@@ -49,14 +51,24 @@ export type FicheTone = "strength" | "hyrox" | "paces";
 export type FicheTableRow =
   | {
       kind: "exercise";
-      tag: string | null;
       name: string;
       sets: string;
       reps: string;
+      // « 40 kg », « 40-45 kg », « 70 % du max », « — » (16/11 : comme la carte de l'app).
+      load: string;
       rest: string;
       comment: string;
     }
-  | { kind: "span"; tag: null; name: string; text: string };
+  | { kind: "span"; name: string; text: string };
+
+// Un exercice dans le cadre d'un superset (A1, A2…) ou d'un EMOM (sans lettre).
+export type FicheGroupRow = {
+  tag: string | null;
+  name: string;
+  reps: string;
+  load: string;
+  comment: string;
+};
 
 export type FicheBlock = { n: number; title: string; lines: string[] };
 
@@ -65,6 +77,8 @@ export type PaceRow = { label: string; pace: string; speed: string; usedFor: str
 export type FicheSection =
   | { kind: "text"; label: string; text: string }
   | { kind: "table"; title: string; rows: FicheTableRow[] }
+  // Superset ou EMOM : « Superset » · « 3 tours », ses exercices, « Repos 1:30 après chaque tour ».
+  | { kind: "group"; title: string; aside: string; footer: string | null; rows: FicheGroupRow[] }
   | { kind: "charges"; title: string; columns: string[]; rows: { week: string; cells: string[] }[] }
   | { kind: "blocks"; blocks: FicheBlock[] }
   | {
@@ -227,23 +241,20 @@ const repsOf = (exercise: StrengthExercise) => {
 const restText = (seconds?: number) =>
   seconds ? formatSeconds(seconds).replace(/^(\d+:\d{2}) min$/, "$1") : "—";
 
+// Le tempo et la consigne du coach ; plus de RIR (16/11 : l'app ne l'affiche plus, personne ne le
+// comprenait).
 function commentOf(exercise: StrengthExercise): string {
-  const work = exercise.sets.filter((set) => set.type === "normal");
-  const rirs = new Set(work.map((set) => set.rir));
-  const [rir] = [...rirs];
   return (
-    [
-      rirs.size === 1 && rir !== undefined ? `RIR ${rir}` : null,
-      exercise.tempo ? `tempo ${exercise.tempo}` : null,
-      exercise.cue ?? null,
-    ]
+    [exercise.tempo ? `tempo ${exercise.tempo}` : null, exercise.cue ?? null]
       .filter(Boolean)
       .join(" · ") || "—"
   );
 }
 
-// Charge d'un exercice : « 40 kg », « 40-45 kg », « 70 % » (sans max connu), « — » sans charge.
-export function loadText(exercise: StrengthExercise): string {
+// Charge d'un exercice : « 40 kg », « 40-45 kg », « 70 % du max » (sans max connu), « — » sans charge.
+// Une montée en % s'écrit en plage comme les kg (« 70-80 % du max ») ; `short` : « 70-80 % » (tableau des
+// charges semaine par semaine, dont le titre dit « en % du max » : relecture du 16/11).
+export function loadText(exercise: StrengthExercise, { short = false } = {}): string {
   const work = exercise.sets.filter((set) => set.type === "normal");
   const kgs = work.map((set) => set.kg).filter((kg): kg is number => kg !== undefined && kg > 0);
   if (kgs.length > 0) {
@@ -251,8 +262,11 @@ export function loadText(exercise: StrengthExercise): string {
     const max = Math.max(...kgs);
     return min === max ? formatKg(min) : `${String(min).replace(".", ",")}-${formatKg(max)}`;
   }
-  const pcts = [...new Set(work.map((set) => set.pct).filter((pct) => pct !== undefined))];
-  return pcts.length > 0 ? `${pcts.join("-")} %` : "—";
+  const pcts = work.map((set) => set.pct).filter((pct): pct is number => pct !== undefined);
+  if (pcts.length === 0) return "—";
+  const min = Math.min(...pcts);
+  const max = Math.max(...pcts);
+  return `${min === max ? min : `${min}-${max}`} %${short ? "" : " du max"}`;
 }
 
 type Entry = { exercise: StrengthExercise; scheme: string };
@@ -271,56 +285,75 @@ function entries(content: StrengthContent): Entry[] {
   });
 }
 
-function strengthTable(content: StrengthContent): FicheTableRow[] {
+const tours = (n: number) => `${n} tour${n > 1 ? "s" : ""}`;
+
+// Un cadre n'a pas d'en-tête de colonnes : l'unité est écrite (« 12 répét. », un exercice tenu « 30 s »).
+const groupRow = (exercise: StrengthExercise, tag: string | null): FicheGroupRow => ({
+  tag,
+  name: exercise.name,
+  reps: isTimedExercise(exercise) ? repsOf(exercise).reps : `${repsOf(exercise).reps} répét.`,
+  load: loadText(exercise),
+  comment: commentOf(exercise),
+});
+
+// Le corps d'une fiche de musculation, DANS L'ORDRE de la séance : les exercices seuls (et les blocs
+// de texte) dans un tableau, chaque superset et chaque EMOM dans son cadre ; un tableau reprend après.
+function strengthBody(content: StrengthContent): FicheSection[] {
+  const sections: FicheSection[] = [];
+  let rows: FicheTableRow[] = [];
   let superset = 0;
-  return content.items.flatMap((item): FicheTableRow[] => {
+  const flush = () => {
+    if (rows.length > 0) sections.push({ kind: "table", title: "Musculation", rows });
+    rows = [];
+  };
+  for (const item of content.items) {
     if (item.kind === "exercise") {
       const { count, reps } = repsOf(item);
-      return [
-        {
-          kind: "exercise",
-          tag: null,
-          name: item.name,
-          sets: String(count),
-          reps,
-          rest: restText(item.restSec),
-          comment: commentOf(item),
-        },
-      ];
-    }
-    if (item.kind === "superset") {
-      const letter = String.fromCharCode(65 + superset++);
-      return item.exercises.map((exercise, i) => ({
+      rows.push({
         kind: "exercise",
-        tag: `${letter}${i + 1}`,
-        name: exercise.name,
-        sets: String(item.rounds),
-        reps: repsOf(exercise).reps,
-        // Repos après le dernier exercice du tour (maquette : « — » sur A1, « 90 s » sur A2).
-        rest: i === item.exercises.length - 1 ? restText(item.restSec) : "—",
-        comment: commentOf(exercise),
-      }));
+        name: item.name,
+        sets: String(count),
+        reps,
+        load: loadText(item),
+        rest: restText(item.restSec),
+        comment: commentOf(item),
+      });
+    } else if (item.kind === "superset") {
+      flush();
+      const letter = String.fromCharCode(65 + superset++);
+      sections.push({
+        kind: "group",
+        title: "Superset",
+        aside: tours(item.rounds),
+        // Comme la carte de l'app : « Repos 1:30 », « Repos 0:45 » (formatClock).
+        footer: item.restSec ? `Repos ${formatClock(item.restSec)} après chaque tour` : null,
+        rows: item.exercises.map((exercise, i) => groupRow(exercise, `${letter}${i + 1}`)),
+      });
+    } else if (item.kind === "emom") {
+      flush();
+      sections.push({
+        kind: "group",
+        title: "EMOM",
+        aside: `${item.minutes} min`,
+        footer: item.workSec
+          ? `Chaque minute : ${item.workSec} s de travail, puis repos`
+          : "Chaque minute, au début de la minute",
+        rows: item.exercises.map((exercise) => groupRow(exercise, null)),
+      });
+    } else {
+      // Un bloc texte, avec ses lignes répétées s'il en a (« 4 tours : Planche 45 s · Dead bug 10 »).
+      const repeat = item.repeat
+        ? [`${tours(item.repeat.times)} : ${item.repeat.lines.join(" · ")}`]
+        : [];
+      rows.push({
+        kind: "span",
+        name: item.title,
+        text: [...item.lines, ...repeat].join(" · ") || "—",
+      });
     }
-    if (item.kind === "emom") {
-      const work = item.workSec
-        ? ` · ${item.workSec} s de travail · ${60 - item.workSec} s de repos`
-        : " · au début de chaque minute";
-      return [
-        {
-          kind: "span",
-          tag: null,
-          name: item.exercises.map((exercise) => exercise.name).join(" + "),
-          text: `EMOM ${item.minutes} min · ${item.exercises
-            // Un exercice tenu (D-166) se lit « 30 s », pas « 30 s répét. » (revue MVP, C14).
-            .map((exercise) =>
-              isTimedExercise(exercise) ? repsOf(exercise).reps : `${repsOf(exercise).reps} répét.`,
-            )
-            .join(" + ")}${work}`,
-        },
-      ];
-    }
-    return [{ kind: "span", tag: null, name: item.title, text: item.lines.join(" · ") || "—" }];
-  });
+  }
+  flush();
+  return sections;
 }
 
 const MAX_CHARGE_COLUMNS = 6;
@@ -338,7 +371,7 @@ function chargesSections(occurrences: Occurrence[], base: Entry[]): FicheSection
         const found =
           match ?? own.find((candidate) => candidate.exercise.name === entry.exercise.name);
         if (!found) return "—";
-        const load = loadText(found.exercise);
+        const load = loadText(found.exercise, { short: true });
         return found.scheme !== entry.scheme ? `${found.scheme} · ${load}` : load;
       }),
     };
@@ -346,10 +379,12 @@ function chargesSections(occurrences: Occurrence[], base: Entry[]): FicheSection
   // Aucune charge nulle part (poids du corps) : pas de tableau.
   if (rows.every((row) => row.cells.every((cell) => cell === "—"))) return [];
   const sections: FicheSection[] = [];
+  // Des charges en % (max du sportif inconnu) : « % du max » une fois, dans le titre.
+  const percent = rows.some((row) => row.cells.some((cell) => cell.includes("%")));
   for (let start = 0; start < base.length; start += MAX_CHARGE_COLUMNS) {
     sections.push({
       kind: "charges",
-      title: "Charges semaine par semaine",
+      title: `Charges semaine par semaine${percent ? " (en % du max)" : ""}`,
       columns: base
         .slice(start, start + MAX_CHARGE_COLUMNS)
         .map((entry) => abbreviate(entry.exercise.name)),
@@ -369,20 +404,13 @@ function strengthSections(group: Group): FicheSection[] {
     // Séance v1 (texte) : ses blocs numérotés.
     return [{ kind: "blocks", blocks: blocksOf(first.content) }];
   }
-  const hasSuperset = content.items.some((item) => item.kind === "superset");
-  const tip = [
-    hasSuperset
-      ? "A1 + A2 = superset : enchaîne les exercices, le repos vient après le dernier."
-      : null,
-    first.published?.coachTip ?? null,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  // Le conseil du coach ; le superset s'explique par son cadre (16/11).
+  const tip = first.published?.coachTip ?? null;
   return [
     ...(content.warmup
       ? [{ kind: "text", label: "Échauffement", text: content.warmup } as const]
       : []),
-    { kind: "table", title: "Musculation", rows: strengthTable(content) },
+    ...strengthBody(content),
     ...(content.cooldown
       ? [{ kind: "text", label: "Retour au calme", text: content.cooldown } as const]
       : []),
@@ -437,7 +465,8 @@ export function paceRows(sessions: PublishedSession[]): PaceRow[] {
           {
             label: step.label ?? runRoleLabels[step.role],
             sort: to,
-            pace: formatPaceRange(from, to).replace("–", " – "),
+            // L'unité dans la colonne, comme l'app (« 5:00 – 5:10 /km », 16/11).
+            pace: `${formatPaceRange(from, to).replace("–", " – ")} /km`,
             speed: from === to ? `${speed(from)} km/h` : `${speed(to)} – ${speed(from)} km/h`,
           },
           title,
@@ -454,7 +483,7 @@ export function paceRows(sessions: PublishedSession[]): PaceRow[] {
               {
                 label: "Run Hyrox",
                 sort: line.paceSecPerKm,
-                pace: formatPaceRange(line.paceSecPerKm, line.paceSecPerKm),
+                pace: `${formatPaceRange(line.paceSecPerKm, line.paceSecPerKm)} /km`,
                 speed: `${speed(line.paceSecPerKm)} km/h`,
               },
               title,
@@ -509,6 +538,87 @@ function chargesHeaderLines(columns: string[]): number {
   return Math.max(1, ...columns.map((column) => lines(column, perLine)));
 }
 
+// Largeur des caractères de Plus Jakarta Sans Medium (millièmes d'em, mesurée sur la police des PDF) :
+// le modèle sait ainsi quand une cellule étroite passe à la ligne (relecture du 16/11 : une page en trop
+// décalait tous les numéros). Un caractère absent compte 0,65 em.
+const GLYPHS: Record<string, number> = {
+  " ": 173,
+  "0": 724,
+  "1": 382,
+  "2": 599,
+  "3": 610,
+  "4": 638,
+  "5": 616,
+  "6": 599,
+  "7": 548,
+  "8": 629,
+  "9": 599,
+  ",": 299,
+  ".": 317,
+  "-": 532,
+  "–": 597,
+  "—": 927,
+  "×": 624,
+  "·": 317,
+  "%": 998,
+  "/": 455,
+  ":": 317,
+  a: 575,
+  b: 669,
+  c: 603,
+  d: 669,
+  e: 614,
+  f: 397,
+  g: 659,
+  h: 580,
+  i: 237,
+  j: 237,
+  k: 558,
+  l: 237,
+  m: 913,
+  n: 580,
+  o: 654,
+  p: 669,
+  q: 669,
+  r: 350,
+  s: 511,
+  t: 396,
+  u: 580,
+  v: 533,
+  w: 826,
+  x: 511,
+  y: 553,
+  z: 460,
+  é: 614,
+  è: 614,
+  à: 575,
+};
+const CELL_SIZE = 11;
+const textWidth = (text: string) =>
+  ([...text].reduce((sum, char) => sum + (GLYPHS[char] ?? 650), 0) * CELL_SIZE) / 1000;
+
+// Nombre de lignes d'un texte dans une cellule de `width` px (coupure aux espaces).
+export function cellLines(text: string, width: number): number {
+  const space = textWidth(" ");
+  let count = 1;
+  let current = 0;
+  for (const word of text.split(" ")) {
+    const size = textWidth(word);
+    if (current === 0) current = size;
+    else if (current + space + size <= width) current += space + size;
+    else {
+      count += 1;
+      current = size;
+    }
+  }
+  return count;
+}
+
+// Largeurs de texte (px de la maquette) : un tableau fait 546 px à l'intérieur ; la colonne Charge
+// ≈ 80 px ; une cellule du tableau des charges se partage ce qui reste après la colonne Semaine (1,7).
+const LOAD_WIDTH = 80;
+const chargeCellWidth = (columns: number) => (546 - 16 - 8 * columns) / (1.7 + columns);
+
 export function sectionHeight(section: FicheSection): number {
   switch (section.kind) {
     case "text":
@@ -523,13 +633,51 @@ export function sectionHeight(section: FicheSection): number {
             sum +
             (row.kind === "span"
               ? 30 + 15 * (lines(row.text, 46) - 1)
-              : (row.tag ? 34 : 30) +
-                15 * (Math.max(lines(row.name, 26), lines(row.comment, 22)) - 1)),
+              : 30 +
+                15 *
+                  (Math.max(
+                    lines(row.name, 24),
+                    lines(row.comment, 20),
+                    cellLines(row.load, LOAD_WIDTH),
+                  ) -
+                    1)),
           0,
         )
       );
-    case "charges":
-      return 24 + 15 + 12.5 * chargesHeaderLines(section.columns) + section.rows.length * 24;
+    case "group":
+      // En-tête, une ligne par exercice (plus si le nom ou le commentaire passe à la ligne), le repos.
+      return (
+        12 +
+        30 +
+        section.rows.reduce(
+          (sum, row) =>
+            sum +
+            30 +
+            15 *
+              (Math.max(
+                lines(row.name, 24),
+                lines(row.comment, 30),
+                cellLines(row.load, LOAD_WIDTH),
+              ) -
+                1),
+          0,
+        ) +
+        (section.footer ? 26 : 0)
+      );
+    case "charges": {
+      // Une ligne par semaine, plus haute si une cellule passe à la ligne (« 3 × 6 · 47,5 kg » étroit).
+      const width = chargeCellWidth(section.columns.length);
+      return (
+        24 +
+        15 +
+        12.5 * chargesHeaderLines(section.columns) +
+        section.rows.reduce(
+          (sum, row) =>
+            sum + 24 + 15 * (Math.max(1, ...row.cells.map((cell) => cellLines(cell, width))) - 1),
+          0,
+        )
+      );
+    }
     case "blocks":
       return 2 + blocksHeight(section.blocks);
     case "workload":
@@ -624,8 +772,12 @@ export function fichesPdf(input: PdfProgramInput): FichesPdf {
     const subtitle = [weeks, durationText(group.occurrences), day].filter(Boolean).join(" · ");
     if (group.discipline === "strength") {
       const sections = strengthSections(group);
-      const table = sections.find((section) => section.kind === "table");
-      const count = table?.kind === "table" ? table.rows.length : 0;
+      // Les exercices des tableaux ET des cadres (superset, EMOM).
+      const count = sections.reduce(
+        (sum, section) =>
+          sum + (section.kind === "table" || section.kind === "group" ? section.rows.length : 0),
+        0,
+      );
       fiches.push({
         name: group.title,
         tone: "strength",
@@ -662,14 +814,8 @@ export function fichesPdf(input: PdfProgramInput): FichesPdf {
       kicker: "Repères",
       subtitle: "Les allures de ce programme, telles que publiées",
       tocSubtitle: "Repères · allures de course et ergomètres",
-      sections: [
-        { kind: "paces", rows: paces },
-        {
-          kind: "tip",
-          label: "À retenir",
-          text: "Course en min/km ; SkiErg et rameur en min/500 m.",
-        },
-      ],
+      // L'unité est dans chaque allure (« 6:15 /km », « 2:10 /500 m ») : plus de note (16/11).
+      sections: [{ kind: "paces", rows: paces }],
     });
   }
 

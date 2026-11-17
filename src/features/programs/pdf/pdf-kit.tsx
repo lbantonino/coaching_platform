@@ -305,12 +305,17 @@ export const titleStyles = StyleSheet.create({
 });
 
 // ---------------------------------------------------------------------------
-// Lignes d'une séance : mêmes règles que les cartes de l'agenda de l'app (puce devant chaque
-// exercice, gras pour la durée ou le mouvement et son volume, italique pour la plage de FC).
+// Lignes d'une séance : mêmes règles que les cartes de l'agenda de l'app (un petit trait de la couleur
+// de la discipline devant chaque exercice, plus de puce ronde depuis le 16/11 ; gras pour la durée ou
+// le mouvement et son volume, italique pour la plage de FC).
 // ---------------------------------------------------------------------------
 const LINE_SIZE = 11;
 const LINE_HEIGHT = 1.4;
-const BULLET = 5;
+// Le trait devant un exercice (décision d'Antonino du 16/11 : « petit trait de couleur »).
+const TRAIT_WIDTH = 2.5;
+const TRAIT_HEIGHT = 9;
+// Retrait des lignes d'un bloc répété : leur trait se pose après le trait vertical du bloc.
+const BLOCK_INDENT = 9;
 
 function Rich({
   text,
@@ -354,10 +359,10 @@ function Item({
     <View style={{ flexDirection: "row", alignItems: "flex-start", gap: u(6) }}>
       <View
         style={{
-          width: u(BULLET),
-          height: u(BULLET),
-          borderRadius: u(BULLET / 2),
-          marginTop: u((LINE_SIZE * lineHeight) / 2 - BULLET / 2),
+          width: u(TRAIT_WIDTH),
+          height: u(TRAIT_HEIGHT),
+          borderRadius: u(1),
+          marginTop: u((LINE_SIZE * lineHeight) / 2 - TRAIT_HEIGHT / 2),
           backgroundColor: exercise ? disciplinePdf[discipline].fill : "transparent",
         }}
       />
@@ -385,8 +390,8 @@ export function SessionLines({
         line.kind === "line" ? (
           <Item key={i} text={line.text} discipline={discipline} lineHeight={lineHeight} />
         ) : (
-          // Bloc répété (« 5 × ») ou bloc Hyrox (« AMRAP 20 min ») : son nom, puis ses lignes dont les
-          // puces sont posées sur le trait du bloc (comme dans l'app).
+          // Bloc répété (« 5 × »), superset (« Superset · 3 tours ») ou bloc Hyrox (« AMRAP 20 min ») :
+          // son nom, puis ses lignes en retrait le long du trait vertical du bloc (comme dans l'app).
           <View key={i} style={{ flexDirection: "column", gap: u(1) }}>
             <Text
               style={{
@@ -398,7 +403,14 @@ export function SessionLines({
             >
               {glue(line.kind === "repeat" ? `${line.times} ×` : line.label)}
             </Text>
-            <View style={{ position: "relative", flexDirection: "column", gap: u(1) }}>
+            <View
+              style={{
+                position: "relative",
+                flexDirection: "column",
+                gap: u(1),
+                paddingLeft: u(BLOCK_INDENT),
+              }}
+            >
               <View
                 style={{
                   position: "absolute",

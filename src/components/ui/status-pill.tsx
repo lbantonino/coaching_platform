@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-// Pastille d'état (kit « Coory Pages », STATUS-PILL, D-119) : un point de 6 px de la couleur du texte
-// puis le libellé, sur un fond teinté. Ordinateur : 26 px de haut, 12 px ; téléphone : 28 px, 12,5 px.
+// Étiquette d'état (kit « Coory Pages », STATUS-PILL, D-119) : le libellé sur un fond teinté, en
+// rectangle aux coins arrondis (plus de point ni de capsule depuis le 16/11/2026). Ordinateur : 26 px de haut, 12 px ; téléphone : 28 px, 12,5 px.
 // Tons : neutre (« Pas encore invitée »), violet (« Lien prêt »), ambre (« En attente »), vert
 // (« Compte activé »). Pur balisage : utilisable dans un composant serveur comme client.
 export type StatusTone = "neutral" | "accent" | "warn" | "ok";
@@ -24,9 +24,8 @@ export function StatusPill({
 }) {
   return (
     <span
-      className={`inline-flex h-7 shrink-0 items-center gap-1.5 rounded-[14px] px-[11px] text-[12.5px] leading-[normal] font-medium whitespace-nowrap lg:h-[26px] lg:rounded-[13px] lg:px-2.5 lg:text-[12px] ${tones[tone]} ${className}`}
+      className={`inline-flex h-7 shrink-0 items-center rounded-[7px] px-[11px] text-[12.5px] leading-[normal] font-medium whitespace-nowrap lg:h-[26px] lg:rounded-[6px] lg:px-2.5 lg:text-[12px] ${tones[tone]} ${className}`}
     >
-      <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current" />
       {children}
     </span>
   );

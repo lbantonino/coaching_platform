@@ -347,6 +347,7 @@ export function AthleteAgendaSection({
                       >
                         {day.day}
                       </span>
+                      {/* Les séances du jour : de petits traits (16/11/2026 : plus de pastilles). */}
                       <span className="flex min-h-2 flex-wrap items-center justify-center gap-0.5">
                         {competition ? (
                           <Flag
@@ -360,7 +361,7 @@ export function AthleteAgendaSection({
                           <span
                             key={item.key}
                             aria-hidden
-                            className={`size-1.5 rounded-full ${
+                            className={`h-[3px] w-2.5 rounded-[2px] ${
                               item.discipline ? dotColors[item.discipline] : "bg-muted"
                             }`}
                           />

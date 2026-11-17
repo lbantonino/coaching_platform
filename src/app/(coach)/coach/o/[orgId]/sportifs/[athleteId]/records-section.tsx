@@ -109,13 +109,12 @@ function RecordTile({ entry }: { entry: RecordEntry }) {
   const pace = recordPace(entry.event, entry.timeSeconds);
   return (
     <li className="flex min-w-0 flex-[1_1_220px] flex-col gap-1.5 rounded-[14px] bg-surface-2 p-4">
-      <span className="flex items-center gap-[7px] text-[13px] leading-[16.5px] font-medium text-text-2">
-        <span
-          aria-hidden
-          className={`size-[7px] shrink-0 rounded-full ${
-            entry.event === "hyrox" ? "bg-hyrox-fill" : "bg-run-fill"
-          }`}
-        />
+      {/* L'épreuve dans la couleur de sa discipline (16/11/2026 : plus de pastilles). */}
+      <span
+        className={`text-[13px] leading-[16.5px] font-semibold ${
+          entry.event === "hyrox" ? "text-hyrox" : "text-run-text"
+        }`}
+      >
         {recordTitle(entry.event, entry.hyroxCategory)}
       </span>
       <span className="text-[24px] leading-[1.1] font-semibold tracking-[-0.02em] whitespace-nowrap tabular-nums">

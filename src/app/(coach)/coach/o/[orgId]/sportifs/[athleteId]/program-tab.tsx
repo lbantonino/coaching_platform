@@ -6,6 +6,8 @@ import { ProgramCard } from "@/components/programs/program-cards";
 import { sortAthletePrograms } from "@/domain/training/program-status";
 import type { ProgramListItem } from "@/features/programs/queries";
 
+import { ProgramCardMenu } from "../../programmes/_editor/program-card-menu";
+
 // Onglet « Programme » de la fiche d'un sportif (test d'Antonino sur iPhone, 15/11/2026 : une seule
 // vue d'un programme) : les cartes de SES programmes, les mêmes que la page Programmes (en cours, à
 // venir, brouillons, terminés, archivés). Un appui ouvre le programme, le seul endroit où l'on construit,
@@ -19,6 +21,7 @@ const secondaryClass =
   "inline-flex h-[50px] items-center justify-center rounded-[11px] px-4 text-[14px] font-semibold whitespace-nowrap text-text inset-ring inset-ring-field-ring transition-colors duration-150 hover:bg-surface-2 sm:h-11";
 
 export function ProgramTab({
+  organizationId,
   name,
   programs,
   tabHref,
@@ -27,6 +30,7 @@ export function ProgramTab({
   copyHref,
   archived,
 }: {
+  organizationId: string;
   name: string;
   // Tous ses programmes, archivés compris (son historique).
   programs: ProgramListItem[];
@@ -56,6 +60,14 @@ export function ProgramTab({
             key={program.id}
             program={program}
             href={`${editorBase}/${program.id}?retour=${encodeURIComponent(tabHref)}`}
+            menu={
+              <ProgramCardMenu
+                organizationId={organizationId}
+                programId={program.id}
+                title={program.title}
+                status={program.status}
+              />
+            }
           />
         ))}
       </div>

@@ -66,7 +66,8 @@ function strengthCard(
       return [
         {
           kind: "group",
-          label: [step.title, step.badge].filter(Boolean).join(" "),
+          // « EMOM · 10 min », écrit comme « Superset · 3 tours » (16/11).
+          label: [step.title, step.badge].filter(Boolean).join(" · "),
           lines: exercises,
         },
       ];
@@ -76,7 +77,8 @@ function strengthCard(
   });
 }
 
-// « 20 min @6:00 min/km, allure progressive » -> « 20 min @ 6:00 » ;
+// « 20 min @6:00 min/km, allure progressive » -> « 20 min · 6:00 /km » (l'allure écrite comme dans les
+// applications de sport, Antonino le 16/11 : jamais « @ » ni une allure sans unité) ;
 // « 1:45 min de récupération (trot lent) » -> « récup 1:45 (trot lent) » ;
 // « 1 min de récupération Z2 · 130-145 bpm » -> « récup 1 min · Z2 · 130–145 bpm ».
 export function shortLine(line: string): string {
@@ -89,20 +91,27 @@ export function shortLine(line: string): string {
     const value = raw.includes(":") ? raw.replace(/ min$/, "") : raw;
     const word = /repos/i.test(recovery[2] ?? "") ? "repos" : "récup";
     const note = recovery[3] ? ` (${recovery[3]})` : "";
-    const target = recovery[4] ? ` · ${shortLine(recovery[4]).replace(/^@ /, "")}` : "";
+    const target = recovery[4] ? ` · ${shortLine(recovery[4])}` : "";
     return bpm(`${word} ${value}${note}${target}`);
   }
   return bpm(
     // Coupe au premier « , texte » (« 20 min @6:00 min/km, allure progressive ») mais jamais dans un
-    // nombre décimal (« Run 1,5 km »).
-    line
-      .split(/,\s(?=\D)/)[0]!
-      .replace(/ min\/km/g, "")
+    // nombre décimal (« Run 1,5 km »), ni dans une simple liste sans mesure (« Hanches, épaules,
+    // colonne », 16/11) : la coupure ne retire qu'un commentaire écrit après un chiffre.
+    cutComment(line)
+      .replace(/ min\/km/g, " /km")
       // « 2:10 min/500 m » -> « 2:10 /500 m ».
       .replace(/(?: min)? ?\/ ?500 ?m/g, " /500 m")
-      .replace(/\s*@\s*/g, " @ ")
+      // Une allure en tête (celle d'une récup) perd son « @ » ; ailleurs elle suit le volume : « · ».
+      .replace(/^\s*@\s*/, "")
+      .replace(/\s*@\s*/g, " · ")
       .trim(),
   );
+}
+
+function cutComment(line: string): string {
+  const [head] = line.split(/,\s(?=\D)/);
+  return head !== undefined && /\d/.test(head) ? head : line;
 }
 
 // Une ligne de séance telle qu'une carte l'écrit (cartes de l'agenda, PDF) : raccourcie, Running en

@@ -340,7 +340,7 @@ function Chips({ items, primary = false }: { items: string[]; primary?: boolean 
       {items.map((item) => (
         <li
           key={item}
-          className={`h-7 rounded-full px-[11px] text-[12.5px] leading-7 whitespace-nowrap ${
+          className={`h-7 rounded-[7px] px-[11px] text-[12.5px] leading-7 whitespace-nowrap ${
             primary
               ? "bg-lib-lavender font-semibold text-lib-lavender-ink"
               : "bg-lib-chip font-medium text-dlg-ink-2"

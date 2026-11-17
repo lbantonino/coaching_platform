@@ -278,7 +278,7 @@ describe("course : les étapes et « Répéter »", () => {
         kind: "card",
         role: "warmup",
         title: "Échauffement",
-        lines: ["15 min · @6:00"],
+        lines: ["15 min · 6:00 /km"],
         sub: ["Footing facile"],
         path: ["w"],
       },
@@ -292,7 +292,7 @@ describe("course : les étapes et « Répéter »", () => {
             kind: "card",
             role: "work",
             title: "Course",
-            lines: ["400 m · @4:05–4:15"],
+            lines: ["400 m · 4:05–4:15 /km"],
             sub: [],
             path: ["r1", "run"],
           },
@@ -375,7 +375,7 @@ describe("Hyrox : un bloc simple = une carte ; un circuit = une grande carte", (
           kind: "card",
           role: "work",
           title: "Course",
-          lines: ["1 km · @5:30"],
+          lines: ["1 km · 5:30 /km"],
           sub: [],
           path: ["b1", "l1"],
         },
@@ -418,7 +418,7 @@ describe("Hyrox : un bloc simple = une carte ; un circuit = une grande carte", (
 });
 
 describe("Hyrox : un bloc simple écrit ses lignes comme les cartes", () => {
-  it("« Course 1 km · @6:00 », jamais « Run … min/km »", () => {
+  it("« Course 1 km · 6:00 /km », comme une montre de sport", () => {
     const [warmup] = sessionCards({
       discipline: "hyrox",
       items: [
@@ -435,7 +435,9 @@ describe("Hyrox : un bloc simple écrit ses lignes comme les cartes", () => {
         },
       ],
     });
-    expect(warmup).toMatchObject({ lines: ["Course 1 km · @6:00", "Wall balls 10 répétitions"] });
+    expect(warmup).toMatchObject({
+      lines: ["Course 1 km · 6:00 /km", "Wall balls 10 répétitions"],
+    });
   });
 });
 
@@ -532,10 +534,26 @@ describe("séance v1 : pas de doublon", () => {
       kind: "card",
       role: "warmup",
       title: "Échauffement",
-      lines: ["20 min @6:00 min/km, allure progressive"],
+      lines: ["20 min · 6:00 /km, allure progressive"],
       sub: [],
       path: ["0"],
     });
+  });
+});
+
+describe("séance v1 : les allures écrites comme dans les applications de sport", () => {
+  it("« 4 min @4:55 min/km » -> « 4 min · 4:55 /km » ; ergomètre « /500 m »", () => {
+    const [group] = viewStepCards([
+      {
+        title: "Bloc principal",
+        lines: [],
+        repeat: { times: 5, lines: ["4 min @4:55 min/km", "SkiErg 500 m @2:10 min/500 m"] },
+      },
+    ]);
+    expect(group?.kind === "group" && group.cards.map((card) => card.title)).toEqual([
+      "4 min · 4:55 /km",
+      "SkiErg 500 m · 2:10 /500 m",
+    ]);
   });
 });
 

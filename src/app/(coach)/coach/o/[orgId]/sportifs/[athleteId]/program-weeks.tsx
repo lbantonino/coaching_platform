@@ -214,12 +214,12 @@ function WeekCard({
         {current || week.label ? (
           <span className="flex flex-wrap gap-1.5">
             {current ? (
-              <span className="flex h-6 items-center rounded-[12px] bg-violet-soft px-[9px] text-[12px] font-medium whitespace-nowrap text-violet-text">
+              <span className="flex h-6 items-center rounded-[6px] bg-violet-soft px-[9px] text-[12px] font-medium whitespace-nowrap text-violet-text">
                 Semaine actuelle
               </span>
             ) : null}
             {week.label ? (
-              <span className="flex h-6 items-center rounded-[12px] bg-bg px-[9px] text-[12px] font-medium whitespace-nowrap text-text-2">
+              <span className="flex h-6 items-center rounded-[6px] bg-bg px-[9px] text-[12px] font-medium whitespace-nowrap text-text-2">
                 {week.label}
               </span>
             ) : null}

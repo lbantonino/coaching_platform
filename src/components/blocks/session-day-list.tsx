@@ -17,13 +17,6 @@ const dots: Record<Discipline | "none", string> = {
   hybrid: "bg-hybrid-fill",
   none: "bg-muted",
 };
-const rings: Record<Discipline | "none", string> = {
-  running: "border-run-fill",
-  strength: "border-strength-fill",
-  hyrox: "border-hyrox-fill",
-  hybrid: "border-hybrid-fill",
-  none: "border-muted",
-};
 const cards: Record<Discipline | "none", string> = {
   running: "bg-run-fill text-on-run-fill",
   strength: "bg-strength-fill text-on-strength-fill",
@@ -61,10 +54,15 @@ const weekRange = (monday: string) => {
     : `${dayMonthShort.format(utc(monday))} – ${dayMonthShort.format(utc(sunday))}`;
 };
 
-function NowLine() {
+function NowLine({ minutes }: { minutes: number }) {
+  const time = `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
   return (
-    <span aria-hidden className="relative my-1 block h-px bg-violet">
-      <span className="absolute -top-[3px] -left-[3px] size-[7px] rounded-full bg-violet" />
+    // « Maintenant » : l'heure dans une étiquette, puis le trait violet (16/11/2026 : plus de point).
+    <span aria-hidden className="my-1 flex items-center gap-1.5">
+      <span className="shrink-0 rounded-[4px] bg-accent px-1.5 text-[11px] leading-[18px] font-semibold text-on-accent tabular">
+        {time}
+      </span>
+      <span className="h-0.5 flex-1 rounded-[1px] bg-violet" />
     </span>
   );
 }
@@ -132,7 +130,7 @@ export function SessionDayList({
                     : `Collective · ${block.subtitle}`;
                   return (
                     <li key={block.key}>
-                      {index === nowIndex ? <NowLine /> : null}
+                      {index === nowIndex ? <NowLine minutes={nowMinutes} /> : null}
                       {/* Ordinateur : une ligne. */}
                       <Link
                         href={sessionHref(block.sessionId, block.date)}
@@ -140,11 +138,7 @@ export function SessionDayList({
                       >
                         <span
                           aria-hidden
-                          className={`size-2 rounded-full ${
-                            block.individual
-                              ? dots[discipline]
-                              : `border-[1.5px] ${rings[discipline]}`
-                          }`}
+                          className={`h-4 w-[3px] rounded-[2px] ${dots[discipline]}`}
                         />
                         <span className="text-[12.5px] text-muted tabular">{range}</span>
                         <span className="truncate">
@@ -172,7 +166,7 @@ export function SessionDayList({
                 })}
                 {isToday && nowIndex === -1 ? (
                   <li aria-hidden>
-                    <NowLine />
+                    <NowLine minutes={nowMinutes} />
                   </li>
                 ) : null}
               </ul>

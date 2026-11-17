@@ -37,21 +37,13 @@ function Photo({
   name: string;
   photoPath: string | null;
   sex: Sex;
-  // 46 px dans le menu (kit, boîte 32), pastille verte de 12 px cerclée de blanc.
+  // 46 px dans le menu (kit, boîte 32). Plus de pastille verte « en ligne » (16/11/2026).
   large?: boolean;
 }) {
   return (
     // Cerclée de violet (02/11), comme la photo de la carte « Prochaine séance ».
     <span className="relative inline-flex shrink-0 rounded-full outline outline-[1.5px] outline-offset-2 outline-violet">
       <Avatar name={name} photoPath={photoPath} sex={sex} size={large ? "menu" : "sm"} />
-      <span
-        aria-hidden
-        className={`absolute rounded-full bg-ok ${
-          large
-            ? "-right-px -bottom-px size-3 ring-2 ring-dlg"
-            : "-right-0.5 -bottom-0.5 size-2.5 ring-2 ring-panel"
-        }`}
-      />
     </span>
   );
 }

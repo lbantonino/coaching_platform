@@ -528,9 +528,8 @@ export function DocumentsView({
                     </div>
                     <div role="cell" className="hidden min-w-0 lg:flex">
                       <span
-                        className={`inline-flex h-6 max-w-full items-center gap-1.5 rounded-xl px-[9px] text-[12px] leading-[normal] font-medium ${tileClassFor(document.categoryColor)}`}
+                        className={`inline-flex h-6 max-w-full items-center rounded-[6px] px-[9px] text-[12px] leading-[normal] font-medium ${tileClassFor(document.categoryColor)}`}
                       >
-                        <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-current" />
                         <span className="truncate">{categoryLabel(document)}</span>
                       </span>
                     </div>
@@ -845,7 +844,7 @@ function CategoryMenu({
         }`}
       >
         {current.dot ? (
-          <span aria-hidden className={`size-2 shrink-0 rounded-full ${current.dot}`} />
+          <span aria-hidden className={`h-3 w-[3px] shrink-0 rounded-[1.5px] ${current.dot}`} />
         ) : null}
         <span className="text-muted">Catégorie</span>
         <span className="min-w-0 flex-1 truncate">{current.label}</span>
@@ -881,7 +880,10 @@ function CategoryMenu({
                   selected ? "bg-selected" : "hover:bg-dlg-tile"
                 }`}
               >
-                <span aria-hidden className={`size-2 shrink-0 rounded-full ${option.dot ?? ""}`} />
+                <span
+                  aria-hidden
+                  className={`h-3 w-[3px] shrink-0 rounded-[1.5px] ${option.dot ?? ""}`}
+                />
                 <span className="min-w-0 flex-1 truncate">{option.label}</span>
                 <span aria-hidden className="text-faint tabular">
                   {option.count}

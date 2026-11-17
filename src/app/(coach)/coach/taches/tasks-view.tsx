@@ -416,7 +416,7 @@ export function TasksView({
                 >
                   <span
                     aria-hidden
-                    className={`size-2 rounded-full ${active ? "bg-on-cta" : item.color}`}
+                    className={`h-3 w-[3px] shrink-0 rounded-[1.5px] ${active ? "bg-on-cta" : item.color}`}
                   />
                   {item.label}
                 </Link>
@@ -880,7 +880,7 @@ function TaskRow({
           <span className="flex min-w-0 items-center gap-[5px] text-[12.5px] font-medium whitespace-nowrap text-text-2 max-lg:hidden">
             <span
               aria-hidden
-              className={`size-[7px] shrink-0 rounded-full ${dot[task.list.color]}`}
+              className={`h-3 w-[3px] shrink-0 rounded-[1.5px] ${dot[task.list.color]}`}
             />
             <span className="truncate">{task.list.name}</span>
           </span>

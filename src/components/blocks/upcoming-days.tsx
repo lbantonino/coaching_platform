@@ -107,7 +107,7 @@ export function UpcomingDays({
                         {block.label.slice(0, 5)}
                       </span>
                       {next ? (
-                        <span className="-my-1 grid h-6 place-items-center rounded-[12px] bg-accent px-2.5 text-[12px] font-medium text-on-accent lg:h-5 lg:rounded-[10px] lg:px-2 lg:text-[11px]">
+                        <span className="-my-1 grid h-6 place-items-center rounded-[6px] bg-accent px-2.5 text-[12px] font-medium text-on-accent lg:h-5 lg:rounded-[5px] lg:px-2 lg:text-[11px]">
                           Prochaine
                         </span>
                       ) : null}

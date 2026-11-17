@@ -140,7 +140,7 @@ export function EditorSessionCard({
           </span>
         ) : null}
         {coach ? (
-          <span className="inline-flex h-6 items-center gap-[5px] self-start rounded-[12px] bg-bg px-[9px] text-[12.5px] leading-[normal] font-medium text-text-2 lg:h-[22px] lg:rounded-[11px] lg:px-2 lg:text-[11.5px]">
+          <span className="inline-flex h-6 items-center gap-[5px] self-start rounded-[6px] bg-bg px-[9px] text-[12.5px] leading-[normal] font-medium text-text-2 lg:h-[22px] lg:rounded-[6px] lg:px-2 lg:text-[11.5px]">
             <User aria-hidden size={12} strokeWidth={2} className="shrink-0" />
             <span className="truncate">{coach}</span>
           </span>

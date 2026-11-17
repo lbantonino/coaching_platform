@@ -198,7 +198,7 @@ export function LibraryFilter({
                           {option.dot ? (
                             <span
                               aria-hidden
-                              className={`absolute -right-0.5 -bottom-0.5 size-2 rounded-full shadow-[0_0_0_2px_var(--dlg)] ${option.dot}`}
+                              className={`absolute bottom-[3px] left-1/2 h-[2px] w-3 -translate-x-1/2 rounded-[1px] ${option.dot}`}
                             />
                           ) : null}
                         </span>

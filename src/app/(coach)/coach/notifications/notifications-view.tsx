@@ -649,7 +649,7 @@ function Section({
           {section.title}
         </h2>
         {unread > 0 ? (
-          <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-accent px-1.5 text-[11px] leading-none font-semibold text-white tabular">
+          <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-[5px] bg-accent px-1.5 text-[11px] leading-none font-semibold text-white tabular">
             {unread}
             <span className="sr-only"> {plural(unread, "non lue", "non lues")}</span>
           </span>
@@ -748,7 +748,7 @@ function Row({
       {selecting ? <Box checked={checked} /> : null}
       <span
         aria-hidden
-        className={`size-[7px] shrink-0 rounded-full ${unread ? "bg-violet" : "bg-transparent"}`}
+        className={`w-[3px] shrink-0 self-stretch rounded-[1.5px] ${unread ? "bg-violet" : "bg-transparent"}`}
       />
       {item.person ? (
         <Avatar

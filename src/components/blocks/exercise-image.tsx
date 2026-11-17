@@ -20,7 +20,7 @@ export function ExerciseTag({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full pr-[9px] pl-[7px] leading-none font-semibold shadow-[0_1px_2px_rgba(22,18,40,0.08)] ${
+      className={`inline-flex items-center gap-1.5 rounded-[6px] pr-[9px] pl-[7px] leading-none font-semibold shadow-[0_1px_2px_rgba(22,18,40,0.08)] ${
         size === "card"
           ? "h-[22px] bg-on-image text-[10.5px] text-on-image-ink"
           : "h-6 self-start bg-lib-tag text-[11px] text-text"
@@ -28,7 +28,7 @@ export function ExerciseTag({
     >
       <span
         aria-hidden
-        className={`size-[7px] shrink-0 rounded-full ${libraryCategoryDots[category]}`}
+        className={`h-2.5 w-[3px] shrink-0 rounded-[1.5px] ${libraryCategoryDots[category]}`}
       />
       {exerciseCategoryLabels[category]}
     </span>
@@ -72,10 +72,10 @@ export function SheetFigure({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} fetchPriority="high" className="block size-full object-cover" />
       {step ? (
-        <figcaption className="absolute top-2.5 left-2.5 flex h-[26px] items-center gap-[7px] rounded-full bg-on-image pr-2.5 pl-1 text-[11.5px] leading-none font-semibold text-on-image-ink shadow-[0_1px_2px_rgba(22,18,40,0.1)]">
+        <figcaption className="absolute top-2.5 left-2.5 flex h-[26px] items-center gap-[7px] rounded-[7px] bg-on-image pr-2.5 pl-1 text-[11.5px] leading-none font-semibold text-on-image-ink shadow-[0_1px_2px_rgba(22,18,40,0.1)]">
           <span
             aria-hidden
-            className="grid size-[18px] place-items-center rounded-full bg-on-image-ink text-[10px] leading-none font-bold text-on-image"
+            className="grid size-[18px] place-items-center rounded-[5px] bg-on-image-ink text-[10px] leading-none font-bold text-on-image"
           >
             {step.number}
           </span>

@@ -81,11 +81,13 @@ export const athleteStatusLabels = {
   paused: "En pause",
   archived: "Archivé",
 } as const;
-// Point de couleur du statut (liste et fiche, maquette « Sportifs » du 03/11/2026).
-export const athleteStatusDots = {
-  active: "bg-ok",
-  paused: "bg-warn-dot",
-  archived: "bg-archived-dot",
+// Étiquette du statut (liste et fiche ; 16/11/2026 : plus de pastilles) : fond teinté et texte de la
+// même couleur. « Actif » prend le vert des autres étiquettes « Actif » (Badge « ok ») : le vert du kit
+// passait sous 4,5:1 en clair (test tests/unit/status-tags-contrast.test.ts).
+export const athleteStatusTags = {
+  active: "bg-ok-soft text-ok",
+  paused: "bg-status-warn-soft text-status-warn",
+  archived: "bg-status-neutral-soft text-status-neutral",
 } as const;
 
 export type AthleteStatus = keyof typeof athleteStatusLabels;

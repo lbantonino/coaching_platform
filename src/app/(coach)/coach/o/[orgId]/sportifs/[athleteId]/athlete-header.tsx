@@ -5,13 +5,14 @@ import { NotAvailableButton } from "@/components/blocks/not-available";
 import { PageHeader } from "@/components/layout/page-header";
 import { Avatar } from "@/components/ui/avatar";
 import { SexMark } from "@/components/ui/sex-mark";
+import { Tag } from "@/components/ui/tag";
 import { FEATURES } from "@/config/features";
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import { completionLabel, missingProfileInfo } from "@/features/athletes/completeness";
 import type { AthleteDetail } from "@/features/athletes/queries";
 import {
   athleteLevelLabels,
-  athleteStatusDots,
+  athleteStatusTags,
   athleteStatusLabels,
 } from "@/features/athletes/schemas";
 
@@ -133,11 +134,6 @@ export function AthleteIdentity({
               }
               photoPath={athlete.photoPath}
             />
-            {/* Téléphone : le statut est le point sur la photo. */}
-            <span
-              aria-hidden
-              className={`absolute right-0 bottom-0 size-3 rounded-full ring-[2.5px] ring-surface lg:hidden ${athleteStatusDots[athlete.status]}`}
-            />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-[3px] lg:basis-[200px] lg:gap-1.5">
             <div className="flex min-w-0 items-center gap-1.5 lg:gap-2">
@@ -156,13 +152,10 @@ export function AthleteIdentity({
               </span>
             </div>
             <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] leading-[normal] text-muted lg:gap-x-3 lg:gap-y-2 lg:text-[13.5px] lg:text-text-2">
-              <span className="flex items-center gap-1.5 max-lg:hidden">
-                <span
-                  aria-hidden
-                  className={`size-[7px] rounded-full ${athleteStatusDots[athlete.status]}`}
-                />
+              {/* Le statut en étiquette, sur téléphone aussi (16/11 : plus de point sur la photo). */}
+              <Tag className={athleteStatusTags[athlete.status]}>
                 {athleteStatusLabels[athlete.status]}
-              </span>
+              </Tag>
               {athlete.level ? (
                 <>
                   <span className="max-lg:hidden">{dot}</span>
@@ -172,11 +165,7 @@ export function AthleteIdentity({
               {athlete.programType ? (
                 <>
                   {athlete.level ? dot : <span className="max-lg:hidden">{dot}</span>}
-                  <span className="flex items-center gap-1.5">
-                    <span
-                      aria-hidden
-                      className={`size-1.5 rounded-full lg:size-[7px] ${disciplineStyles[athlete.programType].dot}`}
-                    />
+                  <span className={`font-semibold ${disciplineStyles[athlete.programType].text}`}>
                     {disciplineLabels[athlete.programType]}
                   </span>
                 </>

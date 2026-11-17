@@ -179,7 +179,7 @@ function ProfileSection({ athlete, editHref }: { athlete: AthleteDetail; editHre
         </InfoRow>
         <InfoRow icon={Gauge} label="Niveau">
           {athlete.level ? (
-            <span className="max-lg:mt-0.5 max-lg:inline-flex max-lg:h-[26px] max-lg:items-center max-lg:rounded-[13px] max-lg:bg-ok/10 max-lg:px-[11px] max-lg:text-[13px] max-lg:text-ok">
+            <span className="max-lg:mt-0.5 max-lg:inline-flex max-lg:h-[26px] max-lg:items-center max-lg:rounded-[7px] max-lg:bg-ok/10 max-lg:px-[11px] max-lg:text-[13px] max-lg:text-ok">
               {athleteLevelLabels[athlete.level]}
             </span>
           ) : (
@@ -285,9 +285,10 @@ function UpcomingSection({
                   </span>
                   <span className="flex min-w-0 flex-col gap-0.5 leading-[normal]">
                     <span className="flex min-w-0 items-center gap-[7px] text-[14px] font-semibold">
+                      {/* La discipline : une barre fine (16/11/2026 : plus de pastilles). */}
                       <span
                         aria-hidden
-                        className={`size-[7px] shrink-0 rounded-full ${item.discipline ? disciplineStyles[item.discipline].dot : "bg-faint"}`}
+                        className={`h-4 w-[3px] shrink-0 rounded-[2px] ${item.discipline ? disciplineStyles[item.discipline].dot : "bg-faint"}`}
                       />
                       <span className="truncate">{item.title}</span>
                     </span>
@@ -422,7 +423,8 @@ function GoalSection({
       : null;
   const details = [typeLabel, category, goal?.competitionLocation ?? null, target].filter(Boolean);
   const phoneDetails = [typeLabel, category, target].filter(Boolean);
-  const badge = "flex h-6 items-center gap-1.5 rounded-xl px-[9px] text-[12px] font-medium";
+  // Étiquettes : rectangles aux coins arrondis, jamais des capsules (16/11/2026).
+  const badge = "flex h-6 items-center gap-1.5 rounded-[6px] px-2 text-[12px] font-medium";
 
   return (
     <Section
@@ -437,11 +439,9 @@ function GoalSection({
           <div className="flex items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1.5">
               {discipline ? (
-                <span className={`${badge} bg-bg text-text-2`}>
-                  <span
-                    aria-hidden
-                    className={`size-[7px] rounded-full ${disciplineStyles[discipline].dot}`}
-                  />
+                <span
+                  className={`${badge} font-semibold ${disciplineStyles[discipline].tint} ${disciplineStyles[discipline].text}`}
+                >
                   {disciplineLabels[discipline]}
                 </span>
               ) : null}

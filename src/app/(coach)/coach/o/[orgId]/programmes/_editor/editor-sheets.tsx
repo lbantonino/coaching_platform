@@ -177,10 +177,8 @@ export function DisciplineSheet({
                 className="sr-only"
               />
               <span
-                aria-hidden
-                className={`size-2.5 shrink-0 rounded-full ${disciplineStyles[discipline].dot}`}
-              />
-              <span className="min-w-0 flex-1 text-[14.5px] font-semibold text-text">
+                className={`min-w-0 flex-1 text-[14.5px] font-semibold ${disciplineStyles[discipline].text}`}
+              >
                 {disciplineLabels[discipline]}
               </span>
               <RadioMark checked={value === discipline} />
@@ -467,10 +465,10 @@ export function SessionTemplateSheet({
                 </span>
                 <span className="flex min-w-0 items-center gap-1.5 text-[12.5px] text-muted">
                   <span
-                    aria-hidden
-                    className={`size-1.5 shrink-0 rounded-full ${disciplineStyles[template.discipline].dot}`}
-                  />
-                  <span className="shrink-0">{disciplineLabels[template.discipline]}</span>
+                    className={`shrink-0 font-semibold ${disciplineStyles[template.discipline].text}`}
+                  >
+                    {disciplineLabels[template.discipline]}
+                  </span>
                   <span aria-hidden className="text-faint">
                     ·
                   </span>
@@ -478,7 +476,7 @@ export function SessionTemplateSheet({
                 </span>
               </span>
               {template.source === "coory" ? (
-                <span className="inline-flex h-6 shrink-0 items-center rounded-[12px] bg-violet-soft-2 px-[9px] text-[11.5px] font-semibold text-violet-text">
+                <span className="inline-flex h-6 shrink-0 items-center rounded-[6px] bg-violet-soft-2 px-[9px] text-[11.5px] font-semibold text-violet-text">
                   Coory
                 </span>
               ) : null}

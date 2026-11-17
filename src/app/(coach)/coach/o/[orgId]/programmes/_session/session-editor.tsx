@@ -582,11 +582,9 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex min-w-0 flex-col gap-1">
-                <span className="flex items-center gap-[7px] text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase">
-                  <span
-                    aria-hidden
-                    className={`size-[7px] rounded-full ${disciplineStyles[discipline].dot}`}
-                  />
+                <span
+                  className={`text-[11.5px] font-semibold tracking-[0.05em] uppercase ${disciplineStyles[discipline].text}`}
+                >
                   {kicker}
                 </span>
                 <h2 className="text-[26px] leading-[1.15] font-bold tracking-[-0.025em] text-text">
@@ -609,11 +607,9 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
 
           <div className="flex items-start justify-between gap-3 px-1 lg:hidden">
             <div className="flex min-w-0 flex-col gap-[5px]">
-              <span className="flex items-center gap-[7px] text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase">
-                <span
-                  aria-hidden
-                  className={`size-[7px] rounded-full ${disciplineStyles[discipline].dot}`}
-                />
+              <span
+                className={`text-[11.5px] font-semibold tracking-[0.05em] uppercase ${disciplineStyles[discipline].text}`}
+              >
                 {kicker}
               </span>
               <h2 className="text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">

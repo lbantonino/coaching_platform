@@ -509,11 +509,10 @@ export function ProgramWizard({
                             onChange={() => setDiscipline(choice)}
                             className="sr-only"
                           />
+                          {/* Le mot dans la couleur de la discipline (16/11/2026 : plus de pastilles). */}
                           <span
-                            aria-hidden
-                            className={`size-2.5 rounded-full ${disciplineStyles[choice].dot}`}
-                          />
-                          <span className="truncate text-[15px] leading-[normal] font-semibold text-text">
+                            className={`truncate text-[15px] leading-[normal] font-semibold ${disciplineStyles[choice].text}`}
+                          >
                             {disciplineLabels[choice]}
                           </span>
                         </label>
@@ -1052,8 +1051,9 @@ function Field({
 function AimRow({ discipline, children }: { discipline: Discipline; children: ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex w-[118px] shrink-0 items-center gap-2 text-[14px] font-semibold text-text lg:w-[130px]">
-        <span aria-hidden className={`size-2 rounded-full ${disciplineStyles[discipline].dot}`} />
+      <span
+        className={`flex w-[118px] shrink-0 items-center text-[14px] font-semibold lg:w-[130px] ${disciplineStyles[discipline].text}`}
+      >
         {disciplineLabels[discipline]}
       </span>
       <div className="min-w-0 flex-1">{children}</div>
@@ -1073,11 +1073,9 @@ function FixedAthlete({ athlete }: { athlete: WizardAthlete }) {
             {athlete.name}
           </span>
           {athlete.programType ? (
-            <span className="flex items-center gap-1.5 text-[12.5px] leading-[normal] text-muted">
-              <span
-                aria-hidden
-                className={`size-1.5 rounded-full ${disciplineStyles[athlete.programType].dot}`}
-              />
+            <span
+              className={`text-[12.5px] leading-[normal] font-semibold ${disciplineStyles[athlete.programType].text}`}
+            >
               {disciplineLabels[athlete.programType]}
             </span>
           ) : null}
@@ -1163,11 +1161,9 @@ export function AthletePicker({
                     {athlete.name}
                   </span>
                   {athlete.programType ? (
-                    <span className="flex items-center gap-1.5 text-[12.5px] leading-[normal] text-muted">
-                      <span
-                        aria-hidden
-                        className={`size-1.5 rounded-full ${disciplineStyles[athlete.programType].dot}`}
-                      />
+                    <span
+                      className={`text-[12.5px] leading-[normal] font-semibold ${disciplineStyles[athlete.programType].text}`}
+                    >
                       {disciplineLabels[athlete.programType]}
                     </span>
                   ) : null}
@@ -1261,7 +1257,7 @@ function SourceSelect({
       {current.discipline ? (
         <span
           aria-hidden
-          className={`size-2 shrink-0 rounded-full ${disciplineStyles[current.discipline].dot}`}
+          className={`h-4 w-[3px] shrink-0 rounded-[2px] ${disciplineStyles[current.discipline].dot}`}
         />
       ) : null}
       <span className="pointer-events-none flex min-w-0 flex-1 flex-col gap-0.5">

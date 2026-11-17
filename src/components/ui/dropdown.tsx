@@ -115,7 +115,7 @@ export function Dropdown({
                 }`}
               >
                 {option.dot ? (
-                  <span aria-hidden className={`size-[7px] shrink-0 rounded-full ${option.dot}`} />
+                  <span aria-hidden className={`h-1 w-3.5 shrink-0 rounded-[2px] ${option.dot}`} />
                 ) : null}
                 <span className="flex-1 whitespace-nowrap">{option.label}</span>
                 {option.count === undefined ? null : (

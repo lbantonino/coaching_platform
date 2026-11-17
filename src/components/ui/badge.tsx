@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-// Pastilles (prompt Claude Design §4 « Badge ») : 12/500, 4 × 10 px, fond teinté + texte de la couleur.
+// Étiquettes (prompt Claude Design §4 « Badge ») : 12/500, 4 × 10 px, fond teinté + texte de la couleur,
+// en rectangle aux coins arrondis (jamais une capsule, ni un point, depuis le 16/11/2026).
 // Sens des couleurs :
 // ok = fait, actif, publié, payé · warn = en pause, en attente, à livrer, partiel
 // live = en retard, manqué, sauté, priorité haute (orange « attention ») · neutral = brouillon, archivé
@@ -14,7 +15,7 @@ const tones = {
   neutral: "bg-chip text-muted",
   planned: "bg-run-soft text-run",
   moved: "bg-strength-soft text-strength",
-  // Disciplines (D-23) : course, musculation, Hyrox, hybride. Un point de 7 px devant le libellé.
+  // Disciplines (D-23) : course, musculation, Hyrox, hybride.
   run: "bg-run-soft text-run",
   strength: "bg-strength-soft text-strength",
   hyrox: "bg-hyrox-soft text-hyrox",
@@ -23,35 +24,11 @@ const tones = {
 
 export type BadgeTone = keyof typeof tones;
 
-const dotColors: Partial<Record<BadgeTone, string>> = {
-  run: "bg-run",
-  strength: "bg-strength",
-  hyrox: "bg-hyrox",
-  hybrid: "bg-hybrid",
-};
-
-export function Badge({
-  tone = "neutral",
-  dot,
-  children,
-}: {
-  tone?: BadgeTone;
-  // Point de couleur devant le libellé ; par défaut, seulement pour les disciplines.
-  dot?: boolean;
-  children: ReactNode;
-}) {
-  const dotColor = dotColors[tone];
-  const showDot = dot ?? Boolean(dotColor);
+export function Badge({ tone = "neutral", children }: { tone?: BadgeTone; children: ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-[12px] leading-[1.3] font-medium whitespace-nowrap ${tones[tone]}`}
+      className={`inline-flex items-center rounded-[6px] px-2.5 py-1 text-[12px] leading-[1.3] font-medium whitespace-nowrap ${tones[tone]}`}
     >
-      {showDot ? (
-        <span
-          aria-hidden
-          className={`size-[7px] shrink-0 rounded-full ${dotColor ?? "bg-current"}`}
-        />
-      ) : null}
       {children}
     </span>
   );

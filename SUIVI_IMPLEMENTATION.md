@@ -31,6 +31,55 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### PDF cohérents avec l'app (D-189, 16/11/2026)
+```
+src/domain/training/pdf-agenda.ts (musculation listée + renvoi, superset « Superset · N tours », hauteur
+  et raccourci d'une semaine trop pleine) ; pdf-fiches.ts (plus de RIR, colonne Charge, « % du max »,
+  superset et EMOM en cadres dans l'ordre, conseil du coach seul, allures avec unité, note retirée) ;
+  src/features/programs/pdf/pdf-kit.tsx (trait au lieu de la puce, lignes d'un bloc en retrait),
+  agenda-pdf.tsx (musculation listée), fiches-pdf.tsx (colonne Charge, cadre).
+Relecture indépendante (0 critique) corrigée, chaque point avec un test vu en échec : « % du max »
+  faisait déborder une fiche (cellules du tableau des charges en « 70 % », « (en % du max) » dans le
+  titre, plages « 70-80 % », largeur réelle des cellules dans l'estimation de hauteur) ; un bloc répété
+  qui n'est pas un superset garde son nom (« Gainage · 4 tours ») et ses lignes ; repos du cadre écrit
+  comme l'app (« Repos 0:45 »). Puis, à la demande d'Antonino, 4 des 5 mineurs : unité dans les
+  cadres (« 12 répét. ») et commentaire sous sa colonne ; plus de coupure d'une simple liste à la virgule
+  (« Hanches, épaules, colonne », carte de l'app comprise) ; « EMOM · 10 min » ; commentaire de code.
+  Reste, laissé tel quel : le superset d'un seul tour à plat dans l'Agenda (comme l'app).
+Tests : pdf-agenda.test.ts, pdf-fiches.test.ts, pdf-render.test.ts (pages réelles = pages prévues en
+  % du max), revue-mvp-programmes.test.ts (EMOM tenu dans son cadre) ; Vitest 709/709 ;
+  program-pdf.spec.ts 8/8. Planche avant / après sur les PDF de démo (Inès « Prépa HYROX · bloc 2 »).
+```
+
+### « ⋯ » sur les cartes de programme, plus aucune pastille (D-188, 16/11/2026)
+```
+supabase/migrations/20261116120000_supprimer_programme.sql (nouveau : delete_program, membre de
+  l'organisation, cascade du brouillon et des versions) ; database.types.ts régénéré ;
+  features/programs/actions.ts (deleteProgram, loadProgramSettings, updateProgramSettings) ;
+  programmes/_editor/program-card-menu.tsx (nouveau : « ⋯ » d'une carte, fenêtres de l'éditeur) ;
+  program-cards.tsx (emplacement du menu, discipline en mot coloré, étiquettes arrondies) ;
+  programmes/page.tsx + sportifs/[athleteId]/program-tab.tsx (menu branché sur chaque carte).
+Pastilles : components/ui/tag.tsx (nouveau : étiquette commune), badge.tsx et status-pill.tsx (sans
+  point, coins arrondis), count-badge, dropdown, notifications-popover ; blocks (prochaine séance,
+  liste du jour et grille de la semaine : « maintenant » = l'heure dans une étiquette ; mois : petits
+  traits ; heures de coaching, agenda, bibliothèque) ; fiche sportif (en-tête, tableau, vue d'ensemble,
+  objectifs, records, repères, agenda, documents) ; éditeur (assistant, fenêtres, séance, jours fixes,
+  Hyrox) ; comptabilité (traits de légende), tâches, documents, notifications, messages, inscription.
+  Allures « 5:30 /km » (card-lines.ts, session-cards.ts) dans les cartes et l'agenda.
+Relecture indépendante (0 critique) corrigée, chaque point avec un test vu en échec : organisation
+  revérifiée par delete_program(organisation, programme) et les actions ; révision des fenêtres de la
+  carte ; « Modifications non publiées » sur la carte d'un programme publié ; contraste « Actif » ; icône
+  « groupe » du mois ; capsule des pages d'erreur. 10 mineurs reportés (registre).
+Tests : program-card-menu.spec.ts (nouveau : renommer, conflit à deux onglets, supprimer ; programme
+  publié), agenda-month-collective.spec.ts, 46_supprimer_programme.test.sql, status-tags-contrast.test.ts,
+  no-dots-no-capsules.test.ts (garde de la règle) ; Vitest 702/702 ; SQL 583/583 ; Playwright (suite complète, téléphone
+  et ordinateur, après corrections) 310 réussis, 43 ignorés, 3 échecs hors lot, tous dépendants des
+  données locales (sessions.spec paiement : vise le 9/11 déjà payé par la démo ; agenda.spec téléphone :
+  « Programmes en cours » limité à 3, la base locale en contient d'autres ; tasks.spec « Tout
+  supprimer » : le nombre de tâches terminées de la base locale change le titre attendu). Captures téléphone et ordinateur, sombre et clair.
+Production : `npx supabase db push` AVANT de déployer (sinon « Supprimer » échoue en ligne).
+```
+
 ### Séances en cartes, même page sur ordinateur et téléphone (D-187, 15/11/2026)
 ```
 src/domain/training/session-cards.ts (nouveau : une séance en cartes, toutes disciplines, v1 comprise) ;
@@ -50,6 +99,8 @@ Relecture indépendante (0 critique) : corrigés avec un test vu en échec : Hyr
   la fiche de la Bibliothèque vers le programme (la redirection devenait la « page précédente »),
   rechargement sur la liste des semaines ; vérifiés par capture : barre coupée aux coins, cartes de l'agenda
   visibles sur fond teinté, trait des blocs répétés de l'agenda. 8 mineurs reportés (registre).
+Allures (16/11, Antonino) : « 5:30 /km », « 2:10 /500 m » dans les cartes et les cartes repliées de
+  l'agenda (session-cards.ts, card-lines.ts shortLine, glue de session-line.tsx).
 Hors lot : éditeur « Modifier la séance » en cartes, PDF, champs RIR de l'éditeur (maquettes à venir).
 ```
 

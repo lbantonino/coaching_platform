@@ -12,9 +12,12 @@ import {
 
 describe("lignes des cartes de l'agenda (2c)", () => {
   it("raccourcit sans rien perdre", () => {
-    expect(shortLine("20 min @6:00 min/km, allure progressive")).toBe("20 min @ 6:00");
+    expect(shortLine("20 min @6:00 min/km, allure progressive")).toBe("20 min · 6:00 /km");
     expect(shortLine("1:45 min de récupération (trot lent)")).toBe("récup 1:45 (trot lent)");
-    expect(shortLine("4 min @4:55 min/km")).toBe("4 min @ 4:55");
+    expect(shortLine("4 min @4:55 min/km")).toBe("4 min · 4:55 /km");
+    // Une simple liste n'est pas coupée (16/11) : la coupure ne retire qu'un commentaire après une mesure.
+    expect(shortLine("Hanches, épaules, colonne")).toBe("Hanches, épaules, colonne");
+    expect(shortLine("Run 1 km, facile")).toBe("Run 1 km");
     // La récup garde son unité et sa cible (cas d'Antonino du 10/11).
     expect(shortLine("1 min de récupération Z2 · 130-145 bpm")).toBe(
       "récup 1 min · Z2 · 130–145 bpm",
@@ -38,8 +41,12 @@ describe("lignes des cartes de l'agenda (2c)", () => {
         ],
       }),
     ).toEqual([
-      { kind: "line", text: "10 min @ 6:30–6:40" },
-      { kind: "repeat", times: 4, lines: ["3 min @ 4:50–5:10", "récup 1 min · Z2 · 130–145 bpm"] },
+      { kind: "line", text: "10 min · 6:30–6:40 /km" },
+      {
+        kind: "repeat",
+        times: 4,
+        lines: ["3 min · 4:50–5:10 /km", "récup 1 min · Z2 · 130–145 bpm"],
+      },
       { kind: "line", text: "10 min · Z2 · 130–150 bpm" },
     ]);
   });
@@ -49,7 +56,7 @@ describe("lignes des cartes de l'agenda (2c)", () => {
         discipline: "running",
         steps: [{ title: "Sortie longue", lines: ["1 h 20 @5:45–6:20 min/km"] }],
       }),
-    ).toEqual([{ kind: "line", text: "80 min @ 5:45–6:20" }]);
+    ).toEqual([{ kind: "line", text: "80 min · 5:45–6:20 /km" }]);
   });
   it("découpe une ligne pour le contraste : durée en gras, plage de FC en italique", () => {
     expect(lineParts("récup 1 min · Z2 · 130–145 bpm")).toEqual([
@@ -68,8 +75,8 @@ describe("lignes des cartes de l'agenda (2c)", () => {
     ]);
   });
   it("Hyrox et musculation : rien ne manque", () => {
-    expect(shortLine("Run 1,5 km @5:30 min/km")).toBe("Run 1,5 km @ 5:30");
-    expect(shortLine("SkiErg 500 m @2:10 min/500 m")).toBe("SkiErg 500 m @ 2:10 /500 m");
+    expect(shortLine("Run 1,5 km @5:30 min/km")).toBe("Run 1,5 km · 5:30 /km");
+    expect(shortLine("SkiErg 500 m @2:10 min/500 m")).toBe("SkiErg 500 m · 2:10 /500 m");
     expect(
       cardLines({
         discipline: "hyrox",
@@ -85,7 +92,7 @@ describe("lignes des cartes de l'agenda (2c)", () => {
       {
         kind: "group",
         label: "AMRAP 20 min",
-        lines: ["Run 400 m @ 5:15", "Farmers carry 50 m · 2 × 16 kg"],
+        lines: ["Run 400 m · 5:15 /km", "Farmers carry 50 m · 2 × 16 kg"],
       },
     ]);
     expect(shortLine("Burpee broad jumps 40 m")).toBe("Burpee broad jumps 40 m");
@@ -138,7 +145,8 @@ describe("lignes des cartes de l'agenda (2c)", () => {
       { kind: "line", text: "Back squat 4 × 6" },
       { kind: "line", text: "SDT roumain 3 × 8" },
       { kind: "repeat", times: 3, lines: ["Fentes marchées 10", "Hip thrust barre 12"] },
-      { kind: "group", label: "EMOM 10 min", lines: ["KB swing 15"] },
+      // Écrit comme « Superset · 3 tours » (16/11) : le nom, puis sa durée.
+      { kind: "group", label: "EMOM · 10 min", lines: ["KB swing 15"] },
     ]);
   });
   it("Hyrox et musculation : le mouvement et son volume en gras, l'intensité normale", () => {
@@ -214,7 +222,7 @@ describe("détail d'une séance (panneau de l'éditeur)", () => {
         "hyrox",
       ),
     ).toEqual([
-      { text: "Run 1 km @ 5:30", exercise: true, parts: null },
+      { text: "Run 1 km · 5:30 /km", exercise: true, parts: null },
       { text: "Burpee broad jumps 40 m", exercise: true, parts: null },
       { text: "Repos 1:30 min entre les tours", exercise: false, parts: null },
     ]);

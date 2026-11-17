@@ -187,15 +187,19 @@ function SessionCard({ session }: { session: AgendaSessionView }) {
         <Text style={s.meta}>{pdfText(session.meta)}</Text>
       </View>
       <View style={s.body}>
-        {session.fiche ? (
-          <>
-            <Text style={s.strongLine}>{pdfText(session.fiche.summary)}</Text>
-            <Text style={s.violetLine}>→ fiche dans « Fiches et repères »</Text>
-          </>
-        ) : (
+        {/* Musculation (16/11) : ses exercices comme la carte de l'app, puis le renvoi à sa fiche ;
+            Hyrox trop long : son résumé, puis le renvoi. */}
+        {session.fiche?.summary ? (
+          <Text style={s.strongLine}>{pdfText(session.fiche.summary)}</Text>
+        ) : null}
+        {session.lines.length > 0 ? (
           <SessionLines lines={session.lines} discipline={session.discipline} />
-        )}
-        {session.cut ? <Text style={s.violetLine}>→ détail dans Coory</Text> : null}
+        ) : null}
+        {session.fiche ? (
+          <Text style={s.violetLine}>→ fiche dans « Fiches et repères »</Text>
+        ) : session.cut ? (
+          <Text style={s.violetLine}>→ détail dans Coory</Text>
+        ) : null}
       </View>
     </View>
   );

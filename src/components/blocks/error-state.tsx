@@ -127,7 +127,7 @@ export function ErrorState({
         ) : (
           <Illustration500 className="h-[68px] w-[172px] lg:h-[90px] lg:w-[228px]" />
         )}
-        <span className="mt-[30px] rounded-full bg-violet-soft px-[11px] py-[5px] text-[12px] leading-[normal] font-semibold text-violet-text lg:mt-9">
+        <span className="mt-[30px] rounded-[7px] bg-violet-soft px-[11px] py-[5px] text-[12px] leading-[normal] font-semibold text-violet-text lg:mt-9">
           {text.badge}
         </span>
         <h1

@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 
 import { NotAvailableDialog } from "@/components/blocks/not-available";
+import { Tag } from "@/components/ui/tag";
 import { Avatar } from "@/components/ui/avatar";
 import { buttonClass } from "@/components/ui/button";
 import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
@@ -33,7 +34,7 @@ import {
   type Discipline,
 } from "@/domain/training/discipline";
 import { setAthletesProgramType, setAthletesStatus } from "@/features/athletes/actions";
-import { athleteStatusDots, type AthleteStatus, type Sex } from "@/features/athletes/schemas";
+import { athleteStatusTags, type AthleteStatus, type Sex } from "@/features/athletes/schemas";
 import { createInvitations, type BulkInvitation } from "@/features/invitations/actions";
 
 // Liste des sportifs, d'après la maquette « Sportifs » du 03/11/2026 (pages 1a et 1b du dossier
@@ -74,8 +75,8 @@ const statusLabel = Object.fromEntries(statusChoices.map((c) => [c.status, c.lab
   AthleteStatus,
   string
 >;
-// Points de statut et de discipline : athleteStatusDots et disciplineStyles[…].dot (partagés).
-const statusDot = athleteStatusDots;
+// Étiquette de statut et couleur de discipline : athleteStatusTags et disciplineStyles (partagés).
+const statusTag = athleteStatusTags;
 
 const sortNames: Record<SortColumn, string> = {
   sportif: "nom",
@@ -572,23 +573,17 @@ function Row({
               row.sub
             )}
           </span>
-          {/* Téléphone : « ● Actif · ● Musculation ». */}
+          {/* Téléphone : « Actif · Musculation » (étiquette du statut, discipline en couleur ; 16/11 :
+              plus de pastilles). */}
           <span className="flex items-center gap-2 text-[13px] whitespace-nowrap text-text-2 lg:hidden">
-            <span className="flex items-center gap-[5px]">
-              <span aria-hidden className={`size-1.5 rounded-full ${statusDot[row.status]}`} />
-              {statusLabel[row.status]}
-            </span>
+            <Tag className={statusTag[row.status]}>{statusLabel[row.status]}</Tag>
             <span aria-hidden className="text-checkbox">
               ·
             </span>
-            <span className="flex min-w-0 items-center gap-[5px]">
-              <span
-                aria-hidden
-                className={`size-1.5 shrink-0 rounded-full ${row.programType ? disciplineStyles[row.programType].dot : "bg-faint"}`}
-              />
-              <span className="truncate">
-                {row.programType ? disciplineLabels[row.programType] : "Programme à choisir"}
-              </span>
+            <span
+              className={`min-w-0 truncate ${row.programType ? `font-semibold ${disciplineStyles[row.programType].text}` : ""}`}
+            >
+              {row.programType ? disciplineLabels[row.programType] : "Programme à choisir"}
             </span>
           </span>
         </span>
@@ -603,8 +598,7 @@ function Row({
           aria-label={`Statut : ${statusLabel[row.status]}. Changer le statut de ${row.name}`}
           className="relative z-10 -mx-2 inline-flex items-center gap-[7px] rounded-lg px-2 py-1 text-[13.5px] whitespace-nowrap text-text transition-colors duration-150 hover:bg-chip"
         >
-          <span aria-hidden className={`size-[7px] rounded-full ${statusDot[row.status]}`} />
-          {statusLabel[row.status]}
+          <Tag className={statusTag[row.status]}>{statusLabel[row.status]}</Tag>
         </button>
       </span>
       <span className={desktop}>
@@ -616,11 +610,9 @@ function Row({
             aria-label={`Programme : ${disciplineLabels[row.programType]}. Changer la discipline de ${row.name}`}
             className="relative z-10 -mx-2 inline-flex items-center gap-[7px] rounded-lg px-2 py-1 text-[13.5px] font-medium whitespace-nowrap text-text transition-colors duration-150 hover:bg-chip"
           >
-            <span
-              aria-hidden
-              className={`size-2 rounded-full ${disciplineStyles[row.programType].dot}`}
-            />
-            {disciplineLabels[row.programType]}
+            <span className={`font-semibold ${disciplineStyles[row.programType].text}`}>
+              {disciplineLabels[row.programType]}
+            </span>
           </button>
         ) : (
           <button

@@ -442,7 +442,7 @@ async function SessionDetail({
                 {session.discipline ? (
                   <span
                     aria-hidden
-                    className={`size-[7px] shrink-0 rounded-full ${dots[session.discipline]}`}
+                    className={`h-4 w-[3px] shrink-0 rounded-[2px] ${dots[session.discipline]}`}
                   />
                 ) : null}
                 {kindLine}
@@ -455,7 +455,7 @@ async function SessionDetail({
                   <Calendar aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
                   {capitalize(dayLabel(current.date))}
                   {badge ? (
-                    <span className="inline-flex h-5 items-center rounded-[10px] bg-violet-soft px-2 text-[11.5px] font-medium text-violet-text">
+                    <span className="inline-flex h-5 items-center rounded-[5px] bg-violet-soft px-2 text-[11.5px] font-medium text-violet-text">
                       {badge}
                     </span>
                   ) : null}

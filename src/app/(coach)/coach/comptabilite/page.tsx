@@ -329,7 +329,7 @@ async function Accounting({
                 }`}
               >
                 <span className="flex items-center gap-[7px] text-[13px] leading-[normal] font-medium whitespace-nowrap text-text-2">
-                  <span aria-hidden className={`size-2 shrink-0 rounded-full ${stat.dot}`} />
+                  <span aria-hidden className={`h-1 w-3.5 shrink-0 rounded-[2px] ${stat.dot}`} />
                   {stat.label}
                 </span>
                 <span className="text-[18px] leading-[1.2] font-semibold tracking-[-0.01em] whitespace-nowrap tabular">
@@ -358,11 +358,11 @@ async function Accounting({
                 </h2>
                 <div className="flex gap-3.5 text-[12.5px] leading-[normal] font-medium text-text-2">
                   <span className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span aria-hidden className="size-2 rounded-full bg-violet" />
+                    <span aria-hidden className="h-1 w-3.5 shrink-0 rounded-[2px] bg-violet" />
                     Gagné
                   </span>
                   <span className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span aria-hidden className="size-2 rounded-full bg-list-amber" />
+                    <span aria-hidden className="h-1 w-3.5 shrink-0 rounded-[2px] bg-list-amber" />
                     Dépensé
                   </span>
                 </div>
@@ -519,7 +519,7 @@ async function Accounting({
                             <span className="inline-flex min-w-0 items-center gap-1.5">
                               <span
                                 aria-hidden
-                                className={`size-2 shrink-0 rounded-full ${categoryDotClass[expense.categoryColor ?? "grey"]}`}
+                                className={`h-3 w-[3px] shrink-0 rounded-[1.5px] ${categoryDotClass[expense.categoryColor ?? "grey"]}`}
                               />
                               <span className="truncate">
                                 {[

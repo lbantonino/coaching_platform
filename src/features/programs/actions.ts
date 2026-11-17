@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import type { Discipline } from "@/domain/training/discipline";
+import type { ProgramGoal } from "@/domain/training/program-plan";
 import {
   planFromDraft,
   programDraftSchema,
@@ -283,6 +284,22 @@ export async function publishProgram(
   };
 }
 
+// Le programme appartient-il à l'organisation passée ? (Un coach membre de deux organisations ne
+// touche pas, depuis l'une, un programme de l'autre : relecture du 16/11.)
+async function inOrganization(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  organizationId: string,
+  programId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("programs")
+    .select("id")
+    .eq("organization_id", organizationId)
+    .eq("id", programId)
+    .maybeSingle();
+  return data !== null;
+}
+
 export async function archiveProgram(
   organizationId: string,
   programId: string,
@@ -290,9 +307,127 @@ export async function archiveProgram(
   const { membership } = await requireOrgAccess(organizationId);
   if (!z.uuid().safeParse(programId).success) return fail("NOT_FOUND", "Programme introuvable.");
   const supabase = await createClient();
+  if (!(await inOrganization(supabase, membership.organizationId, programId))) {
+    return fail("NOT_FOUND", "Programme introuvable.");
+  }
   const { error } = await supabase.rpc("archive_program", { p_program_id: programId });
   if (error) return fromDatabase(error);
   revalidateProgram(membership.organizationId);
+  return { ok: true };
+}
+
+// « Supprimer » (demande d'Antonino du 16/11 : depuis la carte d'un programme) : définitif, le
+// programme, son brouillon et ses versions publiées disparaissent (delete_program, membre de
+// l'organisation ; cascade dans la base).
+export async function deleteProgram(
+  organizationId: string,
+  programId: string,
+): Promise<ActionResult> {
+  const { membership } = await requireOrgAccess(organizationId);
+  if (!z.uuid().safeParse(programId).success) return fail("NOT_FOUND", "Programme introuvable.");
+  const supabase = await createClient();
+  const { data: row } = await supabase
+    .from("programs")
+    .select("athlete_id")
+    .eq("organization_id", membership.organizationId)
+    .eq("id", programId)
+    .maybeSingle();
+  // Le programme doit être celui de CETTE organisation (relecture du 16/11), revérifié dans la base.
+  if (!row) return fail("NOT_FOUND", "Programme introuvable.");
+  const { error } = await supabase.rpc("delete_program", {
+    p_organization_id: membership.organizationId,
+    p_program_id: programId,
+  });
+  if (error) return fromDatabase(error);
+  revalidateProgram(membership.organizationId, row?.athlete_id);
+  return { ok: true };
+}
+
+// Les réglages d'un programme pour les fenêtres de sa carte (« ⋯ » de la page Programmes et de la
+// fiche, 16/11) : les mêmes valeurs que l'éditeur lit dans son brouillon.
+export type ProgramSettings = {
+  title: string;
+  discipline: Discipline;
+  startDate: string;
+  weeksCount: number;
+  goal: ProgramGoal | null;
+  hyrox: boolean;
+  published: boolean;
+  // Programmes publiés du même sportif (avertissement de chevauchement des dates).
+  others: { title: string; startDate: string; weeksCount: number }[];
+  // Révision du brouillon lue à l'ouverture : l'enregistrement la revérifie (relecture du 16/11 : une
+  // fenêtre ouverte avant un changement fait ailleurs ne l'écrase pas en silence).
+  revision: number;
+};
+
+export async function loadProgramSettings(
+  organizationId: string,
+  programId: string,
+): Promise<ActionResult<{ settings: ProgramSettings }>> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const supabase = await createClient();
+  const loaded = await loadDraft(supabase, membership.organizationId, programId);
+  if (!loaded?.draft) return fail("NOT_FOUND", "Programme introuvable.");
+  const { draft, program } = loaded;
+  const { data: others } = await supabase
+    .from("programs")
+    .select("title, start_date, weeks_count")
+    .eq("organization_id", membership.organizationId)
+    .eq("athlete_id", program.athleteId)
+    .eq("status", "published")
+    .neq("id", program.id);
+  return {
+    ok: true,
+    settings: {
+      title: draft.title,
+      discipline: draft.discipline,
+      startDate: draft.startDate,
+      weeksCount: draft.weeks.length,
+      goal: draft.goal ?? null,
+      hyrox:
+        draft.discipline === "hyrox" ||
+        draft.weeks.some((week) => week.sessions.some((s) => s.content.discipline === "hyrox")),
+      published: loaded.activePublication !== null,
+      others: (others ?? []).map((row) => ({
+        title: row.title,
+        startDate: row.start_date,
+        weeksCount: row.weeks_count,
+      })),
+      revision: loaded.revision,
+    },
+  };
+}
+
+// Modifier un réglage depuis la carte : le brouillon RELU, la même modification que l'éditeur, le même
+// enregistrement (saveDraft revérifie la révision dans la base). Un programme archivé ne se modifie pas.
+export async function updateProgramSettings(
+  organizationId: string,
+  programId: string,
+  expectedRevision: number,
+  change:
+    | { title: string }
+    | { discipline: Discipline }
+    | { startDate: string }
+    | { goal: ProgramGoal | null },
+): Promise<ActionResult> {
+  const { membership } = await requireOrgAccess(organizationId);
+  const supabase = await createClient();
+  const loaded = await loadDraft(supabase, membership.organizationId, programId);
+  if (!loaded?.draft) return fail("NOT_FOUND", "Programme introuvable.");
+  if (loaded.program.status === "archived") {
+    return fail("INVALID", "Ce programme est archivé : désarchive-le pour le modifier.");
+  }
+  // Changé ailleurs depuis l'ouverture de la fenêtre : rien n'est écrasé.
+  if (loaded.revision !== expectedRevision) return fromDatabase({ code: "CY409" });
+  const next = { ...loaded.draft, ...("goal" in change ? {} : change) };
+  if ("goal" in change) {
+    // Sans objectif : la clé disparaît du brouillon (comme « Retirer l'objectif » dans l'éditeur).
+    if (change.goal) next.goal = change.goal;
+    else delete next.goal;
+  }
+  const saved = await saveDraft(membership.organizationId, programId, loaded.revision, next);
+  if (!saved.ok) return saved;
+  revalidateProgram(membership.organizationId, loaded.program.athleteId);
   return { ok: true };
 }
 
@@ -305,6 +440,9 @@ export async function unarchiveProgram(
   const { membership } = await requireOrgAccess(organizationId);
   if (!z.uuid().safeParse(programId).success) return fail("NOT_FOUND", "Programme introuvable.");
   const supabase = await createClient();
+  if (!(await inOrganization(supabase, membership.organizationId, programId))) {
+    return fail("NOT_FOUND", "Programme introuvable.");
+  }
   const { data, error } = await supabase.rpc("unarchive_program", { p_program_id: programId });
   if (error) {
     return error.code === "23P01"

@@ -323,7 +323,7 @@ function PreviewRow({ item, onChoose }: { item: PreviewItem; onChoose: () => voi
         <span className="flex min-w-0 items-center gap-2">
           {item.read ? null : (
             <>
-              <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-accent" />
+              <span aria-hidden className="h-3.5 w-[3px] shrink-0 rounded-[1.5px] bg-accent" />
               <span className="sr-only">Non lue : </span>
             </>
           )}
