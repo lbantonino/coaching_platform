@@ -14,6 +14,14 @@ import { createContext, useContext, useEffect, useSyncExternalStore } from "reac
 const PREVIOUS = "coory-previous-page";
 const CURRENT = "coory-current-page";
 const TITLE = "coory-page-title:";
+// La page précédente a-t-elle été quittée par une navigation normale (lien, bouton) ? « 0 » si l'on
+// est arrivé ici par le geste de retour (alors l'historique ne mène pas à elle).
+const FORWARD = "coory-previous-forward";
+// Page à recharger en y revenant par l'historique (ses données ont pu changer entre-temps).
+const REFRESH = "coory-refresh-on-return";
+// Dernier « Précédent / Suivant » du navigateur (geste de retour) : une arrivée dans la seconde vient
+// de l'historique.
+let poppedAt = 0;
 
 const here = () => window.location.pathname + window.location.search;
 
@@ -31,16 +39,33 @@ function visibleTitle() {
 // de la page en cours à chaque clic (juste avant de la quitter).
 export function NavigationMemory() {
   const pathname = usePathname();
+  const router = useRouter();
+  useEffect(() => {
+    const onPop = () => {
+      poppedAt = Date.now();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
   useEffect(() => {
     try {
       const current = sessionStorage.getItem(CURRENT);
       const next = here();
-      if (current && current.split("?")[0] !== pathname) sessionStorage.setItem(PREVIOUS, current);
+      if (current && current.split("?")[0] !== pathname) {
+        sessionStorage.setItem(PREVIOUS, current);
+        sessionStorage.setItem(FORWARD, Date.now() - poppedAt < 1000 ? "0" : "1");
+      }
       sessionStorage.setItem(CURRENT, next);
+      // Revenu par l'historique sur une page dont les données ont changé : on la recharge.
+      const stale = sessionStorage.getItem(REFRESH);
+      if (stale) {
+        sessionStorage.removeItem(REFRESH);
+        if (stale === pathname) router.refresh();
+      }
     } catch {
       // Stockage bloqué : le retour garde sa destination habituelle.
     }
-  }, [pathname]);
+  }, [pathname, router]);
   useEffect(() => {
     const remember = () => {
       try {
@@ -82,6 +107,26 @@ function previousPage() {
     return null;
   }
   return { href: previous, title: sessionStorage.getItem(TITLE + previousPath) };
+}
+
+// Revenir à `href` en RECULANT dans l'historique quand c'est la page d'où l'on vient par une navigation
+// normale : le geste de retour suit alors ce retour au lieu de rouvrir la page quittée (cas signalé au
+// test sur iPhone du 15/11 : « Modifier la séance » puis « ← Semaine 1 »). Ses données sont rechargées
+// à l'arrivée. false : ce n'est pas la page d'avant, le lien l'ouvre normalement.
+// `steps` : les étapes de cette page à remonter d'un coup (2 : l'éditeur d'une séance ouvert depuis le
+// détail de la séance, dont « ← Semaine 1 » ramène à la semaine).
+export function returnByHistory(href: string, steps = 1): boolean {
+  try {
+    const previous = previousPage();
+    const path = href.split("?")[0];
+    if (!previous || previous.href.split("?")[0] !== path) return false;
+    if (sessionStorage.getItem(FORWARD) !== "1") return false;
+    sessionStorage.setItem(REFRESH, path ?? "");
+    window.history.go(-steps);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Une page qui enregistre toute seule (éditeur de programme, de séance) donne son propre départ

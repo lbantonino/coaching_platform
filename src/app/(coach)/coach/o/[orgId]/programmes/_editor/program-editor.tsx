@@ -125,7 +125,7 @@ import {
 
 import { openUseTemplate } from "../modeles/[templateId]/use-template-sheet";
 import { DropLine, Handle } from "../_session/running-parts";
-import { useSafeLeave } from "../_session/safe-leave";
+import { rememberEditorDepth, useSafeLeave } from "../_session/safe-leave";
 
 import { saveStatusLabel, useEditor } from "./editor-provider";
 import {
@@ -437,6 +437,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     if (!(await editor.flush())) {
       toast("Le brouillon n'est pas enregistré : recharge la page, puis réessaie.");
       return;
+    }
+    // Téléphone : ouvert depuis le détail de la séance (une étape au-dessus de la semaine), son retour
+    // remontera les deux étapes (safe-leave).
+    if (isPhone()) {
+      rememberEditorDepth(level === "session" && window.history.state?.[LEVEL_STATE] ? 1 : 0);
     }
     router.push(href);
   };
