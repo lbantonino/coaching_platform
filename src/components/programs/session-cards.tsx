@@ -7,6 +7,8 @@ import { MoreMenu, type MoreMenuItem } from "@/components/ui/more-menu";
 import { disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import type { CardRole, GroupCard, SessionCard, StepCard } from "@/domain/training/session-cards";
 
+import { glue } from "./session-line";
+
 // Une séance en CARTES (test d'Antonino et de Gianluca sur iPhone, 15/11/2026, D-187), la même vue
 // partout (page du programme, page d'un modèle, récap de l'éditeur de séance, agenda d'un sportif) :
 // une carte par étape, une grande carte pour ce qui se répète (superset, EMOM, « Répéter », circuit),
@@ -125,7 +127,7 @@ function Step({
           key={`l${i}`}
           className={`mt-1 text-text-2 text-[14.5px] leading-[1.4] lg:text-[13.5px]`}
         >
-          {line}
+          {glue(line)}
         </span>
       ))}
       {step.sub.map((line, i) => (
@@ -133,7 +135,7 @@ function Step({
           key={`s${i}`}
           className={`mt-0.5 text-muted text-[13.5px] leading-[1.4] lg:text-[12.5px]`}
         >
-          {line}
+          {glue(line)}
         </span>
       ))}
     </li>

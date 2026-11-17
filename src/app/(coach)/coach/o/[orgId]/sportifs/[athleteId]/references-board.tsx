@@ -551,7 +551,7 @@ function Evolution({
             <span
               aria-hidden
               style={{ background: tone.line }}
-              className="size-2 shrink-0 rounded-full"
+              className="h-1 w-3.5 shrink-0 rounded-[2px]"
             />
             <span className="min-w-0 flex-1 truncate text-left">{series.title}</span>
             <ChevronDown aria-hidden size={14} strokeWidth={2} className="shrink-0 text-muted" />

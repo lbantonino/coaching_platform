@@ -4,7 +4,7 @@ import Link from "next/link";
 import { NotAvailableButton } from "@/components/blocks/not-available";
 import { Avatar } from "@/components/ui/avatar";
 import { FEATURES } from "@/config/features";
-import { disciplineLabels } from "@/domain/training/discipline";
+import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
 import type { WeekBlock } from "@/features/agenda/week";
 
 // Carte « Prochaine séance » du tableau de bord (maquette v6, D-77) : la séance la plus proche, calculée
@@ -23,13 +23,6 @@ const disciplineBars = {
   strength: "max-md:border-strength-fill",
   hyrox: "max-md:border-hyrox-fill",
   hybrid: "max-md:border-hybrid-fill",
-} as const;
-
-const disciplineDots = {
-  running: "bg-run-fill",
-  strength: "bg-strength-fill",
-  hyrox: "bg-hyrox-fill",
-  hybrid: "bg-hybrid-fill",
 } as const;
 
 function untilLabel(block: WeekBlock, today: string, nowMinutes: number, dayLabel: string) {
@@ -98,9 +91,8 @@ export function NextSessionCard({
             <span className="flex items-center gap-2 max-md:hidden">
               <span
                 aria-hidden
-                className="flex h-5 items-center gap-1.5 rounded-full bg-ok-soft px-2 text-[12px] font-medium text-ok lg:text-[11px]"
+                className="flex h-5 items-center rounded-[5px] bg-ok-soft px-1.5 text-[12px] font-semibold text-ok lg:text-[11px]"
               >
-                <span className="size-1.5 rounded-full bg-ok" />
                 {when}
               </span>
               {rank ? (
@@ -152,13 +144,11 @@ export function NextSessionCard({
                 </div>
                 {block.discipline ? (
                   <div className="mt-auto flex shrink-0 items-center gap-1.5 pt-1.5 text-[12px] font-medium text-text-2 md:hidden">
-                    <span
-                      aria-hidden
-                      className={`size-1.5 shrink-0 rounded-full ${disciplineDots[block.discipline]}`}
-                    />
                     <span className="truncate">
-                      {disciplineLabels[block.discipline]} ·{" "}
-                      {block.individual ? "Individuelle" : "Collective"}
+                      <span className={`font-semibold ${disciplineStyles[block.discipline].text}`}>
+                        {disciplineLabels[block.discipline]}
+                      </span>{" "}
+                      · {block.individual ? "Individuelle" : "Collective"}
                     </span>
                   </div>
                 ) : null}
@@ -176,11 +166,9 @@ export function NextSessionCard({
         <div className="flex items-center justify-between max-md:hidden">
           <div className="flex gap-1.5">
             {block.discipline ? (
-              <span className="flex h-8 items-center gap-1.5 rounded-lg border border-line px-2.5 text-[13px] text-text-2 lg:h-6 lg:rounded-md lg:px-2 lg:text-[11px]">
-                <span
-                  aria-hidden
-                  className={`size-1.5 rounded-full ${disciplineDots[block.discipline]}`}
-                />
+              <span
+                className={`flex h-8 items-center rounded-[7px] px-2.5 text-[13px] font-semibold lg:h-6 lg:rounded-[6px] lg:px-2 lg:text-[11px] ${disciplineStyles[block.discipline].tint} ${disciplineStyles[block.discipline].text}`}
+              >
                 {disciplineLabels[block.discipline]}
               </span>
             ) : null}

@@ -12,8 +12,8 @@ import type { Discipline } from "@/domain/training/discipline";
 export const glue = (text: string) =>
   text
     .replace(/(\d) (bpm|min|km|m|s|kg)\b/g, "$1 $2")
-    // « 2:10 /500 m » (ergomètre) et « 4 × 6 » ne se coupent pas en deux lignes.
-    .replace(/(\d) (\/500)/g, "$1 $2")
+    // « 2:10 /500 m » (ergomètre), « 5:30 /km » et « 4 × 6 » ne se coupent pas en deux lignes.
+    .replace(/(\d) (\/500|\/km)/g, "$1 $2")
     .replace(/(\d) × (\d)/g, "$1 × $2")
     // « Wall balls 20 », « Hip thrust barre 12 », « Back squat 4 × 6 » : un nombre de répétitions ne
     // part pas seul à la ligne. Une distance (« Farmers carry 200 m ») peut, elle, passer à la ligne.

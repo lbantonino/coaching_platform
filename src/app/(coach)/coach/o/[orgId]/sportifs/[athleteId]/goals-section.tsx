@@ -48,11 +48,8 @@ function goalDetails(goal: GoalEntry): string {
 function DisciplineLabel({ goal }: { goal: GoalEntry }) {
   const discipline = goalDiscipline(goal.type);
   return discipline ? (
-    <span className="inline-flex items-center gap-1.5 font-medium text-text-2">
-      <span
-        aria-hidden
-        className={`size-[7px] shrink-0 rounded-full ${disciplineStyles[discipline].dot}`}
-      />
+    // La discipline : le mot dans sa couleur (16/11/2026 : plus de pastilles).
+    <span className={`font-semibold ${disciplineStyles[discipline].text}`}>
       {disciplineLabels[discipline]}
     </span>
   ) : null;

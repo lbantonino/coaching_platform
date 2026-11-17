@@ -451,11 +451,15 @@ describe("C14 : un EMOM tenu se lit en secondes dans le PDF des fiches", () => {
         }
       }
     }
+    // Depuis le 16/11, l'EMOM a son cadre (comme sa carte dans l'app) : la colonne Répét. dit « 30 s ».
     const page = fichesPdf(program).pages.find((item) => item.kind === "fiche");
-    const table =
-      page?.kind === "fiche" ? page.sections.find((section) => section.kind === "table") : null;
     const emom =
-      table?.kind === "table" ? table.rows.find((row) => row.kind === "span") : undefined;
-    expect(emom).toMatchObject({ text: "EMOM 10 min · 30 s · 20 s de travail · 40 s de repos" });
+      page?.kind === "fiche"
+        ? page.sections.find((section) => section.kind === "group" && section.title === "EMOM")
+        : undefined;
+    if (emom?.kind !== "group") throw new Error("cadre EMOM attendu");
+    expect(emom.rows[0]).toMatchObject({ reps: "30 s" });
+    expect(emom.footer).toBe("Chaque minute : 20 s de travail, puis repos");
+    expect(JSON.stringify(emom)).not.toContain("répét.");
   });
 });

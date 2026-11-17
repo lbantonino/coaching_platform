@@ -16,8 +16,8 @@ export function CountBadge({
       aria-hidden
       className={`inline-flex items-center justify-center tabular ${
         tone === "soft"
-          ? "h-5 min-w-5 rounded-[10px] bg-violet-soft-2 px-1.5 text-[11px] text-violet-text"
-          : "h-4 min-w-4 rounded-full bg-accent px-1 text-[9px] leading-none font-semibold text-on-accent shadow-[0_0_0_2px_var(--surface)]"
+          ? "h-5 min-w-5 rounded-[5px] bg-violet-soft-2 px-1.5 text-[11px] text-violet-text"
+          : "h-4 min-w-4 rounded-[4px] bg-accent px-1 text-[9px] leading-none font-semibold text-on-accent shadow-[0_0_0_2px_var(--surface)]"
       } ${className}`}
     >
       {count > 99 ? "99+" : count}

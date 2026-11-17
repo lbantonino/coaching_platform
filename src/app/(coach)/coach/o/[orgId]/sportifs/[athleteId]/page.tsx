@@ -445,6 +445,7 @@ async function AthleteSection({
             <>
               {publishBanner}
               <ProgramTab
+                organizationId={organizationId}
                 name={athlete.firstName}
                 programs={ownPrograms}
                 tabHref={`${basePath}?onglet=programme`}

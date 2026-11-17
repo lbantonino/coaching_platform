@@ -262,7 +262,8 @@ const disciplineHints: Record<NewSessionDiscipline, string> = {
 };
 
 const pill =
-  "inline-flex h-6 shrink-0 items-center gap-1.5 rounded-[12px] px-[9px] text-[11.5px] leading-[normal] font-semibold whitespace-nowrap";
+  // Étiquette : un rectangle aux coins arrondis, jamais une capsule (16/11/2026).
+  "inline-flex h-6 shrink-0 items-center gap-1.5 rounded-[6px] px-2 text-[11.5px] leading-[normal] font-semibold whitespace-nowrap";
 const smallButton =
   "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 enabled:hover:bg-surface-2 enabled:active:scale-[0.97] disabled:text-faint";
 const card = "rounded-[20px] bg-surface";
@@ -605,7 +606,9 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
       ) : readOnly ? (
         <>
           <span className="font-semibold text-violet-text">Coory</span>
-          <span aria-hidden className="size-1 rounded-full bg-dlg-disabled" />
+          <span aria-hidden className="text-dlg-disabled">
+            ·
+          </span>
           <span className="flex items-center gap-[7px]">
             <Lock aria-hidden size={13} strokeWidth={2} />
             Lecture seule
@@ -618,11 +621,11 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           <span className="font-semibold text-text">Publié v{meta.publication.number}</span>
           {unpublished ? (
             <>
-              <span aria-hidden className="size-1 rounded-full bg-dlg-disabled" />
-              <span className="flex items-center gap-2">
-                <span aria-hidden className="size-[7px] rounded-full bg-violet" />
-                Modifications non publiées
+              <span aria-hidden className="text-dlg-disabled">
+                ·
               </span>
+              {/* Plus de pastilles (16/11/2026) : la phrase dans le violet des états. */}
+              <span className="font-medium text-violet-text">Modifications non publiées</span>
             </>
           ) : null}
         </>
@@ -633,14 +636,12 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   );
   // Téléphone : des pilules blanches séparées (« Hyrox », « Publié v1 », « ● Non publié »).
   const phonePill =
-    "flex h-[26px] items-center gap-1.5 rounded-[13px] bg-surface px-2.5 text-[12.5px] whitespace-nowrap";
+    "flex h-[26px] items-center gap-1.5 rounded-[7px] bg-surface px-2.5 text-[12.5px] whitespace-nowrap";
   const phonePills = (
     <span className="mt-1 flex flex-wrap gap-1.5">
-      <span className={`${phonePill} font-medium text-text`}>
-        <span
-          aria-hidden
-          className={`size-[7px] rounded-full ${disciplineStyles[plan.discipline].dot}`}
-        />
+      <span
+        className={`${phonePill} font-semibold ${disciplineStyles[plan.discipline].tint} ${disciplineStyles[plan.discipline].text}`}
+      >
         {disciplineLabels[plan.discipline]}
       </span>
       {readOnly && target.kind === "program" ? (
@@ -659,8 +660,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
             Publié v{meta.publication.number}
           </span>
           {unpublished ? (
-            <span className={`${phonePill} font-medium text-text-2`}>
-              <span aria-hidden className="size-[7px] rounded-full bg-violet" />
+            <span className={`${phonePill} bg-violet-soft font-semibold text-violet-text`}>
               Non publié
             </span>
           ) : null}
@@ -691,8 +691,9 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     .join(" · ");
 
   const disciplinePill = (discipline: Discipline) => (
-    <span className={`${pill} bg-bg text-[12px] font-medium text-text-2`}>
-      <span aria-hidden className={`size-[7px] rounded-full ${disciplineStyles[discipline].dot}`} />
+    <span
+      className={`${pill} text-[12px] ${disciplineStyles[discipline].tint} ${disciplineStyles[discipline].text}`}
+    >
       {disciplineLabels[discipline]}
     </span>
   );
@@ -1686,10 +1687,9 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                           >
                             Semaine {item.index}
                             {currentWeek === item.index ? (
-                              <span
-                                aria-label="en cours"
-                                className="size-1.5 rounded-full bg-violet"
-                              />
+                              <span className="rounded-[5px] bg-violet-soft px-1.5 py-px text-[10.5px] font-semibold text-violet-text">
+                                en cours
+                              </span>
                             ) : null}
                           </span>
                           {draft ? (
@@ -1953,9 +1953,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
                               <span className="w-[18px] shrink-0 text-[12px] font-semibold text-faint tabular">
                                 {i + 1}
                               </span>
+                              {/* La discipline : une barre fine, comme les cartes (16/11/2026). */}
                               <span
                                 aria-hidden
-                                className={`size-[7px] shrink-0 rounded-full ${disciplineStyles[s.content.discipline].dot}`}
+                                className={`h-4 w-[3px] shrink-0 rounded-[2px] ${disciplineStyles[s.content.discipline].dot}`}
                               />
                               <span className="min-w-0 flex-1 truncate">{s.title}</span>
                               <span className="shrink-0 text-[12.5px] font-normal text-muted">

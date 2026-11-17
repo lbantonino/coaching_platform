@@ -8,7 +8,7 @@ import { shortName } from "./week-grid";
 
 // Vue Mois de la page Agenda, à la façon de Google Agenda (D-78, maquette agenda-v1) : de grandes cases
 // qui remplissent la carte, séparées d'un filet. Ordinateur : jusqu'à trois séances écrites par jour
-// (« ● 07:00 Nadia E. », point cerclé pour une collective), puis « +3 autres ». Téléphone : de petites
+// (« ▍07:00 Nadia E. », barre de la discipline, icône « groupe » pour une collective), puis « +3 autres ». Téléphone : de petites
 // étiquettes de la couleur de la discipline. Aujourd'hui : case teintée de violet, numéro en gras
 // violet, sans rond (02/11) ; les jours des mois voisins sont grisés. Une case ouvre sa journée ; son nom, lu par un
 // lecteur d'écran, dit aussi quelles séances elle contient.
@@ -18,13 +18,6 @@ const dots: Record<Discipline | "none", string> = {
   hyrox: "bg-hyrox-fill",
   hybrid: "bg-hybrid-fill",
   none: "bg-muted",
-};
-const rings: Record<Discipline | "none", string> = {
-  running: "border-run-fill",
-  strength: "border-strength-fill",
-  hyrox: "border-hyrox-fill",
-  hybrid: "border-hybrid-fill",
-  none: "border-muted",
 };
 const chips: Record<Discipline | "none", string> = {
   running: "bg-run-fill text-on-run-fill",
@@ -93,14 +86,20 @@ export function MonthGrid({
                       key={block.key}
                       className="flex h-[18px] min-w-0 items-center gap-1.5 px-1 text-[11px]"
                     >
+                      {/* La discipline : une barre fine (16/11/2026 : plus de pastilles) ; une collective
+                          porte l'icône « groupe », comme sur téléphone. */}
                       <span
-                        className={`size-1.5 shrink-0 rounded-full ${
-                          block.individual
-                            ? dots[block.discipline ?? "none"]
-                            : `border-[1.2px] ${rings[block.discipline ?? "none"]}`
-                        }`}
+                        className={`h-3 w-[3px] shrink-0 rounded-[1.5px] ${dots[block.discipline ?? "none"]}`}
                       />
                       <span className="text-muted tabular">{block.label.slice(0, 5)}</span>
+                      {block.individual ? null : (
+                        <Users
+                          aria-hidden
+                          size={10}
+                          strokeWidth={2.4}
+                          className="-mr-0.5 shrink-0 text-muted"
+                        />
+                      )}
                       <span className="truncate text-text">{shortName(block)}</span>
                     </span>
                   ))}

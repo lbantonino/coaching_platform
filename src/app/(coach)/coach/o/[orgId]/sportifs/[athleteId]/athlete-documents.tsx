@@ -85,7 +85,7 @@ export async function AthleteDocuments({
                     </span>
                   </span>
                 </span>
-                <span className="flex h-6 shrink-0 items-center rounded-xl bg-bg px-[9px] text-[12px] font-medium whitespace-nowrap text-text-2">
+                <span className="flex h-6 shrink-0 items-center rounded-[6px] bg-bg px-[9px] text-[12px] font-medium whitespace-nowrap text-text-2">
                   {document.categoryName ?? "Sans catégorie"}
                 </span>
               </Link>

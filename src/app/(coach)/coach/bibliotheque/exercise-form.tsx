@@ -218,7 +218,7 @@ export function ExerciseForm({
           <p className="text-[16px] leading-[normal] font-semibold text-pretty break-words">
             {name.trim() || "Nouvel exercice"}
           </p>
-          <span className="h-6 self-start rounded-xl bg-dlg-accent-soft px-2.5 text-[12px] leading-6 font-medium text-violet-text">
+          <span className="h-6 self-start rounded-[6px] bg-dlg-accent-soft px-2.5 text-[12px] leading-6 font-medium text-violet-text">
             {exerciseCategoryLabels[category]}
           </span>
         </div>

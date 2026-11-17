@@ -136,7 +136,7 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
     .click();
   // (Séance v1, en texte : la grande carte porte le nom du bloc et son volume.)
   const repeat = firstWeek.getByRole("list", { name: "Bloc principal" }).filter({ visible: true });
-  await expect(repeat.getByText("4 min @4:55 min/km")).toBeVisible();
+  await expect(repeat.getByText("4 min · 4:55 /km")).toBeVisible();
   await expect(
     firstWeek.getByRole("list", { name: "Étapes de la séance" }).getByText("5 × 4 min"),
   ).toBeVisible();

@@ -41,32 +41,52 @@ describe("PDF Fiches et repères", () => {
     expect(toc.rows.every((row) => row.page > 1)).toBe(true);
   });
 
-  it("fiche de musculation : tableau (A1/A2, repos après le dernier, EMOM) et charges par semaine", () => {
+  it("fiche de musculation : tableau (charge, sans RIR), superset et EMOM en cadres, charges par semaine", () => {
     const [page] = fiches(fichesPdf(demoProgram(6)).pages);
     expect(page).toMatchObject({
       kicker: "Musculation · Force",
       title: "Force bas du corps",
       subtitle: "Toutes les semaines · ≈ 60 min · mercredi",
     });
-    const table = page!.sections.find((section) => section.kind === "table");
+    // Décisions d'Antonino du 16/11 : plus de RIR, une colonne Charge, le superset et l'EMOM dans un
+    // cadre comme leur carte dans l'app, à leur place dans la séance.
+    const shown = page!.sections.filter(
+      (section) => section.kind === "table" || section.kind === "group",
+    );
+    expect(shown.map((section) => section.kind)).toEqual(["table", "group", "group"]);
+    const table = shown[0];
     if (table?.kind !== "table") throw new Error("tableau attendu");
+    expect(table.rows).toHaveLength(2);
     expect(table.rows[0]).toEqual({
       kind: "exercise",
-      tag: null,
       name: "Back squat",
       sets: "4",
       reps: "6",
+      load: "40 kg",
       rest: "2:30",
-      comment: "RIR 2",
+      comment: "—",
     });
-    expect(table.rows[2]).toMatchObject({ tag: "A1", sets: "3", rest: "—" });
-    expect(table.rows[3]).toMatchObject({ tag: "A2", rest: "1:30" });
-    expect(table.rows[4]).toEqual({
-      kind: "span",
-      tag: null,
-      name: "Kettlebell swing",
-      text: "EMOM 10 min · 15 répét. · 20 s de travail · 40 s de repos",
+    const [superset, emom] = shown.slice(1);
+    if (superset?.kind !== "group" || emom?.kind !== "group") throw new Error("cadres attendus");
+    expect(superset).toMatchObject({
+      title: "Superset",
+      aside: "3 tours",
+      footer: "Repos 1:30 après chaque tour",
     });
+    expect(superset.rows.map((row) => [row.tag, row.name, row.load])).toEqual([
+      ["A1", "Fentes marchées", "8 kg"],
+      ["A2", "Hip thrust barre", "40 kg"],
+    ]);
+    expect(emom).toMatchObject({
+      title: "EMOM",
+      aside: "10 min",
+      footer: "Chaque minute : 20 s de travail, puis repos",
+    });
+    // Dans un cadre, pas d'en-tête de colonnes : l'unité est écrite (« 15 répét. », 16/11).
+    expect(emom.rows).toEqual([
+      { tag: null, name: "Kettlebell swing", reps: "15 répét.", load: "16 kg", comment: "—" },
+    ]);
+    expect(superset.rows.map((row) => row.reps)).toEqual(["10 répét.", "12 répét."]);
     const sections = fiches(fichesPdf(demoProgram(6)).pages)
       .filter((p) => p.tone === "strength")
       .flatMap((p) => p.sections);
@@ -81,8 +101,9 @@ describe("PDF Fiches et repères", () => {
     });
     // Semaine allégée : le schéma qui change s'écrit devant la charge.
     expect(rows[3]!.cells[0]).toBe("3 × 6 · 47,5 kg");
+    // Le conseil du coach reste ; l'explication « A1 + A2 = superset » n'a plus lieu d'être.
     const tip = sections.find((section) => section.kind === "tip");
-    expect(tip).toMatchObject({ label: "Conseil" });
+    expect(tip).toEqual({ kind: "tip", label: "Conseil", text: "Garde 2 répétitions en réserve." });
   });
 
   it("workload Hyrox : une carte par semaine, blocs numérotés, cette semaine en avant", () => {
@@ -102,9 +123,14 @@ describe("PDF Fiches et repères", () => {
 
   it("allures : course de la plus lente à la plus rapide, puis les ergomètres", () => {
     expect(paceRows([hyrox(3), running(50)])).toEqual([
-      { label: "Run Hyrox", pace: "6:00", speed: "10 km/h", usedFor: "Circuit stations" },
-      { label: "Run Hyrox", pace: "5:30", speed: "10,9 km/h", usedFor: "Circuit stations" },
-      { label: "Course", pace: "4:30 – 4:40", speed: "12,9 – 13,3 km/h", usedFor: "Fractionné" },
+      { label: "Run Hyrox", pace: "6:00 /km", speed: "10 km/h", usedFor: "Circuit stations" },
+      { label: "Run Hyrox", pace: "5:30 /km", speed: "10,9 km/h", usedFor: "Circuit stations" },
+      {
+        label: "Course",
+        pace: "4:30 – 4:40 /km",
+        speed: "12,9 – 13,3 km/h",
+        usedFor: "Fractionné",
+      },
       { label: "SkiErg", pace: "2:10 /500 m", speed: "—", usedFor: "Circuit stations" },
     ]);
   });
@@ -120,8 +146,95 @@ describe("PDF Fiches et repères", () => {
     );
     expect(
       loadText({ ...squat, loadMode: "pct", sets: [{ type: "normal", repsMin: 5, pct: 75 }] }),
-    ).toBe("75 %");
+    ).toBe("75 % du max");
     expect(loadText({ ...squat, sets: [{ type: "normal", repsMin: 10 }] })).toBe("—");
+    // Relecture du 16/11 : une montée en % s'écrit en plage, comme les kg ; version courte pour le
+    // tableau des charges (sa mention « % du max » est dans le titre).
+    const climb = {
+      ...squat,
+      loadMode: "pct" as const,
+      sets: [70, 75, 80].map((pct) => ({ type: "normal" as const, repsMin: 5, pct })),
+    };
+    expect(loadText(climb)).toBe("70-80 % du max");
+    expect(loadText(climb, { short: true })).toBe("70-80 %");
+  });
+
+  it("superset en premier, d'un seul tour, deux supersets : chacun son cadre, à sa place", () => {
+    const program = demoProgram(1);
+    const published = program.weeks[0]!.sessions[1]!.published!;
+    if (published.content.discipline !== "strength") throw new Error("musculation attendue");
+    const [squat, , superset] = published.content.items;
+    if (superset?.kind !== "superset" || !squat) throw new Error("superset attendu");
+    published.content.items = [
+      { ...superset, id: "a", rounds: 1 },
+      squat,
+      { ...superset, id: "b", restSec: 45 },
+    ];
+    const page = fiches(fichesPdf(program).pages).find((p) => p.tone === "strength");
+    const shown = (page?.sections ?? []).filter(
+      (section) => section.kind === "table" || section.kind === "group",
+    );
+    expect(
+      shown.map((section) =>
+        section.kind === "group" ? `${section.title} · ${section.aside}` : section.kind,
+      ),
+    ).toEqual(["Superset · 1 tour", "table", "Superset · 3 tours"]);
+    const last = shown[2];
+    if (last?.kind !== "group") throw new Error("cadre attendu");
+    expect(last.rows.map((row) => row.tag)).toEqual(["B1", "B2"]);
+    // Écrit comme la carte de l'app (formatClock) : « Repos 0:45 », jamais « Repos 45 s » (relecture).
+    expect(last.footer).toBe("Repos 0:45 après chaque tour");
+  });
+
+  it("un bloc texte répété garde ses lignes dans la fiche (« Gainage » : 4 tours…)", () => {
+    const program = demoProgram(1);
+    const published = program.weeks[0]!.sessions[1]!.published!;
+    if (published.content.discipline !== "strength") throw new Error("musculation attendue");
+    published.content.items = [
+      {
+        id: "gainage",
+        kind: "text",
+        title: "Gainage",
+        lines: [],
+        repeat: { times: 4, lines: ["Planche 45 s", "Dead bug 10"] },
+      },
+    ];
+    const page = fiches(fichesPdf(program).pages).find((p) => p.tone === "strength");
+    const table = page?.sections.find((section) => section.kind === "table");
+    if (table?.kind !== "table") throw new Error("tableau attendu");
+    expect(table.rows[0]).toEqual({
+      kind: "span",
+      name: "Gainage",
+      text: "4 tours : Planche 45 s · Dead bug 10",
+    });
+  });
+
+  it("charges en % du max : « 70 % » dans les cellules, « (en % du max) » dans le titre", () => {
+    const program = demoProgram(2);
+    for (const week of program.weeks) {
+      const published = week.sessions[1]!.published!;
+      if (published.content.discipline !== "strength") continue;
+      published.content.items = [
+        {
+          id: "p1",
+          kind: "exercise",
+          name: "Back squat",
+          loadMode: "pct",
+          sets: [{ type: "normal", repsMin: 5, pct: 70 }],
+          restSec: 120,
+        },
+      ];
+    }
+    const page = fiches(fichesPdf(program).pages).find((p) => p.tone === "strength");
+    const charges = page?.sections.find((section) => section.kind === "charges");
+    if (charges?.kind !== "charges") throw new Error("charges attendues");
+    expect(charges.title).toBe("Charges semaine par semaine (en % du max)");
+    expect(charges.rows[0]!.cells).toEqual(["70 %"]);
+  });
+
+  it("allures : l'unité est dans la colonne, plus de note « min/km » en bas", () => {
+    const page = fiches(fichesPdf(demoProgram(6)).pages).find((p) => p.tone === "paces");
+    expect(page?.sections.some((section) => section.kind === "tip")).toBe(false);
   });
 
   it("une fiche trop longue continue sur la page suivante, « (suite) », jamais au-delà d'une page", () => {

@@ -21,6 +21,7 @@ import {
   PhoneTemplateFilters,
   QuerySelect,
 } from "./list-filters";
+import { ProgramCardMenu } from "./_editor/program-card-menu";
 
 export const metadata: Metadata = {
   title: "Programmes",
@@ -321,7 +322,19 @@ async function ProgramsTab({
       ) : (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {shown.map((program) => (
-            <ProgramCard key={program.id} program={program} href={`${base}/${program.id}`} />
+            <ProgramCard
+              key={program.id}
+              program={program}
+              href={`${base}/${program.id}`}
+              menu={
+                <ProgramCardMenu
+                  organizationId={organizationId}
+                  programId={program.id}
+                  title={program.title}
+                  status={program.status}
+                />
+              }
+            />
           ))}
         </div>
       )}

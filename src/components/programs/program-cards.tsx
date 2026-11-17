@@ -1,5 +1,6 @@
 import { Flag } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/avatar";
 import { disciplineLabels, disciplineStyles } from "@/domain/training/discipline";
@@ -14,7 +15,7 @@ import { formatDayMonth } from "@/lib/format";
 // lien étendu sous le titre) ; « Utiliser » reste un lien à part.
 
 const pillBase =
-  "inline-flex h-6 shrink-0 items-center rounded-[12px] px-[9px] text-[11.5px] leading-[normal] font-semibold whitespace-nowrap";
+  "inline-flex h-6 shrink-0 items-center rounded-[6px] px-[9px] text-[11.5px] leading-[normal] font-semibold whitespace-nowrap";
 
 function StatusPill({ program }: { program: ProgramListItem }) {
   switch (program.status) {
@@ -43,7 +44,16 @@ function StatusPill({ program }: { program: ProgramListItem }) {
 const stretched =
   "after:absolute after:inset-0 after:rounded-[20px] focus-visible:outline-none after:focus-visible:outline-2 after:focus-visible:outline-offset-2 after:focus-visible:outline-violet";
 
-export function ProgramCard({ program, href }: { program: ProgramListItem; href: string }) {
+export function ProgramCard({
+  program,
+  href,
+  menu,
+}: {
+  program: ProgramListItem;
+  href: string;
+  // « ⋯ » de la carte (16/11/2026) : les actions du programme sans l'ouvrir.
+  menu?: ReactNode;
+}) {
   const lastDay = programEnd(program.startDate, program.weeksCount);
   const sunday = new Date(`${lastDay}T00:00:00Z`);
   sunday.setUTCDate(sunday.getUTCDate() - 1);
@@ -70,6 +80,8 @@ export function ProgramCard({ program, href }: { program: ProgramListItem; href:
           {program.athleteName}
         </span>
         <StatusPill program={program} />
+        {/* Au-dessus du lien étendu de la carte : le menu ne l'ouvre jamais. */}
+        {menu ? <span className="relative z-10 -my-2 -mr-2 lg:-my-1 lg:-mr-1">{menu}</span> : null}
       </div>
       <div className="flex min-w-0 flex-col gap-1">
         <h2 className="min-w-0 truncate text-[16.5px] leading-[1.25] font-semibold tracking-[-0.01em] text-text">
@@ -80,11 +92,10 @@ export function ProgramCard({ program, href }: { program: ProgramListItem; href:
         <p className="flex min-w-0 items-center gap-1.5 text-[12.5px] leading-[normal] text-muted">
           {discipline ? (
             <>
-              <span
-                aria-hidden
-                className={`size-[7px] shrink-0 rounded-full ${disciplineStyles[discipline].dot}`}
-              />
-              <span className="shrink-0">{disciplineLabels[discipline]}</span>
+              {/* La discipline : le mot dans sa couleur (16/11/2026 : plus de pastilles). */}
+              <span className={`shrink-0 font-semibold ${disciplineStyles[discipline].text}`}>
+                {disciplineLabels[discipline]}
+              </span>
               <span aria-hidden className="text-faint">
                 ·
               </span>
@@ -92,6 +103,13 @@ export function ProgramCard({ program, href }: { program: ProgramListItem; href:
           ) : null}
           <span className="truncate">{period}</span>
         </p>
+        {/* Publié puis modifié (renommé depuis la carte, ou dans l'éditeur) : le sportif voit encore la
+            version publiée, jusqu'à la prochaine publication (relecture du 16/11). */}
+        {program.hasUnpublishedChanges && program.status !== "archived" ? (
+          <p className="text-[12.5px] leading-[normal] font-medium text-violet-text">
+            Modifications non publiées
+          </p>
+        ) : null}
       </div>
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3 text-[13px] leading-[normal]">
@@ -154,11 +172,9 @@ export function TemplateCard({
         </Link>
       </h2>
       <p className="flex min-w-0 items-center gap-1.5 text-[12.5px] leading-[normal] text-muted">
-        <span
-          aria-hidden
-          className={`size-[7px] shrink-0 rounded-full ${disciplineStyles[template.discipline].dot}`}
-        />
-        <span className="shrink-0">{disciplineLabels[template.discipline]}</span>
+        <span className={`shrink-0 font-semibold ${disciplineStyles[template.discipline].text}`}>
+          {disciplineLabels[template.discipline]}
+        </span>
         <span aria-hidden className="text-faint">
           ·
         </span>

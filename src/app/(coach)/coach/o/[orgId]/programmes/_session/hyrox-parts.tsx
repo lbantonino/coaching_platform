@@ -604,7 +604,7 @@ export function HyroxBlockPanel({
       </div>
 
       <div className="flex items-center gap-2.5 rounded-[12px] bg-surface-2 p-3">
-        <span aria-hidden className="size-2 shrink-0 rounded-full bg-hyrox-fill" />
+        <span aria-hidden className="h-4 w-[3px] shrink-0 rounded-[2px] bg-hyrox-fill" />
         <span className="flex-1 text-[12.5px] leading-[1.45] text-text-2">
           Modèle prêt : <strong className="font-semibold text-text">Simulation de course</strong>, 8
           runs de 1 km et les 8 stations dans l&apos;ordre officiel.
@@ -969,7 +969,7 @@ export function SimulationSheet({
                 key={row.key}
                 className={`flex min-h-10 items-center gap-2.5 border-b border-dlg-divider px-3 ${row.station ? "bg-surface-2" : "bg-surface"}`}
               >
-                <span aria-hidden className={`size-[7px] shrink-0 rounded-full ${row.dot}`} />
+                <span aria-hidden className={`h-4 w-[3px] shrink-0 rounded-[2px] ${row.dot}`} />
                 <span
                   className={`min-w-0 flex-1 truncate text-[13.5px] text-text ${row.station ? "font-semibold" : "font-medium"}`}
                 >

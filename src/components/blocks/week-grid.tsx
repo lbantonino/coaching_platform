@@ -317,10 +317,13 @@ export function WeekGrid({
                       {isToday ? (
                         <span
                           aria-hidden
-                          className="pointer-events-none absolute inset-x-0 z-10 h-px bg-violet"
+                          className="pointer-events-none absolute inset-x-0 z-10 h-0.5 rounded-[1px] bg-violet"
                           style={{ top: at(nowHours) }}
                         >
-                          <span className="absolute -top-[3px] -left-[3px] size-[7px] rounded-full bg-violet shadow-[0_0_0_3px_var(--violet-ring)]" />
+                          {/* « Maintenant » : l'heure dans une étiquette, plus de point (16/11/2026). */}
+                          <span className="absolute top-1/2 left-0.5 -translate-y-1/2 rounded-[4px] bg-accent px-1 text-[10px] leading-[15px] font-semibold text-on-accent tabular">
+                            {now.slice(0, 5)}
+                          </span>
                         </span>
                       ) : null}
                     </div>

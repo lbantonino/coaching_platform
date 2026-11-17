@@ -228,7 +228,7 @@ export function AgendaFilters({
         <span className="min-w-0 flex-1 text-[15.5px] leading-[normal] font-medium text-text">
           {label}
         </span>
-        <span aria-hidden className={`size-2.5 shrink-0 rounded-full ${dot}`} />
+        <span aria-hidden className={`h-1 w-3.5 shrink-0 rounded-[2px] ${dot}`} />
       </label>
     );
     return (
@@ -503,7 +503,7 @@ export function AgendaMiniMonth({
               {dots ? (
                 <span aria-hidden className="flex h-1.5 gap-[2px]">
                   {dayDots.slice(0, 3).map((discipline, i) => (
-                    <span key={i} className={`size-1 rounded-full ${dotClass[discipline]}`} />
+                    <span key={i} className={`h-[3px] w-2 rounded-[1px] ${dotClass[discipline]}`} />
                   ))}
                 </span>
               ) : null}

@@ -641,11 +641,9 @@ function Heading({
   const discipline = session.content.discipline;
   return (
     <div className="flex flex-col gap-[3px]">
-      <span className="flex items-center gap-[7px] text-[11.5px] font-semibold tracking-[0.05em] text-faint uppercase">
-        <span
-          aria-hidden
-          className={`size-[7px] rounded-full ${disciplineStyles[discipline].dot}`}
-        />
+      <span
+        className={`text-[11.5px] font-semibold tracking-[0.05em] uppercase ${disciplineStyles[discipline].text}`}
+      >
         Séance {position} · Semaine {week}
       </span>
       <h2 className="text-[19px] leading-[1.2] font-bold tracking-[-0.015em] text-text">

@@ -133,7 +133,7 @@ export function DonutChart({
               >
                 <span
                   aria-hidden
-                  className="size-2 shrink-0 rounded-full"
+                  className="h-1 w-3.5 shrink-0 rounded-[2px]"
                   style={{ background: segment.cents > 0 ? segment.color : "var(--track)" }}
                 />
                 <span className={`flex-1 truncate ${segment.cents === 0 ? "text-muted" : ""}`}>

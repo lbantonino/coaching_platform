@@ -37,14 +37,14 @@ export function CoachingHours({ label, split }: { label: string; split: HoursSpl
       <dl className="mt-3 flex flex-col gap-2 text-[13px]">
         <div className={row}>
           <dt className="flex items-center gap-2 text-text-2">
-            <span aria-hidden className="size-2 rounded-full bg-violet" />
+            <span aria-hidden className="h-1 w-3.5 shrink-0 rounded-[2px] bg-violet" />
             Individuelles
           </dt>
           <dd className="font-medium tabular">{hoursLabel(split.individual)}</dd>
         </div>
         <div className={row}>
           <dt className="flex items-center gap-2 text-text-2">
-            <span aria-hidden className="size-2 rounded-full bg-violet/35" />
+            <span aria-hidden className="h-1 w-3.5 shrink-0 rounded-[2px] bg-violet/35" />
             Collectives
           </dt>
           <dd className="font-medium tabular">{hoursLabel(split.group)}</dd>

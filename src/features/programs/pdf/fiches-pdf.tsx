@@ -117,6 +117,29 @@ const s = StyleSheet.create({
     borderWidth: u(1),
     borderColor: INK,
   },
+  // Cadre d'un superset ou d'un EMOM (16/11) : comme sa grande carte dans l'app.
+  groupHead: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: u(6),
+    paddingHorizontal: u(8),
+  },
+  groupTitle: {
+    fontSize: u(10),
+    fontWeight: 800,
+    letterSpacing: u(10 * 0.04),
+    textTransform: "uppercase",
+  },
+  groupAside: { fontSize: u(10.5), fontWeight: 700 },
+  groupFooter: {
+    borderTopWidth: u(1),
+    borderTopColor: "#ecebf1",
+    paddingVertical: u(6),
+    paddingHorizontal: u(8),
+    fontSize: u(10.5),
+    color: INK_2,
+  },
   chargesTitle: { fontSize: u(11.5), fontWeight: 700, marginBottom: u(6) },
   tip: {
     flexDirection: "row",
@@ -154,8 +177,9 @@ const s = StyleSheet.create({
   blockTitle: { fontSize: u(11), lineHeight: BLOCK_LINE, fontWeight: 700 },
 });
 
-// Colonnes du tableau d'exercices : Exercice 2,3 · Séries 0,6 · Répét. 1 · Repos 0,8 · Commentaire 1,6.
-const cols = { name: 2.3, sets: 0.6, reps: 1, rest: 0.8, comment: 1.6 };
+// Colonnes du tableau d'exercices : Exercice · Séries · Répét. · Charge (16/11, comme la carte de l'app)
+// · Repos · Commentaire. Le cadre d'un superset ou d'un EMOM reprend les mêmes colonnes.
+const cols = { name: 2.1, sets: 0.6, reps: 0.9, load: 1.15, rest: 0.7, comment: 1.45 };
 const cell = (flex: number, center = false) => ({
   flexGrow: flex,
   flexBasis: 0,
@@ -244,6 +268,7 @@ function Section({ section, tone }: { section: FicheSection; tone: FicheTone }) 
             <Text style={cell(cols.name)}>{section.title}</Text>
             <Text style={cell(cols.sets, true)}>Séries</Text>
             <Text style={cell(cols.reps, true)}>Répét.</Text>
+            <Text style={cell(cols.load, true)}>Charge</Text>
             <Text style={cell(cols.rest, true)}>Repos</Text>
             <Text style={cell(cols.comment)}>Commentaire</Text>
           </View>
@@ -252,13 +277,12 @@ function Section({ section, tone }: { section: FicheSection; tone: FicheTone }) 
               <View
                 style={[cell(cols.name), { flexDirection: "row", alignItems: "center", gap: u(6) }]}
               >
-                {row.kind === "exercise" && row.tag ? <Text style={s.tag}>{row.tag}</Text> : null}
                 <Text style={{ fontWeight: 600, flexShrink: 1 }}>{pdfText(row.name)}</Text>
               </View>
               {row.kind === "span" ? (
                 <Text
                   style={[
-                    cell(cols.sets + cols.reps + cols.rest + cols.comment, true),
+                    cell(cols.sets + cols.reps + cols.load + cols.rest + cols.comment, true),
                     { fontWeight: 500 },
                   ]}
                 >
@@ -268,12 +292,44 @@ function Section({ section, tone }: { section: FicheSection; tone: FicheTone }) 
                 <>
                   <Text style={cell(cols.sets, true)}>{row.sets}</Text>
                   <Text style={cell(cols.reps, true)}>{pdfText(row.reps)}</Text>
+                  <Text style={cell(cols.load, true)}>{pdfText(row.load)}</Text>
                   <Text style={cell(cols.rest, true)}>{pdfText(row.rest)}</Text>
                   <Text style={[cell(cols.comment), { color: INK_2 }]}>{pdfText(row.comment)}</Text>
                 </>
               )}
             </View>
           ))}
+        </View>
+      );
+    case "group":
+      // Superset ou EMOM : son nom et ses tours en tête, ses exercices (A1, A2…) aux colonnes du
+      // tableau, son repos en bas.
+      return (
+        <View style={s.table} wrap={false}>
+          <View style={[s.groupHead, { backgroundColor: colors.tint }]}>
+            <Text style={s.groupTitle}>{section.title}</Text>
+            <Text style={s.groupAside}>{pdfText(section.aside)}</Text>
+          </View>
+          {section.rows.map((row, i) => (
+            <View key={i} style={s.tr}>
+              <View
+                style={[
+                  cell(cols.name + cols.sets),
+                  { flexDirection: "row", alignItems: "center", gap: u(6) },
+                ]}
+              >
+                {row.tag ? <Text style={s.tag}>{row.tag}</Text> : null}
+                <Text style={{ fontWeight: 600, flexShrink: 1 }}>{pdfText(row.name)}</Text>
+              </View>
+              <Text style={cell(cols.reps, true)}>{pdfText(row.reps)}</Text>
+              <Text style={cell(cols.load, true)}>{pdfText(row.load)}</Text>
+              {/* Le commentaire sous la colonne Commentaire du tableau, pas sous Repos (le repos est
+                  en bas du cadre). */}
+              <Text style={cell(cols.rest, true)} />
+              <Text style={[cell(cols.comment), { color: INK_2 }]}>{pdfText(row.comment)}</Text>
+            </View>
+          ))}
+          {section.footer ? <Text style={s.groupFooter}>{pdfText(section.footer)}</Text> : null}
         </View>
       );
     case "charges":

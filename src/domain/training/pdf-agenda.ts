@@ -13,8 +13,9 @@ import { formatMinutes } from "./session-view";
 // - une semaine = une page ; si elle déborde, les séances les plus longues passent à 3 lignes puis
 //   « → détail dans Coory » (règle du handoff), jamais une carte coupée sur deux pages ;
 // - la musculation, et un bloc Hyrox de plus de 4 lignes, ont leur fiche dans le PDF 2 « Fiches et
-//   repères » : l'agenda écrit leur résumé et le renvoi (texte, un lien entre deux fichiers ne marche
-//   pas sur téléphone) ;
+//   repères » : l'agenda écrit le renvoi (texte, un lien entre deux fichiers ne marche pas sur
+//   téléphone) ; la musculation liste d'abord ses exercices comme la carte de l'app (superset et EMOM
+//   groupés, décision d'Antonino du 16/11), le Hyrox trop long écrit son résumé ;
 // - les lignes suivent les règles des cartes de l'agenda de l'app (card-lines.ts : Running en
 //   minutes, une info par ligne, puces, gras et italique).
 
@@ -88,8 +89,8 @@ export type AgendaSessionView = {
   // À droite de l'en-tête : « coach · 10:00 », « ≈ 55 min ».
   meta: string;
   lines: CardLine[];
-  // Séance qui a sa fiche : son résumé en gras, puis le renvoi.
-  fiche: { summary: string } | null;
+  // Séance qui a sa fiche : son résumé en gras (Hyrox) ou ses lignes (musculation), puis le renvoi.
+  fiche: { summary: string | null } | null;
   // Séance raccourcie pour tenir sur la page : « → détail dans Coory ».
   cut: boolean;
 };
@@ -191,16 +192,35 @@ function sessionMeta(session: PdfSessionInput): string {
   return [moment, time, duration].filter(Boolean).join(" · ");
 }
 
+// Lignes d'une musculation (16/11) : celles de la carte de l'app ; un bloc répété porte le nom de son
+// étape (« Superset · 3 tours », « Gainage · 4 tours ») plutôt que « 3 × ». Les blocs répétés de
+// cardLines suivent l'ordre des étapes répétées (échauffement et retour au calme exclus).
+function strengthLines(content: ProgramSessionContent): CardLine[] {
+  const repeated = content.steps.filter(
+    (step) => step.repeat && step.title !== "Échauffement" && step.title !== "Retour au calme",
+  );
+  let next = 0;
+  return cardLines(content).map((line) => {
+    if (line.kind !== "repeat") return line;
+    const step = repeated[next++];
+    const label = step
+      ? `${step.title} · ${step.badge ?? `${line.times} tours`}`
+      : `${line.times} tours`;
+    return { kind: "group", label, lines: line.lines };
+  });
+}
+
 function sessionView(session: PdfSessionInput, raceDate: string | null, date: string | null) {
   const { content } = session;
   const race = raceDate !== null && date === raceDate;
   const fiche = hasFiche(content);
+  const strength = content.discipline === "strength";
   return {
     discipline: content.discipline ?? "hybrid",
     title: `${race ? "★ " : ""}${content.title}`,
     meta: sessionMeta(session),
-    lines: fiche ? [] : cardLines(content),
-    fiche: fiche ? { summary: session.headline } : null,
+    lines: strength ? strengthLines(content) : fiche ? [] : cardLines(content),
+    fiche: fiche ? { summary: strength ? null : session.headline } : null,
     cut: false,
   } satisfies AgendaSessionView;
 }
@@ -219,7 +239,8 @@ function visualLines(lines: CardLine[]): number {
 }
 
 function sessionLines(session: AgendaSessionView): number {
-  if (session.fiche) return 2;
+  // Avec une fiche : son résumé éventuel, ses lignes, puis le renvoi (qui remplace « détail dans Coory »).
+  if (session.fiche) return (session.fiche.summary ? 1 : 0) + visualLines(session.lines) + 1;
   return visualLines(session.lines) + (session.cut ? 1 : 0);
 }
 
@@ -262,14 +283,19 @@ export function firstLines(lines: CardLine[], max: number): CardLine[] {
 }
 
 // Une semaine trop chargée pour sa page : les séances les plus longues passent à 3 lignes, puis à
-// 1 ligne si besoin, chacune suivie de « → détail dans Coory ».
+// 1 ligne si besoin, chacune suivie de « → détail dans Coory » ; une musculation raccourcie garde son
+// renvoi « → fiche dans « Fiches et repères » » à la place.
 export function fitWeek(days: AgendaDayView[]): AgendaDayView[] {
   let fitted = days;
   for (const max of [3, 1]) {
     if (estimateDaysHeight(fitted) <= DAYS_AVAILABLE) return fitted;
     const candidates = fitted
       .flatMap((day) => day.sessions)
-      .filter((session) => !session.fiche && cardLineCount(session.lines) > max)
+      // Une musculation listée se raccourcit aussi ; son renvoi à la fiche reste.
+      .filter(
+        (session) =>
+          (!session.fiche || session.fiche.summary === null) && cardLineCount(session.lines) > max,
+      )
       .sort((a, b) => sessionLines(b) - sessionLines(a));
     for (const target of candidates) {
       fitted = fitted.map((day) => ({

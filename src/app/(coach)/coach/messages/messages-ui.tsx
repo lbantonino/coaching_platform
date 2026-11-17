@@ -280,7 +280,7 @@ export function ConversationList({
                         {row.preview}
                       </span>
                       {row.unread > 0 ? (
-                        <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-accent px-1.5 text-[11px] leading-none font-semibold text-white tabular">
+                        <span className="grid h-5 min-w-5 shrink-0 place-items-center rounded-[5px] bg-accent px-1.5 text-[11px] leading-none font-semibold text-white tabular">
                           {row.unread}
                           <span className="sr-only"> non lu{row.unread > 1 ? "s" : ""}</span>
                         </span>
