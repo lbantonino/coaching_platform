@@ -1,8 +1,9 @@
 "use client";
 
-import { Copy, GripVertical, Plus, Repeat2, Sparkles, Trash2 } from "lucide-react";
+import { Copy, Ellipsis, GripVertical, Plus, Sparkles, Trash2 } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 
+import { CardMenu, type CardActions } from "@/components/programs/session-cards";
 import { useReorder } from "@/components/programs/use-reorder";
 import { ChipGroup } from "@/components/ui/chip-group";
 import { MoreMenu } from "@/components/ui/more-menu";
@@ -16,37 +17,25 @@ import {
   distanceField,
   duplicateItem,
   durationField,
-  measureText,
   moveItem,
   parseDistance,
   parseDuration,
   removeItem,
-  repeatSeconds,
   setRepeatTimes,
-  stepDetail,
   renameStep,
   stepTitle,
   type RunItem,
 } from "@/domain/training/running-edit";
+import { sessionCards, type SessionCard, type StepCard } from "@/domain/training/session-cards";
 import { RUN_ROLES, type RunStep, type RunningContent } from "@/domain/training/session-v2";
-import { formatMinutes } from "@/domain/training/session-view";
+
+import { AddInside, EditorCard, EditorGroup, cardsByPath } from "./card-shell";
 
 // Liste et panneau de l'éditeur Running (04, RUN-01 à 03 ; sources CooryEditeurListe et
 // CooryEditeurPanneau). Étapes colorées par rôle : effort en couleur Running, récupération en gris,
 // facile en gris clair ; bloc « Répéter N fois » en encadré teinté. Aucune barre ni courbe.
 
 export type AthleteAims = { firstName: string; vmaKmh: number | null; hrMax: number | null };
-
-export const SELECTED =
-  "inset-ring-[1.5px] inset-ring-violet shadow-[0_8px_20px_-12px_rgba(139,92,246,0.6)]";
-export const BASE = "inset-ring inset-ring-line";
-
-const barClass = (step: RunStep) =>
-  step.role === "run"
-    ? "bg-run-fill"
-    : step.role === "recovery" || step.role === "rest"
-      ? "bg-dlg-disabled"
-      : "bg-[color-mix(in_srgb,var(--dlg-disabled)_70%,var(--surface))]";
 
 export function Handle({
   label,
@@ -78,58 +67,43 @@ export function DropLine({ at }: { at: "before" | "after" | null }) {
 }
 
 // Une étape de la liste : poignée, barre de couleur, titre et détail, mesure à droite.
+// Une étape (17/11) : la carte de la séance, avec la poignée, le « ⋯ » et l'appui qui l'ouvre.
 function StepRow({
-  step,
+  card,
   selected,
-  child,
   onSelect,
   handle,
   drop,
   dragging,
+  actions,
 }: {
-  step: RunStep;
+  card: StepCard;
   selected: boolean;
-  child: boolean;
   onSelect: () => void;
   handle: ReactNode;
   drop: "before" | "after" | null;
   dragging: boolean;
+  actions?: CardActions;
 }) {
   return (
-    <div
-      data-reorder-row=""
-      className={`relative flex items-center gap-3 bg-surface py-2 pr-3 pl-2 transition-[box-shadow,opacity] duration-150 ${
-        child ? "min-h-[54px] rounded-[13px]" : "min-h-[58px] rounded-[14px]"
-      } ${selected ? SELECTED : BASE} ${dragging ? "opacity-60" : ""}`}
-    >
-      <DropLine at={drop} />
-      {handle}
-      <span
-        aria-hidden
-        className={`w-1 shrink-0 rounded-[2px] ${child ? "h-[34px]" : "h-[38px]"} ${barClass(step)}`}
-      />
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-pressed={selected}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none after:focus-visible:outline-2 after:focus-visible:outline-offset-2 after:focus-visible:outline-violet"
-      >
-        <span className={`flex min-w-0 flex-1 flex-col ${child ? "gap-px" : "gap-0.5"}`}>
-          <span
-            className={`truncate font-semibold text-text ${child ? "text-[14px]" : "text-[14.5px]"}`}
-          >
-            {stepTitle(step)}
-          </span>
-          <span className="text-[12.5px] leading-[1.4] text-muted">{stepDetail(step)}</span>
-        </span>
-        <span
-          className={`font-semibold whitespace-nowrap text-text ${child ? "text-[13.5px]" : "text-[14px]"}`}
-        >
-          {measureText(step.measure)}
-        </span>
-      </button>
-    </div>
+    <EditorCard
+      card={card}
+      discipline="running"
+      selected={selected}
+      onSelect={onSelect}
+      handle={handle}
+      drop={drop}
+      dragging={dragging}
+      menu={actions ? <CardMenu title={card.title} path={card.path} actions={actions} /> : null}
+    />
   );
+}
+
+function cardAt(byPath: Map<string, SessionCard>, path: string[], title: string): StepCard {
+  const found = byPath.get(path.join("/"));
+  return found?.kind === "card"
+    ? found
+    : { kind: "card", role: "work", title, lines: [], sub: [], path };
 }
 
 // Nombre de répétitions : − 5 + (30 px, maquette).
@@ -166,6 +140,7 @@ function Stepper({ value, onChange }: { value: number; onChange: (value: number)
 // Bloc « Répéter N fois » : en-tête teinté (icône, stepper, « fois · 20 min », ···), étapes en dessous.
 function RepeatGroup({
   item,
+  byPath,
   selectedId,
   onSelect,
   onTimes,
@@ -177,8 +152,10 @@ function RepeatGroup({
   handle,
   drop,
   dragging,
+  actions,
 }: {
   item: Extract<RunItem, { kind: "repeat" }>;
+  byPath: Map<string, SessionCard>;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onTimes: (times: number) => void;
@@ -190,33 +167,30 @@ function RepeatGroup({
   handle: ReactNode;
   drop: "before" | "after" | null;
   dragging: boolean;
+  actions?: CardActions;
 }) {
   const inner = useReorder(onMoveChild);
-  const seconds = repeatSeconds(item);
+  const card = byPath.get(item.id);
   return (
-    <div
-      data-reorder-row=""
-      className={`relative flex flex-col gap-2 rounded-[17px] bg-[color-mix(in_srgb,var(--run-fill)_9%,var(--surface))] p-2.5 transition-opacity duration-150 ${dragging ? "opacity-60" : ""}`}
-    >
-      <DropLine at={drop} />
-      <div className="flex min-h-8 flex-wrap items-center gap-2.5 pt-0.5 pr-1 pl-1.5">
-        {handle}
-        <span className="flex items-center gap-[7px] text-[14px] font-semibold whitespace-nowrap text-run-text">
-          <Repeat2 aria-hidden size={15} strokeWidth={2} />
-          Répéter
-        </span>
-        {readOnly ? (
-          <span className="text-[14px] font-semibold text-text">{item.times}</span>
+    <EditorGroup
+      title="Répéter"
+      // Le nombre de fois se change ici (− 5 +), là où la séance l'écrit (« 5 fois »).
+      aside={
+        readOnly ? (
+          `${item.times} fois`
         ) : (
-          <Stepper value={item.times} onChange={onTimes} />
-        )}
-        <span className="min-w-0 flex-1 truncate text-[12.5px] text-text-2">
-          fois
-          {seconds
-            ? ` · ${seconds % 60 ? `≈ ${formatMinutes(Math.round(seconds / 60) * 60)}` : formatMinutes(seconds)}`
-            : ""}
-        </span>
-        {readOnly ? null : (
+          <span className="flex shrink-0 items-center gap-2 text-[13.5px] font-semibold text-text-2 lg:text-[12.5px]">
+            <Stepper value={item.times} onChange={onTimes} />
+            fois
+          </span>
+        )
+      }
+      footer={card?.kind === "group" ? (card.footer ?? null) : null}
+      handle={handle}
+      drop={drop}
+      dragging={dragging}
+      menu={
+        readOnly ? null : (
           <MoreMenu
             label="Plus d'actions sur le bloc Répéter"
             title={`Répéter ${item.times} fois`}
@@ -225,20 +199,30 @@ function RepeatGroup({
               { label: "Dupliquer le bloc", icon: Copy, onSelect: onDuplicate },
               { label: "Supprimer le bloc", icon: Trash2, destructive: true, onSelect: onRemove },
             ]}
-            className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-muted! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
+            button={{
+              content: <Ellipsis aria-hidden size={18} strokeWidth={2} />,
+              className:
+                "-my-1.5 -mr-1 grid size-11 shrink-0 place-items-center rounded-[10px] text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text lg:size-8 lg:rounded-[9px]",
+            }}
           />
-        )}
-      </div>
-      <div {...inner.listProps} className="flex flex-col gap-1.5">
+        )
+      }
+      add={
+        readOnly || item.steps.length >= 10 ? null : (
+          <AddInside label="Ajouter une étape" onClick={onAddStep} />
+        )
+      }
+    >
+      <div {...inner.listProps} className="flex flex-col gap-2">
         {item.steps.map((step, index) => (
           <StepRow
             key={step.id}
-            step={step}
-            child
+            card={cardAt(byPath, [item.id, step.id], stepTitle(step))}
             selected={selectedId === step.id}
             onSelect={() => onSelect(step.id)}
             drop={inner.dropMark(index)}
             dragging={inner.drag?.from === index}
+            {...(readOnly ? {} : actions ? { actions } : {})}
             handle={
               readOnly ? null : (
                 <Handle
@@ -250,17 +234,7 @@ function RepeatGroup({
           />
         ))}
       </div>
-      {readOnly || item.steps.length >= 10 ? null : (
-        <button
-          type="button"
-          onClick={onAddStep}
-          className="flex min-h-10 items-center gap-[7px] self-start rounded-[12px] px-3 text-[13px] font-medium text-run-text transition-colors duration-150 hover:bg-surface/60"
-        >
-          <Plus aria-hidden size={14} strokeWidth={2} />
-          Ajouter une étape
-        </button>
-      )}
-    </div>
+    </EditorGroup>
   );
 }
 
@@ -272,6 +246,7 @@ export function RunningList({
   onChange,
   onAddStep,
   onAddRepeat,
+  actions,
 }: {
   content: RunningContent;
   selectedId: string | null;
@@ -280,8 +255,11 @@ export function RunningList({
   onChange: (content: RunningContent) => void;
   onAddStep: (repeatId?: string) => void;
   onAddRepeat: () => void;
+  // « ⋯ » d'une étape : Dupliquer, Supprimer (17/11, comme la page du programme).
+  actions?: CardActions;
 }) {
   const outer = useReorder((from, to) => onChange(moveItem(content, from, to)));
+  const byPath = cardsByPath(sessionCards(content));
   const addButton =
     "inline-flex min-h-[46px] flex-[1_1_140px] items-center justify-center gap-[7px] rounded-[14px] text-[13.5px] font-medium whitespace-nowrap text-text-2 inset-ring-[1.5px] inset-ring-line transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]";
   return (
@@ -300,13 +278,13 @@ export function RunningList({
             return (
               <StepRow
                 key={item.id}
-                step={item}
-                child={false}
+                card={cardAt(byPath, [item.id], stepTitle(item))}
                 selected={selectedId === item.id}
                 onSelect={() => onSelect(item.id)}
                 handle={handle}
                 drop={drop}
                 dragging={dragging}
+                {...(readOnly ? {} : actions ? { actions } : {})}
               />
             );
           if (item.kind === "repeat")
@@ -314,6 +292,7 @@ export function RunningList({
               <RepeatGroup
                 key={item.id}
                 item={item}
+                byPath={byPath}
                 selectedId={selectedId}
                 onSelect={onSelect}
                 readOnly={readOnly}
@@ -325,30 +304,19 @@ export function RunningList({
                 handle={handle}
                 drop={drop}
                 dragging={dragging}
+                {...(actions ? { actions } : {})}
               />
             );
           // Bloc texte (séance reprise de la v1) : lu tel quel.
           return (
-            <div
+            <EditorCard
               key={item.id}
-              data-reorder-row=""
-              className={`relative flex min-h-[58px] items-center gap-3 rounded-[14px] bg-surface py-2 pr-3 pl-2 ${BASE}`}
-            >
-              <DropLine at={drop} />
-              {handle}
-              <span aria-hidden className="h-[38px] w-1 shrink-0 rounded-[2px] bg-dlg-disabled" />
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-[14.5px] font-semibold text-text">{item.title}</span>
-                <span className="text-[12.5px] leading-[1.4] text-muted">
-                  {[...item.lines, ...(item.repeat?.lines ?? [])].join(" · ")}
-                </span>
-              </span>
-              {item.badge ? (
-                <span className="text-[14px] font-semibold whitespace-nowrap text-text">
-                  {item.badge}
-                </span>
-              ) : null}
-            </div>
+              card={cardAt(byPath, [item.id], item.title)}
+              discipline="running"
+              handle={handle}
+              drop={drop}
+              dragging={dragging}
+            />
           );
         })}
       </div>

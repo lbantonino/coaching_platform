@@ -101,6 +101,51 @@ describe("musculation : une carte par exercice", () => {
     expect(single).toMatchObject({ aside: "1 série", lines: ["1 répétition · 140 kg"] });
   });
 
+  it("éditeur : les kilos estimés depuis le max du sportif (« ≈ 78,5 kg (75 %) »), sinon « % du max »", () => {
+    // Décision d'Antonino du 17/11 : la carte de l'éditeur montre ce que recevra le sportif. Même calcul
+    // que la publication (kgFromPercent : arrondi au demi-kilo).
+    const content = strength({
+      items: [
+        {
+          id: "a",
+          kind: "exercise",
+          name: "Soulevé de terre barre",
+          exerciseId: ID,
+          loadMode: "pct",
+          sets: normal({ repsMin: 5, pct: 75 }, 4),
+        },
+        {
+          id: "b",
+          kind: "exercise",
+          name: "Squat avant",
+          loadMode: "pct",
+          sets: normal({ repsMin: 8, pct: 65 }, 3),
+        },
+      ],
+    });
+    const [known, unknown] = sessionCards(content, { maxes: { [ID]: 104.5 } });
+    expect(known).toMatchObject({ lines: ["5 répétitions · ≈ 78,5 kg (75 %)"] });
+    expect(unknown).toMatchObject({ lines: ["8 répétitions · 65 % du max"] });
+    // Une série retouchée dans l'éditeur garde ses kilos calculés : même écriture que les autres.
+    const touched = strength({
+      items: [
+        {
+          id: "a",
+          kind: "exercise",
+          name: "Soulevé de terre barre",
+          exerciseId: ID,
+          loadMode: "pct",
+          sets: normal({ repsMin: 5, pct: 75, kg: 78.5 }, 4),
+        },
+      ],
+    });
+    expect(sessionCards(touched, { maxes: { [ID]: 104.5 } })[0]).toMatchObject({
+      lines: ["5 répétitions · ≈ 78,5 kg (75 %)"],
+    });
+    // Sans maxes (la séance affichée, publiée) : rien ne change.
+    expect(sessionCards(content)[0]).toMatchObject({ lines: ["5 répétitions · 75 % du max"] });
+  });
+
   it("pyramide : une ligne par série ; séries d'échauffement à part ; tempo et consigne dessous", () => {
     const [pyramid, warm] = sessionCards(
       strength({

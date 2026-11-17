@@ -45,6 +45,13 @@ import {
 } from "@/domain/training/hyrox-edit";
 import { withEstimatedDuration } from "@/domain/training/session-duration";
 import {
+  canDuplicateAt,
+  canRemoveAt,
+  duplicateAt,
+  removeAt,
+} from "@/domain/training/session-items";
+import type { CardActions } from "@/components/programs/session-cards";
+import {
   SESSION_ITEMS_MAX,
   type HyroxBlock,
   type HyroxContent,
@@ -88,8 +95,11 @@ import {
 import {
   ExercisePickerSheet,
   StrengthExercisePanel,
+  BoundaryPanel,
+  COOLDOWN,
   StrengthGroupPanel,
   StrengthList,
+  WARMUP,
   type LibraryChoice,
   type StrengthAthlete,
 } from "./strength-parts";
@@ -198,6 +208,35 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
     if (isPhone()) setSelected(null);
   };
 
+  // Kilos estimés des cartes (décision du 17/11) : le max du sportif par exercice.
+  const maxes = meta.strength
+    ? Object.fromEntries(
+        Object.entries(meta.strength.athlete.maxes).map(([id, max]) => [id, max.kg]),
+      )
+    : null;
+  // « ⋯ » d'une carte, comme sur la page du programme : Dupliquer, Supprimer (avec « Annuler »).
+  const cardActions: CardActions = {
+    duplicate: (path) =>
+      setSession((current) => ({ ...current, content: duplicateAt(current.content, path) })),
+    remove: (path) => {
+      const before = session.content;
+      setSession((current) => ({ ...current, content: removeAt(current.content, path) }));
+      // La carte ouverte (ou son groupe) disparaît : son panneau se ferme.
+      if (selected && path.includes(selected)) {
+        closePanel();
+        setSelected(null);
+      }
+      toast("Étape supprimée.", {
+        action: {
+          label: "Annuler",
+          onClick: () => setSession((current) => ({ ...current, content: before })),
+        },
+      });
+    },
+    canDuplicate: (path) => canDuplicateAt(session.content, path),
+    canRemove: (path) => canRemoveAt(session.content, path),
+  };
+
   const discipline = session.content.discipline;
   const kicker = `${disciplineLabels[discipline]} · Séance ${meta.position} · Semaine ${meta.weekIndex}`;
   const meters = running ? runningDistanceMeters(running) : null;
@@ -266,6 +305,14 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
           setSelected(null);
           toast("Exercice supprimé.");
         }}
+      />
+    ) : strength && (selected === WARMUP || selected === COOLDOWN) ? (
+      <BoundaryPanel
+        key={selected}
+        kind={selected}
+        text={strength[selected]}
+        onChange={(text) => setStrength((current) => ({ ...current, [selected]: text }))}
+        onDone={closePanel}
       />
     ) : strength && group ? (
       <StrengthGroupPanel
@@ -427,32 +474,8 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         ) : null}
         {durationField}
       </div>
-      {strength ? (
-        <div className="grid gap-2.5 lg:grid-cols-2">
-          {(["warmup", "cooldown"] as const).map((key) => (
-            <label key={key} className="flex min-w-0 flex-col gap-1.5">
-              <span className={label}>{key === "warmup" ? "Échauffement" : "Retour au calme"}</span>
-              <textarea
-                defaultValue={strength[key] ?? ""}
-                maxLength={300}
-                rows={2}
-                placeholder={
-                  key === "warmup"
-                    ? "Mobilité hanches et épaules, 2 tours de 10 squats à vide"
-                    : "Étirements fessiers et dos, 5 min"
-                }
-                onChange={(event) =>
-                  setStrength((current) => ({
-                    ...current,
-                    [key]: event.target.value.trim() || undefined,
-                  }))
-                }
-                className={`${field} resize-none`}
-              />
-            </label>
-          ))}
-        </div>
-      ) : (
+      {/* Musculation : l'échauffement et le retour au calme sont des cartes de la liste (17/11). */}
+      {strength ? null : (
         <div className="grid gap-2.5 lg:grid-cols-2">
           <label className="flex min-w-0 flex-col gap-1.5">
             <span className={label}>Objectif</span>
@@ -508,6 +531,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         setRunning(result.content);
         select(result.id);
       }}
+      actions={cardActions}
     />
   ) : strength ? (
     <StrengthList
@@ -524,6 +548,8 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         setStrength((current) => removeStrengthItem(current, id));
         toast("Bloc supprimé.");
       }}
+      {...(maxes ? { maxes } : {})}
+      actions={cardActions}
     />
   ) : hyrox ? (
     <HyroxList
@@ -551,6 +577,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         setHyrox((current) => removeHyroxItem(current, id));
         toast("Bloc supprimé.");
       }}
+      actions={cardActions}
     />
   ) : (
     // Hybride : l'éditeur n'est pas dessiné (règle 5 du dossier de design) ; la séance se lit.

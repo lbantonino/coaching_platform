@@ -47,7 +47,26 @@ Complément du même jour : section « Prestataires techniques » (Supabase, Ver
   Garmin, pas d'entraînement, transfert hors UE à confirmer) ; « Durée de conservation » écrite (compte et
   données des sportifs effacés sous 30 jours sur demande, santé jusqu'au retrait de l'accord, paiements
   et factures tant que le compte existe, assistant = compteur sans contenu) ; « réponse sous un mois ».
-  Pas encore de bouton de fermeture de compte ni d'export : ces demandes se traitent à la main.
+  Le coach peut déjà exporter les données de son organisation (Paramètres > Données, D-57), c'est écrit ;
+  pas encore de bouton de fermeture de compte : ces demandes se traitent à la main.
+Décision d'Antonino (17/11) : Garmin = ENVOI SEULEMENT des séances de course vers la montre, aucune
+  donnée reçue. Rubrique 08 réécrite en ce sens (ce que Coory envoie, ce qu'il garde : identifiant,
+  clés de connexion, liste des séances envoyées ; lien garmin.com/privacy/connect exigé par le
+  contrat). Activity API laissée cochée chez Garmin : si Coory reçoit un jour les activités, réécrire
+  la rubrique AVANT et redemander l'accord des sportifs.
+```
+
+### Éditeur « Modifier la séance » en cartes (D-190, 17/11/2026)
+```
+src/domain/training/session-cards.ts (kilos estimés depuis le max : sessionCards(content, { maxes }) ;
+  hyroxCard exporté) ; components/programs/session-cards.tsx (CardMenu exporté) ;
+  _session/card-shell.tsx (nouveau : EditorCard, EditorGroup, AddInside, cardsByPath) ;
+  strength-parts.tsx (liste en cartes, échauffement et retour au calme en cartes, BoundaryPanel, colonne
+  RIR retirée, plus de vignette ni de points du superset) ; running-parts.tsx et hyrox-parts.tsx (listes
+  en cartes, compteur de tours dans l'en-tête) ; session-editor.tsx (max du sportif, « ⋯ » des cartes,
+  panneau de l'échauffement, champs d'échauffement retirés de la carte du haut).
+Tests : session-cards.test.ts (kilos estimés, vus en échec puis au vert) ; program-editor.spec.ts TC-11
+  (cartes « 5 séries », échauffement en carte, plus de RIR).
 ```
 
 ### Fin de la liste du test iPhone : geste de retour et allures (17/11/2026)

@@ -1,8 +1,9 @@
 "use client";
 
-import { Clock, Link2, Minus, Plus, Search, Trash2, Unlink } from "lucide-react";
+import { Ellipsis, Minus, Plus, Search, Trash2, Unlink } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
+import { CardMenu, type CardActions } from "@/components/programs/session-cards";
 import { useReorder } from "@/components/programs/use-reorder";
 import { Checkbox } from "@/components/ui/checkbox";
 import { dlgPrimaryButtonClass } from "@/components/ui/dialog-styles";
@@ -10,6 +11,7 @@ import { MoreMenu } from "@/components/ui/more-menu";
 import { DialogFooter, Sheet } from "@/components/ui/overlay";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { kgFromPercent } from "@/domain/training/aims";
+import { sessionCards, type SessionCard, type StepCard } from "@/domain/training/session-cards";
 import {
   isTimedExercise,
   type StrengthContent,
@@ -18,8 +20,6 @@ import {
 } from "@/domain/training/session-v2";
 import {
   addSet,
-  exerciseSummary,
-  groupMeta,
   moveItem,
   parseQuickFill,
   parseReps,
@@ -38,7 +38,8 @@ import {
   type StrengthGroup,
 } from "@/domain/training/strength-edit";
 
-import { BASE, DropLine, Handle, SELECTED, field, label } from "./running-parts";
+import { AddInside, EditorCard, EditorGroup, cardsByPath } from "./card-shell";
+import { Handle, field, label } from "./running-parts";
 
 // Liste et panneaux de l'éditeur Musculation (05, MUS-01 à 03 ; sources CooryEditeurListe et
 // CooryEditeurPanneau). Exercices avec vignette grise et résumé des séries ; superset relié par un
@@ -63,7 +64,6 @@ export type AthleteMax = {
 };
 export type StrengthAthlete = { firstName: string; maxes: Record<string, AthleteMax> };
 
-const GROUP_TINT = "bg-[color-mix(in_srgb,var(--strength-fill)_9%,var(--surface))]";
 const dayMonth = new Intl.DateTimeFormat("fr-BE", {
   day: "numeric",
   month: "short",
@@ -71,67 +71,56 @@ const dayMonth = new Intl.DateTimeFormat("fr-BE", {
 });
 const kg = (value: number) => `${String(value).replace(".", ",")} kg`;
 
+// Une carte d'exercice (17/11) : la carte de la séance, avec la poignée, le « ⋯ » et l'appui qui l'ouvre.
 function ExerciseRow({
-  exercise,
-  summary,
+  card,
   selected,
-  child,
   onSelect,
   handle,
   drop,
   dragging,
-  linked,
+  actions,
 }: {
-  exercise: StrengthExercise;
-  summary: string;
+  card: StepCard;
   selected: boolean;
-  child: boolean;
   onSelect: () => void;
   handle: ReactNode;
   drop: "before" | "after" | null;
   dragging: boolean;
-  linked: boolean;
+  actions?: CardActions;
 }) {
   return (
-    <div
-      data-reorder-row=""
-      className={`relative flex items-center gap-3 bg-surface py-2 pr-3 pl-2 transition-[box-shadow,opacity] duration-150 ${
-        child ? "min-h-[54px] rounded-[13px]" : "min-h-[58px] rounded-[14px]"
-      } ${selected ? SELECTED : BASE} ${dragging ? "opacity-60" : ""}`}
-    >
-      {linked ? (
-        <span
-          aria-hidden
-          className={`absolute top-1/2 -left-[15px] -mt-1 size-2 rounded-full bg-strength shadow-[0_0_0_2px_color-mix(in_srgb,var(--strength-fill)_9%,var(--surface))]`}
+    <EditorCard
+      card={card}
+      discipline="strength"
+      selected={selected}
+      onSelect={onSelect}
+      handle={handle}
+      drop={drop}
+      dragging={dragging}
+      menu={
+        <CardMenu
+          title={card.title}
+          path={card.path}
+          {...(card.exerciseId ? { exerciseId: card.exerciseId } : {})}
+          {...(actions ? { actions } : {})}
         />
-      ) : null}
-      <DropLine at={drop} />
-      {handle}
-      <span
-        aria-hidden
-        className={`shrink-0 bg-chip ${child ? "size-[38px] rounded-[10px]" : "size-[42px] rounded-[11px]"}`}
-      />
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-pressed={selected}
-        className="flex min-w-0 flex-1 flex-col text-left after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none after:focus-visible:outline-2 after:focus-visible:outline-offset-2 after:focus-visible:outline-violet"
-      >
-        <span
-          className={`truncate font-semibold text-text ${child ? "text-[14px]" : "text-[14.5px]"}`}
-        >
-          {exercise.name}
-        </span>
-        <span className={`text-[12.5px] leading-[1.4] text-muted ${child ? "mt-px" : "mt-0.5"}`}>
-          {summary}
-        </span>
-      </button>
-    </div>
+      }
+    />
   );
+}
+
+// La carte d'un exercice dans le modèle des cartes ; à défaut (jamais en pratique), son seul nom.
+function cardAt(byPath: Map<string, SessionCard>, path: string[], title: string): StepCard {
+  const found = byPath.get(path.join("/"));
+  return found?.kind === "card"
+    ? found
+    : { kind: "card", role: "work", title, lines: [], sub: [], path };
 }
 
 function Group({
   group,
+  byPath,
   selectedId,
   readOnly,
   onSelect,
@@ -141,8 +130,10 @@ function Group({
   handle,
   drop,
   dragging,
+  actions,
 }: {
   group: StrengthGroup;
+  byPath: Map<string, SessionCard>;
   selectedId: string | null;
   readOnly: boolean;
   onSelect: (id: string) => void;
@@ -152,36 +143,25 @@ function Group({
   handle: ReactNode;
   drop: "before" | "after" | null;
   dragging: boolean;
+  actions?: CardActions;
 }) {
   const inner = useReorder((from, to) =>
     onChange((current) => moveItem(current, from, to, group.id)),
   );
   const superset = group.kind === "superset";
-  const Icon = superset ? Link2 : Clock;
+  const card = byPath.get(group.id);
   return (
-    <div
-      data-reorder-row=""
-      className={`relative flex flex-col gap-2 rounded-[17px] p-2.5 transition-[opacity,box-shadow] duration-150 ${GROUP_TINT} ${
-        selectedId === group.id ? SELECTED : ""
-      } ${dragging ? "opacity-60" : ""}`}
-    >
-      <DropLine at={drop} />
-      <div className="flex min-h-8 flex-wrap items-center gap-2.5 pt-0.5 pr-1 pl-1.5">
-        {handle}
-        <button
-          type="button"
-          onClick={() => onSelect(group.id)}
-          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[8px] text-left focus-visible:outline-2 focus-visible:outline-violet"
-        >
-          <span className="flex items-center gap-[7px] text-[14px] font-semibold whitespace-nowrap text-strength-text">
-            <Icon aria-hidden size={15} strokeWidth={2} />
-            {superset ? "Superset" : "EMOM"}
-          </span>
-          <span className="min-w-0 flex-1 truncate text-[12.5px] text-text-2">
-            {groupMeta(group)}
-          </span>
-        </button>
-        {readOnly ? null : (
+    <EditorGroup
+      title={superset ? "Superset" : "EMOM"}
+      aside={card?.kind === "group" ? (card.aside ?? null) : null}
+      footer={card?.kind === "group" ? (card.footer ?? null) : null}
+      selected={selectedId === group.id}
+      onSelect={() => onSelect(group.id)}
+      handle={handle}
+      drop={drop}
+      dragging={dragging}
+      menu={
+        readOnly ? null : (
           <MoreMenu
             label={`Plus d'actions sur le ${superset ? "superset" : "bloc EMOM"}`}
             title={superset ? "Superset" : "EMOM"}
@@ -199,40 +179,33 @@ function Group({
                 onSelect: onRemove,
               },
             ]}
-            className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-muted! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
+            button={{
+              content: <Ellipsis aria-hidden size={18} strokeWidth={2} />,
+              className:
+                "-my-1.5 -mr-1 grid size-11 shrink-0 place-items-center rounded-[10px] text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text lg:size-8 lg:rounded-[9px]",
+            }}
           />
-        )}
-      </div>
-      <div
-        {...inner.listProps}
-        className={`relative flex flex-col gap-1.5 ${superset ? "pl-6" : ""}`}
-      >
-        {superset ? (
-          <span
-            aria-hidden
-            className="absolute top-[26px] bottom-[26px] left-2 w-0.5 rounded-[1px] bg-strength"
+        )
+      }
+      add={
+        readOnly || group.exercises.length >= 6 ? null : (
+          <AddInside
+            label={superset ? "Ajouter un exercice au superset" : "Ajouter un exercice"}
+            onClick={onAdd}
           />
-        ) : null}
+        )
+      }
+    >
+      <div {...inner.listProps} className="flex flex-col gap-2">
         {group.exercises.map((exercise, index) => (
           <ExerciseRow
             key={exercise.id}
-            exercise={exercise}
-            summary={
-              group.kind === "emom"
-                ? [
-                    group.workSec ? `${group.workSec} s` : null,
-                    exercise.cue ?? exerciseSummary(exercise, { inGroup: true }),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")
-                : exerciseSummary(exercise, { inGroup: true })
-            }
-            child
-            linked={superset}
+            card={cardAt(byPath, [group.id, exercise.id], exercise.name)}
             selected={selectedId === exercise.id}
             onSelect={() => onSelect(exercise.id)}
             drop={inner.dropMark(index)}
             dragging={inner.drag?.from === index}
+            {...(readOnly ? {} : actions ? { actions } : {})}
             handle={
               readOnly ? null : (
                 <Handle
@@ -244,17 +217,43 @@ function Group({
           />
         ))}
       </div>
-      {readOnly || group.exercises.length >= 6 ? null : (
-        <button
-          type="button"
-          onClick={onAdd}
-          className={`flex min-h-10 items-center gap-[7px] self-start rounded-[12px] px-3 text-[13px] font-medium text-strength-text transition-colors duration-150 hover:bg-surface/60 ${superset ? "ml-6" : ""}`}
-        >
-          <Plus aria-hidden size={14} strokeWidth={2} />
-          {superset ? "Relier un exercice" : "Ajouter un exercice"}
-        </button>
-      )}
-    </div>
+    </EditorGroup>
+  );
+}
+
+// L'échauffement et le retour au calme (décision d'Antonino du 17/11) : des cartes, la première et la
+// dernière, comme dans la séance affichée ; un appui ouvre leur texte dans le panneau.
+export const WARMUP = "warmup";
+export const COOLDOWN = "cooldown";
+
+function BoundaryCard({
+  kind,
+  byPath,
+  selected,
+  readOnly,
+  onSelect,
+}: {
+  kind: typeof WARMUP | typeof COOLDOWN;
+  byPath: Map<string, SessionCard>;
+  selected: boolean;
+  readOnly: boolean;
+  onSelect: () => void;
+}) {
+  const title = kind === WARMUP ? "Échauffement" : "Retour au calme";
+  const found = byPath.get(kind);
+  const card: StepCard =
+    found?.kind === "card"
+      ? found
+      : { kind: "card", role: kind, title, lines: [], sub: [], path: [kind] };
+  if (readOnly && card.lines.length === 0) return null;
+  return (
+    <EditorCard
+      card={card}
+      discipline="strength"
+      selected={selected}
+      {...(readOnly ? {} : { onSelect })}
+      empty="Aucun : touche pour en écrire un"
+    />
   );
 }
 
@@ -267,6 +266,8 @@ export function StrengthList({
   onAddExercise,
   onCreateSuperset,
   onRemoveItem,
+  maxes,
+  actions,
 }: {
   content: StrengthContent;
   selectedId: string | null;
@@ -276,12 +277,24 @@ export function StrengthList({
   onAddExercise: (groupId?: string) => void;
   onCreateSuperset: () => void;
   onRemoveItem: (id: string) => void;
+  // Max du sportif par exercice (kg) : les kilos estimés des cartes (décision du 17/11).
+  maxes?: Record<string, number>;
+  // « ⋯ » d'une carte : Dupliquer, Supprimer (et « Voir dans la Bibliothèque » partout).
+  actions?: CardActions;
 }) {
   const outer = useReorder((from, to) => onChange((current) => moveItem(current, from, to)));
+  const byPath = cardsByPath(sessionCards(content, maxes ? { maxes } : {}));
   const addButton =
     "inline-flex min-h-[46px] flex-[1_1_140px] items-center justify-center gap-[7px] rounded-[14px] text-[13.5px] font-medium whitespace-nowrap text-text-2 inset-ring-[1.5px] inset-ring-line transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]";
   return (
     <div className="flex flex-col gap-2">
+      <BoundaryCard
+        kind={WARMUP}
+        byPath={byPath}
+        selected={selectedId === WARMUP}
+        readOnly={readOnly}
+        onSelect={() => onSelect(WARMUP)}
+      />
       <div {...outer.listProps} className="flex flex-col gap-2">
         {content.items.map((item, index) => {
           const name =
@@ -304,15 +317,13 @@ export function StrengthList({
             return (
               <ExerciseRow
                 key={item.id}
-                exercise={item}
-                summary={exerciseSummary(item)}
-                child={false}
-                linked={false}
+                card={cardAt(byPath, [item.id], item.name)}
                 selected={selectedId === item.id}
                 onSelect={() => onSelect(item.id)}
                 handle={handle}
                 drop={drop}
                 dragging={dragging}
+                {...(readOnly ? {} : actions ? { actions } : {})}
               />
             );
           if (item.kind === "superset" || item.kind === "emom")
@@ -320,6 +331,7 @@ export function StrengthList({
               <Group
                 key={item.id}
                 group={item}
+                byPath={byPath}
                 selectedId={selectedId}
                 readOnly={readOnly}
                 onSelect={onSelect}
@@ -329,26 +341,29 @@ export function StrengthList({
                 handle={handle}
                 drop={drop}
                 dragging={dragging}
+                {...(actions ? { actions } : {})}
               />
             );
+          // Un bloc de texte (séance reprise d'une ancienne version) : il se lit et se déplace.
           return (
-            <div
+            <EditorCard
               key={item.id}
-              data-reorder-row=""
-              className={`relative flex min-h-[58px] items-center gap-3 rounded-[14px] bg-surface py-2 pr-3 pl-2 ${BASE}`}
-            >
-              <DropLine at={drop} />
-              {handle}
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-[14.5px] font-semibold text-text">{item.title}</span>
-                <span className="text-[12.5px] leading-[1.4] text-muted">
-                  {[...item.lines, ...(item.repeat?.lines ?? [])].join(" · ")}
-                </span>
-              </span>
-            </div>
+              card={cardAt(byPath, [item.id], item.title)}
+              discipline="strength"
+              handle={handle}
+              drop={drop}
+              dragging={dragging}
+            />
           );
         })}
       </div>
+      <BoundaryCard
+        kind={COOLDOWN}
+        byPath={byPath}
+        selected={selectedId === COOLDOWN}
+        readOnly={readOnly}
+        onSelect={() => onSelect(COOLDOWN)}
+      />
       {readOnly ? null : (
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => onAddExercise()} className={addButton}>
@@ -375,11 +390,9 @@ export function StrengthList({
 // ---------------------------------------------------------------------------
 const cell =
   "h-10 w-full min-w-0 rounded-[10px] bg-surface px-2.5 text-[16px] font-medium text-text inset-ring inset-ring-field-ring outline-none transition-shadow duration-150 placeholder:text-faint focus:inset-ring-[1.5px] focus:inset-ring-violet aria-invalid:inset-ring-alert lg:text-[15px]";
-// Un exercice tenu n'a pas de RIR (D-166) : sa grille perd la colonne (revue MVP du 13/11, C13).
-const gridOf = (timed: boolean) =>
-  timed
-    ? "grid grid-cols-[24px_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.8fr)] gap-1.5"
-    : "grid grid-cols-[24px_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.7fr)] gap-1.5";
+// Plus de colonne RIR (décision d'Antonino du 17/11 : l'app ne l'affiche plus ; les valeurs déjà
+// enregistrées restent dans la série, jamais affichées).
+const SET_GRID = "grid grid-cols-[24px_minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,0.8fr)] gap-1.5";
 
 function SetRow({
   set,
@@ -409,8 +422,7 @@ function SetRow({
         ? String(set.kg).replace(".", ",")
         : "",
   );
-  const [rir, setRir] = useState(set.rir !== undefined ? String(set.rir) : "");
-  const [bad, setBad] = useState<{ reps?: boolean; load?: boolean; rir?: boolean }>({});
+  const [bad, setBad] = useState<{ reps?: boolean; load?: boolean }>({});
   const warmup = set.type === "warmup";
   const computed =
     mode === "pct" && set.pct !== undefined && maxKg ? kgFromPercent(maxKg, set.pct) : null;
@@ -461,22 +473,9 @@ function SetRow({
         : { ...set, kg: Math.round(number * 2) / 2 },
     );
   };
-  const commitRir = (value: string) => {
-    const text = value.replace("—", "").trim();
-    if (!text) {
-      const next = { ...set };
-      delete next.rir;
-      setBad((current) => ({ ...current, rir: false }));
-      return onChange(next);
-    }
-    const number = Number(text);
-    const ok = Number.isInteger(number) && number >= 0 && number <= 10;
-    setBad((current) => ({ ...current, rir: !ok }));
-    if (ok) onChange({ ...set, rir: number });
-  };
 
   return (
-    <div className={`${gridOf(timed)} items-center`}>
+    <div className={`${SET_GRID} items-center`}>
       <span className="text-center text-[13px] font-semibold text-faint">{index + 1}</span>
       <button
         type="button"
@@ -529,20 +528,6 @@ function SetRow({
           </span>
         ) : null}
       </span>
-      {timed ? null : (
-        <input
-          aria-label={`RIR de la série ${index + 1}`}
-          inputMode="numeric"
-          value={rir}
-          placeholder="—"
-          aria-invalid={bad.rir ?? false}
-          onChange={(event) => {
-            setRir(event.target.value);
-            commitRir(event.target.value);
-          }}
-          className={cell}
-        />
-      )}
     </div>
   );
 }
@@ -708,12 +693,11 @@ export function StrengthExercisePanel({
       )}
 
       <div className="flex flex-col gap-1.5">
-        <div className={`${gridOf(timed)} px-1 text-[11.5px] font-semibold text-faint`}>
+        <div className={`${SET_GRID} px-1 text-[11.5px] font-semibold text-faint`}>
           <span>#</span>
           <span>Type</span>
           <span>{timed ? "Durée" : "Répét."}</span>
           <span>{exercise.loadMode === "pct" ? "% max" : "kg"}</span>
-          {timed ? null : <span>RIR</span>}
         </div>
         {exercise.sets.map((set, index) => (
           <SetRow
@@ -834,6 +818,51 @@ function PanelFooter({
       >
         Supprimer
       </button>
+    </div>
+  );
+}
+
+// Panneau de l'échauffement ou du retour au calme (17/11 : ce sont des cartes de la liste) : son texte,
+// écrit d'un trait. « Supprimer » le retire de la séance (sa carte redit « Aucun »).
+export function BoundaryPanel({
+  kind,
+  text,
+  onChange,
+  onDone,
+}: {
+  kind: typeof WARMUP | typeof COOLDOWN;
+  text: string | undefined;
+  onChange: (text: string | undefined) => void;
+  onDone: () => void;
+}) {
+  const title = kind === WARMUP ? "Échauffement" : "Retour au calme";
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 className="text-[19px] leading-[1.2] font-bold tracking-[-0.015em] text-text">{title}</h2>
+      <label className="flex flex-col gap-1.5">
+        <span className={label}>Ce que fait le sportif</span>
+        <textarea
+          key={kind}
+          defaultValue={text ?? ""}
+          maxLength={300}
+          rows={4}
+          placeholder={
+            kind === WARMUP
+              ? "Mobilité hanches et épaules, 2 tours de 10 squats à vide"
+              : "Étirements fessiers et dos, 5 min"
+          }
+          onChange={(event) => onChange(event.target.value.trim() || undefined)}
+          className={`${field} h-auto resize-none py-2.5`}
+        />
+      </label>
+      <PanelFooter
+        primary="OK"
+        onDone={onDone}
+        onDelete={() => {
+          onChange(undefined);
+          onDone();
+        }}
+      />
     </div>
   );
 }

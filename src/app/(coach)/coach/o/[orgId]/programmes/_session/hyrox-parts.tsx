@@ -1,8 +1,9 @@
 "use client";
 
-import { Clock, Copy, Plus, Repeat2, Trash2 } from "lucide-react";
+import { Copy, Ellipsis, Plus, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
+import { CardMenu, type CardActions } from "@/components/programs/session-cards";
 import { useReorder } from "@/components/programs/use-reorder";
 import { MoreMenu } from "@/components/ui/more-menu";
 import { DialogBody, Overlay } from "@/components/ui/overlay";
@@ -20,13 +21,9 @@ import {
   HYROX_FORMAT_LABELS,
   applyLoads,
   blockHasStepper,
-  blockIsRun,
   blockLabel,
-  blockMeta,
   isErgStation,
   lineDetail,
-  lineHasThumb,
-  lineRight,
   lineTitle,
   moveItem,
   newLine,
@@ -43,9 +40,11 @@ import {
   type HyroxLine,
   type HyroxStation,
 } from "@/domain/training/session-v2";
+import { hyroxCard, sessionCards, type SessionCard } from "@/domain/training/session-cards";
 import { formatClock } from "@/domain/training/session-view";
 
-import { BASE, DropLine, Handle, SELECTED, field, label } from "./running-parts";
+import { AddInside, EditorCard, EditorGroup, cardsByPath } from "./card-shell";
+import { Handle, field, label } from "./running-parts";
 
 // Liste et panneaux de l'éditeur Hyrox (06, HYR-01 à 03 ; sources CooryEditeurListe et
 // CooryEditeurPanneau). Blocs avec un format ; lignes Run (barre Running), Station (vignette),
@@ -71,8 +70,6 @@ const parseRest = (text: string) => {
   return value !== null && value <= 1800 ? value : null;
 };
 
-const RUN_TINT = "bg-[color-mix(in_srgb,var(--run-fill)_9%,var(--surface))]";
-const HYROX_TINT = "bg-[color-mix(in_srgb,var(--hyrox-fill)_9%,var(--surface))]";
 const LINE_KINDS: { value: HyroxLine["kind"]; label: string }[] = [
   { value: "run", label: "Run" },
   { value: "station", label: "Station" },
@@ -81,55 +78,46 @@ const LINE_KINDS: { value: HyroxLine["kind"]; label: string }[] = [
   { value: "exercise", label: "Autre mouvement" },
 ];
 
+// Une étape d'un bloc (17/11) : la carte de la séance (même écriture : hyroxCard), avec la poignée,
+// le « ⋯ » et l'appui qui l'ouvre.
 function LineRow({
   line,
+  path,
   selected,
   onSelect,
   handle,
   drop,
   dragging,
+  actions,
 }: {
   line: HyroxLine;
+  path: string[];
   selected: boolean;
   onSelect: () => void;
   handle: ReactNode;
   drop: "before" | "after" | null;
   dragging: boolean;
+  actions?: CardActions;
 }) {
-  const thumb = lineHasThumb(line);
-  const right = lineRight(line);
+  const card = hyroxCard(line, path);
   return (
-    <div
-      data-reorder-row=""
-      className={`relative flex min-h-[54px] items-center gap-3 rounded-[13px] bg-surface py-2 pr-3 pl-2 transition-[box-shadow,opacity] duration-150 ${
-        selected ? SELECTED : BASE
-      } ${dragging ? "opacity-60" : ""}`}
-    >
-      <DropLine at={drop} />
-      {handle}
-      {thumb ? (
-        <span aria-hidden className="size-[38px] shrink-0 rounded-[10px] bg-chip" />
-      ) : (
-        <span
-          aria-hidden
-          className={`h-[34px] w-1 shrink-0 rounded-[2px] ${line.kind === "run" ? "bg-run-fill" : "bg-dlg-disabled"}`}
+    <EditorCard
+      card={card}
+      discipline="hyrox"
+      selected={selected}
+      onSelect={onSelect}
+      handle={handle}
+      drop={drop}
+      dragging={dragging}
+      menu={
+        <CardMenu
+          title={card.title}
+          path={card.path}
+          {...(card.exerciseId ? { exerciseId: card.exerciseId } : {})}
+          {...(actions ? { actions } : {})}
         />
-      )}
-      <button
-        type="button"
-        onClick={onSelect}
-        aria-pressed={selected}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none after:focus-visible:outline-2 after:focus-visible:outline-offset-2 after:focus-visible:outline-violet"
-      >
-        <span className="flex min-w-0 flex-1 flex-col gap-px">
-          <span className="truncate text-[14px] font-semibold text-text">{lineTitle(line)}</span>
-          <span className="text-[12.5px] leading-[1.4] text-muted">{lineDetail(line)}</span>
-        </span>
-        {right ? (
-          <span className="text-[13.5px] font-semibold whitespace-nowrap text-text">{right}</span>
-        ) : null}
-      </button>
-    </div>
+      }
+    />
   );
 }
 
@@ -165,6 +153,7 @@ function Stepper({ value, onChange }: { value: number; onChange: (value: number)
 
 function BlockGroup({
   block,
+  byPath,
   selectedId,
   onSelect,
   onChange,
@@ -174,8 +163,10 @@ function BlockGroup({
   handle,
   drop,
   dragging,
+  actions,
 }: {
   block: HyroxBlock;
+  byPath: Map<string, SessionCard>;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onChange: (change: (current: HyroxContent) => HyroxContent) => void;
@@ -185,48 +176,46 @@ function BlockGroup({
   handle: ReactNode;
   drop: "before" | "after" | null;
   dragging: boolean;
+  actions?: CardActions;
 }) {
   const inner = useReorder((from, to) =>
     onChange((current) => moveItem(current, from, to, block.id)),
   );
-  const run = blockIsRun(block);
-  const Icon =
-    block.format === "amrap" || block.format === "emom" || block.format === "for_time"
-      ? Clock
-      : Repeat2;
-  const tone = run ? "text-run-text" : "text-hyrox";
+  // Ce que la séance écrit en tête et en bas de la grande carte (« AMRAP 25 min », « Repos 1:00 entre
+  // les tours ») ; un bloc simple (une seule carte dans la séance) n'a que sa limite.
+  const card = byPath.get(block.id);
+  const aside = card && "aside" in card ? (card.aside ?? null) : null;
+  const footer =
+    card?.kind === "group"
+      ? (card.footer ?? null)
+      : card?.kind === "card"
+        ? card.sub.join(" · ") || null
+        : null;
   return (
-    <div
-      data-reorder-row=""
-      className={`relative flex flex-col gap-2 rounded-[17px] p-2.5 transition-[opacity,box-shadow] duration-150 ${run ? RUN_TINT : HYROX_TINT} ${
-        selectedId === block.id ? SELECTED : ""
-      } ${dragging ? "opacity-60" : ""}`}
-    >
-      <DropLine at={drop} />
-      <div className="flex min-h-8 flex-wrap items-center gap-2.5 pt-0.5 pr-1 pl-1.5">
-        {handle}
-        <button
-          type="button"
-          onClick={() => onSelect(block.id)}
-          className={`flex items-center gap-[7px] rounded-[8px] text-[14px] font-semibold whitespace-nowrap focus-visible:outline-2 focus-visible:outline-violet ${tone}`}
-        >
-          <Icon aria-hidden size={15} strokeWidth={2} />
-          {blockLabel(block)}
-        </button>
-        {blockHasStepper(block) ? (
-          <Stepper
-            value={block.rounds ?? 1}
-            onChange={(rounds) => onChange((current) => setRounds(current, block.id, rounds))}
-          />
-        ) : null}
-        <button
-          type="button"
-          tabIndex={-1}
-          onClick={() => onSelect(block.id)}
-          className="min-w-0 flex-1 truncate text-left text-[12.5px] text-text-2"
-        >
-          {blockMeta(block)}
-        </button>
+    <EditorGroup
+      // Le nom écrit comme la séance (« AMRAP », et « 25 min » à droite), sinon le nom du bloc.
+      title={card?.title ?? blockLabel(block)}
+      // Les tours se changent ici (− 5 +), là où la séance les écrit (« 5 tours »).
+      aside={
+        blockHasStepper(block) ? (
+          <span className="flex shrink-0 items-center gap-2 text-[13.5px] font-semibold text-text-2 lg:text-[12.5px]">
+            <Stepper
+              value={block.rounds ?? 1}
+              onChange={(rounds) => onChange((current) => setRounds(current, block.id, rounds))}
+            />
+            tours
+          </span>
+        ) : (
+          aside
+        )
+      }
+      footer={footer}
+      selected={selectedId === block.id}
+      onSelect={() => onSelect(block.id)}
+      handle={handle}
+      drop={drop}
+      dragging={dragging}
+      menu={
         <MoreMenu
           label={`Plus d'actions sur le bloc ${blockLabel(block)}`}
           title={blockLabel(block)}
@@ -235,18 +224,30 @@ function BlockGroup({
             { label: "Dupliquer le bloc", icon: Copy, onSelect: onDuplicate },
             { label: "Supprimer le bloc", icon: Trash2, destructive: true, onSelect: onRemove },
           ]}
-          className="-my-1.5 [&>button]:bg-transparent! [&>button]:text-muted! [&>button]:inset-ring-0! lg:[&>button]:size-8!"
+          button={{
+            content: <Ellipsis aria-hidden size={18} strokeWidth={2} />,
+            className:
+              "-my-1.5 -mr-1 grid size-11 shrink-0 place-items-center rounded-[10px] text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text lg:size-8 lg:rounded-[9px]",
+          }}
         />
-      </div>
-      <div {...inner.listProps} className="flex flex-col gap-1.5">
+      }
+      add={
+        block.lines.length >= 40 ? null : (
+          <AddInside label="Ajouter une étape" onClick={onAddLine} />
+        )
+      }
+    >
+      <div {...inner.listProps} className="flex flex-col gap-2">
         {block.lines.map((line, index) => (
           <LineRow
             key={line.id}
             line={line}
+            path={[block.id, line.id]}
             selected={selectedId === line.id}
             onSelect={() => onSelect(line.id)}
             drop={inner.dropMark(index)}
             dragging={inner.drag?.from === index}
+            {...(actions ? { actions } : {})}
             handle={
               <Handle
                 label={`Déplacer « ${lineTitle(line)} » (flèches haut et bas)`}
@@ -256,17 +257,7 @@ function BlockGroup({
           />
         ))}
       </div>
-      {block.lines.length >= 40 ? null : (
-        <button
-          type="button"
-          onClick={onAddLine}
-          className={`flex min-h-10 items-center gap-[7px] self-start rounded-[12px] px-3 text-[13px] font-medium transition-colors duration-150 hover:bg-surface/60 ${tone}`}
-        >
-          <Plus aria-hidden size={14} strokeWidth={2} />
-          Ajouter une étape
-        </button>
-      )}
-    </div>
+    </EditorGroup>
   );
 }
 
@@ -280,6 +271,7 @@ export function HyroxList({
   onSimulation,
   onDuplicate,
   onRemove,
+  actions,
 }: {
   content: HyroxContent;
   selectedId: string | null;
@@ -290,8 +282,11 @@ export function HyroxList({
   onSimulation: () => void;
   onDuplicate: (id: string) => void;
   onRemove: (id: string) => void;
+  // « ⋯ » d'une étape : Dupliquer, Voir dans la Bibliothèque, Supprimer (17/11).
+  actions?: CardActions;
 }) {
   const outer = useReorder((from, to) => onChange((current) => moveItem(current, from, to)));
+  const byPath = cardsByPath(sessionCards(content));
   const addButton =
     "inline-flex min-h-[46px] flex-[1_1_140px] items-center justify-center gap-[7px] rounded-[14px] text-[13.5px] font-medium whitespace-nowrap text-text-2 inset-ring-[1.5px] inset-ring-line transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]";
   return (
@@ -309,6 +304,7 @@ export function HyroxList({
               <BlockGroup
                 key={item.id}
                 block={item}
+                byPath={byPath}
                 selectedId={selectedId}
                 onSelect={onSelect}
                 onChange={onChange}
@@ -318,23 +314,24 @@ export function HyroxList({
                 handle={handle}
                 drop={outer.dropMark(index)}
                 dragging={outer.drag?.from === index}
+                {...(actions ? { actions } : {})}
               />
             );
+          // Un bloc de texte (séance reprise d'une ancienne version) : il se lit et se déplace.
+          const text = byPath.get(item.id);
           return (
-            <div
+            <EditorCard
               key={item.id}
-              data-reorder-row=""
-              className={`relative flex min-h-[58px] items-center gap-3 rounded-[14px] bg-surface py-2 pr-3 pl-2 ${BASE}`}
-            >
-              <DropLine at={outer.dropMark(index)} />
-              {handle}
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-[14.5px] font-semibold text-text">{item.title}</span>
-                <span className="text-[12.5px] leading-[1.4] text-muted">
-                  {[...item.lines, ...(item.repeat?.lines ?? [])].join(" · ")}
-                </span>
-              </span>
-            </div>
+              card={
+                text?.kind === "card"
+                  ? text
+                  : { role: "work", title: item.title, lines: item.lines, sub: [] }
+              }
+              discipline="hyrox"
+              handle={handle}
+              drop={outer.dropMark(index)}
+              dragging={outer.drag?.from === index}
+            />
           );
         })}
       </div>

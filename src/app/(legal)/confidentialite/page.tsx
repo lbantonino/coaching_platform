@@ -38,8 +38,8 @@ export default function PrivacyPage() {
               saisi par le coach : objectifs, disponibilités, repères et performances, notes.{" "}
               <strong>Santé</strong> : contraintes physiques, seulement avec l’accord exprès du
               sportif (article 9 du RGPD), effacées s’il retire cet accord. <strong>Garmin</strong>{" "}
-              (facultatif) : tes activités terminées, si tu relies ton compte Garmin Connect (voir «
-              Connexion à Garmin Connect »).
+              (facultatif) : ton identifiant Garmin et les clés de connexion, si tu relies ton
+              compte pour recevoir tes séances sur ta montre (voir « Connexion à Garmin Connect »).
             </p>
           ),
         },
@@ -125,7 +125,8 @@ export default function PrivacyPage() {
               <p>
                 <strong>Paiements et factures</strong> enregistrés par le coach : tant que son
                 compte existe. Le coach reste responsable de les conserver le temps exigé par la loi
-                ; il peut en demander une copie avant de fermer son compte.
+                ; il peut les télécharger dans Paramètres, onglet Données, avant de fermer son
+                compte.
               </p>
               <p>
                 <strong>Assistant IA</strong> : Coory ne garde pas les conversations, seulement le
@@ -147,7 +148,9 @@ export default function PrivacyPage() {
               <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
                 {LEGAL.contactEmail}
               </a>
-              , réponse sous un mois.
+              , réponse sous un mois. Coach : tu peux aussi télécharger toutes les données de ton
+              organisation (fichier lisible par une autre application) dans Paramètres, onglet
+              Données.
             </p>
           ),
         },
@@ -156,68 +159,79 @@ export default function PrivacyPage() {
           // 17/11/2026) : usage des données Garmin, TOUS les tiers qui les traitent, vente ou non,
           // IA, accès/correction/effacement/export et retrait du consentement. Chaque phrase est un
           // engagement à respecter dans le code de la connexion Garmin.
+          // Décision d'Antonino du 17/11/2026 : ENVOI SEULEMENT (séances de course vers la montre),
+          // aucune donnée reçue de Garmin pour l'instant. Si Coory reçoit un jour les activités
+          // (Activity API, gardée cochée chez Garmin), cette rubrique doit être réécrite AVANT, et
+          // l'accord des sportifs redemandé.
           title: "Connexion à Garmin Connect",
           body: (
             <>
               <p>
-                Si tu relies ton compte <strong>Garmin Connect</strong> à Coory, ton coach peut
-                envoyer tes séances de course sur ta montre, et tes activités terminées reviennent
-                dans Coory. Cette connexion est facultative : Coory fonctionne aussi sans montre.
-                Responsable de ce traitement : {LEGAL.publisher}, éditeur de Coory [à confirmer avec
-                un juriste]. [En préparation : la connexion n’est pas encore ouverte.]
+                Si tu relies ton compte <strong>Garmin Connect</strong> à Coory, les séances de
+                course que ton coach publie pour toi arrivent sur ta montre : tu n’as plus à les
+                recopier dans Garmin Connect. Pour l’instant, Coory envoie seulement :{" "}
+                <strong>il ne reçoit aucune donnée de ta montre</strong> (ni activités, ni fréquence
+                cardiaque, ni position GPS). Si un jour Coory propose de recevoir tes activités,
+                cette page sera mise à jour avant, et ton accord te sera demandé à nouveau. Cette
+                connexion est facultative : Coory fonctionne aussi sans montre. Responsable de ce
+                traitement : {LEGAL.publisher}, éditeur de Coory [à confirmer avec un juriste]. [En
+                préparation : la connexion n’est pas encore ouverte.]
               </p>
               <p>
-                <strong>Ce que Coory envoie à Garmin</strong> : les séances que ton coach a publiées
-                pour toi (nom, date, étapes, allures ou zones de fréquence cardiaque visées). Une
-                fois dans Garmin Connect, elles relèvent aussi de la politique de confidentialité de
-                Garmin.
+                <strong>Ce que Coory envoie à Garmin</strong> : les séances de course que ton coach
+                a publiées pour toi (nom, date, étapes, durées ou distances, allures ou fréquences
+                cardiaques visées, consignes). Une fois dans Garmin Connect, elles relèvent aussi de
+                la{" "}
+                <a
+                  href="https://www.garmin.com/privacy/connect"
+                  className="font-semibold text-text"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  politique de confidentialité de Garmin
+                </a>
+                .
               </p>
               <p>
-                <strong>Ce que Coory reçoit de Garmin</strong> : tes activités terminées après la
-                connexion (type d’activité, date et heure, durée, distance, allure ou vitesse,
-                fréquence cardiaque, dénivelé, détail par tour), sans historique d’avant la
-                connexion. Coory ne garde pas ton tracé GPS. Ces données servent uniquement à
-                marquer la séance prévue comme faite et à montrer, à toi et à ton coach, ce qui
-                était prévu et ce que tu as réalisé.
+                <strong>Ce que Coory garde</strong> : ton identifiant Garmin, les clés de connexion
+                qui permettent l’envoi (jamais ton mot de passe Garmin, que Coory ne voit pas), et
+                la liste des séances envoyées, pour pouvoir les modifier ou les retirer de ta montre
+                si ton coach change ton programme.
               </p>
               <p>
-                <strong>Base légale</strong> : ton consentement explicite, donné quand tu relies ton
-                compte (articles 6 et 9 du RGPD, car la fréquence cardiaque peut renseigner sur ta
-                santé). Tu peux le retirer à tout moment.
+                <strong>Base légale</strong> : ton consentement, donné quand tu relies ton compte
+                (article 6 du RGPD). Tu peux le retirer à tout moment.
               </p>
               <p>
-                <strong>Qui y a accès</strong> : toi et ton coach, avec les personnes de son
-                organisation qui te suivent. Deux prestataires techniques seulement traitent ces
-                données : Supabase (base de données, Irlande) et Vercel (application, Dublin,
-                Irlande). Aucun autre tiers ne les reçoit, ni service de statistiques, ni régie
-                publicitaire, ni fournisseur d’intelligence artificielle.
+                <strong>Qui y a accès</strong> : ces informations de connexion servent seulement à
+                Coory pour envoyer tes séances ; ton coach voit uniquement si ta montre est reliée.
+                Deux prestataires techniques les traitent : Supabase (base de données, Irlande) et
+                Vercel (application, Dublin, Irlande). Aucun autre tiers ne les reçoit, ni service
+                de statistiques, ni régie publicitaire, ni fournisseur d’intelligence artificielle.
               </p>
               <p>
-                <strong>Intelligence artificielle</strong> : l’Assistant IA de Coory ne lit jamais
-                tes données Garmin, et elles ne servent jamais à entraîner, évaluer ou améliorer un
-                modèle d’intelligence artificielle.
+                <strong>Intelligence artificielle</strong> : l’Assistant IA de Coory n’a pas accès à
+                ta connexion Garmin, et rien de ce qui concerne Garmin ne sert à entraîner, évaluer
+                ou améliorer un modèle d’intelligence artificielle.
               </p>
               <p>
-                <strong>Jamais vendues</strong> : tes données Garmin ne sont ni vendues, ni louées,
-                ni partagées à des fins commerciales.
+                <strong>Jamais vendues</strong> : les informations de ta connexion Garmin ne sont ni
+                vendues, ni louées, ni partagées à des fins commerciales.
               </p>
               <p>
-                <strong>Durée de conservation</strong> : tant que ton compte Garmin est relié et que
-                ton compte Coory existe. Si tu déconnectes Garmin ou fermes ton compte, Coory arrête
-                tout échange avec Garmin et efface les données reçues de Garmin dans les 30 jours au
-                plus tard. Les séances déjà envoyées restent dans ton calendrier Garmin Connect, où
-                tu peux les supprimer.
+                <strong>Durée de conservation</strong> : tant que ton compte Garmin est relié. Si tu
+                déconnectes Garmin ou fermes ton compte, Coory arrête tout envoi et efface ton
+                identifiant Garmin et tes clés de connexion dans les 30 jours au plus tard. Les
+                séances déjà envoyées restent dans ton Garmin Connect, où tu peux les supprimer.
               </p>
               <p>
                 <strong>Tes droits</strong> : pour retirer ton consentement, déconnecte Garmin
-                depuis ton profil Coory ou depuis les applications connectées de ton compte Garmin
-                Connect. Pour consulter, recevoir une copie (dans un format lisible), corriger ou
-                effacer tes données Garmin, écris à{" "}
+                depuis Coory ou depuis les applications connectées de ton compte Garmin Connect.
+                Pour toute autre demande (consulter, recevoir une copie, effacer), écris à{" "}
                 <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
                   {LEGAL.contactEmail}
                 </a>
-                , réponse sous un mois. Une activité erronée peut aussi être corrigée ou supprimée
-                dans Garmin Connect.
+                , réponse sous un mois.
               </p>
               <p>Garmin et Garmin Connect sont des marques de Garmin Ltd. ou de ses filiales.</p>
             </>

@@ -51,9 +51,10 @@ test("TC-02, TC-10 : brouillon depuis un modèle Coory, séance Running modifié
   await expect(page.getByRole("heading", { name: "Endurance", level: 2 })).toBeVisible();
 
   // La première étape (30 min) passe à 12 min ; sur téléphone, elle s'ouvre dans une feuille.
+  // (Éditeur en cartes, 17/11 : la carte s'appelle d'abord par son titre, « Course ».)
   if (phone)
     await page
-      .getByRole("button", { name: /30 min$/ })
+      .getByRole("button", { name: /^Course.*30 min/ })
       .first()
       .click();
   await page.getByRole("textbox", { name: "Durée de l'étape" }).fill("12");
@@ -106,13 +107,14 @@ test("TC-02, TC-10 : brouillon depuis un modèle Coory, séance Running modifié
   await expect(low).toHaveValue("150");
   await expect(high).toHaveValue("160");
   if (phone) await page.getByRole("button", { name: "Valider l'étape" }).click();
+  // La carte de l'étape écrit comme la séance : « 12 min · zone 3 · 150–160 bpm » (le tiret est collé
+  // à ses nombres par des caractères invisibles, glue()).
   await expect(
     page
-      .getByText(/Zone 3 · 150–160 bpm/)
+      .getByRole("button", { name: /^Course.*12 min · zone 3 · 150\u2060?–\u2060?160 bpm/ })
       .filter({ visible: true })
       .first(),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: /12 min$/ }).first()).toBeVisible();
 
   if (phone) {
     await page.getByRole("button", { name: "Semaine 1", exact: true }).click();
@@ -199,12 +201,13 @@ test("TC-11 : séries en saisie rapide, et % du max sans max connu", async ({ pa
     page.getByText(/^Pas de max pour .+ les kg ne sont pas calculés/).filter({ visible: true }),
   ).toBeVisible();
   if (phone) await page.getByRole("button", { name: "Valider l'exercice" }).click();
-  await expect(
-    page
-      .getByText(/^5 × 3/)
-      .filter({ visible: true })
-      .first(),
-  ).toBeVisible();
+  // La carte de l'exercice (éditeur en cartes, 17/11) : « 5 séries », « 3 répétitions · 70 % du max ».
+  const deadlift = page
+    .getByRole("button", { name: /^Soulevé de terre barre/ })
+    .filter({ visible: true })
+    .first();
+  await expect(deadlift).toContainText("5 séries");
+  await expect(deadlift).toContainText(/3 répétitions · \d+ % du max/);
 
   // D-166 (demande d'Antonino du 13/11) : un exercice tenu se compte en secondes. « Mesure :
   // Secondes », puis « 3 séries de 45 s » ; le % du max disparaît (un temps se met en kg).
@@ -221,12 +224,18 @@ test("TC-11 : séries en saisie rapide, et % du max sans max connu", async ({ pa
   await page.getByRole("button", { name: "Remplir" }).click();
   await expect(page.getByRole("textbox", { name: "Secondes de la série 3" })).toHaveValue("45");
   if (phone) await page.getByRole("button", { name: "Valider l'exercice" }).click();
-  await expect(
-    page
-      .getByText(/^3 × 45 s/)
-      .filter({ visible: true })
-      .first(),
-  ).toBeVisible();
+  await expect(deadlift).toContainText("3 séries");
+  await expect(deadlift).toContainText("45 s");
+
+  // Éditeur en cartes (décisions d'Antonino du 17/11) : plus de colonne RIR ; l'échauffement est une
+  // carte de la liste, son texte s'ouvre dans le panneau (la feuille sur téléphone).
+  await expect(page.getByText("RIR", { exact: true }).filter({ visible: true })).toHaveCount(0);
+  await page
+    .getByRole("button", { name: /^Échauffement/ })
+    .filter({ visible: true })
+    .first()
+    .click();
+  await expect(page.getByLabel("Ce que fait le sportif").filter({ visible: true })).toBeVisible();
 });
 
 // D-164 (demande d'Antonino du 11/11) : plus de 7 séances par semaine. « 8+ » ouvre un compteur de 8 à

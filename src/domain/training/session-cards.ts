@@ -1,3 +1,4 @@
+import { kgFromPercent } from "./aims";
 import { hyroxStationLabels } from "./hyrox-official";
 import { formatPace, formatPaceRange } from "./pace";
 import type {
@@ -117,16 +118,33 @@ function amountText(set: StrengthSet): string {
 }
 
 // Les kilos (calculés depuis le max à la publication, ou écrits par le coach) ; sinon le % du max.
-function loadText(set: StrengthSet): string | null {
+// Dans l'éditeur (décision d'Antonino du 17/11), un % se lit aussi en kilos estimés depuis le max du
+// sportif, avec le calcul de la publication : « ≈ 78,5 kg (75 %) ».
+// Une série retouchée garde ses kilos calculés : avec le max, toujours la même écriture.
+function loadText(set: StrengthSet, maxKg?: number): string | null {
+  if (maxKg && set.pct !== undefined) {
+    return `≈ ${formatKg(kgFromPercent(maxKg, set.pct))} (${set.pct} %)`;
+  }
   if (set.kg !== undefined && set.kg > 0) return formatKg(set.kg);
   if (set.pct !== undefined) return `${set.pct} % du max`;
   return null;
 }
 
-const setText = (set: StrengthSet) => [amountText(set), loadText(set)].filter(Boolean).join(" · ");
+const setTextFor = (set: StrengthSet, maxKg?: number) =>
+  [amountText(set), loadText(set, maxKg)].filter(Boolean).join(" · ");
 const allSame = (values: string[]) => values.every((value) => value === values[0]);
 
-function exerciseCard(exercise: StrengthExercise, path: string[], inGroup: boolean): StepCard {
+// Max du sportif par exercice de la Bibliothèque (kg), pour les kilos estimés de l'éditeur.
+export type CardOptions = { maxes?: Record<string, number> };
+
+function exerciseCard(
+  exercise: StrengthExercise,
+  path: string[],
+  inGroup: boolean,
+  options: CardOptions = {},
+): StepCard {
+  const maxKg = exercise.exerciseId ? options.maxes?.[exercise.exerciseId] : undefined;
+  const setText = (set: StrengthSet) => setTextFor(set, maxKg);
   const warmups = exercise.sets.filter((set) => set.type === "warmup");
   const work = exercise.sets.filter((set) => set.type === "normal");
   const sets = work.length > 0 ? work : exercise.sets;
@@ -157,19 +175,24 @@ function exerciseCard(exercise: StrengthExercise, path: string[], inGroup: boole
   });
 }
 
-function strengthCards(content: Extract<SessionContent, { discipline: "strength" }>) {
+function strengthCards(
+  content: Extract<SessionContent, { discipline: "strength" }>,
+  options: CardOptions = {},
+) {
   const cards: SessionCard[] = [];
   if (content.warmup) {
     cards.push(card("Échauffement", ["warmup"], { role: "warmup", lines: [content.warmup] }));
   }
   for (const item of content.items) {
-    if (item.kind === "exercise") cards.push(exerciseCard(item, [item.id], false));
+    if (item.kind === "exercise") cards.push(exerciseCard(item, [item.id], false, options));
     else if (item.kind === "superset") {
       cards.push(
         group(
           "Superset",
           [item.id],
-          item.exercises.map((exercise) => exerciseCard(exercise, [item.id, exercise.id], true)),
+          item.exercises.map((exercise) =>
+            exerciseCard(exercise, [item.id, exercise.id], true, options),
+          ),
           {
             aside: plural(item.rounds, "tour"),
             footer: item.restSec ? `${restText(item.restSec)} après chaque tour` : null,
@@ -181,7 +204,9 @@ function strengthCards(content: Extract<SessionContent, { discipline: "strength"
         group(
           "EMOM",
           [item.id],
-          item.exercises.map((exercise) => exerciseCard(exercise, [item.id, exercise.id], true)),
+          item.exercises.map((exercise) =>
+            exerciseCard(exercise, [item.id, exercise.id], true, options),
+          ),
           {
             aside: `${item.minutes} min`,
             footer: item.workSec
@@ -251,7 +276,8 @@ function runCard(step: RunStep, path: string[]): StepCard {
 // ---------------------------------------------------------------------------
 // Hyrox
 // ---------------------------------------------------------------------------
-function hyroxCard(line: HyroxLine, path: string[]): StepCard {
+// Exporté pour l'éditeur de séance (17/11) : chaque étape d'un bloc écrite comme sa carte.
+export function hyroxCard(line: HyroxLine, path: string[]): StepCard {
   const target =
     "targetSec" in line && line.targetSec ? [`Temps cible ${formatClock(line.targetSec)}`] : [];
   switch (line.kind) {
@@ -409,7 +435,8 @@ function textCard(block: TextBlock): SessionCard {
   );
 }
 
-export function sessionCards(content: SessionContent): SessionCard[] {
+// `options.maxes` : seulement dans l'éditeur (kilos estimés) ; la séance publiée a déjà ses kilos.
+export function sessionCards(content: SessionContent, options: CardOptions = {}): SessionCard[] {
   switch (content.discipline) {
     case "running":
       return content.items.map((item) =>
@@ -425,7 +452,7 @@ export function sessionCards(content: SessionContent): SessionCard[] {
             : textCard(item),
       );
     case "strength":
-      return strengthCards(content);
+      return strengthCards(content, options);
     case "hyrox":
       return content.items.map((item) =>
         item.kind === "block" ? hyroxBlockCard(item) : textCard(item),
