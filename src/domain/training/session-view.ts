@@ -412,7 +412,8 @@ export function sessionHeadline(
         main?.target?.kind === "hr"
           ? `zone ${main.target.zone}`
           : main?.target?.kind === "pace"
-            ? `@${formatPaceRange(main.target.fromSecPerKm, main.target.toSecPerKm)}`
+            ? // Avec son unité, sans « @ » (16/11) : « 50 min · 4:30–4:40 /km ».
+              `${formatPaceRange(main.target.fromSecPerKm, main.target.toSecPerKm)} /km`
             : null;
       if (repeat && repeat.kind === "repeat") {
         const work = repeat.steps.find((step) => step.role === "run") ?? repeat.steps[0];

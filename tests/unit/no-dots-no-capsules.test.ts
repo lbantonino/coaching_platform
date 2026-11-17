@@ -148,5 +148,6 @@ describe("plus de pastilles, plus d'étiquettes en capsule (D-188)", () => {
         });
     }
     expect(found).toEqual([]);
-  });
+    // Lit tout src/ : sous la charge de la suite complète, plus que les 5 s par défaut.
+  }, 30_000);
 });

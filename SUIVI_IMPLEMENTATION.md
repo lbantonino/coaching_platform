@@ -42,6 +42,29 @@ Accès Garmin Starter accepté le 16/11 (Training + Activity API). Le formulaire
   données Garmin vers l'Assistant IA ni pour entraîner une IA, pas de tracé GPS gardé, effacement sous
   30 jours après déconnexion, export lisible sur demande, jamais vendues. Aucune connexion codée.
 Vérifs : tsc OK, eslint OK, prettier OK ; page vue sur téléphone et ordinateur (serveur local).
+Complément du même jour : section « Prestataires techniques » (Supabase, Vercel, Brevo, Google si
+  « Continuer avec Google », Anthropic pour l'Assistant IA : ce qui part, jamais santé / notes privées /
+  Garmin, pas d'entraînement, transfert hors UE à confirmer) ; « Durée de conservation » écrite (compte et
+  données des sportifs effacés sous 30 jours sur demande, santé jusqu'au retrait de l'accord, paiements
+  et factures tant que le compte existe, assistant = compteur sans contenu) ; « réponse sous un mois ».
+  Pas encore de bouton de fermeture de compte ni d'export : ces demandes se traitent à la main.
+```
+
+### Fin de la liste du test iPhone : geste de retour et allures (17/11/2026)
+```
+Geste de retour après « Modifier la séance » (cas voisin signalé le 15/11) : components/layout/
+  back-link.tsx (returnByHistory : reculer dans l'historique vers la page d'où l'on vient par une
+  navigation normale, puis recharger ses données à l'arrivée) ; _session/safe-leave.tsx (téléphone :
+  « ← Semaine 1 » remonte jusqu'à la semaine, détail de la séance compris ; ordinateur : « Terminer »
+  inchangé, rouvre la semaine et la séance) ; program-editor.tsx (retient d'où l'éditeur est ouvert).
+Allures « 5:30 /km » : card-lines.ts (appPaces, partagé), running-edit.ts et hyrox-edit.ts (résumé d'une
+  étape dans l'éditeur), session-view.ts (résumé d'une séance de course, avec son unité), assistant
+  program-edit.ts (lignes « avant → après » des cartes). Les unités des champs de saisie (« min/km »)
+  restent : elles disent comment taper l'allure.
+Tests : program-editor-back.spec.ts (nouveau cas, vu en échec puis au vert), program-editor,
+  modeles-coory (adresse au retour sur téléphone) ; running-edit, hyrox-edit, session-view,
+  assistant-lot3b (vus en échec puis au vert) ; no-dots-no-capsules (délai de 30 s sous charge) ;
+  Vitest 711/711.
 ```
 
 ### PDF cohérents avec l'app (D-189, 16/11/2026)

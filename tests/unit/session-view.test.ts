@@ -12,7 +12,7 @@ import {
 } from "@/domain/training/session-view";
 
 import { draft, hyroxSession, runningSession, strengthSession } from "./fixtures/program-v2";
-import { hyrox, strength } from "./pdf-fixtures";
+import { hyrox, running, strength } from "./pdf-fixtures";
 
 const EXERCISE = "8a5f1c3e-3a4b-5c6d-8e9f-0a1b2c3d4e5f";
 
@@ -154,5 +154,20 @@ describe("durée d'une séance en minutes, toutes disciplines (recette du 11/11/
       "≈ 60 min",
     );
     expect(sessionStats(hyroxLong).find((stat) => stat.label === "Durée")?.value).toBe("≈ 75 min");
+  });
+});
+
+// Allures écrites comme les apps de sport (règle d'Antonino du 16/11) : « 4:30–4:40 /km », jamais
+// « @4:30-4:40 » ni sans unité, aussi dans le résumé d'une séance de course.
+describe("résumé d'une séance de course : l'allure avec son unité", () => {
+  it("« 50 min · 4:30–4:40 /km »", () => {
+    const session = running(50);
+    if (session.content.discipline !== "running") throw new Error("course attendue");
+    const steps = session.content.items.flatMap((item) =>
+      item.kind === "repeat" ? item.steps : item.kind === "step" ? [item] : [],
+    );
+    const headline = sessionHeadline({ ...session, content: { ...session.content, items: steps } });
+    expect(headline).toMatch(/\d:\d{2}(–\d:\d{2})? \/km$/);
+    expect(headline).not.toContain("@");
   });
 });

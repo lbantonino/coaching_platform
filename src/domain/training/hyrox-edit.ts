@@ -69,7 +69,8 @@ export function lineDetail(line: HyroxLine): string {
     case "run":
       return [
         ergMeters(line.meters),
-        line.paceSecPerKm ? `${formatPace(line.paceSecPerKm)} min/km` : null,
+        // Comme les apps de sport (16/11) : « 600 m · 5:45 /km ».
+        line.paceSecPerKm ? `${formatPace(line.paceSecPerKm)} /km` : null,
       ]
         .filter(Boolean)
         .join(" · ");

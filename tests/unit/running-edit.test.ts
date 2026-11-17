@@ -95,12 +95,10 @@ describe("lecture de la séance", () => {
     expect(runningCounts(content)).toEqual({ blocks: 3, steps: 12 });
     expect(estimatedMinutes(content, 30)).toBe(45);
     const steps = content.items;
-    expect(steps[0]?.kind === "step" && stepDetail(steps[0])).toBe(
-      "6:15 min/km · allure progressive",
-    );
+    expect(steps[0]?.kind === "step" && stepDetail(steps[0])).toBe("6:15 /km · allure progressive");
     const repeat = steps[1];
     if (repeat?.kind !== "repeat") throw new Error("bloc attendu");
-    expect(stepDetail(repeat.steps[0]!)).toBe("5:00 – 5:10 min/km");
+    expect(stepDetail(repeat.steps[0]!)).toBe("5:00 – 5:10 /km");
     expect(stepDetail(repeat.steps[1]!)).toBe("Trot · sans cible");
   });
 });

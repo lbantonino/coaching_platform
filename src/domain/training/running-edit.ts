@@ -99,14 +99,15 @@ export function targetText(step: RunStep): string | null {
   if (!step.target) return null;
   if (step.target.kind === "pace") {
     const { fromSecPerKm: from, toSecPerKm: to } = step.target;
-    return `${from === to ? formatPace(from) : `${formatPace(from)} – ${formatPace(to)}`} min/km`;
+    // Comme les apps de sport (16/11) : « 5:00 – 5:10 /km ».
+    return `${from === to ? formatPace(from) : `${formatPace(from)} – ${formatPace(to)}`} /km`;
   }
   const bpm =
     step.target.bpmFrom !== undefined ? ` · ${step.target.bpmFrom}–${step.target.bpmTo} bpm` : "";
   return `Zone ${step.target.zone}${bpm}`;
 }
 
-// Ligne de la liste : « 6:15 min/km · allure progressive », « Trot · sans cible ».
+// Ligne de la liste : « 6:15 /km · allure progressive », « Trot · sans cible ».
 export function stepDetail(step: RunStep): string {
   const target = targetText(step);
   return target
