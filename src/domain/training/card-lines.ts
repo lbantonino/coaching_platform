@@ -98,15 +98,20 @@ export function shortLine(line: string): string {
     // Coupe au premier « , texte » (« 20 min @6:00 min/km, allure progressive ») mais jamais dans un
     // nombre décimal (« Run 1,5 km »), ni dans une simple liste sans mesure (« Hanches, épaules,
     // colonne », 16/11) : la coupure ne retire qu'un commentaire écrit après un chiffre.
-    cutComment(line)
-      .replace(/ min\/km/g, " /km")
-      // « 2:10 min/500 m » -> « 2:10 /500 m ».
-      .replace(/(?: min)? ?\/ ?500 ?m/g, " /500 m")
-      // Une allure en tête (celle d'une récup) perd son « @ » ; ailleurs elle suit le volume : « · ».
-      .replace(/^\s*@\s*/, "")
-      .replace(/\s*@\s*/g, " · ")
-      .trim(),
+    appPaces(cutComment(line)),
   );
+}
+
+// Les allures écrites comme les apps de sport (règle d'Antonino du 16/11) : « 20 min @5:30 min/km » ->
+// « 20 min · 5:30 /km », « 2:10 min/500 m » -> « 2:10 /500 m ». Une allure en tête (celle d'une récup)
+// perd son « @ » ; ailleurs elle suit le volume : « · ». Partagé par les cartes, les PDF et l'assistant.
+export function appPaces(text: string): string {
+  return text
+    .replace(/ min\/km/g, " /km")
+    .replace(/(?: min)? ?\/ ?500 ?m/g, " /500 m")
+    .replace(/^\s*@\s*/, "")
+    .replace(/\s*@\s*/g, " · ")
+    .trim();
 }
 
 function cutComment(line: string): string {

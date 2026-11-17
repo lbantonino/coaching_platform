@@ -45,6 +45,7 @@ import {
   type SessionDraft,
   type Weekday,
 } from "@/domain/training/session-v2";
+import { appPaces } from "@/domain/training/card-lines";
 import { sessionHeadline, sessionSteps } from "@/domain/training/session-view";
 import { mondayOf } from "@/features/programs/template-use";
 
@@ -213,10 +214,15 @@ const AIM_WORDS = { pace: "allure", hr: "zones de FC", kg: "kg", pct: "% du max"
 // « Modifier une séance » : Claude réécrit la séance ENTIÈRE ; la carte dit chaque différence, avec
 // les lignes que montrent la page d'une séance et les PDF (sessionSteps : exercice et son volume,
 // étape de course et sa cible), pour que rien ne change sans se voir (relecture n°2).
+// Les allures écrites comme dans l'app (« 400 m · 5:00 /km », 16/11), jamais « @5:00 min/km ».
 function viewLines(session: Pick<SessionBody, "content">): string[] {
-  return sessionSteps(session).flatMap((step) =>
-    step.repeat ? [`${step.title} : ${step.repeat.lines.join(" + ")}`, ...step.lines] : step.lines,
-  );
+  return sessionSteps(session)
+    .flatMap((step) =>
+      step.repeat
+        ? [`${step.title} : ${step.repeat.lines.join(" + ")}`, ...step.lines]
+        : step.lines,
+    )
+    .map(appPaces);
 }
 
 // Deux lignes « Nom · volume » : seulement ce qui change (« Back squat → Presse à cuisses »,

@@ -105,6 +105,43 @@ describe("moteur des opérations (même logique que l'éditeur)", () => {
     expect(programDraftSchema.safeParse(result.plan).success).toBe(true);
   });
 
+  it("modifier une séance de course : la carte écrit l'allure comme l'app (« 5:00 /km »)", () => {
+    const session = draft.weeks
+      .flatMap((week) => week.sessions)
+      .find(
+        (item) =>
+          item.content.discipline === "running" &&
+          item.content.items.some(
+            (part) =>
+              (part.kind === "step" && part.target?.kind === "pace") ||
+              (part.kind === "repeat" && part.steps.some((step) => step.target?.kind === "pace")),
+          ),
+      );
+    if (!session || session.content.discipline !== "running") throw new Error("course attendue");
+    const five = { kind: "pace" as const, fromSecPerKm: 300, toSecPerKm: 300 };
+    const items = session.content.items.map((part) =>
+      part.kind === "step" && part.target?.kind === "pace"
+        ? { ...part, target: five }
+        : part.kind === "repeat"
+          ? {
+              ...part,
+              steps: part.steps.map((step) =>
+                step.target?.kind === "pace" ? { ...step, target: five } : step,
+              ),
+            }
+          : part,
+    );
+    const seance = {
+      title: session.title,
+      sessionType: session.sessionType,
+      durationMinutes: session.durationMinutes,
+      content: { ...session.content, items },
+    };
+    const text = run([{ op: "modifier_seance", cle: session.key, seance }]).lines.join("\n");
+    expect(text).toContain("5:00 /km");
+    expect(text).not.toMatch(/@|min\/km/);
+  });
+
   it("supprimer une séance et retirer une semaine : comme removeSession et removeWeek", () => {
     const quality = at(3, 2);
     const removed = run([{ op: "supprimer_seance", cle: quality.key }]);

@@ -49,7 +49,8 @@ export default function PrivacyPage() {
             <p>
               Fournir le service de coaching (exécution du contrat), sécuriser les comptes (intérêt
               légitime), et les données de santé uniquement sur la base du consentement. Aucune
-              vente de données, aucune publicité.
+              vente de données, aucune publicité, aucun outil de statistiques : seulement les
+              cookies nécessaires à ta connexion.
             </p>
           ),
         },
@@ -58,18 +59,82 @@ export default function PrivacyPage() {
           body: (
             <p>
               Le coach et les personnes de son organisation ; le sportif pour ce qui le concerne.
-              Chaque espace de coach est séparé des autres. Hébergement dans l’Union européenne :
-              Supabase (base de données et fichiers) en Irlande, et Vercel (application) sur ses
-              serveurs de Dublin, en Irlande.
+              Chaque espace de coach est séparé des autres.
             </p>
+          ),
+        },
+        {
+          // Liste complète des prestataires (docs/DEPLOIEMENT.md, vérifiée dans le code le
+          // 17/11/2026 : package.json, .env.example, src/features/assistant). Tout nouveau service
+          // qui reçoit des données doit être ajouté ici.
+          title: "Prestataires techniques",
+          body: (
+            <>
+              <p>
+                Ils traitent les données uniquement pour faire fonctionner Coory, et aucun ne les
+                utilise pour son propre compte.
+              </p>
+              <p>
+                <strong>Supabase</strong> : base de données, comptes et fichiers, hébergés en
+                Irlande (Union européenne).
+              </p>
+              <p>
+                <strong>Vercel</strong> : hébergement de l’application, sur ses serveurs de Dublin
+                (Irlande).
+              </p>
+              <p>
+                <strong>Brevo</strong> (France) : envoi des e-mails de ton compte (confirmation
+                d’inscription, mot de passe oublié). Brevo reçoit ton adresse e-mail et le contenu
+                de ces e-mails.
+              </p>
+              <p>
+                <strong>Google</strong> : seulement si tu choisis « Continuer avec Google ». Google
+                confirme ton identité et transmet à Coory ton nom et ton adresse e-mail.
+              </p>
+              <p>
+                <strong>Anthropic</strong> (Claude, États-Unis) : seulement quand un coach utilise
+                l’Assistant IA. Sa demande et les informations utiles pour y répondre (par exemple
+                le prénom d’un sportif, ses objectifs, ses repères, ses séances ou ses paiements)
+                sont envoyées à Claude. L’Assistant ne lit jamais les données de santé, les notes
+                privées ni les données Garmin, et Anthropic n’utilise pas ces échanges pour
+                entraîner ses modèles. Coach, n’écris pas de données de santé dans l’Assistant.
+                [Cadre du transfert hors de l’Union européenne à confirmer avec un juriste.]
+              </p>
+            </>
           ),
         },
         {
           title: "Durée de conservation",
           body: (
-            <p>
-              [Durées à définir : compte actif, après fermeture, factures et obligations légales.]
-            </p>
+            <>
+              <p>
+                <strong>Compte</strong> : tant qu’il est ouvert. Pour le fermer, écris à{" "}
+                <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
+                  {LEGAL.contactEmail}
+                </a>{" "}
+                : il est effacé dans les 30 jours, avec les données qui y sont liées.
+              </p>
+              <p>
+                <strong>Données des sportifs</strong> : tant que leur coach les garde dans Coory.
+                Elles sont effacées dans les 30 jours quand le coach en demande la suppression ou
+                ferme son compte.
+              </p>
+              <p>
+                <strong>Santé</strong> : jusqu’au retrait de l’accord du sportif, puis effacées.
+              </p>
+              <p>
+                <strong>Paiements et factures</strong> enregistrés par le coach : tant que son
+                compte existe. Le coach reste responsable de les conserver le temps exigé par la loi
+                ; il peut en demander une copie avant de fermer son compte.
+              </p>
+              <p>
+                <strong>Assistant IA</strong> : Coory ne garde pas les conversations, seulement le
+                nombre de demandes, effacé avec le compte.
+              </p>
+              <p>
+                <strong>Garmin</strong> : voir « Connexion à Garmin Connect ».
+              </p>
+            </>
           ),
         },
         {
@@ -82,7 +147,7 @@ export default function PrivacyPage() {
               <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
                 {LEGAL.contactEmail}
               </a>
-              .
+              , réponse sous un mois.
             </p>
           ),
         },

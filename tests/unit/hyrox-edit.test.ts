@@ -76,7 +76,7 @@ describe("lecture", () => {
     const [warmup, block, amrap] = content.items;
     if (warmup?.kind !== "block" || block?.kind !== "block" || amrap?.kind !== "block")
       throw new Error("blocs attendus");
-    expect(lineDetail(block.lines[0]!)).toBe("600 m · 5:45 min/km");
+    expect(lineDetail(block.lines[0]!)).toBe("600 m · 5:45 /km");
     expect(lineRight(block.lines[0]!)).toBe("≈ 3:27");
     expect(lineDetail(block.lines[1]!)).toBe("25 m · 102 kg · station");
     expect(lineRight(block.lines[2]!)).toBe("30 s");
