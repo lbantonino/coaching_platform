@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { fillAthleteName, goToCoachSection } from "./helpers";
+
 // Téléphone : la page d'un programme ouvre sur la semaine, comme l'ordinateur (D-187, « la même
 // page ») ; « Semaine N ⌄ » ouvre la liste des semaines ; le geste de retour (balayage depuis le bord,
 // bouton « Précédent ») fait toujours la même chose que le retour de la barre : une séance → sa
@@ -10,6 +12,9 @@ const ORG = "0a000000-0000-4000-8000-0000000000a1";
 const TEMPLATE = "7a000000-0000-4000-8000-000000000002";
 const LIST = new RegExp(`/coach/o/${ORG}/programmes\\?onglet=modeles$`);
 const EDITOR = new RegExp(`/coach/o/${ORG}/programmes/modeles/${TEMPLATE}(\\?.*)?$`);
+// Modèle Coory « Préparation 10 km » pour créer un brouillon de test (nettoyé en fin de suite).
+const TEN_K = "7a000000-0000-4000-8000-000000000002";
+const PROGRAM = new RegExp(`/coach/o/${ORG}/programmes/[0-9a-f-]{36}(\\?.*)?$`);
 
 async function login(page: Page) {
   await page.goto("/login");
@@ -90,4 +95,57 @@ test("téléphone : rechargée sur la liste des semaines, la page y reste et le 
   await expect(weekHeading(page, 2)).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(LIST);
+});
+
+// Cas voisin signalé le 15/11 : « Modifier la séance » ouvre la page de la séance ; son retour
+// (« ← Semaine 1 » sur téléphone, « Terminer » sur ordinateur) revenait au programme en AJOUTANT une
+// page, et le geste de retour rouvrait la séance. Il recule maintenant d'une
+// page (comme le geste) et le programme montre ce qui vient d'être changé.
+test("téléphone : après « Modifier la séance » puis « ← Semaine 1 », le geste de retour ne rouvre pas la séance", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "telephone",
+    "La pile de niveaux n'existe que sur téléphone.",
+  );
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  await login(page);
+  await goToCoachSection(page, "Sportifs");
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
+  await fillAthleteName(page, `Retour ${suffix}`);
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  await expect(page.getByRole("heading", { name: `Retour ${suffix}`, level: 1 })).toBeVisible();
+  const athleteId = new URL(page.url()).pathname.split("/").pop() ?? "";
+  await page.goto(`/coach/o/${ORG}/programmes/nouveau?sportif=${athleteId}&modele=${TEN_K}`);
+  for (let step = 1; step < 4; step += 1) {
+    await page.getByRole("button", { name: "Continuer" }).click();
+  }
+  await page.getByRole("button", { name: "Créer le brouillon" }).click();
+  await expect(page).toHaveURL(PROGRAM);
+
+  // La semaine 1, une séance, « Modifier la séance » : la page de la séance ; on la renomme.
+  await expect(weekHeading(page, 1)).toBeVisible();
+  await page.locator("button[aria-pressed]").filter({ visible: true }).first().click();
+  await page.getByRole("button", { name: "Modifier la séance" }).filter({ visible: true }).click();
+  await expect(page).toHaveURL(/\/seances\//);
+  const name = `Renommée ${suffix.slice(-6)}`;
+  await page
+    .getByRole("button", { name: "Plus d'actions sur la séance" })
+    .filter({ visible: true })
+    .click();
+  await page.getByRole("dialog").getByRole("button", { name: "Renommer la séance" }).click();
+  const rename = page.getByRole("dialog", { name: "Renommer la séance" });
+  await rename.getByLabel("Nom de la séance").fill(name);
+  await rename.getByRole("button", { name: "Renommer" }).click();
+  // Le retour de la barre du téléphone : « ← Semaine 1 ».
+  await page.getByRole("banner").getByRole("button", { name: "Semaine 1", exact: true }).click();
+
+  // De retour sur la semaine 1 (comme l'annonce la barre), avec le nouveau nom ; le geste de retour
+  // suivant quitte le programme, comme son retour : il ne rouvre ni la séance ni son détail.
+  await expect(page).toHaveURL(/\/[0-9a-f-]{36}(\?semaine=1)?$/);
+  await expect(weekHeading(page, 1)).toBeVisible();
+  await expect(page.getByText(name).filter({ visible: true }).first()).toBeVisible();
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/seances\//);
+  await expect(page).not.toHaveURL(PROGRAM);
 });

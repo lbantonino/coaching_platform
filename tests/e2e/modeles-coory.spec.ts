@@ -209,7 +209,9 @@ test("D-179 : renommer une étape de course et un exercice", async ({ page }, te
       ).toBeVisible();
       await page.getByRole("button", { name: "Terminer" }).click();
     }
-    await expect(page).toHaveURL(/\?semaine=1&seance=/);
+    // Téléphone : « ← Semaine 1 » remonte jusqu'à la semaine (geste de retour cohérent, 17/11) ;
+    // ordinateur : « Terminer » rouvre la semaine et la séance.
+    await expect(page).toHaveURL(phone ? /\/[0-9a-f-]{36}(\?semaine=1)?$/ : /\?semaine=1&seance=/);
   };
 
   // Running : l'étape « Endurance » devient « Footing facile ».

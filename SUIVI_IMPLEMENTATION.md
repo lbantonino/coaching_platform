@@ -31,6 +31,19 @@
 ## Dernière session
 - Date : 2026-11-13
 
+### Rubrique Garmin de la politique de confidentialité (17/11/2026)
+```
+Accès Garmin Starter accepté le 16/11 (Training + Activity API). Le formulaire « Add app » du portail
+  exige une politique qui dit l'usage des données Garmin, TOUS les tiers, vente ou non, IA, accès /
+  correction / effacement / export et retrait du consentement. src/app/(legal)/confidentialite/page.tsx :
+  section 07 « Connexion à Garmin Connect » (marquée « en préparation »), ligne Garmin dans « Données
+  collectées », régions d'hébergement confirmées (Supabase Irlande, Vercel Dublin) ; src/config/legal.ts :
+  textes datés du 17 novembre 2026. Engagements à respecter dans le code de la connexion : jamais de
+  données Garmin vers l'Assistant IA ni pour entraîner une IA, pas de tracé GPS gardé, effacement sous
+  30 jours après déconnexion, export lisible sur demande, jamais vendues. Aucune connexion codée.
+Vérifs : tsc OK, eslint OK, prettier OK ; page vue sur téléphone et ordinateur (serveur local).
+```
+
 ### PDF cohérents avec l'app (D-189, 16/11/2026)
 ```
 src/domain/training/pdf-agenda.ts (musculation listée + renvoi, superset « Superset · N tours », hauteur

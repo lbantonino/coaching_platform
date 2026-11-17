@@ -4,10 +4,37 @@ import { CloudOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 
-import { BackGuardProvider } from "@/components/layout/back-link";
+import { BackGuardProvider, returnByHistory } from "@/components/layout/back-link";
 import { ConfirmDialog } from "@/components/ui/overlay";
 
 import { saveStatusLabel, useEditor } from "../_editor/editor-provider";
+
+// Téléphone (geste de retour d'iPhone, test du 15/11) : l'éditeur d'une séance ouvert depuis le DÉTAIL
+// de la séance (une étape de l'historique au-dessus de la semaine) : « ← Semaine 1 » remonte les deux
+// étapes, jusqu'à la semaine ; le geste de retour suivant quitte alors le programme, comme la barre.
+const EDITOR_DEPTH = "coory-session-editor-depth";
+const isPhone = () => !window.matchMedia("(min-width: 1024px)").matches;
+
+export function rememberEditorDepth(depth: number) {
+  try {
+    sessionStorage.setItem(EDITOR_DEPTH, JSON.stringify({ path: window.location.pathname, depth }));
+  } catch {
+    // Stockage bloqué : le retour remonte d'une étape.
+  }
+}
+
+function takeEditorDepth(href: string): number {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(EDITOR_DEPTH) ?? "null") as {
+      path: string;
+      depth: number;
+    } | null;
+    sessionStorage.removeItem(EDITOR_DEPTH);
+    return saved && saved.path === href.split("?")[0] ? saved.depth : 0;
+  } catch {
+    return 0;
+  }
+}
 
 // Quitter l'éditeur de séance sans perdre de modification (phase 4, SES-F07) : « Terminer » et le
 // retour enregistrent d'abord ; si l'enregistrement échoue (connexion, séance refusée, programme
@@ -19,9 +46,15 @@ export function useSafeLeave() {
   const [pending, startTransition] = useTransition();
   const [blockedHref, setBlockedHref] = useState<string | null>(null);
 
+  // Téléphone, vers la page d'avant : on recule dans l'historique (le geste de retour reste cohérent).
+  // Ordinateur, ou page d'avant inconnue : on l'ouvre (« Terminer » rouvre la semaine et la séance).
+  const go = (href: string) => {
+    if (isPhone() && returnByHistory(href, 1 + takeEditorDepth(href))) return;
+    router.push(href);
+  };
   const leave = (href: string) =>
     startTransition(async () => {
-      if (await editor.flush()) router.push(href);
+      if (await editor.flush()) go(href);
       else setBlockedHref(href);
     });
 
@@ -35,7 +68,7 @@ export function useSafeLeave() {
       onConfirm={() => {
         const href = blockedHref;
         setBlockedHref(null);
-        if (href) router.push(href);
+        if (href) go(href);
       }}
     >
       {editor.status === "conflict"

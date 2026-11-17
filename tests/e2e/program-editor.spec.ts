@@ -120,7 +120,9 @@ test("TC-02, TC-10 : brouillon depuis un modèle Coory, séance Running modifié
     await expect(page.getByText("Enregistré", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Terminer" }).click();
   }
-  await expect(page).toHaveURL(/\?semaine=1&seance=/);
+  // Téléphone : « ← Semaine 1 » remonte jusqu'à la semaine (geste de retour cohérent, 17/11) ;
+  // ordinateur : « Terminer » rouvre la semaine et la séance.
+  await expect(page).toHaveURL(phone ? /\/[0-9a-f-]{36}(\?semaine=1)?$/ : /\?semaine=1&seance=/);
   // De retour, une nouvelle séance s'ajoute : l'éditeur repart du brouillon à jour (bug du 10/11 :
   // l'ancien état réaffiché enregistrait en conflit, puis « Page introuvable »). Toutes les
   // disciplines sont proposées (D-163) : une séance de musculation dans ce programme running (le modèle
