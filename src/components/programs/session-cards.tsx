@@ -32,7 +32,8 @@ const BARS: Record<Exclude<CardRole, "work">, string> = {
   rest: "bg-checkbox",
 };
 
-function CardMenu({
+// Exporté pour les cartes de l'éditeur de séance (17/11) : le même « ⋯ » partout.
+export function CardMenu({
   title,
   path,
   exerciseId,
