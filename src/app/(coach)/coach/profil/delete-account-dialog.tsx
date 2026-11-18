@@ -13,6 +13,8 @@ import { Overlay } from "@/components/ui/overlay";
 import { deleteMyAccount, type DeleteAccountState } from "@/features/account/delete-account";
 import { CONFIRMATION_WORD } from "@/features/account/rules";
 
+import { ExportButton } from "./export-button";
+
 // « Supprimer mon compte » (décisions d'Antonino du 18/11/2026) : la confirmation du kit (tuile rose,
 // titre 21/700, texte gris, « Annuler » + action rouge), avec en plus le lien vers l'export et le mot
 // à taper. Le bouton rouge ne s'active qu'avec « SUPPRIMER » exact ; le serveur revérifie le mot.
@@ -79,14 +81,13 @@ function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
           sportifs, programmes, agenda, paiements, dépenses, tâches, documents et photos. Rien ne
           pourra être récupéré.
         </p>
-        <a
-          href="/coach/profil/export"
-          download
-          className="mt-3.5 inline-flex min-h-11 items-center gap-2 self-start rounded-[10px] text-[15px] leading-[normal] font-semibold text-violet underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dlg-accent md:min-h-9"
+        <ExportButton
+          wrapperClassName="mt-3.5 flex flex-col items-start gap-1.5"
+          className="inline-flex min-h-11 items-center gap-2 rounded-[10px] text-[15px] leading-[normal] font-semibold text-violet underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dlg-accent disabled:opacity-60 md:min-h-9"
         >
           <Download aria-hidden size={17} strokeWidth={2} />
           Télécharger mes données d&apos;abord
-        </a>
+        </ExportButton>
         <div className="mt-4 flex flex-col gap-[7px]">
           <label htmlFor={fieldId} className={dlgLabelClass}>
             Tape {CONFIRMATION_WORD} pour confirmer

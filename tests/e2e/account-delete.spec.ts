@@ -81,7 +81,7 @@ test("un coach supprime son compte : tout part, il est déconnecté et ne peut p
   await card.getByRole("button", { name: "Supprimer mon compte" }).click();
   const confirm = page.getByRole("dialog", { name: "Supprimer ton compte ?" });
   await expect(confirm).toContainText("définitivement");
-  await expect(confirm.getByRole("link", { name: /Télécharger mes données/ })).toBeVisible();
+  await expect(confirm.getByRole("button", { name: /Télécharger mes données/ })).toBeVisible();
   const go = confirm.getByRole("button", { name: "Supprimer définitivement" });
   await expect(go).toBeDisabled();
   // « SUPPRIMER » exact : en minuscules, le bouton reste inactif.

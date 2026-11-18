@@ -56,6 +56,29 @@ Décision d'Antonino (17/11) : Garmin = ENVOI SEULEMENT des séances de course v
   la rubrique AVANT et redemander l'accord des sportifs.
 ```
 
+### Export complet et « Aide et contact » (D-192, 18/11/2026)
+```
+Export : src/features/account/export-data.ts (readAll : page par page de 1 000 lignes, erreur = échec) ;
+  profil/export/route.ts (30 tables, ordre par clé primaire, invitations sans token_hash, réglages de
+  l'organisation, 503 « L'export n'a pas abouti » si une lecture échoue, note « a_savoir » sur les
+  fichiers) ; texte de la carte « Exporter mes données ».
+Aide et contact : settings-context.tsx (rubrique « aide »), profil/sections.ts (7e rubrique, LifeBuoy),
+  settings-dialog-panel.tsx, settings-sections.tsx (HelpSection : adresse en clair + « Copier
+  l'adresse », « Écrire un e-mail », « Signaler un problème » avec un e-mail préparé, raccourcis vers
+  Données et Sécurité).
+Tests : tests/unit/export-read-all.test.ts (3, vus en échec) ; settings.spec.ts (l'export contient les
+  13 tables ajoutées et les réglages, jamais token_hash : vu en échec) ; help-contact.spec.ts (rubrique,
+  copie dans le presse-papiers, e-mails préparés, raccourci vers l'export ; « Signale-le » de la page
+  introuvable).
+Relecture indépendante (0 critique) corrigée le 18/11, chaque point avec un test vu en échec : export qui
+  échouait en silence (profil/export-button.tsx : fetch + fichier, alerte avec l'adresse, aussi dans
+  « Supprimer mon compte » ; journal de la table en échec) ; limite de 4,5 Mo de Vercel (jsonStream :
+  flux, JSON compact ; maxDuration 60 s) ; « Adresse copiée » cachée sous la fenêtre (retour dans la
+  carte) ; inscription et rôle du coach ajoutés à l'export ; pagination selon ce qui est reçu ; adresse
+  en clair sur les pages d'erreur (error-state.tsx, ordinateur). Suite : Vitest 721/721, pgTAP 599/599,
+  Playwright 328 réussis (3 échecs connus des données locales).
+```
+
 ### « Supprimer mon compte » (D-191, 18/11/2026)
 ```
 supabase/migrations/20261118120000_supprimer_mon_compte.sql (delete_account_data(p_user_id), serveur
