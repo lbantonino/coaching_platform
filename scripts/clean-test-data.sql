@@ -16,15 +16,18 @@ declare
   col record;
   n bigint;
 begin
-  -- 1. Organisations créées par les tests d'inscription (leurs comptes partent à l'étape 2).
-  delete from public.organizations o
-  where o.id <> all (demo)
-    and o.id in (
-      select m.organization_id
-      from public.organization_members m
-      join auth.users u on u.id = m.user_id
-      where u.email ~ marker
-    );
+  -- 1. Organisations créées par les tests d'inscription (leurs comptes partent à l'étape 2). Leurs
+  --    factures et leurs sportifs d'abord : ils bloquent l'effacement de l'organisation (« on delete
+  --    restrict », même ordre que delete_account_data) ; un test d'inscription qui s'arrête après
+  --    avoir créé un sportif bloquait sinon tout le nettoyage (18/11/2026).
+  create temporary table test_orgs on commit drop as
+  select distinct m.organization_id as id
+  from public.organization_members m
+  join auth.users u on u.id = m.user_id
+  where u.email ~ marker and m.organization_id <> all (demo);
+  delete from public.athlete_invoices where organization_id in (select id from test_orgs);
+  delete from public.athlete_profiles where organization_id in (select id from test_orgs);
+  delete from public.organizations o where o.id in (select id from test_orgs);
   get diagnostics n = row_count;
   if n > 0 then raise notice 'organisations : %', n; end if;
 

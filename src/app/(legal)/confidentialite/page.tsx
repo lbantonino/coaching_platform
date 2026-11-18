@@ -108,16 +108,18 @@ export default function PrivacyPage() {
           body: (
             <>
               <p>
-                <strong>Compte</strong> : tant qu’il est ouvert. Pour le fermer, écris à{" "}
+                <strong>Compte</strong> : tant qu’il est ouvert. Tu le supprimes toi-même dans
+                Paramètres, onglet Sécurité, « Supprimer mon compte » : il est effacé tout de suite,
+                avec toutes les données de ton organisation. Tu peux aussi écrire à{" "}
                 <a href={`mailto:${LEGAL.contactEmail}`} className="font-semibold text-text">
                   {LEGAL.contactEmail}
                 </a>{" "}
-                : il est effacé dans les 30 jours, avec les données qui y sont liées.
+                : il est alors effacé dans les 30 jours.
               </p>
               <p>
                 <strong>Données des sportifs</strong> : tant que leur coach les garde dans Coory.
-                Elles sont effacées dans les 30 jours quand le coach en demande la suppression ou
-                ferme son compte.
+                Elles sont effacées quand le coach supprime son compte (tout de suite), ou dans les
+                30 jours s’il demande par e-mail la suppression d’un sportif.
               </p>
               <p>
                 <strong>Santé</strong> : jusqu’au retrait de l’accord du sportif, puis effacées.
@@ -125,7 +127,7 @@ export default function PrivacyPage() {
               <p>
                 <strong>Paiements et factures</strong> enregistrés par le coach : tant que son
                 compte existe. Le coach reste responsable de les conserver le temps exigé par la loi
-                ; il peut les télécharger dans Paramètres, onglet Données, avant de fermer son
+                ; il peut les télécharger dans Paramètres, onglet Données, avant de supprimer son
                 compte.
               </p>
               <p>
@@ -150,7 +152,7 @@ export default function PrivacyPage() {
               </a>
               , réponse sous un mois. Coach : tu peux aussi télécharger toutes les données de ton
               organisation (fichier lisible par une autre application) dans Paramètres, onglet
-              Données.
+              Données, et supprimer ton compte dans l’onglet Sécurité.
             </p>
           ),
         },

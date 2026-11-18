@@ -6,6 +6,6 @@ export const LEGAL = {
   publisher: "Antonino Lo Bianco",
   contactEmail: "antonino.lobianco@outlook.com",
   // Date de la dernière version des textes (pages légales et onglet « Légal » des Paramètres).
-  updatedOn: "17 novembre 2026",
-  updatedShort: "17 nov. 2026",
+  updatedOn: "18 novembre 2026",
+  updatedShort: "18 nov. 2026",
 } as const;

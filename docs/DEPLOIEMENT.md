@@ -148,9 +148,13 @@ Coût indicatif : modèle Claude Opus 5.5 (4 $ par million de jetons envoyés, 2
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | clé « publishable » | même page |
    | `AUTH_PROVIDERS` | `google` | |
    | `ANTHROPIC_API_KEY` | la clé de l'étape 3 (cocher « Sensitive ») | console Anthropic |
+   | `SUPABASE_SECRET_KEY` | clé « secret » (cocher « Sensitive ») | Supabase → Project Settings → API Keys |
 
-   **Pas** de `SUPABASE_SECRET_KEY` pour ce MVP : elle ne sert qu'aux invitations, masquées. Moins
-   de clé secrète en ligne, moins de risque.
+   `SUPABASE_SECRET_KEY` est **obligatoire depuis D-191** (18/11/2026) : « Supprimer mon compte »
+   en a besoin pour effacer les données (fonction réservée au serveur) et supprimer le compte
+   lui-même. Sans elle, le coach voit « La suppression n'a pas abouti » et rien n'est effacé. Elle ne
+   sert qu'à ça (et aux invitations, masquées) : jamais dans le navigateur (`server-only`), jamais
+   préfixée `NEXT_PUBLIC_`.
 4. « Deploy ». Puis **Settings → Domains** : ajouter ton domaine et suivre les indications DNS.
 5. Mise à jour plus tard : `git push` sur `main` redéploie le site (Vercel) **et** applique les
    nouvelles migrations (intégration GitHub de Supabase), en même temps. Ne pas utiliser l'intégration
