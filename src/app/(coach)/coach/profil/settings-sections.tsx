@@ -1,6 +1,18 @@
 "use client";
 
-import { ArrowUpRight, Download, FileText, Info, Lock, LogOut } from "lucide-react";
+import {
+  ArrowUpRight,
+  Bug,
+  Check,
+  ChevronRight,
+  Copy,
+  Download,
+  FileText,
+  Info,
+  Lock,
+  LogOut,
+  Mail,
+} from "lucide-react";
 import Link from "next/link";
 import {
   useActionState,
@@ -13,6 +25,7 @@ import {
 } from "react";
 
 import { useMoney } from "@/components/blocks/money-context";
+import type { SettingsSection } from "@/components/blocks/settings-context";
 import { ProvisionalNotice } from "@/components/layout/provisional-notice";
 import { ConfirmSubmitButton } from "@/components/ui/confirm-submit-button";
 import { FieldCheck } from "@/components/ui/field-check";
@@ -43,6 +56,7 @@ import { formatDate } from "@/lib/format";
 
 import { CurrencyChangeButton } from "./currency-change-sheet";
 import { DeleteAccountButton } from "./delete-account-dialog";
+import { ExportButton } from "./export-button";
 
 // Rubriques Préférences, Pays et devise, Sécurité et Données de la fenêtre des Paramètres, au
 // kit « Coory Pages », page 13 (D-127). La rubrique Profil n'est pas ici (déjà faite, ne pas toucher :
@@ -810,14 +824,15 @@ export function DataSection({ intro }: { intro: string }) {
       <SettingsCard
         id="settings-export"
         title="Exporter mes données"
-        description="Un fichier JSON avec tout ce que contient ton organisation : sportifs, objectifs, séances, programmes, paiements, factures, tâches, messages, notes et structures. Utile pour une sauvegarde ou pour changer d'outil."
+        description="Un fichier JSON avec tout ce que contient ton organisation : sportifs, objectifs, séances, programmes, modèles, exercices, paiements, factures, dépenses, tâches, documents, notes et structures. Les fichiers eux-mêmes (documents, photos) n'y sont pas, seulement leurs noms. Utile pour une sauvegarde ou pour changer d'outil."
       >
-        <div className="flex flex-col md:flex-row">
-          <a href="/coach/profil/export" download className={primaryButtonClass}>
-            <Download aria-hidden size={16} strokeWidth={1.9} />
-            Télécharger mes données
-          </a>
-        </div>
+        <ExportButton
+          className={primaryButtonClass}
+          wrapperClassName="flex flex-col gap-2.5 md:items-start"
+        >
+          <Download aria-hidden size={16} strokeWidth={1.9} />
+          Télécharger mes données
+        </ExportButton>
         <p className="rounded-[10px] bg-status-warn-soft px-3 py-2.5 text-[13px] leading-[1.45] text-status-warn md:text-[12.5px]">
           Il contient des données de santé (blessures notées avec l&apos;accord des sportifs) :
           garde-le en lieu sûr.
@@ -883,6 +898,110 @@ export function LegalSection({ intro }: { intro: string }) {
         ))}
       </ul>
       <ProvisionalNotice className="mt-1.5" />
+    </SectionBody>
+  );
+}
+
+// --- Aide et contact (demande d'Antonino du 18/11/2026) ------------------------------------------
+// Les demandes arrivent par e-mail et sont traitées à la main. Sur un ordinateur sans messagerie
+// configurée, un lien « mailto » ne fait rien de visible : l'adresse est écrite en clair et se copie.
+const SUPPORT_SUBJECT = "Question sur Coory";
+const REPORT_SUBJECT = "Problème dans Coory";
+const REPORT_BODY =
+  "Ce que je faisais :\n\n\nCe qui s'est passé :\n\n\nAppareil (téléphone ou ordinateur, navigateur) :\n";
+
+function mailto(subject: string, body?: string) {
+  const query = `subject=${encodeURIComponent(subject)}${body ? `&body=${encodeURIComponent(body)}` : ""}`;
+  return `mailto:${LEGAL.contactEmail}?${query}`;
+}
+
+export function HelpSection({
+  intro,
+  onSection,
+}: {
+  intro: string;
+  onSection: (section: SettingsSection) => void;
+}) {
+  // Le retour de la copie s'affiche DANS la carte : une notification en bas de page passerait sous la
+  // fenêtre des Paramètres (relecture du 18/11).
+  const [copied, setCopied] = useState<"idle" | "done" | "failed">("idle");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(LEGAL.contactEmail);
+      setCopied("done");
+    } catch {
+      setCopied("failed");
+    }
+  };
+  return (
+    <SectionBody intro={intro}>
+      <SettingsCard
+        id="settings-support"
+        title="Écrire au support"
+        description="Une question, un souci, une idée : écris-nous, on te répond par e-mail."
+      >
+        <p className="rounded-[12px] bg-surface-2 px-3.5 py-3 text-[15px] leading-[1.4] font-semibold break-all text-text select-all md:rounded-[11px] md:text-[14px]">
+          {LEGAL.contactEmail}
+        </p>
+        <div className="flex flex-col gap-2.5 md:flex-row md:flex-wrap">
+          <a href={mailto(SUPPORT_SUBJECT)} className={primaryButtonClass}>
+            <Mail aria-hidden size={16} strokeWidth={1.9} />
+            Écrire un e-mail
+          </a>
+          <button type="button" onClick={copy} className={secondaryButtonClass}>
+            {copied === "done" ? (
+              <Check aria-hidden size={16} strokeWidth={2.2} className="text-ok" />
+            ) : (
+              <Copy aria-hidden size={16} strokeWidth={1.9} />
+            )}
+            Copier l&apos;adresse
+          </button>
+        </div>
+        <p role="status" className="text-[13px] leading-[1.45] font-medium text-ok empty:hidden">
+          {copied === "done" ? "Adresse copiée." : ""}
+        </p>
+        {copied === "failed" ? (
+          <p role="alert" className="text-[13px] leading-[1.45] font-medium text-alert">
+            Copie impossible : sélectionne l&apos;adresse à la main.
+          </p>
+        ) : null}
+      </SettingsCard>
+      <SettingsCard
+        id="settings-report"
+        title="Signaler un problème"
+        description="L'e-mail est déjà préparé : dis-nous ce que tu faisais et ce qui s'est passé. Une capture d'écran aide beaucoup."
+      >
+        <div className="flex flex-col md:flex-row">
+          <a href={mailto(REPORT_SUBJECT, REPORT_BODY)} className={secondaryButtonClass}>
+            <Bug aria-hidden size={16} strokeWidth={1.9} />
+            Signaler un problème
+          </a>
+        </div>
+      </SettingsCard>
+      <SettingsCard
+        id="settings-account-help"
+        title="Tes données et ton compte"
+        description="Télécharger tout ce que contient ton organisation, ou supprimer ton compte."
+      >
+        <div className="flex flex-col gap-2.5 md:flex-row md:flex-wrap">
+          <button
+            type="button"
+            onClick={() => onSection("donnees")}
+            className={secondaryButtonClass}
+          >
+            Exporter mes données
+            <ChevronRight aria-hidden size={16} strokeWidth={1.9} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onSection("securite")}
+            className={secondaryButtonClass}
+          >
+            Supprimer mon compte
+            <ChevronRight aria-hidden size={16} strokeWidth={1.9} />
+          </button>
+        </div>
+      </SettingsCard>
     </SectionBody>
   );
 }

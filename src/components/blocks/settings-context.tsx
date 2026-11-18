@@ -6,7 +6,7 @@ import { createContext, useContext } from "react";
 // sur une section précise (« profil ») ou sur le sommaire (null). Hors de l'espace coach, pas de
 // fenêtre : le menu garde ses liens.
 export type SettingsSection =
-  "profil" | "preferences" | "argent" | "securite" | "donnees" | "legal";
+  "profil" | "preferences" | "argent" | "securite" | "donnees" | "legal" | "aide";
 
 export const SettingsContext = createContext<((section: SettingsSection | null) => void) | null>(
   null,

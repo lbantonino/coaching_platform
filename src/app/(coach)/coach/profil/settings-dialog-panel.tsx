@@ -13,6 +13,7 @@ import { SECTIONS } from "./sections";
 import { ProfileDialogSection } from "./settings-forms";
 import {
   DataSection,
+  HelpSection,
   LegalSection,
   MoneySection,
   moneySummary,
@@ -192,6 +193,8 @@ export function SettingsDialogPanel({
           <SecuritySection email={data.email} intro={intro} />
         ) : shown === "legal" ? (
           <LegalSection intro={intro} />
+        ) : shown === "aide" ? (
+          <HelpSection intro={intro} onSection={onSection} />
         ) : (
           <DataSection intro={intro} />
         )}

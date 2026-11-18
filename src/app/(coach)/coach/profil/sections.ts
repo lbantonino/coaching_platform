@@ -2,6 +2,7 @@ import {
   Download,
   FileText,
   Landmark,
+  LifeBuoy,
   ShieldCheck,
   SlidersHorizontal,
   UserRound,
@@ -10,7 +11,7 @@ import {
 
 import type { SettingsSection } from "@/components/blocks/settings-context";
 
-// Les six sections des Paramètres (D-57, D-58 ; kit « Coory Pages », page 13, D-127). Module partagé
+// Les sept sections des Paramètres (D-57, D-58 ; kit « Coory Pages », page 13, D-127). Module partagé
 // (ni client ni serveur) : la page serveur y lit la section demandée (?onglet=), la fenêtre y lit
 // libellés et icônes. `hint` : la phrase sous le titre de la rubrique ; `short` : sa ligne courte
 // dans le menu (celle de « Pays et devise » est calculée : « Belgique · EUR »). La TVA n'est plus un
@@ -59,6 +60,14 @@ export const SECTIONS = [
     short: "Conditions, confidentialité",
     icon: FileText,
     isNew: true,
+  },
+  // « Aide et contact » (demande d'Antonino du 18/11/2026) : joindre le support par e-mail.
+  {
+    key: "aide",
+    label: "Aide et contact",
+    hint: "Joindre le support, signaler un problème, retrouver tes données",
+    short: "Support, e-mail",
+    icon: LifeBuoy,
   },
 ] as const satisfies readonly {
   key: SettingsSection;

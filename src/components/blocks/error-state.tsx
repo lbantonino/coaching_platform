@@ -108,6 +108,14 @@ export function ErrorState({
       ? `Lien cassé : ${pathname}`
       : `Erreur dans Coory${ref ? ` (Réf. ${ref})` : ""}`;
   const support = `mailto:${LEGAL.contactEmail}?subject=${encodeURIComponent(subject)}`;
+  // Sur un ordinateur sans messagerie configurée, le lien ne fait rien de visible : l'adresse est
+  // écrite à côté, sélectionnable (demande d'Antonino du 17/11 : « Contacter le support » doit marcher).
+  const address = (
+    <span className="max-lg:hidden">
+      {" : "}
+      <span className="font-medium text-muted select-all">{LEGAL.contactEmail}</span>
+    </span>
+  );
 
   const back = () => {
     // Pas de page précédente dans l'onglet (adresse ouverte directement) : le tableau de bord.
@@ -180,6 +188,7 @@ export function ErrorState({
             <a href={support} className={linkClass}>
               Signale-le<span className="max-lg:hidden"> au support</span>
             </a>
+            {address}
           </span>
         ) : (
           <>
@@ -188,6 +197,7 @@ export function ErrorState({
               <a href={support} className={linkClass}>
                 Contacter le support
               </a>
+              {address}
             </span>
             {ref ? (
               <>

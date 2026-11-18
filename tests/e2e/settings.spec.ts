@@ -79,7 +79,7 @@ test("téléphone : un menu déroulant des rubriques, Échap referme le menu d'a
   await chooseSettingsSection(page, "Données");
   await expect(sections).toBeHidden();
   await expect(picker).toContainText("Données");
-  await expect(dialog.getByRole("link", { name: "Télécharger mes données" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Télécharger mes données" })).toBeVisible();
   // La croix referme la fenêtre.
   await dialog.getByRole("button", { name: "Fermer" }).filter({ visible: true }).click();
   await expect(dialog).toBeHidden();
@@ -185,4 +185,45 @@ test("sécurité : le mot de passe actuel est vérifié, et les données s'expor
     ),
   );
   expect([...orgIds].every((id) => id === body.organisation.id)).toBe(true);
+  // Tout ce que l'organisation contient (relecture du 18/11 : une dizaine de tables manquaient),
+  // y compris les réglages de l'organisation ; jamais le jeton secret d'une invitation.
+  for (const table of [
+    "account_signups",
+    "organization_members",
+    "coach_documents",
+    "document_categories",
+    "coach_expenses",
+    "expense_categories",
+    "coach_task_lists",
+    "exercises",
+    "exercise_favorites",
+    "program_drafts",
+    "program_templates",
+    "session_templates",
+    "organization_currency_changes",
+    "athlete_invites",
+    "assistant_usage",
+  ]) {
+    expect(Array.isArray(body.donnees[table]), table).toBe(true);
+  }
+  expect(body.organisation.pays).toBeTruthy();
+  expect(body.organisation.devise).toBeTruthy();
+  expect(JSON.stringify(body)).not.toContain("token_hash");
+});
+
+// Relecture du 18/11 : le fichier se télécharge depuis le bouton ; un export qui échoue le DIT dans
+// la carte (avant, le navigateur échouait en silence, ou enregistrait la phrase d'erreur).
+test("export : le fichier se télécharge, et un échec s'affiche dans la carte", async ({ page }) => {
+  await loginAsCoachB(page);
+  const dialog = await openSettings(page, "donnees");
+  const card = dialog.getByRole("region", { name: "Exporter mes données" });
+  const download = page.waitForEvent("download");
+  await card.getByRole("button", { name: "Télécharger mes données" }).click();
+  expect((await download).suggestedFilename()).toMatch(/^coory-export-\d{4}-\d{2}-\d{2}\.json$/);
+
+  await page.route("**/coach/profil/export", (route) =>
+    route.fulfill({ status: 503, contentType: "text/plain", body: "indisponible" }),
+  );
+  await card.getByRole("button", { name: "Télécharger mes données" }).click();
+  await expect(card.getByRole("alert")).toContainText("L'export n'a pas abouti");
 });
