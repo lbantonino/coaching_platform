@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
     "/coach/o/[orgId]/programmes/[programId]/pdf/*": ["./src/features/programs/pdf/fonts/*"],
   },
   experimental: {
+    // Les agents de code ne sont prévenus que des mises à jour de sécurité de Next.js.
+    agentUpgrade: "security",
     // Photos de profil jusqu'à 2 Mo (D-28), documents jusqu'à 4 Mo (D-60, revue du 13/11/2026 : la
     // limite d'envoi de Vercel est 4,5 Mo) : 1 Mo par défaut pour une action serveur, plus la marge du
     // formulaire. La taille réelle est revérifiée dans l'action.
