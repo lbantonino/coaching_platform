@@ -91,7 +91,8 @@ async function Template({
     };
     return (
       <EditorProvider
-        key={`${program.id}:${program.version}`}
+        // Nouvelle version du serveur adoptée sur place (EditorProvider, 18/11).
+        key={program.id}
         organizationId={organizationId}
         target={{ kind: "template", templateId: program.id }}
         readOnly={program.source === "coory"}

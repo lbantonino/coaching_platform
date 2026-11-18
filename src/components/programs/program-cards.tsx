@@ -42,7 +42,7 @@ function StatusPill({ program }: { program: ProgramListItem }) {
 }
 
 const stretched =
-  "after:absolute after:inset-0 after:rounded-[20px] focus-visible:outline-none after:focus-visible:outline-2 after:focus-visible:outline-offset-2 after:focus-visible:outline-violet";
+  "after:absolute after:inset-0 after:rounded-[20px] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-violet";
 
 export function ProgramCard({
   program,

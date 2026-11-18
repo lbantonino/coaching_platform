@@ -183,6 +183,25 @@ export function EditorProvider({
     };
   }, [flush]);
 
+  // Données plus fraîches reçues du serveur (rechargement au retour de l'éditeur de séance, « Recharger »
+  // après un conflit) : adoptées SUR PLACE, sans reconstruire l'éditeur (relecture du 18/11 : une
+  // fenêtre ouverte se refermait seule et le niveau du téléphone repartait de la semaine quand le
+  // rechargement arrivait après un geste du coach). Rien n'est adopté pendant qu'une modification
+  // attend ou part : c'est l'enregistrement qui tranche (conflit). Après un conflit, on repart du serveur.
+  useEffect(() => {
+    if (initialRevision <= revisionRef.current && !blocked.current) return;
+    if (dirty.current || inFlight.current) return;
+    if (blocked.current && initialRevision < revisionRef.current) return;
+    blocked.current = false;
+    revisionRef.current = initialRevision;
+    planRef.current = initialPlan;
+    savedJson.current = JSON.stringify(initialPlan);
+    setPlan(initialPlan);
+    setRevision(initialRevision);
+    setError(null);
+    setStatus("saved");
+  }, [initialPlan, initialRevision]);
+
   // C10 : rouverte depuis le cache (retour arrière), la page peut montrer une révision dépassée ;
   // revenue au premier plan, elle relit le serveur (une modification faite ailleurs s'affiche).
   useEffect(() => {

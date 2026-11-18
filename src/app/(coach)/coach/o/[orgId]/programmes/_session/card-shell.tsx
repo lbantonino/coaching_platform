@@ -117,7 +117,7 @@ export function EditorCard({
           type="button"
           onClick={onSelect}
           aria-pressed={selected}
-          className="flex min-w-0 flex-1 flex-col pl-1 text-left after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none after:focus-visible:outline-2 after:focus-visible:outline-offset-2 after:focus-visible:outline-violet"
+          className="flex min-w-0 flex-1 flex-col pl-1 text-left after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-violet"
         >
           {body}
         </button>
@@ -170,7 +170,8 @@ export function EditorGroup({
             type="button"
             onClick={onSelect}
             aria-pressed={selected}
-            className={`${titleClass} rounded-[8px] pl-1 text-left focus-visible:outline-2 focus-visible:outline-violet`}
+            // 44 px de haut sur téléphone : c'est le seul accès au panneau du bloc (relecture du 17/11).
+            className={`${titleClass} flex min-h-11 items-center rounded-[8px] pl-1 text-left focus-visible:outline-2 focus-visible:outline-violet lg:min-h-0`}
           >
             {title}
           </button>
@@ -186,6 +187,64 @@ export function EditorGroup({
         <span className="px-1.5 pb-0.5 text-[13.5px] text-muted lg:text-[12.5px]">{footer}</span>
       ) : null}
     </div>
+  );
+}
+
+// La carte d'un élément dans le modèle ; à défaut (jamais en pratique), son seul nom.
+export function cardAt(byPath: Map<string, SessionCard>, path: string[], title: string): StepCard {
+  const found = byPath.get(path.join("/"));
+  return found?.kind === "card"
+    ? found
+    : { kind: "card", role: "work", title, lines: [], sub: [], path };
+}
+
+// Un bloc de texte (séance reprise d'une ancienne version) : il se lit et se déplace. Répété
+// (« Circuit », 4 tours), c'est une grande carte avec ses lignes, comme dans la séance (relecture du
+// 17/11 : il s'affichait vide).
+export function TextItemCard({
+  byPath,
+  id,
+  title,
+  discipline,
+  handle = null,
+  drop = null,
+  dragging = false,
+}: {
+  byPath: Map<string, SessionCard>;
+  id: string;
+  title: string;
+  discipline: Discipline;
+  handle?: ReactNode;
+  drop?: "before" | "after" | null;
+  dragging?: boolean;
+}) {
+  const found = byPath.get(id);
+  if (found?.kind === "group") {
+    return (
+      <EditorGroup
+        title={found.title}
+        aside={found.aside ?? null}
+        footer={found.footer ?? null}
+        handle={handle}
+        drop={drop}
+        dragging={dragging}
+      >
+        <div className="flex flex-col gap-2">
+          {found.cards.map((card, i) => (
+            <EditorCard key={i} card={card} discipline={discipline} />
+          ))}
+        </div>
+      </EditorGroup>
+    );
+  }
+  return (
+    <EditorCard
+      card={cardAt(byPath, [id], title)}
+      discipline={discipline}
+      handle={handle}
+      drop={drop}
+      dragging={dragging}
+    />
   );
 }
 

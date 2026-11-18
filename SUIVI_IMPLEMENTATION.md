@@ -66,7 +66,19 @@ src/domain/training/session-cards.ts (kilos estimés depuis le max : sessionCard
   en cartes, compteur de tours dans l'en-tête) ; session-editor.tsx (max du sportif, « ⋯ » des cartes,
   panneau de l'échauffement, champs d'échauffement retirés de la carte du haut).
 Tests : session-cards.test.ts (kilos estimés, vus en échec puis au vert) ; program-editor.spec.ts TC-11
-  (cartes « 5 séries », échauffement en carte, plus de RIR).
+  (cartes « 5 séries », échauffement en carte, plus de RIR, « Supprimer » ferme son panneau) et TC-02.
+Relecture indépendante (0 critique) corrigée le 18/11, chaque point avec un test vu en échec : panneau de
+  l'échauffement resté ouvert après « Supprimer » (ordinateur) ; bloc texte répété d'une ancienne séance
+  affiché vide (TextItemCard) ; contour de focus des cartes invisible (ordre de variantes, garde
+  tests/unit/focus-variants.test.ts) ; titre des grandes cartes à 44 px sur téléphone
+  (session-editor-cards.spec.ts). 9 mineurs reportés (registre).
+Geste de retour, consolidé le 18/11 (vu dans la suite complète) : l'arrivée « par l'historique » se
+  décide par l'adresse atteinte par le geste, plus par un délai d'une seconde (back-link.tsx) ; les
+  niveaux « séance » du téléphone sont retenus hors de l'historique, que Next réécrit au rechargement,
+  et le niveau se recale quand la page redevient visible (program-editor.tsx) ; l'EditorProvider adopte
+  sur place une révision plus récente, sans reconstruire l'éditeur (une fenêtre ouverte ne se referme
+  plus seule). Suite complète : Vitest 713/713, Playwright 315 réussis, 3 échecs dus aux données locales
+  (modèles « Préparation 10 km » en double ×2, paiement du 9/11).
 ```
 
 ### Fin de la liste du test iPhone : geste de retour et allures (17/11/2026)

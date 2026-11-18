@@ -43,7 +43,7 @@ import {
 import { hyroxCard, sessionCards, type SessionCard } from "@/domain/training/session-cards";
 import { formatClock } from "@/domain/training/session-view";
 
-import { AddInside, EditorCard, EditorGroup, cardsByPath } from "./card-shell";
+import { AddInside, EditorCard, EditorGroup, TextItemCard, cardsByPath } from "./card-shell";
 import { Handle, field, label } from "./running-parts";
 
 // Liste et panneaux de l'éditeur Hyrox (06, HYR-01 à 03 ; sources CooryEditeurListe et
@@ -317,16 +317,12 @@ export function HyroxList({
                 {...(actions ? { actions } : {})}
               />
             );
-          // Un bloc de texte (séance reprise d'une ancienne version) : il se lit et se déplace.
-          const text = byPath.get(item.id);
           return (
-            <EditorCard
+            <TextItemCard
               key={item.id}
-              card={
-                text?.kind === "card"
-                  ? text
-                  : { role: "work", title: item.title, lines: item.lines, sub: [] }
-              }
+              byPath={byPath}
+              id={item.id}
+              title={item.title}
               discipline="hyrox"
               handle={handle}
               drop={outer.dropMark(index)}

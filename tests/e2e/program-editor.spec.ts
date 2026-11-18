@@ -236,6 +236,17 @@ test("TC-11 : séries en saisie rapide, et % du max sans max connu", async ({ pa
     .first()
     .click();
   await expect(page.getByLabel("Ce que fait le sportif").filter({ visible: true })).toBeVisible();
+  // « Supprimer » vide l'échauffement et ferme son panneau, sur ordinateur aussi (relecture du 17/11) :
+  // plus d'ancien texte affiché, la carte redit « Aucun ».
+  await page
+    .getByRole("button", { name: "Supprimer", exact: true })
+    .filter({ visible: true })
+    .first()
+    .click();
+  await expect(page.getByLabel("Ce que fait le sportif").filter({ visible: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: /^Échauffement.*Aucun/ }).filter({ visible: true }),
+  ).toBeVisible();
 });
 
 // D-164 (demande d'Antonino du 11/11) : plus de 7 séances par semaine. « 8+ » ouvre un compteur de 8 à
