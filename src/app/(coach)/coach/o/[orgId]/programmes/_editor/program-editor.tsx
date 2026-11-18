@@ -163,6 +163,14 @@ import {
 type EditorLevel = "weeks" | "week" | "session";
 const LEVEL_STATE = "cooryEditorLevel";
 const isPhone = () => !window.matchMedia("(min-width: 1024px)").matches;
+const here = () => `${window.location.pathname}${window.location.search}`;
+// Les niveaux « séance » ouverts par la pile, gardés aussi HORS de l'historique (relecture du 18/11) :
+// un rechargement des données (router.refresh, au retour de l'éditeur de séance) réécrit l'entrée
+// d'historique sans notre marque (Next ne garde pas un état personnel sur une navigation « soft »).
+// L'adresse d'un niveau « séance » (?seance=…) lui est propre ; la liste vit le temps de l'onglet.
+const stackSessions = new Set<string>();
+const sessionOpenedByStack = () =>
+  window.history.state?.[LEVEL_STATE] === "session" || stackSessions.has(here());
 
 function writeLevel(
   mode: "push" | "replace",
@@ -177,7 +185,10 @@ function writeLevel(
   if (week) url.searchParams.set("semaine", String(week));
   if (level === "session" && session) url.searchParams.set("seance", session);
   const href = `${url.pathname}${url.search}`;
-  if (mode === "push") window.history.pushState({ [LEVEL_STATE]: level }, "", href);
+  if (mode === "push") {
+    window.history.pushState({ [LEVEL_STATE]: level }, "", href);
+    if (level === "session") stackSessions.add(href);
+  }
   // Remplacer garde la marque « ouvert par la pile » : le retour de la barre reste un retour arrière.
   else
     window.history.replaceState(
@@ -380,20 +391,30 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, [plan.weeks, weekIndex, homeWeek]);
-  // Page rechargée sur une étape de la pile (Safari recharge souvent un onglet) : l'historique garde la
-  // marque de l'étape (liste des semaines, séance) ; on rouvre ce niveau-là (relecture).
+  // Page rechargée sur une étape de la pile (Safari recharge souvent un onglet), ou page qui redevient
+  // visible au retour de l'éditeur de séance (Next 16 garde l'état de la page quittée, et le geste de
+  // retour arrive pendant qu'elle est cachée) : le niveau suit TOUJOURS l'entrée d'historique en cours
+  // (relecture du 18/11 : elle restait sur le détail de la séance quand rien n'avait changé).
   useEffect(() => {
     if (!isPhone()) return;
     const stored = window.history.state?.[LEVEL_STATE];
+    const key = new URLSearchParams(window.location.search).get("seance");
+    const known = plan.weeks.some((item) => item.sessions.some((one) => one.key === key));
     if (stored === "weeks") setLevel("weeks");
-    else if (stored === "session" && meta.focus.session) setLevel("session");
-    // Au montage seulement.
+    else if (key && known && (stored === "session" || stackSessions.has(here()))) {
+      setSessionKey(key);
+      setLevel("session");
+    } else setLevel("week");
+    // Au montage (et quand la page redevient visible) seulement.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Remonter d'un niveau (retour de la barre, semaine retirée, séance supprimée) : un retour arrière
   // si ce niveau a été ouvert par la pile, sinon l'étape actuelle devient le niveau du dessus.
   const closeLevel = (parent: EditorLevel) => {
-    if (isPhone() && window.history.state?.[LEVEL_STATE]) {
+    if (
+      isPhone() &&
+      (window.history.state?.[LEVEL_STATE] || (level === "session" && sessionOpenedByStack()))
+    ) {
       window.history.back();
       return;
     }
@@ -441,7 +462,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     // Téléphone : ouvert depuis le détail de la séance (une étape au-dessus de la semaine), son retour
     // remontera les deux étapes (safe-leave).
     if (isPhone()) {
-      rememberEditorDepth(level === "session" && window.history.state?.[LEVEL_STATE] ? 1 : 0);
+      rememberEditorDepth(level === "session" && sessionOpenedByStack() ? 1 : 0);
     }
     router.push(href);
   };

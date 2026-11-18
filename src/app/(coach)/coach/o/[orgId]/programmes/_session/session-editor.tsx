@@ -313,6 +313,11 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         text={strength[selected]}
         onChange={(text) => setStrength((current) => ({ ...current, [selected]: text }))}
         onDone={closePanel}
+        onDelete={() => {
+          setStrength((current) => ({ ...current, [selected]: undefined }));
+          closePanel();
+          setSelected(null);
+        }}
       />
     ) : strength && group ? (
       <StrengthGroupPanel

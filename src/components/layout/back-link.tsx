@@ -19,9 +19,11 @@ const TITLE = "coory-page-title:";
 const FORWARD = "coory-previous-forward";
 // Page à recharger en y revenant par l'historique (ses données ont pu changer entre-temps).
 const REFRESH = "coory-refresh-on-return";
-// Dernier « Précédent / Suivant » du navigateur (geste de retour) : une arrivée dans la seconde vient
-// de l'historique.
-let poppedAt = 0;
+// Page atteinte par le dernier « Précédent / Suivant » du navigateur (geste de retour). Une arrivée sur
+// CETTE page vient de l'historique ; un retour de niveau sur place (même page) ne compte pas pour la
+// page suivante (relecture du 18/11 : un délai d'une seconde confondait une navigation rapide avec un
+// geste de retour).
+let poppedTo: string | null = null;
 
 const here = () => window.location.pathname + window.location.search;
 
@@ -42,7 +44,7 @@ export function NavigationMemory() {
   const router = useRouter();
   useEffect(() => {
     const onPop = () => {
-      poppedAt = Date.now();
+      poppedTo = window.location.pathname;
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -53,9 +55,10 @@ export function NavigationMemory() {
       const next = here();
       if (current && current.split("?")[0] !== pathname) {
         sessionStorage.setItem(PREVIOUS, current);
-        sessionStorage.setItem(FORWARD, Date.now() - poppedAt < 1000 ? "0" : "1");
+        sessionStorage.setItem(FORWARD, poppedTo === pathname ? "0" : "1");
       }
       sessionStorage.setItem(CURRENT, next);
+      poppedTo = null;
       // Revenu par l'historique sur une page dont les données ont changé : on la recharge.
       const stale = sessionStorage.getItem(REFRESH);
       if (stale) {

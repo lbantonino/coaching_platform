@@ -38,7 +38,14 @@ import {
   type StrengthGroup,
 } from "@/domain/training/strength-edit";
 
-import { AddInside, EditorCard, EditorGroup, cardsByPath } from "./card-shell";
+import {
+  AddInside,
+  EditorCard,
+  EditorGroup,
+  TextItemCard,
+  cardAt,
+  cardsByPath,
+} from "./card-shell";
 import { Handle, field, label } from "./running-parts";
 
 // Liste et panneaux de l'éditeur Musculation (05, MUS-01 à 03 ; sources CooryEditeurListe et
@@ -108,14 +115,6 @@ function ExerciseRow({
       }
     />
   );
-}
-
-// La carte d'un exercice dans le modèle des cartes ; à défaut (jamais en pratique), son seul nom.
-function cardAt(byPath: Map<string, SessionCard>, path: string[], title: string): StepCard {
-  const found = byPath.get(path.join("/"));
-  return found?.kind === "card"
-    ? found
-    : { kind: "card", role: "work", title, lines: [], sub: [], path };
 }
 
 function Group({
@@ -346,9 +345,11 @@ export function StrengthList({
             );
           // Un bloc de texte (séance reprise d'une ancienne version) : il se lit et se déplace.
           return (
-            <EditorCard
+            <TextItemCard
               key={item.id}
-              card={cardAt(byPath, [item.id], item.title)}
+              byPath={byPath}
+              id={item.id}
+              title={item.title}
               discipline="strength"
               handle={handle}
               drop={drop}
@@ -829,11 +830,14 @@ export function BoundaryPanel({
   text,
   onChange,
   onDone,
+  onDelete,
 }: {
   kind: typeof WARMUP | typeof COOLDOWN;
   text: string | undefined;
   onChange: (text: string | undefined) => void;
   onDone: () => void;
+  // Vide le texte et ferme le panneau, sur ordinateur aussi (la sélection est levée).
+  onDelete: () => void;
 }) {
   const title = kind === WARMUP ? "Échauffement" : "Retour au calme";
   return (
@@ -855,14 +859,7 @@ export function BoundaryPanel({
           className={`${field} h-auto resize-none py-2.5`}
         />
       </label>
-      <PanelFooter
-        primary="OK"
-        onDone={onDone}
-        onDelete={() => {
-          onChange(undefined);
-          onDone();
-        }}
-      />
+      <PanelFooter primary="OK" onDone={onDone} onDelete={onDelete} />
     </div>
   );
 }

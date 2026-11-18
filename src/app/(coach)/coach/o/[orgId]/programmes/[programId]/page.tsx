@@ -147,7 +147,9 @@ async function Program({
 
   return (
     <EditorProvider
-      key={`${program.id}:${loaded.revision}`}
+      // Une nouvelle révision du serveur est adoptée sur place (EditorProvider), sans reconstruire
+      // l'éditeur ni perdre la fenêtre ou le niveau ouverts (18/11).
+      key={program.id}
       organizationId={organizationId}
       target={{ kind: "program", programId: program.id }}
       readOnly={program.status === "archived"}

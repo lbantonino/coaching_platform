@@ -149,3 +149,41 @@ test("téléphone : après « Modifier la séance » puis « ← Semaine 1 », l
   await expect(page).not.toHaveURL(/\/seances\//);
   await expect(page).not.toHaveURL(PROGRAM);
 });
+
+// Relecture du 18/11 : le rechargement des données au retour (router.refresh) réécrit l'entrée
+// d'historique et efface la marque « niveau séance » (Next ne garde pas un état personnel sur une
+// navigation « soft »). Le retour de l'éditeur doit quand même remonter jusqu'à la semaine. Ici, la
+// réécriture de Next est simulée juste avant « Modifier la séance ».
+test("téléphone : même si l'historique perd sa marque, « ← Semaine 1 » remonte jusqu'à la semaine", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "telephone",
+    "La pile de niveaux n'existe que sur téléphone.",
+  );
+  const suffix = `${testInfo.project.name}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  await login(page);
+  await goToCoachSection(page, "Sportifs");
+  await page.getByRole("link", { name: "Nouveau sportif", exact: true }).click();
+  await fillAthleteName(page, `Marque ${suffix}`);
+  await page.getByRole("button", { name: "Enregistrer le sportif" }).click();
+  await expect(page.getByRole("heading", { name: `Marque ${suffix}`, level: 1 })).toBeVisible();
+  const athleteId = new URL(page.url()).pathname.split("/").pop() ?? "";
+  await page.goto(`/coach/o/${ORG}/programmes/nouveau?sportif=${athleteId}&modele=${TEN_K}`);
+  for (let step = 1; step < 4; step += 1) {
+    await page.getByRole("button", { name: "Continuer" }).click();
+  }
+  await page.getByRole("button", { name: "Créer le brouillon" }).click();
+  await expect(page).toHaveURL(PROGRAM);
+
+  await expect(weekHeading(page, 1)).toBeVisible();
+  await page.locator("button[aria-pressed]").filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/seance=/);
+  // Ce que fait Next en fin de rechargement : la même adresse, un état d'historique sans notre marque.
+  await page.evaluate(() => window.history.replaceState({ __NA: true }, "", window.location.href));
+  await page.getByRole("button", { name: "Modifier la séance" }).filter({ visible: true }).click();
+  await expect(page).toHaveURL(/\/seances\//);
+  await page.getByRole("banner").getByRole("button", { name: "Semaine 1", exact: true }).click();
+  await expect(page).toHaveURL(/\/[0-9a-f-]{36}(\?semaine=1)?$/);
+  await expect(weekHeading(page, 1)).toBeVisible();
+});

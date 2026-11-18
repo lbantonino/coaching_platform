@@ -29,7 +29,14 @@ import {
 import { sessionCards, type SessionCard, type StepCard } from "@/domain/training/session-cards";
 import { RUN_ROLES, type RunStep, type RunningContent } from "@/domain/training/session-v2";
 
-import { AddInside, EditorCard, EditorGroup, cardsByPath } from "./card-shell";
+import {
+  AddInside,
+  EditorCard,
+  EditorGroup,
+  TextItemCard,
+  cardAt,
+  cardsByPath,
+} from "./card-shell";
 
 // Liste et panneau de l'éditeur Running (04, RUN-01 à 03 ; sources CooryEditeurListe et
 // CooryEditeurPanneau). Étapes colorées par rôle : effort en couleur Running, récupération en gris,
@@ -97,13 +104,6 @@ function StepRow({
       menu={actions ? <CardMenu title={card.title} path={card.path} actions={actions} /> : null}
     />
   );
-}
-
-function cardAt(byPath: Map<string, SessionCard>, path: string[], title: string): StepCard {
-  const found = byPath.get(path.join("/"));
-  return found?.kind === "card"
-    ? found
-    : { kind: "card", role: "work", title, lines: [], sub: [], path };
 }
 
 // Nombre de répétitions : − 5 + (30 px, maquette).
@@ -309,9 +309,11 @@ export function RunningList({
             );
           // Bloc texte (séance reprise de la v1) : lu tel quel.
           return (
-            <EditorCard
+            <TextItemCard
               key={item.id}
-              card={cardAt(byPath, [item.id], item.title)}
+              byPath={byPath}
+              id={item.id}
+              title={item.title}
               discipline="running"
               handle={handle}
               drop={drop}

@@ -116,7 +116,7 @@ export function EditorSessionCard({
               type="button"
               onClick={onSelect}
               aria-pressed={selected}
-              className="min-w-0 truncate text-left text-[16px] leading-[1.25] font-semibold text-text after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none after:focus-visible:outline-2 after:focus-visible:outline-offset-2 after:focus-visible:outline-violet lg:text-[15px]"
+              className="min-w-0 truncate text-left text-[16px] leading-[1.25] font-semibold text-text after:absolute after:inset-0 after:rounded-[inherit] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-violet lg:text-[15px]"
             >
               {title}
             </button>
