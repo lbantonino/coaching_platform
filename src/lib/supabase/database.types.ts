@@ -2127,6 +2127,7 @@ export type Database = {
         Returns: string;
       };
       current_user_is_platform_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      delete_account_data: { Args: { p_user_id: string }; Returns: undefined };
       delete_program: {
         Args: { p_organization_id: string; p_program_id: string };
         Returns: undefined;

@@ -56,6 +56,38 @@ Décision d'Antonino (17/11) : Garmin = ENVOI SEULEMENT des séances de course v
   la rubrique AVANT et redemander l'accord des sportifs.
 ```
 
+### « Supprimer mon compte » (D-191, 18/11/2026)
+```
+supabase/migrations/20261118120000_supprimer_mon_compte.sql (delete_account_data(p_user_id), serveur
+  SEULEMENT : refuse la démo et une organisation partagée ; efface factures, émises comprises (le
+  déclencheur protect_issued_invoice les laisse partir pour l'organisation effacée, dans sa
+  transaction), et sportifs, bloqués par « on delete restrict », puis l'organisation en cascade) ;
+  src/features/account/delete-account.ts (action deleteMyAccount : mot « SUPPRIMER » revérifié, garde
+  de la démo, clé du serveur vérifiée AVANT tout effacement, organisation partagée refusée avant les
+  fichiers, fichiers des trois dossiers parcourus sous-dossiers compris avec la session du coach,
+  données, compte retenté une fois, session ; sans organisation, un nouvel essai passe au compte) ;
+  src/features/account/rules.ts ; profil/delete-account-dialog.tsx (fenêtre de confirmation du kit,
+  lien vers l'export, champ « Tape SUPPRIMER pour confirmer ») ; settings-sections.tsx (carte en bas de
+  Sécurité) ; src/app/(auth)/compte-supprime/page.tsx (page publique) ; lib/supabase/admin.ts (usage
+  ajouté à la liste) ; confidentialite/page.tsx et config/legal.ts (fermeture du compte en libre-service,
+  textes datés du 18/11) ; scripts/clean-test-data.sql (factures et sportifs des organisations de test
+  effacés avant elles : un test arrêté après avoir créé un sportif bloquait tout le nettoyage).
+Tests : pgTAP 47_supprimer_mon_compte (10, vus en échec puis au vert : tout part, l'autre coach intact,
+  organisation partagée et démo refusées, anonyme refusé) ; e2e account-delete.spec.ts (coach jetable :
+  sportif + photo du sportif + photo du coach, mot exact, fichiers effacés, page de confirmation,
+  déconnecté, ancien mot de passe refusé ; démo : mot inexact refusé PAR LE SERVEUR même bouton forcé,
+  puis refus de la démo), sur ordinateur et téléphone.
+Relecture indépendante (1 critique, 4 importants) corrigée le 18/11, chaque point avec un test vu en
+  échec : clé secrète absente de la production (plantage → message, rien d'effacé ; clé ajoutée à
+  docs/DEPLOIEMENT.md) ; nouvel essai bloqué sur « accès refusé » après un échec à l'étape du compte ;
+  facture émise qui bloquait l'effacement APRÈS le départ des fichiers ; fonction appelable directement
+  avec la session du coach (sans le mot, ni fichiers, ni compte) ; phrase fausse dans la politique (le
+  coach ne supprime pas un sportif lui-même) ; Entrée du clavier qui lançait la suppression ; fenêtre
+  impossible à faire défiler au doigt sur un petit téléphone. Tests : 47 (16), tests/unit/
+  delete-account.test.ts (3), account-delete.spec.ts (Entrée, défilement au doigt).
+Production : npx supabase db push (nouvelle migration) ET SUPABASE_SECRET_KEY dans Vercel (Sensitive).
+```
+
 ### Éditeur « Modifier la séance » en cartes (D-190, 17/11/2026)
 ```
 src/domain/training/session-cards.ts (kilos estimés depuis le max : sessionCards(content, { maxes }) ;

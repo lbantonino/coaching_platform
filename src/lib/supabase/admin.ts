@@ -10,6 +10,8 @@ import type { Database } from "./database.types";
 // Client ADMINISTRATEUR (clé secrète) : il contourne la RLS. Usage strictement limité aux procédures
 // de confiance listées ici, jamais pour lire ou écrire des données métier :
 //   - créer le compte d'un sportif qui accepte une invitation valide (inscription libre fermée).
+//   - « Supprimer mon compte » (src/features/account/delete-account.ts) : appeler la fonction
+//     delete_account_data (réservée au serveur) puis supprimer le compte (auth.admin.deleteUser).
 // `server-only` fait échouer le build si ce fichier est importé côté navigateur.
 export function createAdminClient() {
   const secretKey = z.string().min(1).safeParse(process.env.SUPABASE_SECRET_KEY);

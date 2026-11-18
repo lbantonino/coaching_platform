@@ -42,6 +42,7 @@ import type { SettingsData } from "@/features/coach/settings-data";
 import { formatDate } from "@/lib/format";
 
 import { CurrencyChangeButton } from "./currency-change-sheet";
+import { DeleteAccountButton } from "./delete-account-dialog";
 
 // Rubriques Préférences, Pays et devise, Sécurité et Données de la fenêtre des Paramètres, au
 // kit « Coory Pages », page 13 (D-127). La rubrique Profil n'est pas ici (déjà faite, ne pas toucher :
@@ -784,6 +785,18 @@ export function SecuritySection({ email, intro }: { email: string; intro: string
               Se déconnecter
             </button>
           </form>
+        </div>
+      </SettingsCard>
+      {/* Droit à l'effacement (décisions d'Antonino du 18/11/2026) : carte à part, tout en bas. */}
+      <SettingsCard
+        id="settings-delete-account"
+        title="Supprimer mon compte"
+        description="Efface ton compte et toutes les données de ton organisation, tout de suite et définitivement. Pense à télécharger tes données avant."
+      >
+        <div className="flex flex-col md:flex-row">
+          <DeleteAccountButton className={dangerButtonClass}>
+            Supprimer mon compte
+          </DeleteAccountButton>
         </div>
       </SettingsCard>
     </SectionBody>
