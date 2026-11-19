@@ -12,6 +12,10 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
 # next.js
 /.next/
@@ -30,7 +34,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files : secrets jamais commités, seul le modèle .env.example est versionné
+# env files
 .env*
 !.env.example
 
@@ -41,30 +45,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# supabase (fichiers locaux générés par le CLI)
+# supabase
 supabase/.branches
 supabase/.temp
 
-# cache local d'outils Claude Code
-.impeccable/
-
-# playwright (rapports et traces locaux)
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-
-# Originaux des images RepDB (retéléchargés par scripts/catalog-images.mjs), D-142
+# images sources du catalogue d'exercices, téléchargées par scripts/catalog-images.mjs
 /resources/exercise-library/data/repdb-images/
-
-# Documents de travail (specs, prompts, maquettes, suivi) : ils restent en local, hors du dépôt
-/00_INDEX.md
-/AGENTS.md
-/CARNET_TECHNIQUE.md
-/CLAUDE.md
-/COORY_PROMPT_CLAUDE_CODE.md
-/Coaching_Platform_Cahier_des_Charges_Complet.pdf
-/Coaching_Platform_Roadmap.pdf
-/SUIVI_IMPLEMENTATION.md
-/coory-design/
-/docs/
