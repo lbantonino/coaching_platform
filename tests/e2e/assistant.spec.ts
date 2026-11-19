@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { isPhone } from "./helpers";
+
 // Assistant IA (kit « Coory Pages », page 02, D-132), réservé à l'abonnement mensuel Coory depuis
 // D-168 (13/11/2026). Le coach C (organisation A, non abonnée, adresse non autorisée, D-171) voit la
 // boîte et la page verrouillées, sans saisie ni suggestion : aucune demande ne peut partir chez
@@ -20,6 +22,19 @@ test("sans abonnement Coory, l'assistant est verrouillé dans la boîte et sur s
   page,
 }) => {
   await loginAsCoachC(page);
+  // Téléphone (19/11) : l'icône du haut mène directement à la page de l'assistant, verrouillée.
+  if (isPhone(page)) {
+    await page
+      .getByRole("link", { name: "Assistant IA" })
+      .filter({ visible: true })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/coach\/assistant$/);
+    await expect(page.getByRole("heading", { name: LOCKED })).toBeVisible();
+    await expect(page.getByLabel("Ta demande à l'assistant")).toHaveCount(0);
+    await expect(page.getByRole("list", { name: "Raccourcis" })).toHaveCount(0);
+    return;
+  }
   const button = page
     .getByRole("button", { name: "Assistant IA" })
     .filter({ visible: true })
@@ -56,12 +71,23 @@ test("autorisé par son adresse, le coach A a l'assistant ouvert sans abonnement
   await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
-  await page
-    .getByRole("button", { name: "Assistant IA" })
-    .filter({ visible: true })
-    .first()
-    .click();
-  const box = page.getByRole("dialog", { name: "Assistant IA" });
+  if (isPhone(page)) {
+    await page
+      .getByRole("link", { name: "Assistant IA" })
+      .filter({ visible: true })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/coach\/assistant$/);
+  } else {
+    await page
+      .getByRole("button", { name: "Assistant IA" })
+      .filter({ visible: true })
+      .first()
+      .click();
+  }
+  const box = isPhone(page)
+    ? page.getByRole("region", { name: "Assistant IA" })
+    : page.getByRole("dialog", { name: "Assistant IA" });
   await expect(box.getByLabel("Ta demande à l'assistant")).toBeVisible();
   await expect(box).toContainText("N'écris pas de données de santé ici.");
   await expect(box).not.toContainText(LOCKED);

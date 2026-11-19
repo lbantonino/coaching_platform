@@ -1,5 +1,28 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+import { isPhone } from "./helpers";
+
+// Où se parle l'assistant (19/11) : sur ordinateur, la boîte ouverte par « Assistant IA » de
+// l'en-tête ; sur téléphone, l'icône du haut mène à la page de l'assistant (même conversation, mêmes
+// cartes d'action).
+async function assistantSurface(page: Page): Promise<Locator> {
+  if (isPhone(page)) {
+    await page
+      .getByRole("link", { name: "Assistant IA" })
+      .filter({ visible: true })
+      .first()
+      .click();
+    await expect(page).toHaveURL(/\/coach\/assistant$/);
+    return page.getByRole("region", { name: "Assistant IA" });
+  }
+  await page
+    .getByRole("button", { name: "Assistant IA" })
+    .filter({ visible: true })
+    .first()
+    .click();
+  return page.getByRole("dialog", { name: "Assistant IA" });
+}
+
 // Assistant IA qui agit (lot 1 des actions) : le coach B (organisation abonnée dans la graine) parle à
 // un FAUX Claude (tests/e2e/fixtures/assistant-script.json, activé par ASSISTANT_FAKE_SCRIPT dans
 // playwright.config.ts) : aucun appel payant. Chaque action devient une carte ; rien n'est fait avant
@@ -15,12 +38,7 @@ async function openAssistant(page: Page): Promise<Locator> {
   await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
-  await page
-    .getByRole("button", { name: "Assistant IA" })
-    .filter({ visible: true })
-    .first()
-    .click();
-  return page.getByRole("dialog", { name: "Assistant IA" });
+  return assistantSurface(page);
 }
 
 async function ask(box: Locator, question: string) {
@@ -701,12 +719,7 @@ async function openAssistantAsSettingsCoach(page: Page): Promise<Locator> {
   await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
-  await page
-    .getByRole("button", { name: "Assistant IA" })
-    .filter({ visible: true })
-    .first()
-    .click();
-  return page.getByRole("dialog", { name: "Assistant IA" });
+  return assistantSurface(page);
 }
 
 test("lot 6 : une préférence, puis une sorte de notifications coupée", async ({

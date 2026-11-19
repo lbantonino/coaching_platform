@@ -40,8 +40,9 @@ const phoneIcon =
 // Assistant IA (coach) : dans l'en-tête des pages sur ordinateur (avec son nom), et dans la barre du haut
 // sur téléphone (demande d'Antonino du 29/10/2026 : « super important »). En violet (D-77) pour qu'on
 // comprenne qu'il s'ouvre : translucide en sombre, plein en clair.
-// Kit « Coory Pages », 02 (D-132) : il ouvre la boîte de l'assistant par-dessus la page (et la ferme) ;
-// sans la boîte (hors espace coach), il mène à la page de l'assistant.
+// Kit « Coory Pages », 02 (D-132) : sur ordinateur, il ouvre la boîte de l'assistant par-dessus la page
+// (et la ferme). Téléphone (19/11, demande d'Antonino) : comme « Assistant IA » du menu, il mène à la
+// page de l'assistant, plein écran façon messagerie ; sans la boîte (hors espace coach), la page aussi.
 export function AssistantButton({ withLabel = false }: { withLabel?: boolean }) {
   const assistant = useAssistant();
   const className = `inline-flex shrink-0 items-center justify-center bg-ai-bg text-ai-text inset-ring inset-ring-ai-border transition-[filter] duration-150 hover:brightness-110 ${
@@ -53,7 +54,7 @@ export function AssistantButton({ withLabel = false }: { withLabel?: boolean }) 
       {withLabel ? "Assistant IA" : null}
     </>
   );
-  if (!assistant) {
+  if (!assistant || !withLabel) {
     return (
       <Link
         href="/coach/assistant"

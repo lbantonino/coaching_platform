@@ -29,7 +29,8 @@ async function Assistant() {
   return (
     <>
       <PageHeader title="Assistant IA" icon={Sparkles} />
-      <PageBody fill>
+      {/* Téléphone : la page occupe l'écran sous la barre, la saisie reste en bas (comme Messages). */}
+      <PageBody fill screen>
         <AssistantView />
       </PageBody>
     </>

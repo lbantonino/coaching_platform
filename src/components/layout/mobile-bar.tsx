@@ -82,7 +82,7 @@ export function MobileTopBar() {
       </div>
       <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-panel p-1 inset-ring inset-ring-line shadow-[0_6px_20px_rgba(0,0,0,0.14)]">
         <span id={TOOL_SLOT} className="contents" />
-        {space === "coach" ? <AssistantButton /> : null}
+        {space === "coach" && !pathname.startsWith("/coach/assistant") ? <AssistantButton /> : null}
         <NotificationBell phone />
       </div>
     </header>

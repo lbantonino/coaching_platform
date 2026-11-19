@@ -11,19 +11,16 @@ import type { WeekBlock } from "@/features/agenda/week";
 // à partir des vraies séances. Même fond que les autres cartes ; elle se distingue par son contour
 // violet, l'heure écrite en violet et la photo du sportif cerclée de violet (demandes d'Antonino du
 // 01/11 : ni dégradé, ni aplat violet). Toute la carte ouvre la séance ; deux petites icônes « Ouvrir
-// la séance » et « Message ». Téléphone (02/11, comme un widget de l'iPhone) : un carré à côté des
-// Tâches : « Prochaine séance », l'heure, puis la séance en petit bloc (sans « dans 2 h 28 », 02/11) ; les
-// pastilles et les deux icônes sont pour les écrans plus larges (toute la carte ouvre la séance).
+// la séance » et « Message ». Téléphone (19/11, demande d'Antonino : « une carte par ligne », et une
+// Prochaine séance plus détaillée) : pleine largeur, tout le détail de l'ordinateur (« demain », le
+// rang dans la journée, la photo, la séance, durée et lieu, discipline, boutons), plus l'heure de fin.
 const iconLink =
   "inline-flex size-11 items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-selected-hover hover:text-text lg:size-7 lg:rounded-md";
 
-// Filet gauche du bloc de la séance, dans le widget carré du téléphone.
-const disciplineBars = {
-  running: "max-md:border-run-fill",
-  strength: "max-md:border-strength-fill",
-  hyrox: "max-md:border-hyrox-fill",
-  hybrid: "max-md:border-hybrid-fill",
-} as const;
+// « 9:15 » → « 09:15 » (minutes depuis minuit).
+function clock(minutes: number) {
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
 
 function untilLabel(block: WeekBlock, today: string, nowMinutes: number, dayLabel: string) {
   if (block.date !== today) return dayLabel.toLowerCase();
@@ -68,10 +65,10 @@ export function NextSessionCard({
       aria-labelledby="next-session-title"
       // Toute la carte ouvre la séance (29/10/2026) : le lien du titre la couvre entièrement ;
       // les deux petites icônes passent au-dessus et gardent leur propre action.
-      className={`relative flex h-full min-w-0 flex-col justify-between gap-5 rounded-[20px] border border-violet-line bg-surface p-5 transition-colors duration-150 hover:border-violet max-md:aspect-square max-md:justify-start max-md:gap-0 max-md:overflow-hidden max-md:p-4 ${className}`}
+      className={`relative flex h-full min-w-0 flex-col justify-between gap-5 rounded-[20px] border border-violet-line bg-surface p-5 transition-colors duration-150 hover:border-violet ${className}`}
     >
-      <div className="max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col">
-        <div className="mb-3 flex items-center justify-between gap-3 max-md:mb-2">
+      <div>
+        <div className="mb-3 flex items-center justify-between gap-3">
           <h2
             id="next-session-title"
             className="text-[12px] font-medium tracking-[0.08em] whitespace-nowrap text-muted uppercase lg:text-[11px]"
@@ -88,7 +85,7 @@ export function NextSessionCard({
             )}
           </h2>
           {block ? (
-            <span className="flex items-center gap-2 max-md:hidden">
+            <span className="flex items-center gap-2">
               <span
                 aria-hidden
                 className="flex h-5 items-center rounded-[5px] bg-ok-soft px-1.5 text-[12px] font-semibold text-ok lg:text-[11px]"
@@ -105,27 +102,26 @@ export function NextSessionCard({
         </div>
         {block ? (
           <>
-            <div className="text-[26px] leading-none font-semibold tracking-tight whitespace-nowrap text-violet-text tabular">
-              {block.label.slice(0, 5)}
+            <div className="flex items-baseline gap-2 whitespace-nowrap">
+              <span className="text-[26px] leading-none font-semibold tracking-tight text-violet-text tabular">
+                {block.label.slice(0, 5)}
+              </span>
+              {/* Téléphone : l'heure de fin aussi (19/11). */}
+              <span className="text-[14px] text-muted tabular md:hidden">
+                jusqu&apos;à {clock(block.end)}
+              </span>
             </div>
-            {/* Téléphone : la séance en bloc qui remplit le reste du carré, un filet de la couleur de la
-                discipline à gauche (comme un évènement du widget Calendrier de l'iPhone) ; sans photo :
-                le sportif, le type de séance, la durée et le lieu, puis la discipline (02/11). */}
-            <div
-              className={`mt-2.5 flex min-w-0 items-center gap-2.5 max-md:mt-3 max-md:min-h-0 max-md:flex-1 max-md:items-stretch max-md:rounded-lg max-md:border-l-[3px] max-md:bg-surface-2 max-md:py-2 max-md:pr-2 max-md:pl-2.5 ${
-                block.discipline ? disciplineBars[block.discipline] : "max-md:border-line-2"
-              }`}
-            >
+            <div className="mt-2.5 flex min-w-0 items-center gap-2.5 max-md:mt-3.5 max-md:gap-3">
               {person ? (
-                <span className="inline-flex shrink-0 rounded-full max-md:hidden outline outline-[1.5px] outline-offset-2 outline-violet">
+                <span className="inline-flex shrink-0 rounded-full outline outline-[1.5px] outline-offset-2 outline-violet">
                   <Avatar name={person.name} photoPath={person.photoPath} size="xs" />
                 </span>
               ) : null}
-              <div className="min-w-0 max-md:flex max-md:flex-1 max-md:flex-col">
-                <div className="shrink-0 truncate text-[15px] font-medium text-text md:text-[16px] lg:text-[13px]">
+              <div className="min-w-0">
+                <div className="truncate text-[16px] font-medium text-text lg:text-[13px]">
                   {block.title}
                 </div>
-                <div className="mt-0.5 truncate text-[13px] text-muted max-md:hidden md:text-[14px] lg:text-[12px]">
+                <div className="mt-0.5 truncate text-[14px] text-muted lg:text-[12px]">
                   {[
                     block.individual ? block.subtitle : `Collective · ${block.subtitle}`,
                     `${block.end - block.start} min`,
@@ -134,24 +130,6 @@ export function NextSessionCard({
                     .filter(Boolean)
                     .join(" · ")}
                 </div>
-                {/* Téléphone : une information par ligne, la discipline en bas du bloc ; sur un écran de
-                    moins de 420 px (iPhone standard), la durée et le lieu cèdent leur place. */}
-                <div className="mt-0.5 shrink-0 truncate text-[13px] text-muted md:hidden">
-                  {block.individual ? block.subtitle : `Collective · ${block.subtitle}`}
-                </div>
-                <div className="shrink-0 truncate text-[13px] text-muted tabular max-[419px]:hidden md:hidden">
-                  {[`${block.end - block.start} min`, location].filter(Boolean).join(" · ")}
-                </div>
-                {block.discipline ? (
-                  <div className="mt-auto flex shrink-0 items-center gap-1.5 pt-1.5 text-[12px] font-medium text-text-2 md:hidden">
-                    <span className="truncate">
-                      <span className={`font-semibold ${disciplineStyles[block.discipline].text}`}>
-                        {disciplineLabels[block.discipline]}
-                      </span>{" "}
-                      · {block.individual ? "Individuelle" : "Collective"}
-                    </span>
-                  </div>
-                ) : null}
               </div>
             </div>
           </>
@@ -163,7 +141,7 @@ export function NextSessionCard({
         )}
       </div>
       {block ? (
-        <div className="flex items-center justify-between max-md:hidden">
+        <div className="flex items-center justify-between">
           <div className="flex gap-1.5">
             {block.discipline ? (
               <span

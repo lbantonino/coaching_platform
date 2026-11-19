@@ -401,6 +401,17 @@ select:not([multiple]):not([data-chevron="own"]) {
     padding-bottom: calc(110px + env(safe-area-inset-bottom));
   }
 }
+/* Page Assistant IA sur téléphone (19/11, façon messagerie) : tout l'écran sur le fond des cartes, barre
+ * du haut comprise. Le marqueur n'est posé que pendant que la page est affichée (assistant-view.tsx) :
+ * Next garde les pages quittées cachées dans le document. */
+@media (max-width: 1023.98px) {
+  html[data-assistant-screen] {
+    --under-bar: var(--surface);
+  }
+  html[data-assistant-screen] body {
+    background-color: var(--surface);
+  }
+}
 /* Page Agenda sur ordinateur (D-78) : le bouton ☰ de la barre masque le panneau de l'agenda. */
 @media (min-width: 1024px) {
   html[data-agenda-panel] [data-agenda-panel] {

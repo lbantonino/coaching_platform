@@ -170,9 +170,8 @@ async function Dashboard() {
         inline
       />
       <PageBody fill>
-        {/* Téléphone (02/11) : une grille de 2 colonnes ; Prochaine séance et Tâches en widgets carrés côte
-            à côte (comme les widgets de l'iPhone), les autres cartes sur toute la largeur. Ailleurs, cette
-            enveloppe s'efface (contents). */}
+        {/* Téléphone : une carte par ligne (19/11, demande d'Antonino ; avant : Prochaine séance et Tâches
+            en widgets carrés côte à côte). Ailleurs, cette enveloppe s'efface (contents). */}
         <div className="grid grid-cols-2 gap-3 md:contents">
           {/* Téléphone (02/11) : les deux rangées s'effacent (contents) et les cartes se rangent dans la
             grille ci-dessus : Prochaine séance et Tâches (carrés), Séances à venir, Encaissés, Activité
@@ -181,7 +180,7 @@ async function Dashboard() {
             tâches et l'encaissé de la semaine (demande d'Antonino du 26/10). */}
           <div className="grid shrink-0 gap-4 max-md:contents md:grid-cols-3">
             <NextSessionCard
-              className="max-md:order-1"
+              className="max-md:order-1 max-md:col-span-2"
               block={next}
               rank={
                 next
@@ -209,7 +208,7 @@ async function Dashboard() {
                 (maquette v6, D-77). */}
             <section
               aria-labelledby="tasks-title"
-              className="relative flex min-w-0 flex-col rounded-[20px] border border-line bg-surface p-5 max-md:order-2 max-md:aspect-square max-md:overflow-hidden max-md:p-4"
+              className="relative flex min-w-0 flex-col rounded-[20px] border border-line bg-surface p-5 max-md:order-2 max-md:col-span-2"
             >
               <div className="mb-2 flex items-center justify-between gap-3">
                 <h2
