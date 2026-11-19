@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { recordIds, replayIds } from "@/domain/training/local-id";
 import type { ProgramDraft, ProgramPlan } from "@/domain/training/program-plan";
 import { saveDraft, updateTemplate } from "@/features/programs/actions";
 
@@ -90,6 +91,21 @@ export function EditorProvider({
     target.kind === "program"
       ? `coory-revision:program:${target.programId}`
       : `coory-revision:template:${target.templateId}`;
+  // En retard sur une version enregistrée DANS CET ONGLET par un autre éditeur (l'éditeur de séance,
+  // avant le retour au programme) : la version à jour est en route (rechargement). Les gestes faits
+  // d'ici là sont gardés pour être rejoués sur elle, et rien ne part avec l'ancienne version (bug du
+  // 19/11 : l'ajout d'une séance tout de suite après le retour partait avec la version dépassée,
+  // était refusé comme un conflit, puis effacé sans rien dire à l'arrivée de la version à jour).
+  const behind = useRef<{
+    revision: number;
+    // Chaque geste, avec les identifiants qu'il a tirés (rejoué, il recrée les mêmes clés).
+    changes: {
+      change: (plan: ProgramPlan | ProgramDraft) => ProgramPlan | ProgramDraft;
+      ids: string[];
+    }[];
+    arrived: Promise<void>;
+    resolve: () => void;
+  } | null>(null);
 
   const saveOnce = useCallback(async (): Promise<boolean> => {
     if (!dirty.current || blocked.current) return !blocked.current;
@@ -138,9 +154,16 @@ export function EditorProvider({
     return true;
   }, [organizationId, target, initialPlan, storeKey]);
 
-  // Un seul enregistrement à la fois ; ce qui change pendant l'envoi part juste après.
+  // Un seul enregistrement à la fois ; ce qui change pendant l'envoi part juste après. En retard sur
+  // une version de cet onglet : on attend qu'elle arrive (10 s au plus, puis le conflit habituel).
   const flush = useCallback(async (): Promise<boolean> => {
     clearTimeout(timer.current);
+    const pending = behind.current;
+    if (pending) {
+      if (dirty.current) setStatus("saving");
+      await Promise.race([pending.arrived, new Promise((resolve) => setTimeout(resolve, 10_000))]);
+      if (behind.current === pending) behind.current = null;
+    }
     for (;;) {
       while (inFlight.current) await inFlight.current;
       if (!dirty.current) return !blocked.current;
@@ -156,7 +179,8 @@ export function EditorProvider({
   const update = useCallback(
     (change: (plan: ProgramPlan | ProgramDraft) => ProgramPlan | ProgramDraft) => {
       if (readOnly || blocked.current) return;
-      const next = change(planRef.current);
+      const { value: next, ids } = recordIds(() => change(planRef.current));
+      behind.current?.changes.push({ change, ids });
       planRef.current = next;
       setPlan(next);
       dirty.current = true;
@@ -189,6 +213,27 @@ export function EditorProvider({
   // rechargement arrivait après un geste du coach). Rien n'est adopté pendant qu'une modification
   // attend ou part : c'est l'enregistrement qui tranche (conflit). Après un conflit, on repart du serveur.
   useEffect(() => {
+    // La version attendue (enregistrée par un autre éditeur de cet onglet) est arrivée : on repart
+    // d'elle et on rejoue les gestes faits entre-temps ; l'enregistrement en attente part ensuite.
+    const pending = behind.current;
+    if (pending && initialRevision >= pending.revision && !inFlight.current) {
+      behind.current = null;
+      blocked.current = false;
+      revisionRef.current = initialRevision;
+      savedJson.current = JSON.stringify(initialPlan);
+      const replayed = pending.changes.reduce(
+        (plan, { change, ids }) => replayIds(ids, () => change(plan)),
+        initialPlan,
+      );
+      planRef.current = replayed;
+      dirty.current = pending.changes.length > 0;
+      setPlan(replayed);
+      setRevision(initialRevision);
+      setError(null);
+      setStatus(dirty.current ? "saving" : "saved");
+      pending.resolve();
+      return;
+    }
     if (initialRevision <= revisionRef.current && !blocked.current) return;
     if (dirty.current || inFlight.current) return;
     if (blocked.current && initialRevision < revisionRef.current) return;
@@ -206,7 +251,17 @@ export function EditorProvider({
   // revenue au premier plan, elle relit le serveur (une modification faite ailleurs s'affiche).
   useEffect(() => {
     try {
-      if (Number(sessionStorage.getItem(storeKey) ?? 0) > initialRevision) router.refresh();
+      const known = Number(sessionStorage.getItem(storeKey) ?? 0);
+      if (known > revisionRef.current) {
+        if (!behind.current) {
+          let resolve = () => {};
+          const arrived = new Promise<void>((done) => {
+            resolve = done;
+          });
+          behind.current = { revision: known, changes: [], arrived, resolve };
+        }
+        router.refresh();
+      }
     } catch {
       // Stockage bloqué : rien à comparer.
     }
