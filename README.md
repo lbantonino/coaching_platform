@@ -1,115 +1,33 @@
-# Coaching Platform (nom commercial à définir)
+# Coory
 
-Application web SaaS de programmation et de suivi d'entraînements Running, Musculation, Hyrox et Hybride, avec trois espaces : coach, sportif et administration de la plateforme.
+Application web pour les coachs sportifs (running, musculation, Hyrox, hybride). Le coach y gère ses sportifs, ses programmes d'entraînement, son agenda et ses paiements, avec un assistant IA qui prépare les actions et les lui fait valider.
 
-> **État réel du code** : voir [SUIVI_IMPLEMENTATION.md](SUIVI_IMPLEMENTATION.md). Les documents de `docs/` décrivent la cible, pas ce qui est développé.
-> **Pourquoi le projet est construit ainsi** (stack, architecture, sécurité, progression) : voir [CARNET_TECHNIQUE.md](CARNET_TECHNIQUE.md).
+**Bêta en ligne :** [coory-beta.vercel.app](https://coory-beta.vercel.app)
 
-## Prérequis
+## Stack
 
-- **Node.js 24 LTS** (fichier `.nvmrc`). Avec nvm : `nvm use` à la racine du projet.
-- npm (fourni avec Node).
+Next.js · React · TypeScript · Tailwind CSS · Supabase (PostgreSQL, Auth, Storage) · API Claude · Vercel
 
-## Démarrage
+## Lancer le projet en local
+
+Prérequis : Node.js 24 et Docker Desktop.
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+cp .env.example .env.local   # valeurs données par : npm run db:status
+npm run db:start             # Supabase en local
+npm run db:reset             # base de démonstration
+npm run dev                  # http://localhost:3000
 ```
 
-## Environnements et variables
-
-Un projet Supabase **par environnement**, jamais partagé :
-
-| Environnement | Supabase | Données |
-|---|---|---|
-| DEV | Local, via le CLI et Docker (`npm run db:start`) | Seed de démonstration uniquement |
-| STAGING | Projet cloud dédié, région UE (créé plus tard) | Données de test |
-| PROD | Projet cloud dédié, région UE (créé plus tard) | Données réelles, jamais copiées en DEV |
+## Tests
 
 ```bash
-cp .env.example .env.local   # puis remplir avec les valeurs de `npx supabase status`
+npm run check      # lint, types, format et tests unitaires
+npm run db:test    # tests de la base et de la sécurité (pgTAP)
+npm run test:e2e   # parcours complets (Playwright)
 ```
 
-- `.env.local` et tous les `.env*` sont ignorés par Git ; seul `.env.example` (noms sans valeurs) est versionné.
-- Seules les variables `NEXT_PUBLIC_*` atteignent le navigateur. La clé secrète Supabase reste côté serveur.
-- `AUTH_PROVIDERS` (serveur) liste les connexions sociales réellement configurées (`google`, `facebook`, `apple`) ; vide = aucun bouton. Marche à suivre : [docs/AUTH_FOURNISSEURS.md](docs/AUTH_FOURNISSEURS.md).
+---
 
-## Base de données locale (DEV)
-
-Prérequis : **Docker Desktop lancé**. Le CLI Supabase est une dépendance du projet (`npx supabase`), aucune installation globale.
-
-| Commande | Rôle |
-|---|---|
-| `npm run db:start` | Démarre Supabase en local (Postgres, Auth, Storage, Studio). Le premier lancement télécharge les images Docker (plusieurs Go) |
-| `npm run db:status` | Affiche les URL et les clés locales (à recopier dans `.env.local`) |
-| `npm run db:reset` | Recrée la base locale de zéro : toutes les migrations, `supabase/seed.sql`, puis les photos de démonstration (`scripts/seed-photos.mjs`). Les sessions récentes et le profil du coach A sont gardés (`scripts/dev-keep.mjs`) : on reste connecté dans son navigateur |
-| `npm run db:new <nom>` | Crée un fichier de migration horodaté dans `supabase/migrations/` |
-| `npm run db:test` | Lance les tests SQL/RLS (pgTAP) de `supabase/tests/` sur la base locale |
-| `npm run db:types` | Régénère `src/lib/supabase/database.types.ts` depuis le schéma local (après chaque migration) |
-| `npm run db:stop` | Arrête les conteneurs (les données locales sont conservées) |
-
-Comptes de démonstration locaux (créés par le seed, mot de passe `demo-coach-local`) : `coach-a@example.test` (Organisation Démo A), `coach-b@example.test` (Organisation Démo B) `admin@example.test` (administrateur de la plateforme, sans organisation) et `thomas.peeters@example.test` (sportif de l'Organisation Démo A, ouvre l'espace sportif). Le seed crée aussi 8 sportifs inventés dans l'Organisation Démo A et 2 dans la B, avec profils et repères. Les tests navigateur ajoutent leurs propres fiches temporaires : `npm run db:reset` remet ensuite la base de démo au propre.
-
-**Inscription** (D-30) : `/inscription` crée un compte coach ou sportif. En local, l'e-mail de confirmation arrive dans Mailpit ; son lien ouvre la page « Bienvenue », qui crée l'espace du coach (son organisation) ou finalise le compte sportif. Après une modification de `supabase/config.toml` : `npm run db:stop` puis `npm run db:start`.
-
-URL locales utiles : Studio http://127.0.0.1:54323, boîte mail de test (Mailpit) http://127.0.0.1:54324.
-
-**Règles des migrations** : le schéma ne change que par un nouveau fichier de migration, jamais à la main dans Studio. Une migration déjà commitée n'est pas modifiée ; on corrige avec une nouvelle migration. Chaque migration indique en commentaire son SQL de retour arrière.
-
-## Commandes de qualité
-
-| Commande | Rôle |
-|---|---|
-| `npm run lint` | ESLint (règles Next.js, React, TypeScript) |
-| `npm run typecheck` | Génère les types de routes Next puis vérifie TypeScript strict (`tsc --noEmit`) |
-| `npm run format` | Formate le code avec Prettier (les `.md` et `.pdf` de spécification ne sont jamais reformatés) |
-| `npm run format:check` | Vérifie le formatage sans modifier |
-| `npm run test` | Tests unitaires Vitest des règles métier pures (`tests/unit/`) |
-| `npm run check` | Lint, typecheck, format et tests unitaires, à lancer avant chaque commit |
-| `npm run build` | Build de production |
-| `npm run test:e2e` | Tests de parcours Playwright (ordinateur + téléphone) sur le build de production. Prérequis : Supabase local démarré et seedé |
-
-## Architecture : monolithe modulaire
-
-Une seule application Next.js (App Router) en TypeScript strict. Pas de backend séparé : le serveur Next.js exécute la logique métier, Supabase fournit PostgreSQL, Auth, Storage et RLS (à partir de P1).
-
-```text
-src/
-  app/                 # pages et layouts, groupés par espace : (auth), (coach), (athlete), (admin)
-    api/               # uniquement les vrais endpoints HTTP (téléchargement PDF, webhooks)
-  domain/              # règles métier pures, sans UI ni accès base, testables unitairement
-  features/<module>/   # cas d'usage d'un module : lectures, actions, schémas Zod
-  components/ui/       # composants d'interface réutilisables
-  lib/                 # intégrations techniques (client Supabase, etc.)
-supabase/
-  migrations/          # SQL versionné, seule façon de modifier le schéma
-  seed.sql             # données de DÉMONSTRATION uniquement
-```
-
-Un dossier n'est créé qu'au moment où il reçoit son premier fichier.
-
-### Lecture, mutation, HTTP
-
-| Outil Next.js | Usage | Règle |
-|---|---|---|
-| **Server Component** | Lire des données et rendre une page | Lecture via les services de `features/` |
-| **Server Action** | Mutation déclenchée par un formulaire de l'application | Appelable directement par n'importe qui : revérifier identité, rôle, organisation, propriété et Zod **dans l'action** |
-| **Route Handler** (`app/api/`) | Vrai endpoint HTTP (fichier, callback, webhook) | Mêmes services et mêmes vérifications que les actions |
-
-La logique métier n'est écrite qu'une fois, dans `domain/` et `features/` ; les trois points d'entrée l'appellent. La RLS PostgreSQL ajoute une défense en profondeur, elle ne remplace pas les vérifications serveur.
-
-### Conventions
-
-- `organization_id` sépare les locataires ; il est toujours déduit de la session côté serveur, jamais accepté tel quel depuis le navigateur.
-- IDs UUID, champs `created_at`, `updated_at`, `created_by`.
-- Interface en français, unités explicites (min/km, bpm, kg, m, km, s, répétitions).
-- Aucune donnée personnelle réelle dans le code, les seeds ou les commits.
-
-## Idées pour la suite
-
-- **Agent IA dans l'app** (`DIF-11`, demandé le 23/10/2026) : une fenêtre de discussion dans l'espace coach. L'agent connaît le contexte et fait les actions à la place du coach. Par exemple : « crée le sportif Valentin Dupont, musculation, disponible mardi, mercredi et jeudi à 19 h », ou « mets à jour les allures de Thomas ». Il ne touche qu'à ce qui est demandé, passe par les mêmes contrôles que l'interface, et **montre ce qu'il va faire avant que le coach confirme**. Prévu après les phases cœur (P9), détail dans [docs/16_POSITIONNEMENT.md](docs/16_POSITIONNEMENT.md).
-
-## Documentation
-
-Règles d'engagement : [CLAUDE.md](CLAUDE.md). Carte des spécifications : [00_INDEX.md](00_INDEX.md). Feuille de route et critères de recette : [docs/14_TESTS_ET_ROADMAP.md](docs/14_TESTS_ET_ROADMAP.md).
+Antonino Lo Bianco · 2026

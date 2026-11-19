@@ -56,3 +56,15 @@ supabase/.temp
 
 # Originaux des images RepDB (retéléchargés par scripts/catalog-images.mjs), D-142
 /resources/exercise-library/data/repdb-images/
+
+# Documents de travail (specs, prompts, maquettes, suivi) : ils restent en local, hors du dépôt
+/00_INDEX.md
+/AGENTS.md
+/CARNET_TECHNIQUE.md
+/CLAUDE.md
+/COORY_PROMPT_CLAUDE_CODE.md
+/Coaching_Platform_Cahier_des_Charges_Complet.pdf
+/Coaching_Platform_Roadmap.pdf
+/SUIVI_IMPLEMENTATION.md
+/coory-design/
+/docs/
