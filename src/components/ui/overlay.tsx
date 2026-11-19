@@ -46,6 +46,29 @@ import {
 
 const PHONE = "(max-width: 767.98px)";
 
+// Dernière façon d'agir de la personne : le clavier, ou le doigt et la souris (recette du 19/11/2026).
+// À l'ouverture, le navigateur donne le focus à la première commande de la fenêtre ; sans clavier, le
+// contour violet du focus (fait pour la navigation au clavier) entourait un bouton qu'on n'avait pas
+// choisi (iPhone d'Antonino, fenêtre des Paramètres).
+let lastInput: "keyboard" | "pointer" = "pointer";
+if (typeof window !== "undefined") {
+  window.addEventListener("keydown", () => (lastInput = "keyboard"), true);
+  window.addEventListener("pointerdown", () => (lastInput = "pointer"), true);
+}
+
+// Un champ où l'on écrit garde le focus : on peut taper tout de suite, et son contour est le sien.
+const TYPING =
+  'input:not([type="checkbox"],[type="radio"],[type="button"],[type="submit"],[type="reset"],[type="file"],[type="range"],[type="color"]), textarea, select, [contenteditable="true"]';
+
+// Après showModal() : ouverte sans le clavier, la fenêtre prend le focus elle-même, sans contour, et
+// Tab mène ensuite à sa première commande ; ouverte au clavier, rien ne change.
+function settleFocus(dialog: HTMLDialogElement) {
+  if (lastInput === "keyboard") return;
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && dialog.contains(active) && active.matches(TYPING)) return;
+  dialog.focus({ preventScroll: true });
+}
+
 // Décalage vertical affiché (px), lu sur l'élément : une animation interrompue repart de là.
 function shownOffset(element: HTMLElement): number {
   const transform = getComputedStyle(element).transform;
@@ -146,6 +169,7 @@ export function Overlay({
       previous?.backdrop.remove();
       ghost.current = null;
       if (!dialog.open) dialog.showModal();
+      settleFocus(dialog);
       try {
         dialog.animate([{ opacity: previous ? 0.6 : 0 }, { opacity: 1 }], {
           duration: 220,
@@ -375,6 +399,8 @@ export function Overlay({
   return (
     <dialog
       ref={ref}
+      // Focusable par le script seulement (settleFocus), jamais dans l'ordre de Tab.
+      tabIndex={-1}
       aria-labelledby={labelledBy}
       aria-label={labelledBy ? undefined : label}
       aria-describedby={describedBy}
@@ -405,7 +431,7 @@ export function Overlay({
       onPointerCancel={onPointerEnd}
       // La fenêtre ne défile pas : en-tête et pied restent fixes, seul le corps défile (kit). En bas
       // du téléphone, la zone du geste d'accueil est laissée libre (safe-area).
-      className={`m-0 mt-auto max-h-[calc(100%-44px)] w-full max-w-none overflow-hidden rounded-t-[28px] bg-dlg p-0 pb-[env(safe-area-inset-bottom)] text-text ${
+      className={`m-0 mt-auto max-h-[calc(100%-44px)] outline-none w-full max-w-none overflow-hidden rounded-t-[28px] bg-dlg p-0 pb-[env(safe-area-inset-bottom)] text-text ${
         size === "picker"
           ? `shadow-[var(--lib-menu-shadow)] ${PICKER_PHONE}`
           : "shadow-[var(--dlg-shadow)]"
