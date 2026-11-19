@@ -429,6 +429,8 @@ export function sessionHeadline(
     }
     case "strength": {
       const count = strengthCount(content);
+      // Que des blocs texte (séance reprise de la v1) : la durée, jamais « 0 exercice » (19/11).
+      if (count === 0) return duration;
       const pct = content.items.some(
         (item) =>
           (item.kind === "exercise" && item.loadMode === "pct") ||
@@ -487,6 +489,24 @@ export function runningDistanceMeters(
   return known ? Math.round(meters) : null;
 }
 
+// Le second chiffre d'une séance de musculation : ses séries ; ou ses blocs quand elle n'a que des
+// blocs texte (séance reprise de la v1, recette du 19/11), plutôt que « Séries 0 ». Le même dans
+// l'éditeur de séance et sur la page d'une séance.
+export function strengthCountStat(
+  content: Extract<PublishedSession["content"], { discipline: "strength" }>,
+): { label: string; value: string } {
+  const sets = content.items.reduce((total, item) => {
+    if (item.kind === "exercise")
+      return total + item.sets.filter((set) => set.type === "normal").length;
+    if (item.kind === "superset") return total + item.rounds * item.exercises.length;
+    if (item.kind === "emom") return total + item.minutes;
+    return total;
+  }, 0);
+  const blocks = content.items.filter((item) => item.kind === "text").length;
+  if (strengthCount(content) === 0 && blocks > 0) return { label: "Blocs", value: String(blocks) };
+  return { label: "Séries", value: String(sets) };
+}
+
 export function sessionStats(
   session: Pick<PublishedSession, "content" | "durationMinutes">,
 ): { label: string; value: string }[] {
@@ -503,16 +523,8 @@ export function sessionStats(
         },
       ];
     }
-    case "strength": {
-      const sets = content.items.reduce((total, item) => {
-        if (item.kind === "exercise")
-          return total + item.sets.filter((set) => set.type === "normal").length;
-        if (item.kind === "superset") return total + item.rounds * item.exercises.length;
-        if (item.kind === "emom") return total + item.minutes;
-        return total;
-      }, 0);
-      return [duration, { label: "Séries", value: String(sets) }];
-    }
+    case "strength":
+      return [duration, strengthCountStat(content)];
     case "hyrox":
       return [
         duration,

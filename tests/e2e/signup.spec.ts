@@ -136,6 +136,17 @@ test("l'inscription ne propose que le compte coach", async ({ page }) => {
   await expect(page.getByText(/Je suis sportif|^Sportif$/)).toHaveCount(0);
 });
 
+// Recette du 19/11 : l'assistant s'appelle « Assistant IA » partout, aussi sur le badge de l'inscription
+// (téléphone), qui disait encore « Copilote IA ».
+test("le badge de l'inscription dit « Assistant IA », comme partout dans Coory", async ({
+  page,
+}) => {
+  await page.goto("/inscription");
+  await expect(page.getByRole("heading", { name: "Créer ton compte" })).toBeVisible();
+  await expect(page.getByText(/Copilote/)).toHaveCount(0);
+  await expect(page.getByText("Assistant IA", { exact: true })).toHaveCount(1);
+});
+
 test("un sportif s'inscrit seul et attend que son coach le rattache", async ({
   page,
   request,

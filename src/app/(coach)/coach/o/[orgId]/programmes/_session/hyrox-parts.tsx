@@ -749,7 +749,7 @@ export function HyroxLinePanel({
             />
             <UnitField
               name="Allure"
-              unit="min/km"
+              unit="/km"
               initial={line.paceSecPerKm ? formatPace(line.paceSecPerKm) : ""}
               placeholder="5:45"
               parse={paceIn}

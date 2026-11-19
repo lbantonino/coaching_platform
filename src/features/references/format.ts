@@ -14,14 +14,15 @@ type Formattable = {
 
 const numberFr = new Intl.NumberFormat("fr-BE", { maximumFractionDigits: 2 });
 
-// Valeur principale d'un repère, avec son unité (docs/05 §4 : « 05:00 min/km », km/h dérivé si utile).
+// Valeur principale d'un repère, avec son unité : « 5:00 /km » comme les apps de sport (règle du
+// 16/11/2026), km/h pour la VMA.
 export function formatReferenceValue(entry: Formattable): string {
   // La VMA s'exprime en vitesse (km/h), même si elle est stockée comme une allure.
   if (entry.kind === "pace_vma" && entry.paceMin !== null) {
     return `${numberFr.format(paceToSpeedKmh(entry.paceMin))} km/h`;
   }
   if (entry.paceMin !== null && entry.paceMax !== null) {
-    return `${formatPaceRange(entry.paceMin, entry.paceMax)} min/km`;
+    return `${formatPaceRange(entry.paceMin, entry.paceMax)} /km`;
   }
   if (entry.bpm !== null) return `${entry.bpm} bpm`;
   if (entry.loadKg !== null) {
@@ -32,13 +33,13 @@ export function formatReferenceValue(entry: Formattable): string {
 }
 
 // La valeur et son unité séparées (maquette « Sportifs » du 03/11/2026 : grand chiffre, unité en
-// plus petit) : « 4:50–5:05 » + « min/km », « 6 kg × 25 » + « reps », « 58 » + « bpm ».
+// plus petit) : « 4:50–5:05 » + « /km », « 6 kg × 25 » + « reps », « 58 » + « bpm ».
 export function splitReferenceValue(entry: Formattable): { value: string; unit: string } {
   if (entry.kind === "pace_vma" && entry.paceMin !== null) {
     return { value: numberFr.format(paceToSpeedKmh(entry.paceMin)), unit: "km/h" };
   }
   if (entry.paceMin !== null && entry.paceMax !== null) {
-    return { value: formatPaceRange(entry.paceMin, entry.paceMax), unit: "min/km" };
+    return { value: formatPaceRange(entry.paceMin, entry.paceMax), unit: "/km" };
   }
   if (entry.bpm !== null) return { value: String(entry.bpm), unit: "bpm" };
   if (entry.loadKg !== null) {
@@ -53,7 +54,7 @@ export function splitReferenceValue(entry: Formattable): { value: string; unit: 
 // Information secondaire : vitesse dérivée pour une allure (milieu de plage), exercice pour une charge.
 export function formatReferenceDetail(entry: Formattable): string | null {
   if (entry.kind === "pace_vma" && entry.paceMin !== null) {
-    return `${formatPaceRange(entry.paceMin, entry.paceMin)} min/km`;
+    return `${formatPaceRange(entry.paceMin, entry.paceMin)} /km`;
   }
   if (entry.paceMin !== null && entry.paceMax !== null) {
     const middle = (entry.paceMin + entry.paceMax) / 2;

@@ -8,6 +8,7 @@ import { AssistantDialog, AssistantProvider } from "@/components/blocks/assistan
 import { DemoBanner } from "@/components/blocks/demo-banner";
 import { TaskSheetProvider } from "@/components/blocks/task-sheet";
 import { AppShell } from "@/components/layout/app-shell";
+import { ShellSkeleton } from "@/components/layout/shell-skeleton";
 import { askAssistant } from "@/features/assistant/actions";
 import { executeAssistantAction, executeWithFile } from "@/features/assistant/execute";
 import { getAssistantAccess } from "@/features/assistant/queries";
@@ -30,11 +31,12 @@ import { SettingsDialogProvider } from "./coach/profil/settings-dialog";
 export const maxDuration = 300;
 
 // Coquille de l'espace coach (prompt Claude Design §5.2). Elle lit la session (organisation, carte
-// du coach) : tout passe derrière Suspense (Cache Components).
+// du coach) : tout passe derrière Suspense (Cache Components). Pendant ce temps, la silhouette de la
+// coquille (recette du 19/11), jamais un fond vide.
 // Ce n'est PAS une protection : chaque page appelle elle-même son garde-fou (requireCoach, requireOrgAccess).
 export default function CoachLayout({ children }: LayoutProps<"/">) {
   return (
-    <Suspense fallback={<div className="flex-1" />}>
+    <Suspense fallback={<ShellSkeleton />}>
       <CoachShell>{children}</CoachShell>
     </Suspense>
   );

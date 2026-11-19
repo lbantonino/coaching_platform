@@ -83,7 +83,27 @@ export function upgradeV1Session(
   key: string,
   withCoach?: { coachSessionId: string; date: string; time?: string },
 ): SessionDraft {
-  const items = session.steps.map((step, i) => ({
+  // Musculation (recette du 19/11/2026) : l'« Échauffement » en tête et le « Retour au calme » en fin
+  // vont dans les champs de la séance ; en blocs texte, l'éditeur les montrait deux fois (le champ
+  // vide, puis le bloc). Seulement sans perte : bloc sans répétition, texte dans la limite du champ.
+  let steps = session.steps;
+  let warmup: string | undefined;
+  let cooldown: string | undefined;
+  if (session.discipline === "strength") {
+    const first = steps[0];
+    const firstText = first && steps.length > 1 ? sessionField(first, "échauffement") : null;
+    if (firstText) {
+      warmup = firstText;
+      steps = steps.slice(1);
+    }
+    const last = steps.at(-1);
+    const lastText = last && steps.length > 1 ? sessionField(last, "retour au calme") : null;
+    if (lastText) {
+      cooldown = lastText;
+      steps = steps.slice(0, -1);
+    }
+  }
+  const items = steps.map((step, i) => ({
     id: `t${i + 1}`,
     kind: "text" as const,
     title: step.title,
@@ -98,8 +118,24 @@ export function upgradeV1Session(
     durationMinutes: session.durationMinutes,
     ...(session.objective ? { objective: session.objective } : {}),
     ...(session.coachTips ? { coachTip: session.coachTips } : {}),
-    content: { discipline: session.discipline ?? "hybrid", items },
+    content:
+      session.discipline === "strength"
+        ? {
+            discipline: "strength",
+            ...(warmup ? { warmup } : {}),
+            ...(cooldown ? { cooldown } : {}),
+            items,
+          }
+        : { discipline: session.discipline ?? "hybrid", items },
     athleteCanMove: false,
     ...(withCoach ? { withCoach } : {}),
   };
+}
+
+// Le texte d'un champ « Échauffement » / « Retour au calme » tiré d'une étape v1 du même nom
+// (« 10 min · Cardio léger et mobilité ») ; null si l'étape doit rester un bloc.
+function sessionField(step: ProgramSessionStep, name: string): string | null {
+  if (step.repeat || step.title.trim().toLocaleLowerCase("fr") !== name) return null;
+  const text = [step.badge, ...step.lines].filter(Boolean).join(" · ").trim();
+  return text.length > 0 && text.length <= 300 ? text : null;
 }

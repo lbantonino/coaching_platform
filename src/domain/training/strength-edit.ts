@@ -178,6 +178,9 @@ export function strengthCounts(content: StrengthContent): { exercises: number; s
 // « 6 exercices · 16 séries · superset et EMOM ».
 export function strengthSummary(content: StrengthContent): string {
   const { exercises, sets } = strengthCounts(content);
+  // Que des blocs texte (séance reprise de la v1, recette du 19/11) : « 2 blocs », pas « 0 exercice ».
+  const blocks = content.items.filter((item) => item.kind === "text").length;
+  if (exercises === 0 && blocks > 0) return `${blocks} bloc${blocks > 1 ? "s" : ""}`;
   const kinds = [
     content.items.some((item) => item.kind === "superset") ? "superset" : null,
     content.items.some((item) => item.kind === "emom") ? "EMOM" : null,

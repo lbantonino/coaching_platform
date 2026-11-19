@@ -67,7 +67,7 @@ export function SignupView({ social }: { social: ReactNode }) {
         </Link>
         <span className="flex h-7 items-center gap-1.5 rounded-[7px] bg-dlg-accent-tile px-[11px] text-[11.5px] font-bold text-violet-text lg:hidden">
           <Spark size={12} className="text-violet" />
-          Copilote IA
+          Assistant IA
         </span>
       </div>
 

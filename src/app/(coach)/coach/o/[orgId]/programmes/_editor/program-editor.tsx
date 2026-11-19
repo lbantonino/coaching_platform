@@ -278,8 +278,12 @@ const pill =
 const smallButton =
   "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[9px] bg-surface px-3 text-[12.5px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 enabled:hover:bg-surface-2 enabled:active:scale-[0.97] disabled:text-faint";
 const card = "rounded-[20px] bg-surface";
-const phoneButton =
-  "inline-flex h-11 flex-1 items-center justify-center rounded-[12px] px-4 text-[14px] font-semibold transition-[scale] duration-150 active:scale-[0.98]";
+const phoneButtonBase =
+  "inline-flex h-11 items-center justify-center rounded-[12px] text-[14px] font-semibold whitespace-nowrap transition-[scale] duration-150 active:scale-[0.98]";
+const phoneButton = `${phoneButtonBase} flex-1 px-4`;
+// À côté de « Dupliquer dans Mes modèles » (modèle Coory) : « Utiliser » prend la largeur de son mot,
+// pour que le libellé long tienne sur une ligne à 390 px (recette du 19/11).
+const phoneButtonFit = `${phoneButtonBase} shrink-0 px-5`;
 
 export function ProgramEditor({ meta }: { meta: EditorMeta }) {
   const editor = useEditor<ProgramDraft | ProgramPlan>();
@@ -1531,7 +1535,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           <button
             type="button"
             onClick={openUseTemplate}
-            className={`${phoneButton} bg-surface text-text inset-ring inset-ring-field-ring`}
+            className={`${readOnly ? phoneButtonFit : phoneButton} bg-surface text-text inset-ring inset-ring-field-ring`}
           >
             Utiliser
           </button>

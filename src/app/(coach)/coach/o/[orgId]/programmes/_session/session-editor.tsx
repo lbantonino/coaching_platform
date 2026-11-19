@@ -67,7 +67,6 @@ import {
   removeItem as removeStrengthItem,
   replaceExercise,
   replaceGroup,
-  strengthCounts,
   strengthSummary,
   type StrengthGroup,
 } from "@/domain/training/strength-edit";
@@ -76,6 +75,7 @@ import {
   formatSeconds,
   runningDistanceMeters,
   sessionHeadline,
+  strengthCountStat,
 } from "@/domain/training/session-view";
 import { saveSessionAsTemplate } from "@/features/programs/actions";
 
@@ -240,10 +240,9 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
   const discipline = session.content.discipline;
   const kicker = `${disciplineLabels[discipline]} · Séance ${meta.position} · Semaine ${meta.weekIndex}`;
   const meters = running ? runningDistanceMeters(running) : null;
-  const strengthCount = strength ? strengthCounts(strength) : null;
   const totals = [
-    // Musculation : « Séries » d'abord (maquette 5a).
-    ...(strengthCount ? [{ label: "Séries", value: String(strengthCount.sets) }] : []),
+    // Musculation : « Séries » d'abord (maquette 5a) ; « Blocs » pour une séance faite de blocs texte.
+    ...(strength ? [strengthCountStat(strength)] : []),
     {
       label: session.durationManual ? "Durée" : "Durée estimée",
       value: `${session.durationManual ? "" : "≈ "}${formatMinutes(session.durationMinutes * 60)}`,

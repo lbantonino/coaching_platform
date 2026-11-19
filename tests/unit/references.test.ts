@@ -93,13 +93,17 @@ describe("affichage des repères", () => {
 
   it("affiche une allure, sa plage et la vitesse dérivée", () => {
     expect(formatReferenceValue({ ...base, kind: "pace_5k", paceMin: 295, paceMax: 295 })).toBe(
-      "4:55 min/km",
+      "4:55 /km",
     );
     expect(formatReferenceValue({ ...base, kind: "pace_easy", paceMin: 400, paceMax: 435 })).toBe(
-      "6:40–7:15 min/km",
+      "6:40–7:15 /km",
     );
     expect(formatReferenceDetail({ ...base, kind: "pace_5k", paceMin: 300, paceMax: 300 })).toBe(
       "≈ 12 km/h",
+    );
+    // VMA : la vitesse en grand, l'allure en détail, écrite « 4:00 /km » (règle du 16/11).
+    expect(formatReferenceDetail({ ...base, kind: "pace_vma", paceMin: 240, paceMax: 240 })).toBe(
+      "4:00 /km",
     );
   });
 
@@ -121,7 +125,7 @@ describe("affichage des repères", () => {
     expect(splitReferenceValue({ ...base, kind: "pace_race", paceMin: 290, paceMax: 305 })).toEqual(
       {
         value: "4:50–5:05",
-        unit: "min/km",
+        unit: "/km",
       },
     );
     expect(

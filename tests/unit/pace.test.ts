@@ -19,6 +19,15 @@ describe("parsePace / formatPace (RUN-01)", () => {
     expect(parsePace("6:15/km")).toEqual({ ok: true, secPerKm: 375 });
   });
 
+  // Règle du 16/11 (recette du 19/11) : une allure s'écrit « 15:00 /km », aussi dans un message.
+  it("écrit les bornes d'une allure hors limites comme une allure (« /km »)", () => {
+    const result = parsePace("1:30");
+    expect(result).toEqual({
+      ok: false,
+      error: "Allure hors limites : elle doit être comprise entre 2:00 et 15:00 /km.",
+    });
+  });
+
   it("refuse une saisie ambiguë au lieu de deviner", () => {
     const result = parsePace("4:5");
     expect(result.ok).toBe(false);

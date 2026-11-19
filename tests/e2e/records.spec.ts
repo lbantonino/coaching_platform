@@ -39,7 +39,7 @@ test("le coach enregistre des performances et voit le meilleur temps par épreuv
   await expect(saved).toBeVisible();
   await addPerformance(page, "5 km", "21:45");
   await expect(best.getByText("21:45", { exact: true })).toBeVisible();
-  await expect(best.getByText(/4:21 min\/km/)).toBeVisible();
+  await expect(best.getByText(/4:21 \/km/)).toBeVisible();
   await expect(best.getByText("22:30", { exact: true })).toHaveCount(0);
 
   // Hyrox : la catégorie est obligatoire, puis le record porte son nom.

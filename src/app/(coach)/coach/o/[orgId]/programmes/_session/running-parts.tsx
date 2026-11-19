@@ -725,16 +725,16 @@ export function RunStepPanel({
                 className={field}
               />
               <span className="text-[13px] font-medium whitespace-nowrap text-muted">
-                {paceMode === "minkm" ? "min/km" : "% VMA"}
+                {paceMode === "minkm" ? "/km" : "% VMA"}
               </span>
             </div>
             {paceError ? (
               <p className="text-[12.5px] text-alert">{paceError}</p>
             ) : paceMode === "vma" && step.target?.kind === "pace" ? (
-              // En % de VMA : l'allure qui en sort, en min/km.
+              // En % de VMA : l'allure qui en sort, « 4:30–4:40 /km ».
               <p className="text-[12.5px] text-muted">
                 Soit {formatPace(step.target.fromSecPerKm)}–{formatPace(step.target.toSecPerKm)}{" "}
-                min/km.
+                /km.
               </p>
             ) : null}
           </>

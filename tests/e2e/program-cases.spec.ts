@@ -211,3 +211,28 @@ test.fixme("TC-09 : le sportif autorisé déplace une séance à jour fixe dans 
   // Attend l'espace du sportif (roadmap P6) : l'autorisation est déjà enregistrée par séance
   // (athleteCanMove, C-14), le déplacement et la notification du coach viendront avec lui.
 });
+
+// Recette du 19/11 : sur téléphone (390 px, la largeur de référence), « Dupliquer dans Mes modèles »
+// passait sur deux lignes à côté de « Utiliser ».
+test("téléphone : « Dupliquer dans Mes modèles » tient sur une ligne", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "telephone", "Défaut propre au téléphone.");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await login(page);
+  await page.goto(`/coach/o/${ORG}/programmes/modeles/${COORY_TEMPLATE}`);
+  const button = page
+    .getByRole("button", { name: "Dupliquer dans Mes modèles" })
+    .filter({ visible: true });
+  await expect(button).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Utiliser" }).filter({ visible: true }),
+  ).toBeVisible();
+  // Lignes de texte du libellé : une seule hauteur de ligne distincte.
+  const lines = await button.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+  });
+  expect(lines).toBe(1);
+});

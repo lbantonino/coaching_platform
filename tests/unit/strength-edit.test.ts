@@ -121,6 +121,19 @@ describe("lecture", () => {
       "10 répétitions · RIR 1",
     );
   });
+
+  // Recette du 19/11 : une séance reprise de la v1 n'a que des blocs texte ; « 0 exercice · 0 série »
+  // laissait croire qu'elle était vide.
+  it("une séance faite seulement de blocs texte se résume par ses blocs", () => {
+    const content: StrengthContent = {
+      discipline: "strength",
+      items: [
+        { id: "t1", kind: "text", title: "Circuit", lines: ["10 squats"] },
+        { id: "t2", kind: "text", title: "Finisher", lines: ["30 s de gainage"] },
+      ],
+    };
+    expect(strengthSummary(content)).toBe("2 blocs");
+  });
 });
 
 describe("charge en % du max", () => {

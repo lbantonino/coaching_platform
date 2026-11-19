@@ -171,3 +171,62 @@ describe("résumé d'une séance de course : l'allure avec son unité", () => {
     expect(headline).not.toContain("@");
   });
 });
+
+// Recette du 19/11 : une séance de musculation d'avant l'éditeur (v1, blocs texte) affichait deux
+// « Échauffement » et deux « Retour au calme » (le champ de la séance, vide, et le bloc texte) et
+// « 0 exercice / 0 série ». La reprise remplit les champs de la séance ; les chiffres comptent les blocs.
+describe("séance de musculation reprise de la v1", () => {
+  const v1 = {
+    title: "Remise en forme",
+    discipline: "strength" as const,
+    sessionType: "Force",
+    durationMinutes: 60,
+    steps: [
+      { title: "Échauffement", badge: "10 min", lines: ["Cardio léger et mobilité"] },
+      {
+        title: "Circuit",
+        badge: "4 tours",
+        lines: [],
+        repeat: { times: 4, lines: ["10 squats au poids du corps", "10 pompes inclinées"] },
+      },
+      { title: "Retour au calme", badge: "5 min", lines: ["Étirements doux"] },
+    ],
+  };
+
+  it("l'échauffement et le retour au calme vont dans leurs champs, sans doublon", () => {
+    const upgraded = upgradeV1Session(v1, "s1-1");
+    if (upgraded.content.discipline !== "strength") throw new Error("musculation attendue");
+    expect(upgraded.content.warmup).toBe("10 min · Cardio léger et mobilité");
+    expect(upgraded.content.cooldown).toBe("5 min · Étirements doux");
+    expect(upgraded.content.items).toHaveLength(1);
+    expect(upgraded.content.items[0]).toMatchObject({ kind: "text", title: "Circuit" });
+    const display = parseProgramSession(
+      JSON.parse(JSON.stringify({ schemaVersion: 2, ...upgraded })),
+    );
+    expect(display?.steps.map((step) => step.title)).toEqual([
+      "Échauffement",
+      "Circuit",
+      "Retour au calme",
+    ]);
+  });
+
+  it("un bloc « Échauffement » au milieu de la séance reste un bloc (l'ordre ne change pas)", () => {
+    const [warmup, circuit, cooldown] = v1.steps;
+    const upgraded = upgradeV1Session({ ...v1, steps: [circuit!, warmup!, cooldown!] }, "s1-1");
+    if (upgraded.content.discipline !== "strength") throw new Error("musculation attendue");
+    expect(upgraded.content.warmup).toBeUndefined();
+    expect(upgraded.content.items.map((item) => (item.kind === "text" ? item.title : ""))).toEqual([
+      "Circuit",
+      "Échauffement",
+    ]);
+  });
+
+  it("sans exercice structuré : ni « 0 exercice » ni « 0 série », la durée et les blocs", () => {
+    const upgraded = upgradeV1Session(v1, "s1-1");
+    expect(sessionHeadline(upgraded)).toBe("60 min");
+    expect(sessionStats(upgraded)).toEqual([
+      { label: "Durée", value: "≈ 60 min" },
+      { label: "Blocs", value: "1" },
+    ]);
+  });
+});

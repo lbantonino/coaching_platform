@@ -94,7 +94,7 @@ describe("buildReferenceSeries", () => {
     ]);
     expect(race.tone).toBe("hyrox");
     expect(race.points[0].value).toBe(297.5);
-    expect(race.points[0].valueLabel).toBe("4:50–5:05 min/km");
+    expect(race.points[0].valueLabel).toBe("4:50–5:05 /km");
   });
 });
 

@@ -159,7 +159,7 @@ function CalculatorForm({
               {numberFr.format(vma.vmaKmh)} km/h
             </span>
             <span className="font-mono text-small text-muted">
-              {formatPace(3600 / vma.vmaKmh)} min/km
+              {formatPace(3600 / vma.vmaKmh)} /km
             </span>
           </p>
           <fieldset className="flex flex-col">
@@ -187,7 +187,7 @@ function CalculatorForm({
                   </span>
                 </span>
                 <span className="font-mono tabular">
-                  {formatProposedPace(pace.minSecPerKm, pace.maxSecPerKm)} min/km
+                  {formatProposedPace(pace.minSecPerKm, pace.maxSecPerKm)} /km
                 </span>
               </label>
             ))}

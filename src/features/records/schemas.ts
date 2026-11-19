@@ -48,10 +48,10 @@ export function formatRaceTime(totalSeconds: number): string {
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${ss}` : `${minutes}:${ss}`;
 }
 
-// Allure moyenne d'une course à pied (« 4:21 min/km »), ou null pour Hyrox.
+// Allure moyenne d'une course à pied (« 4:21 /km », règle du 16/11), ou null pour Hyrox.
 export function recordPace(event: RecordEvent, totalSeconds: number): string | null {
   const km = distancesKm[event];
-  return km ? `${formatPace(totalSeconds / km)} min/km` : null;
+  return km ? `${formatPace(totalSeconds / km)} /km` : null;
 }
 
 // Libellé complet de l'épreuve : « Hyrox Open », « 10 km ».

@@ -1,5 +1,5 @@
 // Allures de course : règles PURES (sans base ni interface), testées par Vitest (RUN-01, docs/05 §4 et §7).
-// Stockage en secondes par kilomètre ; affichage « m:ss min/km ».
+// Stockage en secondes par kilomètre ; affichage « m:ss /km » (règle du 16/11/2026).
 
 // Bornes raisonnables pour une allure de course à pied (2:00 à 15:00 min/km). Hors bornes = erreur de saisie probable.
 export const PACE_MIN_SEC_PER_KM = 120;
@@ -30,7 +30,7 @@ export function parsePace(input: string): PaceParseResult {
   if (secPerKm < PACE_MIN_SEC_PER_KM || secPerKm > PACE_MAX_SEC_PER_KM) {
     return {
       ok: false,
-      error: "Allure hors limites : elle doit être comprise entre 2:00 et 15:00 min/km.",
+      error: "Allure hors limites : elle doit être comprise entre 2:00 et 15:00 /km.",
     };
   }
   return { ok: true, secPerKm };

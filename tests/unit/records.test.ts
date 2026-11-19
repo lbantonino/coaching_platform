@@ -81,7 +81,7 @@ describe("formatage", () => {
   it("écrit les temps et l'allure moyenne", () => {
     expect(formatRaceTime(1305)).toBe("21:45");
     expect(formatRaceTime(6150)).toBe("1:42:30");
-    expect(recordPace("run_5k", 1305)).toBe("4:21 min/km");
+    expect(recordPace("run_5k", 1305)).toBe("4:21 /km");
     expect(recordPace("hyrox", 4720)).toBeNull();
     expect(recordTitle("hyrox", "pro")).toBe("Hyrox Pro");
     expect(recordTitle("run_half", null)).toBe("Semi-marathon");

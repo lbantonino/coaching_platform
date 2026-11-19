@@ -73,8 +73,8 @@ test("le coach enregistre des repères datés et conserve l'historique", async (
   await expect(saved).toBeVisible();
   await addMeasure(page, "Allure 5 km", (p) => p.getByLabel("Allure (min/km)").fill("4:45"));
   let menu = await openReferenceMenu(page);
-  await expect(menu).toContainText("4:45 min/km");
-  await expect(menu).not.toContainText("4:55 min/km");
+  await expect(menu).toContainText("4:45 /km");
+  await expect(menu).not.toContainText("4:55 /km");
   await page.keyboard.press("Escape");
 
   // FC et charge de référence.
@@ -176,7 +176,7 @@ test("le coach calcule les allures depuis un test de Cooper et valide avant enre
   await testKind.getByText("Cooper (12 min)").click();
   await page.getByLabel("Distance parcourue en 12 min (m)").fill("3000");
   await expect(page.getByText("15 km/h", { exact: true })).toBeVisible();
-  await expect(page.getByText("5:20–6:09 min/km")).toBeVisible();
+  await expect(page.getByText("5:20–6:09 /km")).toBeVisible();
 
   // Le coach décoche une zone, puis valide.
   await page.getByRole("checkbox", { name: /Allure marathon/ }).uncheck();
@@ -188,8 +188,8 @@ test("le coach calcule les allures depuis un test de Cooper et valide avant enre
 
   const menu = await openReferenceMenu(page);
   await expect(menu).toContainText("15 km/h");
-  await expect(menu).toContainText("5:20–6:09 min/km");
-  await expect(menu).toContainText("4:13 min/km");
+  await expect(menu).toContainText("5:20–6:09 /km");
+  await expect(menu).toContainText("4:13 /km");
   await expect(menu).not.toContainText("Allure marathon");
   await page.keyboard.press("Escape");
 
