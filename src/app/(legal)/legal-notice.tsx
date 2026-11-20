@@ -6,10 +6,10 @@ import { LegalTocAccordion, LegalTocAside } from "@/components/layout/legal-toc"
 import { ProvisionalNotice } from "@/components/layout/provisional-notice";
 import { LEGAL } from "@/config/legal";
 
-// Gabarit commun des pages légales PROVISOIRES (maquette d'Antonino du 06/11/2026, écrans 04 à 06,
-// D-139) : sommaire à gauche (ordinateur) ou en accordéon (téléphone), onglets entre les trois
-// documents, titre au point violet, bandeau « Version provisoire », sections numérotées, encadré de
-// contact. Rien n'y est présenté comme validé : les passages entre crochets restent à compléter.
+// Gabarit commun des pages légales (maquette d'Antonino du 06/11/2026, écrans 04 à 06, D-139) :
+// sommaire à gauche (ordinateur) ou en accordéon (téléphone), onglets entre les trois documents, titre
+// au point violet, bandeau « Bêta privée » (D-198), sections numérotées, encadré de contact. Textes
+// complets le 20/11/2026, pas encore relus par un juriste : rien n'y est présenté comme validé.
 const documents = [
   { href: "/conditions", label: "Conditions" },
   { href: "/confidentialite", label: "Confidentialité" },
@@ -80,8 +80,7 @@ export function LegalDocument({
           />
           <header className="flex flex-col gap-2.5 lg:gap-3">
             <p className="text-[10.5px] font-semibold tracking-[0.1em] text-muted uppercase lg:text-[11.5px]">
-              <span className="max-lg:hidden">Texte provisoire · </span>Mis à jour le{" "}
-              {LEGAL.updatedOn}
+              <span className="max-lg:hidden">Bêta privée · </span>Mis à jour le {LEGAL.updatedOn}
             </p>
             <h1 className="text-[29px] leading-[1.08] font-extrabold tracking-[-0.04em] text-balance text-text lg:text-[42px] lg:leading-[1.05] lg:tracking-[-0.045em]">
               {title}

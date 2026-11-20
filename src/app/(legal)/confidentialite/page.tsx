@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { LEGAL } from "@/config/legal";
 
@@ -24,8 +25,12 @@ export default function PrivacyPage() {
                 {LEGAL.contactEmail}
               </a>
               ). Pour les données qu’un coach saisit sur ses sportifs, le coach est responsable de
-              traitement et Coory agit comme sous-traitant [à confirmer avec un juriste, clauses de
-              sous-traitance à ajouter aux conditions d’utilisation].
+              traitement et l’éditeur de Coory est son sous-traitant : ses engagements sont écrits
+              dans les{" "}
+              <Link href="/conditions" className="font-semibold text-text">
+                conditions d’utilisation
+              </Link>
+              , rubrique « Données de tes sportifs ».
             </p>
           ),
         },
@@ -75,12 +80,12 @@ export default function PrivacyPage() {
                 utilise pour son propre compte.
               </p>
               <p>
-                <strong>Supabase</strong> : base de données, comptes et fichiers, hébergés en
-                Irlande (Union européenne).
+                <strong>Supabase</strong> (Supabase Pte. Ltd., Singapour) : base de données, comptes
+                et fichiers, hébergés en Irlande (Union européenne).
               </p>
               <p>
-                <strong>Vercel</strong> : hébergement de l’application, sur ses serveurs de Dublin
-                (Irlande).
+                <strong>Vercel</strong> (Vercel Inc., États-Unis) : hébergement de l’application,
+                sur ses serveurs de Dublin (Irlande).
               </p>
               <p>
                 <strong>Brevo</strong> (France) : envoi des e-mails de ton compte (confirmation
@@ -98,7 +103,15 @@ export default function PrivacyPage() {
                 sont envoyées à Claude. L’Assistant ne lit jamais les données de santé, les notes
                 privées ni les données Garmin, et Anthropic n’utilise pas ces échanges pour
                 entraîner ses modèles. Coach, n’écris pas de données de santé dans l’Assistant.
-                [Cadre du transfert hors de l’Union européenne à confirmer avec un juriste.]
+              </p>
+              <p>
+                <strong>Hors de l’Union européenne</strong> : certains de ces prestataires sont
+                établis hors de l’Union européenne ou y accèdent depuis l’étranger. Ces envois sont
+                encadrés par les clauses contractuelles types de la Commission européenne, prévues
+                dans leurs contrats : Anthropic traite les demandes de l’Assistant aux États-Unis ;
+                l’équipe de Supabase peut accéder à la base depuis Singapour ou les États-Unis pour
+                son support ; Vercel et Google sont aussi certifiés au cadre de protection des
+                données UE-États-Unis (Data Privacy Framework).
               </p>
             </>
           ),
@@ -176,8 +189,8 @@ export default function PrivacyPage() {
                 cardiaque, ni position GPS). Si un jour Coory propose de recevoir tes activités,
                 cette page sera mise à jour avant, et ton accord te sera demandé à nouveau. Cette
                 connexion est facultative : Coory fonctionne aussi sans montre. Responsable de ce
-                traitement : {LEGAL.publisher}, éditeur de Coory [à confirmer avec un juriste]. [En
-                préparation : la connexion n’est pas encore ouverte.]
+                traitement : {LEGAL.publisher}, éditeur de Coory. Cette connexion n’est pas encore
+                disponible : elle sera ouverte plus tard.
               </p>
               <p>
                 <strong>Ce que Coory envoie à Garmin</strong> : les séances de course que ton coach

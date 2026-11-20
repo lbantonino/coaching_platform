@@ -8,9 +8,11 @@ import { emailField, newPasswordField } from "./schemas";
 
 // Inscription libre (D-30) : règles PURES, testées par Vitest.
 
-// Version des conditions et de la politique de confidentialité acceptées (pages provisoires).
+// Version des conditions et de la politique de confidentialité acceptées.
 // Nouvelle version le 06/11/2026 (D-139) : éditeur, contact et hébergement complétés, code d'accès.
-export const TERMS_VERSION = "2026-11-06-provisoire";
+// Nouvelle version le 20/11/2026 (D-198) : contrat de sous-traitance, paiements, responsabilité,
+// résiliation, hébergeurs et transferts hors de l'Union européenne ; plus aucun crochet.
+export const TERMS_VERSION = "2026-11-20-beta";
 
 export const ACCOUNT_KINDS = ["coach", "athlete"] as const;
 export type AccountKind = (typeof ACCOUNT_KINDS)[number];

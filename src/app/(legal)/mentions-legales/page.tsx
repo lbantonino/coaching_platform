@@ -36,11 +36,18 @@ export default function LegalNoticePage() {
         {
           title: "Hébergement",
           body: (
-            <p>
-              Application : Vercel Inc. (vercel.com). Base de données et fichiers : Supabase
-              (supabase.com), serveurs dans l’Union européenne. [Adresses des hébergeurs et région à
-              confirmer à la mise en ligne.]
-            </p>
+            <>
+              <p>
+                <strong>Application</strong> : Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA
+                91723, États-Unis (vercel.com). L’application tourne sur ses serveurs de Dublin
+                (Irlande).
+              </p>
+              <p>
+                <strong>Base de données et fichiers</strong> : Supabase Pte. Ltd., 65 Chulia Street
+                #38-02/03, OCBC Centre, Singapour 049513 (supabase.com). Les données sont stockées à
+                Dublin (Irlande, Union européenne).
+              </p>
+            </>
           ),
         },
         {

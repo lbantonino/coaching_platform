@@ -220,9 +220,9 @@ test("la connexion propose l'inscription, sans bouton social tant qu'aucun n'est
   await page.getByRole("link", { name: "Créer un compte" }).filter({ visible: true }).click();
   await expect(page.getByRole("heading", { name: /^Créer ton compte\.?$/ })).toBeVisible();
   await expect(page.getByRole("button", { name: /Continuer avec/ })).toHaveCount(0);
-  // Les pages légales provisoires sont accessibles et annoncées comme telles.
+  // Les pages légales sont accessibles et annoncées comme une bêta privée, pas encore relue par un juriste.
   await page.goto("/confidentialite");
-  await expect(page.getByText("Version provisoire")).toBeVisible();
+  await expect(page.getByText("Bêta privée", { exact: true })).toBeVisible();
   // La dernière étape est réservée aux comptes connectés.
   await page.goto("/bienvenue");
   await expect(page).toHaveURL(/\/login$/);
