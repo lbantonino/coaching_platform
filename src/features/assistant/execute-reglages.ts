@@ -43,7 +43,7 @@ export async function executeReglages(
 ): Promise<ExecuteResult> {
   switch (action.kind) {
     case "modifier_profil": {
-      const data = await loadSettings();
+      const data = await loadSettings(orgId);
       const saved = await updateProfile(
         state(),
         fields(mergeProfile(data.profile, action.params.changes)),
@@ -67,7 +67,7 @@ export async function executeReglages(
     }
     case "devise_organisation": {
       // Relecture n°1 : seulement depuis la devise annoncée sur la carte.
-      const data = await loadSettings();
+      const data = await loadSettings(orgId);
       if (data.organization.id !== orgId) return fail("Organisation introuvable.");
       const conflict = currencyConflict(action.params.depuis, data.organization.currency);
       if (conflict) return fail(conflict);
@@ -80,7 +80,7 @@ export async function executeReglages(
       return { ok: true, href: SETTINGS };
     }
     case "preferences": {
-      const data = await loadSettings();
+      const data = await loadSettings(orgId);
       const saved = await updatePreferences(
         state(),
         fields(mergePreferences(data.preferences, action.params.changes)),

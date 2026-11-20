@@ -21,6 +21,7 @@ import {
   mergeProfile,
   preferenceText,
   type ReglagesKind,
+  uniqueNotificationKeys,
 } from "../reglages";
 import { shapeNotifications } from "./shape";
 
@@ -151,7 +152,7 @@ export async function proposeReglages(
   names: Record<string, string>,
 ): Promise<Checked> {
   if (kind === "notifications") {
-    const keys = p.cles as string[];
+    const keys = uniqueNotificationKeys(p.cles as string[]);
     if (!keys.every(isNotificationKey)) {
       return refuse("Notification inconnue : prends les clés de voir_notifications.");
     }
@@ -163,10 +164,10 @@ export async function proposeReglages(
     keys.slice(0, 5).forEach((key, index) => {
       names[`notif:${index}`] = byKey.get(key) ?? "";
     });
-    return { ok: true };
+    return { ok: true, params: { cles: keys } };
   }
 
-  const data = await loadSettings();
+  const data = await loadSettings(orgId);
   const owner = data.organization.isOwner && data.organization.id === orgId;
   switch (kind) {
     case "modifier_profil": {

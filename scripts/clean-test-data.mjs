@@ -2,9 +2,11 @@
 // tests de bout en bout (sportifs « … ordinateur-1794… », comptes d'inscription de test…), sans
 // toucher à la graine de démonstration ni à ce qui a été créé à la main. Voir clean-test-data.sql.
 // Aussi lancé à la fin de chaque suite Playwright (tests/e2e/global-teardown.ts).
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+
+import { createClient } from "@supabase/supabase-js";
 
 // Conteneur de la base locale de Supabase : « supabase_db_ » + project_id de supabase/config.toml.
 const CONTAINER = "supabase_db_coaching-platform";
@@ -45,3 +47,44 @@ console.log(
     ? `Données de test retirées de la base locale :\n${notices.join("\n")}`
     : "Base locale déjà propre.",
 );
+
+// Photos de test (mineur n°9 du lot 5) : le test « la photo jointe devient celle du sportif » dépose
+// une photo pour Léa et Noah Test ; la remise en état ci-dessus efface leur photo_path, mais le fichier
+// restait dans le stockage LOCAL. Retirés par l'API de stockage (un DELETE SQL laisserait le fichier).
+// Jamais bloquant : un échec est seulement signalé.
+const TEST_PHOTO_FOLDERS = [
+  "org/0b000000-0000-4000-8000-0000000000b1/athlete/e5000000-0000-4000-8000-000000000001",
+  "org/0b000000-0000-4000-8000-0000000000b1/athlete/e5000000-0000-4000-8000-000000000002",
+];
+try {
+  const env = Object.fromEntries(
+    execFileSync("npx", ["supabase", "status", "-o", "env"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .split("\n")
+      .filter((line) => line.includes("="))
+      .map((line) => {
+        const at = line.indexOf("=");
+        return [line.slice(0, at), line.slice(at + 1).replace(/^"|"$/g, "")];
+      }),
+  );
+  if (!/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(env.API_URL ?? "")) {
+    throw new Error("réservé à la base locale");
+  }
+  const storage = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  }).storage.from("profile-photos");
+  let removed = 0;
+  for (const folder of TEST_PHOTO_FOLDERS) {
+    const { data } = await storage.list(folder);
+    const files = (data ?? []).map((file) => `${folder}/${file.name}`);
+    if (files.length > 0) {
+      const { error } = await storage.remove(files);
+      if (!error) removed += files.length;
+    }
+  }
+  if (removed > 0) console.log(`  photos de test : ${removed}`);
+} catch (error) {
+  console.log(`  photos de test non retirées (${error instanceof Error ? error.message : error})`);
+}

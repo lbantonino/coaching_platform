@@ -37,6 +37,8 @@ import {
   availabilityText,
   coachExerciseRefusal,
   exerciseText,
+  goalCheckDay,
+  goalEditRefusal,
   goalLine,
   goalStatusRefusal,
   goalText,
@@ -45,7 +47,7 @@ import {
   mergeGoal,
   noteLengthRefusal,
   photoRefusal,
-  recordLine,
+  recordDeletionLine,
   referenceValueText,
   type SportifsKind,
 } from "../sportifs";
@@ -449,6 +451,11 @@ export async function proposeSportifs(
           ? "secondary"
           : "main";
       }
+      // L'actuel principal passera en secondaire : la carte le nomme (relecture n°6).
+      const currentMain = goals.current.find((goal) => goal.priority === "main");
+      if (objectif.priority === "main" && currentMain) {
+        names.principalActuel = goalLine(goalFormValues(currentMain));
+      }
       const input = mergeGoal(
         {
           goalType: "",
@@ -475,13 +482,23 @@ export async function proposeSportifs(
       if (!goal) return refuse("Objectif introuvable : regarde voir_objectifs.");
       const values = goalFormValues(goal);
       names.objectif = goalLine(values);
+      const otherMain = goals.current.find(
+        (item) => item.priority === "main" && item.id !== goal.id,
+      );
+      if (otherMain) names.principalActuel = goalLine(goalFormValues(otherMain));
       if (kind === "statut_objectif") {
         const refusal = goalStatusRefusal(goal, p.statut as "atteint" | "abandonne" | "principal");
         return refusal ? refuse(refusal) : { ok: true };
       }
       if (kind === "supprimer_objectif") return { ok: true };
       const changes = p.changes as Record<string, unknown>;
-      const parsed = parseGoalForm(mergeGoal(values, changes), today);
+      // Clôturé ou sans effet : refusé ; en retard : sa date passée reste permise (relecture n°5).
+      const editRefusal = goalEditRefusal(goal, values, changes);
+      if (editRefusal) return refuse(editRefusal);
+      const parsed = parseGoalForm(
+        mergeGoal(values, changes),
+        goalCheckDay(goal.targetDate, today),
+      );
       if (!parsed.ok) return refuse(parsed.error);
       for (const field of Object.keys(changes)) {
         names[`avant:${field}`] = goalText(field, values[field as keyof typeof values]);
@@ -561,13 +578,7 @@ export async function proposeSportifs(
       const records = await listRecords(orgId, athlete.id);
       const record = records.history.find((item) => item.id === p.recordId);
       if (!record) return refuse("Record introuvable : regarde voir_reperes.");
-      const minutes = Math.floor(record.timeSeconds / 60);
-      const seconds = String(record.timeSeconds % 60).padStart(2, "0");
-      names.record = `${recordLine({
-        event: record.event,
-        hyroxCategory: record.hyroxCategory ?? undefined,
-        time: `${minutes}:${seconds}`,
-      })} (le ${record.achievedOn})`;
+      names.record = recordDeletionLine(record);
       return { ok: true };
     }
     case "photo": {

@@ -35,6 +35,8 @@ type Row = {
 export async function listPayments(
   organizationId: string,
   from?: string,
+  // Filtres appliqués par la base AVANT la limite de 500 (lecture de l'assistant, mineur n°7 du lot 4).
+  filters: { to?: string; athleteId?: string } = {},
 ): Promise<AthletePayment[]> {
   const supabase = await createClient();
   let query = supabase
@@ -47,6 +49,8 @@ export async function listPayments(
     .order("created_at", { ascending: false })
     .limit(500);
   if (from) query = query.gte("received_on", from);
+  if (filters.to) query = query.lte("received_on", filters.to);
+  if (filters.athleteId) query = query.eq("athlete_id", filters.athleteId);
   const { data, error } = await query;
   if (error) throw new Error("Lecture des paiements impossible.");
   return ((data ?? []) as unknown as Row[]).map((row) => ({

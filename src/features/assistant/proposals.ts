@@ -3,7 +3,7 @@ import { z } from "zod";
 import { formatMoney, type Currency } from "@/domain/billing/money";
 import { PAYMENT_METHODS } from "@/domain/billing/payments";
 import { DISCIPLINES } from "@/domain/training/discipline";
-import { programGoalSchema } from "@/domain/training/program-plan";
+import { aimDefaultsSchema, programGoalSchema } from "@/domain/training/program-plan";
 import { SESSION_MOMENTS, sessionBodySchema, WEEKDAYS } from "@/domain/training/session-v2";
 import {
   EQUIPMENT_KEYS,
@@ -31,6 +31,7 @@ import {
 } from "@/features/athletes/schemas";
 import { GOAL_TYPES, goalTypeLabels, type GoalType } from "@/features/goals/schemas";
 import { SESSION_KINDS, SESSION_PAYMENT_METHODS } from "@/features/sessions/schemas";
+import { brusselsDayOf } from "@/lib/format";
 
 import { DAILY_ACTIONS, DAILY_PARAMS, summarizeDaily, type DailyKind } from "./daily";
 import {
@@ -246,6 +247,9 @@ export const PARAMS = {
       .refine((changes) => Object.keys(changes).length > 0, {
         error: "Indique au moins un champ à compléter.",
       }),
+    // Noté par le SERVEUR à la proposition (relecture du lot 2, n°d) : la valeur de chaque champ changé.
+    // Au clic, une fiche modifiée entre-temps refuse la carte au lieu d'écraser la saisie du coach.
+    avant: z.record(z.string(), z.union([z.string(), z.array(z.string())])).optional(),
   }),
   // Lot 3a : un BROUILLON de programme, depuis un modèle, une copie, vide, ou écrit par l'assistant
   // (séances décrites une fois avec une référence, puis placées semaine par semaine).
@@ -258,6 +262,9 @@ export const PARAMS = {
       weeksCount: z.number().int().min(1).max(52),
       sessionsPerWeek: z.number().int().min(1).max(14),
       scheduling: z.enum(["ordered", "fixed"]),
+      // Façon de viser : notée par le SERVEUR selon le sportif (relecture du lot 3a, n°7), comme
+      // l'assistant de création ; la même au « Valider ».
+      aimDefaults: aimDefaultsSchema.optional(),
       goal: programGoalSchema.optional(),
       phases: z
         .array(
@@ -439,6 +446,58 @@ const TITLES: Record<
 };
 
 // Les PDF viennent de la version publiée : rien pour un programme introuvable ou jamais publié.
+// Relecture du lot 2, n°a : la version publiée se date au jour de Bruxelles (pas en UTC : publiée à
+// 0 h 30, elle aurait la date de la veille).
+export const publicationLine = (number: number, publishedAt: string) =>
+  `Version ${number} publiée le ${dayInWords(brusselsDayOf(publishedAt))}`;
+
+// Relecture du lot 2, n°f : doublon d'exercice au nom près, sans casse ni espaces en trop ; comparé
+// ici plutôt que par un motif de la base (où « * » devenait un joker).
+const exerciseKey = (name: string) => name.trim().replace(/\s+/g, " ").toLocaleLowerCase("fr");
+export const sameExerciseName = (a: string, b: string) => exerciseKey(a) === exerciseKey(b);
+
+// Relecture du lot 2, n°e : seuls les champs qui changent vraiment vont sur la carte (jamais
+// « Bruxelles → Bruxelles »).
+const fieldValue = (value: unknown) => JSON.stringify(value ?? "");
+export function changedAthleteFields(
+  current: Record<string, unknown>,
+  changes: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(changes).filter(
+      ([field, value]) => fieldValue(current[field]) !== fieldValue(value),
+    ),
+  );
+}
+
+// « Compléter la fiche » : refus du serveur, en règle pure (relecture du lot 2, n°j : testés sans base).
+export function athleteFicheRefusal(
+  detail: { status: string; hasAccount: boolean } | null,
+  changes: Record<string, unknown>,
+): string | null {
+  if (!detail || detail.status === "archived") {
+    return "Sportif introuvable ou archivé : cherche-le avec chercher_sportifs.";
+  }
+  if (changes.email !== undefined && detail.hasAccount) {
+    return "Le sportif a activé son compte : son adresse e-mail ne peut plus être modifiée ici.";
+  }
+  return null;
+}
+
+// Relecture du lot 2, n°d : un champ modifié entre la carte et le clic refuse la carte.
+export function staleAthleteFields(
+  before: Record<string, unknown> | undefined,
+  current: Record<string, unknown>,
+): string | null {
+  if (!before) return null;
+  const changed = Object.entries(before)
+    .filter(([field, value]) => fieldValue(current[field]) !== fieldValue(value))
+    .map(([field]) => ATHLETE_FIELD_LABELS[field] ?? field);
+  return changed.length > 0
+    ? `La fiche a changé depuis la carte (${changed.join(", ")}) : redemande à l'assistant pour ne rien écraser.`
+    : null;
+}
+
 export function pdfRefusal(program: { published: boolean } | null): string | null {
   if (!program) return "Programme introuvable : regarde voir_programmes.";
   return program.published
@@ -482,6 +541,27 @@ export function athleteFieldText(field: string, value: unknown): string {
     default:
       return text;
   }
+}
+
+// Coordonnées d'un sportif : voir_fiche dit seulement « rempli » ou « vide » (décision d'Antonino du
+// 14/11/2026, confirmée le 20/11). La carte renvoyée à Claude (proposalToolResult) suit la même règle :
+// le coach voit « ancien → nouveau », Claude lit « rempli → nouveau » (la nouvelle valeur vient de lui).
+const PRIVATE_ATHLETE_FIELDS = ["email", "phone", "addressLine", "postalCode", "city"] as const;
+
+export function summaryForClaude(
+  proposal: AssistantAction & { summary: readonly string[] },
+): readonly string[] {
+  if (proposal.kind !== "completer_fiche") return proposal.summary;
+  const changes = (proposal.params.changes ?? {}) as Record<string, unknown>;
+  return proposal.summary.map((line) => {
+    const field = PRIVATE_ATHLETE_FIELDS.find(
+      (key) => key in changes && line.startsWith(`${ATHLETE_FIELD_LABELS[key]} : `),
+    );
+    if (!field) return line;
+    const after = athleteFieldText(field, changes[field]);
+    const before = line.startsWith(`${ATHLETE_FIELD_LABELS[field]} : — → `) ? "vide" : "rempli";
+    return `${ATHLETE_FIELD_LABELS[field]} : ${before} → ${after}`;
+  });
 }
 
 const METHOD: Record<string, string> = {

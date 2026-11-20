@@ -8,8 +8,13 @@
 -- aucun). Séances reprises de « Force · bloc 2 » (graine, D-155), 4 semaines en 2 phases. Données
 -- INVENTÉES, vérifiées par tests/unit/seed-programmes.test.ts.
 -- <assistant-tests>
+-- Aussi les brouillons fb…02/03 (« Bloc force »), au cas où un test les publierait (relecture du lot
+-- 3b, n°12) : ils doivent redevenir de simples brouillons.
 delete from public.program_publications
-where program_id in ('fb000000-0000-4000-8000-000000000004', 'fb000000-0000-4000-8000-000000000005');
+where program_id in (
+  'fb000000-0000-4000-8000-000000000002', 'fb000000-0000-4000-8000-000000000003',
+  'fb000000-0000-4000-8000-000000000004', 'fb000000-0000-4000-8000-000000000005'
+);
 delete from public.program_templates where organization_id = '0b000000-0000-4000-8000-0000000000b1' and origin = 'coach';
 delete from public.session_templates where organization_id = '0b000000-0000-4000-8000-0000000000b1' and origin = 'coach';
 insert into public.programs (id, organization_id, athlete_id, title, goal, discipline, start_date, weeks_count, status, created_by) values
@@ -108,7 +113,9 @@ on conflict (id) do update set
 insert into public.athlete_notes (id, organization_id, athlete_id, visibility, body, created_by, updated_by) values
   ('e5000000-0000-4000-8000-000000000011', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'coach', 'Note existante de Léa (test).', 'b0000000-0000-4000-8000-00000000000b', 'b0000000-0000-4000-8000-00000000000b'),
   ('e5000000-0000-4000-8000-000000000012', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000002', 'coach', 'Note existante de Noah (test).', 'b0000000-0000-4000-8000-00000000000b', 'b0000000-0000-4000-8000-00000000000b')
-on conflict (id) do update set body = excluded.body;
+-- Une note par sportif et par visibilité (contrainte) : une note recréée par un test sous un autre id
+-- est remise en état au lieu de bloquer le chargement (mineur n°9 du lot 5).
+on conflict (athlete_id, visibility) do update set body = excluded.body;
 insert into public.athlete_goals (id, organization_id, athlete_id, goal_type, description, target_date, priority, status, competition_name, competition_location, hyrox_category, target_time_seconds, created_by) values
   ('e5000000-0000-4000-8000-000000000021', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'run_10k', null, '2027-04-11', 'main', 'active', null, null, null, 2700, 'b0000000-0000-4000-8000-00000000000b'),
   ('e5000000-0000-4000-8000-000000000031', '0b000000-0000-4000-8000-0000000000b1', 'e5000000-0000-4000-8000-000000000001', 'fitness', null, null, 'secondary', 'active', null, null, null, null, 'b0000000-0000-4000-8000-00000000000b'),

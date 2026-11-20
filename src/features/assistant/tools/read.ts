@@ -40,6 +40,8 @@ import {
   shapeTasks,
   shapeTemplates,
   shapeUnpaid,
+  MAX_ROWS,
+  withTotal,
 } from "./shape";
 
 // Exécution des outils de lecture de l'Assistant IA (lot 1 des actions), pour l'organisation du
@@ -139,19 +141,29 @@ export async function runReadTool(
       )
         .filter((task) => !sportif_id || task.athleteId === sportif_id)
         .filter((task) => !liste_id || task.list?.id === liste_id);
-      return json(shapeTasks(tasks));
+      // « toutes » : les tâches à faire d'abord ; coupée, la liste le dit (mineur n°7 du lot 4).
+      return json(
+        withTotal(
+          shapeTasks(tasks),
+          tasks.length,
+          statut === "toutes"
+            ? "demande les tâches terminées à part (statut « terminees »), ou précise un sportif ou une liste."
+            : "précise un sportif ou une liste.",
+        ),
+      );
     }
     case "voir_paiements": {
       const { sportif_id, du, au } = inputs.voir_paiements.parse(input ?? {});
-      const payments = (await listPayments(organizationId, du))
-        .filter((payment) => !au || payment.receivedOn <= au)
-        .filter((payment) => !sportif_id || payment.athleteId === sportif_id);
-      return json(shapePayments(payments));
+      // Sportif et dates filtrés PAR LA BASE, avant la limite de 500 lignes (mineur n°7 du lot 4).
+      const payments = await listPayments(organizationId, du, { to: au, athleteId: sportif_id });
+      return json(
+        withTotal(shapePayments(payments), payments.length, "précise un sportif ou des dates."),
+      );
     }
     case "voir_depenses": {
       // Une dépense mensuelle compte tant qu'elle n'est pas finie : elle reste dans la période.
       const { du, au } = inputs.voir_depenses.parse(input ?? {});
-      const expenses = (await listExpenses(organizationId)).filter(
+      const expenses = (await listExpenses(organizationId, { to: au })).filter(
         (expense) =>
           (!au || expense.spentOn <= au) &&
           (!du ||
@@ -159,12 +171,25 @@ export async function runReadTool(
               ? expense.endsOn === null || expense.endsOn >= du
               : expense.spentOn >= du)),
       );
-      return json(shapeExpenses(expenses));
+      return json(withTotal(shapeExpenses(expenses), expenses.length, "précise des dates."));
     }
     case "voir_parametres":
-      return json(shapeSettings(await loadSettings()));
-    case "voir_notifications":
-      return json(shapeNotifications(await getNotifications(organizationId, todayIsoInBrussels())));
+      return json(shapeSettings(await loadSettings(organizationId)));
+    case "voir_notifications": {
+      // Sans les sortes coupées par le coach, comme la cloche (mineur n°3 du lot 6).
+      const [notifications, settings] = await Promise.all([
+        getNotifications(organizationId, todayIsoInBrussels()),
+        loadSettings(organizationId),
+      ]);
+      const rows = shapeNotifications(notifications, settings.notify);
+      return json(
+        withTotal(
+          rows.slice(0, MAX_ROWS),
+          rows.length,
+          "marque les plus anciennes comme lues ou masque-les, puis relis.",
+        ),
+      );
+    }
     case "voir_objectifs":
     case "voir_reperes": {
       const { sportif_id } = inputs[name].parse(input ?? {});
@@ -184,7 +209,13 @@ export async function runReadTool(
       const documents = (await listDocuments(organizationId, sportif_id)).filter(
         (document) => !categorie_id || document.categoryId === categorie_id,
       );
-      return json(shapeDocuments(documents));
+      return json(
+        withTotal(
+          shapeDocuments(documents),
+          documents.length,
+          "précise un sportif ou une catégorie.",
+        ),
+      );
     }
     case "voir_programmes": {
       const { sportif_id } = inputs.voir_programmes.parse(input);

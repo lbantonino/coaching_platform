@@ -34,7 +34,12 @@ import {
   type HyroxCategory,
 } from "@/features/goals/schemas";
 import { NOTE_MAX_LENGTH } from "@/features/notes/schemas";
-import { RECORD_EVENTS, recordEventLabels, type RecordEvent } from "@/features/records/schemas";
+import {
+  RECORD_EVENTS,
+  formatRaceTime,
+  recordEventLabels,
+  type RecordEvent,
+} from "@/features/records/schemas";
 import {
   referenceKindLabels,
   referenceSourceLabels,
@@ -301,6 +306,44 @@ export function goalStatusRefusal(
   return null;
 }
 
+// Relecture du lot 5, n°5 : « Modifier l'objectif » comme la fiche. Un objectif clôturé ne se modifie
+// plus (sinon la carte mènerait à « introuvable ») ; une carte sans effet est refusée.
+export function goalEditRefusal(
+  goal: { status: GoalStatus },
+  values: GoalFormInput,
+  changes: Record<string, unknown>,
+): string | null {
+  if (goal.status !== "active") {
+    return `Cet objectif est déjà ${goalStatusLabels[goal.status].toLowerCase()} : il n'est plus en cours et ne se modifie plus.`;
+  }
+  const merged = mergeGoal(values, changes);
+  const unchanged = (Object.keys(merged) as (keyof GoalFormInput)[]).every(
+    (field) => merged[field] === values[field],
+  );
+  if (!unchanged) return null;
+  return changes.priority === "main" && values.priority === "main"
+    ? "Cet objectif est déjà l'objectif principal."
+    : "Rien ne change : l'objectif a déjà ces valeurs.";
+}
+
+// Un objectif en retard garde sa date passée sans la changer, comme dans la fiche (updateGoal).
+export const goalCheckDay = (targetDate: string | null, today: string) =>
+  targetDate !== null && targetDate < today ? targetDate : today;
+
+// Relecture du lot 5, n°8 : « Marathon : 3:05:00 », jamais « 185:00 ».
+export function recordDeletionLine(record: {
+  event: string;
+  hyroxCategory: string | null;
+  timeSeconds: number;
+  achievedOn: string;
+}): string {
+  return `${recordLine({
+    event: record.event,
+    hyroxCategory: record.hyroxCategory ?? undefined,
+    time: formatRaceTime(record.timeSeconds),
+  })} (le ${dayInWords(record.achievedOn)})`;
+}
+
 // Comme la Bibliothèque : un exercice Coory se met en favori, ne se modifie ni ne se supprime.
 export function coachExerciseRefusal(
   exercise: { organizationId: string | null } | null,
@@ -518,6 +561,13 @@ const GOAL_STATUS_TITLES = {
   principal: "Objectif principal",
 } as const;
 
+// Relecture du lot 5, n°6 : devenir principal fait passer l'actuel en secondaire ; la carte le dit.
+function mainDemotedLine(names: Record<string, string>): string | null {
+  return names.principalActuel
+    ? `L'objectif principal actuel (${names.principalActuel}) passe en secondaire`
+    : null;
+}
+
 export function summarizeSportifs(
   action: { kind: string; params: Record<string, unknown> },
   names: Record<string, string>,
@@ -573,7 +623,18 @@ export function summarizeSportifs(
         typeof goal.competitionName === "string" && goal.competitionName
           ? `Compétition : ${goal.competitionName}`
           : null,
+        // Relecture n°7 : tout ce qui sera enregistré est sur la carte.
+        typeof goal.competitionLocation === "string" && goal.competitionLocation
+          ? `Lieu : ${goal.competitionLocation}`
+          : null,
+        typeof goal.hyroxCategory === "string" && goal.hyroxCategory
+          ? `Catégorie Hyrox : ${goalText("hyroxCategory", goal.hyroxCategory)}`
+          : null,
+        typeof goal.description === "string" && goal.description
+          ? `Description : ${goal.description}`
+          : null,
         goal.priority === "main" ? "Objectif principal" : null,
+        goal.priority === "main" ? mainDemotedLine(names) : null,
       );
       break;
     }
@@ -583,11 +644,18 @@ export function summarizeSportifs(
         who,
         names.objectif ?? "Objectif",
         ...changeLines((p.changes ?? {}) as Record<string, unknown>, GOAL_LABELS, names, goalText),
+        (p.changes as Record<string, unknown> | undefined)?.priority === "main"
+          ? mainDemotedLine(names)
+          : null,
       );
       break;
     case "statut_objectif":
       title = GOAL_STATUS_TITLES[p.statut as keyof typeof GOAL_STATUS_TITLES];
-      lines.push(who, names.objectif ?? "Objectif");
+      lines.push(
+        who,
+        names.objectif ?? "Objectif",
+        p.statut === "principal" ? mainDemotedLine(names) : null,
+      );
       break;
     case "supprimer_objectif":
       title = "Supprimer l'objectif";
@@ -603,6 +671,7 @@ export function summarizeSportifs(
         who,
         referenceLine(repere),
         `Mesuré le ${dayInWords(repere.measuredOn ?? "")} · ${referenceSourceLabels[repere.source as ReferenceSource] ?? repere.source}`,
+        repere.note ? `Note : ${repere.note}` : null,
       );
       break;
     }

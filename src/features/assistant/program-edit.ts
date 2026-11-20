@@ -32,11 +32,15 @@ import {
   dayHasRoom,
   fillMoments,
   isPastWeek,
+  proposeWeekDays,
+  sessionDay,
+  sessionMoment,
   setWeekFixed,
   setWeekOrdered,
 } from "@/domain/training/scheduling";
 import { withEstimatedDuration } from "@/domain/training/session-duration";
 import {
+  MAX_SESSIONS_PER_DAY,
   MAX_SESSIONS_PER_WEEK,
   SESSION_MOMENTS,
   WEEKDAYS,
@@ -145,24 +149,57 @@ const phaseId = z.string().regex(/^[A-Za-z0-9_-]{1,40}$/);
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const label = (max: number) => z.string().trim().min(1).max(max);
 
+// Relecture du lot 3b, n°11 : chaque champ décrit pour Claude (schéma JSON généré d'ici).
+const sessionKey = key.describe("Clé d'une séance, lue avec voir_brouillon ou voir_modele.");
+const weekNumber = week.describe("Numéro de semaine, tel que lu avec voir_brouillon.");
+const dayOfWeek = z
+  .enum(WEEKDAYS)
+  .describe("Jour de la semaine (semaine à jours fixes seulement).");
+const timeOfDay = hhmm.describe("Heure HH:MM (semaine à jours fixes seulement).");
+const momentOfDay = z
+  .enum(SESSION_MOMENTS)
+  .describe("Moment de la journée, quand plusieurs séances tombent le même jour.");
+
 export const programEditSchema = z.discriminatedUnion("op", [
-  z.strictObject({ op: z.literal("modifier_seance"), cle: key, seance: sessionBodySchema }),
-  z.strictObject({ op: z.literal("ajouter_seance"), semaine: week, seance: sessionBodySchema }),
-  z.strictObject({ op: z.literal("dupliquer_seance"), cle: key }),
-  z.strictObject({ op: z.literal("supprimer_seance"), cle: key }),
+  z.strictObject({ op: z.literal("modifier_seance"), cle: sessionKey, seance: sessionBodySchema }),
   z.strictObject({
-    op: z.literal("deplacer_seance"),
-    cle: key,
-    semaine: week,
-    position: z.number().int().min(1).max(14).optional(),
+    op: z.literal("ajouter_seance"),
+    semaine: weekNumber,
+    seance: sessionBodySchema,
+    // Relecture du lot 3b, n°10 : dans une semaine à jours fixes, la séance ajoutée a un jour (donné,
+    // sinon proposé comme dans l'éditeur), et peut avoir une heure et un moment.
+    jour: dayOfWeek.optional(),
+    heure: timeOfDay.optional(),
+    moment: momentOfDay.optional(),
+  }),
+  z.strictObject({ op: z.literal("dupliquer_seance"), cle: sessionKey }),
+  z.strictObject({ op: z.literal("supprimer_seance"), cle: sessionKey }),
+  z.strictObject({
+    op: z
+      .literal("deplacer_seance")
+      .describe(
+        "Déplace une séance DU PROGRAMME vers une autre semaine ou une autre place (pas un rendez-vous de l'agenda).",
+      ),
+    cle: sessionKey,
+    semaine: weekNumber.describe("Semaine d'arrivée."),
+    position: z
+      .number()
+      .int()
+      .min(1)
+      .max(14)
+      .describe("Place dans la semaine d'arrivée (semaine dans l'ordre) ; à la fin sinon.")
+      .optional(),
   }),
   z.strictObject({
     op: z.literal("jour_seance"),
-    cle: key,
-    jour: z.enum(WEEKDAYS).nullable(),
-    heure: hhmm.optional(),
-    moment: z.enum(SESSION_MOMENTS).optional(),
-    portee: z.enum(["semaine", "phase", "programme"]).optional(),
+    cle: sessionKey,
+    jour: dayOfWeek.nullable(),
+    heure: timeOfDay.optional(),
+    moment: momentOfDay.optional(),
+    portee: z
+      .enum(["semaine", "phase", "programme"])
+      .describe("Où appliquer ce jour : cette semaine, sa phase ou tout le programme.")
+      .optional(),
   }),
   z.strictObject({ op: z.literal("ajouter_semaine") }),
   z.strictObject({ op: z.literal("retirer_semaine"), semaine: week }),
@@ -174,8 +211,12 @@ export const programEditSchema = z.discriminatedUnion("op", [
   }),
   z.strictObject({
     op: z.literal("organisation_semaine"),
-    semaine: week,
-    mode: z.enum(["ordered", "fixed"]),
+    semaine: weekNumber,
+    mode: z
+      .enum(["ordered", "fixed"])
+      .describe(
+        "ordered : dans l'ordre, le sportif choisit le jour ; fixed : jours fixes, un jour proposé pour chaque séance (comme l'éditeur).",
+      ),
   }),
   z.strictObject({ op: z.literal("ajouter_phase"), nom: label(40) }),
   z.strictObject({ op: z.literal("renommer_phase"), phase: phaseId, nom: label(40) }),
@@ -298,7 +339,7 @@ type Applied<T> =
 export function applyProgramEdits<T extends AnyPlan>(
   plan: T,
   edits: ProgramEdit[],
-  { today }: { today?: string } = {},
+  { today, availableDays = [] }: { today?: string; availableDays?: readonly Weekday[] } = {},
 ): Applied<T> {
   if (edits.length === 0 || edits.length > MAX_PROGRAM_EDITS) {
     return { ok: false, error: `Entre 1 et ${MAX_PROGRAM_EDITS} changements par carte.` };
@@ -354,12 +395,55 @@ export function applyProgramEdits<T extends AnyPlan>(
       case "ajouter_seance": {
         const at = place(edit.semaine);
         if (at === null) return noWeek(edit.semaine);
+        const target = current.weeks[at - 1] as Week;
+        const timing = edit.jour ?? edit.heure ?? edit.moment;
+        if (target.scheduling !== "fixed" && timing !== undefined) {
+          return fail(
+            `La semaine ${edit.semaine} est « dans l'ordre » : passe-la d'abord en jours fixes (organisation_semaine), comme dans l'éditeur.`,
+          );
+        }
         const body = placedBody(edit.seance);
         const added = addSession(current, at, body);
         if (!added.key) return fail(`La semaine ${edit.semaine} est pleine (14 séances).`);
+        let day: Weekday | undefined;
+        if (target.scheduling === "fixed") {
+          const newWeek = added.plan.weeks[at - 1] as Week;
+          day =
+            edit.jour ??
+            proposeWeekDays(newWeek.sessions, availableDays).get(added.key) ??
+            undefined;
+          if (day && !dayHasRoom(target, day)) {
+            return fail(
+              `Le ${DAY_WORDS[day]} a déjà ${MAX_SESSIONS_PER_DAY} séances en semaine ${edit.semaine}.`,
+            );
+          }
+          const newKey = added.key;
+          added.plan = {
+            ...added.plan,
+            weeks: added.plan.weeks.map((item, i) =>
+              i !== at - 1
+                ? item
+                : fillMoments({
+                    ...item,
+                    sessions: item.sessions.map((session) =>
+                      session.key !== newKey
+                        ? session
+                        : {
+                            ...session,
+                            fixedDay: day,
+                            ...(edit.heure ? { fixedTime: edit.heure } : {}),
+                            ...(edit.moment ? { moment: edit.moment } : {}),
+                          },
+                    ),
+                  }),
+            ),
+          };
+        }
         current = added.plan;
         lines.push(
-          `Semaine ${edit.semaine} : nouvelle séance « ${body.title} » (${body.durationMinutes} min)`,
+          `Semaine ${edit.semaine} : nouvelle séance « ${body.title} » (${body.durationMinutes} min)${
+            day ? ` · ${[DAY_WORDS[day], edit.heure].filter(Boolean).join(" à ")}` : ""
+          }`,
         );
         touched.add(edit.semaine);
         break;
@@ -392,6 +476,13 @@ export function applyProgramEdits<T extends AnyPlan>(
         const from = found.week.index;
         const fromLabel = labelOf(from);
         if (from === to) {
+          // Relecture du lot 3b, n°7 : en jours fixes, l'ordre suit les jours ; « place 1 → 3 » ne
+          // changerait rien.
+          if (found.week.scheduling === "fixed") {
+            return fail(
+              `La semaine ${fromLabel} est en jours fixes : l'ordre suit les jours. Change plutôt le jour de la séance (jour_seance).`,
+            );
+          }
           const slot = Math.min(
             (edit.position ?? found.week.sessions.length) - 1,
             found.week.sessions.length - 1,
@@ -410,8 +501,33 @@ export function applyProgramEdits<T extends AnyPlan>(
             target.scheduling === "fixed" &&
             found.session.fixedDay !== undefined &&
             dayHasRoom(target, found.session.fixedDay);
+          // Relecture du lot 3b, n°7 : un moment déjà pris ce jour-là n'est pas doublé (fillMoments
+          // en propose un libre) ; ce qui se perd est dit sur la carte.
+          const keptDay = found.session.fixedDay;
+          const momentTaken =
+            keepDay &&
+            keptDay !== undefined &&
+            found.session.moment !== undefined &&
+            target.sessions.some(
+              (session) =>
+                sessionDay(session) === keptDay && sessionMoment(session) === found.session.moment,
+            );
+          const notes = [
+            found.session.withCoach
+              ? "n'est plus liée au rendez-vous du coach, qui reste dans l'agenda"
+              : null,
+            keptDay !== undefined && !keepDay
+              ? target.scheduling === "fixed"
+                ? `jour retiré : déjà ${MAX_SESSIONS_PER_DAY} séances le ${DAY_WORDS[keptDay]}`
+                : "jour retiré : la semaine d'arrivée est dans l'ordre"
+              : null,
+          ].filter((note): note is string => note !== null);
           const moved: SessionDraft = keepDay
-            ? { ...found.session, withCoach: undefined }
+            ? {
+                ...found.session,
+                withCoach: undefined,
+                ...(momentTaken ? { moment: undefined } : {}),
+              }
             : {
                 ...found.session,
                 withCoach: undefined,
@@ -433,7 +549,11 @@ export function applyProgramEdits<T extends AnyPlan>(
               return fillMoments({ ...item, sessions });
             }),
           };
-          lines.push(`« ${found.session.title} » : semaine ${fromLabel} → semaine ${edit.semaine}`);
+          lines.push(
+            `« ${found.session.title} » : semaine ${fromLabel} → semaine ${edit.semaine}${
+              notes.length > 0 ? ` (${notes.join(" ; ")})` : ""
+            }`,
+          );
           touched.add(edit.semaine);
         }
         touched.add(fromLabel);
@@ -557,20 +677,35 @@ export function applyProgramEdits<T extends AnyPlan>(
       case "organisation_semaine": {
         const at = place(edit.semaine);
         if (at === null) return noWeek(edit.semaine);
+        // Relecture du lot 3b, n°8 : comme l'éditeur, passer en jours fixes propose un jour à chaque
+        // séance (selon les jours disponibles du sportif) ; un jour déjà choisi est gardé.
+        const chosen = new Set<Weekday>();
         current = {
           ...current,
           weeks: current.weeks.map((item) => {
             if (item.index !== at) return item;
             if (edit.mode === "ordered") return setWeekOrdered(item);
-            const days = new Map<string, Weekday>();
+            const days = proposeWeekDays(item.sessions, availableDays);
             item.sessions.forEach((session) => {
               if (session.fixedDay) days.set(session.key, session.fixedDay);
             });
-            return setWeekFixed(item, days);
+            const fixedWeek = setWeekFixed(item, days);
+            fixedWeek.sessions.forEach((session) => {
+              const day = sessionDay(session);
+              if (day) chosen.add(day);
+            });
+            return fixedWeek;
           }),
         };
+        const dayList = WEEKDAYS.filter((day) => chosen.has(day))
+          .map((day) => DAY_WORDS[day])
+          .join(", ");
         lines.push(
-          `Semaine ${edit.semaine} : ${edit.mode === "ordered" ? "dans l'ordre" : "jours fixes"}`,
+          `Semaine ${edit.semaine} : ${
+            edit.mode === "ordered"
+              ? "dans l'ordre"
+              : `jours fixes${dayList ? ` (${dayList})` : ""}`
+          }`,
         );
         touched.add(edit.semaine);
         break;

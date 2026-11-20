@@ -9,7 +9,13 @@ import {
 } from "@/domain/documents/documents";
 import { LIST_COLORS, LIST_NAME_MAX, listColorLabels, type ListColor } from "@/domain/tasks/lists";
 import { DISCIPLINES, disciplineLabels, type Discipline } from "@/domain/training/discipline";
-import { SESSION_PAYMENT_METHODS } from "@/features/sessions/schemas";
+import { COLLECT_WEEKS } from "@/domain/billing/payments";
+import { addDays } from "@/features/agenda/items";
+import {
+  SESSION_PAYMENT_METHODS,
+  defaultVatIncluded,
+  type SessionPaymentMethod,
+} from "@/features/sessions/schemas";
 
 import { dayInWords } from "./rules";
 
@@ -171,6 +177,55 @@ export function seriesStartRefusal(
   if (!session.repeatsWeekly || typeof changes.startsOn !== "string") return null;
   if (changes.startsOn === session.startsOn || session.startsOn > today) return null;
   return `Cette série a déjà commencé (le ${dayInWords(session.startsOn)}) : pour la décaler, utilise deplacer_seance avec scope series (3 jours au plus, comme le glisser dans l'agenda) ; sinon arrête-la (endsOn) et crée-en une nouvelle.`;
+}
+
+// Relecture du lot 4, n°3 : jamais une carte pour un changement que le formulaire ignorerait (« Fait »
+// sans effet). Paiement et TVA n'existent qu'avec un prix ; une date de fin, qu'avec une série.
+export function ignoredSessionFieldsRefusal(
+  session: { priceCents: number | null; repeatsWeekly: boolean },
+  changes: Record<string, unknown>,
+): string | null {
+  const price = "price" in changes ? changes.price : session.priceCents;
+  const paymentChange = ["paymentMethod", "vatRate", "vatIncluded"].some(
+    (field) => changes[field] !== undefined,
+  );
+  if (paymentChange && (price === null || price === undefined)) {
+    return "Cette séance n'a pas de prix : le paiement et la TVA ne comptent qu'avec un prix. Ajoute un prix (price) dans la même demande, ou retire ces changements.";
+  }
+  const repeats =
+    typeof changes.repeatsWeekly === "boolean" ? changes.repeatsWeekly : session.repeatsWeekly;
+  if (!repeats && typeof changes.endsOn === "string") {
+    return "Une séance unique n'a pas de date de fin : endsOn sert seulement à une séance qui se répète chaque semaine (repeatsWeekly).";
+  }
+  return null;
+}
+
+// Relecture du lot 4, n°4 : changer le moyen de paiement remet « TVA comprise » à la valeur du moyen,
+// comme le formulaire (sauf si le coach la choisit lui-même) ; la carte le montre.
+export function withPaymentMethodVat(
+  session: { paymentMethod: string | null; priceVatIncluded: boolean },
+  changes: Record<string, unknown>,
+): Record<string, unknown> {
+  const method = changes.paymentMethod;
+  if (typeof method !== "string" || changes.vatIncluded !== undefined) return changes;
+  if (method === session.paymentMethod) return changes;
+  const included = defaultVatIncluded(method as SessionPaymentMethod);
+  return included === session.priceVatIncluded ? changes : { ...changes, vatIncluded: included };
+}
+
+// Relecture du lot 4, n°5 : ce que devient une date dont le paiement est retiré. « À encaisser » ne
+// liste que les séances passées des COLLECT_WEEKS dernières semaines.
+export function sessionDateStatus(date: string, today: string): "futur" | "a_encaisser" | "ancien" {
+  if (date > today) return "futur";
+  return date < addDays(today, -7 * COLLECT_WEEKS) ? "ancien" : "a_encaisser";
+}
+
+function unpaidAgainLine(date: string, status: string | undefined): string {
+  const day = `La séance du ${dayInWords(date)}`;
+  if (status === "futur") return `${day} n'est plus marquée payée`;
+  if (status === "ancien")
+    return `${day} n'est plus marquée payée (trop ancienne pour « À encaisser »)`;
+  return `${day} redevient à encaisser`;
 }
 
 // Le sportif d'une séance individuelle ne change pas (droit refusé en base aussi).
@@ -382,6 +437,7 @@ export function summarizeDaily(
         ),
       );
       lines.push(names.serie === "oui" ? "Toute la série (chaque semaine)" : null);
+      lines.push(names.prix ? `Prix : ${names.prix}` : null);
       break;
     case "supprimer_seance_agenda":
       title = "Supprimer la séance";
@@ -399,15 +455,20 @@ export function summarizeDaily(
         names.seance ?? "Séance",
         `Séance du ${dayInWords(String(p.sessionDate))}`,
         names.montant ?? null,
-        "Elle redevient à encaisser",
+        names.seanceStatut === "futur"
+          ? "Elle n'est plus marquée payée"
+          : names.seanceStatut === "ancien"
+            ? "Elle n'est plus marquée payée (trop ancienne pour « À encaisser »)"
+            : "Elle redevient à encaisser",
       );
       break;
     case "supprimer_paiement":
       title = "Supprimer le paiement";
       lines.push(
         names.paiement ?? "Paiement",
-        names.seanceDate
-          ? `La séance du ${dayInWords(names.seanceDate)} redevient à encaisser`
+        names.seanceDate ? unpaidAgainLine(names.seanceDate, names.seanceStatut) : null,
+        names.forfaitDu && names.forfaitAu
+          ? `Forfait du ${dayInWords(names.forfaitDu)} au ${dayInWords(names.forfaitAu)} : ses séances ne sont plus couvertes`
           : null,
         "Il disparaît des chiffres (définitif)",
       );

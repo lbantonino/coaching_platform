@@ -9,28 +9,28 @@ import { currencyOf, formatMoney } from "@/domain/billing/money";
 import { formatBytes } from "@/domain/documents/documents";
 import { EQUIPMENT_KEYS } from "@/domain/exercises/vocabulary";
 import { findSession } from "@/domain/training/plan-edit";
-import { planIssues } from "@/domain/training/program-plan";
+import { HYROX_DIVISIONS, planIssues } from "@/domain/training/program-plan";
 import { copyStartDate } from "@/domain/training/program-status";
 import { SESSION_MOMENTS, sessionBodySchema, WEEKDAYS } from "@/domain/training/session-v2";
 import { getAthlete } from "@/features/athletes/queries";
 import { addressSchema, athleteUpdateSchema } from "@/features/athletes/schemas";
 import { loadDraft } from "@/features/programs/drafts";
-import { listAthleteProgramRows } from "@/features/programs/queries";
+import { getPublishedProgram, listAthleteProgramRows } from "@/features/programs/queries";
 import { checkPublication } from "@/features/programs/publish-check";
 import { getProgramTemplate, getSessionTemplate } from "@/features/programs/templates";
 import { getSession } from "@/features/sessions/queries";
 import { sessionAmountCents } from "@/features/sessions/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
-import { dayInWords, type AssistantAttachment } from "../rules";
+import type { AssistantAttachment } from "../rules";
 import { createClient } from "@/lib/supabase/server";
 
 import { isDailyKind } from "../daily";
 import { isReglagesKind } from "../reglages";
 import { isSportifsKind } from "../sportifs";
-import { hasUnknownExercise, UNKNOWN_EXERCISE } from "../exercise-check";
+import { athletePlanFacts, hasUnknownExercise, UNKNOWN_EXERCISE } from "../exercise-check";
 import { athleteFormValues, checkAgainstSession, formRuleError } from "../form-data";
-import { withSourceRhythm } from "../program";
+import { copySourceRefusal, overlapWarning, withSourceRhythm } from "../program";
 import { DAILY_TOOLS, proposeDaily } from "./daily";
 import { proposeReglages, REGLAGES_TOOLS } from "./reglages";
 import { proposeSportifs, SPORTIFS_TOOLS } from "./sportifs";
@@ -53,9 +53,13 @@ import {
 } from "../program-edit";
 import {
   ACTION_KINDS,
+  athleteFicheRefusal,
   athleteFieldText,
+  changedAthleteFields,
   pdfRefusal,
   prepareToolInput,
+  publicationLine,
+  sameExerciseName,
   summarize,
   type AssistantProposal,
   type ParsedAssistantAction,
@@ -362,8 +366,8 @@ const writtenSession = {
 WRITE_TOOLS.push({
   name: "creer_programme",
   description: [
-    "Propose un BROUILLON de programme pour un sportif (jamais publié : le coach le relit et le publie dans l'éditeur).",
-    "Avant : chercher_sportifs, voir_programmes (choisis un début LUNDI après la fin de son dernier programme), voir_modeles.",
+    "Propose un BROUILLON de programme pour un sportif (jamais publié ici : le coach le relit ; pour le publier, une autre carte publier_programme, seulement s'il le demande).",
+    "Avant : chercher_sportifs, voir_programmes (choisis un début LUNDI après la fin de son dernier programme PUBLIÉ ; un brouillon ne bloque rien), voir_modeles.",
     "Départ (start) : un modèle qui convient ({kind:'template', templateId}) est le plus sûr ; sinon une copie ({kind:'copy', programId}) ; sinon vide ({kind:'blank'}), et alors tu peux écrire les séances.",
     "Programme écrit : décris chaque séance UNE fois dans seances (avec ref), puis place les ref semaine par semaine dans semaines ; fais progresser en variant les séances d'une phase à l'autre, sans répéter inutilement.",
     "Musculation : exerciseId vient de chercher_exercices. Course : allures en secondes par km ou zones de FC. Reste concis.",
@@ -380,14 +384,15 @@ WRITE_TOOLS.push({
       scheduling: {
         type: "string",
         enum: ["ordered", "fixed"],
-        description: "ordered : dans l'ordre, le sportif choisit le jour ; fixed : jours fixés.",
+        description:
+          "ordered : dans l'ordre, le sportif choisit le jour ; fixed : jours fixés (donne fixedDay à chaque séance, sinon Coory en propose un selon les disponibilités du sportif).",
       },
       goal: {
         type: "object",
         properties: {
           raceName: { type: "string" },
           raceDate: date,
-          hyroxDivision: { type: "string" },
+          hyroxDivision: { type: "string", enum: [...HYROX_DIVISIONS] },
           note: { type: "string" },
         },
       },
@@ -605,10 +610,6 @@ WRITE_TOOLS.push(...REGLAGES_TOOLS);
 
 export const WRITE_TOOL_NAMES = new Set<string>(ACTION_KINDS);
 
-const DAY_MS = 86_400_000;
-const isoPlus = (day: string, days: number) =>
-  new Date(Date.parse(`${day}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
-
 type Proposed = { ok: true; proposal: AssistantProposal } | { ok: false; error: string };
 const PROGRAM_ACTIONS = new Set<string>([
   "publier_programme",
@@ -724,23 +725,22 @@ export async function proposeAction(
 
   let links: AssistantProposal["links"];
   if (kind === "preparer_pdf") {
-    // Seulement un programme de l'organisation, publié : les PDF viennent de sa dernière version.
-    const { data: program } = await supabase
-      .from("programs")
-      .select(
-        "id, title, athlete_profiles ( display_name ), program_publications!programs_active_publication_fkey ( number, published_at )",
-      )
-      .eq("organization_id", organizationId)
-      .eq("id", String(p.programId))
-      .maybeSingle();
-    const publication = program?.program_publications ?? null;
-    const refusal = pdfRefusal(program ? { published: publication !== null } : null);
-    if (refusal || !program || !publication) return refuse(refusal ?? "Programme introuvable.");
+    // Seulement un programme de l'organisation, publié : les PDF viennent de sa dernière version, lue
+    // comme les pages PDF (getPublishedProgram, relecture du lot 2, n°i).
+    const published = await getPublishedProgram(organizationId, String(p.programId));
+    if (!published) {
+      const { data: exists } = await supabase
+        .from("programs")
+        .select("id")
+        .eq("organization_id", organizationId)
+        .eq("id", String(p.programId))
+        .maybeSingle();
+      return refuse(pdfRefusal(exists ? { published: false } : null) ?? "Programme introuvable.");
+    }
+    const program = published.program;
     names[program.id] = program.title;
-    names.sportif = program.athlete_profiles?.display_name ?? "";
-    names.version = `Version ${publication.number} publiée le ${dayInWords(
-      publication.published_at.slice(0, 10),
-    )}`;
+    names.sportif = published.athleteName;
+    names.version = publicationLine(program.publicationNumber, program.publishedAt);
     const pdf = `/coach/o/${organizationId}/programmes/${program.id}/pdf`;
     links = [
       { label: "Agenda du programme", href: `${pdf}/agenda` },
@@ -749,36 +749,26 @@ export async function proposeAction(
   }
 
   if (kind === "creer_exercice") {
-    // Doublon possible : un exercice du coach au même nom (sans casse). La carte le dit ; le coach décide.
+    // Doublon possible : un exercice du coach au même nom (sans casse ni espaces en trop). La carte le
+    // dit ; le coach décide. Comparé ici, pas par un motif de la base (relecture du lot 2, n°f).
     const { data } = await supabase
       .from("exercises")
-      .select("id")
+      .select("name_fr")
       .eq("organization_id", organizationId)
       .is("archived_at", null)
-      // Nom exact sans casse : « % » et « _ » d'un nom ne sont pas des jokers.
-      .ilike(
-        "name_fr",
-        String(p.name)
-          .trim()
-          .replace(/[\\%_]/g, (char) => `\\${char}`),
-      )
-      .limit(1);
-    if ((data ?? []).length > 0) names.doublon = "oui";
+      .limit(2000);
+    if ((data ?? []).some((row) => sameExerciseName(row.name_fr, String(p.name)))) {
+      names.doublon = "oui";
+    }
   }
 
   if (kind === "completer_fiche") {
     // La fiche doit être de l'organisation et active ; le résultat passe par les MÊMES règles que le
     // formulaire Profil (schémas de la fiche et de l'adresse), sur la fiche complète.
     const detail = await getAthlete(organizationId, String(p.athleteId));
-    if (!detail || detail.status === "archived") {
-      return refuse("Sportif introuvable ou archivé : cherche-le avec chercher_sportifs.");
-    }
     const changes = p.changes as Record<string, string | string[]>;
-    if (changes.email !== undefined && detail.hasAccount) {
-      return refuse(
-        "Le sportif a activé son compte : son adresse e-mail ne peut plus être modifiée ici.",
-      );
-    }
+    const ficheRefusal = athleteFicheRefusal(detail, changes);
+    if (ficheRefusal || !detail) return refuse(ficheRefusal ?? "Sportif introuvable.");
     const current = athleteFormValues(detail) as Record<string, string | string[]>;
     if (
       Object.entries(changes).every(([f, v]) => JSON.stringify(current[f]) === JSON.stringify(v))
@@ -792,9 +782,19 @@ export async function proposeAction(
       return refuse((profile.error ?? address.error)?.issues[0]?.message ?? "Fiche invalide.");
     }
     names[detail.id] = detail.displayName;
-    for (const field of Object.keys(changes)) {
+    // Seuls les vrais changements vont sur la carte (n°e) ; leur valeur actuelle est notée pour le
+    // clic (n°d : une saisie du coach entre-temps refuse la carte au lieu d'être écrasée).
+    const effective = changedAthleteFields(current, changes) as Record<string, string | string[]>;
+    for (const field of Object.keys(effective)) {
       names[`avant:${field}`] = athleteFieldText(field, current[field]);
     }
+    p = {
+      ...p,
+      changes: effective,
+      avant: Object.fromEntries(
+        Object.keys(effective).map((field) => [field, current[field] ?? ""]),
+      ),
+    };
   }
 
   if (kind === "creer_programme") {
@@ -813,28 +813,26 @@ export async function proposeAction(
     if (start.kind === "copy" && start.programId) {
       // La même source que createProgram : le brouillon d'un programme de ce sportif.
       const source = athleteId ? await loadDraft(supabase, organizationId, start.programId) : null;
-      if (!source?.draft || source.program.athleteId !== athleteId) {
-        return refuse("Programme à copier introuvable parmi ceux de ce sportif.");
-      }
+      const refusal = copySourceRefusal(
+        source?.draft ? { athleteId: source.program.athleteId } : null,
+        athleteId,
+      );
+      if (refusal || !source) return refuse(refusal ?? "Programme à copier introuvable.");
       names[start.programId] = source.program.title;
       p = withSourceRhythm(p, source.draft);
     }
-    if (await hasUnknownExercise(supabase, p.seances)) return refuse(UNKNOWN_EXERCISE);
+    if (await hasUnknownExercise(supabase, organizationId, p.seances)) {
+      return refuse(UNKNOWN_EXERCISE);
+    }
+    // Façon de viser par défaut comme l'assistant de création (relecture du lot 3a, n°7) : FC sans
+    // VMA, % avec des charges maximales liées ; notée ici, la même au « Valider ».
+    if (!p.aimDefaults) {
+      p = { ...p, aimDefaults: (await athletePlanFacts(supabase, organizationId, athleteId)).aim };
+    }
     // Un brouillon peut chevaucher un programme publié, mais il ne pourra pas être publié tel quel :
     // la carte le dit (comme l'assistant de création).
-    const from = String(p.startDate);
-    const to = isoPlus(from, Number(p.weeksCount) * 7);
-    const clash = rows.find(
-      (row) =>
-        row.status === "published" &&
-        row.startDate < to &&
-        from < isoPlus(row.startDate, row.weeksCount * 7),
-    );
-    if (clash) {
-      names.chevauchement = `Attention : chevauche « ${clash.title} », publié jusqu'au ${dayInWords(
-        isoPlus(clash.startDate, clash.weeksCount * 7 - 1),
-      )}.`;
-    }
+    const overlap = overlapWarning(rows, String(p.startDate), Number(p.weeksCount));
+    if (overlap) names.chevauchement = overlap;
   }
 
   if (kind === "modifier_programme") {
@@ -850,11 +848,15 @@ export async function proposeAction(
     if (refusal || !loaded?.draft) return refuse(refusal ?? "Programme introuvable.");
     const stale = staleReading(Number(p.revision), loaded.revision);
     if (stale) return refuse(stale);
+    const facts = await athletePlanFacts(supabase, organizationId, loaded.program.athleteId);
     const applied = applyProgramEdits(loaded.draft, p.operations as ProgramEdit[], {
       today: todayIsoInBrussels(),
+      availableDays: facts.availableDays,
     });
     if (!applied.ok) return refuse(applied.error);
-    if (await hasUnknownExercise(supabase, p.operations)) return refuse(UNKNOWN_EXERCISE);
+    if (await hasUnknownExercise(supabase, organizationId, p.operations)) {
+      return refuse(UNKNOWN_EXERCISE);
+    }
     const { data: athleteRow } = await supabase
       .from("athlete_profiles")
       .select("display_name")
@@ -883,7 +885,9 @@ export async function proposeAction(
     if (stale) return refuse(stale);
     const applied = applyProgramEdits(template.plan, p.operations as ProgramEdit[]);
     if (!applied.ok) return refuse(applied.error);
-    if (await hasUnknownExercise(supabase, p.operations)) return refuse(UNKNOWN_EXERCISE);
+    if (await hasUnknownExercise(supabase, organizationId, p.operations)) {
+      return refuse(UNKNOWN_EXERCISE);
+    }
     Object.assign(
       names,
       editCardNames({

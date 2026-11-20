@@ -7,7 +7,7 @@ import { useOpenNewPayment } from "@/components/blocks/new-payment-sheet";
 import { useOpenNewSession } from "@/components/blocks/new-session-sheet";
 import { useOpenTaskSheet } from "@/components/blocks/task-sheet";
 import { Spinner } from "@/components/ui/spinner";
-import { canValidate, type CardState } from "@/features/assistant/cards";
+import { canModify, canValidate, type CardState } from "@/features/assistant/cards";
 import { toPaymentPrefill, toSessionPrefill, toTaskPrefill } from "@/features/assistant/form-data";
 
 // Carte d'action de l'Assistant IA (lot 1 des actions, spec §5.2) : ce que l'assistant propose de
@@ -118,14 +118,16 @@ export function AssistantCard({
           >
             Valider
           </button>
-          <button
-            type="button"
-            disabled={!actionable}
-            onClick={modify}
-            className="inline-flex h-11 items-center justify-center rounded-[12px] px-3.5 text-[14px] font-medium text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2 disabled:opacity-40 md:h-9 md:rounded-[10px] md:text-[13.5px]"
-          >
-            Modifier
-          </button>
+          {canModify(card.kind) ? (
+            <button
+              type="button"
+              disabled={!actionable}
+              onClick={modify}
+              className="inline-flex h-11 items-center justify-center rounded-[12px] px-3.5 text-[14px] font-medium text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2 disabled:opacity-40 md:h-9 md:rounded-[10px] md:text-[13.5px]"
+            >
+              Modifier
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onCancel}

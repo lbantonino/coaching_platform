@@ -38,9 +38,13 @@ type Row = {
 
 const colorOf = (value: string): CategoryColor => (isCategoryColor(value) ? value : "grey");
 
-export async function listExpenses(organizationId: string): Promise<CoachExpense[]> {
+export async function listExpenses(
+  organizationId: string,
+  // Fin de période filtrée par la base AVANT la limite de 500 (assistant, mineur n°7 du lot 4).
+  filters: { to?: string } = {},
+): Promise<CoachExpense[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("coach_expenses")
     .select(
       "id, label, spent_on, amount_cents, vat_rate, currency, repeats_monthly, ends_on, category:expense_categories ( id, name, color )",
@@ -49,6 +53,8 @@ export async function listExpenses(organizationId: string): Promise<CoachExpense
     .order("spent_on", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(500);
+  if (filters.to) query = query.lte("spent_on", filters.to);
+  const { data, error } = await query;
   if (error) throw new Error("Lecture des dépenses impossible.");
   return ((data ?? []) as unknown as Row[]).map((row) => ({
     id: row.id,

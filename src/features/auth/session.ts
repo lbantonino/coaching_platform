@@ -100,7 +100,9 @@ export async function getCoachMemberships(
     .eq("status", "active")
     // Ordre stable : la première organisation (celle qu'utilisent le menu et les pages) est la plus
     // ancienne, pas celle que la base renvoie au hasard.
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    // Départage stable si deux adhésions ont la même date (mineur n°4 du lot 6).
+    .order("organization_id", { ascending: true });
 
   if (error) throw new Error("Lecture des organisations impossible.");
 

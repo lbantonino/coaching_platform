@@ -44,7 +44,7 @@ import {
   type CardState,
 } from "@/features/assistant/cards";
 import type { ExecuteResult } from "@/features/assistant/execute";
-import { DOCUMENT_ACCEPT, DOCUMENT_MAX_BYTES, formatBytes } from "@/domain/documents/documents";
+import { DOCUMENT_ACCEPT, formatBytes } from "@/domain/documents/documents";
 import type { AssistantAction } from "@/features/assistant/proposals";
 import type { StepResult } from "@/features/assistant/loop";
 import {
@@ -53,6 +53,7 @@ import {
   UNCONFIGURED_NOTE,
   UNCONFIGURED_TEXT,
   assistantComposerOpen,
+  attachmentProblem,
   trimHistory,
   type AskRequest,
   type AssistantAccess,
@@ -703,6 +704,8 @@ export function AssistantComposer({
   const [fileError, setFileError] = useState<string | null>(null);
   const submit = () => {
     dictation.cancel();
+    // Un refus de fichier ne reste pas affiché après l'envoi (relecture du lot 2, n°h).
+    setFileError(null);
     assistant.send(assistant.draft);
   };
   return (
@@ -734,9 +737,12 @@ export function AssistantComposer({
         <div className="flex min-w-0">
           <button
             type="button"
-            onClick={() => assistant.setAttachment(null)}
+            onClick={() => {
+              setFileError(null);
+              assistant.setAttachment(null);
+            }}
             aria-label={`Retirer le fichier joint : ${assistant.attachment.name}`}
-            className="tap-44 inline-flex h-9 max-w-full min-w-0 items-center gap-1.5 rounded-full bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
+            className="tap-44 inline-flex h-9 max-w-full min-w-0 items-center gap-1.5 rounded-md bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
           >
             <Paperclip aria-hidden size={14} strokeWidth={1.9} className="shrink-0" />
             <span className="truncate">{assistant.attachment.name}</span>
@@ -794,8 +800,10 @@ export function AssistantComposer({
             const file = event.target.files?.[0] ?? null;
             event.target.value = "";
             if (!file) return;
-            if (file.size > DOCUMENT_MAX_BYTES) {
-              setFileError("Fichier trop lourd : 4 Mo maximum.");
+            // Vide, trop lourd ou nom trop long : refusé ici, avec la raison (relecture du lot 2, n°g).
+            const problem = attachmentProblem(file);
+            if (problem) {
+              setFileError(problem);
               return;
             }
             setFileError(null);

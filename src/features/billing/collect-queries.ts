@@ -1,6 +1,6 @@
 import "server-only";
 
-import { coveredByPackage } from "@/domain/billing/payments";
+import { COLLECT_WEEKS, coveredByPackage } from "@/domain/billing/payments";
 import { addDays } from "@/features/agenda/items";
 import { listSessions, type CoachSession } from "@/features/sessions/queries";
 import { datesToCollect } from "@/features/sessions/prices";
@@ -9,9 +9,8 @@ import { createClient } from "@/lib/supabase/server";
 
 import { listPackageCovers, type PackageCover } from "./payment-queries";
 
-// À encaisser (D-90) : les douze dernières semaines, comme la carte Prix d'une séance. Au-delà, une
-// date oubliée ne compte plus : la liste reste courte et utile.
-export const COLLECT_WEEKS = 12;
+// À encaisser : les COLLECT_WEEKS dernières semaines (règle dans domain/billing/payments).
+export { COLLECT_WEEKS };
 // En retard : pas payée plus d'une semaine après la séance. Seules celles-là sonnent dans la cloche,
 // pour qu'elle ne signale pas chaque séance tout juste finie.
 export const LATE_AFTER_DAYS = 7;

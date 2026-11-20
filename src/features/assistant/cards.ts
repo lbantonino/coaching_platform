@@ -10,6 +10,10 @@ export type CardState = AssistantProposal & { status: CardStatus; result?: strin
 export const toCards = (proposals: AssistantProposal[]): CardState[] =>
   proposals.map((proposal) => ({ ...proposal, status: "pending" }));
 
+// Relecture du lot 2, n°c : la carte « Nouvel exercice » n'a pas de « Modifier » (plan du lot 2) :
+// l'exercice se modifie ensuite dans sa page de la Bibliothèque.
+export const canModify = (kind: string): boolean => kind !== "creer_exercice";
+
 export function canValidate(cards: CardState[], id: string): boolean {
   const card = cards.find((item) => item.id === id);
   if (!card || card.status !== "pending") return false;

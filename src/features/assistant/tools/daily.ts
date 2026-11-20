@@ -25,9 +25,12 @@ import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 import {
+  ignoredSessionFieldsRefusal,
   individualAthleteRefusal,
   seriesStartRefusal,
+  sessionDateStatus,
   sessionFieldText,
+  withPaymentMethodVat,
   stopExpenseRefusal,
   taskFieldText,
   unpaidRefusal,
@@ -399,12 +402,15 @@ export async function proposeDaily(
         if (refusal) return refuse(refusal);
         const paid = payments.find((payment) => payment.sessionDate === p.sessionDate);
         if (paid) names.montant = money(paid.amountCents, paid.currency);
+        names.seanceStatut = sessionDateStatus(String(p.sessionDate), todayIsoInBrussels());
         return { ok: true };
       }
-      const changes = p.changes as Record<string, unknown>;
+      // Moyen de paiement changé : « TVA comprise » suit, comme dans le formulaire (relecture n°4).
+      const changes = withPaymentMethodVat(session, p.changes as Record<string, unknown>);
       const refusal =
         individualAthleteRefusal(session, changes) ??
-        seriesStartRefusal(session, changes, todayIsoInBrussels());
+        seriesStartRefusal(session, changes, todayIsoInBrussels()) ??
+        ignoredSessionFieldsRefusal(session, changes);
       if (refusal) return refuse(refusal);
       // Inscrits : ceux déjà inscrits gardent leur place (même archivés) ; les AJOUTÉS doivent être des
       // fiches actives de l'organisation (relecture n°1).
@@ -432,13 +438,20 @@ export async function proposeDaily(
           currency,
         );
       }
-      return { ok: true };
+      // Paiement ou TVA changés sans toucher au prix : la carte rappelle le prix (relecture n°4).
+      const paymentChange = ["paymentMethod", "vatRate", "vatIncluded"].some(
+        (field) => changes[field] !== undefined,
+      );
+      if (paymentChange && changes.price === undefined && session.priceCents !== null) {
+        names.prix = money(session.priceCents, session.currency ?? currency);
+      }
+      return { ok: true, params: { changes } };
     }
     case "supprimer_paiement": {
       const { data } = await supabase
         .from("athlete_payments")
         .select(
-          "received_on, amount_cents, currency, method, label, session_id, session_date, athlete:athlete_profiles ( display_name )",
+          "received_on, amount_cents, currency, method, label, session_id, session_date, covers_from, covers_to, athlete:athlete_profiles ( display_name )",
         )
         .eq("organization_id", orgId)
         .eq("id", String(p.paymentId))
@@ -450,7 +463,15 @@ export async function proposeDaily(
         paymentMethodLabels[data.method as PaymentMethod] ?? data.method,
         `reçu le ${dayInWords(data.received_on)}`,
       ].join(" · ");
-      if (data.session_id && data.session_date) names.seanceDate = data.session_date;
+      if (data.session_id && data.session_date) {
+        names.seanceDate = data.session_date;
+        names.seanceStatut = sessionDateStatus(data.session_date, todayIsoInBrussels());
+      }
+      // Un forfait couvre une période : la carte le dit (relecture n°5).
+      if (data.covers_from && data.covers_to) {
+        names.forfaitDu = data.covers_from;
+        names.forfaitAu = data.covers_to;
+      }
       return { ok: true };
     }
     case "supprimer_depense":

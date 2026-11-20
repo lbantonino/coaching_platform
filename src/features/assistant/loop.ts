@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 import type { AssistantModel } from "./model";
-import type { AssistantProposal } from "./proposals";
+import { summaryForClaude, type AssistantProposal } from "./proposals";
 import { systemPrompt, type AssistantErrorKind } from "./rules";
 
 // UNE étape d'une demande à l'Assistant IA (lot 1 des actions, spec §5.1) : un appel au modèle.
@@ -43,6 +43,15 @@ export type StepResult =
   | { kind: "error"; error: AssistantErrorKind; usage: StepUsage };
 
 export const PROPOSAL_PENDING = "Proposition affichée au coach, en attente de sa validation.";
+
+// Relecture du lot 3a, n°11 : Claude apprend ce que dit la carte (titre, lignes, avertissements comme
+// un chevauchement), pour ne pas la contredire dans la suite de la conversation. Jamais l'ancienne
+// valeur des coordonnées d'un sportif (summaryForClaude).
+export function proposalToolResult(
+  proposal: Pick<AssistantProposal, "kind" | "params" | "title" | "summary">,
+): string {
+  return `${PROPOSAL_PENDING} Carte « ${proposal.title} » : ${summaryForClaude(proposal).join(" · ")}`;
+}
 
 // Ce que voit le coach pendant qu'une étape cherche quelque chose.
 const PROGRESS: Record<string, string> = {
@@ -115,7 +124,11 @@ export async function runAssistantStep(
     const outcome = await ctx.runTool(call.name, call.input, proposals);
     if (outcome.type === "proposal") {
       proposals.push(outcome.proposal);
-      byId.set(call.id, { type: "tool_result", tool_use_id: call.id, content: PROPOSAL_PENDING });
+      byId.set(call.id, {
+        type: "tool_result",
+        tool_use_id: call.id,
+        content: proposalToolResult(outcome.proposal),
+      });
     } else {
       if (outcome.type === "error") failures.push(outcome.content);
       byId.set(call.id, {

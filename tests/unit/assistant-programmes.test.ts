@@ -86,9 +86,9 @@ describe("programRuleError", () => {
     expect(programRuleError(custom)).toBeNull();
   });
 
-  it("refuse un début qui n'est pas un lundi", () => {
+  it("refuse un début qui n'est pas un lundi, en proposant les lundis voisins", () => {
     expect(programRuleError({ ...base, startDate: "2026-11-17" })).toBe(
-      "Un programme commence un lundi.",
+      "Un programme commence un lundi : prends le lundi 23 novembre 2026 (ou le lundi 16 novembre 2026).",
     );
   });
 

@@ -87,3 +87,7 @@ export function coveredByPackage(
     (cover) => cover.athleteId === athleteId && date >= cover.coversFrom && date <= cover.coversTo,
   );
 }
+
+// À encaisser (D-90) : les douze dernières semaines, comme la carte Prix d'une séance. Au-delà, une
+// date oubliée ne compte plus : la liste reste courte et utile. (Règle pure, partagée avec l'assistant.)
+export const COLLECT_WEEKS = 12;

@@ -147,3 +147,14 @@ export const passwordChangeSchema = z
     error: SAME_PASSWORD_MESSAGE,
     path: ["password"],
   });
+
+// Réglages lus pour UNE organisation (mineur n°4 du lot 6) : celle de l'assistant ou de la page, sinon la
+// première (la plus ancienne, comme le menu). Jamais une organisation dont le coach n'est pas membre.
+export function pickMembership<T extends { organizationId: string }>(
+  memberships: readonly T[],
+  organizationId?: string,
+): T {
+  return (
+    memberships.find((membership) => membership.organizationId === organizationId) ?? memberships[0]
+  );
+}

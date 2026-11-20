@@ -1,7 +1,10 @@
 import { programDraftSchema, type ProgramDraft, type Week } from "@/domain/training/program-plan";
 import { sessionsPerWeekFor } from "@/domain/training/program-upgrade";
-import type { SessionDraft } from "@/domain/training/session-v2";
+import { fillMoments, proposeWeekDays } from "@/domain/training/scheduling";
+import type { SessionDraft, Weekday } from "@/domain/training/session-v2";
 import { createProgramInputSchema, type CreateProgramInput } from "@/features/programs/schemas";
+
+import { dayInWords } from "./rules";
 
 // Créer un programme avec l'Assistant IA (lot 3a) : règles PURES, testées par Vitest. Le résultat est
 // toujours un BROUILLON, créé par la même logique que l'assistant « Créer un programme »
@@ -39,8 +42,11 @@ export function toCreateProgramInput(params: Params, athleteId: string): CreateP
 
 // Les semaines d'un programme écrit : chaque référence devient une séance (clé stable
 // « w<semaine>-s<n> »), sans jour en mode « dans l'ordre » ; une semaine non décrite reste vide.
+// Jours fixes : une séance sans jour en reçoit un, proposé comme dans l'éditeur (proposeWeekDays, selon
+// les jours disponibles du sportif) : jamais une séance sans jour (relecture du lot 3a, n°9).
 export function buildCustomWeeks(
   params: Params,
+  availableDays: readonly Weekday[] = [],
 ): { ok: true; weeks: Week[] } | { ok: false; error: string } {
   // Relecture n°2 : rien d'ignoré en silence (semaine hors du programme, doublons), pour que la carte
   // compte exactement ce que « Valider » crée.
@@ -68,6 +74,7 @@ export function buildCustomWeeks(
     seen.add(week.index);
   }
   const fixed = params.scheduling === "fixed";
+  const perWeek = Number(params.sessionsPerWeek);
   const weeks: Week[] = [];
   for (let index = 1; index <= weeksCount; index++) {
     const week = plan.find((item) => item.index === index);
@@ -89,12 +96,27 @@ export function buildCustomWeeks(
         ...(fixed ? { fixedDay, fixedTime, moment } : {}),
       } as SessionDraft);
     }
-    weeks.push({
-      index,
-      light: week?.light === true,
-      scheduling: fixed ? "fixed" : "ordered",
-      sessions: placed,
-    });
+    // Relecture du lot 3a, n°13 : la carte annonce un rythme ; une semaine plus chargée le contredirait.
+    if (Number.isInteger(perWeek) && placed.length > perWeek) {
+      return {
+        ok: false,
+        error: `Semaine ${index} : ${placed.length} séances placées pour ${perWeek} par semaine (sessionsPerWeek) : mets sessionsPerWeek à ${placed.length} ou retire des séances.`,
+      };
+    }
+    const proposed = fixed ? proposeWeekDays(placed, availableDays) : null;
+    const withDays = proposed
+      ? placed.map((session) =>
+          session.fixedDay ? session : { ...session, fixedDay: proposed.get(session.key) },
+        )
+      : placed;
+    weeks.push(
+      fillMoments({
+        index,
+        light: week?.light === true,
+        scheduling: fixed ? "fixed" : "ordered",
+        sessions: withDays,
+      }),
+    );
   }
   return { ok: true, weeks };
 }
@@ -105,7 +127,14 @@ const issueText = (issue: { path: PropertyKey[]; message: string } | undefined) 
 // Erreur que l'assistant de création ou l'éditeur renverrait pour ce programme, ou null.
 export function programRuleError(params: Params): string | null {
   const start = String(params.startDate ?? "");
-  if (new Date(`${start}T00:00:00Z`).getUTCDay() !== 1) return "Un programme commence un lundi.";
+  const weekday = new Date(`${start}T00:00:00Z`).getUTCDay();
+  if (weekday !== 1) {
+    // Relecture du lot 3a, n°12 : les lundis voisins, pour que l'assistant corrige sans deviner.
+    if (Number.isNaN(weekday)) return "Un programme commence un lundi.";
+    const next = isoPlus(start, (8 - weekday) % 7);
+    const previous = isoPlus(start, -((weekday + 6) % 7));
+    return `Un programme commence un lundi : prends le ${dayInWords(next)} (ou le ${dayInWords(previous)}).`;
+  }
   const input = createProgramInputSchema.safeParse(
     toCreateProgramInput(params, athleteIdOf(params.athlete)),
   );
@@ -133,8 +162,9 @@ export function programRuleError(params: Params): string | null {
 export function customDraftFrom(
   created: ProgramDraft,
   params: Params,
+  availableDays: readonly Weekday[] = [],
 ): { ok: true; draft: ProgramDraft } | { ok: false; error: string } {
-  const built = buildCustomWeeks(params);
+  const built = buildCustomWeeks(params, availableDays);
   if (!built.ok) return built;
   return { ok: true, draft: { ...created, weeks: built.weeks } };
 }
@@ -152,4 +182,55 @@ export function withSourceRhythm<T extends Params>(
 export function placedSessions(params: Params): number {
   const built = buildCustomWeeks(params);
   return built.ok ? built.weeks.reduce((total, week) => total + week.sessions.length, 0) : 0;
+}
+
+const DAY_MS = 86_400_000;
+const isoPlus = (day: string, days: number) =>
+  new Date(Date.parse(`${day}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
+
+// --- Refus du serveur, en règles pures (relecture du lot 3a, n°15 : testés sans base) ---------------
+
+// Relecture du lot 3a, n°6 : comme la Bibliothèque (listLibraryExercises), un exercice cité doit être
+// du catalogue Coory ou de CETTE organisation, actif et non archivé. La RLS seule laissait passer un
+// exercice archivé, masqué, ou d'une autre organisation du même coach.
+export function isUsableExercise(
+  row: { organization_id: string | null; visibility: string; archived_at: string | null },
+  organizationId: string,
+): boolean {
+  return (
+    (row.organization_id === null || row.organization_id === organizationId) &&
+    row.visibility === "active" &&
+    row.archived_at === null
+  );
+}
+
+// Copie : la même source que createProgram, un programme de CE sportif.
+export function copySourceRefusal(
+  source: { athleteId: string } | null,
+  athleteId: string | null,
+): string | null {
+  return source && athleteId && source.athleteId === athleteId
+    ? null
+    : "Programme à copier introuvable parmi ceux de ce sportif.";
+}
+
+// Un brouillon peut chevaucher un programme PUBLIÉ, mais ne pourra pas être publié tel quel : la carte
+// le dit (comme l'assistant de création). Un brouillon ne bloque rien.
+export function overlapWarning(
+  rows: readonly { title: string; status: string; startDate: string; weeksCount: number }[],
+  from: string,
+  weeksCount: number,
+): string | null {
+  const to = isoPlus(from, weeksCount * 7);
+  const clash = rows.find(
+    (row) =>
+      row.status === "published" &&
+      row.startDate < to &&
+      from < isoPlus(row.startDate, row.weeksCount * 7),
+  );
+  return clash
+    ? `Attention : chevauche « ${clash.title} », publié jusqu'au ${dayInWords(
+        isoPlus(clash.startDate, clash.weeksCount * 7 - 1),
+      )}.`
+    : null;
 }

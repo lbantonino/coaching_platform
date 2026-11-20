@@ -38,7 +38,7 @@ import { createClient } from "@/lib/supabase/server";
 import { executeDaily } from "./execute-daily";
 import { executeReglages } from "./execute-reglages";
 import { executeSportifs } from "./execute-sportifs";
-import { hasUnknownExercise, UNKNOWN_EXERCISE } from "./exercise-check";
+import { athletePlanFacts, hasUnknownExercise, UNKNOWN_EXERCISE } from "./exercise-check";
 import {
   athleteFormValues,
   athleteUpdateFormData,
@@ -56,7 +56,7 @@ import {
   revisionConflict,
   templateEditRefusal,
 } from "./program-edit";
-import { assistantActionSchema } from "./proposals";
+import { assistantActionSchema, staleAthleteFields } from "./proposals";
 
 // Clic « Valider » sur une carte de l'Assistant IA (lot 1 des actions, spec §5.2). N'appelle JAMAIS
 // Claude (aucun coût, aucune demande décomptée). Ne fait aucune confiance à la carte : accès à
@@ -152,6 +152,12 @@ export async function executeAssistantAction(
       // Lot 2 : le formulaire Profil COMPLET (fiche actuelle + champs de la carte), par updateAthlete.
       const current = await getAthlete(orgId, action.params.athleteId);
       if (!current || current.status === "archived") return fail("Sportif introuvable ou archivé.");
+      // Une saisie du coach entre la carte et le clic n'est jamais écrasée (relecture du lot 2, n°d).
+      const stale = staleAthleteFields(
+        action.params.avant,
+        athleteFormValues(current) as Record<string, unknown>,
+      );
+      if (stale) return fail(stale);
       const state = await updateAthlete(
         orgId,
         current.id,
@@ -178,9 +184,16 @@ export async function executeAssistantAction(
       if (refusal || !loaded?.draft) return fail(refusal ?? "Programme introuvable.");
       const conflict = revisionConflict(revision, loaded.revision);
       if (conflict) return fail(conflict);
-      const applied = applyProgramEdits(loaded.draft, operations, { today: todayIsoInBrussels() });
+      // Jours proposés en jours fixes : selon les disponibilités du sportif, comme à la proposition.
+      const facts = await athletePlanFacts(await createClient(), orgId, loaded.program.athleteId);
+      const applied = applyProgramEdits(loaded.draft, operations, {
+        today: todayIsoInBrussels(),
+        availableDays: facts.availableDays,
+      });
       if (!applied.ok) return fail(applied.error);
-      if (await hasUnknownExercise(await createClient(), operations)) return fail(UNKNOWN_EXERCISE);
+      if (await hasUnknownExercise(await createClient(), orgId, operations)) {
+        return fail(UNKNOWN_EXERCISE);
+      }
       const saved = await saveDraft(orgId, programId, revision, applied.plan);
       if (!saved.ok) {
         return fail(saved.code === "REVISION_CONFLICT" ? changedSinceProposal() : saved.message);
@@ -202,7 +215,9 @@ export async function executeAssistantAction(
       if (conflict) return fail(conflict);
       const applied = applyProgramEdits(template.plan, operations);
       if (!applied.ok) return fail(applied.error);
-      if (await hasUnknownExercise(await createClient(), operations)) return fail(UNKNOWN_EXERCISE);
+      if (await hasUnknownExercise(await createClient(), orgId, operations)) {
+        return fail(UNKNOWN_EXERCISE);
+      }
       const saved = await updateTemplate(orgId, "program", templateId, version, applied.plan);
       if (!saved.ok) {
         return fail(
@@ -370,16 +385,30 @@ export async function executeAssistantAction(
       // puis, pour un programme écrit, le MÊME enregistrement que l'éditeur.
       const params = action.params as Record<string, unknown>;
       const athleteId = String((params.athlete as { athleteId: string }).athleteId);
+      // Exercices revérifiés au clic : la carte vient du navigateur (relecture du lot 3a, n°6).
+      if (await hasUnknownExercise(await createClient(), orgId, params.seances)) {
+        return fail(UNKNOWN_EXERCISE);
+      }
       const created = await createProgram(orgId, toCreateProgramInput(params, athleteId));
       if (!created.ok) return fail(created.message);
       const href = `${base}/programmes/${created.programId}`;
       if (!params.seances) return { ok: true, href };
-      const loaded = await loadDraft(await createClient(), orgId, created.programId);
-      const custom = loaded?.draft ? customDraftFrom(loaded.draft, params) : null;
-      const saved =
-        loaded && custom?.ok
-          ? await saveDraft(orgId, created.programId, loaded.revision, custom.draft)
-          : null;
+      // Relecture du lot 3a, n°14 : même une erreur imprévue (lecture du brouillon) ne laisse pas de
+      // programme vide en plan.
+      let custom: ReturnType<typeof customDraftFrom> | null = null;
+      let saved: Awaited<ReturnType<typeof saveDraft>> | null = null;
+      try {
+        const supabase = await createClient();
+        const loaded = await loadDraft(supabase, orgId, created.programId);
+        const facts = await athletePlanFacts(supabase, orgId, athleteId);
+        custom = loaded?.draft ? customDraftFrom(loaded.draft, params, facts.availableDays) : null;
+        saved =
+          loaded && custom?.ok
+            ? await saveDraft(orgId, created.programId, loaded.revision, custom.draft)
+            : null;
+      } catch {
+        saved = null;
+      }
       if (!saved?.ok) {
         // Pas de programme vide laissé en plan : le brouillon à peine créé est archivé.
         await archiveProgram(orgId, created.programId);

@@ -1,6 +1,19 @@
+import { spawnSync } from "node:child_process";
+
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { isPhone } from "./helpers";
+
+// Une requête SQL sur la base LOCALE (comme le nettoyage de fin de suite) : remettre une fiche de test
+// dans son état de départ, ou relire ce qu'une carte a écrit.
+function localSql(query: string): string {
+  const result = spawnSync(
+    "docker",
+    ["exec", "supabase_db_coaching-platform", "psql", "-U", "postgres", "-Atc", query],
+    { encoding: "utf8" },
+  );
+  return result.stdout.trim();
+}
 
 // Où se parle l'assistant (19/11) : sur ordinateur, la boîte ouverte par « Assistant IA » de
 // l'en-tête ; sur téléphone, l'icône du haut mène à la page de l'assistant (même conversation, mêmes
@@ -213,6 +226,12 @@ test("sans dictée dans le navigateur, le bouton micro n'apparaît pas", async (
 test("lot 2 : compléter la fiche d'un sportif", async ({ page }, testInfo) => {
   const who = testInfo.project.name === "telephone" ? "Hugo" : "Sarah";
   const full = who === "Hugo" ? "Hugo Lefèvre" : "Sarah Vermeulen";
+  const id = `db000000-0000-4000-8000-00000000000${who === "Hugo" ? 2 : 1}`;
+  // Rejouable même après une suite arrêtée avant le nettoyage (mineur du lot 2) : matériel vidé.
+  localSql(`update public.athlete_profiles set equipment = null where id = '${id}'`);
+  const before = localSql(
+    `select concat_ws('|', level, address_line, postal_code, city) from public.athlete_profiles where id = '${id}'`,
+  );
   const box = await openAssistant(page);
   await ask(box, `Ajoute le tapis de course au matériel de ${who}`);
   const card = box.getByRole("region", { name: "Compléter la fiche" });
@@ -224,6 +243,35 @@ test("lot 2 : compléter la fiche d'un sportif", async ({ page }, testInfo) => {
   expect(href).toMatch(/\/sportifs\/db000000-[^?]+\?onglet=profil$/);
   await page.goto(href ?? "/");
   await expect(page.getByText("Tapis de course (test assistant)").first()).toBeVisible();
+  // Seul le matériel a changé : niveau et adresse sont restés tels quels (mineur du lot 2).
+  expect(
+    localSql(
+      `select concat_ws('|', level, address_line, postal_code, city) from public.athlete_profiles where id = '${id}'`,
+    ),
+  ).toBe(before);
+});
+
+// Relecture du lot 2, n°g et n°h : un fichier refusé dit pourquoi, et le message part avec l'envoi.
+test("un fichier trop lourd est refusé, et le refus disparaît à l'envoi", async ({ page }) => {
+  const box = await openAssistant(page);
+  await box.locator('input[type="file"]').setInputFiles({
+    name: "trop-lourd.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.alloc(4 * 1024 * 1024 + 1),
+  });
+  await expect(box.getByText("Fichier trop lourd : 4 Mo maximum.")).toBeVisible();
+  await box.locator('input[type="file"]').setInputFiles({
+    name: "vide.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.alloc(0),
+  });
+  await expect(
+    box.getByText("Fichier vide : choisis un fichier qui contient quelque chose."),
+  ).toBeVisible();
+  await ask(box, "Qu'est-ce que tu peux faire ?");
+  await expect(
+    box.getByText("Fichier vide : choisis un fichier qui contient quelque chose."),
+  ).toHaveCount(0);
 });
 
 // Lot 2 (D-181) : « Nouvel exercice » dans la Bibliothèque du coach, par la même création que le

@@ -15,6 +15,7 @@ import { getSettingsData, type SettingsData } from "./settings-data";
 import {
   NOTIFICATION_KINDS,
   emailChangeSchema,
+  pickMembership,
   organizationNameSchema,
   parsePreferences,
   passwordChangeSchema,
@@ -40,9 +41,9 @@ export type SettingsState<T> = {
 const field = (formData: FormData, name: string) => String(formData.get(name) ?? "");
 
 // Fenêtre des Paramètres (D-58) : ses données, lues à l'ouverture (et après un changement).
-export async function loadSettings(): Promise<SettingsData> {
+export async function loadSettings(organizationId?: string): Promise<SettingsData> {
   const { user, memberships } = await requireCoach();
-  return getSettingsData(user, memberships[0]);
+  return getSettingsData(user, pickMembership(memberships, organizationId));
 }
 
 // --- Profil -------------------------------------------------------------------------------------

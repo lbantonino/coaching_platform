@@ -115,7 +115,9 @@ describe("runAssistantStep", () => {
       {
         type: "tool_result",
         tool_use_id: "toolu_2",
-        content: "Proposition affichée au coach, en attente de sa validation.",
+        // Claude apprend ce que dit la carte (relecture du lot 3a, n°11).
+        content:
+          "Proposition affichée au coach, en attente de sa validation. Carte « Nouvelle liste de tâches » : Facturation",
       },
     ]);
   });

@@ -15,6 +15,7 @@ import type { CoachTask } from "@/features/tasks/queries";
 import type { AthleteGoals } from "@/features/goals/queries";
 import { NOTIFICATION_KINDS } from "@/features/coach/settings";
 import type { SettingsData } from "@/features/coach/settings-data";
+import type { NotifyPreferences } from "@/features/notifications/filter";
 import type { Notifications } from "@/features/notifications/queries";
 import { goalStatusLabels, goalTypeLabels } from "@/features/goals/schemas";
 import type { AthleteRecords } from "@/features/records/queries";
@@ -272,7 +273,18 @@ export function shapeAthleteSheet(fiche: SheetSource) {
 }
 
 // --- Lot 4 (D-183) : le quotidien. 100 lignes au plus par lecture ; jamais le fichier d'un document.
-const MAX_ROWS = 100;
+export const MAX_ROWS = 100;
+
+// Liste coupée (mineur n°7 du lot 4, n°3 du lot 6) : l'assistant doit savoir qu'il en manque, sinon il
+// conclut à tort (« pas de paiement de Sarah en mars »). Sous la limite, la liste reste telle quelle.
+export function withTotal<T>(rows: readonly T[], total: number, hint: string) {
+  if (total <= rows.length) return rows;
+  return {
+    lignes: rows,
+    total,
+    note: `Seules les ${rows.length} premières lignes sur ${total} sont montrées : ${hint}`,
+  };
+}
 const amountText = (cents: number, currency: Parameters<typeof formatMoney>[1]) =>
   formatMoney(cents, currency).replace(/\s/g, " ");
 
@@ -387,11 +399,14 @@ export function shapeSettings(data: SettingsData) {
 }
 
 // Une ligne par notification (clé pour agir dessus), dans l'ordre des sortes visibles.
-export function shapeNotifications(notifications: Notifications) {
+// `notify` : les sortes que le coach a coupées ne sont pas lues (mineur n°3 du lot 6), comme dans la
+// cloche et la page Notifications. Toutes les lignes : la lecture les coupe à 100 avec withTotal.
+export function shapeNotifications(notifications: Notifications, notify?: NotifyPreferences) {
   const rows: { cle: string; sorte: string; texte: string; lue: boolean; masquee: boolean }[] = [];
   const push = (sorte: string, key: string, texte: string, read: boolean, dismissed: boolean) =>
     rows.push({ cle: key, sorte, texte, lue: read, masquee: dismissed });
   for (const kind of NOTIFICATION_KINDS) {
+    if (notify && !notify[kind]) continue;
     switch (kind) {
       case "competitions":
         for (const event of notifications.competitions) {
@@ -444,5 +459,5 @@ export function shapeNotifications(notifications: Notifications) {
         break;
     }
   }
-  return rows.slice(0, MAX_ROWS);
+  return rows;
 }

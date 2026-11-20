@@ -21,6 +21,11 @@ const atLeastOne = { error: "Indique au moins un changement." };
 const nonEmpty = (value: object) => Object.keys(value).length > 0;
 const ALL_KINDS = ["competitions", "messages", "tasks", "unpaid", "profiles"] as const;
 
+const DURATION_ERROR = { error: "La durée par défaut va de 15 à 480 minutes." };
+const PRICE_ERROR = { error: "Le prix par défaut va de 0 à 100 000." };
+const FIRST_HOUR_ERROR = { error: "L'agenda commence entre 0 h et 12 h (un nombre entier)." };
+const LAST_HOUR_ERROR = { error: "L'agenda finit entre 13 h et 24 h (un nombre entier)." };
+
 export const REGLAGES_PARAMS = {
   modifier_profil: z.strictObject({
     changes: z
@@ -46,12 +51,33 @@ export const REGLAGES_PARAMS = {
   preferences: z.strictObject({
     changes: z
       .strictObject({
-        defaultSessionMinutes: z.number().int().min(15).max(480).optional(),
+        // Messages en français (mineur n°5 du lot 6) : ils reviennent tels quels à l'assistant.
+        defaultSessionMinutes: z
+          .number(DURATION_ERROR)
+          .int(DURATION_ERROR)
+          .min(15, DURATION_ERROR)
+          .max(480, DURATION_ERROR)
+          .optional(),
         defaultLocation: short(120).nullable().optional(),
-        defaultPrice: z.number().min(0).max(100_000).nullable().optional(),
+        defaultPrice: z
+          .number(PRICE_ERROR)
+          .min(0, PRICE_ERROR)
+          .max(100_000, PRICE_ERROR)
+          .nullable()
+          .optional(),
         defaultPaymentMethod: z.enum(["transfer", "cash"]).optional(),
-        agendaFirstHour: z.number().int().min(0).max(12).optional(),
-        agendaLastHour: z.number().int().min(13).max(24).optional(),
+        agendaFirstHour: z
+          .number(FIRST_HOUR_ERROR)
+          .int(FIRST_HOUR_ERROR)
+          .min(0, FIRST_HOUR_ERROR)
+          .max(12, FIRST_HOUR_ERROR)
+          .optional(),
+        agendaLastHour: z
+          .number(LAST_HOUR_ERROR)
+          .int(LAST_HOUR_ERROR)
+          .min(13, LAST_HOUR_ERROR)
+          .max(24, LAST_HOUR_ERROR)
+          .optional(),
       })
       .refine(nonEmpty, atLeastOne),
   }),
@@ -267,4 +293,9 @@ export function summarizeReglages(
     title,
     summary: lines.filter((line): line is string => typeof line === "string" && line !== ""),
   };
+}
+
+// Une même notification citée deux fois compterait double sur la carte (mineur n°6 du lot 6).
+export function uniqueNotificationKeys(keys: readonly string[]): string[] {
+  return [...new Set(keys)];
 }
