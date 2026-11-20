@@ -1,6 +1,13 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { NextRequest } from "next/server";
 
+import {
+  isTokenHash,
+  RECOVERY_COOKIE,
+  RECOVERY_COOKIE_MAX_AGE,
+  RECOVERY_COOKIE_PATH,
+} from "@/features/auth/recovery";
 import { createClient } from "@/lib/supabase/server";
 
 // Retour d'un lien Supabase (réinitialisation de mot de passe, confirmation d'inscription, connexion
@@ -16,6 +23,24 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "";
+  const tokenHash = searchParams.get("token_hash");
+
+  // Lien « Mot de passe oublié » du modèle Coory (incident du 20/11/2026) : le jeton est seulement
+  // rangé, il sera vérifié à l'enregistrement du nouveau mot de passe (features/auth/recovery.ts).
+  if (
+    searchParams.get("type") === "recovery" &&
+    next === "/nouveau-mot-de-passe" &&
+    isTokenHash(tokenHash)
+  ) {
+    (await cookies()).set(RECOVERY_COOKIE, tokenHash, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: request.nextUrl.protocol === "https:",
+      path: RECOVERY_COOKIE_PATH,
+      maxAge: RECOVERY_COOKIE_MAX_AGE,
+    });
+    redirect("/nouveau-mot-de-passe");
+  }
 
   if (code && ALLOWED_NEXT.has(next)) {
     const supabase = await createClient();

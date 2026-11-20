@@ -259,6 +259,13 @@ otp_expiry = 3600
 subject = "Confirme ton adresse e-mail pour Coory"
 content_path = "./supabase/templates/confirmation.html"
 
+# E-mail « Mot de passe oublié », en français (incident du 20/11/2026). Le lien mène à l'app
+# (/auth/confirm?…&token_hash=…&type=recovery), pas à Supabase : il marche depuis n'importe quel
+# appareil, et le jeton n'est vérifié qu'à l'enregistrement du nouveau mot de passe.
+[auth.email.template.recovery]
+subject = "Choisis un nouveau mot de passe pour Coory"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

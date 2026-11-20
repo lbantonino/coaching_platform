@@ -1,6 +1,6 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
-import { logoutCoach } from "./helpers";
+import { logoutCoach, signUpFreshCoach } from "./helpers";
 
 // Parcours « mot de passe oublié » de bout en bout, e-mail compris.
 // Les e-mails locaux sont capturés par Mailpit (http://127.0.0.1:54324), lu ici via son API.
@@ -19,8 +19,13 @@ async function waitForResetLink(request: APIRequestContext, email: string): Prom
     const { messages } = (await search.json()) as { messages: { ID: string }[] };
     if (messages.length > 0) {
       const message = await request.get(`${MAILPIT}/message/${messages[0].ID}`);
-      const { Text } = (await message.json()) as { Text: string };
-      const link = Text.match(/http:\/\/127\.0\.0\.1:54321\/auth\/v1\/verify\?[^\s)\]"<>]+/)?.[0];
+      const { HTML, Text } = (await message.json()) as { HTML: string; Text: string };
+      // Le lien du modèle Coory (vers l'app) ou, à défaut, celui de Supabase.
+      const link = `${Text}\n${HTML}`
+        .replaceAll("&amp;", "&")
+        .match(
+          /http:\/\/(?:localhost:3100\/auth\/confirm|127\.0\.0\.1:54321\/auth\/v1\/verify)\?[^\s)\]"<>]+/,
+        )?.[0];
       if (link) return link;
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
@@ -61,7 +66,10 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   const link = await waitForResetLink(request, RESET_ACCOUNT);
   await page.goto(link);
   await expect(page).toHaveURL(/\/nouveau-mot-de-passe$/);
-  await expect(page.getByText(`Compte : ${RESET_ACCOUNT}`)).toBeVisible();
+  // Le lien n'est vérifié qu'à l'enregistrement : la page ne connaît pas encore le compte.
+  await expect(
+    page.getByText("Choisis le nouveau mot de passe de ton compte Coory."),
+  ).toBeVisible();
 
   // 3. Mot de passe trop court refusé, puis nouveau mot de passe valide.
   await page.getByLabel("Nouveau mot de passe").fill("court");
@@ -78,9 +86,14 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   await logoutCoach(page);
   // Attendre la fin de la déconnexion : naviguer trop tôt interromprait l'action.
   await expect(page).toHaveURL(/\/login$/);
+  // Rouvert, le lien affiche le formulaire (il n'est vérifié qu'à l'enregistrement), puis il est refusé.
   await page.goto(link);
-  // Supabase ajoute un fragment #error=...otp_expired, conservé par le navigateur.
-  await expect(page).toHaveURL(/\/lien-invalide(#.*)?$/);
+  await expect(page).toHaveURL(/\/nouveau-mot-de-passe$/);
+  const again = `encore-${Date.now()}`;
+  await page.getByLabel("Nouveau mot de passe").fill(again);
+  await page.getByLabel("Confirmation", { exact: true }).fill(again);
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(page).toHaveURL(/\/lien-invalide$/);
   await expect(page.getByRole("heading", { name: "Ce lien n'est plus valide" })).toBeVisible();
 
   // 5. Connexion avec le nouveau mot de passe.
@@ -90,6 +103,51 @@ test("le coach réinitialise son mot de passe via l'e-mail et se reconnecte avec
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
   await expect(page.getByRole("heading", { name: "Tableau de bord", level: 1 })).toBeVisible();
+});
+
+// Incident du 20/11/2026 en ligne : le lien ouvert ailleurs que dans le navigateur de la demande (app
+// Gmail, Coory installée sur l'écran d'accueil, autre ordinateur) menait à « lien invalide », alors que
+// Supabase l'avait accepté. Et le robot d'une messagerie qui ouvre le lien avant la personne ne doit
+// pas le consommer.
+test("le lien marche dans un autre navigateur que celui de la demande, même ouvert avant par un robot", async ({
+  page,
+  request,
+  browser,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "ordinateur", "parcours e-mail exécuté sur un seul profil");
+  // Un compte neuf, à lui seul : le compte de réinitialisation partagé sert au test précédent.
+  const email = await signUpFreshCoach(page, request, testInfo);
+  await logoutCoach(page);
+  await expect(page).toHaveURL(/\/login$/);
+  await clearMailbox(request, email);
+
+  await page.goto("/mot-de-passe-oublie");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByRole("button", { name: "Recevoir le lien" }).click();
+  await expect(page.getByRole("status")).toContainText(SENT_MESSAGE);
+  const link = await waitForResetLink(request, email);
+
+  // Le robot d'une messagerie ouvre le lien d'abord, sans les cookies de personne.
+  await request.get(link);
+
+  // La personne l'ouvre dans un autre navigateur, qui n'a aucun cookie de la demande.
+  const elsewhere = await browser.newContext();
+  const other = await elsewhere.newPage();
+  await other.goto(link);
+  await expect(other).toHaveURL(/\/nouveau-mot-de-passe$/);
+  const newPassword = `ailleurs-${Date.now()}`;
+  await other.getByLabel("Nouveau mot de passe").fill(newPassword);
+  await other.getByLabel("Confirmation", { exact: true }).fill(newPassword);
+  await other.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(other).toHaveURL(/\/coach$/);
+  await elsewhere.close();
+
+  // Le nouveau mot de passe ouvre le compte, dans le premier navigateur aussi.
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByLabel("Mot de passe", { exact: true }).fill(newPassword);
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
 });
 
 test("un lien falsifié mène à la page « lien invalide »", async ({ page }) => {

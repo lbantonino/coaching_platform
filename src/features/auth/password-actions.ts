@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { isDemoAccount } from "@/features/demo/queries";
@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { fieldErrors } from "./field-errors";
 import { getHomePath } from "./guards";
+import { isTokenHash, RECOVERY_COOKIE, RECOVERY_COOKIE_PATH } from "./recovery";
 import { newPasswordSchema, passwordResetRequestSchema } from "./schemas";
 import { getRecoveryUser } from "./session";
 
@@ -65,15 +66,7 @@ export async function updatePassword(
   _previous: NewPasswordState,
   formData: FormData,
 ): Promise<NewPasswordState> {
-  // La session de récupération ouverte par le lien e-mail est obligatoire (pas une session ordinaire).
-  const user = await getRecoveryUser();
-  if (!user) {
-    return {
-      error: "Ce lien de réinitialisation n'est plus valable. Redemande un lien.",
-      fields: {},
-    };
-  }
-
+  // La saisie d'abord : une faute de frappe ne doit pas consommer le lien (à usage unique).
   const parsed = newPasswordSchema.safeParse({
     password: String(formData.get("password") ?? ""),
     confirmation: String(formData.get("confirmation") ?? ""),
@@ -81,9 +74,35 @@ export async function updatePassword(
   if (!parsed.success) {
     return { error: null, fields: fieldErrors(parsed.error) };
   }
-  if (await isDemoAccount()) return { error: DEMO_DISABLED, fields: {} };
 
+  // La session de récupération ouverte par le lien e-mail est obligatoire (pas une session ordinaire).
+  // Lien du modèle Coory (incident du 20/11/2026) : son jeton est vérifié maintenant, une seule fois,
+  // et ouvre cette session dans le navigateur où la personne se trouve.
   const supabase = await createClient();
+  let user = await getRecoveryUser();
+  if (!user) {
+    const store = await cookies();
+    const token = store.get(RECOVERY_COOKIE)?.value;
+    if (isTokenHash(token)) {
+      store.delete({ name: RECOVERY_COOKIE, path: RECOVERY_COOKIE_PATH });
+      const { data, error } = await supabase.auth.verifyOtp({
+        type: "recovery",
+        token_hash: token,
+      });
+      // Expiré ou déjà servi : la page « lien invalide » propose d'en demander un nouveau.
+      if (error || !data.user) redirect("/lien-invalide");
+      user = { id: data.user.id, email: data.user.email ?? null };
+    }
+  }
+  if (!user) {
+    return {
+      error: "Ce lien de réinitialisation n'est plus valable. Redemande un lien.",
+      fields: {},
+    };
+  }
+  // Le même client : la session tout juste ouverte par le jeton n'est connue que de lui.
+  if (await isDemoAccount(supabase)) return { error: DEMO_DISABLED, fields: {} };
+
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) {
     const message =
