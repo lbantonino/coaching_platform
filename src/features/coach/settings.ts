@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { FEATURES } from "@/config/features";
 import { parseAmount } from "@/domain/billing/payments";
-import { emailField, newPasswordField } from "@/features/auth/schemas";
+import { emailField, newPasswordField, SAME_PASSWORD_MESSAGE } from "@/features/auth/schemas";
 
 // Page Paramètres (D-57) : règles PURES des formulaires, testées par Vitest. Les actions serveur les
 // appellent puis écrivent en base, qui revérifie les mêmes formats (contraintes CHECK).
@@ -144,6 +144,6 @@ export const passwordChangeSchema = z
     path: ["confirmation"],
   })
   .refine((values) => values.password !== values.current, {
-    error: "Le nouveau mot de passe doit être différent de l'actuel.",
+    error: SAME_PASSWORD_MESSAGE,
     path: ["password"],
   });

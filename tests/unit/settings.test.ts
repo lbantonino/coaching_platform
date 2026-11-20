@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { SAME_PASSWORD_MESSAGE } from "@/features/auth/schemas";
 import { parsePreferences, passwordChangeSchema, profileSchema } from "@/features/coach/settings";
 import { enabledTotal } from "@/features/notifications/filter";
 
@@ -68,10 +69,14 @@ describe("changement de mot de passe", () => {
     expect(
       passwordChangeSchema.safeParse({ ...ok, password: "court", confirmation: "court" }).success,
     ).toBe(false);
-    expect(
-      passwordChangeSchema.safeParse({ ...ok, password: ok.current, confirmation: ok.current })
-        .success,
-    ).toBe(false);
+    const same = passwordChangeSchema.safeParse({
+      ...ok,
+      password: ok.current,
+      confirmation: ok.current,
+    });
+    expect(same.success).toBe(false);
+    // Demande d'Antonino du 20/11 : le dire clairement et demander d'en écrire un nouveau.
+    expect(same.error?.issues[0]?.message).toBe(SAME_PASSWORD_MESSAGE);
   });
 });
 

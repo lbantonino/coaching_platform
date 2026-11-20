@@ -150,6 +150,45 @@ test("le lien marche dans un autre navigateur que celui de la demande, même ouv
   await expect(page).toHaveURL(/\/coach$/);
 });
 
+// Incident du 20/11/2026 en ligne (2) : Antonino a retapé son mot de passe actuel. Le lien était
+// vérifié, Supabase a refusé « même mot de passe », et la page a renvoyé vers « lien invalide » au lieu
+// d'afficher l'erreur : la session ouverte par le lien n'était pas reconnue.
+test("retaper son mot de passe actuel affiche l'erreur et laisse en choisir un autre", async ({
+  page,
+  request,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "ordinateur", "parcours e-mail exécuté sur un seul profil");
+  const email = await signUpFreshCoach(page, request, testInfo);
+  await logoutCoach(page);
+  await expect(page).toHaveURL(/\/login$/);
+  await clearMailbox(request, email);
+  await page.goto("/mot-de-passe-oublie");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByRole("button", { name: "Recevoir le lien" }).click();
+  await expect(page.getByRole("status")).toContainText(SENT_MESSAGE);
+  await page.goto(await waitForResetLink(request, email));
+  await expect(page).toHaveURL(/\/nouveau-mot-de-passe$/);
+
+  // Le mot de passe de l'inscription (signUpFreshCoach) : refusé, on reste sur la page.
+  await page.getByLabel("Nouveau mot de passe").fill("un-mot-de-passe-solide");
+  await page.getByLabel("Confirmation", { exact: true }).fill("un-mot-de-passe-solide");
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(
+    page.getByRole("alert").filter({
+      hasText: "C'est déjà ton mot de passe actuel. Choisis-en un nouveau.",
+    }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/\/nouveau-mot-de-passe$/);
+  await expect(page.getByText(`Compte : ${email}`)).toBeVisible();
+
+  // Un autre mot de passe passe, sans redemander de lien.
+  const other = `autre-${Date.now()}`;
+  await page.getByLabel("Nouveau mot de passe").fill(other);
+  await page.getByLabel("Confirmation", { exact: true }).fill(other);
+  await page.getByRole("button", { name: "Enregistrer le mot de passe" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+});
+
 test("un lien falsifié mène à la page « lien invalide »", async ({ page }) => {
   await page.goto("/auth/confirm?code=faux-code&next=/nouveau-mot-de-passe");
   await expect(page).toHaveURL(/\/lien-invalide$/);

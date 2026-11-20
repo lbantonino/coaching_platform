@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { fieldErrors } from "./field-errors";
 import { getHomePath } from "./guards";
 import { isTokenHash, RECOVERY_COOKIE, RECOVERY_COOKIE_PATH } from "./recovery";
-import { newPasswordSchema, passwordResetRequestSchema } from "./schemas";
+import { newPasswordSchema, passwordResetRequestSchema, SAME_PASSWORD_MESSAGE } from "./schemas";
 import { getRecoveryUser } from "./session";
 
 export type ResetRequestState = {
@@ -107,7 +107,7 @@ export async function updatePassword(
   if (error) {
     const message =
       error.code === "same_password"
-        ? "Le nouveau mot de passe doit être différent de l'ancien."
+        ? SAME_PASSWORD_MESSAGE
         : error.code === "weak_password"
           ? "Ce mot de passe est trop faible. Choisis-en un plus long ou plus varié."
           : "Le mot de passe n'a pas pu être modifié. Redemande un lien de réinitialisation.";

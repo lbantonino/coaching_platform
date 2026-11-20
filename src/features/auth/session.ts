@@ -42,16 +42,38 @@ export async function getRecoveryUser(): Promise<CurrentUser | null> {
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) return null;
   const now = Date.now() / 1000;
-  const recovered = (data.claims.amr ?? []).some((entry) =>
+  const amr = data.claims.amr ?? [];
+  const user = {
+    id: data.claims.sub,
+    email: typeof data.claims.email === "string" ? data.claims.email : null,
+  };
+  const recovered = amr.some((entry) =>
     typeof entry === "string"
       ? entry === "recovery"
       : entry.method === "recovery" && now - entry.timestamp < RECOVERY_WINDOW_SECONDS,
   );
-  if (!recovered) return null;
-  return {
-    id: data.claims.sub,
-    email: typeof data.claims.email === "string" ? data.claims.email : null,
-  };
+  if (recovered) return user;
+
+  // Lien du modèle Coory (D-197) : le jeton vérifié par verifyOtp ouvre une session « otp », pas
+  // « recovery » (incident du 20/11/2026 : refusée, la page renvoyait vers « lien invalide »). Elle ne
+  // vaut session de récupération que si elle a été ouverte APRÈS une demande « Mot de passe oublié »
+  // (recovery_sent_at) et dans l'heure : une connexion ordinaire n'a jamais la méthode « otp ».
+  const otp = amr.find(
+    (entry) =>
+      typeof entry !== "string" &&
+      entry.method === "otp" &&
+      now - entry.timestamp < RECOVERY_WINDOW_SECONDS,
+  );
+  if (!otp || typeof otp === "string") return null;
+  const { data: current } = await supabase.auth.getUser();
+  const sentAt = current.user?.recovery_sent_at
+    ? Date.parse(current.user.recovery_sent_at) / 1000
+    : null;
+  const afterRequest =
+    sentAt !== null &&
+    sentAt <= otp.timestamp + 1 &&
+    otp.timestamp - sentAt < RECOVERY_WINDOW_SECONDS;
+  return afterRequest ? user : null;
 }
 
 // À appeler en tête de toute page ou action réservée aux utilisateurs connectés.

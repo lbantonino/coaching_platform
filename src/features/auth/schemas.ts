@@ -3,6 +3,10 @@ import { z } from "zod";
 // Aligné sur minimum_password_length (supabase/config.toml) : 10 caractères.
 export const PASSWORD_MIN_LENGTH = 10;
 
+// Nouveau mot de passe identique à l'actuel (Paramètres, et lien « Mot de passe oublié » où Supabase
+// le refuse) : le dire clairement et demander d'en écrire un nouveau (demande d'Antonino du 20/11/2026).
+export const SAME_PASSWORD_MESSAGE = "C'est déjà ton mot de passe actuel. Choisis-en un nouveau.";
+
 // Messages du prototype Claude Design (§7.1) : vide → « Indique… », mal formé → « ne semble pas valide ».
 export const emailField = z
   .email({
