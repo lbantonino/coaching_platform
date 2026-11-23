@@ -34,6 +34,26 @@ export default function LegalNoticePage() {
           body: <p>{LEGAL.publisher}.</p>,
         },
         {
+          // Lien voulu vers l'agence d'Antonino (décision du 23/11/2026) :
+          // Coory reste un projet personnel, Synode n'en est pas l'éditeur.
+          title: "Conception et développement",
+          body: (
+            <p>
+              Coory est conçu et développé par {LEGAL.publisher}, cofondateur de Synode agency,
+              agence technologique à Bruxelles (
+              <a
+                href="https://synode-agency.com/"
+                target="_blank"
+                rel="noopener"
+                className="font-semibold text-text"
+              >
+                synode-agency.com
+              </a>
+              ).
+            </p>
+          ),
+        },
+        {
           title: "Hébergement",
           body: (
             <>
