@@ -461,3 +461,19 @@ export function shapeNotifications(notifications: Notifications, notify?: Notify
   }
   return rows;
 }
+
+// Revue du 20/11, n°5 : une liste coupée se lit par morceaux, une sorte à la fois ou seulement les
+// notifications à traiter (ni lues ni masquées). Marquer ou masquer ne servait à rien : les lignes
+// restent dans la liste, avec leur état.
+export type NotificationFilter = { sorte?: string; etat?: "toutes" | "a_traiter" };
+export function pickNotifications<T extends { sorte: string; lue: boolean; masquee: boolean }>(
+  rows: readonly T[],
+  { sorte, etat }: NotificationFilter,
+): T[] {
+  return rows.filter(
+    (row) =>
+      (!sorte || row.sorte === sorte) && (etat !== "a_traiter" || (!row.lue && !row.masquee)),
+  );
+}
+export const NOTIFICATIONS_CUT_HINT =
+  "relis une sorte à la fois (sorte), ou seulement celles à traiter (etat « a_traiter »).";

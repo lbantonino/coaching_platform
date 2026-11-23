@@ -241,23 +241,33 @@ export function isHardSession(session: SessionDraft): boolean {
 // gardent leur jour ; les autres séances se répartissent sur les jours disponibles du sportif (tous
 // s'il n'en a pas indiqué), en évitant de mettre deux séances le même jour et deux séances dures de
 // suite. Le coach corrige ensuite. Déterministe : mêmes données, même proposition.
+// `keepFixedDays` (Assistant IA, revue du 20/11/2026, n°2) : une séance qui a déjà un jour le garde et
+// compte comme posée ; seules les séances sans jour en reçoivent un, sur les jours encore libres.
 export function proposeWeekDays(
   sessions: SessionDraft[],
   availableDays: readonly Weekday[],
+  { keepFixedDays = false }: { keepFixedDays?: boolean } = {},
 ): Map<string, Weekday> {
   const result = new Map<string, Weekday>();
   const candidates = availableDays.length > 0 ? [...availableDays] : [...WEEKDAYS];
   const used = new Map<number, boolean>(); // jour (0 à 6) -> séance dure ?
   const count = new Map<number, number>(); // jour (0 à 6) -> séances déjà posées (4 au plus, D-164)
+  const placed = (session: SessionDraft): Weekday | undefined =>
+    session.withCoach
+      ? weekdayOf(session.withCoach.date)
+      : keepFixedDays
+        ? session.fixedDay
+        : undefined;
   for (const session of sessions) {
-    if (!session.withCoach) continue;
-    const day = weekdayOf(session.withCoach.date);
+    const day = placed(session);
+    if (!day) continue;
+    const index = WEEKDAYS.indexOf(day);
     result.set(session.key, day);
-    used.set(WEEKDAYS.indexOf(day), isHardSession(session));
-    count.set(WEEKDAYS.indexOf(day), (count.get(WEEKDAYS.indexOf(day)) ?? 0) + 1);
+    used.set(index, (used.get(index) ?? false) || isHardSession(session));
+    count.set(index, (count.get(index) ?? 0) + 1);
   }
 
-  const free = sessions.filter((session) => !session.withCoach);
+  const free = sessions.filter((session) => !placed(session));
   free.forEach((session, i) => {
     const hard = isHardSession(session);
     const ideal = Math.round((i * 7) / Math.max(free.length, 1));

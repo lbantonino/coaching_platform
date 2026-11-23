@@ -23,12 +23,17 @@ function exerciseIds(value: unknown, found = new Set<string>()): Set<string> {
   return found;
 }
 
+// `already` (revue du 20/11, n°10) : le programme ou le modèle tel qu'il est enregistré. Un exercice qui
+// y est déjà (masqué ou archivé depuis) ne bloque pas une séance réécrite en entier : comme dans
+// l'éditeur, il reste où il est. Seuls les exercices AJOUTÉS doivent être dans la Bibliothèque.
 export async function hasUnknownExercise(
   supabase: Supabase,
   organizationId: string,
   value: unknown,
+  already?: unknown,
 ): Promise<boolean> {
-  const ids = [...exerciseIds(value)];
+  const kept = already === undefined ? new Set<string>() : exerciseIds(already);
+  const ids = [...exerciseIds(value)].filter((id) => !kept.has(id));
   if (ids.length === 0) return false;
   const { data } = await supabase
     .from("exercises")
@@ -40,11 +45,12 @@ export async function hasUnknownExercise(
 // Ce que l'assistant de création lit d'un sportif pour un programme (relecture du lot 3a, n°7 et
 // n°9) : ses jours disponibles (jours proposés en jours fixes) et la façon de viser par défaut (FC
 // sans VMA, % avec des charges maximales liées à un exercice), comme aimFor dans l'assistant.
+// null si une lecture échoue (revue du 20/11, n°9) : rien n'est deviné, la carte est refusée.
 export async function athletePlanFacts(
   supabase: Supabase,
   organizationId: string,
   athleteId: string | null,
-): Promise<{ availableDays: Weekday[]; aim: ReturnType<typeof aimFor> }> {
+): Promise<{ availableDays: Weekday[]; aim: ReturnType<typeof aimFor> } | null> {
   if (!athleteId) return { availableDays: [], aim: aimFor(undefined) };
   const [profile, metrics] = await Promise.all([
     supabase
@@ -59,6 +65,7 @@ export async function athletePlanFacts(
       .eq("organization_id", organizationId)
       .eq("athlete_id", athleteId),
   ]);
+  if (profile.error || metrics.error) return null;
   const rows = metrics.data ?? [];
   const availableDays = (profile.data?.available_days ?? []).filter((day): day is Weekday =>
     (WEEKDAYS as readonly string[]).includes(day),
@@ -69,6 +76,9 @@ export async function athletePlanFacts(
   } as Parameters<typeof aimFor>[0]);
   return { availableDays, aim };
 }
+
+export const ATHLETE_READ_FAILED =
+  "La fiche du sportif n'a pas pu être lue (jours disponibles, repères) : réessaie dans un instant.";
 
 export const UNKNOWN_EXERCISE =
   "Exercice introuvable : prends les id donnés par chercher_exercices.";

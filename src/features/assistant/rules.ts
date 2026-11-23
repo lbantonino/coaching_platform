@@ -52,13 +52,15 @@ export const attachmentSchema = z.strictObject({
 });
 export type AssistantAttachment = z.infer<typeof attachmentSchema>;
 
-// Relecture du lot 2, n°g : un fichier refusé dit pourquoi (vide, trop lourd, nom trop long), dans le
+// Relecture du lot 2, n°g : un fichier refusé dit pourquoi (vide, trop lourd, sans nom, nom trop long), dans le
 // navigateur, avant d'envoyer la demande ; sinon le serveur répondait « demande illisible ».
 export function attachmentProblem(file: { name: string; size: number }): string | null {
   if (file.size <= 0) return "Fichier vide : choisis un fichier qui contient quelque chose.";
   if (file.size > DOCUMENT_MAX_BYTES) return "Fichier trop lourd : 4 Mo maximum.";
   const name = file.name.trim();
-  if (name.length === 0 || name.length > 200) {
+  // Revue du 20/11, n°11 : un nom vide n'est pas « trop long ».
+  if (name.length === 0) return "Fichier sans nom : renomme-le, puis joins-le à nouveau.";
+  if (name.length > 200) {
     return "Nom de fichier trop long (200 caractères au plus) : renomme-le, puis joins-le à nouveau.";
   }
   return null;

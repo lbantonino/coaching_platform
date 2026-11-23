@@ -28,9 +28,14 @@ import { createClient } from "@/lib/supabase/server";
 import { isDailyKind } from "../daily";
 import { isReglagesKind } from "../reglages";
 import { isSportifsKind } from "../sportifs";
-import { athletePlanFacts, hasUnknownExercise, UNKNOWN_EXERCISE } from "../exercise-check";
+import {
+  ATHLETE_READ_FAILED,
+  athletePlanFacts,
+  hasUnknownExercise,
+  UNKNOWN_EXERCISE,
+} from "../exercise-check";
 import { athleteFormValues, checkAgainstSession, formRuleError } from "../form-data";
-import { copySourceRefusal, overlapWarning, withSourceRhythm } from "../program";
+import { copySourceRefusal, overlapWarning, programRuleError, withSourceRhythm } from "../program";
 import { DAILY_TOOLS, proposeDaily } from "./daily";
 import { proposeReglages, REGLAGES_TOOLS } from "./reglages";
 import { proposeSportifs, SPORTIFS_TOOLS } from "./sportifs";
@@ -59,7 +64,7 @@ import {
   pdfRefusal,
   prepareToolInput,
   publicationLine,
-  sameExerciseName,
+  hasExerciseNamed,
   summarize,
   type AssistantProposal,
   type ParsedAssistantAction,
@@ -750,16 +755,22 @@ export async function proposeAction(
 
   if (kind === "creer_exercice") {
     // Doublon possible : un exercice du coach au même nom (sans casse ni espaces en trop). La carte le
-    // dit ; le coach décide. Comparé ici, pas par un motif de la base (relecture du lot 2, n°f).
-    const { data } = await supabase
-      .from("exercises")
-      .select("name_fr")
-      .eq("organization_id", organizationId)
-      .is("archived_at", null)
-      .limit(2000);
-    if ((data ?? []).some((row) => sameExerciseName(row.name_fr, String(p.name)))) {
-      names.doublon = "oui";
+    // dit ; le coach décide. Comparé ici, pas par un motif de la base (relecture du lot 2, n°f), sur
+    // tous ses exercices (revue du 20/11, n°12).
+    const duplicate = await hasExerciseNamed(async (from, to) => {
+      const { data, error } = await supabase
+        .from("exercises")
+        .select("name_fr")
+        .eq("organization_id", organizationId)
+        .is("archived_at", null)
+        .order("id")
+        .range(from, to);
+      return error ? null : (data ?? []);
+    }, String(p.name));
+    if (duplicate === null) {
+      return refuse("La Bibliothèque n'a pas pu être lue (doublon possible) : réessaie.");
     }
+    if (duplicate) names.doublon = "oui";
   }
 
   if (kind === "completer_fiche") {
@@ -825,10 +836,13 @@ export async function proposeAction(
       return refuse(UNKNOWN_EXERCISE);
     }
     // Façon de viser par défaut comme l'assistant de création (relecture du lot 3a, n°7) : FC sans
-    // VMA, % avec des charges maximales liées ; notée ici, la même au « Valider ».
-    if (!p.aimDefaults) {
-      p = { ...p, aimDefaults: (await athletePlanFacts(supabase, organizationId, athleteId)).aim };
-    }
+    // VMA, % avec des charges maximales liées ; notée ici, la même au « Valider ». Les jours
+    // disponibles aussi (revue du 20/11, n°3) : la carte se revérifie avec eux, le clic les reprend.
+    const facts = await athletePlanFacts(supabase, organizationId, athleteId);
+    if (!facts) return refuse(ATHLETE_READ_FAILED);
+    p = { ...p, aimDefaults: p.aimDefaults ?? facts.aim, joursDisponibles: facts.availableDays };
+    const withDays = programRuleError(p);
+    if (withDays) return refuse(withDays);
     // Un brouillon peut chevaucher un programme publié, mais il ne pourra pas être publié tel quel :
     // la carte le dit (comme l'assistant de création).
     const overlap = overlapWarning(rows, String(p.startDate), Number(p.weeksCount));
@@ -848,13 +862,16 @@ export async function proposeAction(
     if (refusal || !loaded?.draft) return refuse(refusal ?? "Programme introuvable.");
     const stale = staleReading(Number(p.revision), loaded.revision);
     if (stale) return refuse(stale);
+    // Jours disponibles notés sur la carte : les mêmes au clic (revue du 20/11, n°4).
     const facts = await athletePlanFacts(supabase, organizationId, loaded.program.athleteId);
+    if (!facts) return refuse(ATHLETE_READ_FAILED);
+    p = { ...p, joursDisponibles: facts.availableDays };
     const applied = applyProgramEdits(loaded.draft, p.operations as ProgramEdit[], {
       today: todayIsoInBrussels(),
       availableDays: facts.availableDays,
     });
     if (!applied.ok) return refuse(applied.error);
-    if (await hasUnknownExercise(supabase, organizationId, p.operations)) {
+    if (await hasUnknownExercise(supabase, organizationId, p.operations, loaded.draft)) {
       return refuse(UNKNOWN_EXERCISE);
     }
     const { data: athleteRow } = await supabase
@@ -885,7 +902,7 @@ export async function proposeAction(
     if (stale) return refuse(stale);
     const applied = applyProgramEdits(template.plan, p.operations as ProgramEdit[]);
     if (!applied.ok) return refuse(applied.error);
-    if (await hasUnknownExercise(supabase, organizationId, p.operations)) {
+    if (await hasUnknownExercise(supabase, organizationId, p.operations, template.plan)) {
       return refuse(UNKNOWN_EXERCISE);
     }
     Object.assign(

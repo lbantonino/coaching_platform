@@ -4,8 +4,8 @@ import { z } from "zod";
 
 import { getAthlete, listAthletes } from "@/features/athletes/queries";
 import { listUnpaidDates } from "@/features/billing/collect-queries";
-import { listExpenseCategories, listExpenses } from "@/features/billing/expense-queries";
-import { listPayments } from "@/features/billing/payment-queries";
+import { listExpenseCategories, listExpensesWithTotal } from "@/features/billing/expense-queries";
+import { listPaymentsWithTotal } from "@/features/billing/payment-queries";
 import { listDocumentCategories, listDocuments } from "@/features/documents/queries";
 import { listLibraryExercises } from "@/features/exercises/queries";
 import { loadDraft } from "@/features/programs/drafts";
@@ -17,6 +17,7 @@ import { draftReading, draftReadInput, templateReadInput } from "../program-edit
 import { listSessions } from "@/features/sessions/queries";
 import { listTaskLists, listTasks } from "@/features/tasks/queries";
 import { listGoals } from "@/features/goals/queries";
+import { NOTIFICATION_KINDS, type NotificationKind } from "@/features/coach/settings";
 import { loadSettings } from "@/features/coach/settings-actions";
 import { getNotifications } from "@/features/notifications/queries";
 import { todayIsoInBrussels } from "@/lib/format";
@@ -32,6 +33,8 @@ import {
   shapeDocuments,
   shapeExpenses,
   shapeGoals,
+  NOTIFICATIONS_CUT_HINT,
+  pickNotifications,
   shapeNotifications,
   shapeReferences,
   shapeSettings,
@@ -82,7 +85,10 @@ const inputs = {
   voir_reperes: z.object({ sportif_id: z.uuid() }),
   // Lot 6 (D-185) : les réglages (jamais l'e-mail de connexion ni le numéro du coach).
   voir_parametres: z.object({}),
-  voir_notifications: z.object({}),
+  voir_notifications: z.object({
+    sorte: z.enum(NOTIFICATION_KINDS as [NotificationKind, ...NotificationKind[]]).optional(),
+    etat: z.enum(["toutes", "a_traiter"]).optional(),
+  }),
   voir_programmes: z.object({ sportif_id: z.uuid() }),
   voir_fiche: z.object({ sportif_id: z.uuid() }),
   voir_brouillon: draftReadInput,
@@ -154,24 +160,20 @@ export async function runReadTool(
     }
     case "voir_paiements": {
       const { sportif_id, du, au } = inputs.voir_paiements.parse(input ?? {});
-      // Sportif et dates filtrés PAR LA BASE, avant la limite de 500 lignes (mineur n°7 du lot 4).
-      const payments = await listPayments(organizationId, du, { to: au, athleteId: sportif_id });
-      return json(
-        withTotal(shapePayments(payments), payments.length, "précise un sportif ou des dates."),
-      );
+      // Sportif et dates filtrés PAR LA BASE, avant la limite de 500 lignes (mineur n°7 du lot 4) ;
+      // le total est celui de la base (revue du 20/11, n°8).
+      const { payments, total } = await listPaymentsWithTotal(organizationId, du, {
+        to: au,
+        athleteId: sportif_id,
+      });
+      return json(withTotal(shapePayments(payments), total, "précise un sportif ou des dates."));
     }
     case "voir_depenses": {
-      // Une dépense mensuelle compte tant qu'elle n'est pas finie : elle reste dans la période.
+      // Une dépense mensuelle compte tant qu'elle n'est pas finie : elle reste dans la période. Début
+      // et fin filtrés PAR LA BASE, total compris (revue du 20/11, n°8).
       const { du, au } = inputs.voir_depenses.parse(input ?? {});
-      const expenses = (await listExpenses(organizationId, { to: au })).filter(
-        (expense) =>
-          (!au || expense.spentOn <= au) &&
-          (!du ||
-            (expense.repeatsMonthly
-              ? expense.endsOn === null || expense.endsOn >= du
-              : expense.spentOn >= du)),
-      );
-      return json(withTotal(shapeExpenses(expenses), expenses.length, "précise des dates."));
+      const { expenses, total } = await listExpensesWithTotal(organizationId, { from: du, to: au });
+      return json(withTotal(shapeExpenses(expenses), total, "précise des dates."));
     }
     case "voir_parametres":
       return json(shapeSettings(await loadSettings(organizationId)));
@@ -181,14 +183,9 @@ export async function runReadTool(
         getNotifications(organizationId, todayIsoInBrussels()),
         loadSettings(organizationId),
       ]);
-      const rows = shapeNotifications(notifications, settings.notify);
-      return json(
-        withTotal(
-          rows.slice(0, MAX_ROWS),
-          rows.length,
-          "marque les plus anciennes comme lues ou masque-les, puis relis.",
-        ),
-      );
+      const filter = inputs.voir_notifications.parse(input ?? {});
+      const rows = pickNotifications(shapeNotifications(notifications, settings.notify), filter);
+      return json(withTotal(rows.slice(0, MAX_ROWS), rows.length, NOTIFICATIONS_CUT_HINT));
     }
     case "voir_objectifs":
     case "voir_reperes": {

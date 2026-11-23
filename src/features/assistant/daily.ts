@@ -9,13 +9,14 @@ import {
 } from "@/domain/documents/documents";
 import { LIST_COLORS, LIST_NAME_MAX, listColorLabels, type ListColor } from "@/domain/tasks/lists";
 import { DISCIPLINES, disciplineLabels, type Discipline } from "@/domain/training/discipline";
-import { COLLECT_WEEKS } from "@/domain/billing/payments";
+import { COLLECT_WEEKS, coveredByPackage, type PackageCoverLike } from "@/domain/billing/payments";
 import { addDays } from "@/features/agenda/items";
 import {
   SESSION_PAYMENT_METHODS,
   defaultVatIncluded,
   type SessionPaymentMethod,
 } from "@/features/sessions/schemas";
+import { datesToCollect, type PricedSessionLike } from "@/features/sessions/prices";
 
 import { dayInWords } from "./rules";
 
@@ -220,11 +221,49 @@ export function sessionDateStatus(date: string, today: string): "futur" | "a_enc
   return date < addDays(today, -7 * COLLECT_WEEKS) ? "ancien" : "a_encaisser";
 }
 
+// Revue du 20/11, n°6 : la MÊME règle que la page « À encaisser » (listUnpaidDates, datesToCollect) :
+// une séance avec un prix ET un moyen de paiement, déjà commencée (aujourd'hui : à son heure, à sa
+// date déplacée s'il y a lieu), pas couverte par un forfait. `covers` : les forfaits restants (sans
+// celui du paiement retiré). `session` null (séance supprimée) : la date seule.
+export type UnpaidAgainStatus = "futur" | "a_encaisser" | "ancien" | "forfait" | "sans_suivi";
+export function unpaidAgainStatus(
+  session:
+    | (PricedSessionLike & {
+        paymentMethod: string | null;
+        kind: string;
+        athletes: readonly { id: string }[];
+      })
+    | null,
+  originalDate: string,
+  { today, now, covers }: { today: string; now: string; covers: readonly PackageCoverLike[] },
+): UnpaidAgainStatus {
+  if (!session) return sessionDateStatus(originalDate, today);
+  if (session.paymentMethod === null || session.priceCents === null) return "sans_suivi";
+  if (
+    session.kind === "individual" &&
+    coveredByPackage([...covers], session.athletes[0]?.id, originalDate)
+  ) {
+    return "forfait";
+  }
+  const from = addDays(today, -7 * COLLECT_WEEKS);
+  const collected = datesToCollect([session], from, today, now.slice(0, 5), () => false);
+  if (collected.some((item) => item.originalDate === originalDate)) return "a_encaisser";
+  const moved = session.exceptions?.find((item) => item.originalDate === originalDate);
+  const date = moved?.newDate ?? originalDate;
+  const start = (moved?.newStartTime ?? session.startTime).slice(0, 5);
+  return date > today || (date === today && start > now.slice(0, 5)) ? "futur" : "ancien";
+}
+
 function unpaidAgainLine(date: string, status: string | undefined): string {
   const day = `La séance du ${dayInWords(date)}`;
+  const away = "elle ne revient pas dans « À encaisser »";
   if (status === "futur") return `${day} n'est plus marquée payée`;
   if (status === "ancien")
     return `${day} n'est plus marquée payée (trop ancienne pour « À encaisser »)`;
+  if (status === "forfait")
+    return `${day} n'est plus marquée payée (couverte par un forfait : ${away})`;
+  if (status === "sans_suivi")
+    return `${day} n'est plus marquée payée (sans prix ou sans moyen de paiement : ${away})`;
   return `${day} redevient à encaisser`;
 }
 

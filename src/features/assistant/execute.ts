@@ -12,6 +12,7 @@ import { createExpense } from "@/features/billing/expense-actions";
 import { createPayment } from "@/features/billing/payment-actions";
 import { createSession, markSessionPaid, moveSession } from "@/features/sessions/actions";
 import { findSession } from "@/domain/training/plan-edit";
+import type { Weekday } from "@/domain/training/session-v2";
 import {
   archiveProgram,
   archiveTemplate,
@@ -38,7 +39,12 @@ import { createClient } from "@/lib/supabase/server";
 import { executeDaily } from "./execute-daily";
 import { executeReglages } from "./execute-reglages";
 import { executeSportifs } from "./execute-sportifs";
-import { athletePlanFacts, hasUnknownExercise, UNKNOWN_EXERCISE } from "./exercise-check";
+import {
+  ATHLETE_READ_FAILED,
+  athletePlanFacts,
+  hasUnknownExercise,
+  UNKNOWN_EXERCISE,
+} from "./exercise-check";
 import {
   athleteFormValues,
   athleteUpdateFormData,
@@ -47,7 +53,7 @@ import {
   toFormData,
   toNewAthleteValues,
 } from "./form-data";
-import { customDraftFrom, toCreateProgramInput } from "./program";
+import { cardAvailableDays, customDraftFrom, toCreateProgramInput } from "./program";
 import { programActionRefusal } from "./program-actions";
 import {
   applyProgramEdits,
@@ -71,6 +77,19 @@ const INVALID = "Cette action n'est pas valable. Redemande-la à l'assistant.";
 const onWeek = (path: string, weeks: number[]) =>
   weeks[0] !== undefined ? `${path}?semaine=${weeks[0]}` : path;
 const blank = { error: null, attempt: 0, values: null } as const;
+// Jours disponibles au clic (revue du 20/11, n°3 et n°4) : ceux notés sur la carte, que le coach a
+// lue ; une carte d'avant relit la fiche. Pas d'enjeu de droits : ce ne sont que des jours PROPOSÉS,
+// que le coach peut de toute façon choisir dans l'éditeur. null si la fiche n'a pas pu être lue.
+async function clickAvailableDays(
+  params: object,
+  orgId: string,
+  athleteId: string | null,
+): Promise<readonly Weekday[] | null> {
+  const noted = params as Record<string, unknown>;
+  if (Array.isArray(noted.joursDisponibles)) return cardAvailableDays(noted, []);
+  const facts = await athletePlanFacts(await createClient(), orgId, athleteId);
+  return facts ? facts.availableDays : null;
+}
 
 export async function executeAssistantAction(
   organizationId: string,
@@ -184,14 +203,20 @@ export async function executeAssistantAction(
       if (refusal || !loaded?.draft) return fail(refusal ?? "Programme introuvable.");
       const conflict = revisionConflict(revision, loaded.revision);
       if (conflict) return fail(conflict);
-      // Jours proposés en jours fixes : selon les disponibilités du sportif, comme à la proposition.
-      const facts = await athletePlanFacts(await createClient(), orgId, loaded.program.athleteId);
+      // Jours proposés en jours fixes : ceux notés sur la carte (revue du 20/11, n°4), sinon (carte
+      // d'avant) les disponibilités relues du sportif.
+      const availableDays = await clickAvailableDays(
+        action.params,
+        orgId,
+        loaded.program.athleteId,
+      );
+      if (!availableDays) return fail(ATHLETE_READ_FAILED);
       const applied = applyProgramEdits(loaded.draft, operations, {
         today: todayIsoInBrussels(),
-        availableDays: facts.availableDays,
+        availableDays,
       });
       if (!applied.ok) return fail(applied.error);
-      if (await hasUnknownExercise(await createClient(), orgId, operations)) {
+      if (await hasUnknownExercise(await createClient(), orgId, operations, loaded.draft)) {
         return fail(UNKNOWN_EXERCISE);
       }
       const saved = await saveDraft(orgId, programId, revision, applied.plan);
@@ -215,7 +240,7 @@ export async function executeAssistantAction(
       if (conflict) return fail(conflict);
       const applied = applyProgramEdits(template.plan, operations);
       if (!applied.ok) return fail(applied.error);
-      if (await hasUnknownExercise(await createClient(), orgId, operations)) {
+      if (await hasUnknownExercise(await createClient(), orgId, operations, template.plan)) {
         return fail(UNKNOWN_EXERCISE);
       }
       const saved = await updateTemplate(orgId, "program", templateId, version, applied.plan);
@@ -400,8 +425,13 @@ export async function executeAssistantAction(
       try {
         const supabase = await createClient();
         const loaded = await loadDraft(supabase, orgId, created.programId);
-        const facts = await athletePlanFacts(supabase, orgId, athleteId);
-        custom = loaded?.draft ? customDraftFrom(loaded.draft, params, facts.availableDays) : null;
+        const availableDays = await clickAvailableDays(params, orgId, athleteId);
+        custom =
+          loaded?.draft && availableDays
+            ? customDraftFrom(loaded.draft, params, availableDays)
+            : availableDays
+              ? null
+              : { ok: false, error: ATHLETE_READ_FAILED };
         saved =
           loaded && custom?.ok
             ? await saveDraft(orgId, created.programId, loaded.revision, custom.draft)

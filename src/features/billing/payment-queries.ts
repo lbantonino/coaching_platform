@@ -38,11 +38,31 @@ export async function listPayments(
   // Filtres appliqués par la base AVANT la limite de 500 (lecture de l'assistant, mineur n°7 du lot 4).
   filters: { to?: string; athleteId?: string } = {},
 ): Promise<AthletePayment[]> {
+  return (await readPayments(organizationId, from, filters, false)).payments;
+}
+
+// Lecture de l'assistant : avec le nombre total de paiements de la période (revue du 20/11, n°8 : le
+// total ne s'arrête pas aux 500 lignes lues).
+export async function listPaymentsWithTotal(
+  organizationId: string,
+  from: string | undefined,
+  filters: { to?: string; athleteId?: string },
+): Promise<{ payments: AthletePayment[]; total: number }> {
+  return readPayments(organizationId, from, filters, true);
+}
+
+async function readPayments(
+  organizationId: string,
+  from: string | undefined,
+  filters: { to?: string; athleteId?: string },
+  withCount: boolean,
+): Promise<{ payments: AthletePayment[]; total: number }> {
   const supabase = await createClient();
   let query = supabase
     .from("athlete_payments")
     .select(
       "id, received_on, amount_cents, vat_rate, currency, method, label, covers_from, covers_to, athlete:athlete_profiles ( id, first_name, display_name )",
+      withCount ? { count: "exact" } : undefined,
     )
     .eq("organization_id", organizationId)
     .order("received_on", { ascending: false })
@@ -51,9 +71,9 @@ export async function listPayments(
   if (from) query = query.gte("received_on", from);
   if (filters.to) query = query.lte("received_on", filters.to);
   if (filters.athleteId) query = query.eq("athlete_id", filters.athleteId);
-  const { data, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw new Error("Lecture des paiements impossible.");
-  return ((data ?? []) as unknown as Row[]).map((row) => ({
+  const payments = ((data ?? []) as unknown as Row[]).map((row) => ({
     id: row.id,
     receivedOn: row.received_on,
     amountCents: row.amount_cents,
@@ -70,6 +90,7 @@ export async function listPayments(
       ? (row.athlete.display_name ?? row.athlete.first_name)
       : (row.label ?? "Séance collective"),
   }));
+  return { payments, total: count ?? payments.length };
 }
 
 // Forfaits en cours (D-52) : par sportif, les périodes couvertes par un forfait, pour marquer ses

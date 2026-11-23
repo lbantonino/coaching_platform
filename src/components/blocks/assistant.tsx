@@ -762,7 +762,7 @@ export function AssistantComposer({
             type="button"
             onClick={() => assistant.setAthlete(null)}
             aria-label={`Retirer le sportif : ${assistant.athlete.name}`}
-            className="tap-44 inline-flex h-9 items-center gap-1.5 rounded-full bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
+            className="tap-44 inline-flex h-9 items-center gap-1.5 rounded-md bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
           >
             <UserRound aria-hidden size={14} strokeWidth={1.9} />
             {assistant.athlete.name}

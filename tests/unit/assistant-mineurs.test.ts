@@ -438,3 +438,34 @@ describe("lot 2 n°h : les coordonnées d'un sportif ne partent jamais chez Clau
     expect(result).toContain("Téléphone : vide → 0470 00 00 00");
   });
 });
+
+describe("revue du 20/11 n°1 : le téléphone du coach ne part pas chez Claude", () => {
+  // voir_parametres dit « rempli » ou « vide » pour le téléphone du coach : la carte « Modifier ton
+  // profil » renvoyée à Claude suit la même règle, la carte du coach garde « ancien → nouveau ».
+  const action = {
+    kind: "modifier_profil" as const,
+    params: { changes: { phone: "0470 11 11 11", firstName: "Gianluca" } },
+  };
+  const card = summarize(
+    action,
+    { "avant:phone": "0470 99 99 99", "avant:firstName": "Gian" },
+    "EUR",
+  );
+
+  it("la carte du coach montre l'ancien numéro", () => {
+    expect(card.summary).toContain("Téléphone : 0470 99 99 99 → 0470 11 11 11");
+  });
+
+  it("Claude lit « rempli → nouveau », jamais l'ancien numéro", () => {
+    const result = proposalToolResult({ ...action, ...card });
+    expect(result).not.toContain("0470 99 99 99");
+    expect(result).toContain("Téléphone : rempli → 0470 11 11 11");
+    expect(result).toContain("Prénom : Gian → Gianluca");
+  });
+
+  it("un numéro absent se dit « vide »", () => {
+    const empty = { ...action, params: { changes: { phone: "0470 11 11 11" } } };
+    const result = proposalToolResult({ ...empty, ...summarize(empty, {}, "EUR") });
+    expect(result).toContain("Téléphone : vide → 0470 11 11 11");
+  });
+});

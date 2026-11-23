@@ -13,6 +13,7 @@ import {
 } from "@/domain/documents/documents";
 import { LIST_COLORS, listColorLabels, type ListColor } from "@/domain/tasks/lists";
 import { parseTaskForm } from "@/domain/tasks/task-form";
+import { listPackageCovers } from "@/features/billing/payment-queries";
 import { getDocument } from "@/features/documents/queries";
 import { getSession, listSessionPayments } from "@/features/sessions/queries";
 import {
@@ -21,18 +22,18 @@ import {
   sessionFormInitial,
 } from "@/features/sessions/schemas";
 import { getTask } from "@/features/tasks/queries";
-import { todayIsoInBrussels } from "@/lib/format";
+import { nowTimeInBrussels, todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
 import {
   ignoredSessionFieldsRefusal,
   individualAthleteRefusal,
   seriesStartRefusal,
-  sessionDateStatus,
   sessionFieldText,
   withPaymentMethodVat,
   stopExpenseRefusal,
   taskFieldText,
+  unpaidAgainStatus,
   unpaidRefusal,
   type DailyKind,
 } from "../daily";
@@ -402,7 +403,12 @@ export async function proposeDaily(
         if (refusal) return refuse(refusal);
         const paid = payments.find((payment) => payment.sessionDate === p.sessionDate);
         if (paid) names.montant = money(paid.amountCents, paid.currency);
-        names.seanceStatut = sessionDateStatus(String(p.sessionDate), todayIsoInBrussels());
+        // La règle de la page « À encaisser » (revue du 20/11, n°6).
+        names.seanceStatut = unpaidAgainStatus(session, String(p.sessionDate), {
+          today: todayIsoInBrussels(),
+          now: nowTimeInBrussels(),
+          covers: await listPackageCovers(orgId),
+        });
         return { ok: true };
       }
       // Moyen de paiement changé : « TVA comprise » suit, comme dans le formulaire (relecture n°4).
@@ -451,7 +457,7 @@ export async function proposeDaily(
       const { data } = await supabase
         .from("athlete_payments")
         .select(
-          "received_on, amount_cents, currency, method, label, session_id, session_date, covers_from, covers_to, athlete:athlete_profiles ( display_name )",
+          "received_on, amount_cents, currency, method, label, session_id, session_date, covers_from, covers_to, athlete_id, athlete:athlete_profiles ( display_name )",
         )
         .eq("organization_id", orgId)
         .eq("id", String(p.paymentId))
@@ -465,7 +471,21 @@ export async function proposeDaily(
       ].join(" · ");
       if (data.session_id && data.session_date) {
         names.seanceDate = data.session_date;
-        names.seanceStatut = sessionDateStatus(data.session_date, todayIsoInBrussels());
+        // La règle de la page « À encaisser » (revue du 20/11, n°6), sans le forfait de ce paiement
+        // s'il en couvre un.
+        const covers = [...(await listPackageCovers(orgId))];
+        const own = covers.findIndex(
+          (cover) =>
+            cover.athleteId === data.athlete_id &&
+            cover.coversFrom === data.covers_from &&
+            cover.coversTo === data.covers_to,
+        );
+        if (own !== -1) covers.splice(own, 1);
+        names.seanceStatut = unpaidAgainStatus(
+          await getSession(orgId, data.session_id),
+          data.session_date,
+          { today: todayIsoInBrussels(), now: nowTimeInBrussels(), covers },
+        );
       }
       // Un forfait couvre une période : la carte le dit (relecture n°5).
       if (data.covers_from && data.covers_to) {

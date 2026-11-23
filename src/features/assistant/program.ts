@@ -103,7 +103,8 @@ export function buildCustomWeeks(
         error: `Semaine ${index} : ${placed.length} séances placées pour ${perWeek} par semaine (sessionsPerWeek) : mets sessionsPerWeek à ${placed.length} ou retire des séances.`,
       };
     }
-    const proposed = fixed ? proposeWeekDays(placed, availableDays) : null;
+    // Un jour donné par l'assistant compte comme pris (revue du 20/11, n°2).
+    const proposed = fixed ? proposeWeekDays(placed, availableDays, { keepFixedDays: true }) : null;
     const withDays = proposed
       ? placed.map((session) =>
           session.fixedDay ? session : { ...session, fixedDay: proposed.get(session.key) },
@@ -119,6 +120,16 @@ export function buildCustomWeeks(
     );
   }
   return { ok: true, weeks };
+}
+
+// Revue du 20/11, n°3 et n°4 : les jours disponibles du sportif sont notés par le SERVEUR sur la carte
+// (joursDisponibles) ; la carte se vérifie avec eux et « Valider » les reprend, même si la fiche a
+// changé entre-temps (ce que le coach a lu est ce qui est créé). Une carte d'avant relit la fiche.
+export function cardAvailableDays(
+  params: Params,
+  fallback: readonly Weekday[],
+): readonly Weekday[] {
+  return Array.isArray(params.joursDisponibles) ? (params.joursDisponibles as Weekday[]) : fallback;
 }
 
 const issueText = (issue: { path: PropertyKey[]; message: string } | undefined) =>
@@ -140,8 +151,8 @@ export function programRuleError(params: Params): string | null {
   );
   if (!input.success) return issueText(input.error.issues[0]);
   // Même sans séances écrites (modèle, copie, vide) : les phases passent par le schéma de l'éditeur,
-  // sinon la carte échouerait au clic (relecture n°1).
-  const built = buildCustomWeeks(params);
+  // sinon la carte échouerait au clic (relecture n°1). Avec les jours du clic (revue du 20/11, n°3).
+  const built = buildCustomWeeks(params, cardAvailableDays(params, []));
   if (!built.ok) return built.error;
   const draft = programDraftSchema.safeParse({
     schemaVersion: 2,
@@ -180,7 +191,7 @@ export function withSourceRhythm<T extends Params>(
 
 // Nombre de séances réellement placées dans un programme écrit (pour la carte).
 export function placedSessions(params: Params): number {
-  const built = buildCustomWeeks(params);
+  const built = buildCustomWeeks(params, cardAvailableDays(params, []));
   return built.ok ? built.weeks.reduce((total, week) => total + week.sessions.length, 0) : 0;
 }
 

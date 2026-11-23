@@ -40,6 +40,13 @@ export function expenseDates(expense: ExpenseLike, from: string, to: string): st
   return dates;
 }
 
+// Une dépense compte dans une période qui commence le `from` si elle date de ce jour ou après, ou si
+// elle se répète chaque mois sans être finie avant (Assistant IA, revue du 20/11, n°8). Écrit pour la
+// base (filtre `or` de PostgREST) : appliqué AVANT la limite de lignes. `from` est une date validée.
+export function expenseFromFilter(from: string): string {
+  return `spent_on.gte.${from},and(repeats_monthly.is.true,or(ends_on.is.null,ends_on.gte.${from}))`;
+}
+
 // Formulaire « Nouvelle dépense ».
 export type ExpenseFormValues = {
   label: string;

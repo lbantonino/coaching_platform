@@ -1,5 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
+import { NOTIFICATION_KINDS } from "@/features/coach/settings";
+
 // Outils de LECTURE de l'Assistant IA (lot 1 des actions) : exécutés tout de suite, limités à
 // l'organisation du coach. Les descriptions parlent à Claude (en français, comme la consigne).
 const date = { type: "string", description: "Date au format AAAA-MM-JJ." } as const;
@@ -177,8 +179,14 @@ export const READ_TOOLS: Anthropic.Tool[] = [
   {
     name: "voir_notifications",
     description:
-      "Liste les notifications (100 au plus) : clé, sorte, texte, lue, masquée. Les clés servent à l'outil notifications.",
-    input_schema: { type: "object", properties: {} },
+      "Liste les notifications (100 au plus) : clé, sorte, texte, lue, masquée. Les clés servent à l'outil notifications. Filtres facultatifs : une sorte, ou seulement celles à traiter (ni lues ni masquées).",
+    input_schema: {
+      type: "object",
+      properties: {
+        sorte: { type: "string", enum: [...NOTIFICATION_KINDS] },
+        etat: { type: "string", enum: ["toutes", "a_traiter"] },
+      },
+    },
   },
   {
     name: "voir_programmes",

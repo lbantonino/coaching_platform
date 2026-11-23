@@ -32,6 +32,7 @@ import {
   dayHasRoom,
   fillMoments,
   isPastWeek,
+  momentFromTime,
   proposeWeekDays,
   sessionDay,
   sessionMoment,
@@ -45,6 +46,7 @@ import {
   SESSION_MOMENTS,
   WEEKDAYS,
   sessionBodySchema,
+  sessionMomentLabels,
   type SessionBody,
   type SessionDraft,
   type Weekday,
@@ -410,7 +412,9 @@ export function applyProgramEdits<T extends AnyPlan>(
           const newWeek = added.plan.weeks[at - 1] as Week;
           day =
             edit.jour ??
-            proposeWeekDays(newWeek.sessions, availableDays).get(added.key) ??
+            proposeWeekDays(newWeek.sessions, availableDays, { keepFixedDays: true }).get(
+              added.key,
+            ) ??
             undefined;
           if (day && !dayHasRoom(target, day)) {
             return fail(
@@ -502,17 +506,27 @@ export function applyProgramEdits<T extends AnyPlan>(
             found.session.fixedDay !== undefined &&
             dayHasRoom(target, found.session.fixedDay);
           // Relecture du lot 3b, n°7 : un moment déjà pris ce jour-là n'est pas doublé (fillMoments
-          // en propose un libre) ; ce qui se perd est dit sur la carte.
+          // en propose un libre) ; ce qui se perd est dit sur la carte. Revue du 20/11, n°7 : le moment
+          // déduit de l'heure compte aussi (07:30 = matin) ; l'heure est alors retirée.
           const keptDay = found.session.fixedDay;
+          const takenMoments = new Set(
+            target.sessions
+              .filter((session) => keptDay !== undefined && sessionDay(session) === keptDay)
+              .map(sessionMoment),
+          );
+          const ownMoment = sessionMoment({ ...found.session, withCoach: undefined });
           const momentTaken =
-            keepDay &&
-            keptDay !== undefined &&
-            found.session.moment !== undefined &&
-            target.sessions.some(
-              (session) =>
-                sessionDay(session) === keptDay && sessionMoment(session) === found.session.moment,
-            );
+            keepDay && keptDay !== undefined && ownMoment !== null && takenMoments.has(ownMoment);
+          const timeTaken =
+            momentTaken &&
+            found.session.fixedTime !== undefined &&
+            takenMoments.has(momentFromTime(found.session.fixedTime));
           const notes = [
+            momentTaken && keptDay !== undefined && ownMoment !== null
+              ? `déjà une séance le ${DAY_WORDS[keptDay]} (${sessionMomentLabels[ownMoment].toLowerCase()}) : ${
+                  timeTaken ? "heure retirée, " : ""
+                }autre moment proposé`
+              : null,
             found.session.withCoach
               ? "n'est plus liée au rendez-vous du coach, qui reste dans l'agenda"
               : null,
@@ -527,6 +541,7 @@ export function applyProgramEdits<T extends AnyPlan>(
                 ...found.session,
                 withCoach: undefined,
                 ...(momentTaken ? { moment: undefined } : {}),
+                ...(timeTaken ? { fixedTime: undefined } : {}),
               }
             : {
                 ...found.session,
@@ -678,17 +693,15 @@ export function applyProgramEdits<T extends AnyPlan>(
         const at = place(edit.semaine);
         if (at === null) return noWeek(edit.semaine);
         // Relecture du lot 3b, n°8 : comme l'éditeur, passer en jours fixes propose un jour à chaque
-        // séance (selon les jours disponibles du sportif) ; un jour déjà choisi est gardé.
+        // séance (selon les jours disponibles du sportif) ; un jour déjà choisi est gardé, et compte
+        // comme pris pour les autres (revue du 20/11, n°2).
         const chosen = new Set<Weekday>();
         current = {
           ...current,
           weeks: current.weeks.map((item) => {
             if (item.index !== at) return item;
             if (edit.mode === "ordered") return setWeekOrdered(item);
-            const days = proposeWeekDays(item.sessions, availableDays);
-            item.sessions.forEach((session) => {
-              if (session.fixedDay) days.set(session.key, session.fixedDay);
-            });
+            const days = proposeWeekDays(item.sessions, availableDays, { keepFixedDays: true });
             const fixedWeek = setWeekFixed(item, days);
             fixedWeek.sessions.forEach((session) => {
               const day = sessionDay(session);

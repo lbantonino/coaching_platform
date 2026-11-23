@@ -35,6 +35,7 @@ import { brusselsDayOf } from "@/lib/format";
 
 import { DAILY_ACTIONS, DAILY_PARAMS, summarizeDaily, type DailyKind } from "./daily";
 import {
+  PROFILE_LABELS,
   REGLAGES_ACTIONS,
   REGLAGES_PARAMS,
   summarizeReglages,
@@ -111,6 +112,7 @@ const quarter = z.string().regex(/^([01]\d|2[0-3]):(00|15|30|45)$/, {
 const amount = z.number().positive().max(1_000_000);
 const vatRate = z.number().min(0).max(100);
 const text = (max: number) => z.string().trim().min(1).max(max);
+const availableDaysSchema = z.array(z.enum(WEEKDAYS)).max(7).optional();
 
 const EDITS_LIMIT = `${MAX_PROGRAM_EDITS} changements au plus par carte : propose les suivants une fois celle-ci validée.`;
 
@@ -265,6 +267,8 @@ export const PARAMS = {
       // Façon de viser : notée par le SERVEUR selon le sportif (relecture du lot 3a, n°7), comme
       // l'assistant de création ; la même au « Valider ».
       aimDefaults: aimDefaultsSchema.optional(),
+      // Jours disponibles du sportif : notés par le SERVEUR (revue du 20/11, n°3), les mêmes au clic.
+      joursDisponibles: availableDaysSchema,
       goal: programGoalSchema.optional(),
       phases: z
         .array(
@@ -314,6 +318,8 @@ export const PARAMS = {
     programId: z.uuid(),
     revision: z.number().int().min(0),
     operations: z.array(programEditSchema).min(1).max(MAX_PROGRAM_EDITS, { error: EDITS_LIMIT }),
+    // Notés par le SERVEUR (revue du 20/11, n°4) : les jours proposés au clic sont ceux de la carte.
+    joursDisponibles: availableDaysSchema,
   }),
   modifier_modele: z.strictObject({
     templateId: z.uuid(),
@@ -456,6 +462,21 @@ export const publicationLine = (number: number, publishedAt: string) =>
 const exerciseKey = (name: string) => name.trim().replace(/\s+/g, " ").toLocaleLowerCase("fr");
 export const sameExerciseName = (a: string, b: string) => exerciseKey(a) === exerciseKey(b);
 
+// Revue du 20/11, n°12 : TOUS les exercices du coach, lus page par page (la base rend 1 000 lignes au
+// plus par lecture), pas seulement les premiers. null si une lecture échoue.
+export const EXERCISE_PAGE = 1000;
+export async function hasExerciseNamed(
+  readPage: (from: number, to: number) => Promise<readonly { name_fr: string }[] | null>,
+  name: string,
+): Promise<boolean | null> {
+  for (let from = 0; ; from += EXERCISE_PAGE) {
+    const rows = await readPage(from, from + EXERCISE_PAGE - 1);
+    if (rows === null) return null;
+    if (rows.some((row) => sameExerciseName(row.name_fr, name))) return true;
+    if (rows.length < EXERCISE_PAGE) return false;
+  }
+}
+
 // Relecture du lot 2, n°e : seuls les champs qui changent vraiment vont sur la carte (jamais
 // « Bruxelles → Bruxelles »).
 const fieldValue = (value: unknown) => JSON.stringify(value ?? "");
@@ -546,21 +567,47 @@ export function athleteFieldText(field: string, value: unknown): string {
 // Coordonnées d'un sportif : voir_fiche dit seulement « rempli » ou « vide » (décision d'Antonino du
 // 14/11/2026, confirmée le 20/11). La carte renvoyée à Claude (proposalToolResult) suit la même règle :
 // le coach voit « ancien → nouveau », Claude lit « rempli → nouveau » (la nouvelle valeur vient de lui).
-const PRIVATE_ATHLETE_FIELDS = ["email", "phone", "addressLine", "postalCode", "city"] as const;
+// Même règle pour le téléphone du coach (voir_parametres, carte « Modifier ton profil »).
+const PRIVATE_FIELDS: Partial<
+  Record<
+    AssistantAction["kind"],
+    {
+      labels: Record<string, string>;
+      fields: readonly string[];
+      text: (field: string, value: unknown) => string;
+    }
+  >
+> = {
+  completer_fiche: {
+    labels: ATHLETE_FIELD_LABELS,
+    fields: ["email", "phone", "addressLine", "postalCode", "city"],
+    text: athleteFieldText,
+  },
+  modifier_profil: {
+    labels: PROFILE_LABELS,
+    fields: ["phone"],
+    text: (_field, value) => (value === null || value === "" ? "—" : String(value)),
+  },
+};
 
 export function summaryForClaude(
   proposal: AssistantAction & { summary: readonly string[] },
 ): readonly string[] {
-  if (proposal.kind !== "completer_fiche") return proposal.summary;
-  const changes = (proposal.params.changes ?? {}) as Record<string, unknown>;
+  const rule = PRIVATE_FIELDS[proposal.kind];
+  if (!rule) return proposal.summary;
+  const changes = ((proposal.params as { changes?: unknown }).changes ?? {}) as Record<
+    string,
+    unknown
+  >;
   return proposal.summary.map((line) => {
-    const field = PRIVATE_ATHLETE_FIELDS.find(
-      (key) => key in changes && line.startsWith(`${ATHLETE_FIELD_LABELS[key]} : `),
+    const field = rule.fields.find(
+      (key) => key in changes && line.startsWith(`${rule.labels[key]} : `),
     );
     if (!field) return line;
-    const after = athleteFieldText(field, changes[field]);
-    const before = line.startsWith(`${ATHLETE_FIELD_LABELS[field]} : — → `) ? "vide" : "rempli";
-    return `${ATHLETE_FIELD_LABELS[field]} : ${before} → ${after}`;
+    const label = rule.labels[field];
+    const after = rule.text(field, changes[field]);
+    const before = line.startsWith(`${label} : — → `) ? "vide" : "rempli";
+    return `${label} : ${before} → ${after}`;
   });
 }
 
