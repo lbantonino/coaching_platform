@@ -39,8 +39,8 @@ export default function LegalNoticePage() {
           title: "Conception et développement",
           body: (
             <p>
-              Coory est conçu et développé par {LEGAL.publisher}, cofondateur de Synode agency,
-              agence technologique à Bruxelles (
+              Coory est conçu et développé par {LEGAL.publisher}, cofondateur de Synode, agence
+              technologique à Bruxelles (
               <a
                 href="https://synode-agency.com/"
                 target="_blank"
