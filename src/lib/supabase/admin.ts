@@ -13,7 +13,8 @@ import type { Database } from "./database.types";
 //   - « Supprimer mon compte » (src/features/account/delete-account.ts) : appeler la fonction
 //     delete_account_data (réservée au serveur) puis supprimer le compte (auth.admin.deleteUser).
 //   - alertes des séances (src/features/alerts/send-due.ts, D-205) : la tâche planifiée n'a pas
-//     d'utilisateur ; lire les séances avec alertes, les coachs et leurs appareils, noter les envois.
+//     d'utilisateur ; lire les séances avec alertes, les coachs et leurs appareils, noter les envois ;
+//     faire vérifier le secret de la route par le Vault (alertes_secret_ok).
 // `server-only` fait échouer le build si ce fichier est importé côté navigateur.
 export function createAdminClient() {
   const secretKey = z.string().min(1).safeParse(process.env.SUPABASE_SECRET_KEY);

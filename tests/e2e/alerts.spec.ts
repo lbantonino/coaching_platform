@@ -92,6 +92,18 @@ test("la route planifiée : fermée sans secret, et une alerte due n'est notée 
     (await request.post("/api/alertes", { headers: { authorization: "Bearer faux" } })).status(),
   ).toBe(401);
 
+  // Le secret du Vault suffit (production : une seule copie, celle que la tâche planifiée envoie).
+  const vaultSecret = `coffre-e2e-${Date.now()}-0123456789`;
+  sql(`select vault.create_secret('${vaultSecret}', 'alertes_secret');`);
+  try {
+    const viaVault = await request.post("/api/alertes", {
+      headers: { authorization: `Bearer ${vaultSecret}` },
+    });
+    expect(viaVault.status()).toBe(200);
+  } finally {
+    sql(`delete from vault.secrets where name = 'alertes_secret';`);
+  }
+
   // Une séance qui commence dans 15 min (heure de Bruxelles), avec l'alerte « 15 min avant ».
   const parts = Object.fromEntries(
     new Intl.DateTimeFormat("en-CA", {

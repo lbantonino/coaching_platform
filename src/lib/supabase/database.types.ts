@@ -2157,6 +2157,7 @@ export type Database = {
         Args: { p_adult_confirmed: boolean; p_token_hash: string };
         Returns: string;
       };
+      alertes_secret_ok: { Args: { p_given: string }; Returns: boolean };
       archive_program: { Args: { p_program_id: string }; Returns: undefined };
       assistant_access_allowed: { Args: { p_organization_id: string }; Returns: boolean };
       before_user_created_access_code: { Args: { event: Json }; Returns: Json };
