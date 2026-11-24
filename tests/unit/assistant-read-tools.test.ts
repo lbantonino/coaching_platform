@@ -41,6 +41,7 @@ const session = (over: Partial<CoachSession>): CoachSession => ({
   startsOn: "2026-11-03",
   startTime: "18:00",
   allDay: false,
+  alerts: [],
   durationMinutes: 60,
   repeatsWeekly: true,
   recurrence: null,

@@ -310,6 +310,8 @@ export function PopupSelect({
   search?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // Près du bas de la fenêtre, le menu s'ouvre au-dessus du bouton (comme sur le Mac).
+  const [upward, setUpward] = useState(false);
   const [query, setQuery] = useState("");
   const box = useRef<HTMLSpanElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -343,6 +345,8 @@ export function PopupSelect({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => {
+          const rect = button.current?.getBoundingClientRect();
+          setUpward(rect ? window.innerHeight - rect.bottom < 340 && rect.top > 340 : false);
           setOpen((current) => !current);
           setQuery("");
         }}
@@ -355,7 +359,9 @@ export function PopupSelect({
         <span
           role="menu"
           aria-label={label}
-          className="absolute top-full left-0 z-30 mt-1 flex max-h-[300px] min-w-[230px] flex-col overflow-y-auto rounded-[12px] bg-popover p-1 shadow-[var(--lib-menu-shadow)]"
+          className={`absolute left-0 z-30 flex max-h-[300px] min-w-[230px] flex-col overflow-y-auto rounded-[12px] bg-popover p-1 shadow-[var(--lib-menu-shadow)] ${
+            upward ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
         >
           {search ? (
             <label className="mx-1 mt-1 mb-1 flex h-8 shrink-0 items-center gap-2 rounded-[8px] bg-dlg-tile px-2.5 text-muted">

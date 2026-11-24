@@ -34,6 +34,8 @@ export default defineConfig({
       ASSISTANT_FAKE_SCRIPT: "tests/e2e/fixtures/assistant-script.json",
       // Jamais d'appel payant pendant les tests, même avec une clé dans .env.local (D-173).
       ANTHROPIC_API_KEY: "",
+      // Alertes des séances (D-205) : secret connu des tests de la route /api/alertes.
+      ALERTES_SECRET: "e2e-alertes-0123456789abcdef",
     },
     url: `http://localhost:${PORT}/login`,
     reuseExistingServer: false,

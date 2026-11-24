@@ -67,3 +67,13 @@ export async function chooseDiscipline(dialog: Locator, label: string) {
 export async function submitNewSession(dialog: Locator) {
   await dialog.getByRole("button", { name: /^(Créer la séance|Ajouter)$/ }).click();
 }
+
+// Alerte (D-205) : « 15 min avant », « Le jour même (09:00) »…
+export async function chooseAlert(dialog: Locator, label: string) {
+  await dialog.getByRole("button", { name: /^Alerte :/ }).click();
+  await dialog
+    .getByRole("menu", { name: "Alerte" })
+    .getByRole("menuitemradio", { name: label, exact: true })
+    .click();
+  await expect(dialog.getByRole("button", { name: `Alerte : ${label}` })).toBeVisible();
+}

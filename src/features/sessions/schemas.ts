@@ -1,3 +1,4 @@
+import { parseAlerts } from "@/domain/sessions/alerts";
 import { z } from "zod";
 
 import { parseVatRate } from "@/domain/billing/money";
@@ -37,6 +38,8 @@ export type SessionFormInput = {
   durationMinutes: string;
   // « Jour entier » (D-204) : sans heure ni durée (rangée à 00:00, 60 min).
   allDay?: boolean;
+  // Alertes (D-205) : « 15,1440 » (minutes avant le début), deux au plus ; vide = aucune.
+  alerts?: string;
   repeatsWeekly: boolean;
   endsOn: string;
   // Récurrence (D-203) : la règle en JSON quand elle ne se déduit pas du début (« chaque semaine, le
@@ -80,6 +83,7 @@ export function sessionFormInitial(
     startTime: session.startTime,
     durationMinutes: String(session.durationMinutes),
     allDay: session.allDay,
+    alerts: session.alerts.join(","),
     repeatsWeekly: session.repeatsWeekly,
     endsOn: session.endsOn ?? "",
     // Une règle qui ne se déduit pas du début est renvoyée telle quelle (une série « chaque semaine »
@@ -118,6 +122,8 @@ export type SessionValues = {
   duration_minutes: number;
   // « Jour entier » (D-204) : start_time 00:00 et duration_minutes 60, rangés (contrainte en base).
   all_day: boolean;
+  // Alertes (D-205) : minutes avant le début, deux au plus (contrainte en base).
+  alerts: number[];
   repeats_weekly: boolean;
   // Règle de récurrence (D-203), null pour une séance unique.
   recurrence: RecurrenceRule | null;
@@ -198,6 +204,11 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
     ? ["00:00", "00", "00"]
     : /^([01]\d|2[0-3]):([0-5]\d)$/.exec(input.startTime.trim());
   if (!time) return { ok: false, error: "Indique l'heure de début, par exemple 19:00." };
+
+  const alerts = parseAlerts(input.alerts ?? "", allDay);
+  if (!alerts) {
+    return { ok: false, error: "Alertes invalides : deux au plus, parmi les choix proposés." };
+  }
 
   const duration = allDay ? ALL_DAY_DURATION : Number(input.durationMinutes.trim());
   if (!Number.isInteger(duration) || duration < 15 || duration > 480) {
@@ -296,6 +307,7 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
       start_time: `${time[1]}:${time[2]}`,
       duration_minutes: duration,
       all_day: allDay,
+      alerts,
       repeats_weekly: input.repeatsWeekly,
       recurrence,
       ends_on: endsOn,

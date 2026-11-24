@@ -55,6 +55,7 @@ describe("parseSessionForm", () => {
         start_time: "19:00",
         duration_minutes: 90,
         all_day: false,
+        alerts: [],
         repeats_weekly: true,
         // Récurrence (D-203) : chaque semaine, le jour du début (un mercredi).
         recurrence: { freq: "weekly", interval: 1, weekdays: ["wed"] },

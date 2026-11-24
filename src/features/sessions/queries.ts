@@ -30,6 +30,8 @@ export type CoachSession = {
   startTime: string;
   // « Jour entier » (D-204).
   allDay: boolean;
+  // Alertes (D-205) : minutes avant le début.
+  alerts: number[];
   durationMinutes: number;
   repeatsWeekly: boolean;
   // Règle de récurrence (D-203) ; null pour une séance unique.
@@ -52,7 +54,7 @@ export type CoachSession = {
 
 // Le sportif direct (séance individuelle) et les inscrits (collective) passent par deux relations
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
-const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes, all_day,
+export const SESSION_SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes, all_day, alerts,
   repeats_weekly, recurrence, ends_on, notes, price_cents, price_vat_included, vat_rate, currency, payment_method,
   individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ),
   enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ) ),
@@ -64,7 +66,7 @@ type Profile = {
   display_name: string | null;
   photo_path: string | null;
 } | null;
-type Row = {
+export type SessionRow = {
   id: string;
   kind: string;
   title: string;
@@ -73,6 +75,7 @@ type Row = {
   starts_on: string;
   start_time: string;
   all_day: boolean;
+  alerts: number[];
   duration_minutes: number;
   repeats_weekly: boolean;
   recurrence: unknown;
@@ -95,7 +98,7 @@ const toAthlete = (profile: NonNullable<Profile>): SessionAthlete => ({
   photoPath: profile.photo_path,
 });
 
-function toSession(row: Row): CoachSession {
+export function toCoachSession(row: SessionRow): CoachSession {
   const athletes = row.individual
     ? [toAthlete(row.individual)]
     : row.enrolled
@@ -111,6 +114,7 @@ function toSession(row: Row): CoachSession {
     startsOn: row.starts_on,
     startTime: row.start_time.slice(0, 5),
     allDay: row.all_day,
+    alerts: row.alerts,
     durationMinutes: row.duration_minutes,
     repeatsWeekly: row.repeats_weekly,
     // Une règle illisible (jamais en principe : la base la vérifie) : chaque semaine, le jour du début.
@@ -136,11 +140,11 @@ export async function listSessions(organizationId: string): Promise<CoachSession
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("coach_sessions")
-    .select(SELECT)
+    .select(SESSION_SELECT)
     .eq("organization_id", organizationId)
     .order("start_time");
   if (error) throw new Error("Lecture des séances impossible.");
-  return ((data ?? []) as unknown as Row[]).map(toSession);
+  return ((data ?? []) as unknown as SessionRow[]).map(toCoachSession);
 }
 
 export async function getSession(
@@ -150,12 +154,12 @@ export async function getSession(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("coach_sessions")
-    .select(SELECT)
+    .select(SESSION_SELECT)
     .eq("organization_id", organizationId)
     .eq("id", sessionId)
     .maybeSingle();
   if (error) throw new Error("Lecture de la séance impossible.");
-  return data ? toSession(data as unknown as Row) : null;
+  return data ? toCoachSession(data as unknown as SessionRow) : null;
 }
 
 // Paiements des dates d'une séance (D-52), repérés par la date de la série (`sessionDate`).

@@ -166,6 +166,8 @@ describe("modifier une séance ne détruit jamais sa règle", () => {
       location: "Salle",
       startsOn: "2026-11-24",
       startTime: "18:00",
+      allDay: false,
+      alerts: [],
       durationMinutes: 60,
       repeatsWeekly: true,
       recurrence: { freq: "weekly", interval: 2, weekdays: ["tue", "thu"] },

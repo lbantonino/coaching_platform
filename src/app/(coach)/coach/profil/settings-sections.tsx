@@ -57,6 +57,7 @@ import { formatDate } from "@/lib/format";
 import { CurrencyChangeButton } from "./currency-change-sheet";
 import { DeleteAccountButton } from "./delete-account-dialog";
 import { ExportButton } from "./export-button";
+import { PushAlertsCard } from "./push-alerts-card";
 
 // Rubriques Préférences, Pays et devise, Sécurité et Données de la fenêtre des Paramètres, au
 // kit « Coory Pages », page 13 (D-127). La rubrique Profil n'est pas ici (déjà faite, ne pas toucher :
@@ -543,6 +544,15 @@ export function PreferencesSection({
             ))}
           </div>
         </SettingsCard>
+
+        {/* Alertes des séances sur cet appareil (D-205) : agit tout de suite, sans « Enregistrer ». */}
+        <PushAlertsCard
+          card={({ title, description, children }) => (
+            <SettingsCard id="settings-alerts" title={title} description={description}>
+              {children}
+            </SettingsCard>
+          )}
+        />
       </SectionBody>
       <SaveFooter
         onSave={save}

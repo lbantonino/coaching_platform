@@ -14,6 +14,8 @@ import {
   mobileActionSecondaryClass,
 } from "@/components/ui/mobile-action-bar";
 
+import { alertLabel, alertOptions, parseAlerts } from "@/domain/sessions/alerts";
+
 import { SessionAppleFields, type SessionDraft } from "./session-apple-fields";
 import {
   SESSION_DISCIPLINES,
@@ -259,6 +261,12 @@ function SessionFields({
   const [duration, setDuration] = useState(v.durationMinutes);
   // « Jour entier » (D-204) : sans heure ni durée.
   const [allDay, setAllDay] = useState(v.allDay === true);
+  // Alertes (D-205) : deux au plus ; changer « Jour entier » change les choix, on repart de zéro.
+  const [alerts, setAlerts] = useState<number[]>(
+    () => parseAlerts(v.alerts ?? "", v.allDay === true) ?? [],
+  );
+  const alertId = useId();
+  const alert2Id = useId();
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
   const [endsOn, setEndsOn] = useState(v.endsOn);
   const [price, setPrice] = useState(v.price);
@@ -547,7 +555,10 @@ function SessionFields({
               type="checkbox"
               name="allDay"
               checked={allDay}
-              onChange={(event) => setAllDay(event.target.checked)}
+              onChange={(event) => {
+                setAllDay(event.target.checked);
+                setAlerts([]);
+              }}
               className="peer sr-only"
             />
             <span aria-hidden className={pageCheckBoxClass}>
@@ -555,6 +566,58 @@ function SessionFields({
             </span>
             Jour entier
           </label>
+
+          <input type="hidden" name="alerts" value={alerts.join(",")} />
+          <div className="grid gap-3.5 lg:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-[7px]">
+              <label htmlFor={alertId} className={editLabelClass}>
+                Alerte <span className={editOptionalClass}>sur ton téléphone</span>
+              </label>
+              <select
+                id={alertId}
+                value={alerts[0] === undefined ? "" : String(alerts[0])}
+                onChange={(event) =>
+                  setAlerts(event.target.value === "" ? [] : [Number(event.target.value)])
+                }
+                className={editFieldClass}
+              >
+                <option value="">Aucune</option>
+                {alertOptions(allDay).map((offset) => (
+                  <option key={offset} value={String(offset)}>
+                    {alertLabel(offset, allDay)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {alerts.length > 0 ? (
+              <div className="flex min-w-0 flex-col gap-[7px]">
+                <label htmlFor={alert2Id} className={editLabelClass}>
+                  2e alerte
+                </label>
+                <select
+                  id={alert2Id}
+                  value={alerts[1] === undefined ? "" : String(alerts[1])}
+                  onChange={(event) =>
+                    setAlerts(
+                      event.target.value === ""
+                        ? [alerts[0]]
+                        : [alerts[0], Number(event.target.value)],
+                    )
+                  }
+                  className={editFieldClass}
+                >
+                  <option value="">Aucune</option>
+                  {alertOptions(allDay)
+                    .filter((offset) => offset !== alerts[0])
+                    .map((offset) => (
+                      <option key={offset} value={String(offset)}>
+                        {alertLabel(offset, allDay)}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            ) : null}
+          </div>
 
           {/* Répéter chaque semaine : interrupteur sur toute la ligne (violet pâle quand il est mis). */}
           <label

@@ -1,4 +1,4 @@
-import { Calendar, ChevronRight, Clock, MapPin, MessageCircle, Pencil } from "lucide-react";
+import { Bell, Calendar, ChevronRight, Clock, MapPin, MessageCircle, Pencil } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,6 +26,7 @@ import { listPackageCovers } from "@/features/billing/payment-queries";
 import { listProgramsLinkedToCoachSession } from "@/features/programs/queries";
 import { deleteSession, markSessionPaid, unmarkSessionPaid } from "@/features/sessions/actions";
 import { getSession, listSessionPayments } from "@/features/sessions/queries";
+import { alertLabel } from "@/domain/sessions/alerts";
 import {
   describePeriod,
   describeSchedule,
@@ -496,6 +497,18 @@ async function SessionDetail({
                         </span>
                       </>
                     )}
+                    {session.alerts.length > 0 ? (
+                      <>
+                        <Divider className="h-4 lg:h-[18px]" />
+                        <span className="flex items-center gap-1.5">
+                          <Bell aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
+                          <span className="sr-only">Alerte : </span>
+                          {session.alerts
+                            .map((offset) => alertLabel(offset, session.allDay))
+                            .join(" · ")}
+                        </span>
+                      </>
+                    ) : null}
                   </p>
                 </div>
               </div>

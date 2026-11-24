@@ -1,6 +1,17 @@
 "use client";
 
-import { Check, ChevronRight, Dumbbell, MapPin, Plus, Search, User, Users, X } from "lucide-react";
+import {
+  Bell,
+  Check,
+  ChevronRight,
+  Dumbbell,
+  MapPin,
+  Plus,
+  Search,
+  User,
+  Users,
+  X,
+} from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 import { useMoney } from "@/components/blocks/money-context";
@@ -16,6 +27,7 @@ import {
   weeklyRule,
   type RecurrenceRule,
 } from "@/domain/sessions/recurrence";
+import { alertLabel, alertOptions, parseAlerts } from "@/domain/sessions/alerts";
 import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
 import {
   defaultVatIncluded,
@@ -63,7 +75,8 @@ import { SESSION_DISCIPLINES, priceSentence, useSessionVat } from "./session-for
 // « Échap pour annuler » et « Ajouter ». Mêmes champs envoyés et mêmes règles que l'ancienne fenêtre :
 // seule la forme change (action serveur, TVA, nouveau sportif de D-35, D-52, D-163).
 
-type Screen = "main" | "repeat" | "custom" | "repeat-end" | "athletes" | "discipline";
+type Screen =
+  "main" | "repeat" | "custom" | "repeat-end" | "athletes" | "discipline" | "alert" | "alert2";
 
 // Ce que la grille de l'agenda montre pendant la saisie (séance provisoire, ordinateur).
 export type SessionDraft = {
@@ -111,6 +124,14 @@ export function SessionAppleFields({
   const [startTime, setStartTime] = useState(v.startTime);
   const [duration, setDuration] = useState(Number(v.durationMinutes) || 60);
   const [allDay, setAllDay] = useState(v.allDay === true);
+  // Alertes (D-205) : deux au plus ; « Jour entier » a ses propres choix, on repart de zéro.
+  const [alerts, setAlerts] = useState<number[]>(
+    () => parseAlerts(v.alerts ?? "", v.allDay === true) ?? [],
+  );
+  const toggleAllDay = (next: boolean) => {
+    setAllDay(next);
+    setAlerts([]);
+  };
   const [rule, setRule] = useState<RecurrenceRule | null>(() => initialRule(v));
   const [endsOn, setEndsOn] = useState(v.endsOn);
   const [athleteId, setAthleteId] = useState(v.athleteId);
@@ -151,6 +172,16 @@ export function SessionAppleFields({
   const sentTitle = title.trim() || fallbackTitle;
   const sentence = rule ? recurrenceSentence(rule, startsOn, endsOn || null) : null;
   const disciplineLabel = discipline ? disciplineLabels[discipline as Discipline] : "Non précisée";
+  const alertValue = (index: 0 | 1) =>
+    alerts[index] === undefined ? "Aucune" : alertLabel(alerts[index], allDay);
+  // « Aucune » efface aussi la 2e alerte ; la 2e ne reprend pas la 1re.
+  const chooseAlert = (index: 0 | 1, value: string) => {
+    if (index === 0) setAlerts(value === "" ? [] : [Number(value), ...alerts.slice(1)]);
+    else setAlerts(value === "" ? alerts.slice(0, 1) : [alerts[0], Number(value)]);
+  };
+  const alertChoices = (index: 0 | 1) =>
+    alertOptions(allDay).filter((offset) => index === 0 || offset !== alerts[0]);
+  const alertHint = "L'alerte arrive en notification sur ton téléphone.";
   const enrolledLabel =
     athleteIds.length === 0
       ? "Aucun"
@@ -214,6 +245,7 @@ export function SessionAppleFields({
       <input type="hidden" name="startTime" value={startTime} />
       <input type="hidden" name="durationMinutes" value={String(duration)} />
       {allDay ? <input type="hidden" name="allDay" value="on" /> : null}
+      <input type="hidden" name="alerts" value={alerts.join(",")} />
       {rule ? <input type="hidden" name="repeatsWeekly" value="on" /> : null}
       <input
         type="hidden"
@@ -493,6 +525,60 @@ export function SessionAppleFields({
         </div>
       </>
     ),
+    alert: (
+      <>
+        <SubHeader title="Alerte" onBack={back} />
+        <div role="menu" aria-label="Alerte" className={`${cardClass} mx-4`}>
+          <OptionRow
+            label="Aucune"
+            selected={alerts[0] === undefined}
+            onSelect={() => {
+              chooseAlert(0, "");
+              back();
+            }}
+          />
+          {alertChoices(0).map((offset) => (
+            <OptionRow
+              key={offset}
+              label={alertLabel(offset, allDay)}
+              selected={alerts[0] === offset}
+              onSelect={() => {
+                chooseAlert(0, String(offset));
+                back();
+              }}
+            />
+          ))}
+        </div>
+        <p className="mx-4 px-4 pt-2 text-[12.5px] leading-[1.45] text-muted">{alertHint}</p>
+      </>
+    ),
+    alert2: (
+      <>
+        <SubHeader title="2e alerte" onBack={back} />
+        <div role="menu" aria-label="2e alerte" className={`${cardClass} mx-4`}>
+          <OptionRow
+            label="Aucune"
+            selected={alerts[1] === undefined}
+            onSelect={() => {
+              chooseAlert(1, "");
+              back();
+            }}
+          />
+          {alertChoices(1).map((offset) => (
+            <OptionRow
+              key={offset}
+              label={alertLabel(offset, allDay)}
+              selected={alerts[1] === offset}
+              onSelect={() => {
+                chooseAlert(1, String(offset));
+                back();
+              }}
+            />
+          ))}
+        </div>
+        <p className="mx-4 px-4 pt-2 text-[12.5px] leading-[1.45] text-muted">{alertHint}</p>
+      </>
+    ),
     discipline: (
       <>
         <SubHeader title="Discipline" onBack={back} />
@@ -579,7 +665,7 @@ export function SessionAppleFields({
           </div>
           <div className={rowClass}>
             <span className="text-[16px] text-text">Jour entier</span>
-            <Switch checked={allDay} onChange={setAllDay} label="Jour entier" />
+            <Switch checked={allDay} onChange={toggleAllDay} label="Jour entier" />
           </div>
           <MenuRow
             label="Récurrence"
@@ -676,7 +762,24 @@ export function SessionAppleFields({
               icon={<Dumbbell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
               onOpen={() => setScreen("discipline")}
             />
+            <MenuRow
+              label="Alerte"
+              value={alertValue(0)}
+              muted={alerts.length === 0}
+              icon={<Bell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
+              onOpen={() => setScreen("alert")}
+            />
+            {alerts.length > 0 ? (
+              <MenuRow
+                label="2e alerte"
+                value={alertValue(1)}
+                muted={alerts.length < 2}
+                icon={<Bell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
+                onOpen={() => setScreen("alert2")}
+              />
+            ) : null}
           </div>
+          <p className="px-4 pt-1.5 text-[12.5px] leading-[1.45] text-muted">{alertHint}</p>
         </div>
         <div>
           <p className={sectionTitleClass}>Paiement</p>
@@ -753,6 +856,15 @@ export function SessionAppleFields({
       trailing: <Plus aria-hidden size={14} className="text-violet" />,
     },
   ];
+  const alertItems = (index: 0 | 1): PopupItem[] => [
+    { kind: "option", value: "", label: "Aucune" },
+    { kind: "separator" },
+    ...alertChoices(index).map((offset): PopupItem => ({
+      kind: "option",
+      value: String(offset),
+      label: alertLabel(offset, allDay),
+    })),
+  ];
   const disciplineItems: PopupItem[] = [
     { kind: "option", value: "", label: "Non précisée" },
     { kind: "separator" },
@@ -804,7 +916,7 @@ export function SessionAppleFields({
         </span>
         <span />
         <span className="flex">
-          <MacCheck checked={allDay} onChange={setAllDay} label="Jour entier" />
+          <MacCheck checked={allDay} onChange={toggleAllDay} label="Jour entier" />
         </span>
         {timeNote ? (
           <>
@@ -938,6 +1050,34 @@ export function SessionAppleFields({
             onSelect={setDiscipline}
           />
         </span>
+        {label("Alerte")}
+        <span className="flex">
+          <PopupSelect
+            label="Alerte"
+            valueLabel={alertValue(0)}
+            muted={alerts.length === 0}
+            items={alertItems(0)}
+            selected={alerts[0] === undefined ? "" : String(alerts[0])}
+            onSelect={(value) => chooseAlert(0, value)}
+          />
+        </span>
+        {alerts.length > 0 ? (
+          <>
+            {label("2e alerte")}
+            <span className="flex">
+              <PopupSelect
+                label="2e alerte"
+                valueLabel={alertValue(1)}
+                muted={alerts.length < 2}
+                items={alertItems(1)}
+                selected={alerts[1] === undefined ? "" : String(alerts[1])}
+                onSelect={(value) => chooseAlert(1, value)}
+              />
+            </span>
+            <span />
+            <p className="text-[12.5px] leading-[1.45] text-muted">{alertHint}</p>
+          </>
+        ) : null}
         {separator}
         {label("Prix")}
         <span className="flex flex-wrap items-center gap-1.5">
