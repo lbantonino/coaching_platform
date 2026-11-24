@@ -104,7 +104,7 @@ export function UpcomingDays({
                   <span className="flex items-baseline justify-between gap-2 leading-snug">
                     <span className="flex items-center gap-2">
                       <span className="text-[15px] font-semibold tabular lg:text-[13px]">
-                        {block.label.slice(0, 5)}
+                        {block.allDay ? "Journée" : block.label.slice(0, 5)}
                       </span>
                       {next ? (
                         <span className="-my-1 grid h-6 place-items-center rounded-[6px] bg-accent px-2.5 text-[12px] font-medium text-on-accent lg:h-5 lg:rounded-[5px] lg:px-2 lg:text-[11px]">

@@ -280,7 +280,7 @@ function UpcomingSection({
                       {upcomingDay(item.date, today)}
                     </span>
                     <span className="text-[15px] font-semibold tabular">
-                      {item.type === "session" ? item.time : "Journée"}
+                      {item.type === "session" && item.time ? item.time : "Journée"}
                     </span>
                   </span>
                   <span className="flex min-w-0 flex-col gap-0.5 leading-[normal]">

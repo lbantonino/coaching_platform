@@ -15,8 +15,14 @@ import {
 import { DialogBody, DialogFooter, Sheet } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import { periodsOverlap, programEnd } from "@/domain/training/program-status";
-import { createProgram } from "@/features/programs/actions";
-import { freeStart, mondayOf, templateUseInput } from "@/features/programs/template-use";
+import { quickAthleteName } from "@/features/athletes/quick-name";
+import { createProgram, createProgramForNewAthlete } from "@/features/programs/actions";
+import {
+  freeStart,
+  mondayOf,
+  newWizardAthlete,
+  templateUseInput,
+} from "@/features/programs/template-use";
 import type { WizardAthlete, WizardTemplate } from "@/features/programs/wizard";
 
 import { AthletePicker } from "../../nouveau/program-wizard";
@@ -67,6 +73,9 @@ export function UseTemplateSheet({
   const [open, setOpen] = useState(openOnLoad);
   const [athleteId, setAthleteId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  // Nouveau sportif tapé dans la liste (24/11/2026) : créé avec le programme.
+  const [newAthlete, setNewAthlete] = useState(false);
+  const newName = quickAthleteName(query);
   const [title, setTitle] = useState(template.title);
   const [startDate, setStartDate] = useState(defaultStartDate);
   // La date a été choisie à la main : changer de sportif ne la remplace plus.
@@ -81,7 +90,9 @@ export function UseTemplateSheet({
     return () => window.removeEventListener(USE_TEMPLATE_EVENT, show);
   }, []);
 
-  const athlete = athletes.find((item) => item.id === athleteId);
+  const athlete =
+    athletes.find((item) => item.id === athleteId) ??
+    (newAthlete && newName.ok ? newWizardAthlete(newName.firstName) : undefined);
   const overlapping = (athlete?.programs ?? []).filter(
     (program) =>
       program.status === "published" &&
@@ -101,6 +112,7 @@ export function UseTemplateSheet({
   };
 
   const choose = (next: WizardAthlete) => {
+    setNewAthlete(false);
     setAthleteId(next.id);
     setError(null);
     if (!dateTouched) {
@@ -109,14 +121,29 @@ export function UseTemplateSheet({
     }
   };
 
+  const chooseNew = () => {
+    setNewAthlete(true);
+    setAthleteId(null);
+    setError(null);
+    if (!dateTouched) {
+      setStartDate(freeStart(undefined, defaultStartDate));
+      setSnapped(false);
+    }
+  };
+
   const submit = () => {
     if (!athlete) return;
     setError(null);
     startTransition(async () => {
-      const result = await createProgram(
-        organizationId,
-        templateUseInput({ template, athlete, title, startDate }),
-      );
+      const { athleteId: chosen, ...input } = templateUseInput({
+        template,
+        athlete,
+        title,
+        startDate,
+      });
+      const result = chosen
+        ? await createProgram(organizationId, { ...input, athleteId: chosen })
+        : await createProgramForNewAthlete(organizationId, query, input);
       if (!result.ok) return setError(result.issues?.[0] ?? result.message);
       toast("Brouillon créé.");
       setOpen(false);
@@ -151,6 +178,8 @@ export function UseTemplateSheet({
               query={query}
               onQuery={setQuery}
               onChoose={choose}
+              newSelected={newAthlete}
+              onNew={chooseNew}
             />
           </div>
           <DlgField label="Titre du programme" htmlFor="use-template-title">

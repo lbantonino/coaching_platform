@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
 import { sessionCards, type SessionCard } from "@/domain/training/session-cards";
 import type { SessionBody } from "@/domain/training/session-v2";
@@ -24,7 +26,30 @@ export type SessionDetailModel = {
   cards: SessionCard[];
 };
 
-function Heading({ model, variant }: { model: SessionDetailModel; variant: "panel" | "page" }) {
+// Brouillon modifiable (page du programme, 24/11/2026) : le nom et la durée se changent sur place, et
+// chaque carte ouvre son réglage. Les éléments modifiables viennent de l'éditeur (emplacements).
+export type SessionDetailEditing = {
+  // Remplace le titre (h2) : un titre qui se renomme d'un clic.
+  title?: ReactNode;
+  // Remplace la valeur de la case « Durée ».
+  duration?: ReactNode;
+  onOpen?: (path: string[]) => void;
+};
+
+export const titleSize = {
+  page: "text-[24px] leading-[1.15]",
+  panel: "text-[21px] leading-[1.2]",
+} as const;
+
+function Heading({
+  model,
+  variant,
+  title,
+}: {
+  model: SessionDetailModel;
+  variant: "panel" | "page";
+  title?: ReactNode;
+}) {
   return (
     <div className={`flex flex-col ${variant === "page" ? "gap-1.5 px-1" : "gap-1"}`}>
       <span
@@ -32,13 +57,11 @@ function Heading({ model, variant }: { model: SessionDetailModel; variant: "pane
       >
         {model.kicker}
       </span>
-      <h2
-        className={`font-bold tracking-[-0.02em] text-text ${
-          variant === "page" ? "text-[24px] leading-[1.15]" : "text-[21px] leading-[1.2]"
-        }`}
-      >
-        {model.title}
-      </h2>
+      {title ?? (
+        <h2 className={`font-bold tracking-[-0.02em] text-text ${titleSize[variant]}`}>
+          {model.title}
+        </h2>
+      )}
       <p className={`text-muted ${variant === "page" ? "text-[13.5px]" : "text-[13px]"}`}>
         {model.line}
       </p>
@@ -49,9 +72,11 @@ function Heading({ model, variant }: { model: SessionDetailModel; variant: "pane
 function StepBlocks({
   model,
   actions,
+  editing,
 }: {
   model: SessionDetailModel;
   actions?: CardActions | undefined;
+  editing?: SessionDetailEditing | undefined;
 }) {
   return (
     <>
@@ -63,7 +88,9 @@ function StepBlocks({
               className="flex flex-col gap-0.5 rounded-[12px] bg-surface-2 px-3 py-2.5"
             >
               <dt className="text-[12px] text-muted">{stat.label}</dt>
-              <dd className="text-[15px] font-semibold text-text">{stat.value}</dd>
+              <dd className="text-[15px] font-semibold text-text">
+                {stat.label === "Durée" && editing?.duration ? editing.duration : stat.value}
+              </dd>
             </div>
           ))}
         </dl>
@@ -72,6 +99,7 @@ function StepBlocks({
         cards={model.cards}
         discipline={model.discipline}
         {...(actions ? { actions } : {})}
+        {...(editing?.onOpen ? { onOpen: editing.onOpen } : {})}
       />
     </>
   );
@@ -84,6 +112,7 @@ export function SessionDetailView({
   variant = "panel",
   heading = true,
   actions,
+  editing,
 }: {
   model: SessionDetailModel;
   variant?: "panel" | "page";
@@ -91,21 +120,22 @@ export function SessionDetailView({
   heading?: boolean;
   // « ⋯ » des cartes : Dupliquer et Supprimer (page du programme, brouillon modifiable).
   actions?: CardActions | undefined;
+  editing?: SessionDetailEditing | undefined;
 }) {
   if (variant === "page") {
     return (
       <div className="flex flex-col gap-3">
-        <Heading model={model} variant="page" />
+        <Heading model={model} variant="page" title={editing?.title} />
         <section className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-3 lg:p-4">
-          <StepBlocks model={model} actions={actions} />
+          <StepBlocks model={model} actions={actions} editing={editing} />
         </section>
       </div>
     );
   }
   return (
     <div className="flex flex-col gap-3.5">
-      {heading ? <Heading model={model} variant="panel" /> : null}
-      <StepBlocks model={model} actions={actions} />
+      {heading ? <Heading model={model} variant="panel" title={editing?.title} /> : null}
+      <StepBlocks model={model} actions={actions} editing={editing} />
     </div>
   );
 }
@@ -150,17 +180,20 @@ export function SessionDetail({
   session,
   variant = "panel",
   actions,
+  editing,
   ...place
 }: {
   session: SessionBody;
   variant?: "panel" | "page";
   actions?: CardActions | undefined;
+  editing?: SessionDetailEditing | undefined;
 } & Place) {
   return (
     <SessionDetailView
       model={sessionDetailModel(session, variant, place)}
       variant={variant}
       actions={actions}
+      editing={editing}
     />
   );
 }

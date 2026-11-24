@@ -35,6 +35,8 @@ export type DragBlock = {
   end: number;
   title: string;
   recurring: boolean;
+  // Série quotidienne ou hebdomadaire : « Toute la série » est proposée (D-203).
+  seriesMovable: boolean;
   moved: boolean;
 };
 type Target = { date: string; start: number };
@@ -205,7 +207,7 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
           if (!current?.target) return;
           const { block, target } = current;
           if (target.date === block.date && target.start === block.start) return;
-          if (block.recurring && !block.moved) setConfirm({ block, target });
+          if (block.recurring && block.seriesMovable && !block.moved) setConfirm({ block, target });
           else perform(block, target, "single");
         },
         active: drag

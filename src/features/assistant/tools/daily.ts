@@ -15,7 +15,9 @@ import { LIST_COLORS, listColorLabels, type ListColor } from "@/domain/tasks/lis
 import { parseTaskForm } from "@/domain/tasks/task-form";
 import { listPackageCovers } from "@/features/billing/payment-queries";
 import { getDocument } from "@/features/documents/queries";
+import { describeRule } from "@/domain/sessions/recurrence";
 import { getSession, listSessionPayments } from "@/features/sessions/queries";
+import { scheduleRule } from "@/features/sessions/schemas";
 import {
   newlyAddedAthletes,
   parseSessionForm,
@@ -395,7 +397,15 @@ export async function proposeDaily(
       const who =
         session.kind === "group" ? "collective" : (session.athletes[0]?.name ?? "sans sportif");
       names.seance = `${session.title} · ${who}`;
-      if (session.repeatsWeekly) names.serie = "oui";
+      if (session.repeatsWeekly) {
+        names.serie = "oui";
+        // La règle en clair (D-203) sur la carte : « toute la série (toutes les 2 semaines …) ».
+        const rule = scheduleRule(session);
+        if (rule) {
+          const text = describeRule(rule, session.startsOn, session.endsOn);
+          names.regle = text.charAt(0).toLowerCase() + text.slice(1);
+        }
+      }
       if (kind === "supprimer_seance_agenda") return { ok: true };
       if (kind === "marquer_seance_non_payee") {
         const payments = await listSessionPayments(orgId, session.id);

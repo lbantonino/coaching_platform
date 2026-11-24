@@ -14,7 +14,13 @@ import { todayIsoInBrussels } from "@/lib/format";
 
 import { getSession } from "./queries";
 import { allBelongToOrg, readForm, removeCoachSession, saveSessionChanges } from "./session-core";
-import { occursOn, parseSessionForm, sessionAmountCents, type SessionFormInput } from "./schemas";
+import {
+  occursOn,
+  parseSessionForm,
+  scheduleRule,
+  sessionAmountCents,
+  type SessionFormInput,
+} from "./schemas";
 
 // `attempt` change à CHAQUE réponse : le formulaire est reconstruit avec la saisie renvoyée
 // (React 19 remet sinon les menus déroulants et les cases à leur valeur de départ).
@@ -171,7 +177,9 @@ export async function moveSession(
       ? await getSession(orgId, input.sessionId)
       : null;
   if (!parsed.success || !session) return { ok: false, error: "Séance introuvable." };
-  const { originalDate, newDate, newTime, scope } = parsed.data;
+  const { originalDate, newDate, scope } = parsed.data;
+  // « Jour entier » (D-204) : seule la date change, l'heure reste rangée à 00:00.
+  const newTime = session.allDay ? "00:00" : parsed.data.newTime;
 
   const [hours, minutes] = newTime.split(":").map(Number);
   if (hours * 60 + minutes + session.durationMinutes > 24 * 60) {
@@ -190,6 +198,10 @@ export async function moveSession(
       .eq("id", session.id)
       .eq("organization_id", orgId));
   } else if (scope === "series") {
+    // Une série mensuelle ou annuelle se déplace date par date (D-203, la base le refuse aussi).
+    if (!["daily", "weekly"].includes(scheduleRule(session)?.freq ?? "")) {
+      return { ok: false, error: "Cette série se déplace date par date : glisse une seule date." };
+    }
     // Même jour de la semaine visé, au plus près : de -3 à +3 jours (la base refuse au-delà).
     const shift = (((dayGap(originalDate, newDate) % 7) + 10) % 7) - 3;
     ({ error } = await supabase.rpc("move_session_series", {

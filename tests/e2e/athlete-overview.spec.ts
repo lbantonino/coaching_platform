@@ -58,9 +58,9 @@ test("la fiche propose « Créer un programme », le menu « ••• » et les
   await expect(create.getByRole("button", { name: "Programme" })).toBeVisible();
   await create.getByRole("button", { name: "Séance" }).click();
   const session = page.getByRole("dialog", { name: "Nouvelle séance" });
-  await expect(session.getByLabel("Sportif", { exact: true })).toHaveValue(INES);
-  await expect(session.getByLabel("Discipline")).toHaveValue("hyrox");
-  await session.getByRole("button", { name: "Fermer" }).click();
+  await expect(session.getByRole("button", { name: "Sportif : Inès Benali" })).toBeVisible();
+  await expect(session.getByRole("button", { name: "Discipline : Hyrox" })).toBeVisible();
+  await session.getByRole("button", { name: "Annuler" }).click();
   await expect(session).toBeHidden();
 
   // Prochaines séances : ses compétitions à venir y figurent (Hyrox Gent en décembre).

@@ -7,91 +7,30 @@ import { useActionState, useEffect, useId, useState, type ReactNode } from "reac
 import { useMoney } from "@/components/blocks/money-context";
 import { Avatar } from "@/components/ui/avatar";
 import { errorTextClass } from "@/components/ui/form-styles";
-import {
-  DlgCheckCard,
-  DlgChips,
-  DlgDate,
-  DlgField,
-  DlgFieldset,
-  DlgHint,
-  DlgSegmented,
-  DlgSelect,
-  DlgSuffixInput,
-  DlgTime,
-} from "@/components/ui/dialog-fields";
-import {
-  dlgErrorClass,
-  dlgFormGridClass,
-  dlgInputClass,
-  dlgPrimaryButtonClass,
-  dlgTextareaClass,
-} from "@/components/ui/dialog-styles";
 import { FieldCheck } from "@/components/ui/field-check";
 import {
   MobileActionBar,
   mobileActionPrimaryClass,
   mobileActionSecondaryClass,
 } from "@/components/ui/mobile-action-bar";
-import { DialogBody, DialogFooter } from "@/components/ui/overlay";
-import { currencySymbol, formatVatRate, parseVatRate } from "@/domain/billing/money";
-import { addVat, parseAmount, splitVat } from "@/domain/billing/payments";
+
+import { SessionAppleFields, type SessionDraft } from "./session-apple-fields";
+import {
+  SESSION_DISCIPLINES,
+  paidAmount,
+  priceSentence,
+  useSessionVat,
+} from "./session-form-parts";
+import { currencySymbol } from "@/domain/billing/money";
+import { parseAmount } from "@/domain/billing/payments";
 import { foldText } from "@/domain/documents/documents";
-import { disciplineLabels, type Discipline } from "@/domain/training/discipline";
+import { disciplineLabels } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
 import {
-  SESSION_KINDS,
   defaultVatIncluded,
-  sessionKindLabels,
   type SessionFormInput,
   type SessionKind,
 } from "@/features/sessions/schemas";
-
-// Ordre du menu Discipline (demande d'Antonino, 23/10) : les séances encadrées ont surtout lieu en salle.
-const SESSION_DISCIPLINES: Discipline[] = ["strength", "hyrox", "running", "hybrid"];
-
-// TVA d'une séance (D-163, demande d'Antonino du 11/11) : « Appliquer la TVA » est décochée par défaut,
-// le prix est alors ce que le sportif paie. Cochée : le taux (pré-rempli avec le taux normal du pays,
-// modifiable) et « TVA comprise dans le prix », qui suit le mode de paiement (règle de Gianluca :
-// virement = prix hors TVA, espèces = TVA comprise).
-function useSessionVat(v: SessionFormInput) {
-  const { suggestedVatRate } = useMoney();
-  const [apply, setApply] = useState(v.applyVat);
-  const [rateText, setRateText] = useState(v.vatRate || suggestedVatRate);
-  const [included, setIncluded] = useState(v.vatIncluded);
-  const parsed = parseVatRate(rateText);
-  return {
-    apply,
-    setApply,
-    rateText,
-    setRateText,
-    included,
-    setIncluded,
-    // Taux appliqué : 0 sans TVA, null si le taux saisi est faux.
-    rate: apply ? parsed : 0,
-  };
-}
-type SessionVat = ReturnType<typeof useSessionVat>;
-
-// Ce que le sportif paie : le prix tel quel sans TVA ou TVA comprise, sinon le prix HTVA plus la TVA.
-function paidAmount(priceCents: number, vat: SessionVat): number {
-  return !vat.rate || vat.included ? priceCents : addVat(priceCents, vat.rate);
-}
-
-// La phrase de calcul sous le prix, recalculée à chaque frappe.
-function priceSentence(
-  priceCents: number,
-  vat: SessionVat,
-  format: (cents: number) => string,
-): string {
-  if (vat.rate === null) return "Indique le taux de TVA (ex. 21).";
-  if (vat.rate === 0) return `${format(priceCents)} reçus, sans TVA.`;
-  const rate = formatVatRate(vat.rate);
-  if (vat.included) {
-    const split = splitVat(priceCents, vat.rate);
-    return `${format(priceCents)} reçus, TVA comprise : ${format(split.exclCents)} HTVA et ${format(split.vatCents)} de TVA (${rate}).`;
-  }
-  return `${format(priceCents)} HTVA : le sportif paie ${format(addVat(priceCents, vat.rate))}, TVA de ${rate} comprise.`;
-}
 
 // Case à cocher de la page Modifier la séance (« Appliquer la TVA », « TVA comprise dans le prix »).
 const pageCheckLabelClass =
@@ -124,8 +63,12 @@ type Props = {
   footer?: ReactNode;
   // Fenêtre de l'agenda : la création reste sur la page et prévient la fenêtre (sinon : page de la séance).
   onCreated?: (created: { id: string; title: string; newAthleteName: string | null }) => void;
-  // Fenêtre : « Annuler » du pied.
+  // Fenêtre : « Annuler » (✕ de la feuille, Échap de la bulle).
   onCancel?: () => void;
+  // Fenêtre : feuille façon iPhone, ou bulle accrochée au créneau de l'agenda (ordinateur, D-204).
+  layout?: "sheet" | "popover";
+  // Bulle de l'ordinateur : la grille de l'agenda montre la séance provisoire pendant la saisie.
+  onDraft?: (draft: SessionDraft) => void;
 };
 
 export function SessionForm({
@@ -135,6 +78,8 @@ export function SessionForm({
   submitLabel,
   onCreated,
   onCancel,
+  layout = "sheet",
+  onDraft,
   cancelHref = "",
   athletesPath = "",
   footer,
@@ -150,7 +95,7 @@ export function SessionForm({
   }, [created, onCreated]);
   if (onCreated) {
     return (
-      <SessionDialogFields
+      <SessionAppleFields
         key={state.attempt}
         formAction={formAction}
         pending={pending}
@@ -159,6 +104,8 @@ export function SessionForm({
         athletes={athletes}
         submitLabel={submitLabel}
         onCancel={onCancel ?? (() => {})}
+        layout={layout}
+        onDraft={onDraft}
       />
     );
   }
@@ -310,6 +257,8 @@ function SessionFields({
   const [startsOn, setStartsOn] = useState(v.startsOn);
   const [startTime, setStartTime] = useState(v.startTime);
   const [duration, setDuration] = useState(v.durationMinutes);
+  // « Jour entier » (D-204) : sans heure ni durée.
+  const [allDay, setAllDay] = useState(v.allDay === true);
   const [repeats, setRepeats] = useState(v.repeatsWeekly);
   const [endsOn, setEndsOn] = useState(v.endsOn);
   const [price, setPrice] = useState(v.price);
@@ -342,7 +291,10 @@ function SessionFields({
         : priceSentence(priceCents, vat, format);
 
   const recap = [
-    { label: "Quand", value: whenLabel(startsOn, startTime, repeats) },
+    {
+      label: "Quand",
+      value: whenLabel(startsOn, allDay ? "toute la journée" : startTime, repeats),
+    },
     { label: "Durée", value: duration ? `${duration} min` : "—" },
     { label: "Jusqu'au", value: repeats ? (ends ? dayFull.format(ends) : "Sans fin") : "—" },
     {
@@ -546,7 +498,7 @@ function SessionFields({
                 />
               </div>
             </div>
-            <div className="flex min-w-0 flex-col gap-[7px]">
+            <div className={`flex min-w-0 flex-col gap-[7px] ${allDay ? "hidden" : ""}`}>
               <label htmlFor={timeId} className={editLabelClass}>
                 Heure
               </label>
@@ -562,7 +514,7 @@ function SessionFields({
                 />
               </div>
             </div>
-            <div className="flex min-w-0 flex-col gap-[7px]">
+            <div className={`flex min-w-0 flex-col gap-[7px] ${allDay ? "hidden" : ""}`}>
               <label htmlFor={durationId} className={editLabelClass}>
                 Durée
               </label>
@@ -590,6 +542,20 @@ function SessionFields({
             </div>
           </div>
 
+          <label className={pageCheckLabelClass}>
+            <input
+              type="checkbox"
+              name="allDay"
+              checked={allDay}
+              onChange={(event) => setAllDay(event.target.checked)}
+              className="peer sr-only"
+            />
+            <span aria-hidden className={pageCheckBoxClass}>
+              <Check size={13} strokeWidth={3} />
+            </span>
+            Jour entier
+          </label>
+
           {/* Répéter chaque semaine : interrupteur sur toute la ligne (violet pâle quand il est mis). */}
           <label
             className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-[14px] p-3.5 transition-colors duration-150 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent lg:min-h-0 lg:gap-3.5 lg:px-4 ${
@@ -613,6 +579,8 @@ function SessionFields({
               onChange={(event) => setRepeats(event.target.checked)}
               className="sr-only"
             />
+            {/* Une règle personnalisée (D-203) repart telle quelle à l'enregistrement. */}
+            <input type="hidden" name="recurrence" value={v.recurrence ?? ""} />
             <span
               aria-hidden
               className={`flex h-7 w-[46px] shrink-0 rounded-full p-[3px] transition-colors duration-200 lg:h-6 lg:w-10 ${
@@ -894,288 +862,5 @@ function SessionFields({
         </button>
       </MobileActionBar>
     </div>
-  );
-}
-
-// Fenêtre « Nouvelle séance » (kit, boîte 02) : mêmes champs, mêmes noms et même envoi que la page,
-// présentés en grille de 12 colonnes ; répétition et nouveau sportif en cartes à cocher ; durée et
-// prix à suffixe ; boutons dans le pied fixe. Le prix, la TVA et la note (absents de la maquette)
-// sont gardés, au même style, sous les champs dessinés.
-function SessionDialogFields({
-  formAction,
-  pending,
-  error,
-  values: v,
-  athletes,
-  submitLabel,
-  onCancel,
-}: {
-  formAction: (formData: FormData) => void;
-  pending: boolean;
-  error: string | null;
-  values: SessionFormInput;
-  athletes: { id: string; name: string }[];
-  submitLabel: string;
-  onCancel: () => void;
-}) {
-  const formId = useId();
-  const [kind, setKind] = useState<SessionKind>(v.kind === "individual" ? "individual" : "group");
-  const [repeats, setRepeats] = useState(v.repeatsWeekly);
-  const [newClient, setNewClient] = useState(v.newClient);
-  const [price, setPrice] = useState(v.price);
-  const { currency, format } = useMoney();
-  const vat = useSessionVat(v);
-  const [paymentMethod, setPaymentMethod] = useState(v.paymentMethod || "transfer");
-  const priceCents = parseAmount(price);
-
-  return (
-    <>
-      <DialogBody>
-        <form id={formId} action={formAction} className={dlgFormGridClass} noValidate>
-          <input type="hidden" name="stay" value="1" />
-          <DlgFieldset legend="Type de séance">
-            <DlgSegmented
-              name="kind"
-              value={kind}
-              onChange={(value) => setKind(value as SessionKind)}
-              options={SESSION_KINDS.map((option) => ({
-                value: option,
-                label: sessionKindLabels[option],
-              }))}
-            />
-          </DlgFieldset>
-
-          <DlgField label="Titre" htmlFor="session-title">
-            <input
-              id="session-title"
-              name="title"
-              autoComplete="off"
-              maxLength={120}
-              placeholder={kind === "group" ? "Ex. : Piste du mercredi" : "Ex. : Coaching force"}
-              defaultValue={v.title}
-              className={dlgInputClass}
-            />
-          </DlgField>
-          <DlgField label="Discipline" htmlFor="session-discipline" optional half>
-            <DlgSelect id="session-discipline" name="discipline" defaultValue={v.discipline}>
-              <option value="">Non précisée</option>
-              {SESSION_DISCIPLINES.map((discipline) => (
-                <option key={discipline} value={discipline}>
-                  {disciplineLabels[discipline]}
-                </option>
-              ))}
-            </DlgSelect>
-          </DlgField>
-          <DlgField label="Lieu" htmlFor="session-location" optional half>
-            <input
-              id="session-location"
-              name="location"
-              autoComplete="off"
-              maxLength={120}
-              placeholder="Ex. : piste, salle, parc"
-              defaultValue={v.location}
-              className={dlgInputClass}
-            />
-          </DlgField>
-
-          <DlgField label={repeats ? "Première séance" : "Date"} htmlFor="session-date" half>
-            <DlgDate id="session-date" name="startsOn" defaultValue={v.startsOn} />
-          </DlgField>
-          <DlgField label="Heure" htmlFor="session-time" quarter>
-            <DlgTime id="session-time" name="startTime" defaultValue={v.startTime} />
-          </DlgField>
-          <DlgField label="Durée" htmlFor="session-duration" quarter>
-            <DlgSuffixInput
-              id="session-duration"
-              name="durationMinutes"
-              type="number"
-              inputMode="numeric"
-              min={15}
-              max={480}
-              step={5}
-              defaultValue={v.durationMinutes}
-              suffix="min"
-            />
-          </DlgField>
-
-          <DlgCheckCard
-            name="repeatsWeekly"
-            checked={repeats}
-            onChange={(event) => setRepeats(event.target.checked)}
-            label="Chaque semaine, le même jour et à la même heure"
-          />
-          {repeats ? (
-            <>
-              <DlgField label="Jusqu'au" htmlFor="session-ends" optional half>
-                <DlgDate
-                  id="session-ends"
-                  name="endsOn"
-                  defaultValue={v.endsOn}
-                  aria-describedby="session-ends-hint"
-                />
-              </DlgField>
-              <DlgHint id="session-ends-hint">
-                Sans date de fin, la séance continue chaque semaine.
-              </DlgHint>
-            </>
-          ) : null}
-
-          {kind === "individual" ? (
-            <>
-              {newClient ? (
-                <DlgField label="Nom du nouveau sportif" htmlFor="session-new-athlete" half>
-                  <input
-                    id="session-new-athlete"
-                    name="newAthleteName"
-                    defaultValue={v.newAthleteName}
-                    maxLength={161}
-                    autoComplete="off"
-                    placeholder="Ex. : John Martin"
-                    className={dlgInputClass}
-                  />
-                </DlgField>
-              ) : (
-                <DlgField label="Sportif" htmlFor="session-athlete" half>
-                  <DlgSelect id="session-athlete" name="athleteId" defaultValue={v.athleteId}>
-                    <option value="">Choisir…</option>
-                    {athletes.map((athlete) => (
-                      <option key={athlete.id} value={athlete.id}>
-                        {athlete.name}
-                      </option>
-                    ))}
-                  </DlgSelect>
-                </DlgField>
-              )}
-              {/* Première rencontre (D-35) : une fiche minimale est créée avec ce nom, à compléter. */}
-              <DlgCheckCard
-                name="newClient"
-                checked={newClient}
-                onChange={(event) => setNewClient(event.target.checked)}
-                label="Nouveau sportif"
-                description="Sa fiche est créée avec son nom, à compléter ensuite."
-                half
-              />
-            </>
-          ) : (
-            <DlgFieldset legend="Sportifs inscrits" optional>
-              {athletes.length === 0 ? (
-                <p className="text-[13px] leading-[1.5] text-muted">
-                  Aucun sportif actif pour l&apos;instant.
-                </p>
-              ) : (
-                <DlgChips
-                  name="athleteIds"
-                  defaultValues={v.athleteIds}
-                  options={athletes.map((athlete) => ({ value: athlete.id, label: athlete.name }))}
-                />
-              )}
-            </DlgFieldset>
-          )}
-
-          {/* Prix (D-52) : quand le coach marque une date « payée », ce montant compte dans
-              « Encaissé cette semaine ». Collective : un seul prix pour toute la séance. Virement =
-              prix hors TVA ; espèces = TVA comprise. La case suit le mode, le coach peut la changer. */}
-          <DlgField
-            label={kind === "group" ? "Prix pour toute la séance" : "Prix de la séance"}
-            htmlFor="session-price"
-            optional
-            half
-          >
-            <DlgSuffixInput
-              id="session-price"
-              name="price"
-              inputMode="decimal"
-              autoComplete="off"
-              placeholder="Ex. : 65"
-              value={price}
-              onChange={(event) => setPrice(event.target.value)}
-              aria-describedby="session-price-hint"
-              suffix={currencySymbol(currency)}
-            />
-            <FieldCheck htmlFor="session-price" rule="amount" />
-          </DlgField>
-          <div className="col-span-2 min-w-0 md:col-span-6">
-            <DlgFieldset legend="Paiement">
-              <DlgSegmented
-                name="paymentMethod"
-                value={paymentMethod}
-                onChange={(method) => {
-                  setPaymentMethod(method as typeof paymentMethod);
-                  vat.setIncluded(
-                    defaultVatIncluded(method as Parameters<typeof defaultVatIncluded>[0]),
-                  );
-                }}
-                options={[
-                  { value: "transfer", label: "Virement" },
-                  { value: "cash", label: "Espèces" },
-                ]}
-              />
-            </DlgFieldset>
-          </div>
-          <DlgCheckCard
-            name="applyVat"
-            checked={vat.apply}
-            onChange={(event) => vat.setApply(event.target.checked)}
-            label="Appliquer la TVA"
-            description="Coche si tu factures la TVA sur cette séance."
-          />
-          {vat.apply ? (
-            <>
-              <DlgField label="Taux de TVA" htmlFor="session-vat" half>
-                <DlgSuffixInput
-                  id="session-vat"
-                  name="vatRate"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  placeholder="21"
-                  value={vat.rateText}
-                  onChange={(event) => vat.setRateText(event.target.value)}
-                  aria-describedby="session-price-hint"
-                  suffix="%"
-                />
-              </DlgField>
-              <DlgCheckCard
-                name="vatIncluded"
-                checked={vat.included}
-                onChange={(event) => vat.setIncluded(event.target.checked)}
-                label="TVA comprise dans le prix"
-                half
-              />
-            </>
-          ) : null}
-          <DlgHint id="session-price-hint" live>
-            {priceCents === null
-              ? "Sans prix, la séance ne compte pas dans l'encaissé."
-              : priceSentence(priceCents, vat, format)}
-          </DlgHint>
-
-          <DlgField label="Note du coach" htmlFor="session-notes" optional>
-            <textarea
-              id="session-notes"
-              name="notes"
-              rows={2}
-              maxLength={500}
-              placeholder="Ex. : prévoir chronos et plots"
-              defaultValue={v.notes}
-              className={dlgTextareaClass}
-            />
-          </DlgField>
-
-          {error ? (
-            <p role="alert" className={dlgErrorClass}>
-              {error}
-            </p>
-          ) : null}
-        </form>
-      </DialogBody>
-      <DialogFooter
-        onCancel={onCancel}
-        primary={
-          <button type="submit" form={formId} disabled={pending} className={dlgPrimaryButtonClass}>
-            {pending ? "Enregistrement…" : submitLabel}
-          </button>
-        }
-      />
-    </>
   );
 }

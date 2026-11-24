@@ -40,8 +40,10 @@ const session = (over: Partial<CoachSession>): CoachSession => ({
   location: "Salle",
   startsOn: "2026-11-03",
   startTime: "18:00",
+  allDay: false,
   durationMinutes: 60,
   repeatsWeekly: true,
+  recurrence: null,
   endsOn: null,
   notes: "note privée",
   athletes: [{ id: "00000000-0000-4000-8000-000000000001", name: "Lucas Janssens" }],
@@ -110,6 +112,8 @@ describe("voir_agenda", () => {
         titre: "Coaching force",
         sportif: "Lucas Janssens",
         repetee: true,
+        // La règle en clair (D-203), pour que Claude sache comment la série se répète.
+        repetition: "chaque semaine le mardi",
       },
     ]);
     expect(JSON.stringify(rows)).not.toContain("note privée");

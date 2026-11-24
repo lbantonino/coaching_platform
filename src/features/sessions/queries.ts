@@ -1,12 +1,22 @@
 import { currencyOf, type Currency } from "@/domain/billing/money";
 import "server-only";
 
+import {
+  normalizeRule,
+  recurrenceRuleSchema,
+  type RecurrenceRule,
+} from "@/domain/sessions/recurrence";
 import type { Discipline } from "@/domain/training/discipline";
 import { createClient } from "@/lib/supabase/server";
 
 import type { SessionException, SessionKind, SessionPaymentMethod } from "./schemas";
 
 // photoPath : photo de profil (stockage privé), pour la carte « Prochaine séance » (D-77).
+const readRule = (value: unknown): RecurrenceRule | null => {
+  const parsed = recurrenceRuleSchema.safeParse(value);
+  return parsed.success ? normalizeRule(parsed.data) : null;
+};
+
 export type SessionAthlete = { id: string; name: string; photoPath?: string | null };
 
 export type CoachSession = {
@@ -18,8 +28,12 @@ export type CoachSession = {
   startsOn: string;
   // « 19:00 » (la base renvoie « 19:00:00 »).
   startTime: string;
+  // « Jour entier » (D-204).
+  allDay: boolean;
   durationMinutes: number;
   repeatsWeekly: boolean;
+  // Règle de récurrence (D-203) ; null pour une séance unique.
+  recurrence: RecurrenceRule | null;
   endsOn: string | null;
   notes: string | null;
   // Séance individuelle : son sportif. Séance collective : ses inscrits.
@@ -38,8 +52,8 @@ export type CoachSession = {
 
 // Le sportif direct (séance individuelle) et les inscrits (collective) passent par deux relations
 // différentes vers athlete_profiles : on nomme chacune pour lever l'ambiguïté.
-const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes,
-  repeats_weekly, ends_on, notes, price_cents, price_vat_included, vat_rate, currency, payment_method,
+const SELECT = `id, kind, title, discipline, location, starts_on, start_time, duration_minutes, all_day,
+  repeats_weekly, recurrence, ends_on, notes, price_cents, price_vat_included, vat_rate, currency, payment_method,
   individual:athlete_profiles!coach_sessions_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ),
   enrolled:coach_session_athletes ( athlete:athlete_profiles!coach_session_athletes_athlete_id_organization_id_fkey ( id, first_name, display_name, photo_path ) ),
   exceptions:coach_session_exceptions ( original_date, new_date, new_start_time )`;
@@ -58,8 +72,10 @@ type Row = {
   location: string | null;
   starts_on: string;
   start_time: string;
+  all_day: boolean;
   duration_minutes: number;
   repeats_weekly: boolean;
+  recurrence: unknown;
   ends_on: string | null;
   notes: string | null;
   price_cents: number | null;
@@ -94,8 +110,11 @@ function toSession(row: Row): CoachSession {
     location: row.location,
     startsOn: row.starts_on,
     startTime: row.start_time.slice(0, 5),
+    allDay: row.all_day,
     durationMinutes: row.duration_minutes,
     repeatsWeekly: row.repeats_weekly,
+    // Une règle illisible (jamais en principe : la base la vérifie) : chaque semaine, le jour du début.
+    recurrence: row.repeats_weekly ? readRule(row.recurrence) : null,
     endsOn: row.ends_on,
     notes: row.notes,
     athletes,

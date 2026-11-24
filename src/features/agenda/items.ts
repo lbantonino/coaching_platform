@@ -96,7 +96,8 @@ export function buildAgendaItems(
         type: "session",
         key: `${session.id}:${originalDate}`,
         date,
-        time: startTime,
+        // « Jour entier » (D-204) : sans heure, en tête de la journée (comme les événements).
+        time: session.allDay ? "" : startTime,
         sessionId: session.id,
         individual: session.kind === "individual",
         title: session.title,

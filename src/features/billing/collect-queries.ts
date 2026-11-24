@@ -22,6 +22,7 @@ export type UnpaidDate = {
   athleteName: string | null;
   date: string;
   originalDate: string;
+  // « 19:00 » ; vide pour une séance « Jour entier » (D-204).
   startTime: string;
   // Montant attendu, TVA comprise, dans la devise de la séance.
   amountCents: number;
@@ -73,7 +74,7 @@ export async function listUnpaidDates(
     athleteName: session.kind === "individual" ? (session.athletes[0]?.name ?? null) : null,
     date,
     originalDate,
-    startTime: startTime.slice(0, 5),
+    startTime: session.allDay ? "" : startTime.slice(0, 5),
     amountCents,
     currency: session.currency,
     sessionHref: `/coach/o/${organizationId}/agenda/seances/${session.id}?date=${date}`,

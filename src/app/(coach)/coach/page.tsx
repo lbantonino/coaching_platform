@@ -138,7 +138,9 @@ async function Dashboard() {
       weekday: weekdayShort.format(utc(day.date)),
       day: String(utc(day.date).getUTCDate()),
       relative: relativeDay(day.date, today),
-      blocks: day.blocks.filter((block) => block.date > today || block.start >= nowMinutes),
+      blocks: day.blocks.filter(
+        (block) => block.date > today || block.allDay || block.start >= nowMinutes,
+      ),
     }))
     .filter((day) => day.blocks.length > 0)
     .slice(0, 2);
@@ -154,7 +156,8 @@ async function Dashboard() {
   const late = unpaid.filter((date) => date.late).length;
 
   // Prochaine séance : la plus proche, avec son rang dans sa journée.
-  const next = upcomingDays[0]?.blocks[0] ?? null;
+  // La prochaine séance à l'heure (une séance « Jour entier » n'a pas de compte à rebours, D-204).
+  const next = upcomingDays.flatMap((day) => day.blocks).find((block) => !block.allDay) ?? null;
   const nextDay = next ? layoutDays(sessions, [next.date]).days[0].blocks : [];
   const nextSession = next ? sessions.find((session) => session.id === next.sessionId) : undefined;
   const nextAthlete = next?.individual ? nextSession?.athletes[0] : undefined;

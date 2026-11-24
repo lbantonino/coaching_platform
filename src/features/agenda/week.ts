@@ -1,5 +1,6 @@
 import type { Discipline } from "@/domain/training/discipline";
 import {
+  scheduleRule,
   sessionOccurrences,
   type ScheduleLike,
   type SessionException,
@@ -45,13 +46,20 @@ export type WeekBlock = {
   // Glisser-déposer (D-35) : la date de la série dont vient le bloc, s'il se répète, s'il a été déplacé.
   originalDate: string;
   recurring: boolean;
+  // « Toute la série » se décale seulement pour une série quotidienne ou hebdomadaire (D-203) ; une
+  // série mensuelle, annuelle ou personnalisée par mois se déplace date par date.
+  seriesMovable: boolean;
   moved: boolean;
+  // « Jour entier » (D-204) : sans heure (label « Toute la journée »).
+  allDay: boolean;
   // Colonne occupée parmi `lanes` quand des séances se chevauchent le même jour.
   lane: number;
   lanes: number;
 };
 
 export type WeekLayout = {
+  // Les séances « Jour entier » (D-204, `allDay`) sont en tête de leur journée ; la grille les met
+  // dans sa rangée du haut. Elles ne comptent ni dans les heures ni dans la plage horaire.
   days: { date: string; minutes: number; blocks: WeekBlock[] }[];
   totalMinutes: number;
   // Plage horaire affichée : au moins 06:00 - 22:00 (prompt Claude Design §6, toute la journée
@@ -84,36 +92,47 @@ export function layoutDays(sessions: WeekSession[], dates: string[]): WeekLayout
         date,
         originalDate: occurrence.originalDate,
         recurring: session.repeatsWeekly,
+        seriesMovable: ["daily", "weekly"].includes(scheduleRule(session)?.freq ?? ""),
         moved: occurrence.moved,
         start,
         end,
-        label: `${toTime(start)} - ${toTime(end)}`,
+        label: session.allDay ? "Toute la journée" : `${toTime(start)} - ${toTime(end)}`,
         title: individual ? (session.athletes[0]?.name ?? session.title) : session.title,
         subtitle: individual
           ? session.title
           : `${session.athletes.length} inscrit${session.athletes.length > 1 ? "s" : ""}`,
         discipline: session.discipline,
         individual,
+        allDay: session.allDay === true,
         lane: 0,
         lanes: 1,
       };
     }),
   );
+  const timed = blocks.filter((block) => !block.allDay);
 
   const days = dates.map((date) => {
     const dayBlocks = blocks
       .filter((block) => block.date === date)
-      .sort((a, b) => a.start - b.start || a.end - b.end);
-    assignLanes(dayBlocks);
+      .sort(
+        (a, b) =>
+          Number(b.allDay) - Number(a.allDay) ||
+          a.start - b.start ||
+          a.end - b.end ||
+          a.title.localeCompare(b.title, "fr"),
+      );
+    assignLanes(dayBlocks.filter((block) => !block.allDay));
     return {
       date,
-      minutes: dayBlocks.reduce((sum, block) => sum + (block.end - block.start), 0),
+      minutes: dayBlocks
+        .filter((block) => !block.allDay)
+        .reduce((sum, block) => sum + (block.end - block.start), 0),
       blocks: dayBlocks,
     };
   });
 
-  const starts = blocks.map((block) => block.start);
-  const ends = blocks.map((block) => block.end);
+  const starts = timed.map((block) => block.start);
+  const ends = timed.map((block) => block.end);
   return {
     days,
     totalMinutes: days.reduce((sum, day) => sum + day.minutes, 0),
@@ -125,7 +144,8 @@ export function layoutDays(sessions: WeekSession[], dates: string[]): WeekLayout
 // Heures affichées (Paramètres, D-57) : la plage choisie par le coach (ex. 7 h – 21 h), élargie si
 // une séance commence plus tôt ou finit plus tard, pour qu'aucune ne soit coupée.
 export function withHours(layout: WeekLayout, first: number, last: number): WeekLayout {
-  const blocks = layout.days.flatMap((day) => day.blocks);
+  // Une séance « Jour entier » (D-204) n'a pas d'heure : elle n'élargit pas la plage.
+  const blocks = layout.days.flatMap((day) => day.blocks).filter((block) => !block.allDay);
   return {
     ...layout,
     firstHour: Math.min(first, ...blocks.map((block) => Math.floor(block.start / 60))),

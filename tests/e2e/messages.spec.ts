@@ -47,7 +47,7 @@ test("« Nouveau message » ouvre le fil du sportif choisi ; « Planifier » pr�
   await page.getByRole("button", { name: "Planifier" }).click();
   const session = page.getByRole("dialog", { name: "Nouvelle séance" });
   await expect(session).toBeVisible();
-  await expect(session).toContainText("Chloé Martin");
-  await session.getByRole("button", { name: "Fermer" }).click();
+  await expect(session.getByRole("button", { name: "Sportif : Chloé Martin" })).toBeVisible();
+  await session.getByRole("button", { name: "Annuler" }).click();
   await expect(session).toBeHidden();
 });

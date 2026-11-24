@@ -54,7 +54,10 @@ describe("parseSessionForm", () => {
         starts_on: "2026-09-02",
         start_time: "19:00",
         duration_minutes: 90,
+        all_day: false,
         repeats_weekly: true,
+        // Récurrence (D-203) : chaque semaine, le jour du début (un mercredi).
+        recurrence: { freq: "weekly", interval: 1, weekdays: ["wed"] },
         ends_on: null,
         notes: null,
         price_cents: null,
@@ -95,7 +98,7 @@ describe("parseSessionForm", () => {
   it("exige le sportif d'une séance individuelle et ignore la liste d'inscrits", () => {
     expect(parseSessionForm({ ...base, kind: "individual" })).toEqual({
       ok: false,
-      error: "Choisis le sportif de la séance, ou coche « Nouveau sportif ».",
+      error: "Choisis le sportif de la séance, ou « Nouveau sportif » dans la liste.",
     });
     expect(parseSessionForm({ ...base, kind: "individual", athleteId: ATHLETE })).toMatchObject({
       ok: true,

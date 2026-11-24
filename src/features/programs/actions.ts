@@ -19,6 +19,10 @@ import { buildPublication } from "@/domain/training/program-publication";
 import { copyStartDate } from "@/domain/training/program-status";
 import { resizePlan, sessionsPerWeekFor } from "@/domain/training/program-upgrade";
 import { MAX_SESSIONS_PER_WEEK, sessionBodySchema } from "@/domain/training/session-v2";
+import { setAthletesStatus } from "@/features/athletes/actions";
+import { insertAthlete } from "@/features/athletes/create-athlete";
+import { minimalAthleteValues } from "@/features/athletes/new-athlete";
+import { quickAthleteName } from "@/features/athletes/quick-name";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -192,6 +196,42 @@ export async function createProgram(
 
   revalidateProgram(orgId, values.athleteId);
   return { ok: true, programId };
+}
+
+// ---------------------------------------------------------------------------
+// Créer un programme pour un NOUVEAU sportif (demande d'Antonino du 24/11/2026) : le nom tapé dans la
+// liste de l'assistant (ou de « Utiliser ce modèle ») devient une fiche « à compléter », créée seulement
+// maintenant, avec le programme. Le programme est vérifié AVANT la fiche ; s'il échoue quand même, la
+// fiche est archivée (elle quitte les listes ; aucune suppression n'existe).
+// ---------------------------------------------------------------------------
+const PENDING_ATHLETE = "00000000-0000-4000-8000-000000000000";
+
+export async function createProgramForNewAthlete(
+  organizationId: string,
+  name: string,
+  input: Omit<CreateProgramInput, "athleteId">,
+): Promise<ActionResult<{ programId: string; athleteId: string }>> {
+  const { user, membership } = await requireOrgAccess(organizationId);
+  const orgId = membership.organizationId;
+  const named = quickAthleteName(String(name ?? ""));
+  if (!named.ok) return fail("INVALID", named.error, [named.error]);
+  const checked = createProgramInputSchema.safeParse({ ...input, athleteId: PENDING_ATHLETE }, fr);
+  if (!checked.success) return invalid(checked.error);
+
+  const created = await insertAthlete(
+    orgId,
+    user.id,
+    minimalAthleteValues(named.firstName, named.lastName),
+  );
+  if (!created.ok) return fail("INVALID", created.error, [created.error]);
+
+  const program = await createProgram(orgId, { ...checked.data, athleteId: created.id });
+  if (!program.ok) {
+    await setAthletesStatus(orgId, [created.id], "archived");
+    return program;
+  }
+  revalidatePath(`/coach/o/${orgId}/sportifs`, "layout");
+  return { ok: true, programId: program.programId, athleteId: created.id };
 }
 
 // ---------------------------------------------------------------------------

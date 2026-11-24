@@ -1,6 +1,7 @@
 import { formatMoney } from "@/domain/billing/money";
 import { paymentMethodLabels } from "@/domain/billing/payments";
 import { formatBytes } from "@/domain/documents/documents";
+import { describeRule } from "@/domain/sessions/recurrence";
 import type { LibraryExercise } from "@/domain/exercises/library";
 import type { AthleteDetail, AthleteListItem } from "@/features/athletes/queries";
 import type { UnpaidDate } from "@/features/billing/collect-queries";
@@ -10,7 +11,7 @@ import type { CoachDocument } from "@/features/documents/queries";
 import type { AthleteProgramRow } from "@/features/programs/queries";
 import type { TemplateCard } from "@/features/programs/templates";
 import type { CoachSession } from "@/features/sessions/queries";
-import { sessionOccurrences } from "@/features/sessions/schemas";
+import { scheduleRule, sessionOccurrences } from "@/features/sessions/schemas";
 import type { CoachTask } from "@/features/tasks/queries";
 import type { AthleteGoals } from "@/features/goals/queries";
 import { NOTIFICATION_KINDS } from "@/features/coach/settings";
@@ -80,10 +81,13 @@ export type AgendaRow = {
   date: string;
   date_originale: string;
   heure: string;
-  duree_min: number;
+  // null : séance « Jour entier » (D-204).
+  duree_min: number | null;
   titre: string;
   sportif: string;
   repetee: boolean;
+  // La règle en clair (D-203) : « toutes les 2 semaines le mardi et le jeudi ».
+  repetition?: string;
 };
 
 const who = (session: CoachSession) =>
@@ -92,6 +96,13 @@ const who = (session: CoachSession) =>
     : (session.athletes[0]?.name ?? "sans sportif");
 
 // Une ligne par date entre `du` et `au` (dates déplacées comprises, avec leur date d'origine).
+const repetitionOf = (session: CoachSession) => {
+  const rule = scheduleRule(session);
+  if (!rule) return {};
+  const text = describeRule(rule, session.startsOn, session.endsOn);
+  return { repetition: text.charAt(0).toLowerCase() + text.slice(1) };
+};
+
 export function shapeAgenda(sessions: CoachSession[], du: string, au: string): AgendaRow[] {
   return sessions
     .flatMap((session) =>
@@ -99,11 +110,13 @@ export function shapeAgenda(sessions: CoachSession[], du: string, au: string): A
         seance_id: session.id,
         date: occurrence.date,
         date_originale: occurrence.originalDate,
-        heure: occurrence.startTime,
-        duree_min: session.durationMinutes,
+        // « Jour entier » (D-204) : pas d'heure.
+        heure: session.allDay ? "toute la journée" : occurrence.startTime,
+        duree_min: session.allDay ? null : session.durationMinutes,
         titre: session.title,
         sportif: who(session),
         repetee: session.repeatsWeekly,
+        ...repetitionOf(session),
       })),
     )
     .sort((a, b) => `${a.date} ${a.heure}`.localeCompare(`${b.date} ${b.heure}`));
@@ -137,7 +150,7 @@ export function shapeUnpaid(
       seance_id: date.sessionId,
       date: date.date,
       date_originale: date.originalDate,
-      heure: date.startTime,
+      heure: date.startTime || "toute la journée",
       titre: date.title,
       sportif: date.athleteName ?? "collective",
       montant: formatMoney(date.amountCents, date.currency).replace(/\s/g, " "),

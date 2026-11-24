@@ -1075,6 +1075,7 @@ export type Database = {
       };
       coach_sessions: {
         Row: {
+          all_day: boolean;
           athlete_id: string | null;
           created_at: string;
           created_by: string | null;
@@ -1090,6 +1091,7 @@ export type Database = {
           payment_method: string | null;
           price_cents: number | null;
           price_vat_included: boolean;
+          recurrence: Json | null;
           repeats_weekly: boolean;
           start_time: string;
           starts_on: string;
@@ -1099,6 +1101,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          all_day?: boolean;
           athlete_id?: string | null;
           created_at?: string;
           created_by?: string | null;
@@ -1114,6 +1117,7 @@ export type Database = {
           payment_method?: string | null;
           price_cents?: number | null;
           price_vat_included?: boolean;
+          recurrence?: Json | null;
           repeats_weekly?: boolean;
           start_time: string;
           starts_on: string;
@@ -1122,6 +1126,7 @@ export type Database = {
           vat_rate?: number;
         };
         Update: {
+          all_day?: boolean;
           athlete_id?: string | null;
           created_at?: string;
           created_by?: string | null;
@@ -1137,6 +1142,7 @@ export type Database = {
           payment_method?: string | null;
           price_cents?: number | null;
           price_vat_included?: boolean;
+          recurrence?: Json | null;
           repeats_weekly?: boolean;
           start_time?: string;
           starts_on?: string;

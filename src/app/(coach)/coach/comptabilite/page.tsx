@@ -488,7 +488,7 @@ async function Accounting({
                       title: date.athleteName ?? date.title,
                       sub: `${formatMoney(date.amountCents, date.currency)} · ${unpaidSub(date, today)}`,
                       href: date.sessionHref,
-                      label: `${date.athleteName ?? date.title}, ${dayShortLabel(date.date, today).toLowerCase()} à ${date.startTime}`,
+                      label: `${date.athleteName ?? date.title}, ${dayShortLabel(date.date, today).toLowerCase()}${date.startTime ? ` à ${date.startTime}` : ", toute la journée"}`,
                     }))}
                   />
                 </div>

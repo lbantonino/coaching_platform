@@ -1,5 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
+import { chooseRecurrence, submitNewSession } from "./new-session";
+
 // Agenda interactif (D-35) : un clic sur un créneau vide ouvre « Nouvelle séance » pré-remplie, une
 // séance se déplace à la souris (ordinateur) ou par appui long (téléphone), et une séance
 // hebdomadaire demande « seulement cette date » ou « toute la série ». Semaines de 2027, une par test
@@ -43,16 +45,16 @@ async function createFromSlot(
   });
   const dialog = page.getByRole("dialog", { name: "Nouvelle séance" });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel("Heure", { exact: true })).toHaveValue(
+  await expect(dialog.getByLabel("Heure de début")).toHaveValue(
     `${String(options.hour).padStart(2, "0")}:00`,
   );
-  await expect(dialog.getByLabel(/Première séance|^Date$/)).toHaveValue(options.date);
+  await expect(dialog.getByLabel("Date de début")).toHaveValue(options.date);
   // Individuelle est proposée d'abord (D-35) ; ces tests créent une séance collective.
   await expect(dialog.getByRole("radio", { name: "Individuelle" })).toBeChecked();
   await dialog.getByText("Collective", { exact: true }).click();
   await dialog.getByLabel("Titre").fill(options.title);
-  if (options.weekly) await dialog.getByLabel(/Chaque semaine/).check();
-  await dialog.getByRole("button", { name: "Créer la séance" }).click();
+  if (options.weekly) await chooseRecurrence(dialog, "Chaque semaine");
+  await submitNewSession(dialog);
   await expect(page.getByText("Séance créée.")).toBeVisible();
   await expect(dialog).toBeHidden();
   const block = column(page, options.date).getByRole("link", { name: new RegExp(options.title) });
@@ -256,7 +258,7 @@ test("l'agenda défile d'un bloc, de minuit à minuit, et une séance se crée a
     position: { x: 30, y: (await hourOffset(page, "2027-03-03", 2, box.height)) + 3 },
   });
   const dialog = page.getByRole("dialog", { name: "Nouvelle séance" });
-  await expect(dialog.getByLabel("Heure", { exact: true })).toHaveValue("02:00");
+  await expect(dialog.getByLabel("Heure de début")).toHaveValue("02:00");
 });
 
 // Glissé horizontal du doigt (Chromium : événements tactiles du protocole DevTools), au milieu de

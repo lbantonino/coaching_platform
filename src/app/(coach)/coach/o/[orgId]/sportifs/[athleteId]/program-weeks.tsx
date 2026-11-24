@@ -115,7 +115,7 @@ function WeekCoachItems({
             <span className="min-w-0">
               {item.type === "event"
                 ? `Compétition · ${competitionDay(item.date)} · ${item.title}`
-                : `Avec le coach, en plus · ${dayShortLabel(item.date, today)} · ${item.time} · ${item.title}`}
+                : `Avec le coach, en plus · ${dayShortLabel(item.date, today)} · ${item.time || "Journée"} · ${item.title}`}
             </span>
           </Link>
         </li>

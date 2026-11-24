@@ -33,6 +33,7 @@ import {
   sessionKindLabels,
   sessionOccurrences,
   seriesPosition,
+  sessionTimeLabel,
 } from "@/features/sessions/schemas";
 import { todayIsoInBrussels } from "@/lib/format";
 
@@ -245,7 +246,7 @@ async function SessionDetail({
       : money(session.priceVatIncluded ? session.priceCents : addVat(session.priceCents, vatRate));
   const paymentRow = (occurrence: NonNullable<typeof current>): PaymentRow => {
     const paid = paidByDate.get(occurrence.originalDate);
-    const time = occurrence.startTime.slice(0, 5);
+    const time = sessionTimeLabel(occurrence.startTime, session.allDay).toLowerCase();
     return {
       date: occurrence.originalDate,
       compact: `${capitalize(compactDay.format(utc(occurrence.date)).replace(".", ""))} · ${time}`,
@@ -286,7 +287,7 @@ async function SessionDetail({
     session.repeatsWeekly
       ? `Chaque ${weekdayName.format(utc(session.startsOn))}`
       : shortDate.format(utc(current?.date ?? session.startsOn)),
-    session.startTime.slice(0, 5),
+    sessionTimeLabel(session.startTime, session.allDay),
     session.discipline ? disciplineLabels[session.discipline] : null,
   ]
     .filter(Boolean)
@@ -466,25 +467,35 @@ async function SessionDetail({
                 {/* Téléphone : l'heure, puis le lieu et la durée dessous ; ordinateur : sur une ligne,
                     séparés par des traits. L'heure ne se coupe jamais. */}
                 <div className="flex flex-col gap-1.5 text-[13px] lg:flex-row lg:flex-wrap lg:items-center lg:gap-x-4 lg:gap-y-1 lg:text-[13.5px]">
-                  <p className="flex items-baseline gap-1.5 whitespace-nowrap tabular">
-                    <span className="text-[32px] leading-none font-semibold tracking-[-0.03em] text-violet-text lg:text-[36px]">
-                      {current.startTime.slice(0, 5)}
-                    </span>
-                    <span className="text-[15px] text-muted lg:text-[16px]">
-                      – {endTime(current.startTime, session.durationMinutes)}
-                    </span>
-                  </p>
+                  {session.allDay ? (
+                    <p className="text-[28px] leading-none font-semibold tracking-[-0.03em] whitespace-nowrap text-violet-text lg:text-[32px]">
+                      Toute la journée
+                    </p>
+                  ) : (
+                    <p className="flex items-baseline gap-1.5 whitespace-nowrap tabular">
+                      <span className="text-[32px] leading-none font-semibold tracking-[-0.03em] text-violet-text lg:text-[36px]">
+                        {current.startTime.slice(0, 5)}
+                      </span>
+                      <span className="text-[15px] text-muted lg:text-[16px]">
+                        – {endTime(current.startTime, session.durationMinutes)}
+                      </span>
+                    </p>
+                  )}
                   <Divider className="h-[18px] max-lg:hidden" />
                   <p className="flex flex-wrap items-center gap-x-3.5 gap-y-1 lg:contents">
                     <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <MapPin aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
                       {session.location ?? <span className="text-muted">Lieu non précisé</span>}
                     </span>
-                    <Divider className="h-4 lg:h-[18px]" />
-                    <span className="flex items-center gap-1.5 whitespace-nowrap">
-                      <Clock aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
-                      {formatDuration(session.durationMinutes)}
-                    </span>
+                    {session.allDay ? null : (
+                      <>
+                        <Divider className="h-4 lg:h-[18px]" />
+                        <span className="flex items-center gap-1.5 whitespace-nowrap">
+                          <Clock aria-hidden size={14} strokeWidth={1.8} className="shrink-0" />
+                          {formatDuration(session.durationMinutes)}
+                        </span>
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -663,8 +674,9 @@ async function SessionDetail({
                                   {capitalize(dayLabel(occurrence.date))}
                                 </span>
                                 <span className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted tabular">
-                                  {occurrence.startTime.slice(0, 5)} –{" "}
-                                  {endTime(occurrence.startTime, session.durationMinutes)}
+                                  {session.allDay
+                                    ? "Toute la journée"
+                                    : `${occurrence.startTime.slice(0, 5)} – ${endTime(occurrence.startTime, session.durationMinutes)}`}
                                   {occurrence.moved ? (
                                     <Badge tone="moved">
                                       Déplacée · prévue {dayLabel(occurrence.originalDate)}

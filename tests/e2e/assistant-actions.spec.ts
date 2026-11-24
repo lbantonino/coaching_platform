@@ -509,7 +509,8 @@ test("lot 4 : modifier une séance répétée de l'agenda", async ({ page }, tes
     STEPS,
   );
   await expect(card).toContainText("Heure : 18:00 → 19:00");
-  await expect(card).toContainText("Toute la série (chaque semaine)");
+  // La règle exacte depuis D-203 (« chaque semaine le lundi »).
+  await expect(card).toContainText(/Toute la série \(chaque semaine le \p{L}+\)/u);
   await card.getByRole("button", { name: "Valider" }).click();
   await expect(card).toContainText("Fait");
   await page.goto((await card.getByRole("link", { name: "Voir" }).getAttribute("href")) ?? "/");

@@ -475,7 +475,9 @@ export function summarizeDaily(
           (field, value) => sessionFieldText(field, value, names, currency),
         ),
       );
-      lines.push(names.serie === "oui" ? "Toute la série (chaque semaine)" : null);
+      lines.push(
+        names.serie === "oui" ? `Toute la série (${names.regle ?? "chaque semaine"})` : null,
+      );
       lines.push(names.prix ? `Prix : ${names.prix}` : null);
       break;
     case "supprimer_seance_agenda":

@@ -86,15 +86,29 @@ export function CardMenu({
   );
 }
 
+// Toute la carte s'ouvre d'un clic (24/11/2026) : un bouton posé sur la carte, « ··· » au-dessus.
+function OpenButton({ title, onOpen }: { title: string; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={`Modifier « ${title} »`}
+      onClick={onOpen}
+      className="absolute inset-0 rounded-[inherit] transition-colors duration-150 hover:bg-text/[0.04] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-violet"
+    />
+  );
+}
+
 function Step({
   step,
   discipline,
   actions,
+  onOpen,
   bg,
 }: {
   step: StepCard;
   discipline: Discipline;
   actions?: CardActions;
+  onOpen?: (path: string[]) => void;
   bg: string;
 }) {
   const bar = step.role === "work" ? disciplineStyles[discipline].dot : BARS[step.role];
@@ -103,6 +117,7 @@ function Step({
       className={`relative flex min-w-0 flex-col overflow-hidden rounded-[14px] py-3 pr-3 pl-[18px] lg:py-2.5 ${bg}`}
     >
       <span aria-hidden className={`absolute inset-y-0 left-0 w-[5px] ${bar}`} />
+      {onOpen ? <OpenButton title={step.title} onOpen={() => onOpen(step.path)} /> : null}
       <span className="flex min-w-0 items-start gap-2.5">
         <span
           className={`min-w-0 flex-1 font-bold tracking-[-0.01em] text-text text-[17px] leading-[1.25] lg:text-[15.5px] lg:leading-[1.3]`}
@@ -116,12 +131,14 @@ function Step({
             {step.aside}
           </span>
         ) : null}
-        <CardMenu
-          title={step.title}
-          path={step.path}
-          {...(step.exerciseId ? { exerciseId: step.exerciseId } : {})}
-          {...(actions ? { actions } : {})}
-        />
+        <span className="relative z-10">
+          <CardMenu
+            title={step.title}
+            path={step.path}
+            {...(step.exerciseId ? { exerciseId: step.exerciseId } : {})}
+            {...(actions ? { actions } : {})}
+          />
+        </span>
       </span>
       {step.lines.map((line, i) => (
         <span
@@ -147,16 +164,19 @@ function Group({
   group,
   discipline,
   actions,
+  onOpen,
   bg,
 }: {
   group: GroupCard;
   discipline: Discipline;
   actions?: CardActions;
+  onOpen?: (path: string[]) => void;
   bg: string;
 }) {
   return (
     <li className="flex min-w-0 flex-col gap-2 rounded-[16px] p-2.5 inset-ring inset-ring-line-2 lg:p-2">
-      <span className="flex min-w-0 items-start gap-2.5 py-1 pl-1.5">
+      <span className="relative flex min-w-0 items-start gap-2.5 py-1 pl-1.5">
+        {onOpen ? <OpenButton title={group.title} onOpen={() => onOpen(group.path)} /> : null}
         <span
           className={`min-w-0 flex-1 font-bold tracking-[-0.01em] text-text text-[17px] leading-[1.25] lg:text-[15.5px] lg:leading-[1.3]`}
         >
@@ -169,7 +189,9 @@ function Group({
             {group.aside}
           </span>
         ) : null}
-        <CardMenu title={group.title} path={group.path} {...(actions ? { actions } : {})} />
+        <span className="relative z-10">
+          <CardMenu title={group.title} path={group.path} {...(actions ? { actions } : {})} />
+        </span>
       </span>
       <ol aria-label={group.title} className="m-0 flex list-none flex-col gap-2 p-0">
         {group.cards.map((step) => (
@@ -179,6 +201,7 @@ function Group({
             discipline={discipline}
             bg={bg}
             {...(actions ? { actions } : {})}
+            {...(onOpen ? { onOpen } : {})}
           />
         ))}
       </ol>
@@ -195,6 +218,7 @@ export function SessionCardsView({
   cards,
   discipline,
   actions,
+  onOpen,
   onTint = false,
 }: {
   cards: SessionCard[];
@@ -204,6 +228,8 @@ export function SessionCardsView({
   onTint?: boolean;
   // Page du programme (brouillon modifiable) seulement.
   actions?: CardActions;
+  // Page du programme (24/11/2026) : un clic sur une carte ouvre son réglage (chemin de l'étape).
+  onOpen?: (path: string[]) => void;
 }) {
   // Plus grand sur téléphone, plus serré dès l'ordinateur (lg), partout la même vue.
   const bg = onTint ? "bg-surface" : "bg-surface-2";
@@ -217,6 +243,7 @@ export function SessionCardsView({
             discipline={discipline}
             bg={bg}
             {...(actions ? { actions } : {})}
+            {...(onOpen ? { onOpen } : {})}
           />
         ) : (
           <Step
@@ -225,6 +252,7 @@ export function SessionCardsView({
             discipline={discipline}
             bg={bg}
             {...(actions ? { actions } : {})}
+            {...(onOpen ? { onOpen } : {})}
           />
         ),
       )}

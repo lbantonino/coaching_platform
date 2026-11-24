@@ -26,6 +26,36 @@ export type NewAthleteFormInput = AthleteFormValues &
     coachNote: string;
   };
 
+// Fiche minimale : un prénom (et un nom), tout le reste vide, sportif actif. Utilisée quand un nouveau
+// sportif est tapé dans la liste de « Créer un programme » (24/11/2026) : sa fiche est « à compléter ».
+export function minimalAthleteValues(firstName: string, lastName: string): NewAthleteFormInput {
+  return {
+    firstName,
+    lastName,
+    sex: "",
+    email: "",
+    phone: "",
+    status: "active",
+    preferredContact: "",
+    level: "",
+    experience: "",
+    trainingPlaces: [],
+    equipment: "",
+    programType: "",
+    sessionsPerWeek: "",
+    maxSessionMinutes: "",
+    availableDays: [],
+    scheduleConstraints: "",
+    healthConstraints: "",
+    goalType: "",
+    goalDate: "",
+    competitionName: "",
+    healthConsent: false,
+    consentProof: "",
+    coachNote: "",
+  };
+}
+
 export type NewAthleteValues = {
   profile: {
     first_name: string;

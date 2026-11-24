@@ -12,6 +12,7 @@ import type { CoachDocument } from "@/features/documents/queries";
 import type { CoachTask } from "@/features/tasks/queries";
 import {
   occursOn,
+  scheduleRule,
   parseSessionForm,
   type ScheduleLike,
   type SessionFormInput,
@@ -76,6 +77,7 @@ export function toFormData(action: ParsedAssistantAction): FormData {
       set("startsOn", p.startsOn);
       set("startTime", p.startTime);
       set("durationMinutes", String(p.durationMinutes));
+      check("allDay", p.allDay);
       check("repeatsWeekly", p.repeatsWeekly);
       set("endsOn", p.endsOn ?? "");
       if (p.kind === "individual") set("athleteId", athleteIdOf(p.athlete));
@@ -206,6 +208,7 @@ export function toSessionPrefill(params: Record<string, unknown>): Partial<Sessi
     startsOn: params.startsOn as string | undefined,
     startTime: params.startTime as string | undefined,
     durationMinutes: maybe(params.durationMinutes as number | undefined, String),
+    allDay: params.allDay as boolean | undefined,
     repeatsWeekly: params.repeatsWeekly as boolean | undefined,
     endsOn: params.endsOn as string | undefined,
     athleteId: athleteId || undefined,
@@ -264,6 +267,7 @@ export function toSessionInput(params: Record<string, unknown>): SessionFormInpu
     startTime: text(params.startTime),
     durationMinutes:
       typeof params.durationMinutes === "number" ? String(params.durationMinutes) : "",
+    allDay: params.allDay === true,
     repeatsWeekly: params.repeatsWeekly === true,
     endsOn: text(params.endsOn),
     athleteId: params.kind === "individual" ? athleteId : "",
@@ -358,6 +362,16 @@ export function checkAgainstSession(
         ok: false,
         error: `La séance n'a pas lieu le ${dayInWords(p.originalDate)} : prends la date_originale de voir_agenda.`,
       };
+    } else if (
+      p.scope === "series" &&
+      !["daily", "weekly"].includes(scheduleRule(session)?.freq ?? "")
+    ) {
+      // Une série mensuelle ou annuelle se déplace date par date (D-203), comme dans l'agenda.
+      return {
+        ok: false,
+        error:
+          "Cette série se déplace date par date : propose seulement cette date (scope « single »).",
+      };
     }
     const [hours, minutes] = p.newTime.split(":").map(Number);
     if (hours * 60 + minutes + session.durationMinutes > 24 * 60) {
@@ -440,6 +454,8 @@ export function sessionInputFormData(input: SessionFormInput): FormData {
   form.set("durationMinutes", input.durationMinutes);
   check("repeatsWeekly", input.repeatsWeekly);
   form.set("endsOn", input.endsOn);
+  // La règle de récurrence (D-203) : gardée telle quelle quand l'assistant change autre chose.
+  form.set("recurrence", input.recurrence ?? "");
   form.set("athleteId", input.athleteId);
   for (const id of input.athleteIds) form.append("athleteIds", id);
   check("newClient", input.newClient);

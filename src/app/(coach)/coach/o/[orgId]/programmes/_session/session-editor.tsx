@@ -22,9 +22,6 @@ import {
   RUN_SESSION_TYPES,
   addRepeat,
   addStep,
-  findStep,
-  removeStep,
-  replaceStep,
   runningCounts,
   runningSummary,
 } from "@/domain/training/running-edit";
@@ -33,15 +30,11 @@ import {
   addBlock,
   addLine,
   duplicateItem as duplicateHyroxItem,
-  findLine,
   hyroxCounts,
   hyroxSummary,
   hyroxTimeCap,
   insertSimulation,
   removeItem as removeHyroxItem,
-  removeLine,
-  replaceBlock,
-  replaceLine,
 } from "@/domain/training/hyrox-edit";
 import { withEstimatedDuration } from "@/domain/training/session-duration";
 import {
@@ -53,7 +46,6 @@ import {
 import type { CardActions } from "@/components/programs/session-cards";
 import {
   SESSION_ITEMS_MAX,
-  type HyroxBlock,
   type HyroxContent,
   type RunningContent,
   type SessionDraft,
@@ -62,13 +54,8 @@ import {
 import {
   addExercise,
   addSuperset,
-  findExercise,
-  removeExercise,
   removeItem as removeStrengthItem,
-  replaceExercise,
-  replaceGroup,
   strengthSummary,
-  type StrengthGroup,
 } from "@/domain/training/strength-edit";
 import {
   formatMinutes,
@@ -83,25 +70,15 @@ import { useEditor } from "../_editor/editor-provider";
 import { TextSheet } from "../_editor/editor-sheets";
 
 import { InlineTitle, SESSION_TITLE_MAX } from "./inline-title";
+import { StepPanel, stepTarget, type StepPanelAthletes } from "./step-panel";
 import { useFitToScreen } from "./use-fit-to-screen";
 import { programHref, sessionHref } from "./links";
 import { SaveState, useSafeLeave } from "./safe-leave";
-import { RunStepPanel, RunningList, type AthleteAims } from "./running-parts";
-import {
-  HyroxBlockPanel,
-  HyroxLinePanel,
-  HyroxList,
-  SimulationSheet,
-  type HyroxAthlete,
-} from "./hyrox-parts";
+import { RunningList, type AthleteAims } from "./running-parts";
+import { HyroxList, SimulationSheet, type HyroxAthlete } from "./hyrox-parts";
 import {
   ExercisePickerSheet,
-  StrengthExercisePanel,
-  BoundaryPanel,
-  COOLDOWN,
-  StrengthGroupPanel,
   StrengthList,
-  WARMUP,
   type LibraryChoice,
   type StrengthAthlete,
 } from "./strength-parts";
@@ -282,134 +259,35 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
       : [session.sessionType];
   const hyroxCount = hyrox ? hyroxCounts(hyrox) : null;
 
-  const step = running && selected ? findStep(running, selected) : null;
-  const exercise = strength && selected ? findExercise(strength, selected) : null;
-  const group =
-    strength && selected && !exercise
-      ? (strength.items.find(
-          (item): item is StrengthGroup =>
-            (item.kind === "superset" || item.kind === "emom") && item.id === selected,
-        ) ?? null)
-      : null;
-  const strengthPanel =
-    strength && exercise && meta.strength ? (
-      <StrengthExercisePanel
-        key={exercise.exercise.id}
-        exercise={exercise.exercise}
-        position={exercise.position}
-        inGroup={exercise.group !== null}
-        meta={
-          exercise.exercise.exerciseId
-            ? (libraryMeta.get(exercise.exercise.exerciseId) ?? null)
-            : null
+  // Le réglage de l'élément choisi : le même panneau que dans la « Séance choisie » du programme.
+  const target = stepTarget(session.content, selected);
+  const hyroxBlock = target === "hyrox-block";
+  const stepAthletes: StepPanelAthletes = {
+    athlete: meta.athlete,
+    strength: meta.strength ? { athlete: meta.strength.athlete, libraryMeta } : null,
+    hyrox: meta.hyrox,
+  };
+  const panel =
+    selected && target ? (
+      <StepPanel
+        content={session.content}
+        selected={selected}
+        athletes={stepAthletes}
+        defaultAim={plan.aimDefaults.running}
+        setContent={(change) =>
+          setSession((current) => ({ ...current, content: change(current.content) }))
         }
-        athlete={meta.strength.athlete}
-        onChange={(next) => setStrength((current) => replaceExercise(current, next))}
         onDone={closePanel}
-        onDelete={() => {
-          setStrength((current) => removeExercise(current, exercise.exercise.id));
-          closePanel();
-          setSelected(null);
-          toast("Exercice supprimé.");
-        }}
-      />
-    ) : strength && (selected === WARMUP || selected === COOLDOWN) ? (
-      <BoundaryPanel
-        key={selected}
-        kind={selected}
-        text={strength[selected]}
-        onChange={(text) => setStrength((current) => ({ ...current, [selected]: text }))}
-        onDone={closePanel}
-        onDelete={() => {
-          setStrength((current) => ({ ...current, [selected]: undefined }));
+        onDeleted={() => {
           closePanel();
           setSelected(null);
         }}
-      />
-    ) : strength && group ? (
-      <StrengthGroupPanel
-        key={group.id}
-        group={group}
-        onChange={(next) => setStrength((current) => replaceGroup(current, next))}
-        onDone={closePanel}
-        onDelete={() => {
-          setStrength((current) => removeStrengthItem(current, group.id));
-          closePanel();
-          setSelected(null);
-          toast(group.kind === "superset" ? "Superset supprimé." : "EMOM supprimé.");
-        }}
-      />
-    ) : null;
-  const hyroxLine = hyrox && selected ? findLine(hyrox, selected) : null;
-  const hyroxBlock =
-    hyrox && selected && !hyroxLine
-      ? (hyrox.items.find(
-          (item): item is HyroxBlock => item.kind === "block" && item.id === selected,
-        ) ?? null)
-      : null;
-  const hyroxPanel =
-    hyrox && meta.hyrox && hyroxLine ? (
-      <HyroxLinePanel
-        key={hyroxLine.line.id}
-        line={hyroxLine.line}
-        block={hyroxLine.block}
-        blockPosition={hyroxLine.blockIndex + 1}
-        linePosition={hyroxLine.index + 1}
-        athlete={meta.hyrox}
-        onChange={(next) => setHyrox((current) => replaceLine(current, next))}
-        onDone={closePanel}
-        onDelete={() => {
-          setHyrox((current) => removeLine(current, hyroxLine.line.id));
-          closePanel();
-          setSelected(null);
-          toast("Étape supprimée.");
-        }}
-      />
-    ) : hyrox && meta.hyrox && hyroxBlock ? (
-      <HyroxBlockPanel
-        key={hyroxBlock.id}
-        block={hyroxBlock}
-        position={hyrox.items.findIndex((item) => item.id === hyroxBlock.id) + 1}
-        athlete={meta.hyrox}
-        onChange={(next) => setHyrox((current) => replaceBlock(current, next))}
         onSimulation={() => {
           setSheetOpen(false);
           setSimulation(true);
         }}
-        onDone={closePanel}
-        onDelete={() => {
-          setHyrox((current) => removeHyroxItem(current, hyroxBlock.id));
-          closePanel();
-          setSelected(null);
-          toast("Bloc supprimé.");
-        }}
       />
     ) : null;
-  const panel =
-    strengthPanel ??
-    hyroxPanel ??
-    (running && step ? (
-      <RunStepPanel
-        key={step.step.id}
-        step={step.step}
-        place={{
-          repeatTimes: step.repeat ? step.repeat.times : null,
-          position: step.repeat
-            ? step.index + 1
-            : running.items.findIndex((item) => item.id === step.step.id) + 1,
-        }}
-        athlete={meta.athlete}
-        defaultAim={plan.aimDefaults.running}
-        onChange={(next) => setRunning(replaceStep(running, next))}
-        onDone={closePanel}
-        onDelete={() => {
-          setRunning(removeStep(running, step.step.id));
-          closePanel();
-          setSelected(null);
-          toast("Étape supprimée.");
-        }}
-      />
-    ) : null);
 
   const menu = (phone: boolean) => (
     <MoreMenu

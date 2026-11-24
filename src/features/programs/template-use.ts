@@ -38,6 +38,24 @@ export function mondayOf(iso: string): string {
 // ses phases, que le serveur reprend quand on n'en donne pas), sauf la façon de viser et la catégorie
 // Hyrox, qui suivent le sportif. Les séances se placent « dans l'ordre » ; le coach fixe les jours
 // ensuite dans l'éditeur s'il le veut.
+// Un sportif tapé dans la liste, pas encore créé (24/11/2026) : aucun repère, aucun programme. Sert aux
+// réglages par défaut ; son identifiant est donné par l'action serveur qui le crée.
+export function newWizardAthlete(firstName: string): WizardAthlete {
+  return {
+    id: "",
+    name: firstName,
+    firstName,
+    photoPath: null,
+    programType: null,
+    sessionsPerWeek: null,
+    hasVma: false,
+    hasHrMax: false,
+    hasLinkedMaxes: false,
+    defaultDivision: null,
+    programs: [],
+  };
+}
+
 export function templateUseInput({
   template,
   athlete,

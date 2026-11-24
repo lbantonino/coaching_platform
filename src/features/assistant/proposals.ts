@@ -145,6 +145,7 @@ export const PARAMS = {
       startsOn: isoDay,
       startTime: time,
       durationMinutes: z.number().int().min(5).max(600),
+      allDay: z.boolean().optional(),
       repeatsWeekly: z.boolean().optional(),
       endsOn: isoDay.optional(),
       athlete: athleteRefSchema.optional(),
@@ -683,7 +684,10 @@ export function summarize(
             : "Collective · aucun inscrit"
           : athleteName(p.athlete, names),
       );
-      const when = `${dayInWords(str(p.startsOn))} · ${str(p.startTime)} · ${num(p.durationMinutes)} min`;
+      const when =
+        p.allDay === true
+          ? `${dayInWords(str(p.startsOn))} · toute la journée`
+          : `${dayInWords(str(p.startsOn))} · ${str(p.startTime)} · ${num(p.durationMinutes)} min`;
       const until = p.endsOn ? ` jusqu'au ${dayInWords(str(p.endsOn))}` : "";
       lines.push(p.repeatsWeekly ? `${when} · chaque semaine${until}` : when);
       lines.push(str(p.location) || null);

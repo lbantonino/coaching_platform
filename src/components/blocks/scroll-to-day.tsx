@@ -43,14 +43,15 @@ export function ScrollToDay({
     if (!root) return;
     const hours = root.querySelector<HTMLElement>("[data-grid-scroll]");
     const days = root.querySelector<HTMLElement>("[data-grid-x]");
-    const head = root.querySelector<HTMLElement>("[data-grid-head]");
+    // En-tête des jours et rangée « Jour entier » (D-204) : tous suivent les jours.
+    const heads = [...root.querySelectorAll<HTMLElement>("[data-grid-head]")];
     // La marge des heures fait toujours la hauteur d'une journée (un jour peut être caché).
     const gutter = root.querySelector<HTMLElement>("[data-gutter]");
     if (hours && gutter) hours.scrollTop = (scrollHour * gutter.offsetHeight) / 24;
     if (!days) return;
     const columns = () => [...days.querySelectorAll<HTMLElement>("[data-day-col]")];
     const sync = () => {
-      if (head) head.scrollLeft = days.scrollLeft;
+      for (const head of heads) head.scrollLeft = days.scrollLeft;
     };
     const start = days.querySelector<HTMLElement>("[data-start]");
     if (start) {

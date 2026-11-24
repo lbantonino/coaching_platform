@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
+import { planExerciseIds } from "@/domain/training/plan-exercises";
 import { requireOrgAccess } from "@/features/auth/guards";
+import { listLibraryChoices } from "@/features/programs/library-choices";
 import {
   getProgramTemplate,
   getSessionTemplate,
@@ -62,17 +64,24 @@ async function Template({
   focus: EditorMeta["focus"];
   openUse: boolean;
 }) {
-  const { membership } = await requireOrgAccess(orgId);
+  const { user, membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
   const base = `/coach/o/${organizationId}/programmes`;
   const back = { href: `${base}?onglet=modeles`, label: "Modèles" };
 
   const program = await getProgramTemplate(organizationId, templateId);
   if (program?.plan) {
-    const [sessionTemplates, wizard] = await Promise.all([
+    // « Séance choisie » modifiable (24/11/2026) : un modèle n'a pas de sportif ; seulement les fiches
+    // de Bibliothèque de ses exercices (un modèle Coory reste en lecture seule).
+    const exerciseIds = planExerciseIds(program.plan);
+    const [sessionTemplates, wizard, library] = await Promise.all([
       listSessionTemplateChoices(organizationId, program.plan.discipline),
       loadWizardData(organizationId),
+      exerciseIds.size > 0 && program.source !== "coory"
+        ? listLibraryChoices(user.id, organizationId)
+        : Promise.resolve([]),
     ]);
+    const nobody = "ton sportif";
     const useTemplate = wizard.templates.find((template) => template.id === program.id);
     // Chaque arrivée repart d'une fenêtre neuve (Next 16 garde l'état d'une page déjà visitée).
     const visit = crypto.randomUUID();
@@ -87,6 +96,16 @@ async function Template({
       focus,
       sessionTemplates,
       returnTo: null,
+      steps: {
+        athlete: { firstName: nobody, vmaKmh: null, hrMax: null },
+        strength: {
+          athlete: { firstName: nobody, maxes: {} },
+          library: library
+            .filter((item) => exerciseIds.has(item.id))
+            .map((item) => [item.id, item.meta]),
+        },
+        hyrox: { firstName: nobody, division: null, sex: null, inTemplate: true },
+      },
       publishContext: null,
     };
     return (

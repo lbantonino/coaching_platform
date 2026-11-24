@@ -39,6 +39,8 @@ async function openForceA(page: Page, testInfo: TestInfo) {
   await expect(page).toHaveURL(/\/programmes\/[0-9a-f-]{36}$/);
   if (phone) await page.getByRole("button", { name: "Force A", exact: true }).click();
   await page.getByRole("button", { name: "Modifier la séance" }).click();
+  // Le détail du programme a aussi un titre « Force A » cliquable (24/11) : attendre l'éditeur.
+  await expect(page).toHaveURL(/\/seances\//);
   await expect(title(page, "Force A")).toBeVisible();
   return { phone };
 }

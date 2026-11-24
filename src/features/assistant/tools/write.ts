@@ -141,6 +141,11 @@ export const WRITE_TOOLS: Anthropic.Tool[] = [
         startsOn: date,
         startTime: hour,
         durationMinutes: { type: "integer" },
+        allDay: {
+          type: "boolean",
+          description:
+            "Jour entier : séance sans heure (stage, compétition). startTime et durationMinutes sont alors ignorés.",
+        },
         repeatsWeekly: { type: "boolean" },
         endsOn: date,
         athlete,

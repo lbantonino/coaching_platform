@@ -109,14 +109,16 @@ test("les préférences préremplissent une nouvelle séance, et la cloche se r�
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await page.getByRole("dialog", { name: "Créer" }).getByRole("button", { name: "Séance" }).click();
   const sheet = page.getByRole("dialog", { name: "Nouvelle séance" });
-  await expect(sheet.getByLabel("Durée", { exact: true })).toHaveValue("45");
+  // Durée proposée : la fin suit le début (19:00 + 45 min).
+  await expect(sheet.getByLabel("Heure de fin")).toHaveValue("19:45");
+  await expect(sheet.getByText("Durée : 45 min")).toBeVisible();
   await expect(sheet.getByLabel(/^Lieu/)).toHaveValue("Box de test");
   await expect(sheet.getByLabel(/^Prix de la séance/)).toHaveValue("70");
   await expect(sheet.getByRole("radio", { name: "Espèces" })).toBeChecked();
   await expect(sheet.getByLabel(/^Appliquer la TVA/)).not.toBeChecked();
   await sheet.getByLabel(/^Appliquer la TVA/).check();
   await expect(sheet.getByLabel(/^TVA comprise dans le prix/)).toBeChecked();
-  await sheet.getByRole("button", { name: "Fermer" }).click();
+  await sheet.getByRole("button", { name: "Annuler" }).click();
 
   // Cloche : couper « Fiches à compléter » (puis Enregistrer) la retire de la page Notifications.
   dialog = await openSettings(page, "preferences");

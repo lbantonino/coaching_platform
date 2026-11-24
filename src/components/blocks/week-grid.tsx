@@ -1,4 +1,5 @@
 import { Users } from "lucide-react";
+import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import type { Discipline } from "@/domain/training/discipline";
@@ -174,6 +175,50 @@ export function WeekGrid({
           </div>
         </div>
 
+        {/* Rangée « Jour entier » (D-204, comme le Calendrier d'Apple) : les séances sans heure, au-dessus
+            des heures ; toujours là sur ordinateur, seulement quand il y en a sur téléphone. */}
+        <div
+          className={`flex shrink-0 border-b border-line-soft ${
+            layout.days.some((day) => day.blocks.some((block) => block.allDay))
+              ? ""
+              : "max-lg:hidden"
+          }`}
+        >
+          <div className="flex w-[var(--gut)] shrink-0 items-center justify-end pr-1.5 text-right text-[10px] leading-[1.1] text-faint">
+            Jour entier
+          </div>
+          <div data-grid-head="" className="min-w-0 flex-1 overflow-hidden">
+            <div className={`${row} min-h-7`}>
+              {layout.days.map((day) => (
+                <div
+                  key={day.date}
+                  className={`${column(day.date)} flex flex-col gap-0.5 border-l border-line-soft px-1 py-0.5`}
+                >
+                  {day.blocks
+                    .filter((block) => block.allDay)
+                    .map((block) => (
+                      <Link
+                        key={block.key}
+                        href={sessionHref(block.sessionId, block.date)}
+                        title={`Toute la journée · ${block.title} · ${block.subtitle}`}
+                        className={`flex min-w-0 items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-[12px] leading-[1.25] font-semibold transition-[filter] duration-150 hover:brightness-110 lg:text-[11px] ${
+                          fills[block.discipline ?? "none"]
+                        }`}
+                      >
+                        {block.individual ? null : (
+                          <Users aria-hidden size={11} strokeWidth={2.2} className="shrink-0" />
+                        )}
+                        <span className="min-w-0 truncate">
+                          {single ? block.title : shortName(block)}
+                        </span>
+                      </Link>
+                    ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Les heures défilent verticalement ; dedans, les jours défilent horizontalement. */}
         <div
           data-grid-scroll=""
@@ -240,79 +285,82 @@ export function WeekGrid({
                           span={24}
                         />
                       ) : null}
-                      {day.blocks.map((block) => {
-                        const minutes = block.end - block.start;
-                        const style = {
-                          top: at(block.start / 60, " + 1px"),
-                          height: at(Math.max(minutes, 60) / 60, " - 2px"),
-                          left: `calc(${(block.lane / block.lanes) * 100}% + 4px)`,
-                          width: `calc(${100 / block.lanes}% - 8px)`,
-                        } as CSSProperties;
-                        return (
-                          <DraggableBlock
-                            key={block.key}
-                            block={{
-                              sessionId: block.sessionId,
-                              originalDate: block.originalDate,
-                              date: block.date,
-                              start: block.start,
-                              end: block.end,
-                              title: block.title,
-                              recurring: block.recurring,
-                              moved: block.moved,
-                            }}
-                            href={sessionHref(block.sessionId, block.date)}
-                            title={`${block.label} · ${block.title} · ${block.subtitle}`}
-                            style={style}
-                            className={`absolute flex flex-col justify-center overflow-hidden rounded-lg px-1.5 transition-[filter,opacity] duration-150 hover:brightness-110 ${
-                              fills[block.discipline ?? "none"]
-                            }`}
-                          >
-                            {single ? (
-                              // Vue d'un jour : la place de tout écrire (le nom en entier, l'horaire
-                              // et le titre de la séance), comme Google Agenda.
-                              <>
-                                <span className="flex min-w-0 items-center gap-1 text-[14px] leading-[1.25] font-semibold lg:text-[12.5px]">
-                                  {block.individual ? null : (
-                                    <Users
-                                      aria-hidden
-                                      size={12}
-                                      strokeWidth={2.2}
-                                      className="shrink-0"
-                                    />
-                                  )}
-                                  <span className="min-w-0 truncate">{block.title}</span>
-                                </span>
-                                <span className="truncate text-[13px] leading-[1.25] opacity-90 tabular lg:text-[11.5px]">
-                                  {time(block.start)} – {time(block.end)} ·{" "}
-                                  {block.individual
-                                    ? block.subtitle
-                                    : `Collective · ${block.subtitle}`}
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="flex min-w-0 items-center gap-0.5 text-[13px] leading-[1.2] font-semibold lg:text-[11px]">
-                                  {block.individual ? null : (
-                                    <Users
-                                      aria-hidden
-                                      size={11}
-                                      strokeWidth={2.2}
-                                      className="shrink-0"
-                                    />
-                                  )}
-                                  <span className="min-w-0 truncate">{shortName(block)}</span>
-                                </span>
-                                <span className="truncate text-[12px] leading-[1.2] opacity-90 tabular lg:text-[10.5px]">
-                                  {minutes > 60
-                                    ? `${time(block.start)} · ${hoursLabel(minutes)}`
-                                    : time(block.start)}
-                                </span>
-                              </>
-                            )}
-                          </DraggableBlock>
-                        );
-                      })}
+                      {day.blocks
+                        .filter((block) => !block.allDay)
+                        .map((block) => {
+                          const minutes = block.end - block.start;
+                          const style = {
+                            top: at(block.start / 60, " + 1px"),
+                            height: at(Math.max(minutes, 60) / 60, " - 2px"),
+                            left: `calc(${(block.lane / block.lanes) * 100}% + 4px)`,
+                            width: `calc(${100 / block.lanes}% - 8px)`,
+                          } as CSSProperties;
+                          return (
+                            <DraggableBlock
+                              key={block.key}
+                              block={{
+                                sessionId: block.sessionId,
+                                originalDate: block.originalDate,
+                                date: block.date,
+                                start: block.start,
+                                end: block.end,
+                                title: block.title,
+                                recurring: block.recurring,
+                                seriesMovable: block.seriesMovable,
+                                moved: block.moved,
+                              }}
+                              href={sessionHref(block.sessionId, block.date)}
+                              title={`${block.label} · ${block.title} · ${block.subtitle}`}
+                              style={style}
+                              className={`absolute flex flex-col justify-center overflow-hidden rounded-lg px-1.5 transition-[filter,opacity] duration-150 hover:brightness-110 ${
+                                fills[block.discipline ?? "none"]
+                              }`}
+                            >
+                              {single ? (
+                                // Vue d'un jour : la place de tout écrire (le nom en entier, l'horaire
+                                // et le titre de la séance), comme Google Agenda.
+                                <>
+                                  <span className="flex min-w-0 items-center gap-1 text-[14px] leading-[1.25] font-semibold lg:text-[12.5px]">
+                                    {block.individual ? null : (
+                                      <Users
+                                        aria-hidden
+                                        size={12}
+                                        strokeWidth={2.2}
+                                        className="shrink-0"
+                                      />
+                                    )}
+                                    <span className="min-w-0 truncate">{block.title}</span>
+                                  </span>
+                                  <span className="truncate text-[13px] leading-[1.25] opacity-90 tabular lg:text-[11.5px]">
+                                    {time(block.start)} – {time(block.end)} ·{" "}
+                                    {block.individual
+                                      ? block.subtitle
+                                      : `Collective · ${block.subtitle}`}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="flex min-w-0 items-center gap-0.5 text-[13px] leading-[1.2] font-semibold lg:text-[11px]">
+                                    {block.individual ? null : (
+                                      <Users
+                                        aria-hidden
+                                        size={11}
+                                        strokeWidth={2.2}
+                                        className="shrink-0"
+                                      />
+                                    )}
+                                    <span className="min-w-0 truncate">{shortName(block)}</span>
+                                  </span>
+                                  <span className="truncate text-[12px] leading-[1.2] opacity-90 tabular lg:text-[10.5px]">
+                                    {minutes > 60
+                                      ? `${time(block.start)} · ${hoursLabel(minutes)}`
+                                      : time(block.start)}
+                                  </span>
+                                </>
+                              )}
+                            </DraggableBlock>
+                          );
+                        })}
                       {onMove ? <DropPreview date={day.date} firstHour={0} /> : null}
                       {isToday ? (
                         <span

@@ -42,7 +42,7 @@ export function AgendaItemRow({
           {dayShortLabel(item.date, today)}
         </span>
         <span className="text-[14px] font-medium">
-          {item.type === "session" ? item.time : "Journée"}
+          {item.type === "session" && item.time ? item.time : "Journée"}
         </span>
       </span>
       <span className="flex min-w-0 flex-col">
@@ -155,7 +155,7 @@ function WeekCard({
         {item.type === "event" ? (
           <Flag aria-hidden size={12} strokeWidth={2} className="text-accent-text" />
         ) : null}
-        {item.type === "session" ? item.time : "Journée"}
+        {item.type === "session" && item.time ? item.time : "Journée"}
       </span>
       <span className="line-clamp-2 text-[13px] leading-snug font-medium break-words">
         {item.title}

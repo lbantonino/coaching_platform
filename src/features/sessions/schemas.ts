@@ -3,6 +3,15 @@ import { z } from "zod";
 import { parseVatRate } from "@/domain/billing/money";
 import { addVat, parseAmount } from "@/domain/billing/payments";
 import { DISCIPLINES, type Discipline } from "@/domain/training/discipline";
+import {
+  describeRule,
+  normalizeRule,
+  presetOf,
+  recurrenceRuleSchema,
+  ruleDates,
+  weeklyRule,
+  type RecurrenceRule,
+} from "@/domain/sessions/recurrence";
 import { formatDate } from "@/lib/format";
 
 import type { CoachSession } from "./queries";
@@ -10,6 +19,8 @@ import type { CoachSession } from "./queries";
 // Séances encadrées du coach, en présentiel (P2-05b, D-27). Règles PURES, testées par Vitest.
 // Individuelle d'abord (demande d'Antonino, 23/10) : un coach fait surtout du coaching individuel.
 export const SESSION_KINDS = ["individual", "group"] as const;
+// Durée rangée d'une séance « Jour entier » (D-204, contrainte coach_sessions_all_day_time).
+export const ALL_DAY_DURATION = 60;
 export type SessionKind = (typeof SESSION_KINDS)[number];
 export const sessionKindLabels: Record<SessionKind, string> = {
   group: "Collective",
@@ -24,8 +35,13 @@ export type SessionFormInput = {
   startsOn: string;
   startTime: string;
   durationMinutes: string;
+  // « Jour entier » (D-204) : sans heure ni durée (rangée à 00:00, 60 min).
+  allDay?: boolean;
   repeatsWeekly: boolean;
   endsOn: string;
+  // Récurrence (D-203) : la règle en JSON quand elle ne se déduit pas du début (« chaque semaine, le
+  // jour du début » sinon) ; vide ou absente = cette règle par défaut.
+  recurrence?: string;
   athleteId: string;
   athleteIds: string[];
   // Séance individuelle avec un nouveau sportif (D-35) : sa fiche minimale est créée avec ce nom.
@@ -63,8 +79,15 @@ export function sessionFormInitial(
     startsOn: session.startsOn,
     startTime: session.startTime,
     durationMinutes: String(session.durationMinutes),
+    allDay: session.allDay,
     repeatsWeekly: session.repeatsWeekly,
     endsOn: session.endsOn ?? "",
+    // Une règle qui ne se déduit pas du début est renvoyée telle quelle (une série « chaque semaine »
+    // suit son début si on le change, comme avant D-203).
+    recurrence:
+      session.recurrence && presetOf(session.recurrence, session.startsOn) !== "weekly"
+        ? JSON.stringify(session.recurrence)
+        : "",
     athleteId: session.kind === "individual" ? (session.athletes[0]?.id ?? "") : "",
     athleteIds: session.kind === "group" ? [...enrolledIds] : [],
     newClient: false,
@@ -93,7 +116,11 @@ export type SessionValues = {
   starts_on: string;
   start_time: string;
   duration_minutes: number;
+  // « Jour entier » (D-204) : start_time 00:00 et duration_minutes 60, rangés (contrainte en base).
+  all_day: boolean;
   repeats_weekly: boolean;
+  // Règle de récurrence (D-203), null pour une séance unique.
+  recurrence: RecurrenceRule | null;
   ends_on: string | null;
   notes: string | null;
   price_cents: number | null;
@@ -165,10 +192,14 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
   const startsOn = input.startsOn.trim();
   if (!isoDay(startsOn)) return { ok: false, error: "Indique la date de la séance." };
 
-  const time = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(input.startTime.trim());
+  // « Jour entier » : l'heure et la durée envoyées ne comptent pas.
+  const allDay = input.allDay === true;
+  const time = allDay
+    ? ["00:00", "00", "00"]
+    : /^([01]\d|2[0-3]):([0-5]\d)$/.exec(input.startTime.trim());
   if (!time) return { ok: false, error: "Indique l'heure de début, par exemple 19:00." };
 
-  const duration = Number(input.durationMinutes.trim());
+  const duration = allDay ? ALL_DAY_DURATION : Number(input.durationMinutes.trim());
   if (!Number.isInteger(duration) || duration < 15 || duration > 480) {
     return { ok: false, error: "Durée invalide : entre 15 et 480 minutes." };
   }
@@ -179,6 +210,27 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
     if (!isoDay(endsOn)) return { ok: false, error: "Date de fin invalide." };
     if (endsOn < startsOn) {
       return { ok: false, error: "La date de fin ne peut pas précéder la première séance." };
+    }
+  }
+
+  // Récurrence (D-203) : la règle envoyée, sinon chaque semaine le jour du début ; aucune sans répétition.
+  let recurrence: RecurrenceRule | null = null;
+  if (input.repeatsWeekly) {
+    const text = (input.recurrence ?? "").trim();
+    if (text === "") {
+      recurrence = weeklyRule(startsOn);
+    } else {
+      let json: unknown = null;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        json = null;
+      }
+      const rule = recurrenceRuleSchema.safeParse(json);
+      if (!rule.success) {
+        return { ok: false, error: "Récurrence invalide : choisis au moins un jour." };
+      }
+      recurrence = normalizeRule(rule.data);
     }
   }
 
@@ -219,7 +271,7 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
     if (!z.uuid().safeParse(input.athleteId).success) {
       return {
         ok: false,
-        error: "Choisis le sportif de la séance, ou coche « Nouveau sportif ».",
+        error: "Choisis le sportif de la séance, ou « Nouveau sportif » dans la liste.",
       };
     }
     athleteId = input.athleteId;
@@ -243,7 +295,9 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
       starts_on: startsOn,
       start_time: `${time[1]}:${time[2]}`,
       duration_minutes: duration,
+      all_day: allDay,
       repeats_weekly: input.repeatsWeekly,
+      recurrence,
       ends_on: endsOn,
       notes: notes === "" ? null : notes,
       price_cents: priceCents,
@@ -255,7 +309,21 @@ export function parseSessionForm(input: SessionFormInput): SessionParseResult {
   };
 }
 
-export type ScheduleLike = { startsOn: string; repeatsWeekly: boolean; endsOn: string | null };
+export type ScheduleLike = {
+  startsOn: string;
+  repeatsWeekly: boolean;
+  endsOn: string | null;
+  // « Jour entier » (D-204) : pas d'heure à montrer.
+  allDay?: boolean;
+  // Règle de récurrence (D-203) ; absente pour une ancienne série = chaque semaine, le jour du début.
+  recurrence?: RecurrenceRule | null;
+};
+
+// La règle d'une séance qui se répète (null pour une séance unique).
+export function scheduleRule(session: ScheduleLike): RecurrenceRule | null {
+  if (!session.repeatsWeekly) return null;
+  return session.recurrence ?? weeklyRule(session.startsOn);
+}
 
 // Date déplacée d'une séance hebdomadaire (*_seances_dates_deplacees.sql) : l'occurrence du
 // `originalDate` a lieu le `newDate` à `newStartTime` (« 18:00 »).
@@ -269,27 +337,15 @@ export type Occurrence = {
   moved: boolean;
 };
 
-const DAY_MS = 86_400_000;
-const dayNumber = (iso: string) => Math.round(Date.parse(`${iso}T00:00:00Z`) / DAY_MS);
-const isoFromDay = (day: number) => new Date(day * DAY_MS).toISOString().slice(0, 10);
-
-// Dates d'une séance entre `from` et `to` inclus : sa date unique, ou chaque semaine depuis son début
-// jusqu'à sa fin éventuelle. Calcul en jours UTC : aucun décalage au changement d'heure.
+// Dates d'une séance entre `from` et `to` inclus : sa date unique, ou les dates de sa règle depuis son
+// début jusqu'à sa fin éventuelle. Calcul en jours UTC : aucun décalage au changement d'heure.
 export function occurrencesBetween(session: ScheduleLike, from: string, to: string): string[] {
-  const start = dayNumber(session.startsOn);
-  const first = dayNumber(from);
-  const last = Math.min(
-    dayNumber(to),
-    session.endsOn ? dayNumber(session.endsOn) : Number.POSITIVE_INFINITY,
-  );
-  if (!session.repeatsWeekly) {
-    return start >= first && start <= last ? [session.startsOn] : [];
+  const rule = scheduleRule(session);
+  if (!rule) {
+    return session.startsOn >= from && session.startsOn <= to ? [session.startsOn] : [];
   }
-  // Première occurrence ≥ from : on avance d'un nombre entier de semaines depuis le début.
-  const weeksToSkip = Math.max(0, Math.ceil((first - start) / 7));
-  const dates: string[] = [];
-  for (let day = start + weeksToSkip * 7; day <= last; day += 7) dates.push(isoFromDay(day));
-  return dates;
+  // La règle (chaque jour, semaine, mois, année, personnalisée) : src/domain/sessions/recurrence.ts.
+  return ruleDates(session.startsOn, session.endsOn, rule, from, to);
 }
 
 // Rang d'une date dans sa série hebdomadaire (« Séance 9 sur 19 », page d'une séance) : `originalDate`
@@ -349,15 +405,25 @@ export function formatDuration(minutes: number): string {
   return rest === 0 ? `${hours} h` : `${hours} h ${String(rest).padStart(2, "0")}`;
 }
 
-// « Chaque mercredi à 19:00 · 1 h 30 » ou « Le 28 octobre 2026 à 08:00 · 1 h ».
+// « Chaque mercredi à 19:00 · 1 h 30 » ou « Le 28 octobre 2026 à 08:00 · 1 h » ; « Jour entier » :
+// « Le 5 décembre 2026, toute la journée ».
 export function describeSchedule(
   session: ScheduleLike & { startTime: string; durationMinutes: number },
 ): string {
-  const time = session.startTime.slice(0, 5);
-  const when = session.repeatsWeekly
-    ? `Chaque ${weekdayFormatter.format(new Date(`${session.startsOn}T00:00:00Z`))} à ${time}`
-    : `Le ${formatDate(session.startsOn)} à ${time}`;
-  return `${when} · ${formatDuration(session.durationMinutes)}`;
+  const at = session.allDay ? ", toute la journée" : ` à ${session.startTime.slice(0, 5)}`;
+  const rule = scheduleRule(session);
+  // Une série simple garde « Chaque mercredi » ; une autre règle se dit en entier (D-203).
+  const when = !rule
+    ? `Le ${formatDate(session.startsOn)}${at}`
+    : presetOf(rule, session.startsOn) === "weekly"
+      ? `Chaque ${weekdayFormatter.format(new Date(`${session.startsOn}T00:00:00Z`))}${at}`
+      : `${describeRule(rule, session.startsOn, null)}${at}`;
+  return session.allDay ? when : `${when} · ${formatDuration(session.durationMinutes)}`;
+}
+
+// L'heure d'une séance à l'écran : « 19:00 », ou « Toute la journée » (D-204).
+export function sessionTimeLabel(startTime: string, allDay = false): string {
+  return allDay ? "Toute la journée" : startTime.slice(0, 5);
 }
 
 // « Depuis le 2 septembre 2026, jusqu'au 16 décembre 2026 » (séance récurrente seulement).

@@ -94,3 +94,37 @@ describe("heures affichées (Paramètres, D-57)", () => {
     });
   });
 });
+
+// Séance « Jour entier » (D-204) : à part, dans la rangée du haut de la grille ; elle ne compte pas
+// dans les heures de coaching ni dans la plage horaire affichée.
+describe("séance « Jour entier »", () => {
+  const stage: WeekSession = {
+    ...base,
+    id: "stage",
+    kind: "group",
+    title: "Stage Hyrox",
+    discipline: "hyrox",
+    startsOn: "2026-10-24",
+    repeatsWeekly: false,
+    startTime: "00:00",
+    durationMinutes: 60,
+    allDay: true,
+    athletes: [THOMAS],
+  };
+
+  it("est en tête de sa journée, sans heure, et ne compte pas dans les heures", () => {
+    const layout = layoutDays([stage, force], weekOf("2026-10-19"));
+    const saturday = layout.days[5];
+    expect(saturday.blocks.map((block) => [block.title, block.allDay, block.label])).toEqual([
+      ["Stage Hyrox", true, "Toute la journée"],
+    ]);
+    expect(saturday.minutes).toBe(0);
+    expect(layout.totalMinutes).toBe(60);
+    expect(layout.firstHour).toBe(6);
+  });
+
+  it("ne change pas les heures choisies dans les Paramètres", () => {
+    const layout = withHours(layoutDays([stage, force], weekOf("2026-10-19")), 7, 21);
+    expect([layout.firstHour, layout.lastHour]).toEqual([7, 21]);
+  });
+});

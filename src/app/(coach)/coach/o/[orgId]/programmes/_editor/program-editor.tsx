@@ -41,7 +41,11 @@ import { EditorSessionCard } from "@/components/programs/editor-session-card";
 import { useReorder } from "@/components/programs/use-reorder";
 import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
 import type { CardActions } from "@/components/programs/session-cards";
-import { SessionDetail } from "@/components/programs/session-detail";
+import {
+  SessionDetail,
+  titleSize,
+  type SessionDetailEditing,
+} from "@/components/programs/session-detail";
 import { Avatar } from "@/components/ui/avatar";
 import { dialogDisciplineIcons } from "@/components/ui/kit-icons";
 import { MoreMenu, type MoreMenuItem } from "@/components/ui/more-menu";
@@ -124,8 +128,13 @@ import {
 } from "@/features/programs/actions";
 
 import { openUseTemplate } from "../modeles/[templateId]/use-template-sheet";
-import { DropLine, Handle } from "../_session/running-parts";
+import type { HyroxAthlete } from "../_session/hyrox-parts";
+import { InlineDuration } from "../_session/inline-duration";
+import { InlineTitle, SESSION_TITLE_MAX } from "../_session/inline-title";
+import { DropLine, Handle, type AthleteAims } from "../_session/running-parts";
 import { rememberEditorDepth, useSafeLeave } from "../_session/safe-leave";
+import { StepPanel, stepTarget, type StepPanelAthletes } from "../_session/step-panel";
+import type { StrengthAthlete } from "../_session/strength-parts";
 
 import { saveStatusLabel, useEditor } from "./editor-provider";
 import {
@@ -214,6 +223,13 @@ export type EditorMeta = {
   sessionTemplates: (SessionTemplateOption & { body: SessionBody; version: number })[];
   // Venu de la fiche du sportif (?retour=, revue MVP du 13/11, B15) : le retour du téléphone y ramène.
   returnTo: { href: string; label: string } | null;
+  // « Séance choisie » modifiable (24/11/2026) : ce que les panneaux d'étape savent du sportif (zones et
+  // allures, maxima, catégorie Hyrox) et les fiches de Bibliothèque des exercices du programme.
+  steps: {
+    athlete: AthleteAims;
+    strength: { athlete: StrengthAthlete; library: [string, string][] } | null;
+    hyrox: HyroxAthlete | null;
+  };
   publishContext:
     | (Omit<PublishContext, "maxByExercise" | "coachSessionIds"> & {
         maxByExercise: [
@@ -319,6 +335,10 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
     ordered.find((item) => item.key === meta.focus.session)?.key ?? ordered[0]?.key ?? null,
   );
   const session = ordered.find((item) => item.key === sessionKey) ?? null;
+  // « Séance choisie » modifiable (demande d'Antonino du 24/11/2026, option A) : le réglage d'une étape
+  // ouvert depuis sa carte (à la place du détail sur ordinateur, dans une fenêtre du bas sur téléphone).
+  const [openStep, setOpenStep] = useState<{ session: string; id: string } | null>(null);
+  const [stepSheet, setStepSheet] = useState(false);
   // Téléphone : le niveau ouvert de la pile.
   // Téléphone (D-187, « la même page » que l'ordinateur) : il ouvre sur la semaine, comme la colonne du
   // milieu de l'ordinateur ; la liste des semaines (sa colonne de gauche) s'ouvre par « Semaine N ⌄ ».
@@ -1105,12 +1125,101 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           canDuplicate: (path) => canDuplicateAt(session.content, path),
           canRemove: (path) => canRemoveAt(session.content, path),
         };
+  // Le nom, la durée et le contenu d'une séance changent sur place (24/11/2026), avec les règles de
+  // l'éditeur de séance : la durée estimée suit le contenu, sauf si le coach l'a écrite.
+  const editSession = (key: string, change: (current: SessionDraft) => SessionDraft) =>
+    update((current) => {
+      const found = findSession(current, key);
+      return found
+        ? replaceSession(current, withEstimatedDuration(change(found.session)))
+        : current;
+    });
+  const stepAthletes: StepPanelAthletes = {
+    athlete: meta.steps.athlete,
+    strength: meta.steps.strength
+      ? {
+          athlete: meta.steps.strength.athlete,
+          libraryMeta: new Map(meta.steps.strength.library),
+        }
+      : null,
+    hyrox: meta.steps.hyrox,
+  };
+  const stepId =
+    session && openStep?.session === session.key && stepTarget(session.content, openStep.id)
+      ? openStep.id
+      : null;
+  const closeStep = () => {
+    setOpenStep(null);
+    setStepSheet(false);
+  };
+  // Le détail modifiable : seulement un brouillon (un modèle Coory reste en lecture).
+  const detailEditing = (variant: "panel" | "page"): SessionDetailEditing | undefined =>
+    readOnly || !session
+      ? undefined
+      : {
+          title: (
+            <InlineTitle
+              title={session.title}
+              onRename={(title) =>
+                editSession(session.key, (current) => ({
+                  ...current,
+                  title: title.slice(0, SESSION_TITLE_MAX),
+                }))
+              }
+              className={`font-bold tracking-[-0.02em] text-text ${titleSize[variant]}`}
+            />
+          ),
+          duration: (
+            <InlineDuration
+              minutes={session.durationMinutes}
+              display={`${session.durationManual ? "" : "≈ "}${session.durationMinutes} min`}
+              manual={session.durationManual === true}
+              onChange={(minutes) =>
+                editSession(session.key, (current) => ({
+                  ...current,
+                  durationMinutes: minutes,
+                  durationManual: true,
+                }))
+              }
+              onRecompute={() =>
+                editSession(session.key, (current) => ({ ...current, durationManual: undefined }))
+              }
+            />
+          ),
+          // Une carte ouvre son réglage ; sans réglage propre (répétitions, ancienne séance), l'éditeur.
+          onOpen: (path) => {
+            const id = path.at(-1) ?? null;
+            if (id && stepTarget(session.content, id)) {
+              setOpenStep({ session: session.key, id });
+              setStepSheet(isPhone());
+            } else void openSession(session.key);
+          },
+        };
+  const stepPanel =
+    session && stepId ? (
+      <StepPanel
+        content={session.content}
+        selected={stepId}
+        athletes={stepAthletes}
+        defaultAim={plan.aimDefaults.running}
+        setContent={(change) =>
+          editSession(session.key, (current) => ({
+            ...current,
+            content: change(current.content),
+          }))
+        }
+        onDone={closeStep}
+        onDeleted={closeStep}
+        onSimulation={() => void openSession(session.key)}
+      />
+    ) : null;
   const sessionDetail = session ? (
     <SessionDetail
       session={session}
       position={sessionPosition}
       week={`Semaine ${week?.index}`}
       actions={cardActions}
+      editing={detailEditing("panel")}
     />
   ) : (
     <p className="text-[14px] text-muted">Choisis une séance pour voir son détail.</p>
@@ -1873,6 +1982,20 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
                 {dayPickerView(true)}
               </div>
+            ) : stepPanel && session && !stepSheet ? (
+              // Le réglage d'une étape à la place du détail : le panneau de l'éditeur de séance, qui
+              // défile seul (son pied « Valider … » reste en bas), avec le retour au détail en haut.
+              <div className="-m-[18px] flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain p-5 [--panel-bg:var(--surface)] [--panel-pad:20px]">
+                <button
+                  type="button"
+                  onClick={closeStep}
+                  className="-ml-1 inline-flex h-8 items-center gap-1.5 self-start rounded-[9px] px-1.5 text-[13px] font-semibold text-text-2 transition-colors duration-150 hover:bg-surface-2"
+                >
+                  <ArrowLeft aria-hidden size={15} strokeWidth={2} />
+                  <span className="max-w-[240px] truncate">{session.title}</span>
+                </button>
+                {stepPanel}
+              </div>
             ) : (
               <>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -2121,7 +2244,19 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               position={sessionPosition}
               week={`Semaine ${week?.index}`}
               actions={cardActions}
+              editing={detailEditing("page")}
             />
+            {/* Téléphone : le réglage d'une étape, ouvert depuis sa carte, dans une fenêtre du bas. */}
+            <Overlay
+              open={stepSheet && stepPanel !== null}
+              onClose={closeStep}
+              label="Modifier l'étape"
+              size="form"
+            >
+              <DialogBody>
+                <div className="[--panel-bg:var(--dlg)] [--panel-pad:22px]">{stepPanel}</div>
+              </DialogBody>
+            </Overlay>
             {readOnly ? (
               sessionActions
             ) : (

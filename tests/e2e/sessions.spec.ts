@@ -1,6 +1,16 @@
-import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import { isPhone, setAgendaFilter } from "./helpers";
+import {
+  chooseAthlete,
+  chooseDiscipline,
+  chooseNewAthlete,
+  chooseRecurrence,
+  enrollAthletes,
+  setRepeatEnd,
+  setWhen,
+  submitNewSession,
+} from "./new-session";
 
 // Séances encadrées du coach (P2-05b, D-27, D-35) : collective hebdomadaire avec inscrits,
 // individuelle, nouveau sportif (fiche minimale), fenêtre « Nouvelle séance » commune, page Séances,
@@ -15,12 +25,6 @@ async function loginAsCoachA(page: Page) {
   await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).toHaveURL(/\/coach$/);
-}
-
-async function fillSchedule(scope: Locator, date: string, time: string, minutes: string) {
-  await scope.getByLabel(/Première séance|^Date$/).fill(date);
-  await scope.getByLabel("Heure", { exact: true }).fill(time);
-  await scope.getByLabel("Durée", { exact: true }).fill(minutes);
 }
 
 // « Nouvelle séance » ouvre la même fenêtre sur toutes les pages (D-35), sans changer de page.
@@ -63,24 +67,26 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   // « Individuelle » est le type proposé d'abord : on choisit « Collective ».
   await dialog.getByText("Collective", { exact: true }).click();
   await dialog.getByLabel("Titre").fill(title);
-  await dialog.getByLabel(/^Discipline/).selectOption({ label: "Running" });
+  await chooseDiscipline(dialog, "Running");
   await dialog.getByLabel(/^Lieu/).fill("Stade de test");
-  await dialog.getByLabel(/Chaque semaine/).check();
-  await fillSchedule(dialog, "2027-01-06", "19:00", "90");
-  await dialog.getByLabel(/^Jusqu'au/).fill("2027-01-27");
-  const enrolled = dialog.getByRole("group", { name: /Sportifs inscrits/ });
-  await enrolled.getByText("Thomas Peeters", { exact: true }).click();
-  await enrolled.getByText("Inès Benali", { exact: true }).click();
+  await setWhen(dialog, "2027-01-06", "19:00", "20:30");
+  await expect(dialog.getByText("Durée : 1 h 30")).toBeVisible();
+  await chooseRecurrence(dialog, "Chaque semaine");
+  await setRepeatEnd(dialog, "2027-01-27");
+  await expect(
+    dialog.getByRole("button", { name: /^Fin de la répétition : 27 janv\. 2027/ }),
+  ).toBeVisible();
+  await enrollAthletes(dialog, ["Thomas Peeters", "Inès Benali"]);
+  await expect(
+    dialog.getByRole("button", { name: "Sportifs inscrits : 2 inscrits" }),
+  ).toBeVisible();
   // Prix (D-52) : 80 € TVA comprise pour toute la séance, en espèces. TVA de la séance (D-163) :
   // cochée, le taux normal du pays (21 %) est proposé.
   await dialog.getByLabel(/^Prix pour toute la séance/).fill("80");
-  await dialog
-    .getByRole("group", { name: "Paiement" })
-    .getByText("Espèces", { exact: true })
-    .click();
+  await dialog.getByRole("radio", { name: "Espèces" }).click();
   await dialog.getByLabel(/^Appliquer la TVA/).check();
   await expect(dialog.getByLabel("Taux de TVA")).toHaveValue("21");
-  await dialog.getByRole("button", { name: "Créer la séance" }).click();
+  await submitNewSession(dialog);
 
   // On reste sur l'agenda : la fenêtre se ferme et la séance apparaît le mercredi 6.
   await expect(page.getByText("Séance créée.")).toBeVisible();
@@ -167,19 +173,20 @@ test("une séance individuelle demande son sportif (ou un nouveau client), et la
 
   await expect(dialog.getByRole("radio", { name: "Individuelle" })).toBeChecked();
   await dialog.getByLabel("Titre").fill(title);
-  await fillSchedule(dialog, "2027-01-13", "07:30", "60");
-  await dialog.getByRole("button", { name: "Créer la séance" }).click();
+  await setWhen(dialog, "2027-01-13", "07:30", "08:30");
+  await submitNewSession(dialog);
 
   await expect(
-    dialog
-      .getByRole("alert")
-      .filter({ hasText: "Choisis le sportif de la séance, ou coche « Nouveau sportif »." }),
+    dialog.getByRole("alert").filter({
+      hasText: "Choisis le sportif de la séance, ou « Nouveau sportif » dans la liste.",
+    }),
   ).toBeVisible();
   await expect(dialog.getByLabel("Titre")).toHaveValue(title);
-  await expect(dialog.getByLabel("Heure", { exact: true })).toHaveValue("07:30");
+  await expect(dialog.getByLabel("Heure de début")).toHaveValue("07:30");
+  await expect(dialog.getByLabel("Heure de fin")).toHaveValue("08:30");
 
-  await dialog.getByLabel("Sportif", { exact: true }).selectOption({ label: "Nadia El Amrani" });
-  await dialog.getByRole("button", { name: "Créer la séance" }).click();
+  await chooseAthlete(dialog, "Nadia El Amrani");
+  await submitNewSession(dialog);
   await expect(page.getByText("Séance créée.")).toBeVisible();
   await expect(dialog).toBeHidden();
 
@@ -212,11 +219,10 @@ test("un nouveau sportif tapé dans « Nouvelle séance » a aussitôt sa fiche,
   const dialog = await openNewSession(page);
 
   await dialog.getByLabel("Titre").fill(title);
-  await dialog.getByLabel(/^Nouveau sportif/).check();
-  await expect(dialog.getByRole("combobox", { name: "Sportif", exact: true })).toHaveCount(0);
-  await dialog.getByLabel("Nom du nouveau sportif").fill(name);
-  await fillSchedule(dialog, "2027-01-20", "08:00", "45");
-  await dialog.getByRole("button", { name: "Créer la séance" }).click();
+  await chooseNewAthlete(dialog, name);
+  await expect(dialog.getByRole("button", { name: /^Sportif :/ })).toHaveCount(0);
+  await setWhen(dialog, "2027-01-20", "08:00", "08:45");
+  await submitNewSession(dialog);
   await expect(
     page.getByText(`Séance créée. Fiche de ${name} ajoutée à tes sportifs, à compléter.`),
   ).toBeVisible();
@@ -332,8 +338,8 @@ test("une séance à 21 % : le prix HTVA plus la TVA, et le paiement garde ce ta
   await page.goto(`/coach/o/${ORG_A}/agenda?date=${date}`);
   const dialog = await openNewSession(page);
   await dialog.getByLabel("Titre").fill(title);
-  await fillSchedule(dialog, date, "06:00", "60");
-  await dialog.getByLabel("Sportif", { exact: true }).selectOption({ label: "Nadia El Amrani" });
+  await setWhen(dialog, date, "06:00", "07:00");
+  await chooseAthlete(dialog, "Nadia El Amrani");
   await dialog.getByLabel(/^Prix de la séance/).fill("65");
   // Par virement : la TVA s'ajoute au prix (règle de Gianluca).
   await dialog.getByLabel(/^Appliquer la TVA/).check();
@@ -342,7 +348,7 @@ test("une séance à 21 % : le prix HTVA plus la TVA, et le paiement garde ce ta
   await expect(
     dialog.getByText(/65,00\s€ HTVA : le sportif paie 78,65\s€, TVA de 21 % comprise\./),
   ).toBeVisible();
-  await dialog.getByRole("button", { name: "Créer la séance" }).click();
+  await submitNewSession(dialog);
   await expect(page.getByText("Séance créée.")).toBeVisible();
 
   await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour&date=${date}`);

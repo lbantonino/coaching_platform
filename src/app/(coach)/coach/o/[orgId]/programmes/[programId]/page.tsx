@@ -3,13 +3,16 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { PageBody, PageHeader, PageLoading, pageMainClass } from "@/components/layout/page-header";
+import { planExerciseIds } from "@/domain/training/plan-exercises";
 import { requireOrgAccess } from "@/features/auth/guards";
 import {
   aimContext,
   listCoachSessionSlots,
   loadAthleteContext,
   loadDraft,
+  loadStrengthMaxes,
 } from "@/features/programs/drafts";
+import { listLibraryChoices } from "@/features/programs/library-choices";
 import { listSessionTemplateChoices } from "@/features/programs/templates";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
@@ -61,7 +64,7 @@ async function Program({
   // Ouvert depuis la fiche du sportif (?retour=, revue MVP du 13/11, B15) : le retour y ramène.
   returnTo: string | null;
 }) {
-  const { membership } = await requireOrgAccess(orgId);
+  const { user, membership } = await requireOrgAccess(orgId);
   const organizationId = membership.organizationId;
   const base = `/coach/o/${organizationId}/programmes`;
   const supabase = await createClient();
@@ -108,6 +111,16 @@ async function Program({
   ]);
   if (!athlete) notFound();
   if (fromFiche) back.label = athlete.displayName;
+  // « Séance choisie » modifiable (24/11/2026) : maxima et fiches de Bibliothèque, seulement s'il y a
+  // de la musculation (fiches des exercices du programme seulement).
+  const exerciseIds = planExerciseIds(draft);
+  const hasStrength = draft.weeks.some((week) =>
+    week.sessions.some((session) => session.content.discipline === "strength"),
+  );
+  const [maxes, library] = await Promise.all([
+    hasStrength ? loadStrengthMaxes(supabase, organizationId, program.athleteId) : {},
+    hasStrength ? listLibraryChoices(user.id, organizationId) : [],
+  ]);
 
   const context = aimContext(athlete, draft);
   const meta: EditorMeta = {
@@ -130,6 +143,22 @@ async function Program({
     focus,
     sessionTemplates,
     returnTo: fromFiche ? back : null,
+    steps: {
+      athlete: { firstName: athlete.firstName, vmaKmh: athlete.vmaKmh, hrMax: athlete.hrMax },
+      strength: hasStrength
+        ? {
+            athlete: { firstName: athlete.firstName, maxes },
+            library: library
+              .filter((item) => exerciseIds.has(item.id))
+              .map((item) => [item.id, item.meta]),
+          }
+        : null,
+      hyrox: {
+        firstName: athlete.firstName,
+        division: draft.goal?.hyroxDivision ?? athlete.defaultHyroxDivision ?? null,
+        sex: athlete.sex ?? null,
+      },
+    },
     publishContext: {
       hrMax: context.hrMax,
       maxByExercise: [...context.maxByExercise.entries()],

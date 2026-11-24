@@ -124,7 +124,9 @@ export function SessionDayList({
               <ul className="flex flex-col gap-2 lg:gap-0">
                 {list.map((block, index) => {
                   const discipline = block.discipline ?? "none";
-                  const range = `${time(block.start)} – ${time(block.end)}`;
+                  const range = block.allDay
+                    ? "Toute la journée"
+                    : `${time(block.start)} – ${time(block.end)}`;
                   const detail = block.individual
                     ? block.subtitle
                     : `Collective · ${block.subtitle}`;

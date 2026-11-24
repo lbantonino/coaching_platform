@@ -22,10 +22,12 @@ import { HYROX_DIVISIONS, type HyroxDivision } from "@/domain/training/program-p
 import { periodsOverlap } from "@/domain/training/program-status";
 import {
   createProgram,
+  createProgramForNewAthlete,
   createProgramTemplate,
   previewStart,
   type StartPreview,
 } from "@/features/programs/actions";
+import { quickAthleteName } from "@/features/athletes/quick-name";
 import { aimFor, freeStart } from "@/features/programs/template-use";
 import type { WizardAthlete, WizardData } from "@/features/programs/wizard";
 
@@ -115,6 +117,9 @@ export function ProgramWizard({
   const [seen, setSeen] = useState<StepIndex>(1);
   const [athleteId, setAthleteId] = useState<string | null>(initialAthleteId);
   const [query, setQuery] = useState("");
+  // Nouveau sportif tapé dans la liste (24/11/2026) : son nom est la recherche, il est créé avec le programme.
+  const [newAthlete, setNewAthlete] = useState(false);
+  const newName = quickAthleteName(query);
   const [title, setTitle] = useState(initialTemplate?.title ?? "");
   const [discipline, setDiscipline] = useState<MainDiscipline | null>(
     mainDiscipline(initialTemplate?.discipline) ?? mainDiscipline(initialAthlete?.programType),
@@ -158,11 +163,13 @@ export function ProgramWizard({
   const [pending, startTransition] = useTransition();
 
   const athlete = data.athletes.find((a) => a.id === athleteId);
-  const firstName = athlete?.firstName ?? "ton sportif";
+  const firstName =
+    athlete?.firstName ?? (newAthlete && newName.ok ? newName.firstName : "ton sportif");
   const fixed = lockedAthlete && !templateMode && athlete ? athlete : null;
 
   // Changer de sportif : la façon de viser, la division et les séances par semaine suivent ses repères.
   const chooseAthlete = (next: WizardAthlete) => {
+    setNewAthlete(false);
     setAthleteId(next.id);
     setAim(aimFor(next));
     setDivision(next.defaultDivision ?? "");
@@ -173,6 +180,16 @@ export function ProgramWizard({
     if (!discipline) setDiscipline(mainDiscipline(next.programType));
     setSourceProgramId(next.programs[0]?.id ?? "");
     if (!dateTouched) setStartDate(freeStart(next, defaultStartDate));
+  };
+  // Nouveau sportif : aucun repère, aucun programme ; les réglages par défaut.
+  const chooseNew = () => {
+    setNewAthlete(true);
+    setAthleteId(null);
+    setAim(aimFor(undefined));
+    setDivision("");
+    setSourceProgramId("");
+    if (start === "copy") setStart(initialTemplate ? "template" : "blank");
+    if (!dateTouched) setStartDate(freeStart(undefined, defaultStartDate));
   };
 
   // Les phases ne dépassent jamais le programme.
@@ -254,7 +271,9 @@ export function ProgramWizard({
   }, [step, organizationId, startInput, weeksCount, perWeek]);
 
   const ready: Record<StepIndex, boolean> = {
-    1: templateMode ? title.trim().length > 0 : Boolean(athleteId) && title.trim().length > 0,
+    1: templateMode
+      ? title.trim().length > 0
+      : (Boolean(athleteId) || (newAthlete && newName.ok)) && title.trim().length > 0,
     2: discipline !== null && (!raceOn || raceName.trim().length > 0),
     3: templateMode || /^\d{4}-\d{2}-\d{2}$/.test(startDate),
     4:
@@ -306,9 +325,8 @@ export function ProgramWizard({
         router.push(`${base}/modeles/${result.templateId}`);
         return;
       }
-      if (!athleteId) return;
-      const result = await createProgram(organizationId, {
-        athleteId,
+      if (!athleteId && !newAthlete) return;
+      const input = {
         title: title.trim(),
         discipline,
         ...(raceOn || note.trim() || (discipline === "hyrox" && division)
@@ -330,7 +348,10 @@ export function ProgramWizard({
         phases: phaseInput(),
         scheduling,
         start: startInput,
-      });
+      };
+      const result = athleteId
+        ? await createProgram(organizationId, { ...input, athleteId })
+        : await createProgramForNewAthlete(organizationId, query, input);
       if (!result.ok) return setError(result.issues?.[0] ?? result.message);
       toast("Brouillon créé.");
       router.push(`${base}/${result.programId}`);
@@ -471,6 +492,8 @@ export function ProgramWizard({
                         query={query}
                         onQuery={setQuery}
                         onChoose={chooseAthlete}
+                        newSelected={newAthlete}
+                        onNew={chooseNew}
                       />
                     )}
                     <Field label="Titre du programme" htmlFor="wizard-title">
@@ -1086,18 +1109,24 @@ function FixedAthlete({ athlete }: { athlete: WizardAthlete }) {
 }
 
 // Étape 1 : recherche et liste des sportifs (un seul choisi). Reprise par « Utiliser ce modèle ».
+// `onNew` (24/11/2026) : dès qu'un nom est tapé, une ligne « Nouveau sportif » le propose (seule s'il
+// n'y a aucun résultat) ; `newSelected` la coche. Le sportif est créé avec le programme.
 export function AthletePicker({
   athletes,
   selected,
   query,
   onQuery,
   onChoose,
+  newSelected = false,
+  onNew,
 }: {
   athletes: WizardAthlete[];
   selected: string | null;
   query: string;
   onQuery: (value: string) => void;
   onChoose: (athlete: WizardAthlete) => void;
+  newSelected?: boolean;
+  onNew?: () => void;
 }) {
   const name = useId();
   const text = query
@@ -1132,7 +1161,7 @@ export function AthletePicker({
         />
       </label>
       <div className="flex max-h-[264px] flex-col overflow-y-auto rounded-[13px] inset-ring inset-ring-field-ring">
-        {shown.length === 0 ? (
+        {shown.length === 0 && !(onNew && text) ? (
           <p className="px-3.5 py-4 text-[13.5px] text-muted">Aucun sportif à ce nom.</p>
         ) : (
           shown.map((athlete) => {
@@ -1173,8 +1202,57 @@ export function AthletePicker({
             );
           })
         )}
+        {onNew && text ? (
+          <NewAthleteRow name={name} query={query} checked={newSelected} onNew={onNew} />
+        ) : null}
       </div>
     </fieldset>
+  );
+}
+
+// La ligne « Nouveau sportif » : ce qui sera enregistré (prénom, nom), selon la règle des noms.
+function NewAthleteRow({
+  name,
+  query,
+  checked,
+  onNew,
+}: {
+  name: string;
+  query: string;
+  checked: boolean;
+  onNew: () => void;
+}) {
+  const named = quickAthleteName(query);
+  return (
+    <label
+      className={`relative flex min-h-[56px] items-center gap-3 border-b border-dlg-divider px-3.5 py-2 last:border-b-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-violet ${
+        named.ok ? "cursor-pointer" : "cursor-not-allowed"
+      } ${checked && named.ok ? "bg-lib-lavender" : ""}`}
+    >
+      <input
+        type="radio"
+        name={name}
+        value="nouveau"
+        checked={checked && named.ok}
+        disabled={!named.ok}
+        onChange={onNew}
+        className="sr-only"
+      />
+      <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-surface-2 text-violet">
+        <Plus aria-hidden size={18} strokeWidth={2.2} />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-[14.5px] leading-[normal] font-semibold text-text">
+          Nouveau sportif
+        </span>
+        <span className="truncate text-[12.5px] leading-[normal] text-muted">
+          {named.ok
+            ? `Prénom : ${named.firstName}${named.lastName ? ` · Nom : ${named.lastName}` : ""}`
+            : named.error}
+        </span>
+      </span>
+      <RadioMark checked={checked && named.ok} large />
+    </label>
   );
 }
 

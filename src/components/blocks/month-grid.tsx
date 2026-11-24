@@ -91,7 +91,9 @@ export function MonthGrid({
                       <span
                         className={`h-3 w-[3px] shrink-0 rounded-[1.5px] ${dots[block.discipline ?? "none"]}`}
                       />
-                      <span className="text-muted tabular">{block.label.slice(0, 5)}</span>
+                      <span className="text-muted tabular">
+                        {block.allDay ? "Journée" : block.label.slice(0, 5)}
+                      </span>
                       {block.individual ? null : (
                         <Users
                           aria-hidden

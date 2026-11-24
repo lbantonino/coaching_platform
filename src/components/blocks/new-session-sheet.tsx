@@ -7,18 +7,20 @@ import { createContext, useCallback, useContext, useState, type ReactNode } from
 import { phoneFabClass } from "@/components/layout/mobile-bar";
 import { Spinner } from "@/components/ui/spinner";
 import { buttonClass } from "@/components/ui/button";
-import { DialogBody, Sheet } from "@/components/ui/overlay";
+import { Overlay, type MenuAnchor } from "@/components/ui/overlay";
 import { useToast } from "@/components/ui/toast";
 import type { Discipline } from "@/domain/training/discipline";
 import type { SessionFormState } from "@/features/sessions/actions";
 import type { SessionFormInput } from "@/features/sessions/schemas";
 
+import type { SessionDraft } from "./session-apple-fields";
 import { SessionForm } from "./session-form";
 
 // Fenêtre « Nouvelle séance » de l'espace coach (demandes d'Antonino, 23/10, D-35). La même partout,
 // par-dessus la page où l'on est : clic sur un créneau vide de l'agenda (jour et heure déjà remplis),
 // « Créer → Séance » du tableau de bord, bouton « Nouvelle séance » de l'Agenda et de la page Séances.
-// Feuille du bas sur téléphone, fenêtre centrée sur ordinateur. Après « Créer la séance », on reste
+// Façon Calendrier d'Apple (D-204) : feuille du bas sur téléphone ; sur ordinateur, bulle accrochée au
+// créneau cliqué dans la grille, sinon fenêtre centrée. Après « Créer la séance », on reste
 // sur la page : la fenêtre se ferme, un toast confirme et la page se met à jour. Il n'y a plus de page
 // « Nouvelle séance » à part. Les sportifs proposés sont lus à chaque ouverture (fiches récentes).
 // Depuis la fiche d'un sportif (« + Créer → Séance », 26/10) : séance individuelle avec ce sportif
@@ -31,17 +33,41 @@ type Slot = {
   discipline?: Discipline | null;
   // « Modifier » une carte de l'Assistant IA : toute la séance proposée, pré-remplie.
   values?: Partial<SessionFormInput>;
+  // Créneau cliqué dans la grille (px, à l'écran) : sur ordinateur, la bulle s'y accroche (D-204).
+  rect?: SlotRect;
 };
+export type SlotRect = { left: number; right: number; top: number };
 type Athlete = { id: string; name: string };
 
 const OpenContext = createContext<((slot?: Partial<Slot>) => void) | null>(null);
+// Séance provisoire de la bulle de l'ordinateur : la grille la dessine à son heure (comme le Mac).
+const DraftContext = createContext<SessionDraft | null>(null);
 
 // Ouvre la fenêtre ; null hors de l'espace coach (la grille n'est alors pas cliquable).
 export function useOpenNewSession() {
   return useContext(OpenContext);
 }
 
+export function useNewSessionDraft() {
+  return useContext(DraftContext);
+}
+
 const DEFAULT_TIME = "19:00";
+const DESKTOP = "(min-width: 1024px)";
+const POPOVER_WIDTH = 440;
+const EDGE = 16;
+
+// Bulle du Mac : à droite du créneau (à gauche s'il n'y a pas la place), alignée sur lui, sans sortir
+// de l'écran. Sa hauteur suit la fenêtre (720 px au plus, 24 px des bords : voir Overlay).
+function popoverAnchor(rect: SlotRect): MenuAnchor {
+  const width = Math.min(POPOVER_WIDTH, window.innerWidth - 2 * EDGE);
+  const right = rect.right + 8;
+  const x =
+    right + width <= window.innerWidth - EDGE ? right : Math.max(EDGE, rect.left - 8 - width);
+  const height = Math.min(720, window.innerHeight - 48);
+  const y = Math.max(24, Math.min(rect.top - 24, window.innerHeight - 24 - height));
+  return { x, y, side: "top", width };
+}
 const todayInBrussels = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
 
@@ -70,13 +96,19 @@ export function NewSessionSheet({
   children: ReactNode;
 }) {
   const [slot, setSlot] = useState<Slot | null>(null);
+  // Gardés d'une ouverture à l'autre : la fenêtre s'ouvre tout de suite, la liste se relit derrière.
   const [athletes, setAthletes] = useState<Athlete[] | null>(null);
+  const [anchor, setAnchor] = useState<MenuAnchor | null>(null);
+  const [draft, setDraft] = useState<SessionDraft | null>(null);
   const router = useRouter();
   const toast = useToast();
 
   const open = useCallback(
     (wanted?: Partial<Slot>) => {
-      setAthletes(null);
+      setAnchor(
+        wanted?.rect && window.matchMedia(DESKTOP).matches ? popoverAnchor(wanted.rect) : null,
+      );
+      setDraft(null);
       setSlot({
         date: wanted?.date ?? todayInBrussels(),
         time: wanted?.time ?? DEFAULT_TIME,
@@ -89,10 +121,14 @@ export function NewSessionSheet({
     },
     [loadAthletes],
   );
-  const close = useCallback(() => setSlot(null), []);
+  const close = useCallback(() => {
+    setSlot(null);
+    setDraft(null);
+  }, []);
   const onCreated = useCallback(
     (created: { newAthleteName: string | null }) => {
       setSlot(null);
+      setDraft(null);
       toast(
         created.newAthleteName
           ? `Séance créée. Fiche de ${created.newAthleteName} ajoutée à tes sportifs, à compléter.`
@@ -105,21 +141,19 @@ export function NewSessionSheet({
 
   return (
     <OpenContext.Provider value={open}>
-      {children}
-      <Sheet
+      <DraftContext.Provider value={draft}>{children}</DraftContext.Provider>
+      <Overlay
         open={slot !== null}
         onClose={close}
-        title="Nouvelle séance"
-        subtitle={slot?.label ?? "Elle apparaît tout de suite dans l'agenda."}
+        label={slot?.label ? `Nouvelle séance, ${slot.label}` : "Nouvelle séance"}
+        size="event"
+        anchor={anchor}
         tall
-        bare
       >
         {slot && athletes === null ? (
-          <DialogBody>
-            <p className="flex items-center gap-2 text-[14px] text-muted">
-              <Spinner /> Chargement de tes sportifs…
-            </p>
-          </DialogBody>
+          <p className="flex items-center gap-2 px-5 py-6 text-[14px] text-muted">
+            <Spinner /> Chargement de tes sportifs…
+          </p>
         ) : slot && athletes ? (
           <SessionForm
             action={action}
@@ -151,9 +185,11 @@ export function NewSessionSheet({
             submitLabel="Créer la séance"
             onCreated={onCreated}
             onCancel={close}
+            layout={anchor ? "popover" : "sheet"}
+            onDraft={anchor ? setDraft : undefined}
           />
         ) : null}
-      </Sheet>
+      </Overlay>
     </OpenContext.Provider>
   );
 }

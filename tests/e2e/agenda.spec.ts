@@ -148,7 +148,7 @@ test("le menu « Créer » mène aux vraies créations : séance, programme et t
   const newSession = page.getByRole("dialog", { name: "Nouvelle séance" });
   await expect(newSession.getByLabel("Titre")).toBeVisible();
   await expect(page).toHaveURL(/\/coach$/);
-  await newSession.getByRole("button", { name: "Fermer" }).click();
+  await newSession.getByRole("button", { name: "Annuler" }).click();
   await expect(newSession).toBeHidden();
   await page.getByRole("button", { name: "Créer", exact: true }).click();
   await menu.getByRole("button", { name: "Programme" }).click();
