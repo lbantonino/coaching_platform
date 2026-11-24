@@ -29,6 +29,7 @@ import {
   type MenuAnchor,
 } from "@/components/ui/overlay";
 import type { Discipline } from "@/domain/training/discipline";
+import { agendaViewCookie, type AgendaViewKey } from "@/features/agenda/view-preference";
 
 import { hoursLabel as hoursText } from "./coaching-hours";
 import { GOTO_EVENT, VISIBLE_EVENT, type VisibleDays } from "./scroll-to-day";
@@ -40,7 +41,7 @@ import { GOTO_EVENT, VISIBLE_EVENT, type VisibleDays } from "./scroll-to-day";
 // du téléphone et sa feuille « Vue et filtres ».
 
 export type AgendaViewItem = {
-  key: "jour" | "3jours" | "semaine" | "mois" | "liste";
+  key: AgendaViewKey;
   label: string;
   href: string;
   active: boolean;
@@ -58,6 +59,10 @@ const icons: Record<AgendaViewItem["key"], LucideIcon> = {
   "3jours": Columns3,
   semaine: CalendarDays,
   mois: LayoutGrid,
+};
+// Le choix est retenu sur l'appareil (24/11/2026) : l'agenda rouvert depuis le menu le reprend.
+const rememberView = (key: AgendaViewKey) => {
+  document.cookie = agendaViewCookie(key);
 };
 const typing = (target: EventTarget | null) =>
   target instanceof HTMLElement &&
@@ -101,6 +106,7 @@ export function AgendaViewMenu({
               : null;
       if (target) {
         event.preventDefault();
+        if (view) rememberView(view);
         router.push(target, { scroll: false });
       }
     };
@@ -147,7 +153,10 @@ export function AgendaViewMenu({
                 scroll={false}
                 role="menuitemradio"
                 aria-checked={item.active}
-                onClick={close}
+                onClick={() => {
+                  rememberView(item.key);
+                  close();
+                }}
                 className={menuRowClass({ selected: item.active, anchored: true })}
               >
                 <MenuTile icon={icons[item.key]} />
@@ -692,6 +701,7 @@ export function AgendaPhoneBar({
               key={view.key}
               href={view.href}
               scroll={false}
+              onClick={() => rememberView(view.key)}
               aria-current={view.active ? "page" : undefined}
               className={menuRowClass({ selected: view.active })}
             >

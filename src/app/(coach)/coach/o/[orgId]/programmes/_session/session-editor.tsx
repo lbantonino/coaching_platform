@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, Copy, LayoutTemplate, PenLine, Plus, Trash2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 
 import { barBackClass, barBackIcon } from "@/components/layout/back-link";
 import { MobileBarTitle, phoneFabClass } from "@/components/layout/mobile-bar";
@@ -82,6 +82,8 @@ import { saveSessionAsTemplate } from "@/features/programs/actions";
 import { useEditor } from "../_editor/editor-provider";
 import { TextSheet } from "../_editor/editor-sheets";
 
+import { InlineTitle, SESSION_TITLE_MAX } from "./inline-title";
+import { useFitToScreen } from "./use-fit-to-screen";
 import { programHref, sessionHref } from "./links";
 import { SaveState, useSafeLeave } from "./safe-leave";
 import { RunStepPanel, RunningList, type AthleteAims } from "./running-parts";
@@ -139,7 +141,10 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
   const { plan, update, organizationId } = editor;
   const toast = useToast();
   const [pending, startTransition] = useTransition();
-  const { leave, dialog: leaveDialog } = useSafeLeave();
+  const { leave, pending: leaving, dialog: leaveDialog } = useSafeLeave();
+  // Panneau de droite : il s'arrête toujours au-dessus du bas de l'écran (pied « Valider » visible).
+  const panelRef = useRef<HTMLElement>(null);
+  useFitToScreen(panelRef);
   const found = findSession(plan, meta.sessionKey);
   const session = found?.session ?? null;
   const running = session?.content.discipline === "running" ? session.content : null;
@@ -181,6 +186,9 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
     });
   const setRunning = (content: RunningContent) =>
     setSession((current) => ({ ...current, content }));
+  // Renommer : la fenêtre « Renommer » ou un clic sur le titre (24/11/2026), la même limite.
+  const rename = (title: string) =>
+    setSession((current) => ({ ...current, title: title.slice(0, SESSION_TITLE_MAX) }));
   // Plafond d'une séance (au-delà, elle ne s'enregistrerait plus).
   const full = (session?.content.items.length ?? 0) >= SESSION_ITEMS_MAX;
   const tooMany = () => toast(`${SESSION_ITEMS_MAX} éléments au plus dans une séance.`);
@@ -612,15 +620,17 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
             className={`${card} relative z-[2] hidden flex-col gap-3.5 px-[22px] py-5 lg:flex`}
           >
             <div className="flex items-start justify-between gap-4">
-              <div className="flex min-w-0 flex-col gap-1">
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <span
                   className={`text-[11.5px] font-semibold tracking-[0.05em] uppercase ${disciplineStyles[discipline].text}`}
                 >
                   {kicker}
                 </span>
-                <h2 className="text-[26px] leading-[1.15] font-bold tracking-[-0.025em] text-text">
-                  {session.title}
-                </h2>
+                <InlineTitle
+                  title={session.title}
+                  onRename={rename}
+                  className="text-[26px] leading-[1.15] font-bold tracking-[-0.025em] text-text"
+                />
               </div>
               <span className="flex shrink-0 gap-1.5">
                 <button
@@ -636,20 +646,38 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
             {titleFields}
           </section>
 
-          <div className="flex items-start justify-between gap-3 px-1 lg:hidden">
-            <div className="flex min-w-0 flex-col gap-[5px]">
-              <span
-                className={`text-[11.5px] font-semibold tracking-[0.05em] uppercase ${disciplineStyles[discipline].text}`}
-              >
-                {kicker}
+          {/* Téléphone : la ligne du type sur toute la largeur (elle ne passe pas sur deux lignes à
+              cause des boutons), puis le nom de la séance avec « Terminer » et « ··· ». */}
+          <div className="flex flex-col gap-[5px] px-1 lg:hidden">
+            <span
+              className={`text-[11.5px] font-semibold tracking-[0.05em] uppercase ${disciplineStyles[discipline].text}`}
+            >
+              {kicker}
+            </span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-[5px] pt-1.5">
+                <InlineTitle
+                  title={session.title}
+                  onRename={rename}
+                  className="text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text"
+                />
+                {/* L'état de l'enregistrement, seulement quand il y a quelque chose à dire. */}
+                <SaveState quietWhenSaved className="mt-0.5" />
+              </div>
+              {/* « Terminer » aussi sur téléphone (24/11/2026) : enregistre et revient au programme,
+                  sur la semaine de la séance (ou à la fiche du sportif d'où l'on vient). */}
+              <span className="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={leaving}
+                  onClick={() => leave(backHref)}
+                  className="inline-flex h-11 items-center rounded-[12px] bg-cta px-4 text-[14px] font-semibold whitespace-nowrap text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.97] disabled:opacity-60"
+                >
+                  Terminer
+                </button>
+                {menu(true)}
               </span>
-              <h2 className="text-[24px] leading-[1.15] font-bold tracking-[-0.02em] text-text">
-                {session.title}
-              </h2>
-              {/* Téléphone : l'état de l'enregistrement, seulement quand il y a quelque chose à dire. */}
-              <SaveState quietWhenSaved className="mt-0.5" />
             </div>
-            {menu(true)}
           </div>
 
           {/* Aperçu en direct : un résumé écrit et deux totaux, jamais de graphique. */}
@@ -721,8 +749,9 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         </div>
 
         <aside
+          ref={panelRef}
           aria-label="Modifier l'étape"
-          className={`${card} hidden p-5 inset-ring-[1.5px] inset-ring-violet/35 lg:sticky lg:top-3 lg:block lg:max-h-[calc(100dvh-24px)] lg:overflow-y-auto lg:overscroll-contain`}
+          className={`${card} hidden p-5 inset-ring-[1.5px] inset-ring-violet/35 [--panel-bg:var(--surface)] [--panel-pad:20px] lg:sticky lg:top-3 lg:block lg:max-h-[var(--panel-max-h,calc(100dvh-24px))] lg:overflow-y-auto lg:overscroll-contain`}
         >
           {panel ?? (
             <p className="text-[14px] leading-[1.5] text-muted">
@@ -845,7 +874,9 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         label={strength ? "Régler l'exercice" : hyroxBlock ? "Régler le bloc" : "Modifier l'étape"}
         size="form"
       >
-        <DialogBody>{panel}</DialogBody>
+        <DialogBody>
+          <div className="[--panel-bg:var(--dlg)] [--panel-pad:22px]">{panel}</div>
+        </DialogBody>
       </Overlay>
 
       <TextSheet
@@ -856,7 +887,7 @@ export function SessionEditor({ meta }: { meta: SessionMeta }) {
         initial={session.title}
         confirmLabel="Renommer"
         onConfirm={(title) => {
-          setSession((current) => ({ ...current, title: title.slice(0, 80) }));
+          rename(title);
           setDialog(null);
         }}
       />

@@ -1,5 +1,6 @@
 import { Calendar, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
@@ -26,6 +27,7 @@ import type { Discipline } from "@/domain/training/discipline";
 import { monthGrid, monthLabel, periodLabel, shiftMonth } from "@/features/agenda/calendar";
 import { addDays } from "@/features/agenda/items";
 import { layoutDays, withHours, mondayOf, parseDay, type WeekBlock } from "@/features/agenda/week";
+import { AGENDA_VIEW_COOKIE, viewFromPreference } from "@/features/agenda/view-preference";
 import { requireOrgAccess } from "@/features/auth/guards";
 import { getCoachProfile } from "@/features/coach/profile";
 import { moveSession } from "@/features/sessions/actions";
@@ -117,17 +119,22 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   // Ancienne adresse ?mois=AAAA-MM : la vue Mois de ce mois.
   const legacyMonth = single(query.mois);
   const viewParam = single(query.vue);
+  // Sans vue dans l'adresse (menu, retours) : celle retenue sur cet appareil (24/11/2026).
+  const remembered =
+    viewKeys.includes(viewParam as View) || legacyMonth
+      ? null
+      : viewFromPreference((await cookies()).get(AGENDA_VIEW_COOKIE)?.value);
   const view: View = /^\d{4}-\d{2}$/.test(legacyMonth ?? "")
     ? "mois"
     : viewKeys.includes(viewParam as View)
       ? (viewParam as View)
-      : "semaine";
+      : (remembered?.view ?? "semaine");
   const kindParam = single(query.type);
   const kind: AgendaKind = kindKeys.includes(kindParam as AgendaKind)
     ? (kindParam as AgendaKind)
     : "toutes";
   // Téléphone, vue Semaine : les 7 jours dans l'écran (?jours=7) plutôt que 3 jours qui défilent.
-  const fullWeek = single(query.jours) === "7";
+  const fullWeek = remembered ? remembered.fullWeek : single(query.jours) === "7";
   const date =
     view === "aujourdhui"
       ? today
@@ -157,7 +164,8 @@ async function Agenda({ orgId, query }: { orgId: string; query: Query }) {
   }) => {
     const search = new URLSearchParams();
     const nextView = changes.vue ?? shownView;
-    if (nextView !== "semaine") search.set("vue", nextView);
+    // Toujours écrite : une adresse sans vue reprendrait celle retenue sur l'appareil.
+    search.set("vue", nextView);
     if (nextView === "semaine" && (changes.fullWeek ?? fullWeek)) search.set("jours", "7");
     const nextDate = changes.date ?? date;
     if (nextDate !== today) search.set("date", nextDate);

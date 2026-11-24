@@ -323,7 +323,8 @@ test("téléphone : les jours défilent au doigt d'une semaine à l'autre sans r
   await page.waitForTimeout(400);
   await expect.poll(() => days.evaluate((element) => element.scrollLeft)).toBe(0);
   await swipe(page, "précédent");
-  await expect(page).toHaveURL(/agenda\?date=2027-02-05$/);
+  // La vue est toujours écrite dans l'adresse (24/11 : sinon, celle retenue sur l'appareil reprendrait).
+  await expect(page).toHaveURL(/agenda\?vue=semaine&date=2027-02-05$/);
 
   // Mois : le glissé ouvre le mois suivant.
   await page.goto(`${AGENDA}?vue=mois&date=2027-03-01`);

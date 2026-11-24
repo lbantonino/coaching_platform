@@ -38,6 +38,7 @@ import {
   type StrengthGroup,
 } from "@/domain/training/strength-edit";
 
+import { PanelFooter } from "./panel-footer";
 import {
   AddInside,
   EditorCard,
@@ -790,35 +791,6 @@ export function StrengthExercisePanel({
       </label>
 
       <PanelFooter primary="Valider l'exercice" onDone={onDone} onDelete={onDelete} />
-    </div>
-  );
-}
-
-function PanelFooter({
-  primary,
-  onDone,
-  onDelete,
-}: {
-  primary: string;
-  onDone: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="flex gap-2 pt-1">
-      <button
-        type="button"
-        onClick={onDone}
-        className="inline-flex h-[46px] flex-1 items-center justify-center rounded-[12px] bg-cta px-4 text-[14.5px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
-      >
-        {primary}
-      </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="inline-flex h-[46px] items-center rounded-[12px] px-4 text-[14px] font-semibold text-alert inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"
-      >
-        Supprimer
-      </button>
     </div>
   );
 }

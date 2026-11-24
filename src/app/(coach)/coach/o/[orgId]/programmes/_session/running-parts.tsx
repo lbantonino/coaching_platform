@@ -29,6 +29,7 @@ import {
 import { sessionCards, type SessionCard, type StepCard } from "@/domain/training/session-cards";
 import { RUN_ROLES, type RunStep, type RunningContent } from "@/domain/training/session-v2";
 
+import { PanelFooter } from "./panel-footer";
 import {
   AddInside,
   EditorCard,
@@ -816,22 +817,7 @@ export function RunStepPanel({
         />
       </label>
 
-      <div className="flex gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onDone}
-          className="inline-flex h-[46px] flex-1 items-center justify-center rounded-[12px] bg-cta px-4 text-[14.5px] font-semibold text-on-cta transition-[scale,background-color] duration-150 hover:bg-cta-hover active:scale-[0.98]"
-        >
-          Valider l&apos;étape
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="inline-flex h-[46px] items-center rounded-[12px] px-4 text-[14px] font-semibold text-alert inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.98]"
-        >
-          Supprimer
-        </button>
-      </div>
+      <PanelFooter primary="Valider l'étape" onDone={onDone} onDelete={onDelete} />
     </div>
   );
 }

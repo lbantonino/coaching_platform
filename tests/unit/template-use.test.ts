@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createProgramInputSchema } from "@/features/programs/schemas";
-import { mondayOf, templateUseInput } from "@/features/programs/template-use";
+import { aimFor, mondayOf, templateUseInput } from "@/features/programs/template-use";
 import type { WizardAthlete, WizardTemplate } from "@/features/programs/wizard";
 
 // « Utiliser ce modèle » en direct (demande d'Antonino du 14/11/2026, D-178) : depuis la page d'un
@@ -89,5 +89,17 @@ describe("Utiliser un modèle en direct", () => {
     expect(mondayOf("2026-11-19")).toBe("2026-11-16");
     expect(mondayOf("2026-11-16")).toBe("2026-11-16");
     expect(mondayOf("2026-11-22")).toBe("2026-11-16");
+  });
+});
+
+describe("allure par défaut pour la course (demande d'Antonino du 24/11/2026)", () => {
+  it("même sans VMA connue, la course vise l'allure", () => {
+    expect(aimFor(undefined).running).toBe("pace");
+    expect(aimFor({ ...athlete, hasVma: false }).running).toBe("pace");
+  });
+
+  it("la musculation ne change pas : % avec des maxima reliés, sinon kg", () => {
+    expect(aimFor({ ...athlete, hasLinkedMaxes: true }).strength).toBe("pct");
+    expect(aimFor({ ...athlete, hasLinkedMaxes: false }).strength).toBe("kg");
   });
 });

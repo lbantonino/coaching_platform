@@ -216,9 +216,11 @@ test("D-179 : renommer une étape de course et un exercice", async ({ page }, te
 
   // Running : l'étape « Endurance » devient « Footing facile ».
   await openSession("Endurance");
+  // La carte de l'étape (« Endurance 40 min · zone 2 »), pas le titre de la séance du même nom, qui se
+  // renomme d'un clic depuis le 24/11.
   if (phone)
     await page
-      .getByRole("button", { name: /^Endurance/ })
+      .getByRole("button", { name: /^Endurance \d/ })
       .first()
       .click();
   const stepName = page.getByRole("textbox", { name: "Nom de l'étape" }).filter({ visible: true });

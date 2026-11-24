@@ -1,3 +1,4 @@
+import type { AimDefaults } from "@/domain/training/program-plan";
 import { MAX_SESSIONS_PER_WEEK } from "@/domain/training/session-v2";
 import { firstFreeMonday } from "@/domain/training/program-status";
 
@@ -7,12 +8,13 @@ import type { WizardAthlete, WizardTemplate } from "./wizard";
 // Règles partagées par l'assistant « Nouveau programme » et « Utiliser ce modèle » en direct
 // (demande d'Antonino du 14/11/2026, D-178). Pures : utilisables dans le navigateur et testées par Vitest.
 
-// Façon de viser pré-choisie (WIZ-F06) : allure si la VMA est connue, sinon zones de FC ; % du max si
-// des maxima sont reliés à un exercice, sinon kg.
-export function aimFor(athlete: WizardAthlete | undefined) {
+// Façon de viser pré-choisie : la course vise toujours l'allure (demande d'Antonino du 24/11/2026 ; la
+// règle WIZ-F06 des maquettes ne la choisissait qu'avec une VMA connue, sinon les zones de FC) ; % du
+// max si des maxima sont reliés à un exercice, sinon kg. Le coach peut toujours choisir les zones de FC.
+export function aimFor(athlete: WizardAthlete | undefined): AimDefaults {
   return {
-    running: athlete?.hasVma ? ("pace" as const) : ("hr" as const),
-    strength: athlete?.hasLinkedMaxes ? ("pct" as const) : ("kg" as const),
+    running: "pace",
+    strength: athlete?.hasLinkedMaxes ? "pct" : "kg",
   };
 }
 

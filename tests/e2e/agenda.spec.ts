@@ -64,6 +64,37 @@ test("l'agenda du coach, façon Google Agenda : vues, filtres en cases, et aucun
   await expect(piste.first()).toBeVisible();
 });
 
+test("la vue choisie est retenue : l'agenda rouvert depuis le menu la reprend (24/11)", async ({
+  page,
+}) => {
+  await loginAsCoachA(page);
+  await goToCoachSection(page, "Agenda");
+  await page.getByRole("button", { name: /^Vue : / }).click();
+  if (isPhone(page)) {
+    await page
+      .getByRole("dialog", { name: "Vue et filtres" })
+      .getByRole("navigation", { name: "Vue de l'agenda" })
+      .getByRole("link", { name: "Liste" })
+      .click();
+  } else {
+    await page
+      .getByRole("menu", { name: "Vue de l'agenda" })
+      .getByRole("menuitemradio", { name: /Liste/ })
+      .click();
+  }
+  await expect(page).toHaveURL(/vue=liste/);
+
+  // Rouvert depuis le menu (adresse sans vue) : toujours la liste.
+  await page.goto("/coach");
+  await goToCoachSection(page, "Agenda");
+  await expect(page).toHaveURL(/\/agenda$/);
+  await expect(page.getByRole("button", { name: /^Vue : Liste\./ })).toBeVisible();
+
+  // Une adresse qui donne la vue l'emporte sur le choix retenu.
+  await page.goto(`/coach/o/${ORG_A}/agenda?vue=jour`);
+  await expect(page.getByRole("button", { name: /^Vue : Jour\./ })).toBeVisible();
+});
+
 test("le tableau de bord montre les séances à venir, jour par jour, et les programmes en cours", async ({
   page,
 }) => {
