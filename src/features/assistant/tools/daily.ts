@@ -89,6 +89,16 @@ export const DAILY_TOOLS: Anthropic.Tool[] = [
             startsOn: { ...date, description: "Première date de la série." },
             startTime: { type: "string", description: "HH:MM" },
             durationMinutes: { type: "integer" },
+            allDay: {
+              type: "boolean",
+              description: "Jour entier : sans heure (stage, compétition).",
+            },
+            alerts: {
+              type: "array",
+              items: { type: "integer" },
+              description:
+                "Alertes sur le téléphone du coach, en minutes AVANT le début, deux au plus : 0 (à l'heure), 5, 10, 15, 30, 60, 120, 1440 (la veille), 2880 ; séance jour entier : -540 (le jour même à 9 h), 900 (la veille à 9 h), 2340, 9540 (1 semaine avant). La liste remplace les anciennes alertes ([] = aucune).",
+            },
             repeatsWeekly: { type: "boolean" },
             endsOn: nullable(date, "Dernière date d'une série."),
             athleteIds: {

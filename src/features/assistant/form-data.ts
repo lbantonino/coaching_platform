@@ -78,6 +78,7 @@ export function toFormData(action: ParsedAssistantAction): FormData {
       set("startTime", p.startTime);
       set("durationMinutes", String(p.durationMinutes));
       check("allDay", p.allDay);
+      set("alerts", (p.alerts ?? []).join(","));
       check("repeatsWeekly", p.repeatsWeekly);
       set("endsOn", p.endsOn ?? "");
       if (p.kind === "individual") set("athleteId", athleteIdOf(p.athlete));
@@ -209,6 +210,7 @@ export function toSessionPrefill(params: Record<string, unknown>): Partial<Sessi
     startTime: params.startTime as string | undefined,
     durationMinutes: maybe(params.durationMinutes as number | undefined, String),
     allDay: params.allDay as boolean | undefined,
+    alerts: Array.isArray(params.alerts) ? params.alerts.join(",") : undefined,
     repeatsWeekly: params.repeatsWeekly as boolean | undefined,
     endsOn: params.endsOn as string | undefined,
     athleteId: athleteId || undefined,
@@ -268,6 +270,7 @@ export function toSessionInput(params: Record<string, unknown>): SessionFormInpu
     durationMinutes:
       typeof params.durationMinutes === "number" ? String(params.durationMinutes) : "",
     allDay: params.allDay === true,
+    alerts: Array.isArray(params.alerts) ? params.alerts.join(",") : "",
     repeatsWeekly: params.repeatsWeekly === true,
     endsOn: text(params.endsOn),
     athleteId: params.kind === "individual" ? athleteId : "",
@@ -421,7 +424,11 @@ export function mergeSessionChanges(
         break;
       case "repeatsWeekly":
       case "vatIncluded":
+      case "allDay":
         next[field] = value === true;
+        break;
+      case "alerts":
+        next.alerts = (value as number[]).join(",");
         break;
       case "athleteIds":
         next.athleteIds = [...(value as string[])];
@@ -437,6 +444,8 @@ export function mergeSessionChanges(
       }
     }
   }
+  // « Jour entier » change les choix d'alerte : sans nouvelles alertes, les anciennes partent.
+  if ("allDay" in changes && !("alerts" in changes)) next.alerts = "";
   return next;
 }
 

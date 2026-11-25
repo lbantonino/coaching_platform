@@ -64,6 +64,7 @@ describe("toFormData", () => {
       startsOn: "2026-11-17",
       startTime: "18:00",
       durationMinutes: "60",
+      alerts: "",
       repeatsWeekly: "on",
       endsOn: "",
       athleteId: LUCAS,

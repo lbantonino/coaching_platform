@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // Alertes des séances (D-205, phase C ; fiche validée le 24/11/2026), comme le Calendrier d'Apple : une
 // ou deux par séance, rangées en minutes AVANT le début (base : coach_sessions.alerts, contrainte
 // private.alerts_are_valid). Une séance « Jour entier » commence à 00:00 (D-204) : « le jour même à
@@ -28,6 +30,19 @@ const ALL_DAY_LABELS: Record<number, string> = {
   2340: "2 jours avant (09:00)",
   9540: "1 semaine avant (09:00)",
 };
+
+// Libellé d'une alerte seule : les choix « à l'heure » et « Jour entier » ne se recoupent pas.
+export function alertLabelFor(offset: number): string {
+  return alertLabel(offset, ALL_DAY.includes(offset));
+}
+
+// « 15 min avant, 1 jour avant » ; « aucune ».
+export function alertsText(alerts: number[]): string {
+  return alerts.length === 0 ? "aucune" : alerts.map(alertLabelFor).join(", ");
+}
+
+// Toutes les valeurs permises (assistant : refus d'une valeur inconnue avant même la carte).
+export const ALERT_OFFSETS = new Set([...TIMED, ...ALL_DAY]);
 
 export function alertLabel(offset: number, allDay: boolean): string {
   return (allDay ? ALL_DAY_LABELS : TIMED_LABELS)[offset] ?? `${offset} min avant`;
@@ -128,3 +143,16 @@ export function alertText(input: {
           : `Dans ${offset >= 60 ? `${offset / 60} h` : `${offset} min`} · ${time}`;
   return { title, body: [when, input.location].filter(Boolean).join(" · ") };
 }
+
+// Alertes d'une séance (D-207) : deux au plus, parmi les choix du formulaire ; à l'heure 0, 5, 10, 15,
+// 30, 60, 120, 1440, 2880 ; « Jour entier » -540 (le jour même 09:00), 900, 2340, 9540.
+export const ALERTS_ERROR =
+  "Alertes : deux au plus, en minutes avant le début : 0, 5, 10, 15, 30, 60, 120, 1440, 2880 (séance à l'heure) ou -540, 900, 2340, 9540 (jour entier).";
+export const alertsSchema = z
+  .array(
+    z
+      .number()
+      .int()
+      .refine((offset) => ALERT_OFFSETS.has(offset), { error: ALERTS_ERROR }),
+  )
+  .max(2, { error: ALERTS_ERROR });

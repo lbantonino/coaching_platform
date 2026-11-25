@@ -1,5 +1,4 @@
 import { Users } from "lucide-react";
-import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import type { Discipline } from "@/domain/training/discipline";
@@ -8,7 +7,12 @@ import type { WeekBlock, WeekLayout } from "@/features/agenda/week";
 import type { MoveSessionInput } from "@/features/sessions/actions";
 
 import { DayWeekStrip } from "./day-week-strip";
-import { DraggableBlock, DropPreview, GridInteractions } from "./grid-interactions";
+import {
+  AllDayDropPreview,
+  DraggableBlock,
+  DropPreview,
+  GridInteractions,
+} from "./grid-interactions";
 import { ScrollToDay } from "./scroll-to-day";
 import { SlotLayer } from "./slot-layer";
 
@@ -192,16 +196,31 @@ export function WeekGrid({
               {layout.days.map((day) => (
                 <div
                   key={day.date}
+                  // Repère du glisser-déposer d'une séance « Jour entier » (D-208) : le jour visé.
+                  data-all-day-date={day.date}
                   className={`${column(day.date)} flex flex-col gap-0.5 border-l border-line-soft px-1 py-0.5`}
                 >
                   {day.blocks
                     .filter((block) => block.allDay)
                     .map((block) => (
-                      <Link
+                      <DraggableBlock
                         key={block.key}
+                        block={{
+                          sessionId: block.sessionId,
+                          originalDate: block.originalDate,
+                          date: block.date,
+                          start: block.start,
+                          end: block.end,
+                          title: block.title,
+                          recurring: block.recurring,
+                          seriesMovable: block.seriesMovable,
+                          moved: block.moved,
+                          allDay: true,
+                        }}
                         href={sessionHref(block.sessionId, block.date)}
                         title={`Toute la journée · ${block.title} · ${block.subtitle}`}
-                        className={`flex min-w-0 items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-[12px] leading-[1.25] font-semibold transition-[filter] duration-150 hover:brightness-110 lg:text-[11px] ${
+                        style={{}}
+                        className={`flex min-w-0 items-center gap-1 truncate rounded-md px-1.5 py-0.5 text-[12px] leading-[1.25] font-semibold transition-[filter,opacity] duration-150 hover:brightness-110 lg:text-[11px] ${
                           fills[block.discipline ?? "none"]
                         }`}
                       >
@@ -211,8 +230,9 @@ export function WeekGrid({
                         <span className="min-w-0 truncate">
                           {single ? block.title : shortName(block)}
                         </span>
-                      </Link>
+                      </DraggableBlock>
                     ))}
+                  <AllDayDropPreview date={day.date} />
                 </div>
               ))}
             </div>

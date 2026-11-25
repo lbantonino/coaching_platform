@@ -146,6 +146,12 @@ export const WRITE_TOOLS: Anthropic.Tool[] = [
           description:
             "Jour entier : séance sans heure (stage, compétition). startTime et durationMinutes sont alors ignorés.",
         },
+        alerts: {
+          type: "array",
+          items: { type: "integer" },
+          description:
+            "Alertes sur le téléphone du coach, en minutes AVANT le début, deux au plus : 0 (à l'heure), 5, 10, 15, 30, 60, 120, 1440 (la veille), 2880 ; séance jour entier : -540 (le jour même à 9 h), 900 (la veille à 9 h), 2340, 9540 (1 semaine avant).",
+        },
         repeatsWeekly: { type: "boolean" },
         endsOn: date,
         athlete,

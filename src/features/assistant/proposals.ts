@@ -50,6 +50,7 @@ import {
 import { placedSessions } from "./program";
 import { MAX_PROGRAM_EDITS, programEditSchema } from "./program-edit";
 import { dayInWords } from "./rules";
+import { ALERTS_ERROR, alertsSchema, alertsText, parseAlerts } from "@/domain/sessions/alerts";
 
 // Propositions de l'Assistant IA (lot 1 des actions, spec §5.2 et §5.3) : une action préparée par
 // Claude, affichée en carte, exécutée seulement au clic « Valider » du coach. Les paramètres portent
@@ -146,6 +147,8 @@ export const PARAMS = {
       startTime: time,
       durationMinutes: z.number().int().min(5).max(600),
       allDay: z.boolean().optional(),
+      // Alertes (D-205, D-207) : minutes avant le début, deux au plus.
+      alerts: alertsSchema.optional(),
       repeatsWeekly: z.boolean().optional(),
       endsOn: isoDay.optional(),
       athlete: athleteRefSchema.optional(),
@@ -158,7 +161,11 @@ export const PARAMS = {
     })
     .refine((params) => params.kind !== "individual" || params.athlete !== undefined, {
       error: "Une séance individuelle demande son sportif.",
-    }),
+    })
+    .refine(
+      (params) => parseAlerts((params.alerts ?? []).join(","), params.allDay === true) !== null,
+      { error: ALERTS_ERROR },
+    ),
   // Toute la série se décale de 3 jours au plus, comme au glisser dans l'agenda (relecture n°1) : au-delà,
   // l'agenda ramènerait l'écart dans cette fenêtre et la carte mentirait.
   deplacer_seance: z
@@ -690,6 +697,11 @@ export function summarize(
           : `${dayInWords(str(p.startsOn))} · ${str(p.startTime)} · ${num(p.durationMinutes)} min`;
       const until = p.endsOn ? ` jusqu'au ${dayInWords(str(p.endsOn))}` : "";
       lines.push(p.repeatsWeekly ? `${when} · chaque semaine${until}` : when);
+      lines.push(
+        Array.isArray(p.alerts) && p.alerts.length > 0
+          ? `Alertes : ${alertsText(p.alerts as number[])}`
+          : null,
+      );
       lines.push(str(p.location) || null);
       if (typeof p.price === "number" && p.price > 0) {
         const vat = num(p.vatRate);

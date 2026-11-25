@@ -19,6 +19,7 @@ import {
 import { datesToCollect, type PricedSessionLike } from "@/features/sessions/prices";
 
 import { dayInWords } from "./rules";
+import { alertsSchema, alertsText } from "@/domain/sessions/alerts";
 
 // Assistant IA, lot 4 (D-183) : le QUOTIDIEN (agenda, comptabilité, tâches, documents), en cartes à
 // valider. Règles PURES : schémas stricts, refus (rien que l'action habituelle ne ferait pas) et ce
@@ -60,6 +61,8 @@ export const DAILY_PARAMS = {
         startsOn: isoDay.optional(),
         startTime: time.optional(),
         durationMinutes: z.number().int().min(5).max(600).optional(),
+        allDay: z.boolean().optional(),
+        alerts: alertsSchema.optional(),
         repeatsWeekly: z.boolean().optional(),
         endsOn: isoDay.nullable().optional(),
         athleteIds: z.array(z.uuid()).max(100).optional(),
@@ -300,6 +303,8 @@ export const SESSION_FIELD_LABELS: Record<string, string> = {
   startsOn: "Début",
   startTime: "Heure",
   durationMinutes: "Durée",
+  allDay: "Jour entier",
+  alerts: "Alertes",
   repeatsWeekly: "Chaque semaine",
   endsOn: "Jusqu'au",
   athleteIds: "Inscrits",
@@ -329,7 +334,10 @@ export function sessionFieldText(
       return `${String(value)} min`;
     case "repeatsWeekly":
     case "vatIncluded":
+    case "allDay":
       return yesNo(value);
+    case "alerts":
+      return alertsText(value as number[]);
     case "athleteIds": {
       const ids = value as string[];
       return ids.length === 0

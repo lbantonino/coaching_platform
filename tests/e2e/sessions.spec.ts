@@ -128,7 +128,7 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   // Ordinateur : « Modifier » en haut et dans la barre d'actions du bas (même page).
   await page.getByRole("link", { name: "Modifier", exact: true }).first().click();
   await expect(page.getByLabel(/^Prix pour toute la séance/)).toHaveValue("80");
-  await page.getByLabel("Heure", { exact: true }).fill("19:30");
+  await page.getByLabel("Heure de début").fill("19:30");
   // Kit « Coory Pages », 06 / 12 (D-123) : le récapitulatif (ordinateur) et la ligne du prix suivent
   // la saisie ; le prix par inscrit est un simple calcul (TVA de la séance : 21 %).
   if (testInfo.project.name === "ordinateur") {
@@ -138,10 +138,8 @@ test("le coach crée une séance collective chaque semaine, la retrouve, la modi
   }
   const priceLine = page.locator("p[aria-live]").filter({ hasText: "par inscrit" });
   await expect(priceLine).toHaveText(/80,00\s€ TTC pour la séance, soit 40,00\s€ par inscrit\./);
-  await page
-    .getByRole("group", { name: /Sportifs inscrits/ })
-    .getByText("Thomas Peeters", { exact: true })
-    .click();
+  // Page façon Apple (D-206) : « Sportifs inscrits » ouvre la liste sur place ; on décoche Thomas.
+  await enrollAthletes(page.locator("main"), ["Thomas Peeters"]);
   await expect(priceLine).toHaveText(/soit 80,00\s€ par inscrit\./);
   // Supprimer depuis « Modifier » demande toujours une confirmation ; « Annuler » ne supprime rien.
   await page.getByRole("button", { name: "Supprimer la séance" }).click();

@@ -25,6 +25,7 @@ import type { AthleteReferences } from "@/features/references/queries";
 import { referenceKindLabels } from "@/features/references/schemas";
 
 import { referenceValueText } from "../sportifs";
+import { alertLabelFor } from "@/domain/sessions/alerts";
 
 // Mise en forme des outils de lecture de l'Assistant IA (lot 1 des actions) : ce qui part chez
 // Anthropic. Court, utile à l'action, jamais d'e-mail, de téléphone, de note ni de donnée de santé.
@@ -86,6 +87,8 @@ export type AgendaRow = {
   titre: string;
   sportif: string;
   repetee: boolean;
+  // Alertes (D-207) : « 15 min avant »… ; absentes sans alerte.
+  alertes?: string[];
   // La règle en clair (D-203) : « toutes les 2 semaines le mardi et le jeudi ».
   repetition?: string;
 };
@@ -116,6 +119,7 @@ export function shapeAgenda(sessions: CoachSession[], du: string, au: string): A
         titre: session.title,
         sportif: who(session),
         repetee: session.repeatsWeekly,
+        ...(session.alerts.length > 0 ? { alertes: session.alerts.map(alertLabelFor) } : {}),
         ...repetitionOf(session),
       })),
     )

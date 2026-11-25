@@ -30,8 +30,15 @@ import type { SessionFormInput } from "@/features/sessions/schemas";
 // d'heure, interrupteur, lignes et options de la feuille du téléphone, menus déroulants et cases de la
 // bulle de l'ordinateur, écran « Personnalisé ». Le formulaire lui-même : session-apple-fields.tsx.
 
-export type Athlete = { id: string; name: string };
-export type Layout = "sheet" | "popover";
+// Sportif proposé ; photo et sexe pour l'avatar de la page « Modifier la séance ».
+export type Athlete = {
+  id: string;
+  name: string;
+  photoPath?: string | null;
+  sex?: "female" | "male" | null;
+};
+// Feuille (téléphone, fenêtre centrée), bulle (ordinateur, accrochée au créneau), page « Modifier ».
+export type Layout = "sheet" | "popover" | "page";
 
 export const MAX_DURATION = 480;
 export const MIN_DURATION = 15;

@@ -14,12 +14,21 @@ import {
 } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
+import Link from "next/link";
+
 import { useMoney } from "@/components/blocks/money-context";
+import { Avatar } from "@/components/ui/avatar";
+import {
+  MobileActionBar,
+  mobileActionPrimaryClass,
+  mobileActionSecondaryClass,
+} from "@/components/ui/mobile-action-bar";
 import { currencySymbol } from "@/domain/billing/money";
 import { parseAmount } from "@/domain/billing/payments";
 import { foldText } from "@/domain/documents/documents";
 import {
   RECURRENCE_PRESETS,
+  describeRule,
   normalizeRule,
   presetLabels,
   presetOf,
@@ -64,7 +73,12 @@ import {
   type Layout,
   type PopupItem,
 } from "./session-apple-parts";
-import { SESSION_DISCIPLINES, priceSentence, useSessionVat } from "./session-form-parts";
+import {
+  SESSION_DISCIPLINES,
+  paidAmount,
+  priceSentence,
+  useSessionVat,
+} from "./session-form-parts";
 
 // « Nouvelle séance » façon Calendrier d'Apple (D-204, maquette validée par Antonino le 24/11/2026 :
 // docs/design/maquettes/2026-11-24-nouvelle-seance-apple/). Téléphone (et fenêtre centrée) : feuille
@@ -88,6 +102,14 @@ export type SessionDraft = {
 };
 
 const NEW_ATHLETE = "__new__";
+// Récapitulatif de la page « Modifier » : « Chaque jeudi, 07:00 » ou « Jeu. 10 sept., 07:00 ».
+const RECAP_WEEKDAY = new Intl.DateTimeFormat("fr-BE", { weekday: "long", timeZone: "UTC" });
+const RECAP_DAY = new Intl.DateTimeFormat("fr-BE", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "UTC",
+});
 
 export function SessionAppleFields({
   formAction,
@@ -99,6 +121,9 @@ export function SessionAppleFields({
   onCancel,
   layout,
   onDraft,
+  cancelHref = "",
+  athletesPath = "",
+  footer,
 }: {
   formAction: (formData: FormData) => void;
   pending: boolean;
@@ -109,6 +134,11 @@ export function SessionAppleFields({
   onCancel: () => void;
   layout: Layout;
   onDraft?: (draft: SessionDraft) => void;
+  // Page « Modifier la séance » : retour (Annuler), chemin des fiches (« Voir la fiche ») et bloc de
+  // suppression (formulaire de l'action serveur, rendu par la page).
+  cancelHref?: string;
+  athletesPath?: string;
+  footer?: ReactNode;
 }) {
   const formId = useId();
   const titleRef = useRef<HTMLInputElement>(null);
@@ -187,10 +217,17 @@ export function SessionAppleFields({
       ? "Aucun"
       : `${athleteIds.length} inscrit${athleteIds.length > 1 ? "s" : ""}`;
   const priceLabel = kind === "group" ? "Prix pour toute la séance" : "Prix de la séance";
+  const paidCents = priceCents === null ? null : paidAmount(priceCents, vat);
+  const withVat = Boolean(vat.rate);
+  // Séance collective avec des inscrits : le prix de la séance, et ce que paie chacun.
   const priceHint =
-    priceCents === null
+    priceCents === null || paidCents === null
       ? "Sans prix, la séance ne compte pas dans l'encaissé."
-      : priceSentence(priceCents, vat, format);
+      : kind === "group" && athleteIds.length > 0
+        ? `${format(paidCents)}${withVat ? " TTC" : ""} pour la séance, soit ${format(
+            Math.round(paidCents / athleteIds.length),
+          )} par inscrit${withVat ? "" : ", sans TVA"}.`
+        : priceSentence(priceCents, vat, format);
 
   // La grille de l'agenda suit la saisie (séance provisoire à son heure, avec son titre).
   useEffect(() => {
@@ -608,6 +645,239 @@ export function SessionAppleFields({
   };
 
   // --- Téléphone : la feuille --------------------------------------------------------------------
+  // --- Cartes de la feuille (téléphone) et de la page « Modifier la séance » -----------------------
+  const titleCard = (
+    <>
+      <div className={cardClass}>
+        <input
+          ref={titleRef}
+          aria-label="Titre"
+          placeholder={fallbackTitle || "Titre (ex. : Coaching force)"}
+          maxLength={120}
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          className="h-[52px] w-full bg-transparent px-4 text-[17px] text-text outline-none lg:text-[15px] placeholder:text-faint"
+        />
+      </div>
+    </>
+  );
+  const whenBlock = (
+    <>
+      <div className={cardClass}>
+        <div className={rowClass}>
+          <span className="text-[16px] lg:text-[14px] text-text">Début</span>
+          <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+            <DateChip label="Date de début" value={startsOn} onChange={changeStartsOn} />
+            {allDay ? null : startTimeInput}
+          </span>
+        </div>
+        <div className={rowClass}>
+          <span className="flex shrink-0 flex-col whitespace-nowrap">
+            <span className="text-[16px] lg:text-[14px] text-text">Fin</span>
+            {timeProblem || allDay ? null : (
+              <span className="text-[12.5px] text-muted">Durée : {formatDuration(duration)}</span>
+            )}
+          </span>
+          <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+            <span className={`${chipClass} text-text-2`}>{formatDay(startsOn)}</span>
+            {allDay ? null : endTimeInput}
+          </span>
+        </div>
+        <div className={rowClass}>
+          <span className="text-[16px] lg:text-[14px] text-text">Jour entier</span>
+          <Switch checked={allDay} onChange={toggleAllDay} label="Jour entier" />
+        </div>
+        <MenuRow
+          label="Récurrence"
+          value={presetLabels[preset]}
+          muted={preset === "never"}
+          onOpen={() => setScreen("repeat")}
+        />
+        {rule ? (
+          <MenuRow
+            label="Fin de la répétition"
+            value={endsOn ? formatDay(endsOn) : "Jamais"}
+            muted={!endsOn}
+            onOpen={() => setScreen("repeat-end")}
+          />
+        ) : null}
+      </div>
+      {timeNote}
+      {sentence ? (
+        <p className="-mt-1 px-4 text-[12.5px] leading-[1.45] text-muted">{sentence}</p>
+      ) : null}
+    </>
+  );
+  const locationBlock = (
+    <>
+      <div>
+        <p className={sectionTitleClass}>Lieu</p>
+        <div className={cardClass}>
+          <label className={rowClass}>
+            <MapPin aria-hidden size={18} strokeWidth={1.8} className="shrink-0 text-muted" />
+            <input
+              aria-label="Lieu"
+              placeholder="Ex. : piste, salle, parc"
+              maxLength={120}
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              className="h-11 min-w-0 flex-1 bg-transparent text-[16px] lg:text-[14px] text-text outline-none placeholder:text-faint"
+            />
+          </label>
+        </div>
+      </div>
+    </>
+  );
+  const athleteBlock = (
+    <>
+      <div>
+        <p className={sectionTitleClass}>
+          {kind === "individual" ? "Sportif" : "Sportifs inscrits"}
+        </p>
+        <div className={cardClass}>
+          {kind === "group" ? (
+            <MenuRow
+              label="Sportifs inscrits"
+              value={enrolledLabel}
+              muted={athleteIds.length === 0}
+              icon={<Users aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
+              onOpen={() => setScreen("athletes")}
+            />
+          ) : newClient ? (
+            <div className={rowClass}>
+              <User aria-hidden size={18} strokeWidth={1.8} className="shrink-0 text-muted" />
+              <input
+                aria-label="Nom du nouveau sportif"
+                placeholder="Nom du nouveau sportif"
+                value={newAthleteName}
+                maxLength={161}
+                autoComplete="off"
+                onChange={(event) => setNewAthleteName(event.target.value)}
+                className="h-11 min-w-0 flex-1 bg-transparent text-[16px] lg:text-[14px] text-text outline-none placeholder:text-faint"
+              />
+            </div>
+          ) : (
+            <MenuRow
+              label="Sportif"
+              value={athleteName ?? "Choisir un sportif"}
+              muted={!athleteName}
+              valueOnly
+              icon={<User aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
+              onOpen={() => setScreen("athletes")}
+            />
+          )}
+        </div>
+        {kind === "individual" && newClient ? (
+          <p className="px-4 pt-1.5 text-[12.5px] leading-[1.45] text-muted">
+            Sa fiche est créée avec son nom, à compléter ensuite.{" "}
+            <button
+              type="button"
+              onClick={() => setScreen("athletes")}
+              className="font-semibold text-violet-text"
+            >
+              Choisir dans la liste
+            </button>
+          </p>
+        ) : null}
+      </div>
+    </>
+  );
+  const optionsBlock = (
+    <>
+      <div>
+        <p className={sectionTitleClass}>Options</p>
+        <div className={cardClass}>
+          <MenuRow
+            label="Discipline"
+            value={disciplineLabel}
+            muted={!discipline}
+            icon={<Dumbbell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
+            onOpen={() => setScreen("discipline")}
+          />
+          <MenuRow
+            label="Alerte"
+            value={alertValue(0)}
+            muted={alerts.length === 0}
+            icon={<Bell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
+            onOpen={() => setScreen("alert")}
+          />
+          {alerts.length > 0 ? (
+            <MenuRow
+              label="2e alerte"
+              value={alertValue(1)}
+              muted={alerts.length < 2}
+              icon={<Bell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
+              onOpen={() => setScreen("alert2")}
+            />
+          ) : null}
+        </div>
+        <p className="px-4 pt-1.5 text-[12.5px] leading-[1.45] text-muted">{alertHint}</p>
+      </div>
+    </>
+  );
+  const paymentBlock = (
+    <>
+      <div>
+        <p className={sectionTitleClass}>Paiement</p>
+        <div className={cardClass}>
+          <div className={rowClass}>
+            <span className="text-[16px] lg:text-[14px] text-text">{priceLabel}</span>
+            <span className="flex items-center gap-1.5">
+              {priceInput}
+              <span className="text-[15px] text-muted">{currencySymbol(currency)}</span>
+            </span>
+          </div>
+          <div className={rowClass}>
+            <span className="text-[16px] lg:text-[14px] text-text">Paiement</span>
+            {paymentSwitch}
+          </div>
+          <div className={rowClass}>
+            <span className="text-[16px] lg:text-[14px] text-text">Appliquer la TVA</span>
+            <Switch checked={vat.apply} onChange={vat.setApply} label="Appliquer la TVA" />
+          </div>
+          {vat.apply ? (
+            <>
+              <div className={rowClass}>
+                <label htmlFor={`${formId}-vat`} className="text-[16px] lg:text-[14px] text-text">
+                  Taux de TVA
+                </label>
+                {vatRateInput}
+              </div>
+              <div className={rowClass}>
+                <span className="text-[16px] lg:text-[14px] text-text">
+                  TVA comprise dans le prix
+                </span>
+                <Switch
+                  checked={vat.included}
+                  onChange={vat.setIncluded}
+                  label="TVA comprise dans le prix"
+                />
+              </div>
+            </>
+          ) : null}
+        </div>
+        <p aria-live="polite" className="px-4 pt-1.5 text-[12.5px] leading-[1.45] text-muted">
+          {priceHint}
+        </p>
+      </div>
+    </>
+  );
+  const notesCard = (
+    <>
+      <div className={cardClass}>
+        <textarea
+          aria-label="Note du coach"
+          placeholder="Note du coach (facultatif)"
+          rows={2}
+          maxLength={500}
+          value={notes}
+          onChange={(event) => setNotes(event.target.value)}
+          className="block w-full resize-none bg-transparent px-4 py-3 text-[16px] lg:text-[14px] leading-[1.45] text-text outline-none placeholder:text-faint"
+        />
+      </div>
+    </>
+  );
+
   const sheet = (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2.5 px-4 pt-3 pb-3">
@@ -632,207 +902,13 @@ export function SessionAppleFields({
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-4 pb-8 [&>*]:shrink-0">
         {errorBanner}
-        <div className={cardClass}>
-          <input
-            ref={titleRef}
-            aria-label="Titre"
-            placeholder={fallbackTitle || "Titre (ex. : Coaching force)"}
-            maxLength={120}
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            className="h-[52px] w-full bg-transparent px-4 text-[17px] text-text outline-none placeholder:text-faint"
-          />
-        </div>
-        <div className={cardClass}>
-          <div className={rowClass}>
-            <span className="text-[16px] text-text">Début</span>
-            <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-              <DateChip label="Date de début" value={startsOn} onChange={changeStartsOn} />
-              {allDay ? null : startTimeInput}
-            </span>
-          </div>
-          <div className={rowClass}>
-            <span className="flex shrink-0 flex-col whitespace-nowrap">
-              <span className="text-[16px] text-text">Fin</span>
-              {timeProblem || allDay ? null : (
-                <span className="text-[12.5px] text-muted">Durée : {formatDuration(duration)}</span>
-              )}
-            </span>
-            <span className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-              <span className={`${chipClass} text-text-2`}>{formatDay(startsOn)}</span>
-              {allDay ? null : endTimeInput}
-            </span>
-          </div>
-          <div className={rowClass}>
-            <span className="text-[16px] text-text">Jour entier</span>
-            <Switch checked={allDay} onChange={toggleAllDay} label="Jour entier" />
-          </div>
-          <MenuRow
-            label="Récurrence"
-            value={presetLabels[preset]}
-            muted={preset === "never"}
-            onOpen={() => setScreen("repeat")}
-          />
-          {rule ? (
-            <MenuRow
-              label="Fin de la répétition"
-              value={endsOn ? formatDay(endsOn) : "Jamais"}
-              muted={!endsOn}
-              onOpen={() => setScreen("repeat-end")}
-            />
-          ) : null}
-        </div>
-        {timeNote}
-        {sentence ? (
-          <p className="-mt-1 px-4 text-[12.5px] leading-[1.45] text-muted">{sentence}</p>
-        ) : null}
-        <div>
-          <p className={sectionTitleClass}>Lieu</p>
-          <div className={cardClass}>
-            <label className={rowClass}>
-              <MapPin aria-hidden size={18} strokeWidth={1.8} className="shrink-0 text-muted" />
-              <input
-                aria-label="Lieu"
-                placeholder="Ex. : piste, salle, parc"
-                maxLength={120}
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                className="h-11 min-w-0 flex-1 bg-transparent text-[16px] text-text outline-none placeholder:text-faint"
-              />
-            </label>
-          </div>
-        </div>
-        <div>
-          <p className={sectionTitleClass}>
-            {kind === "individual" ? "Sportif" : "Sportifs inscrits"}
-          </p>
-          <div className={cardClass}>
-            {kind === "group" ? (
-              <MenuRow
-                label="Sportifs inscrits"
-                value={enrolledLabel}
-                muted={athleteIds.length === 0}
-                icon={<Users aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
-                onOpen={() => setScreen("athletes")}
-              />
-            ) : newClient ? (
-              <div className={rowClass}>
-                <User aria-hidden size={18} strokeWidth={1.8} className="shrink-0 text-muted" />
-                <input
-                  aria-label="Nom du nouveau sportif"
-                  placeholder="Nom du nouveau sportif"
-                  value={newAthleteName}
-                  maxLength={161}
-                  autoComplete="off"
-                  onChange={(event) => setNewAthleteName(event.target.value)}
-                  className="h-11 min-w-0 flex-1 bg-transparent text-[16px] text-text outline-none placeholder:text-faint"
-                />
-              </div>
-            ) : (
-              <MenuRow
-                label="Sportif"
-                value={athleteName ?? "Choisir un sportif"}
-                muted={!athleteName}
-                valueOnly
-                icon={<User aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
-                onOpen={() => setScreen("athletes")}
-              />
-            )}
-          </div>
-          {kind === "individual" && newClient ? (
-            <p className="px-4 pt-1.5 text-[12.5px] leading-[1.45] text-muted">
-              Sa fiche est créée avec son nom, à compléter ensuite.{" "}
-              <button
-                type="button"
-                onClick={() => setScreen("athletes")}
-                className="font-semibold text-violet-text"
-              >
-                Choisir dans la liste
-              </button>
-            </p>
-          ) : null}
-        </div>
-        <div>
-          <p className={sectionTitleClass}>Options</p>
-          <div className={cardClass}>
-            <MenuRow
-              label="Discipline"
-              value={disciplineLabel}
-              muted={!discipline}
-              icon={<Dumbbell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
-              onOpen={() => setScreen("discipline")}
-            />
-            <MenuRow
-              label="Alerte"
-              value={alertValue(0)}
-              muted={alerts.length === 0}
-              icon={<Bell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
-              onOpen={() => setScreen("alert")}
-            />
-            {alerts.length > 0 ? (
-              <MenuRow
-                label="2e alerte"
-                value={alertValue(1)}
-                muted={alerts.length < 2}
-                icon={<Bell aria-hidden size={18} strokeWidth={1.8} className="text-muted" />}
-                onOpen={() => setScreen("alert2")}
-              />
-            ) : null}
-          </div>
-          <p className="px-4 pt-1.5 text-[12.5px] leading-[1.45] text-muted">{alertHint}</p>
-        </div>
-        <div>
-          <p className={sectionTitleClass}>Paiement</p>
-          <div className={cardClass}>
-            <div className={rowClass}>
-              <span className="text-[16px] text-text">{priceLabel}</span>
-              <span className="flex items-center gap-1.5">
-                {priceInput}
-                <span className="text-[15px] text-muted">{currencySymbol(currency)}</span>
-              </span>
-            </div>
-            <div className={rowClass}>
-              <span className="text-[16px] text-text">Paiement</span>
-              {paymentSwitch}
-            </div>
-            <div className={rowClass}>
-              <span className="text-[16px] text-text">Appliquer la TVA</span>
-              <Switch checked={vat.apply} onChange={vat.setApply} label="Appliquer la TVA" />
-            </div>
-            {vat.apply ? (
-              <>
-                <div className={rowClass}>
-                  <label htmlFor={`${formId}-vat`} className="text-[16px] text-text">
-                    Taux de TVA
-                  </label>
-                  {vatRateInput}
-                </div>
-                <div className={rowClass}>
-                  <span className="text-[16px] text-text">TVA comprise dans le prix</span>
-                  <Switch
-                    checked={vat.included}
-                    onChange={vat.setIncluded}
-                    label="TVA comprise dans le prix"
-                  />
-                </div>
-              </>
-            ) : null}
-          </div>
-          <p aria-live="polite" className="px-4 pt-1.5 text-[12.5px] leading-[1.45] text-muted">
-            {priceHint}
-          </p>
-        </div>
-        <div className={cardClass}>
-          <textarea
-            aria-label="Note du coach"
-            placeholder="Note du coach (facultatif)"
-            rows={2}
-            maxLength={500}
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            className="block w-full resize-none bg-transparent px-4 py-3 text-[16px] leading-[1.45] text-text outline-none placeholder:text-faint"
-          />
-        </div>
+        {titleCard}
+        {whenBlock}
+        {locationBlock}
+        {athleteBlock}
+        {optionsBlock}
+        {paymentBlock}
+        {notesCard}
       </div>
     </div>
   );
@@ -1144,6 +1220,188 @@ export function SessionAppleFields({
       </div>
     </div>
   );
+
+  // --- Page « Modifier la séance » (D-206) : les cartes de la feuille, sur deux colonnes sur
+  // ordinateur, sous le récapitulatif en direct (kit C-RECAP, D-123) ; téléphone : la carte « qui »,
+  // les cartes, la barre fixe Annuler / Enregistrer. Le type et le sportif d'une séance individuelle ne
+  // changent pas (supprimer puis recréer).
+  if (layout === "page") {
+    const individual = athletes.find((athlete) => athlete.id === v.athleteId) ?? null;
+    const enrolledAthletes = athletes.filter((athlete) => athleteIds.includes(athlete.id));
+    const whoLabel = enrolledAthletes.length === 0 ? "Aucun inscrit" : enrolledLabel;
+    const startDate = /^\d{4}-\d{2}-\d{2}$/.test(startsOn)
+      ? new Date(`${startsOn}T12:00:00Z`)
+      : null;
+    const at = allDay ? "toute la journée" : startTime || "—";
+    const day = startDate ? RECAP_DAY.format(startDate) : "";
+    const when = !startDate
+      ? "—"
+      : !rule
+        ? `${day.charAt(0).toUpperCase()}${day.slice(1)}, ${at}`
+        : preset === "weekly"
+          ? `Chaque ${RECAP_WEEKDAY.format(startDate)}, ${at}`
+          : `${preset === "custom" ? describeRule(rule, startsOn, null) : presetLabels[preset]}, ${at}`;
+    const recap = [
+      { label: "Quand", value: when },
+      { label: "Durée", value: allDay ? "Journée" : `${duration} min` },
+      {
+        label: "Jusqu'au",
+        value: rule ? (endsOn ? formatDay(endsOn) : "Sans fin") : "—",
+      },
+      {
+        label: "Prix",
+        value: paidCents === null ? "—" : `${format(paidCents)}${withVat ? " TTC" : ""}`,
+      },
+      { label: "Paiement", value: paymentMethod === "cash" ? "Espèces" : "Virement" },
+    ];
+    const submitButton = (className: string) => (
+      <button type="submit" form={formId} disabled={submitDisabled} className={className}>
+        {pending ? "Enregistrement…" : submitLabel}
+      </button>
+    );
+    return (
+      <div className="flex w-full flex-col gap-3 lg:max-w-[1120px] lg:gap-4">
+        {/* Récapitulatif en direct (ordinateur). */}
+        <aside
+          aria-label="Récapitulatif de la séance"
+          className="grid grid-cols-[minmax(0,1fr)_170px] items-center gap-x-7 gap-y-3 rounded-[20px] bg-surface px-[22px] py-[18px] inset-ring inset-ring-line-soft max-lg:hidden xl:grid-cols-[220px_minmax(0,1fr)_170px]"
+        >
+          <p className="col-span-full text-[11.5px] leading-[normal] font-semibold tracking-[0.06em] text-faint uppercase">
+            {kind === "group" ? "Séance collective" : "Séance individuelle"}
+          </p>
+          {kind === "group" ? (
+            <div className="flex min-w-0 flex-col gap-2.5">
+              {enrolledAthletes.length > 0 ? (
+                <span className="flex">
+                  {enrolledAthletes.slice(0, 6).map((athlete) => (
+                    <span
+                      key={athlete.id}
+                      className="-ml-2 flex rounded-full ring-2 ring-surface first:ml-0"
+                    >
+                      <Avatar name={athlete.name} size="stack" photoPath={athlete.photoPath} />
+                    </span>
+                  ))}
+                </span>
+              ) : null}
+              <span className="text-[14.5px] leading-[normal] font-semibold">{whoLabel}</span>
+            </div>
+          ) : individual ? (
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar
+                name={individual.name}
+                size="who"
+                photoPath={individual.photoPath}
+                sex={individual.sex}
+              />
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="truncate text-[14.5px] leading-[normal] font-semibold">
+                  {individual.name}
+                </span>
+                <Link
+                  href={`${athletesPath}/${individual.id}`}
+                  className="self-start rounded-[4px] text-[12.5px] leading-[normal] font-medium text-violet-text underline-offset-4 hover:underline"
+                >
+                  Voir la fiche
+                </Link>
+              </span>
+            </div>
+          ) : (
+            <span className="text-[14.5px] font-semibold">Séance individuelle</span>
+          )}
+          <dl className="col-span-full grid min-w-0 grid-cols-5 gap-3 border-t border-line pt-3 max-xl:order-last xl:col-span-1 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-6">
+            {recap.map((item) => (
+              <div
+                key={item.label}
+                className="flex min-w-0 flex-col gap-[3px] text-[13px] leading-[normal]"
+              >
+                <dt className="text-muted">{item.label}</dt>
+                <dd className="font-semibold text-pretty">{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="flex flex-col gap-2">
+            {submitButton(
+              "inline-flex h-[42px] items-center justify-center rounded-[11px] bg-cta px-2 text-[14px] leading-[normal] font-semibold whitespace-nowrap text-on-cta transition-[background-color,scale] duration-150 hover:bg-cta-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+            <Link
+              href={cancelHref}
+              className="inline-flex h-[42px] items-center justify-center rounded-[11px] text-[14px] leading-[normal] font-medium text-text inset-ring inset-ring-line-2 transition-[background-color,scale] duration-150 hover:bg-surface-2 active:scale-[0.98]"
+            >
+              Annuler
+            </Link>
+          </div>
+        </aside>
+
+        {/* Téléphone : qui (le sportif, ou la séance collective et ses inscrits). */}
+        <div className="flex items-center gap-3 rounded-[22px] bg-surface px-4 py-3.5 lg:hidden">
+          {kind === "group" ? (
+            <span
+              aria-hidden
+              className="grid size-[42px] shrink-0 place-items-center rounded-[13px] bg-status-accent-soft text-violet-text"
+            >
+              <Users size={18} strokeWidth={1.8} />
+            </span>
+          ) : individual ? (
+            <Avatar
+              name={individual.name}
+              size="who"
+              photoPath={individual.photoPath}
+              sex={individual.sex}
+            />
+          ) : null}
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-[15px] leading-[normal] font-semibold">
+              {kind === "group" ? "Séance collective" : (individual?.name ?? "Séance individuelle")}
+            </span>
+            <span className="text-[12.5px] leading-[normal] text-muted">
+              {kind === "group" ? whoLabel : "Séance individuelle"}
+            </span>
+          </span>
+        </div>
+
+        <form id={formId} action={formAction} noValidate className="flex flex-col gap-3">
+          {screen === "main" ? (
+            <>
+              {errorBanner}
+              <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
+                <div className="flex min-w-0 flex-col gap-3 [&>*]:shrink-0">
+                  {titleCard}
+                  {whenBlock}
+                  {locationBlock}
+                </div>
+                <div className="flex min-w-0 flex-col gap-3 [&>*]:shrink-0">
+                  {kind === "group" ? athleteBlock : null}
+                  {optionsBlock}
+                  {paymentBlock}
+                  {notesCard}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="-mx-4 flex flex-col pb-4 lg:mx-auto lg:w-full lg:max-w-[560px] [&>*]:shrink-0">
+              {subScreens[screen]}
+            </div>
+          )}
+          {hidden}
+        </form>
+
+        {/* Bas de page : l'avertissement, et « Supprimer la séance » sur ordinateur. */}
+        <div className="flex items-start justify-between gap-4 px-2 pt-1 lg:rounded-[20px] lg:bg-surface lg:px-[22px] lg:py-4 lg:inset-ring lg:inset-ring-line-soft">
+          <p className="text-[12.5px] leading-[1.5] text-faint lg:text-muted">
+            Pour changer de type ou de sportif, supprime la séance et crée-en une nouvelle.
+          </p>
+          {footer ? <div className="shrink-0 max-lg:hidden">{footer}</div> : null}
+        </div>
+
+        <MobileActionBar>
+          <Link href={cancelHref} className={mobileActionSecondaryClass}>
+            Annuler
+          </Link>
+          {submitButton(mobileActionPrimaryClass)}
+        </MobileActionBar>
+      </div>
+    );
+  }
 
   return (
     <form

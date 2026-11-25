@@ -38,6 +38,8 @@ export type DragBlock = {
   // Série quotidienne ou hebdomadaire : « Toute la série » est proposée (D-203).
   seriesMovable: boolean;
   moved: boolean;
+  // « Jour entier » (D-204, D-208) : seul le jour change ; la rangée du haut de la grille.
+  allDay?: boolean;
 };
 type Target = { date: string; start: number };
 type Drag = { block: DragBlock; grab: number; target: Target | null };
@@ -53,6 +55,7 @@ type Ctx = {
     duration: number;
     title: string;
     saving: boolean;
+    allDay: boolean;
   } | null;
 };
 
@@ -65,13 +68,27 @@ const keyOf = (block: { sessionId: string; originalDate: string }) =>
 const weekdayLong = new Intl.DateTimeFormat("fr-BE", { weekday: "long", timeZone: "UTC" });
 
 // Colonne (jour) sous le pointeur et heure visée, arrondie au quart d'heure, sans sortir de la grille.
-function targetAt(clientX: number, clientY: number, grab: number, duration: number): Target | null {
-  const column = document
-    .elementsFromPoint(clientX, clientY)
-    .find(
+// Séance « Jour entier » : seul le jour compte, dans sa rangée du haut ou dans la colonne des heures.
+function targetAt(
+  clientX: number,
+  clientY: number,
+  grab: number,
+  duration: number,
+  allDay = false,
+): Target | null {
+  const elements = document.elementsFromPoint(clientX, clientY);
+  if (allDay) {
+    const cell = elements.find(
       (element): element is HTMLElement =>
-        element instanceof HTMLElement && !!element.dataset.dropDate,
+        element instanceof HTMLElement &&
+        !!(element.dataset.allDayDate ?? element.dataset.dropDate),
     );
+    return cell ? { date: (cell.dataset.allDayDate ?? cell.dataset.dropDate)!, start: 0 } : null;
+  }
+  const column = elements.find(
+    (element): element is HTMLElement =>
+      element instanceof HTMLElement && !!element.dataset.dropDate,
+  );
   if (!column) return null;
   const box = column.getBoundingClientRect();
   const first = Number(column.dataset.firstHour);
@@ -148,7 +165,10 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
         else if (dy) window.scrollBy(0, dy);
         if (dx || dy) {
           const duration = current.block.end - current.block.start;
-          setDragBoth({ ...current, target: targetAt(last.x, last.y, current.grab, duration) });
+          setDragBoth({
+            ...current,
+            target: targetAt(last.x, last.y, current.grab, duration, current.block.allDay),
+          });
         }
       }
       id = requestAnimationFrame(loop);
@@ -199,7 +219,10 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
           if (!current) return;
           if (pointer.current) Object.assign(pointer.current, { x: clientX, y: clientY });
           const duration = current.block.end - current.block.start;
-          setDragBoth({ ...current, target: targetAt(clientX, clientY, current.grab, duration) });
+          setDragBoth({
+            ...current,
+            target: targetAt(clientX, clientY, current.grab, duration, current.block.allDay),
+          });
         },
         end: () => {
           const current = dragRef.current;
@@ -217,6 +240,7 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
               duration: drag.block.end - drag.block.start,
               title: drag.block.title,
               saving: false,
+              allDay: drag.block.allDay === true,
             }
           : saving && isPending
             ? {
@@ -225,6 +249,7 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
                 duration: saving.block.end - saving.block.start,
                 title: saving.block.title,
                 saving: true,
+                allDay: saving.block.allDay === true,
               }
             : confirm
               ? {
@@ -233,6 +258,7 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
                   duration: confirm.block.end - confirm.block.start,
                   title: confirm.block.title,
                   saving: false,
+                  allDay: confirm.block.allDay === true,
                 }
               : null,
       }
@@ -257,7 +283,11 @@ export function GridInteractions({ move, children }: { move?: Move; children: Re
                   {
                     label: `Toute la série · chaque ${weekdayLong.format(
                       new Date(`${confirm.target.date}T00:00:00Z`),
-                    )} à ${toTime(confirm.target.start)}`,
+                    )}${
+                      confirm.block.allDay
+                        ? ", toute la journée"
+                        : ` à ${toTime(confirm.target.start)}`
+                    }`,
                     icon: Repeat,
                     onSelect: () => perform(confirm.block, confirm.target, "series"),
                   },
@@ -406,7 +436,7 @@ export function DraggableBlock({
 export function DropPreview({ date, firstHour }: { date: string; firstHour: number }) {
   const ctx = useContext(DragContext);
   const active = ctx?.active;
-  if (!active?.target || active.target.date !== date) return null;
+  if (!active?.target || active.target.date !== date || active.allDay) return null;
   const { start } = active.target;
   return (
     <span
@@ -437,6 +467,24 @@ export function DropPreview({ date, firstHour }: { date: string; firstHour: numb
           <span className="truncate text-[12px] leading-tight font-semibold">{active.title}</span>
         </>
       )}
+    </span>
+  );
+}
+
+// Aperçu d'une séance « Jour entier » dans la rangée du haut (D-208) : le jour visé, en pointillés.
+export function AllDayDropPreview({ date }: { date: string }) {
+  const ctx = useContext(DragContext);
+  const active = ctx?.active;
+  if (!active?.target || !active.allDay || active.target.date !== date) return null;
+  return (
+    <span
+      aria-hidden
+      className={`pointer-events-none truncate rounded-md border-2 border-accent bg-[color-mix(in_srgb,var(--accent)_10%,var(--surface))] px-1.5 py-0.5 text-[12px] leading-[1.25] font-semibold lg:text-[11px] ${
+        active.saving ? "border-solid" : "border-dashed"
+      }`}
+    >
+      {active.title}
+      {active.saving ? " · …" : ""}
     </span>
   );
 }

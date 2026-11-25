@@ -57,7 +57,7 @@ test("la séance garde son alerte, affichée sur sa page et reprise par « Modif
   await expect(page.getByRole("heading", { name: title, level: 1 })).toBeVisible();
   await expect(page.getByRole("region", { name: "Cette séance" })).toContainText("15 min avant");
   await page.getByRole("link", { name: "Modifier", exact: true }).first().click();
-  await expect(page.getByLabel(/^Alerte/)).toHaveValue("15");
+  await expect(page.getByRole("button", { name: "Alerte : 15 min avant" })).toBeVisible();
 });
 
 test("Paramètres : notifications bloquées, l'explication sans bouton", async ({ page }) => {
