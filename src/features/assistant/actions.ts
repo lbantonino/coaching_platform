@@ -8,6 +8,7 @@ import { getCoachProfile } from "@/features/coach/profile";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
+import { attachmentBlocks } from "./attachment-content";
 import { runAssistantStep, type StepResult } from "./loop";
 import { getAssistantModel } from "./model";
 import { remainingThisMonth } from "./queries";
@@ -59,9 +60,14 @@ export async function askAssistant(
 
   let usageId: string;
   let messages: Anthropic.MessageParam[];
-  // Lot 2 : le nom, le type et la taille du fichier joint (jamais son contenu), pour importer_document.
-  const attachment =
+  // Fichier joint (D-209) : Claude lit son contenu (attachmentBlocks) ; les outils, comme
+  // importer_document, ne reçoivent que son nom, son type et sa taille.
+  const joined =
     "start" in parsed.data ? parsed.data.start.attachment : parsed.data.next.attachment;
+  const attachment = joined
+    ? { name: joined.name, type: joined.type, size: joined.size }
+    : undefined;
+  const attachmentContent = joined ? attachmentBlocks(joined) : [];
   if ("start" in parsed.data) {
     const { data, error } = await supabase.rpc("reserve_assistant_use", {
       p_organization_id: orgId,
@@ -101,6 +107,7 @@ export async function askAssistant(
         model,
         runTool: (name, toolInput, pending) =>
           runAssistantTool(orgId, name, toolInput, pending, user.id, attachment),
+        attachmentBlocks: attachmentContent,
       },
       messages,
       assistantTools(),

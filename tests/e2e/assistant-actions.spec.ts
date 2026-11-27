@@ -274,6 +274,34 @@ test("un fichier trop lourd est refusé, et le refus disparaît à l'envoi", asy
   ).toHaveCount(0);
 });
 
+// D-209 (accord d'Antonino du 27/11) : l'assistant LIT le fichier joint (3 Mo au plus) ; le coach est
+// prévenu qu'il part chez l'IA. Le modèle simulé répond : la demande avec le fichier passe bien.
+test("le fichier joint est lu par l'assistant, et l'avertissement le dit", async ({ page }) => {
+  const box = await openAssistant(page);
+  await box.locator('input[type="file"]').setInputFiles({
+    name: "bilan.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.from("%PDF-1.4 bilan de test"),
+  });
+  await expect(
+    box.getByText(
+      "L'assistant lit ce fichier pour te répondre : il est envoyé à l'IA (Claude). N'y mets pas de données de santé.",
+    ),
+  ).toBeVisible();
+  await ask(box, "Résume ce fichier joint");
+  await expect(box.getByText("Réponse simulée.")).toBeVisible(STEPS);
+  await box.locator('input[type="file"]').setInputFiles({
+    name: "gros.pdf",
+    mimeType: "application/pdf",
+    buffer: Buffer.alloc(3 * 1024 * 1024 + 1, 1),
+  });
+  await expect(
+    box.getByText(
+      "Plus de 3 Mo : l'assistant ne pourra pas le lire, seulement le ranger dans tes Documents.",
+    ),
+  ).toBeVisible();
+});
+
 // Lot 2 (D-181) : « Nouvel exercice » dans la Bibliothèque du coach, par la même création que le
 // formulaire (le nom porte le marqueur : l'exercice est retiré en fin de suite).
 test("lot 2 : créer un exercice dans la Bibliothèque", async ({ page }) => {

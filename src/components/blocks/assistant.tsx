@@ -52,6 +52,7 @@ import {
   LOCKED_TEXT,
   UNCONFIGURED_NOTE,
   UNCONFIGURED_TEXT,
+  READ_MAX_BYTES,
   assistantComposerOpen,
   attachmentProblem,
   trimHistory,
@@ -92,8 +93,8 @@ type AssistantState = {
   messages: AssistantMessage[];
   draft: string;
   athlete: Athlete | null;
-  // Fichier joint à la prochaine demande (lot 2, D-181) : il reste dans le navigateur ; seuls son nom,
-  // son type et sa taille partent chez Claude.
+  // Fichier joint à la prochaine demande (lot 2, D-181) : depuis D-209, Claude le lit (3 Mo au plus,
+  // envoyé avec chaque étape de la demande) ; au-delà, seuls son nom, son type et sa taille.
   attachment: File | null;
   setAttachment: (file: File | null) => void;
   openDialog: () => void;
@@ -165,7 +166,6 @@ export function AssistantProvider({
       const about = athlete ? ` (sportif : ${athlete.name})` : "";
       const question = `${body}${about}`;
       const file = attachment;
-      const meta = file ? { name: file.name, type: file.type, size: file.size } : undefined;
       const history = trimHistory(
         messages
           .filter((message) => !message.failed)
@@ -216,6 +216,11 @@ export function AssistantProvider({
       // Une demande se fait en étapes (un appel au modèle chacune) : tant que l'assistant cherche
       // (outils de lecture), on relance l'étape suivante avec la conversation qu'il a renvoyée.
       const drive = async () => {
+        // Le contenu du fichier (D-209) : lu ici, envoyé à chaque étape (le serveur ne garde rien).
+        const data = file && file.size <= READ_MAX_BYTES ? await toBase64(file) : undefined;
+        const meta = file
+          ? { name: file.name, type: file.type, size: file.size, ...(data ? { data } : {}) }
+          : undefined;
         let result = await ask({
           start: { history, question, ...(meta ? { attachment: meta } : {}) },
         });
@@ -683,6 +688,16 @@ export function AssistantThread({ className = "" }: { className?: string }) {
 
 // Zone de saisie (boîte et page) : le texte, le sportif concerné, Envoyer (rond violet, grisé si
 // vide). Entrée envoie, Maj + Entrée passe à la ligne. « Dicter » (D-173) écrit la voix dans la saisie ;
+// Contenu d'un fichier en base64, sans l'en-tête « data:…;base64, » (D-209).
+function toBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
 // « Joindre » (lot 2, D-181) garde un fichier dans le navigateur pour « Importer un document ».
 export function AssistantComposer({
   rows,
@@ -750,6 +765,14 @@ export function AssistantComposer({
             <X aria-hidden size={13} strokeWidth={2.2} className="shrink-0" />
           </button>
         </div>
+      ) : null}
+      {assistant.attachment ? (
+        // D-209 : le coach sait que le fichier part chez l'IA pour être lu.
+        <p className="px-1 text-[12px] leading-[1.45] text-muted">
+          {assistant.attachment.size > READ_MAX_BYTES
+            ? "Plus de 3 Mo : l'assistant ne pourra pas le lire, seulement le ranger dans tes Documents."
+            : "L'assistant lit ce fichier pour te répondre : il est envoyé à l'IA (Claude). N'y mets pas de données de santé."}
+        </p>
       ) : null}
       {fileError ? (
         <p role="alert" className="px-1 text-[12.5px] leading-[1.4] text-alert">

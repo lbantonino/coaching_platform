@@ -98,11 +98,13 @@ export default function PrivacyPage() {
               </p>
               <p>
                 <strong>Anthropic</strong> (Claude, États-Unis) : seulement quand un coach utilise
-                l’Assistant IA. Sa demande et les informations utiles pour y répondre (par exemple
-                le prénom d’un sportif, ses objectifs, ses repères, ses séances ou ses paiements)
-                sont envoyées à Claude. L’Assistant ne lit jamais les données de santé, les notes
-                privées ni les données Garmin, et Anthropic n’utilise pas ces échanges pour
-                entraîner ses modèles. Coach, n’écris pas de données de santé dans l’Assistant.
+                l’Assistant IA. Sa demande, le fichier qu’il y joint (un PDF, une image, un document
+                Word ou un tableau Excel, que l’Assistant lit pour lui répondre) et les informations
+                utiles pour y répondre (par exemple le prénom d’un sportif, ses objectifs, ses
+                repères, ses séances ou ses paiements) sont envoyés à Claude. L’Assistant ne va
+                jamais chercher les données de santé, les notes privées ni les données Garmin, et
+                Anthropic n’utilise pas ces échanges pour entraîner ses modèles. Coach, n’écris pas
+                de données de santé dans l’Assistant et n’y joins pas de document qui en contient.
               </p>
               <p>
                 <strong>Hors de l’Union européenne</strong> : certains de ces prestataires sont

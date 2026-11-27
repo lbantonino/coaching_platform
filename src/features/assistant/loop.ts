@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
+import { withAttachment } from "./attachment-content";
 import type { AssistantModel } from "./model";
 import { summaryForClaude, type AssistantProposal } from "./proposals";
 import { systemPrompt, type AssistantErrorKind } from "./rules";
@@ -23,6 +24,9 @@ export type StepContext = {
   model: AssistantModel;
   // `pending` : propositions déjà faites dans cette étape (pour relier une carte à une fiche à créer).
   runTool: (name: string, input: unknown, pending: AssistantProposal[]) => Promise<ToolOutcome>;
+  // Le fichier joint, tel que Claude le lit (D-209) : placé avant la question à chaque appel, jamais
+  // dans la conversation renvoyée au navigateur.
+  attachmentBlocks?: Anthropic.ContentBlockParam[];
 };
 
 export type StepUsage = { input: number; output: number };
@@ -93,7 +97,7 @@ export async function runAssistantStep(
   const response = await ctx.model({
     system: [{ type: "text", text: systemPrompt(ctx.firstName, ctx.todayIso) }],
     tools,
-    messages,
+    messages: withAttachment(messages, ctx.attachmentBlocks ?? []),
   });
   const usage = { input: response.usage.input_tokens, output: response.usage.output_tokens };
   // Un refus peut couper un appel d'outil en plein milieu : on n'exécute rien de cette réponse.

@@ -235,7 +235,10 @@ describe("consigne du lot 2", () => {
     const prompt = systemPrompt("Gianluca", "2026-11-14");
     expect(prompt).toContain("compléter la fiche d'un sportif");
     expect(prompt).toContain("voir_fiche");
-    expect(prompt).toContain("tu ne vois jamais son contenu");
+    // D-209 : l'assistant lit le fichier joint, et dit quand il n'a pas pu le lire.
+    expect(prompt).toContain("son contenu est dans la demande");
+    expect(prompt).toContain("n'invente jamais son contenu");
+    expect(prompt).toContain("Si un fichier joint contient des données de santé");
     expect(prompt).toContain("seulement d'un programme publié");
     expect(prompt).toContain("créer un exercice");
   });

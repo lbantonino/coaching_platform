@@ -54,13 +54,10 @@ function scriptedModel(file: string): AssistantModel {
   const script = JSON.parse(readFileSync(path.resolve(file), "utf8")) as Script;
   return async ({ messages }) => {
     let index = messages.length - 1;
-    while (
-      index > 0 &&
-      !(messages[index].role === "user" && typeof messages[index].content === "string")
-    )
+    while (index > 0 && !(messages[index].role === "user" && writtenText(messages[index]) !== null))
       index--;
-    const asked = messages[index]?.content;
-    const question = typeof asked === "string" ? lastQuestion(asked) : "";
+    const asked = messages[index] ? writtenText(messages[index]) : null;
+    const question = asked !== null ? lastQuestion(asked) : "";
     const step = messages.slice(index).filter((message) => message.role === "assistant").length;
     const content = script[question]?.[step] ?? [
       { type: "text", text: "Réponse simulée.", citations: null },
@@ -76,6 +73,15 @@ function scriptedModel(file: string): AssistantModel {
       usage: { input_tokens: 0, output_tokens: 0 },
     } as unknown as Anthropic.Message;
   };
+}
+
+// Texte écrit par le coach : le message lui-même, ou son dernier bloc de texte quand un fichier joint le
+// précède (D-209) ; null pour un retour d'outils.
+function writtenText(message: Anthropic.MessageParam): string | null {
+  if (typeof message.content === "string") return message.content;
+  if (message.content.some((block) => block.type === "tool_result")) return null;
+  const last = message.content.at(-1);
+  return last?.type === "text" ? last.text : null;
 }
 
 // Dernier paragraphe d'un message du coach : sa question.
