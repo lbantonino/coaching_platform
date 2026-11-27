@@ -106,12 +106,13 @@ export async function runAssistantStep(
   const calls = response.content.filter(
     (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
   );
+  const text = textOf(response.content);
   // Réponse coupée par la longueur : un appel d'outil peut être incomplet, on n'en exécute aucun
-  // (relecture n°8).
-  if (response.stop_reason === "max_tokens" && calls.length > 0) {
+  // (relecture n°8). Coupée pendant la réflexion (ni texte ni outil, 27/11) : même message, pas
+  // « indisponible ».
+  if (response.stop_reason === "max_tokens" && (calls.length > 0 || !text)) {
     return { kind: "error", error: "truncated", usage };
   }
-  const text = textOf(response.content);
   if (calls.length === 0) {
     return text ? { kind: "answer", text, usage } : { kind: "error", error: "unavailable", usage };
   }

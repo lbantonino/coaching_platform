@@ -330,6 +330,25 @@ describe("n°3 et n°8 : étape de la boucle", () => {
     expect(used).toEqual([]);
     expect(step).toMatchObject({ kind: "error", error: "truncated" });
   });
+
+  // 27/11 : une demande lourde (programme tiré d'un PDF de 7 pages) a passé toute sa réponse à
+  // réfléchir ; sans texte ni outil, l'écran disait « indisponible », comme une panne.
+  it("une réponse coupée pendant la réflexion, sans texte ni outil, dit qu'elle a été coupée", async () => {
+    const step = await runAssistantStep(
+      {
+        firstName: "",
+        todayIso: "2026-11-27",
+        model: async () =>
+          reply(
+            [{ type: "thinking", thinking: "", signature: "s" } as Anthropic.ContentBlock],
+            "max_tokens",
+          ),
+        runTool: async () => ({ type: "error", content: "" }),
+      },
+      [{ role: "user", content: "x" }],
+    );
+    expect(step).toMatchObject({ kind: "error", error: "truncated" });
+  });
 });
 
 describe("n°6 et n°14 : la taille de ce qui part chez Claude", () => {

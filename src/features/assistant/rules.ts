@@ -12,11 +12,14 @@ export const ASSISTANT_MONTHLY_LIMIT = 100;
 export const ASSISTANT_MODEL = "claude-opus-5-5";
 // De quoi réfléchir puis répondre, ou écrire un programme de quelques semaines (lot 3a : chaque
 // séance décrite une fois, placée par référence). Une réponse coupée n'exécute rien (loop.ts).
-export const ASSISTANT_MAX_TOKENS = 8000;
-// Relecture n°5 : sans flux, le délai couvre toute la rédaction (8 000 jetons en 200 s au pire), et
-// reste sous les 300 s d'une fonction Vercel (maxDuration de l'espace coach). Pas de second essai
-// automatique : il serait facturé une deuxième fois.
-export const ASSISTANT_TIMEOUT_MS = 240_000;
+// 27/11 : 8 000 ne suffisaient pas pour 3 semaines de séances tirées d'un PDF de 7 pages (réflexion
+// comprise) ; seuls les jetons écrits sont facturés, pas la limite.
+export const ASSISTANT_MAX_TOKENS = 20_000;
+// Relecture n°5 : sans flux, le délai couvre toute la rédaction. Mesuré le 27/11 : plus de 90 jetons
+// par seconde ; à 80 au pire, 20 000 jetons en 250 s. Il reste 30 s sous les 300 s d'une fonction
+// Vercel (maxDuration de l'espace coach). Pas de second essai automatique : il serait facturé une
+// deuxième fois.
+export const ASSISTANT_TIMEOUT_MS = 270_000;
 export const ASSISTANT_MAX_RETRIES = 0;
 // Une demande du coach se fait en étapes (un appel au modèle chacune, lot 1 des actions) : 6 au plus,
 // en moins de 5 minutes. La base applique les mêmes limites (continue_assistant_use).
@@ -215,7 +218,8 @@ export const ASSISTANT_ERRORS = {
   invalid: "Ta demande n'a pas pu être lue. Réessaie.",
   steps: "Je n'ai pas réussi, reformule ta demande.",
   expired: "Ta demande a pris trop de temps. Réessaie.",
-  truncated: "Ma réponse a été coupée. Reformule ta demande plus simplement.",
+  truncated:
+    "Ta demande est trop longue pour une seule réponse. Fais-la en plusieurs fois, par exemple semaine par semaine.",
 } as const;
 export type AssistantErrorKind = keyof typeof ASSISTANT_ERRORS;
 

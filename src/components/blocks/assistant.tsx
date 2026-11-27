@@ -21,6 +21,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useId,
   useMemo,
   useRef,
@@ -615,11 +616,25 @@ export function AssistantDialog() {
 // Le fil : les demandes du coach (bulle encre, à droite) et les réponses (orbe + texte).
 export function AssistantThread({ className = "" }: { className?: string }) {
   const assistant = useAssistant()!;
+  // Le fil défile seul (27/11) : à chaque nouveau message ou étape, il descend au dernier, comme une
+  // messagerie ; en douceur, sauf « Réduire les animations ».
+  const list = useRef<HTMLOListElement>(null);
+  const count = assistant.messages.length;
+  const progress = assistant.progress;
+  useEffect(() => {
+    const element = list.current;
+    if (!element) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    element.scrollTo({ top: element.scrollHeight, behavior: reduced ? "auto" : "smooth" });
+  }, [count, progress]);
   return (
     <ol
+      ref={list}
       aria-label="Conversation avec l'assistant"
       aria-live="polite"
-      className={`flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain ${className}`}
+      // `relative` : les textes pour lecteurs d'écran (sr-only, en position absolue) restent dans le
+      // fil qui défile ; sinon ils allongeaient toute la page (27/11).
+      className={`relative flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain ${className}`}
     >
       {assistant.messages
         .filter((message) => !message.hidden)

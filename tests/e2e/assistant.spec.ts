@@ -92,3 +92,49 @@ test("autorisé par son adresse, le coach A a l'assistant ouvert sans abonnement
   await expect(box).toContainText("N'écris pas de données de santé ici.");
   await expect(box).not.toContainText(LOCKED);
 });
+
+// Page de l'Assistant IA (27/11, demande d'Antonino) : la barre latérale, la barre du haut et la colonne
+// « Nouvelle conversation » restent en place ; SEULE la conversation défile, et elle descend au
+// dernier message. Le modèle simulé répond « Réponse simulée. ».
+test("page de l'assistant : seule la conversation défile", async ({ page }) => {
+  test.skip(isPhone(page), "Colonne de l'historique et molette : ordinateur.");
+  await page.goto("/login");
+  await page.getByLabel("Adresse e-mail").fill("coach-a@example.test");
+  await page.getByLabel("Mot de passe", { exact: true }).fill("demo-coach-local");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(page).toHaveURL(/\/coach$/);
+  await page.goto("/coach/assistant");
+  const region = page.getByRole("region", { name: "Assistant IA" });
+  const long = "Une longue demande pour remplir la conversation de l'assistant. ".repeat(20);
+  for (let round = 1; round <= 4; round += 1) {
+    const field = region.getByLabel("Ta demande à l'assistant");
+    await field.fill(`${long}n°${round}`);
+    await field.press("Enter");
+    await expect(region.getByText("Réponse simulée.")).toHaveCount(round, { timeout: 20_000 });
+  }
+  const thread = region.getByRole("list", { name: "Conversation avec l'assistant" });
+  const history = page.getByRole("navigation", { name: "Historique des conversations" });
+  const title = page.getByRole("heading", { name: "Assistant IA", level: 1 });
+  // La page ne défile pas ; le fil, si, et il est descendu au dernier message.
+  expect(
+    await page.evaluate(() => document.scrollingElement!.scrollHeight - window.innerHeight),
+  ).toBeLessThanOrEqual(1);
+  const metrics = () =>
+    thread.evaluate((element) => ({
+      top: element.scrollTop,
+      room: element.scrollHeight - element.clientHeight,
+    }));
+  const bottom = await metrics();
+  expect(bottom.room).toBeGreaterThan(100);
+  await expect.poll(async () => (await metrics()).top).toBeGreaterThanOrEqual(bottom.room - 2);
+  // La molette sur la conversation la fait remonter ; titre et historique ne bougent pas.
+  const titleBefore = (await title.boundingBox())!.y;
+  const historyBefore = (await history.boundingBox())!.y;
+  const box = (await thread.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, -600);
+  await expect.poll(async () => (await metrics()).top).toBeLessThan(bottom.room - 100);
+  expect((await title.boundingBox())!.y).toBe(titleBefore);
+  expect((await history.boundingBox())!.y).toBe(historyBefore);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});

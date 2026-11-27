@@ -10,6 +10,7 @@ import {
 } from "@/features/assistant/program";
 import { assistantActionSchema, summarize } from "@/features/assistant/proposals";
 import {
+  ASSISTANT_ERRORS,
   ASSISTANT_MAX_RETRIES,
   ASSISTANT_MAX_TOKENS,
   ASSISTANT_TIMEOUT_MS,
@@ -197,8 +198,10 @@ describe("customDraftFrom (exécution d'un programme écrit)", () => {
 });
 
 describe("consigne et taille de réponse pour les programmes", () => {
-  it("laisse la place d'écrire un programme (8 000 jetons par étape)", () => {
-    expect(ASSISTANT_MAX_TOKENS).toBe(8000);
+  // 27/11 : 8 000 jetons ne suffisaient pas pour 3 semaines de séances tirées d'un PDF de 7 pages
+  // (réflexion comprise) : trois demandes coupées à 8 000.
+  it("laisse la place d'écrire un programme détaillé (20 000 jetons par étape)", () => {
+    expect(ASSISTANT_MAX_TOKENS).toBe(20_000);
   });
 
   it("dit comment créer un programme : modèle d'abord, lundi, exercices de la Bibliothèque, brouillon", () => {
@@ -258,10 +261,15 @@ describe("relecture du lot 3a", () => {
     expect(withSourceRhythm(params, null).sessionsPerWeek).toBe(4);
   });
 
-  it("n°5 : laisse le temps d'écrire 8 000 jetons, sans second essai facturé, sous les 300 s de Vercel", () => {
-    // 40 jetons par seconde au pire : 200 s pour une réponse complète.
-    expect(ASSISTANT_TIMEOUT_MS).toBeGreaterThanOrEqual((ASSISTANT_MAX_TOKENS / 40) * 1000);
-    expect(ASSISTANT_TIMEOUT_MS).toBeLessThan(300_000);
+  it("n°5 : laisse le temps d'écrire une réponse complète, sans second essai facturé, sous les 300 s de Vercel", () => {
+    // Mesuré en production le 27/11 : plus de 90 jetons par seconde. 80 au pire : 250 s pour
+    // 20 000 jetons ; 30 s restent pour la base et le démarrage de la fonction.
+    expect(ASSISTANT_TIMEOUT_MS).toBeGreaterThanOrEqual((ASSISTANT_MAX_TOKENS / 80) * 1000);
+    expect(ASSISTANT_TIMEOUT_MS).toBeLessThanOrEqual(270_000);
     expect(ASSISTANT_MAX_RETRIES).toBe(0);
+  });
+
+  it("une réponse coupée dit quoi faire : demander en plusieurs fois", () => {
+    expect(ASSISTANT_ERRORS.truncated).toContain("en plusieurs fois");
   });
 });
