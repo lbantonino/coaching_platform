@@ -2,7 +2,8 @@
 // clé ne garde que ce qui la définit, pour que le coach puisse la marquer lue ou la masquer. Si la
 // situation change (nouvelle échéance, nouveau message), la clé change : la notification revient,
 // non lue. Même règle que la base : préfixe connu, chiffres, lettres minuscules, « : » et « - ».
-export const NOTIFICATION_KEY = /^(competition|message|task|unpaid|profile):[0-9a-z:-]{1,120}$/;
+export const NOTIFICATION_KEY =
+  /^(competition|message|task|unpaid|profile|assistant):[0-9a-z:-]{1,120}$/;
 
 export const competitionKey = (goalId: string, date: string) => `competition:${goalId}:${date}`;
 // Message : le sportif et son dernier message non lu.
@@ -13,6 +14,10 @@ export const taskKey = (taskId: string, dueOn: string | null) =>
 // Séance à encaisser (D-90) : la séance et la date de la série (une fois payée, elle disparaît).
 export const unpaidKey = (sessionId: string, date: string) => `unpaid:${sessionId}:${date}`;
 export const profileKey = (athleteId: string) => `profile:${athleteId}`;
+// Conversation de l'Assistant IA bientôt effacée (D-212) : la conversation et sa date d'effacement
+// (la conversation continuée change de date : l'ancienne notification disparaît).
+export const assistantKey = (conversationId: string, expiresOn: string) =>
+  `assistant:${conversationId}:${expiresOn}`;
 
 export function isNotificationKey(key: unknown): key is string {
   return typeof key === "string" && NOTIFICATION_KEY.test(key);

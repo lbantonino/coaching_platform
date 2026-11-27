@@ -14,7 +14,7 @@ import {
 } from "react";
 
 import { disciplineLabels, disciplineStyles, type Discipline } from "@/domain/training/discipline";
-import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
+import { ProgramPdfButton } from "@/components/programs/program-pdf-button";
 import { SessionCardsView } from "@/components/programs/session-cards";
 import { SessionLine } from "@/components/programs/session-line";
 import type { SessionCard } from "@/domain/training/session-cards";
@@ -92,7 +92,7 @@ function SessionDetail({
             {content.durationMinutes} min
           </span>
           {/* Téléphone aussi (revue MVP du 13/11, B14) : 44 px de cible. */}
-          <ProgramPdfMenu
+          <ProgramPdfButton
             base={pdfBase}
             week={weekIndex}
             className="inline-flex h-11 items-center gap-1.5 rounded-[11px] bg-surface px-3 text-[13px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] lg:h-8 lg:rounded-[9px] lg:text-[12.5px]"

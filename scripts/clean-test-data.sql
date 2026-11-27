@@ -77,4 +77,21 @@ begin
   delete from public.assistant_usage where user_id = 'b0000000-0000-4000-8000-00000000000b';
   get diagnostics n = row_count;
   if n > 0 then raise notice 'demandes de test à l''assistant : %', n; end if;
+
+  -- 5. Conversations enregistrées (D-212) des comptes de test (coachs A, B et C de la graine) : celles
+  --    des tests (faux Claude) et leurs notifications « bientôt effacée ». Base LOCALE seulement.
+  delete from public.assistant_conversations
+  where user_id in (select id from auth.users
+                    where email in ('coach-a@example.test', 'coach-b@example.test', 'coach-c@example.test'));
+  get diagnostics n = row_count;
+  if n > 0 then raise notice 'conversations de test de l''assistant : %', n; end if;
+  delete from public.coach_notification_states where key like 'assistant:%'
+    and user_id in (select id from auth.users
+                    where email in ('coach-a@example.test', 'coach-b@example.test', 'coach-c@example.test'));
+
+  -- 6. Fichiers joints à l'Assistant IA par les tests (D-213) : les lignes (les fichiers du stockage
+  --    sont retirés par l'API, scripts/clean-test-data.mjs).
+  delete from public.assistant_files
+  where user_id in (select id from auth.users
+                    where email in ('coach-a@example.test', 'coach-b@example.test', 'coach-c@example.test'));
 end $$;

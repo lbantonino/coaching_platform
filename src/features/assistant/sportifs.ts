@@ -166,6 +166,8 @@ export const SPORTIFS_PARAMS = {
   photo: z.strictObject({
     action: z.enum(["mettre", "retirer"]),
     athleteId: z.uuid().optional(),
+    // D-213 : l'image jointe à mettre, parmi plusieurs (son nom).
+    fichier: text(200).optional(),
   }),
   ajouter_note: z.strictObject({ athleteId: z.uuid(), texte: text(NOTE_MAX_LENGTH) }),
 } as const;

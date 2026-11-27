@@ -157,7 +157,7 @@ export async function executeAssistantAction(
       return fail("Joins à nouveau le fichier, puis redemande à l'assistant.");
     case "preparer_pdf":
       // Lot 2 : la carte donne les liens des PDF ; il n'y a rien à exécuter.
-      return fail("Rien à valider : ouvre les PDF depuis la carte.");
+      return fail("Rien à valider : ouvre le PDF depuis la carte.");
     case "creer_exercice": {
       // Lot 2 : les MÊMES règles et le MÊME enregistrement que « Créer un exercice » (sans photo).
       const parsedForm = parseCoachExerciseForm(toCoachExerciseInput(action.params));

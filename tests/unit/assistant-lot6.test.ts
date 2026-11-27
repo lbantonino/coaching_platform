@@ -167,6 +167,7 @@ describe("Task 1 : lectures sans données sensibles", () => {
       tasks: [{ ...meta, key: "t:1", title: "Appeler Sarah", dueOn: "2026-11-14" } as never],
       unpaid: [],
       profiles: [{ ...meta, key: "p:1", name: "Hugo Lefèvre", dismissed: true } as never],
+      assistant: [],
     });
     expect(rows).toEqual([
       {

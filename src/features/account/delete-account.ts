@@ -92,6 +92,8 @@ export async function deleteMyAccount(
     for (const bucket of BUCKETS) {
       for (const orgId of orgIds) await removeFolder(supabase.storage, bucket, `org/${orgId}`);
     }
+    // Fichiers joints à l'Assistant IA (D-213) : <organisation>/<coach>/… (24 h au plus).
+    for (const orgId of orgIds) await removeFolder(supabase.storage, "assistant-files", orgId);
     await removeFolder(supabase.storage, "profile-photos", `user/${user.id}`);
   } catch {
     return { error: FAILED, attempt };

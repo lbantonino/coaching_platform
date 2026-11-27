@@ -36,7 +36,12 @@ const nextConfig: NextConfig = {
   // PDF des programmes (phase 5) : les polices Plus Jakarta Sans sont lues sur le disque par les deux
   // routes de téléchargement ; on les embarque avec ces routes au déploiement.
   outputFileTracingIncludes: {
-    "/coach/o/[orgId]/programmes/[programId]/pdf/*": ["./src/features/programs/pdf/fonts/*"],
+    // Le PDF du programme (un seul fichier depuis D-211, adresse …/pdf) et celui d'une conversation
+    // de l'Assistant IA (D-212) : la police Plus Jakarta Sans est lue sur le disque au rendu.
+    "/coach/o/[orgId]/programmes/[programId]/pdf": ["./src/features/programs/pdf/fonts/*"],
+    "/coach/o/[orgId]/assistant/conversations/[conversationId]/pdf": [
+      "./src/features/programs/pdf/fonts/*",
+    ],
   },
   experimental: {
     // Les agents de code ne sont prévenus que des mises à jour de sécurité de Next.js.

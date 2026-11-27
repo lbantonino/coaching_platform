@@ -143,7 +143,7 @@ export function ProgramCardMenu({
   ];
 
   const nextPublication = settings?.published
-    ? "Visible dans la fiche et les PDF à la prochaine publication."
+    ? "Visible dans la fiche et le PDF à la prochaine publication."
     : undefined;
 
   return (

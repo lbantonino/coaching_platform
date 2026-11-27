@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 
 import { sendDueAlerts } from "@/features/alerts/send-due";
+import { purgeAssistantFiles } from "@/features/assistant/attachments-purge";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Route appelée chaque minute par la tâche planifiée de Supabase (pg_cron + pg_net, D-205) : envoie les
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
   if (!(await authorized(request))) {
     return Response.json({ error: "Non autorisé." }, { status: 401 });
   }
-  const report = await sendDueAlerts(new Date());
-  return Response.json(report);
+  const now = new Date();
+  const report = await sendDueAlerts(now);
+  // Le même passage efface les fichiers joints à l'Assistant IA de plus de 24 h (D-213).
+  const fichiers = await purgeAssistantFiles(now).catch(() => 0);
+  return Response.json({ ...report, fichiers });
 }

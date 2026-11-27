@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  assistantKey,
   competitionKey,
   countUnread,
   latestUnreadByAthlete,
@@ -12,6 +13,7 @@ import {
   type NotificationState,
 } from "@/domain/notifications/keys";
 import { addDays } from "@/features/agenda/items";
+import { expiresOn, expiresSoon } from "@/features/assistant/conversation-rules";
 import { listAgendaEvents, type AgendaEvent } from "@/features/agenda/queries";
 import { listAthletes } from "@/features/athletes/queries";
 import { listUnpaidDates, type UnpaidDate } from "@/features/billing/collect-queries";
@@ -24,12 +26,34 @@ import { createClient } from "@/lib/supabase/server";
 // à encaisser (D-90, à la place des factures en retard), fiches à compléter, compétitions des
 // sportifs dans les 7 jours (demande d'Antonino du 26/10 : les compétitions ne sont plus dans
 // l'agenda du coach, ce sont des rappels). Les retours de
-// séance s'ajouteront en P6.
+// séance s'ajouteront en P6. Depuis D-212 (27/11/2026) : les conversations de l'Assistant IA effacées
+// dans les 30 jours (toujours affichées : c'est un avertissement avant un effacement).
 // 4e (D-61) : chacune se marque lue ou se masque (table coach_notification_states, par coach) ; la
 // cloche ne compte que ce qui n'est ni lu ni masqué.
 export const COMPETITION_NOTICE_DAYS = 7;
 
 type Client = Awaited<ReturnType<typeof createClient>>;
+
+export type ExpiringConversation = { id: string; title: string; expiresOn: string };
+
+// Conversations du coach connecté (la RLS ne renvoie que les siennes) effacées dans les 30 jours :
+// dernier message il y a plus de 11 mois environ, puis la règle exacte (expiresSoon).
+async function expiringConversations(
+  supabase: Client,
+  organizationId: string,
+  today: string,
+): Promise<ExpiringConversation[]> {
+  const { data } = await supabase
+    .from("assistant_conversations")
+    .select("id, title, last_message_at")
+    .eq("organization_id", organizationId)
+    .lte("last_message_at", `${addDays(today, -330)}T23:59:59Z`)
+    .order("last_message_at", { ascending: true })
+    .limit(200);
+  return (data ?? [])
+    .map((row) => ({ id: row.id, title: row.title, expiresOn: expiresOn(row.last_message_at) }))
+    .filter((row) => expiresSoon(row.expiresOn, today));
+}
 
 // États choisis par le coach connecté (la RLS ne renvoie que les siens).
 async function readStates(
@@ -62,6 +86,7 @@ export type NotificationCounts = {
   tasks: number;
   unpaid: number;
   profiles: number;
+  assistant: number;
   total: number;
 };
 
@@ -72,7 +97,7 @@ export async function countNotifications(
   today: string,
 ): Promise<NotificationCounts> {
   const supabase = await createClient();
-  const [competitions, heads, tasks, unpaid, profiles, states] = await Promise.all([
+  const [competitions, heads, tasks, unpaid, profiles, expiring, states] = await Promise.all([
     // Compétitions (objectifs en cours avec un nom) d'aujourd'hui aux 7 prochains jours.
     supabase
       .from("athlete_goals")
@@ -98,6 +123,7 @@ export async function countNotifications(
       .eq("organization_id", organizationId)
       .neq("status", "archived")
       .or("last_name.is.null,and(email.is.null,phone.is.null)"),
+    expiringConversations(supabase, organizationId, today),
     readStates(supabase, organizationId),
   ]);
   const counts = {
@@ -121,10 +147,20 @@ export async function countNotifications(
       (profiles.data ?? []).map((row) => profileKey(row.id)),
       states,
     ),
+    assistant: countUnread(
+      expiring.map((row) => assistantKey(row.id, row.expiresOn)),
+      states,
+    ),
   };
   return {
     ...counts,
-    total: counts.competitions + counts.messages + counts.tasks + counts.unpaid + counts.profiles,
+    total:
+      counts.competitions +
+      counts.messages +
+      counts.tasks +
+      counts.unpaid +
+      counts.profiles +
+      counts.assistant,
   };
 }
 
@@ -147,6 +183,7 @@ export type Notifications = {
   tasks: (CoachTask & NotificationMeta)[];
   unpaid: (UnpaidDate & NotificationMeta)[];
   profiles: (IncompleteProfile & NotificationMeta)[];
+  assistant: (ExpiringConversation & NotificationMeta)[];
 };
 
 // Le détail de chaque section (page Notifications). Le montant attendu d'une séance à encaisser suit
@@ -156,15 +193,17 @@ export async function getNotifications(
   today: string,
 ): Promise<Notifications> {
   const supabase = await createClient();
-  const [events, conversations, tasks, unpaid, athletes, heads, states] = await Promise.all([
-    listAgendaEvents(organizationId),
-    listConversations(organizationId),
-    listTasks(organizationId),
-    listUnpaidDates(organizationId),
-    listAthletes(organizationId, { status: "all", q: "" }),
-    unreadMessageHeads(supabase, organizationId),
-    readStates(supabase, organizationId),
-  ]);
+  const [events, conversations, tasks, unpaid, athletes, heads, expiring, states] =
+    await Promise.all([
+      listAgendaEvents(organizationId),
+      listConversations(organizationId),
+      listTasks(organizationId),
+      listUnpaidDates(organizationId),
+      listAthletes(organizationId, { status: "all", q: "" }),
+      unreadMessageHeads(supabase, organizationId),
+      expiringConversations(supabase, organizationId, today),
+      readStates(supabase, organizationId),
+    ]);
   const until = addDays(today, COMPETITION_NOTICE_DAYS);
   // Ajoute la clé et l'état ; retire ce que le coach a supprimé.
   const withState = <T>(items: T[], keyOf: (item: T) => string): (T & NotificationMeta)[] =>
@@ -212,5 +251,6 @@ export async function getNotifications(
         })),
       (profile) => profileKey(profile.id),
     ),
+    assistant: withState(expiring, (row) => assistantKey(row.id, row.expiresOn)),
   };
 }

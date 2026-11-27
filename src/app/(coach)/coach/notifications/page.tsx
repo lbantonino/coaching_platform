@@ -20,6 +20,7 @@ import {
   dayShortLabel,
   daysBetween,
   dueLabel,
+  formatDate,
   messageTime,
   todayIsoInBrussels,
 } from "@/lib/format";
@@ -152,6 +153,24 @@ async function NotificationList() {
           : undefined,
         right: { text: formatMoney(date.amountCents, date.currency), strong: true },
         menuSubtitle: `Séance à encaisser · ${formatMoney(date.amountCents, date.currency)}`,
+      })),
+    });
+  }
+  // Conversations de l'Assistant IA bientôt effacées (D-212) : toujours, chacune ouvre la
+  // conversation (la télécharger, ou y écrire pour la garder).
+  if (all.assistant.length > 0) {
+    sections.push({
+      id: "assistant",
+      title: "Conversations bientôt effacées",
+      link: { href: "/coach/assistant", label: "Assistant IA" },
+      items: all.assistant.map((conversation) => ({
+        key: conversation.key,
+        read: conversation.read,
+        dismissed: conversation.dismissed,
+        href: `/coach/assistant?conversation=${conversation.id}`,
+        title: conversation.title,
+        sub: `Sera effacée le ${formatDate(conversation.expiresOn)}. Télécharge-la, ou écris-y pour la garder 12 mois de plus.`,
+        menuSubtitle: "Conversation bientôt effacée",
       })),
     });
   }

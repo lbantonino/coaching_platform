@@ -3,7 +3,9 @@ import "server-only";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic, { toFile } from "@anthropic-ai/sdk";
+
+import { ANTHROPIC_FILE_SECONDS } from "./attachment-rules";
 
 import {
   ASSISTANT_MAX_RETRIES,
@@ -20,6 +22,40 @@ export type AssistantModel = (params: {
   tools: Anthropic.Tool[];
   messages: Anthropic.MessageParam[];
 }) => Promise<Anthropic.Message>;
+
+// Fichiers joints (D-213) : PDF et images envoyés UNE fois à Anthropic (API Files, copie d'1 h au plus),
+// puis cités par leur identifiant à chaque étape. Le faux Claude des tests a ses faux fichiers (aucun
+// appel). Préparation bornée à 50 s par fichier (un appel à part, jamais dans une étape).
+export type AnthropicFiles = {
+  upload: (file: { bytes: Uint8Array; name: string; mime: string }) => Promise<string>;
+  remove: (fileId: string) => Promise<void>;
+};
+
+export function getAnthropicFiles(): AnthropicFiles | null {
+  if (process.env.ASSISTANT_FAKE_SCRIPT && process.env.VERCEL !== "1") {
+    let n = 0;
+    return {
+      upload: async () => `file_simule_${Date.now()}_${n++}`,
+      remove: async () => undefined,
+    };
+  }
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return null;
+  // Pas de second essai : une préparation reste sous la minute (règle des 5 minutes).
+  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: 50_000 });
+  return {
+    upload: async ({ bytes, name, mime }) =>
+      (
+        await client.files.upload({
+          file: await toFile(bytes, name, { type: mime }),
+          expires_in_seconds: ANTHROPIC_FILE_SECONDS,
+        })
+      ).id,
+    remove: async (fileId) => {
+      await client.files.delete(fileId).catch(() => undefined);
+    },
+  };
+}
 
 export function getAssistantModel(): AssistantModel | null {
   const script = process.env.ASSISTANT_FAKE_SCRIPT;

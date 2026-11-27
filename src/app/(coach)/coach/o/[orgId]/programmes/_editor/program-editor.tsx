@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ClipboardList,
   Copy,
   Eye,
   FileDown,
@@ -39,7 +38,7 @@ import {
 import { MobileBarTitle, phoneFabClass } from "@/components/layout/mobile-bar";
 import { EditorSessionCard } from "@/components/programs/editor-session-card";
 import { useReorder } from "@/components/programs/use-reorder";
-import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
+import { ProgramPdfButton } from "@/components/programs/program-pdf-button";
 import type { CardActions } from "@/components/programs/session-cards";
 import {
   SessionDetail,
@@ -616,21 +615,16 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
           },
         ];
 
-  // Téléphone : les deux PDF (version publiée) dans « ··· », la ligne des boutons étant pleine.
+  // Téléphone : le PDF (version publiée, un seul fichier depuis D-211) dans « ··· », la ligne des
+  // boutons étant pleine.
   const pdfBase = target.kind === "program" ? `${meta.base}/${target.programId}/pdf` : null;
-  const openPdf = (href: string) => window.open(href, "_blank", "noopener");
   const phoneMenuItems: MoreMenuItem[] =
     pdfBase && meta.publication
       ? [
           {
-            label: "PDF : agenda du programme",
-            icon: CalendarDays,
-            onSelect: () => openPdf(`${pdfBase}/agenda`),
-          },
-          {
-            label: "PDF : fiches et repères",
-            icon: ClipboardList,
-            onSelect: () => openPdf(`${pdfBase}/fiches`),
+            label: "PDF du programme",
+            icon: FileDown,
+            onSelect: () => window.open(pdfBase, "_blank", "noopener"),
           },
           ...menuItems,
         ]
@@ -1305,8 +1299,8 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               Aperçu
             </Link>
             {phone ? null : meta.publication ? (
-              // PDF tirés de la version PUBLIÉE (phase 5) : le brouillon en cours n'y est pas.
-              <ProgramPdfMenu
+              // PDF tiré de la version PUBLIÉE (phase 5) : le brouillon en cours n'y est pas.
+              <ProgramPdfButton
                 base={`${meta.base}/${target.programId}/pdf`}
                 className={smallButton}
               />
@@ -1314,7 +1308,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
               <button
                 type="button"
                 disabled
-                title="Publie le programme pour générer les PDF."
+                title="Publie le programme pour générer le PDF."
                 className={smallButton}
               >
                 <FileDown aria-hidden size={13} strokeWidth={2} />
@@ -1403,7 +1397,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         // Revue MVP du 13/11 (C21) : un programme publié garde son ancien titre jusqu'à la publication.
         hint={
           meta.publication
-            ? "Le nouveau titre apparaîtra dans la fiche et les PDF à la prochaine publication."
+            ? "Le nouveau titre apparaîtra dans la fiche et le PDF à la prochaine publication."
             : undefined
         }
         onConfirm={(title) => {
@@ -1418,7 +1412,7 @@ export function ProgramEditor({ meta }: { meta: EditorMeta }) {
         initial={plan.discipline}
         hint={
           meta.publication
-            ? "La nouvelle discipline apparaîtra dans la fiche et les PDF à la prochaine publication."
+            ? "La nouvelle discipline apparaîtra dans la fiche et le PDF à la prochaine publication."
             : undefined
         }
         onConfirm={(discipline) => {

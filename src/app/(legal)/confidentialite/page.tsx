@@ -98,13 +98,16 @@ export default function PrivacyPage() {
               </p>
               <p>
                 <strong>Anthropic</strong> (Claude, États-Unis) : seulement quand un coach utilise
-                l’Assistant IA. Sa demande, le fichier qu’il y joint (un PDF, une image, un document
-                Word ou un tableau Excel, que l’Assistant lit pour lui répondre) et les informations
-                utiles pour y répondre (par exemple le prénom d’un sportif, ses objectifs, ses
-                repères, ses séances ou ses paiements) sont envoyés à Claude. L’Assistant ne va
-                jamais chercher les données de santé, les notes privées ni les données Garmin, et
-                Anthropic n’utilise pas ces échanges pour entraîner ses modèles. Coach, n’écris pas
-                de données de santé dans l’Assistant et n’y joins pas de document qui en contient.
+                l’Assistant IA. Sa demande, les fichiers qu’il y joint (jusqu’à 10 : PDF, images,
+                Word, Excel, CSV ou texte, que l’Assistant lit pour lui répondre ; les PDF et les
+                images sont confiés à Anthropic tant qu’ils restent joints, chaque copie 1 heure au
+                plus, puis effacés selon sa politique) et les informations utiles pour y répondre
+                (par exemple le prénom d’un sportif, ses objectifs, ses repères, ses séances ou ses
+                paiements) sont envoyés à Claude. L’Assistant ne va jamais chercher les données de
+                santé, les notes privées ni les données Garmin, et Anthropic n’utilise pas ces
+                échanges pour entraîner ses modèles. La conversation est gardée dans le compte du
+                coach (voir « Durée de conservation »). Coach, n’écris pas de données de santé dans
+                l’Assistant et n’y joins pas de document qui en contient.
               </p>
               <p>
                 <strong>Hors de l’Union européenne</strong> : certains de ces prestataires sont
@@ -146,8 +149,14 @@ export default function PrivacyPage() {
                 compte.
               </p>
               <p>
-                <strong>Assistant IA</strong> : Coory ne garde pas les conversations, seulement le
-                nombre de demandes, effacé avec le compte.
+                <strong>Assistant IA</strong> : Coory garde les conversations du coach 12 mois après
+                leur dernier message, puis les efface (le coach est prévenu 30 jours avant). Il peut
+                les télécharger ou les supprimer à tout moment ; elles sont effacées avec son
+                compte. Les fichiers joints ne sont pas gardés dans la conversation, seulement leur
+                nom : ils sont effacés dès que le coach les retire, et au plus tard 24 heures après
+                leur dépôt (chez Anthropic, chaque copie 1 heure au plus). Si un coach demande la
+                suppression d’un sportif, les conversations qui le nomment sont effacées avec ses
+                données. Le nombre de demandes est effacé avec le compte.
               </p>
               <p>
                 <strong>Garmin</strong> : voir « Connexion à Garmin Connect ».

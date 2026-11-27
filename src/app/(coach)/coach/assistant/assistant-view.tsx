@@ -1,7 +1,8 @@
 "use client";
 
 import { History, SquarePen } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import {
   AssistantComposer,
@@ -17,21 +18,32 @@ import { MobileBarTool } from "@/components/layout/mobile-bar";
 import { DialogBody, Sheet } from "@/components/ui/overlay";
 import { assistantComposerOpen } from "@/features/assistant/rules";
 
+import { ConversationHistory } from "./conversation-history";
+
 // Page de l'Assistant IA (kit « Coory Pages », 02, D-132). Ordinateur : une carte, la colonne
 // « Historique » (250 px : « Nouvelle conversation », puis les conversations par date) et la
 // conversation (accueil : orbe, salutation, saisie, trois raccourcis ; sinon le fil centré à 720 px
 // et « Répondre… » en bas). Téléphone : « Historique » et « Nouvelle conversation » dans la barre du
-// haut, la saisie collée en bas. Les conversations ne sont pas enregistrées : l'historique le dit,
-// sans fausses lignes. Sans abonnement Coory (D-168) : le verrou à la place de la saisie.
+// haut, la saisie collée en bas. Depuis D-212 (27/11/2026), les conversations sont enregistrées :
+// l'historique les liste (conversation-history.tsx), « ?conversation=<id> » en ouvre une (lien de la
+// cloche). Sans abonnement Coory (D-168) : le verrou à la place de la saisie, mais l'historique reste
+// (relire, télécharger, supprimer), la conversation ouverte en lecture seule.
 // Téléphone, façon messagerie (19/11, demande d'Antonino sur le modèle de ChatGPT) : pas de carte, tout
 // l'écran sur un seul fond ; au centre une seule phrase ; les raccourcis en simples lignes juste
 // au-dessus de la saisie, collée en bas (elle remonte avec le clavier). L'ordinateur ne change pas.
-const NO_HISTORY =
-  "Les conversations ne sont pas enregistrées : « Nouvelle conversation » efface celle en cours.";
-
 export function AssistantView() {
   const assistant = useAssistant();
   const [history, setHistory] = useState(false);
+  // Lien de la cloche (« sera effacée le … ») : ouvre la conversation, une fois.
+  const wanted = useSearchParams().get("conversation");
+  const opened = useRef<string | null>(null);
+  const openConversation = assistant?.openConversation;
+  const saved = assistant?.historyMode === "saved";
+  useEffect(() => {
+    if (!wanted || !saved || !openConversation || opened.current === wanted) return;
+    opened.current = wanted;
+    void openConversation(wanted);
+  }, [wanted, saved, openConversation]);
   // Fond uni de tout l'écran (téléphone, globals.css), seulement pendant que la page est affichée.
   useEffect(() => {
     document.documentElement.setAttribute("data-assistant-screen", "");
@@ -42,12 +54,19 @@ export function AssistantView() {
   const ready = assistantComposerOpen(assistant.access);
   const lock = assistantLockText(assistant.access);
   const remaining = remainingLabel(assistant.access);
+  // Historique visible si les conversations sont gardées (même verrouillé) ou en démo (il le dit).
+  const withHistory = ready || assistant.historyMode !== "off";
+  const notice = assistant.notice ? (
+    <p role="status" className="text-center text-[12.5px] leading-[1.45] text-muted">
+      {assistant.notice}
+    </p>
+  ) : null;
 
   return (
     <>
       {/* Téléphone : Historique · Nouvelle conversation, dans la barre du haut. */}
-      {/* Verrouillé (D-168) : rien à ouvrir dans la barre du téléphone. */}
-      {ready ? (
+      {/* Verrouillé (D-168) : seulement l'historique (D-212), pas de « Nouvelle conversation ». */}
+      {withHistory ? (
         <MobileBarTool>
           <button
             type="button"
@@ -57,14 +76,16 @@ export function AssistantView() {
           >
             <History aria-hidden size={17} strokeWidth={1.9} />
           </button>
-          <button
-            type="button"
-            aria-label="Nouvelle conversation"
-            onClick={assistant.restart}
-            className="grid size-10 place-items-center rounded-xl text-text-2"
-          >
-            <SquarePen aria-hidden size={16} strokeWidth={1.9} />
-          </button>
+          {ready ? (
+            <button
+              type="button"
+              aria-label="Nouvelle conversation"
+              onClick={assistant.restart}
+              className="grid size-10 place-items-center rounded-xl text-text-2"
+            >
+              <SquarePen aria-hidden size={16} strokeWidth={1.9} />
+            </button>
+          ) : null}
         </MobileBarTool>
       ) : null}
 
@@ -72,26 +93,44 @@ export function AssistantView() {
         aria-label="Assistant IA"
         className="flex min-h-0 flex-1 lg:overflow-hidden lg:rounded-[20px] lg:bg-surface lg:inset-ring lg:inset-ring-line"
       >
-        {/* Verrouillé (D-168) : pas d'historique ni de « Nouvelle conversation ». */}
-        {ready ? (
+        {/* Verrouillé (D-168) : l'historique reste (D-212), sans « Nouvelle conversation ». */}
+        {withHistory ? (
           <nav
             aria-label="Historique des conversations"
             className="flex w-[250px] shrink-0 flex-col gap-5 border-r border-line px-3.5 py-5 max-lg:hidden"
           >
-            <button
-              type="button"
-              onClick={assistant.restart}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-[11px] bg-cta text-[13.5px] leading-[normal] font-semibold text-on-cta transition-[scale,opacity] duration-150 hover:opacity-90 active:scale-[0.98]"
-            >
-              <SquarePen aria-hidden size={15} strokeWidth={1.9} />
-              Nouvelle conversation
-            </button>
-            <p className="px-1.5 text-[13px] leading-[1.5] text-faint">{NO_HISTORY}</p>
+            {ready ? (
+              <button
+                type="button"
+                onClick={assistant.restart}
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[11px] bg-cta text-[13.5px] leading-[normal] font-semibold text-on-cta transition-[scale,opacity] duration-150 hover:opacity-90 active:scale-[0.98]"
+              >
+                <SquarePen aria-hidden size={15} strokeWidth={1.9} />
+                Nouvelle conversation
+              </button>
+            ) : null}
+            {/* Seule la liste défile (la page a la hauteur de l'écran, D-210). */}
+            <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
+              <ConversationHistory />
+            </div>
           </nav>
         ) : null}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          {!ready ? (
+          {!ready && !empty ? (
+            // Verrouillé, conversation rouverte (D-212) : en lecture seule, le verrou à la place de la
+            // saisie.
+            <>
+              <div className="mx-auto flex min-h-0 w-full max-w-[720px] flex-1 flex-col pt-2 lg:px-10 lg:pt-6">
+                <AssistantThread className="flex-1 pb-4 max-lg:px-1" />
+              </div>
+              <div className="mx-auto flex w-full max-w-[720px] flex-col gap-1 px-4 pb-4 text-center lg:px-10 lg:pb-7">
+                {notice}
+                <p className="text-[14px] font-semibold text-text">{lock.title}</p>
+                <p className="text-[13px] leading-[1.5] text-muted">{lock.detail}</p>
+              </div>
+            </>
+          ) : !ready ? (
             // Sans abonnement : le verrou, ni saisie ni raccourcis (aucune demande ne peut partir).
             <div className="mx-auto flex w-full max-w-[720px] flex-1 flex-col items-center justify-center gap-4 px-4 py-8 text-center lg:px-10">
               <AssistantLockTile />
@@ -157,6 +196,7 @@ export function AssistantView() {
                 <AssistantThread className="flex-1 pb-4 max-lg:px-1" />
               </div>
               <div className="mx-auto flex w-full max-w-[720px] flex-col gap-2 pb-1 lg:px-10 lg:pb-7">
+                {notice}
                 <AssistantComposer rows={2} placeholder="Répondre…" />
                 <p className="text-center text-[12px] leading-[normal] text-faint">{remaining}</p>
               </div>
@@ -168,7 +208,7 @@ export function AssistantView() {
       {/* Téléphone : l'historique (le kit dessine le bouton, pas le panneau). */}
       <Sheet open={history} onClose={() => setHistory(false)} title="Historique" bare>
         <DialogBody>
-          <p className="text-[14px] leading-[1.5] text-muted">{NO_HISTORY}</p>
+          <ConversationHistory large onPicked={() => setHistory(false)} />
         </DialogBody>
       </Sheet>
     </>

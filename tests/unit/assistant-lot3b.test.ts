@@ -507,7 +507,7 @@ describe("cartes d'action : ce que le coach lit avant « Valider »", () => {
     expect(published.summary).toEqual([
       "« Préparation 10 km » · version 2 · Sarah Vermeulen",
       "Attention : 2 exercices en % sans max connu (les kg ne sont pas calculés).",
-      "Les PDF seront tirés de cette version.",
+      "Le PDF sera tiré de cette version.",
     ]);
   });
 

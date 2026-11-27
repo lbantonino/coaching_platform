@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Document, Link, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import { Link, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type {
   AgendaDayView,
@@ -20,7 +20,6 @@ import {
   VIOLET,
   disciplinePdf,
   pdfText,
-  registerPdfFonts,
   titleStyles,
   u,
 } from "./pdf-kit";
@@ -130,7 +129,16 @@ const s = StyleSheet.create({
   violetLine: { fontSize: u(11), lineHeight: 1.4, fontWeight: 500, color: VIOLET },
 });
 
-function TocPage({ page, total, model }: { page: AgendaTocPage; total: number; model: AgendaPdf }) {
+// Pages exportées pour le PDF unique du programme (program-pdf.tsx, D-211).
+export function AgendaTocPageView({
+  page,
+  total,
+  model,
+}: {
+  page: AgendaTocPage;
+  total: number;
+  model: AgendaPdf;
+}) {
   return (
     <PdfPage
       anchor={page.anchor}
@@ -144,7 +152,11 @@ function TocPage({ page, total, model }: { page: AgendaTocPage; total: number; m
     >
       <View style={s.tocHead}>
         <Text style={titleStyles.kicker}>{pdfText(page.kicker)}</Text>
-        <Text style={s.tocTitle}>{pdfText(page.title)}</Text>
+        {/* 2 lignes au plus (relecture du 27/11) : un titre de 3 lignes faisait déborder un sommaire
+            plein d'une page, et décalait tous les numéros. Le titre entier reste dans l'en-tête. */}
+        <Text style={[s.tocTitle, { maxLines: 2, textOverflow: "ellipsis" }]}>
+          {pdfText(page.title)}
+        </Text>
         <Text style={titleStyles.subtitle}>{pdfText(page.subtitle)}</Text>
       </View>
       <View style={s.tocRows}>
@@ -172,6 +184,17 @@ function TocPage({ page, total, model }: { page: AgendaTocPage; total: number; m
           </Link>
         ))}
       </View>
+      {/* PDF unique (D-211) : une ligne de plus, comme celles des semaines, vers les fiches. */}
+      {page.fichesLink ? (
+        <Link src={`#${page.fichesLink.anchor}`} style={[s.tocRow, { backgroundColor: "#ffffff" }]}>
+          <View style={[s.phaseBar, { backgroundColor: "#dcdae3" }]} />
+          <View style={s.tocText}>
+            <Text style={s.tocRowTitle}>{pdfText(page.fichesLink.label)}</Text>
+            <Text style={s.tocRowSub}>{"À la suite de l'agenda"}</Text>
+          </View>
+          <Text style={s.tocPage}>{`p. ${page.fichesLink.page} →`}</Text>
+        </Link>
+      ) : null}
       {page.note ? <Text style={s.note}>{pdfText(page.note)}</Text> : null}
     </PdfPage>
   );
@@ -227,7 +250,7 @@ function Day({ day }: { day: AgendaDayView }) {
   );
 }
 
-function WeekPage({
+export function AgendaWeekPageView({
   page,
   total,
   model,
@@ -261,28 +284,5 @@ function WeekPage({
         ))}
       </View>
     </PdfPage>
-  );
-}
-
-export async function renderAgendaPdf(model: AgendaPdf, author: string): Promise<Buffer> {
-  registerPdfFonts();
-  const total = model.pages.length;
-  return renderToBuffer(
-    <Document
-      title={pdfText(model.documentTitle)}
-      author={pdfText(author)}
-      subject="Agenda du programme"
-      creator="Coory"
-      producer="Coory"
-      language="fr-FR"
-    >
-      {model.pages.map((page) =>
-        page.kind === "toc" ? (
-          <TocPage key={page.anchor} page={page} total={total} model={model} />
-        ) : (
-          <WeekPage key={page.anchor} page={page} total={total} model={model} />
-        ),
-      )}
-    </Document>,
   );
 }

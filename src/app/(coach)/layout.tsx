@@ -10,6 +10,17 @@ import { TaskSheetProvider } from "@/components/blocks/task-sheet";
 import { AppShell } from "@/components/layout/app-shell";
 import { ShellSkeleton } from "@/components/layout/shell-skeleton";
 import { askAssistant } from "@/features/assistant/actions";
+import {
+  prepareAttachment,
+  removeAttachments,
+  requestAttachmentUpload,
+} from "@/features/assistant/attachments";
+import {
+  deleteConversation,
+  listConversations,
+  loadConversation,
+  saveConversation,
+} from "@/features/assistant/conversations";
 import { executeAssistantAction, executeWithFile } from "@/features/assistant/execute";
 import { getAssistantAccess } from "@/features/assistant/queries";
 import { getCoachMemberships, getCurrentUser } from "@/features/auth/session";
@@ -75,6 +86,29 @@ async function CoachShell({ children }: { children: React.ReactNode }) {
           execute={first ? executeAssistantAction.bind(null, first.organizationId) : undefined}
           executeDocument={first ? executeWithFile.bind(null, first.organizationId) : undefined}
           loadAthletes={first ? listSessionAthletes.bind(null, first.organizationId) : undefined}
+          // Conversations enregistrées (D-212) : jamais pour le compte de démonstration (partagé).
+          conversations={
+            first && !demo
+              ? {
+                  save: saveConversation.bind(null, first.organizationId),
+                  list: listConversations.bind(null, first.organizationId),
+                  load: loadConversation.bind(null, first.organizationId),
+                  remove: deleteConversation.bind(null, first.organizationId),
+                  pdfBase: `/coach/o/${first.organizationId}/assistant/conversations`,
+                }
+              : undefined
+          }
+          // Fichiers joints (D-213) : déposés dans le stockage de Coory ; jamais pour la démo.
+          uploads={
+            first && !demo
+              ? {
+                  request: requestAttachmentUpload.bind(null, first.organizationId),
+                  prepare: prepareAttachment.bind(null, first.organizationId),
+                  remove: removeAttachments.bind(null, first.organizationId),
+                }
+              : undefined
+          }
+          demo={demo}
         >
           <AppShell
             value={{

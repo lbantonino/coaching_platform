@@ -13,7 +13,7 @@ import {
 } from "@/features/assistant/program";
 import { applyProgramEdits, type ProgramEdit } from "@/features/assistant/program-edit";
 import { assistantActionSchema, hasExerciseNamed } from "@/features/assistant/proposals";
-import { attachmentProblem } from "@/features/assistant/rules";
+import { attachmentProblem } from "@/features/assistant/attachment-rules";
 import {
   NOTIFICATIONS_CUT_HINT,
   pickNotifications,
@@ -297,6 +297,7 @@ describe("n°5 : voir_notifications coupée dit comment voir la suite", () => {
       { read: false, dismissed: false, key: "u:1", title: "Coaching", date: "2026-11-10" } as never,
     ],
     profiles: [],
+    assistant: [],
   };
   const rows = shapeNotifications(notifications);
 
@@ -402,7 +403,7 @@ describe("n°8 : dépenses d'une période filtrées par la base, total exact", (
 
 describe("n°11 : un fichier au nom vide dit qu'il n'a pas de nom", () => {
   it("nom vide ou fait d'espaces", () => {
-    expect(attachmentProblem({ name: "   ", size: 10 })).toBe(
+    expect(attachmentProblem({ name: "   ", type: "", size: 10 }, 0)).toBe(
       "Fichier sans nom : renomme-le, puis joins-le à nouveau.",
     );
   });

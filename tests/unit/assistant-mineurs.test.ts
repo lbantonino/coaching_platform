@@ -17,7 +17,7 @@ import {
   summarize,
 } from "@/features/assistant/proposals";
 import { REGLAGES_PARAMS, uniqueNotificationKeys } from "@/features/assistant/reglages";
-import { attachmentProblem } from "@/features/assistant/rules";
+import { attachmentProblem } from "@/features/assistant/attachment-rules";
 import {
   goalCheckDay,
   goalEditRefusal,
@@ -39,6 +39,7 @@ const notifications = {
     { ...meta, key: "u:1", title: "Coaching", date: "2026-11-10", athleteName: null } as never,
   ],
   profiles: [],
+  assistant: [],
 };
 
 describe("lot 6 n°3 : voir_notifications respecte les sortes coupées et dit quand la liste est coupée", () => {
@@ -361,17 +362,17 @@ describe("lot 2 n°f : doublon d'exercice, sans joker ni espaces en trop", () =>
 });
 
 describe("lot 2 n°g : un fichier joint refusé dit pourquoi", () => {
+  // D-213 (27/11) : 20 Mo par fichier, plusieurs fichiers (assistant-attachment-rules.test.ts).
   it("fichier vide, trop lourd, nom trop long", () => {
-    expect(attachmentProblem({ name: "vide.pdf", size: 0 })).toBe(
-      "Fichier vide : choisis un fichier qui contient quelque chose.",
+    const pdf = (name: string, size: number) => ({ name, type: "application/pdf", size });
+    expect(attachmentProblem(pdf("vide.pdf", 0), 0)).toBe("« vide.pdf » est vide.");
+    expect(attachmentProblem(pdf("gros.pdf", 21 * 1024 * 1024), 0)).toBe(
+      "« gros.pdf » : plus de 20 Mo.",
     );
-    expect(attachmentProblem({ name: "gros.pdf", size: 5 * 1024 * 1024 })).toBe(
-      "Fichier trop lourd : 4 Mo maximum.",
+    expect(attachmentProblem(pdf(`${"a".repeat(201)}.pdf`, 10), 0)).toBe(
+      "Nom de fichier trop long (200 caractères au plus).",
     );
-    expect(attachmentProblem({ name: `${"a".repeat(201)}.pdf`, size: 10 })).toBe(
-      "Nom de fichier trop long (200 caractères au plus) : renomme-le, puis joins-le à nouveau.",
-    );
-    expect(attachmentProblem({ name: "ok.pdf", size: 10 })).toBeNull();
+    expect(attachmentProblem(pdf("ok.pdf", 5 * 1024 * 1024), 0)).toBeNull();
   });
 });
 

@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight, Flag, ListOrdered, Users } from "lucide-react";
 import Link from "next/link";
 
-import { ProgramPdfMenu } from "@/components/programs/program-pdf-menu";
+import { ProgramPdfButton } from "@/components/programs/program-pdf-button";
 import { cardLines } from "@/domain/training/card-lines";
 import { sessionCards, viewStepCards } from "@/domain/training/session-cards";
 import { defaultWeekIndex } from "@/domain/training/program-status";
@@ -410,9 +410,9 @@ export async function ProgramWeeksSection({
               {pace ? ` · ${pace}` : ""}
             </p>
           </div>
-          {/* Les PDF que le coach envoie au sportif (D-186 : ils étaient sur la carte de l'ancienne vue
-              de l'onglet Programme) ; 44 px de cible sur téléphone. */}
-          <ProgramPdfMenu
+          {/* Le PDF que le coach envoie au sportif (D-186 : il était sur la carte de l'ancienne vue de
+              l'onglet Programme ; un seul fichier depuis D-211) ; 44 px de cible sur téléphone. */}
+          <ProgramPdfButton
             base={pdfBase}
             className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-[11px] bg-surface px-3 text-[13px] font-semibold text-text inset-ring inset-ring-field-ring transition-[scale,background-color] duration-150 hover:bg-surface-2 active:scale-[0.97] lg:h-8 lg:rounded-[9px] lg:text-[12.5px]"
           />

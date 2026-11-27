@@ -11,6 +11,7 @@ import {
   MailOpen,
   MessageSquare,
   MoreHorizontal,
+  Sparkles,
   SquareCheck,
   Trash2,
   UserPen,
@@ -34,7 +35,7 @@ import { useToast } from "@/components/ui/toast";
 // droite : séances à encaisser, compétitions). Téléphone : onglets + deux boutons ronds (✓✓,
 // sélectionner), une colonne, et en sélection une barre noire fixe « Lu · Masquer · Supprimer ».
 
-export type SectionId = "messages" | "tasks" | "profiles" | "unpaid" | "competitions";
+export type SectionId = "messages" | "tasks" | "profiles" | "unpaid" | "competitions" | "assistant";
 
 export type NotificationItem = {
   key: string;
@@ -78,6 +79,7 @@ const icons: Record<SectionId, LucideIcon> = {
   profiles: UserPen,
   unpaid: Coins,
   competitions: Flag,
+  assistant: Sparkles,
 };
 
 // Une seule colonne (sous 1 100 px) : messages, séances, tâches, compétitions, fiches (kit).
@@ -87,6 +89,7 @@ const order: Record<SectionId, string> = {
   tasks: "order-3",
   competitions: "order-4",
   profiles: "order-5",
+  assistant: "order-6",
 };
 const leftColumn: SectionId[] = ["messages", "tasks", "profiles"];
 

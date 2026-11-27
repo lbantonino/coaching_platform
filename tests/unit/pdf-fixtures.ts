@@ -198,3 +198,15 @@ export function demoProgram(weeks = 6, today = "2026-11-10"): PdfProgramInput {
     weeks: list,
   };
 }
+
+// Un programme sans fiche ni allure (D-211) : une course en v1 par semaine (pas de version
+// structurée, donc pas d'allure à reprendre) ; son PDF est l'agenda seul.
+export function programWithoutFiches(weeks = 3): PdfProgramInput {
+  const program = demoProgram(weeks);
+  const content = sessionToDisplay(running(40));
+  for (const week of program.weeks)
+    week.sessions = [
+      { content, headline: "40 min", day: null, time: null, coachDate: null, published: null },
+    ];
+  return program;
+}

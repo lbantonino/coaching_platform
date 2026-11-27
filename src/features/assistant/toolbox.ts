@@ -22,7 +22,7 @@ export async function runAssistantTool(
   input: unknown,
   pending: AssistantProposal[] = [],
   userId = "",
-  attachment?: AssistantAttachment,
+  attachments: AssistantAttachment[] = [],
 ): Promise<ToolOutcome> {
   if (READ_TOOL_NAMES.has(name)) {
     try {
@@ -36,7 +36,7 @@ export async function runAssistantTool(
   }
   if (WRITE_TOOL_NAMES.has(name)) {
     try {
-      const result = await proposeAction(organizationId, name, input, pending, { attachment });
+      const result = await proposeAction(organizationId, name, input, pending, { attachments });
       return result.ok
         ? { type: "proposal", proposal: result.proposal }
         : { type: "error", content: result.error };

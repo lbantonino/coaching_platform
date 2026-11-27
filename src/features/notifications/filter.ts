@@ -8,11 +8,13 @@ export type NotifyPreferences = {
   profiles: boolean;
 };
 
-type Counts = Record<keyof NotifyPreferences, number>;
+type Counts = Record<keyof NotifyPreferences, number> & { assistant?: number };
 
+// Les conversations de l'Assistant IA bientôt effacées (D-212) comptent toujours : c'est un
+// avertissement avant un effacement, pas une préférence.
 export function enabledTotal(counts: Counts, notify: NotifyPreferences): number {
   return (Object.keys(notify) as (keyof NotifyPreferences)[]).reduce(
     (sum, kind) => sum + (notify[kind] ? counts[kind] : 0),
-    0,
+    counts.assistant ?? 0,
   );
 }

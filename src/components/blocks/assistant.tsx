@@ -29,7 +29,19 @@ import {
   type ReactNode,
 } from "react";
 
+import {
+  ATTACHMENT_ACCEPT,
+  useAttachments,
+  type AttachedFile,
+  type AttachmentActions,
+} from "@/components/blocks/assistant-attachments";
 import { AssistantCard } from "@/components/blocks/assistant-card";
+import {
+  newConversationId,
+  useConversationSync,
+  type ConversationActions,
+  type SaveOutcome,
+} from "@/components/blocks/assistant-conversations";
 import { useDictation } from "@/components/blocks/assistant-voice";
 import { MenuDialog, Overlay, type MenuAnchor } from "@/components/ui/overlay";
 import { PROFILE_PHOTO_SIDE, shrinkPhoto } from "@/lib/shrink-photo";
@@ -44,8 +56,10 @@ import {
   toCards,
   type CardState,
 } from "@/features/assistant/cards";
+import { updateMessageCards, type AssistantMessage } from "@/features/assistant/conversation-rules";
+import type { ConversationSummary, StoredConversation } from "@/features/assistant/conversations";
 import type { ExecuteResult } from "@/features/assistant/execute";
-import { DOCUMENT_ACCEPT, formatBytes } from "@/domain/documents/documents";
+import { formatBytes } from "@/domain/documents/documents";
 import type { AssistantAction } from "@/features/assistant/proposals";
 import type { StepResult } from "@/features/assistant/loop";
 import {
@@ -53,35 +67,23 @@ import {
   LOCKED_TEXT,
   UNCONFIGURED_NOTE,
   UNCONFIGURED_TEXT,
-  READ_MAX_BYTES,
   assistantComposerOpen,
-  attachmentProblem,
   trimHistory,
   type AskRequest,
   type AssistantAccess,
 } from "@/features/assistant/rules";
 
 // Assistant IA du coach, kit « Coory Pages », page 02 (D-132) : la boîte ouverte par le bouton
-// « Assistant IA » et la page complète partagent la même conversation (elle vit dans cet onglet du
-// navigateur, rien n'est enregistré). Branché à Claude depuis D-168 (13/11/2026), réservé à
+// « Assistant IA » et la page complète partagent la même conversation. Depuis D-212 (27/11/2026),
+// chaque conversation est enregistrée dans le compte du coach (sauf démo) : historique, rouvrir,
+// continuer, PDF, supprimer ; effacée 12 mois après son dernier message. Branché à Claude depuis D-168 (13/11/2026), réservé à
 // l'abonnement mensuel Coory : sans abonnement, l'interface est verrouillée et AUCUNE demande ne part
 // (la base le revérifie à chaque demande, features/assistant/actions.ts). Abonné : 100 demandes par
 // coach et par mois. Depuis le lot 1 des actions, il lit ce qu'il faut (sportifs, agenda, séances à
 // encaisser) et PROPOSE des actions en cartes : rien n'est fait avant le clic « Valider » du coach.
 
-// `failed` : réponse d'erreur (ou la question qui l'a provoquée), jamais renvoyée à Claude.
-// `hidden` : note pour l'assistant (« [Fait : …] »), envoyée avec la demande suivante, jamais affichée.
-// `cards` : actions proposées par l'assistant, à valider (lot 1 des actions).
-export type AssistantMessage = {
-  id: number;
-  from: "coach" | "assistant";
-  text: string;
-  failed?: boolean;
-  hidden?: boolean;
-  cards?: CardState[];
-  // Actions de la même réponse qui n'ont pas pu être préparées (relecture n°3).
-  failures?: string[];
-};
+// Un message de la conversation (type partagé avec le serveur qui l'enregistre, D-212).
+export type { AssistantMessage };
 type Athlete = { id: string; name: string };
 
 type AssistantState = {
@@ -94,10 +96,12 @@ type AssistantState = {
   messages: AssistantMessage[];
   draft: string;
   athlete: Athlete | null;
-  // Fichier joint à la prochaine demande (lot 2, D-181) : depuis D-209, Claude le lit (3 Mo au plus,
-  // envoyé avec chaque étape de la demande) ; au-delà, seuls son nom, son type et sa taille.
-  attachment: File | null;
-  setAttachment: (file: File | null) => void;
+  // Fichiers joints (D-213) : jusqu'à 10, 20 Mo chacun, déposés puis préparés un par un ; Claude les
+  // lit. Ils restent joints pour la suite de la conversation, jusqu'à leur retrait.
+  attachments: AttachedFile[];
+  canAttach: boolean;
+  addAttachments: (files: File[]) => string | null;
+  removeAttachment: (key: string) => void;
   openDialog: () => void;
   closeDialog: () => void;
   setDraft: (text: string) => void;
@@ -110,6 +114,18 @@ type AssistantState = {
   cancelCard: (messageId: number, cardId: string) => void;
   // Après « Modifier » : la carte est remplacée par le formulaire, ou la saisie attend la correction.
   dropCard: (messageId: number, cardId: string, asked: boolean) => void;
+  // Conversations enregistrées (D-212) : « saved » (compte du coach), « demo » (compte de
+  // démonstration : rien n'est gardé), « off » (pas d'organisation).
+  historyMode: "saved" | "demo" | "off";
+  conversationId: string | null;
+  // null : pas encore chargé.
+  history: ConversationSummary[] | null;
+  // Ce qui n'a pas pu être enregistré, ou une conversation rechargée (autre appareil).
+  notice: string | null;
+  refreshHistory: () => Promise<void>;
+  openConversation: (id: string) => Promise<boolean>;
+  removeConversation: (id: string) => Promise<boolean>;
+  pdfHref: (id: string) => string | null;
 };
 
 const AssistantContext = createContext<AssistantState | null>(null);
@@ -127,6 +143,9 @@ export function AssistantProvider({
   execute,
   executeDocument,
   loadAthletes,
+  conversations,
+  uploads,
+  demo = false,
   children,
 }: {
   firstName: string;
@@ -139,16 +158,22 @@ export function AssistantProvider({
   executeDocument?: (formData: FormData) => Promise<ExecuteResult>;
   // Action serveur (organisation déjà liée) ; sans organisation, aucun sportif.
   loadAthletes?: () => Promise<Athlete[]>;
+  // Conversations enregistrées (D-212), liées à l'organisation ; absentes en démo.
+  conversations?: ConversationActions;
+  // Fichiers joints (D-213), liés à l'organisation ; absents en démo.
+  uploads?: AttachmentActions;
+  demo?: boolean;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [athlete, setAthlete] = useState<Athlete | null>(null);
-  const [attachment, setAttachment] = useState<File | null>(null);
-  // Fichier joint à chaque réponse de l'assistant (id du message) : la carte « Importer un document »
-  // de cette réponse l'envoie au « Valider ». Oublié quand la conversation recommence.
-  const files = useRef(new Map<number, File>());
+  const attached = useAttachments(uploads);
+  // Fichiers joints à chaque réponse de l'assistant (id du message) : la carte « Importer un
+  // document » ou « Photo » de cette réponse envoie le sien au « Valider ». Oubliés quand la
+  // conversation recommence.
+  const files = useRef(new Map<number, { key: string; file: File }[]>());
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   // La réponse du serveur met à jour les demandes restantes (ou verrouille si l'abonnement a pris fin).
@@ -159,6 +184,66 @@ export function AssistantProvider({
   // Cartes en cours d'exécution (un deuxième clic ne relance rien, même avant le rendu suivant).
   const running = useRef(new Set<string>());
   const router = useRouter();
+  // Conversation affichée (D-212) : son identifiant naît avec la première question.
+  const [conversationId, setConversationId] = useState<string | null>(null);
+
+  // Repartir d'une conversation vide (« Nouvelle conversation », ou supprimée ailleurs).
+  const reset = useCallback(() => {
+    conversation.current++;
+    setConversationId(null);
+    setMessages([]);
+    setDraft("");
+    setAthlete(null);
+    attached.clear();
+    files.current.clear();
+    setPending(false);
+    setProgress(null);
+  }, [attached]);
+
+  // Affiche une conversation lue en base (rouverte, ou plus récente sur un autre appareil).
+  const show = useCallback((stored: StoredConversation) => {
+    conversation.current++;
+    setConversationId(stored.id);
+    setMessages(stored.messages);
+    next.current = Math.max(next.current, ...stored.messages.map((message) => message.id + 1));
+    setPending(false);
+    setProgress(null);
+  }, []);
+
+  const sync = useConversationSync({
+    actions: conversations,
+    conversationId,
+    messages,
+    onConflict: show,
+    onGone: reset,
+  });
+
+  // Une carte finie après que le coach a changé de conversation : son résultat est écrit dans SA
+  // conversation (relue en base), pas dans celle affichée.
+  const applyElsewhere = useCallback(
+    async (
+      id: string,
+      messageId: number,
+      change: (cards: CardState[]) => CardState[],
+      note?: string,
+    ) => {
+      if (!conversations) return;
+      const stored = await conversations.load(id).catch(() => null);
+      if (!stored) return;
+      sync.remember(stored);
+      const noteId = Math.max(0, ...stored.messages.map((message) => message.id + 1));
+      void sync.persist(
+        id,
+        updateMessageCards(
+          stored.messages,
+          messageId,
+          change,
+          note ? { id: noteId, from: "coach", text: note, hidden: true } : undefined,
+        ),
+      );
+    },
+    [conversations, sync],
+  );
 
   const send = useCallback(
     (text: string) => {
@@ -166,7 +251,11 @@ export function AssistantProvider({
       if (!body || pending || !assistantComposerOpen(access) || !ask) return;
       const about = athlete ? ` (sportif : ${athlete.name})` : "";
       const question = `${body}${about}`;
-      const file = attachment;
+      // Fichiers : tous prêts avant d'envoyer (le bouton attend) ; ceux en erreur ne partent pas.
+      if (attached.list.some((item) => item.status === "uploading")) return;
+      const joined = attached.list.filter((item) => item.status === "ready" && item.id);
+      const refs = joined.map((item) => ({ id: item.id! }));
+      const names = joined.map((item) => item.file.name).join(", ");
       const history = trimHistory(
         messages
           .filter((message) => !message.failed)
@@ -174,24 +263,33 @@ export function AssistantProvider({
       );
       const asked = next.current++;
       const round = conversation.current;
+      if (!conversationId) setConversationId(newConversationId());
       setMessages((current) => [
         ...current,
         {
           id: asked,
           from: "coach",
-          text: file ? `${question}\nFichier joint : ${file.name}` : question,
+          text:
+            joined.length > 0
+              ? `${question}\n${joined.length > 1 ? "Fichiers joints" : "Fichier joint"} : ${names}`
+              : question,
         },
       ]);
       setDraft("");
-      // Le fichier joint reste pour toute la conversation (relecture du lot 2) : une correction ou la
-      // réponse à une question de l'assistant le garde. Il part avec l'import validé, la croix de la
-      // pastille ou une conversation recommencée.
+      // Les fichiers joints restent pour toute la conversation (relecture du lot 2) : une correction
+      // ou la réponse à une question de l'assistant les garde. Ils partent avec l'import validé, la
+      // croix de leur pastille ou une conversation recommencée.
       setPending(true);
       const answer = (result: AskAssistantResult) => {
         if (round !== conversation.current) return;
         const step = result.ok ? result.step : null;
         const answerId = next.current++;
-        if (file && result.ok) files.current.set(answerId, file);
+        if (joined.length > 0 && result.ok) {
+          files.current.set(
+            answerId,
+            joined.map((item) => ({ key: item.key, file: item.file })),
+          );
+        }
         setMessages((current) => [
           ...current.map((message) =>
             message.id === asked && !result.ok ? { ...message, failed: true } : message,
@@ -217,24 +315,33 @@ export function AssistantProvider({
       // Une demande se fait en étapes (un appel au modèle chacune) : tant que l'assistant cherche
       // (outils de lecture), on relance l'étape suivante avec la conversation qu'il a renvoyée.
       const drive = async () => {
-        // Le contenu du fichier (D-209) : lu ici, envoyé à chaque étape (le serveur ne garde rien).
-        const data = file && file.size <= READ_MAX_BYTES ? await toBase64(file) : undefined;
-        const meta = file
-          ? { name: file.name, type: file.type, size: file.size, ...(data ? { data } : {}) }
-          : undefined;
-        let result = await ask({
-          start: { history, question, ...(meta ? { attachment: meta } : {}) },
-        });
+        // D-213 : seulement les identifiants des fichiers ; copies Anthropic refaites au-delà de 55 min.
+        const withFiles = refs.length > 0 ? { attachments: refs } : {};
+        // Une copie qui ne peut pas être refaite : la question ne part pas (rien n'est compté).
+        if (refs.length > 0 && !(await attached.refresh())) {
+          answer({
+            ok: false,
+            kind: "attachments-missing",
+            error: "Un fichier joint n'a pas pu être préparé : retire-le, puis joins-le à nouveau.",
+            remaining: null,
+          });
+          return;
+        }
+        // Copie trop ancienne pour le serveur : refaite, puis la même étape est rejouée une fois
+        // (refusée AVANT toute réservation, elle ne compte pas).
+        const retried = async (call: () => Promise<AskAssistantResult>) => {
+          const first = await call();
+          if (first.ok || first.kind !== "attachments-expired") return first;
+          return (await attached.refresh(true)) ? call() : first;
+        };
+        let result = await retried(() => ask({ start: { history, question, ...withFiles } }));
         while (result.ok && result.step.kind === "continue") {
           if (round !== conversation.current) return;
           setProgress(result.step.progress);
-          result = await ask({
-            next: {
-              usageId: result.usageId,
-              messages: result.step.messages,
-              ...(meta ? { attachment: meta } : {}),
-            },
-          });
+          const { usageId, step } = result;
+          result = await retried(() =>
+            ask({ next: { usageId, messages: step.messages, ...withFiles } }),
+          );
         }
         answer(result);
       };
@@ -242,22 +349,20 @@ export function AssistantProvider({
         answer({ ok: false, kind: "unavailable", error: UNAVAILABLE, remaining: null }),
       );
     },
-    [athlete, access, ask, attachment, messages, pending],
+    [athlete, access, ask, attached, conversationId, messages, pending],
   );
 
   // Met à jour les cartes d'un message, et ajoute éventuellement une note pour l'assistant.
   const updateCards = useCallback(
     (messageId: number, change: (cards: CardState[]) => CardState[], note?: string) => {
-      setMessages((current) => {
-        const updated = current.map((message) =>
-          message.id === messageId && message.cards
-            ? { ...message, cards: change(message.cards) }
-            : message,
-        );
-        return note
-          ? [...updated, { id: next.current++, from: "coach", text: note, hidden: true }]
-          : updated;
-      });
+      setMessages((current) =>
+        updateMessageCards(
+          current,
+          messageId,
+          change,
+          note ? { id: next.current++, from: "coach", text: note, hidden: true } : undefined,
+        ),
+      );
     },
     [],
   );
@@ -272,9 +377,23 @@ export function AssistantProvider({
     (messageId: number, cardId: string) => {
       const cards = messages.find((message) => message.id === messageId)?.cards ?? [];
       const card = cards.find((item) => item.id === cardId);
+      // Verrouillé (D-212 : conversation rouverte sans abonnement) : rien ne s'exécute.
+      if (!assistantComposerOpen(access)) return;
       if (!card || !execute || !canValidate(cards, cardId) || running.current.has(cardId)) return;
       running.current.add(cardId);
+      // D-212 : la carte « en cours » est enregistrée AVANT l'exécution, à partir de l'écran affiché
+      // (sa génération). Déjà validée ou supprimée sur un autre appareil, écran périmé, ou pas
+      // enregistrée (réseau, trop longue) : RIEN n'est exécuté (relecture du 27/11).
+      const origin = { id: conversationId, round: conversation.current };
+      const from = conversationId ? sync.generation(conversationId) : 0;
       updateCards(messageId, (list) => startCard(list, cardId));
+      const saved: Promise<SaveOutcome> = conversationId
+        ? sync.persist(
+            conversationId,
+            updateMessageCards(messages, messageId, (list) => startCard(list, cardId)),
+            from,
+          )
+        : Promise.resolve("off");
       const blocked = (who: string) => `Impossible : la fiche de ${who} n'a pas été créée.`;
       // « Importer un document » et « Photo » mettre (lot 5) : le fichier joint à cette réponse part
       // avec la carte ; sans lui (page rechargée, autre conversation), on le dit au lieu d'échouer en
@@ -282,9 +401,20 @@ export function AssistantProvider({
       const withFile =
         card.kind === "importer_document" ||
         (card.kind === "photo" && card.params.action === "mettre");
+      // Le fichier de la carte parmi ceux joints à CETTE réponse : celui que nomme « fichier », ou le
+      // seul joint.
+      const pickedFile = () => {
+        const joinedFiles = files.current.get(messageId) ?? [];
+        const wanted =
+          typeof card.params.fichier === "string" ? card.params.fichier.trim().toLowerCase() : null;
+        const named = wanted
+          ? joinedFiles.find((item) => item.file.name.trim().toLowerCase() === wanted)
+          : undefined;
+        return named ?? (joinedFiles.length === 1 ? joinedFiles[0] : undefined);
+      };
       const run = (): Promise<ExecuteResult> => {
         if (!withFile) return execute({ kind: card.kind, params: card.params });
-        const file = files.current.get(messageId);
+        const file = pickedFile()?.file;
         if (!file || !executeDocument) {
           return Promise.resolve({
             ok: false,
@@ -303,20 +433,46 @@ export function AssistantProvider({
           ? shrinkPhoto(file, { maxSide: PROFILE_PHOTO_SIDE }).then(send)
           : send(file);
       };
-      run()
-        .catch((): ExecuteResult => ({ ok: false, error: UNAVAILABLE }))
+      // Le résultat va à la conversation d'où part la carte, même si le coach en a ouvert une autre
+      // entre-temps (jamais dans celle affichée à ce moment-là).
+      const apply = (change: (cards: CardState[]) => CardState[], note?: string) => {
+        if (conversation.current === origin.round) updateCards(messageId, change, note);
+        else if (origin.id) void applyElsewhere(origin.id, messageId, change, note);
+      };
+      saved
+        .then((outcome) => {
+          if (outcome === "ok" || outcome === "off") {
+            return run().catch((): ExecuteResult => ({ ok: false, error: UNAVAILABLE }));
+          }
+          // Pas enregistrée (réseau, trop longue) : la carte redevient « à valider ». Écran périmé
+          // ou conversation supprimée : l'écran a déjà été remplacé.
+          if (outcome === "failed" && conversation.current === origin.round) {
+            updateCards(messageId, (list) =>
+              list.map((item) =>
+                item.id === cardId && item.status === "running"
+                  ? { ...item, status: "pending" }
+                  : item,
+              ),
+            );
+          }
+          return null;
+        })
         .then((result) => {
           running.current.delete(cardId);
+          if (!result) return;
           if (result.ok) {
-            if (withFile) setAttachment(null);
-            updateCards(
-              messageId,
+            if (withFile) {
+              // Le fichier rangé n'est plus joint (comme avant D-213) : celui de la carte, par sa clé.
+              const used = pickedFile();
+              if (used) attached.remove(used.key);
+            }
+            apply(
               (list) => resolveCard(list, cardId, result.href, result.createdAthleteId),
               noteFor(card, "done"),
             );
             router.refresh();
           } else {
-            updateCards(messageId, (list) =>
+            apply((list) =>
               blockDependents(
                 list.map((item) =>
                   item.id === cardId ? { ...item, status: "error", result: result.error } : item,
@@ -328,7 +484,18 @@ export function AssistantProvider({
           }
         });
     },
-    [messages, execute, executeDocument, updateCards, router],
+    [
+      messages,
+      execute,
+      executeDocument,
+      updateCards,
+      router,
+      conversationId,
+      sync,
+      access,
+      applyElsewhere,
+      attached,
+    ],
   );
 
   const cancelCard = useCallback(
@@ -391,27 +558,56 @@ export function AssistantProvider({
       messages,
       draft,
       athlete,
-      attachment,
-      setAttachment,
+      attachments: attached.list,
+      canAttach: attached.enabled,
+      addAttachments: attached.add,
+      removeAttachment: attached.remove,
       openDialog: () => setOpen(true),
       closeDialog: () => setOpen(false),
       setDraft,
       setAthlete,
       send,
       restart: () => {
-        conversation.current++;
-        setMessages([]);
-        setDraft("");
-        setAthlete(null);
-        setAttachment(null);
-        files.current.clear();
-        setPending(false);
-        setProgress(null);
+        reset();
+        sync.setNotice(null);
       },
       loadAthletes: loadAthletes ?? (async () => []),
       validateCard,
       cancelCard,
       dropCard,
+      historyMode: conversations ? "saved" : demo ? "demo" : "off",
+      conversationId,
+      history: sync.history,
+      notice: sync.notice,
+      refreshHistory: sync.refreshHistory,
+      openConversation: async (id: string) => {
+        if (!conversations) return false;
+        const stored = await conversations.load(id).catch(() => null);
+        if (!stored) {
+          sync.setNotice("Cette conversation n'existe plus.");
+          void sync.refreshHistory();
+          return false;
+        }
+        sync.remember(stored);
+        show(stored);
+        setDraft("");
+        setAthlete(null);
+        attached.clear();
+        files.current.clear();
+        sync.setNotice(null);
+        return true;
+      },
+      removeConversation: async (id: string) => {
+        if (!conversations) return false;
+        const { ok } = await conversations.remove(id).catch(() => ({ ok: false }));
+        if (ok) {
+          sync.forget(id);
+          if (id === conversationId) reset();
+          void sync.refreshHistory();
+        }
+        return ok;
+      },
+      pdfHref: (id: string) => (conversations ? `${conversations.pdfBase}/${id}/pdf` : null),
     }),
     [
       firstName,
@@ -422,12 +618,18 @@ export function AssistantProvider({
       messages,
       draft,
       athlete,
-      attachment,
+      attached,
       send,
       loadAthletes,
       validateCard,
       cancelCard,
       dropCard,
+      conversations,
+      demo,
+      conversationId,
+      sync,
+      reset,
+      show,
     ],
   );
 
@@ -676,6 +878,7 @@ export function AssistantThread({ className = "" }: { className?: string }) {
                     key={card.id}
                     card={card}
                     cards={message.cards ?? []}
+                    locked={!assistantComposerOpen(assistant.access)}
                     onValidate={() => assistant.validateCard(message.id, card.id)}
                     onCancel={() => assistant.cancelCard(message.id, card.id)}
                     onModify={(asked) => {
@@ -702,17 +905,7 @@ export function AssistantThread({ className = "" }: { className?: string }) {
 }
 
 // Zone de saisie (boîte et page) : le texte, le sportif concerné, Envoyer (rond violet, grisé si
-// vide). Entrée envoie, Maj + Entrée passe à la ligne. « Dicter » (D-173) écrit la voix dans la saisie ;
-// Contenu d'un fichier en base64, sans l'en-tête « data:…;base64, » (D-209).
-function toBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).replace(/^data:[^,]*,/, ""));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
+// vide). Entrée envoie, Maj + Entrée passe à la ligne. « Dicter » (D-173) écrit la voix dans la saisie.
 // « Joindre » (lot 2, D-181) garde un fichier dans le navigateur pour « Importer un document ».
 export function AssistantComposer({
   rows,
@@ -727,7 +920,24 @@ export function AssistantComposer({
   const [menu, setMenu] = useState<MenuAnchor | null>(null);
   const [athletes, setAthletes] = useState<Athlete[] | null>(null);
   const id = useId();
+  // D-213 : envoyée pendant l'envoi des fichiers, la question part dès qu'ils sont prêts.
+  const uploading = assistant.attachments.some((item) => item.status === "uploading");
   const empty = assistant.draft.trim() === "" || assistant.pending;
+  const [dragging, setDragging] = useState(false);
+  const [queued, setQueued] = useState(false);
+  const send = assistant.send;
+  const draft = assistant.draft;
+  const pending = assistant.pending;
+  const failedFile = assistant.attachments.some((item) => item.status === "error");
+  useEffect(() => {
+    if (!queued || uploading || pending) return;
+    // Réagit à la fin de l'envoi des fichiers (événement extérieur au rendu) : la question mise en
+    // attente part une seule fois, puis l'attente est levée.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQueued(false);
+    // Un fichier en erreur : la question reste dans la saisie, avec la raison affichée.
+    if (!failedFile) send(draft);
+  }, [queued, uploading, pending, failedFile, send, draft]);
   // Dictée (D-173) : la voix s'écrit dans la saisie ; envoyer coupe l'écoute.
   const dictation = useDictation(() => assistant.draft, assistant.setDraft);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -736,10 +946,27 @@ export function AssistantComposer({
     dictation.cancel();
     // Un refus de fichier ne reste pas affiché après l'envoi (relecture du lot 2, n°h).
     setFileError(null);
-    assistant.send(assistant.draft);
+    if (uploading) setQueued(true);
+    else assistant.send(assistant.draft);
   };
   return (
-    <div className="flex flex-col gap-2.5 rounded-[18px] bg-surface p-3 shadow-[0_12px_32px_-18px_var(--violet)] inset-ring-[1.5px] inset-ring-violet/45 md:p-3.5">
+    <div
+      onDragOver={(event) => {
+        if (!assistant.canAttach || !event.dataTransfer.types.includes("Files")) return;
+        event.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(event) => {
+        if (!assistant.canAttach) return;
+        event.preventDefault();
+        setDragging(false);
+        setFileError(assistant.addAttachments(Array.from(event.dataTransfer.files)));
+      }}
+      className={`flex flex-col gap-2.5 rounded-[18px] bg-surface p-3 shadow-[0_12px_32px_-18px_var(--violet)] inset-ring-[1.5px] md:p-3.5 ${
+        dragging ? "inset-ring-violet" : "inset-ring-violet/45"
+      }`}
+    >
       <label htmlFor={id} className="sr-only">
         Ta demande à l&apos;assistant
       </label>
@@ -763,30 +990,52 @@ export function AssistantComposer({
         enterKeyHint="send"
         className="w-full resize-none bg-transparent px-1 text-[16px] leading-[1.5] text-text outline-none placeholder:text-faint md:text-[14.5px]"
       />
-      {assistant.attachment ? (
-        <div className="flex min-w-0">
-          <button
-            type="button"
-            onClick={() => {
-              setFileError(null);
-              assistant.setAttachment(null);
-            }}
-            aria-label={`Retirer le fichier joint : ${assistant.attachment.name}`}
-            className="tap-44 inline-flex h-9 max-w-full min-w-0 items-center gap-1.5 rounded-md bg-status-accent-soft px-3 text-[13px] leading-[normal] font-medium text-violet-text"
-          >
-            <Paperclip aria-hidden size={14} strokeWidth={1.9} className="shrink-0" />
-            <span className="truncate">{assistant.attachment.name}</span>
-            <span className="shrink-0 font-normal">· {formatBytes(assistant.attachment.size)}</span>
-            <X aria-hidden size={13} strokeWidth={2.2} className="shrink-0" />
-          </button>
-        </div>
+      {assistant.attachments.length > 0 ? (
+        <ul aria-label="Fichiers joints" className="flex min-w-0 flex-wrap gap-1.5">
+          {assistant.attachments.map((item) => (
+            <li key={item.key} className="flex max-w-full min-w-0">
+              <button
+                type="button"
+                onClick={() => assistant.removeAttachment(item.key)}
+                // Pas pendant une demande : l'étape suivante a encore besoin du fichier.
+                disabled={assistant.pending}
+                aria-label={`Retirer le fichier joint : ${item.file.name}`}
+                className={`tap-44 inline-flex h-9 max-w-full min-w-0 items-center gap-1.5 rounded-md px-3 text-[13px] leading-[normal] font-medium ${
+                  item.status === "error"
+                    ? "bg-dlg-danger-soft text-dlg-danger-ink"
+                    : "bg-status-accent-soft text-violet-text"
+                }`}
+              >
+                {item.status === "uploading" ? (
+                  <Spinner />
+                ) : (
+                  <Paperclip aria-hidden size={14} strokeWidth={1.9} className="shrink-0" />
+                )}
+                <span className="truncate">{item.file.name}</span>
+                <span className="shrink-0 font-normal">
+                  · {item.status === "uploading" ? "envoi…" : formatBytes(item.file.size)}
+                </span>
+                <X aria-hidden size={13} strokeWidth={2.2} className="shrink-0" />
+              </button>
+            </li>
+          ))}
+        </ul>
       ) : null}
-      {assistant.attachment ? (
-        // D-209 : le coach sait que le fichier part chez l'IA pour être lu.
+      {assistant.attachments.some((item) => item.status === "error") ? (
+        <p role="alert" className="px-1 text-[12.5px] leading-[1.4] text-alert">
+          {assistant.attachments.find((item) => item.status === "error")?.error}
+        </p>
+      ) : null}
+      {queued ? (
+        <p role="status" className="px-1 text-[12.5px] leading-[1.4] text-muted">
+          Ta question part dès que les fichiers sont prêts…
+        </p>
+      ) : null}
+      {assistant.attachments.length > 0 ? (
+        // D-209 : le coach sait que les fichiers partent chez l'IA pour être lus.
         <p className="px-1 text-[12px] leading-[1.45] text-muted">
-          {assistant.attachment.size > READ_MAX_BYTES
-            ? "Plus de 3 Mo : l'assistant ne pourra pas le lire, seulement le ranger dans tes Documents."
-            : "L'assistant lit ce fichier pour te répondre : il est envoyé à l'IA (Claude). N'y mets pas de données de santé."}
+          L&apos;assistant lit ces fichiers pour te répondre : ils sont envoyés à l&apos;IA
+          (Claude). N&apos;y mets pas de données de santé.
         </p>
       ) : null}
       {fileError ? (
@@ -827,35 +1076,35 @@ export function AssistantComposer({
           </button>
         )}
         <span aria-hidden className="flex-1" />
-        <input
-          ref={fileInput}
-          type="file"
-          accept={DOCUMENT_ACCEPT}
-          tabIndex={-1}
-          aria-label="Fichier à joindre"
-          className="sr-only"
-          onChange={(event) => {
-            const file = event.target.files?.[0] ?? null;
-            event.target.value = "";
-            if (!file) return;
-            // Vide, trop lourd ou nom trop long : refusé ici, avec la raison (relecture du lot 2, n°g).
-            const problem = attachmentProblem(file);
-            if (problem) {
-              setFileError(problem);
-              return;
-            }
-            setFileError(null);
-            assistant.setAttachment(file);
-          }}
-        />
-        <button
-          type="button"
-          aria-label="Joindre un fichier"
-          onClick={() => fileInput.current?.click()}
-          className="relative grid size-9 shrink-0 place-items-center rounded-full text-text-2 inset-ring inset-ring-line-2 transition-[background-color,scale] duration-150 after:absolute after:-inset-1 after:rounded-full hover:bg-surface-2 active:scale-95"
-        >
-          <Paperclip aria-hidden size={17} strokeWidth={1.9} />
-        </button>
+        {/* Démo (D-213) : pas de fichier joint (rien n'est déposé par un compte public). */}
+        {assistant.canAttach ? (
+          <>
+            <input
+              ref={fileInput}
+              type="file"
+              accept={ATTACHMENT_ACCEPT}
+              multiple
+              tabIndex={-1}
+              aria-label="Fichier à joindre"
+              className="sr-only"
+              onChange={(event) => {
+                const picked = Array.from(event.target.files ?? []);
+                event.target.value = "";
+                if (picked.length === 0) return;
+                // Vide, trop lourd, format non lu, plus de 10 : refusé ici, avec la raison (lot 2, n°g).
+                setFileError(assistant.addAttachments(picked));
+              }}
+            />
+            <button
+              type="button"
+              aria-label="Joindre un fichier"
+              onClick={() => fileInput.current?.click()}
+              className="relative grid size-9 shrink-0 place-items-center rounded-full text-text-2 inset-ring inset-ring-line-2 transition-[background-color,scale] duration-150 after:absolute after:-inset-1 after:rounded-full hover:bg-surface-2 active:scale-95"
+            >
+              <Paperclip aria-hidden size={17} strokeWidth={1.9} />
+            </button>
+          </>
+        ) : null}
         {dictation.supported ? (
           <button
             type="button"

@@ -37,6 +37,108 @@ export type Database = {
         };
         Relationships: [];
       };
+      assistant_conversations: {
+        Row: {
+          created_at: string;
+          id: string;
+          last_message_at: string;
+          message_count: number;
+          messages: NonNullable<Json>;
+          organization_id: string;
+          title: string;
+          updated_at: string;
+          user_id: string;
+          version: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id: string;
+          last_message_at?: string;
+          message_count?: number;
+          messages: NonNullable<Json>;
+          organization_id: string;
+          title: string;
+          updated_at?: string;
+          user_id?: string;
+          version?: number;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          last_message_at?: string;
+          message_count?: number;
+          messages?: NonNullable<Json>;
+          organization_id?: string;
+          title?: string;
+          updated_at?: string;
+          user_id?: string;
+          version?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_conversations_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assistant_files: {
+        Row: {
+          anthropic_file_id: string | null;
+          created_at: string;
+          id: string;
+          mime_type: string;
+          name: string;
+          organization_id: string;
+          pages: number | null;
+          prepared_at: string | null;
+          size_bytes: number;
+          storage_path: string;
+          text_content: string | null;
+          user_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          anthropic_file_id?: string | null;
+          created_at?: string;
+          id?: string;
+          mime_type: string;
+          name: string;
+          organization_id: string;
+          pages?: number | null;
+          prepared_at?: string | null;
+          size_bytes: number;
+          storage_path: string;
+          text_content?: string | null;
+          user_id?: string;
+        };
+        Update: {
+          anthropic_file_id?: string | null;
+          created_at?: string;
+          id?: string;
+          mime_type?: string;
+          name?: string;
+          organization_id?: string;
+          pages?: number | null;
+          prepared_at?: string | null;
+          size_bytes?: number;
+          storage_path?: string;
+          text_content?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assistant_files_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       assistant_usage: {
         Row: {
           created_at: string;
@@ -2160,6 +2262,11 @@ export type Database = {
       alertes_secret_ok: { Args: { p_given: string }; Returns: boolean };
       archive_program: { Args: { p_program_id: string }; Returns: undefined };
       assistant_access_allowed: { Args: { p_organization_id: string }; Returns: boolean };
+      assistant_files_orphans: { Args: Record<PropertyKey, never>; Returns: string[] };
+      assistant_files_room: {
+        Args: { p_organization_id: string; p_size: number };
+        Returns: boolean;
+      };
       before_user_created_access_code: { Args: { event: Json }; Returns: Json };
       change_organization_currency: {
         Args: { p_currency: string; p_organization_id: string; p_rate: number };
@@ -2250,7 +2357,25 @@ export type Database = {
         };
         Returns: number;
       };
+      reserve_assistant_file: {
+        Args: { p_mime: string; p_name: string; p_organization_id: string; p_size: number };
+        Returns: {
+          id: string;
+          storage_path: string;
+        }[];
+      };
       reserve_assistant_use: { Args: { p_organization_id: string }; Returns: string };
+      save_assistant_conversation: {
+        Args: {
+          p_id: string;
+          p_message_count: number;
+          p_messages: Json;
+          p_organization_id: string;
+          p_title: string;
+          p_version: number;
+        };
+        Returns: number;
+      };
       save_program_draft: {
         Args: {
           p_discipline: string;

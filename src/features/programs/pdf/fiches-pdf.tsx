@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Document, Link, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import { Link, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type {
   FicheBlock,
@@ -20,7 +20,6 @@ import {
   VIOLET,
   disciplinePdf,
   pdfText,
-  registerPdfFonts,
   titleStyles,
   u,
 } from "./pdf-kit";
@@ -188,7 +187,16 @@ const cell = (flex: number, center = false) => ({
   textAlign: center ? ("center" as const) : ("left" as const),
 });
 
-function TocPage({ page, total, model }: { page: FichesTocPage; total: number; model: FichesPdf }) {
+// Pages exportées pour le PDF unique du programme (program-pdf.tsx, D-211).
+export function FichesTocPageView({
+  page,
+  total,
+  model,
+}: {
+  page: FichesTocPage;
+  total: number;
+  model: FichesPdf;
+}) {
   return (
     <PdfPage
       anchor={page.anchor}
@@ -424,7 +432,7 @@ function Section({ section, tone }: { section: FicheSection; tone: FicheTone }) 
   }
 }
 
-function FichePageView({
+export function FichePageView({
   page,
   total,
   model,
@@ -455,28 +463,5 @@ function FichePageView({
         <Section key={i} section={section} tone={page.tone} />
       ))}
     </PdfPage>
-  );
-}
-
-export async function renderFichesPdf(model: FichesPdf, author: string): Promise<Buffer> {
-  registerPdfFonts();
-  const total = model.pages.length;
-  return renderToBuffer(
-    <Document
-      title={pdfText(model.documentTitle)}
-      author={pdfText(author)}
-      subject="Fiches et repères"
-      creator="Coory"
-      producer="Coory"
-      language="fr-FR"
-    >
-      {model.pages.map((page) =>
-        page.kind === "toc" ? (
-          <TocPage key={page.anchor} page={page} total={total} model={model} />
-        ) : (
-          <FichePageView key={page.anchor} page={page} total={total} model={model} />
-        ),
-      )}
-    </Document>,
   );
 }

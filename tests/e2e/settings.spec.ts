@@ -205,6 +205,8 @@ test("sécurité : le mot de passe actuel est vérifié, et les données s'expor
     "organization_currency_changes",
     "athlete_invites",
     "assistant_usage",
+    // D-212 : les conversations de l'Assistant IA.
+    "assistant_conversations",
   ]) {
     expect(Array.isArray(body.donnees[table]), table).toBe(true);
   }

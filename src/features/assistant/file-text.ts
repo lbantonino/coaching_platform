@@ -6,6 +6,9 @@ import { inflateRawSync } from "node:zlib";
 // de décompression), texte coupé au-delà de MAX_TEXT.
 
 const MAX_ENTRY_BYTES = 20 * 1024 * 1024;
+// Relecture du 27/11 (D-213, fichiers de 20 Mo) : une archive piégée (des milliers de feuilles) ne
+// décompresse jamais plus de 60 Mo en tout.
+const MAX_TOTAL_BYTES = 60 * 1024 * 1024;
 export const MAX_TEXT = 100_000;
 const MAX_ROWS = 2000;
 
@@ -23,6 +26,7 @@ export function readZip(buffer: Buffer, wanted: (name: string) => boolean): Map<
   const count = buffer.readUInt16LE(end + 10);
   let at = buffer.readUInt32LE(end + 16);
   const entries = new Map<string, Buffer>();
+  let total = 0;
   for (let n = 0; n < count; n += 1) {
     if (buffer.readUInt32LE(at) !== 0x02014b50) throw new Error("Archive zip illisible.");
     const method = buffer.readUInt16LE(at + 10);
@@ -37,10 +41,16 @@ export function readZip(buffer: Buffer, wanted: (name: string) => boolean): Map<
     if (buffer.readUInt32LE(local) !== 0x04034b50) throw new Error("Archive zip illisible.");
     const start = local + 30 + buffer.readUInt16LE(local + 26) + buffer.readUInt16LE(local + 28);
     const data = buffer.subarray(start, start + compressed);
-    if (method === 0) entries.set(name, Buffer.from(data));
-    else if (method === 8)
-      entries.set(name, inflateRawSync(data, { maxOutputLength: MAX_ENTRY_BYTES }));
-    else throw new Error("Compression non prise en charge.");
+    const entry =
+      method === 0
+        ? Buffer.from(data)
+        : method === 8
+          ? inflateRawSync(data, { maxOutputLength: MAX_ENTRY_BYTES })
+          : null;
+    if (!entry) throw new Error("Compression non prise en charge.");
+    total += entry.length;
+    if (total > MAX_TOTAL_BYTES) throw new Error("Archive trop volumineuse.");
+    entries.set(name, entry);
   }
   return entries;
 }

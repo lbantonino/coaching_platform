@@ -20,9 +20,12 @@ export function AssistantCard({
   onValidate,
   onCancel,
   onModify,
+  locked = false,
 }: {
   card: CardState;
   cards: CardState[];
+  // Assistant verrouillé (pas d'abonnement, D-212 : conversation rouverte en lecture seule).
+  locked?: boolean;
   onValidate: () => void;
   onCancel: () => void;
   // `asked` : la correction se fait dans la conversation (pas de fenêtre pour cette action).
@@ -33,7 +36,7 @@ export function AssistantCard({
   const openTask = useOpenTaskSheet();
   const parent = card.dependsOn ? cards.find((item) => item.id === card.dependsOn) : undefined;
   const waiting = card.status === "pending" && !canValidate(cards, card.id);
-  const actionable = card.status === "pending" && !waiting;
+  const actionable = card.status === "pending" && !waiting && !locked;
 
   const modify = () => {
     const p = card.params;

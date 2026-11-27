@@ -547,7 +547,7 @@ export function PublishSheet({
             </h2>
             {/* MVP coach seul (D-167) : pas d'espace sportif, rien n'est « vu » par le sportif. */}
             <p className="text-[14px] leading-[1.45] text-muted">
-              Les PDF seront tirés de cette version.
+              Le PDF sera tiré de cette version.
             </p>
           </div>
           <dl className="grid grid-cols-3 gap-2">
@@ -675,7 +675,7 @@ export function DatesSheet({
   weeksCount: number;
   // Les autres programmes PUBLIÉS du sportif.
   others: { title: string; startDate: string; weeksCount: number }[];
-  // Le programme a déjà une version publiée : la fiche et les PDF changeront à la publication.
+  // Le programme a déjà une version publiée : la fiche et le PDF changeront à la publication.
   published: boolean;
   onConfirm: (startDate: string) => void;
 }) {
@@ -734,7 +734,7 @@ export function DatesSheet({
           Du {longDay(snapped)} au {longDay(end)} · {weeksCount} semaine{weeksCount > 1 ? "s" : ""}
           {snapped !== value ? " · les semaines commencent le lundi" : ""}. Les séances restent dans
           leurs semaines.
-          {published ? " La fiche et les PDF changeront à la prochaine publication." : ""}
+          {published ? " La fiche et le PDF changeront à la prochaine publication." : ""}
         </p>
         {overlapping.length > 0 ? (
           <p

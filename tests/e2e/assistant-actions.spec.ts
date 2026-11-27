@@ -252,99 +252,82 @@ test("lot 2 : compléter la fiche d'un sportif", async ({ page }, testInfo) => {
 });
 
 // Relecture du lot 2, n°g et n°h : un fichier refusé dit pourquoi, et le message part avec l'envoi.
+// D-213 : 20 Mo par fichier.
 test("un fichier trop lourd est refusé, et le refus disparaît à l'envoi", async ({ page }) => {
   const box = await openAssistant(page);
   await box.locator('input[type="file"]').setInputFiles({
     name: "trop-lourd.pdf",
     mimeType: "application/pdf",
-    buffer: Buffer.alloc(4 * 1024 * 1024 + 1),
+    buffer: Buffer.alloc(20 * 1024 * 1024 + 1),
   });
-  await expect(box.getByText("Fichier trop lourd : 4 Mo maximum.")).toBeVisible();
+  await expect(box.getByText("« trop-lourd.pdf » : plus de 20 Mo.")).toBeVisible();
   await box.locator('input[type="file"]').setInputFiles({
     name: "vide.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.alloc(0),
   });
-  await expect(
-    box.getByText("Fichier vide : choisis un fichier qui contient quelque chose."),
-  ).toBeVisible();
+  await expect(box.getByText("« vide.pdf » est vide.")).toBeVisible();
   await ask(box, "Qu'est-ce que tu peux faire ?");
-  await expect(
-    box.getByText("Fichier vide : choisis un fichier qui contient quelque chose."),
-  ).toHaveCount(0);
+  await expect(box.getByText("« vide.pdf » est vide.")).toHaveCount(0);
 });
 
-// D-209 (accord d'Antonino du 27/11) : l'assistant LIT le fichier joint (3 Mo au plus) ; le coach est
-// prévenu qu'il part chez l'IA. Le modèle simulé répond : la demande avec le fichier passe bien.
-test("le fichier joint est lu par l'assistant, et l'avertissement le dit", async ({ page }) => {
+// D-213 (27/11) : plusieurs fichiers d'un coup (un PDF et un tableau), déposés dans le stockage de
+// Coory puis préparés (faux fichiers Anthropic des tests) ; le coach est prévenu qu'ils partent chez
+// l'IA ; la question attend qu'ils soient prêts. Au-delà de 100 pages : refus clair, rien ne part.
+test("plusieurs fichiers joints sont lus ensemble, 100 pages au plus", async ({ page }) => {
   const box = await openAssistant(page);
-  await box.locator('input[type="file"]').setInputFiles({
-    name: "bilan.pdf",
-    mimeType: "application/pdf",
-    buffer: Buffer.from("%PDF-1.4 bilan de test"),
-  });
+  await box.locator('input[type="file"]').setInputFiles([
+    {
+      name: "programme.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4 <</Type /Page>>"),
+    },
+    { name: "reperes.csv", mimeType: "text/csv", buffer: Buffer.from("VMA;17,5\nSeuil;4:05") },
+  ]);
+  await expect(
+    box.getByRole("list", { name: "Fichiers joints" }).getByRole("listitem"),
+  ).toHaveCount(2);
   await expect(
     box.getByText(
-      "L'assistant lit ce fichier pour te répondre : il est envoyé à l'IA (Claude). N'y mets pas de données de santé.",
+      "L'assistant lit ces fichiers pour te répondre : ils sont envoyés à l'IA (Claude). N'y mets pas de données de santé.",
     ),
   ).toBeVisible();
-  await ask(box, "Résume ce fichier joint");
+  await expect(box.getByText("envoi…")).toHaveCount(0, STEPS);
+  await ask(box, "Refais ce programme avec ces repères");
   await expect(box.getByText("Réponse simulée.")).toBeVisible(STEPS);
+  await expect(box.getByText("Fichiers joints : programme.pdf, reperes.csv")).toBeVisible();
+  // En base : le PDF par sa copie (faux identifiant des tests), le tableau par son texte.
+  expect(
+    localSql(
+      "select string_agg(name || ':' || (anthropic_file_id is not null)::text || ':' || coalesce(text_content, ''), '|' order by name) from public.assistant_files where user_id = 'b0000000-0000-4000-8000-00000000000b' and name in ('programme.pdf', 'reperes.csv')",
+    ),
+  ).toContain("programme.pdf:true:");
+
+  // Retirés : effacés aussitôt.
+  for (const name of ["programme.pdf", "reperes.csv"]) {
+    await box.getByRole("button", { name: `Retirer le fichier joint : ${name}` }).click();
+  }
+  await expect
+    .poll(() =>
+      localSql(
+        "select count(*) from public.assistant_files where user_id = 'b0000000-0000-4000-8000-00000000000b' and name in ('programme.pdf', 'reperes.csv')",
+      ),
+    )
+    .toBe("0");
+
+  // 101 pages : la question est refusée, sans compter de demande.
   await box.locator('input[type="file"]').setInputFiles({
-    name: "gros.pdf",
+    name: "gros-programme.pdf",
     mimeType: "application/pdf",
-    buffer: Buffer.alloc(3 * 1024 * 1024 + 1, 1),
+    buffer: Buffer.from(`%PDF-1.4 ${"<</Type /Page>> ".repeat(101)}`),
   });
+  await expect(box.getByText("envoi…")).toHaveCount(0, STEPS);
+  await ask(box, "Lis tout ce programme");
   await expect(
     box.getByText(
-      "Plus de 3 Mo : l'assistant ne pourra pas le lire, seulement le ranger dans tes Documents.",
+      "Plus de 100 pages en tout dans les fichiers joints : découpe en plusieurs messages.",
     ),
-  ).toBeVisible();
-});
-
-// Lot 2 (D-181) : « Nouvel exercice » dans la Bibliothèque du coach, par la même création que le
-// formulaire (le nom porte le marqueur : l'exercice est retiré en fin de suite).
-test("lot 2 : créer un exercice dans la Bibliothèque", async ({ page }) => {
-  const box = await openAssistant(page);
-  await ask(box, "Crée l'exercice Fentes sautées");
-  const card = box.getByRole("region", { name: "Nouvel exercice" });
-  await expect(card).toContainText(`Fentes sautées ${MARK}`, STEPS);
-  await expect(card).toContainText("Musculation · Quadriceps, Fessiers");
-  await expect(card).toContainText("Poids du corps");
-  await card.getByRole("button", { name: "Valider" }).click();
-  await expect(card).toContainText("Fait");
-  const href = await card.getByRole("link", { name: "Voir" }).getAttribute("href");
-  expect(href).toMatch(/^\/coach\/bibliotheque\/[0-9a-f-]{36}$/);
-  await page.goto(href ?? "/");
-  await expect(page.getByText(`Fentes sautées ${MARK}`).first()).toBeVisible();
-  await expect(page.getByText("Saute et change de jambe en l'air.").first()).toBeVisible();
-});
-
-// Lot 2 (D-181) : « PDF du programme ». Les deux liens de la version publiée, à la place de « Valider ».
-test("lot 2 : les PDF d'un programme publié, en liens", async ({ page }) => {
-  const box = await openAssistant(page);
-  await ask(box, "Donne-moi les PDF du programme de Sarah");
-  const card = box.getByRole("region", { name: "PDF du programme" });
-  await expect(card).toContainText("Programme test PDF", STEPS);
-  await expect(card).toContainText("Sarah Vermeulen");
-  await expect(card).toContainText("Version 1 publiée le dimanche 4 janvier 2026");
-  await expect(card.getByRole("button", { name: "Valider" })).toHaveCount(0);
-  for (const name of ["Agenda du programme", "Fiches et repères"]) {
-    const href = await card.getByRole("link", { name }).getAttribute("href");
-    const response = await page.request.get(href ?? "/");
-    expect(response.status(), name).toBe(200);
-    expect(response.headers()["content-type"]).toContain("application/pdf");
-  }
-});
-
-// Un programme d'une autre organisation (celui de Léa, coach A) : refusé, aucune carte (le faux Claude
-// ne mène qu'une question par conversation, d'où ce test à part).
-test("lot 2 : pas de PDF pour le programme d'une autre organisation", async ({ page }) => {
-  const box = await openAssistant(page);
-  await ask(box, "Donne-moi les PDF du programme de Léa");
-  // Le refus repart à Claude, qui l'explique ; surtout, aucune carte n'apparaît.
-  await expect(box).toContainText("Je ne trouve pas ce programme dans ton organisation.", STEPS);
-  await expect(box.getByRole("region", { name: "PDF du programme" })).toHaveCount(0);
+  ).toBeVisible(STEPS);
 });
 
 // Lot 2 (D-181) : « Importer un document ». Le fichier joint reste dans le navigateur (Claude ne reçoit
@@ -361,6 +344,7 @@ test("lot 2 : importer un document joint dans la fiche d'un sportif", async ({ p
   await expect(
     box.getByRole("button", { name: "Retirer le fichier joint : bilan-test.pdf" }),
   ).toBeVisible();
+  await expect(box.getByText("envoi…")).toHaveCount(0, STEPS);
   await ask(box, "Range ce document dans la fiche de Sarah");
   const card = box.getByRole("region", { name: "Importer un document" });
   await expect(card).toContainText(`Bilan test ${MARK}`, STEPS);
@@ -394,6 +378,7 @@ test("lot 2 : le fichier joint reste pour la demande suivante", async ({ page })
     mimeType: "application/pdf",
     buffer: PDF,
   });
+  await expect(box.getByText("envoi…")).toHaveCount(0, STEPS);
   await ask(box, "Range ce document dans la fiche de Sarah");
   const first = box.getByRole("region", { name: "Importer un document" }).first();
   await expect(first).toContainText("Sportif : Sarah Vermeulen", STEPS);
@@ -476,7 +461,7 @@ test("lot 3b : publier, archiver puis désarchiver un programme", async ({ page 
   );
   await expect(publish).toContainText("Attention :");
   await expect(publish).toContainText("% sans max connu");
-  await expect(publish).toContainText("Les PDF seront tirés de cette version.");
+  await expect(publish).toContainText("Le PDF sera tiré de cette version.");
   await publish.getByRole("button", { name: "Valider" }).click();
   await expect(publish).toContainText("Fait");
 

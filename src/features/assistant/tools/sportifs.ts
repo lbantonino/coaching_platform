@@ -1,3 +1,4 @@
+import { pickAttachment } from "@/features/assistant/attachment-rules";
 import "server-only";
 
 import type Anthropic from "@anthropic-ai/sdk";
@@ -307,12 +308,16 @@ export const SPORTIFS_TOOLS: Anthropic.Tool[] = [
   {
     name: "photo",
     description:
-      "Propose de mettre (image JOINTE avec le bouton « Joindre ») ou de retirer la photo d'un sportif (athleteId), ou celle du coach (sans athleteId). Tu ne vois jamais l'image.",
+      "Propose de mettre (image JOINTE avec le bouton « Joindre ») ou de retirer la photo d'un sportif (athleteId), ou celle du coach (sans athleteId). Plusieurs fichiers joints : précise l'image avec fichier.",
     input_schema: {
       type: "object",
       properties: {
         action: { type: "string", enum: ["mettre", "retirer"] },
         athleteId: { type: "string", description: "Sans lui : la photo du coach." },
+        fichier: {
+          type: "string",
+          description: "Nom exact de l'image jointe, si plusieurs fichiers.",
+        },
       },
       required: ["action"],
     },
@@ -342,8 +347,17 @@ export async function proposeSportifs(
   kind: SportifsKind,
   p: Record<string, unknown>,
   names: Record<string, string>,
-  context: { attachment?: AssistantAttachment } = {},
+  context: { attachments?: AssistantAttachment[] } = {},
 ): Promise<Checked> {
+  // « Photo » (D-213) : l'image jointe nommée par « fichier », ou la seule jointe ; refus expliqué.
+  const photoFile = (): { file?: AssistantAttachment; error?: string } => {
+    if (p.action !== "mettre") return {};
+    const picked = pickAttachment(
+      context.attachments ?? [],
+      typeof p.fichier === "string" ? p.fichier : undefined,
+    );
+    return picked.ok ? { file: picked.file } : { error: picked.error };
+  };
   const today = todayIsoInBrussels();
   const supabase = await createClient();
 
@@ -396,10 +410,12 @@ export async function proposeSportifs(
           .maybeSingle()
       : { data: null };
     const hasPhoto = Boolean(profile?.photo_path);
-    const refusal = photoRefusal(p.action as "mettre" | "retirer", context.attachment, hasPhoto);
+    const chosen = photoFile();
+    if (chosen.error && (context.attachments ?? []).length > 0) return refuse(chosen.error);
+    const refusal = photoRefusal(p.action as "mettre" | "retirer", chosen.file, hasPhoto);
     if (refusal) return refuse(refusal);
-    if (context.attachment) {
-      names.fichier = `${context.attachment.name} (${formatBytes(context.attachment.size)})`;
+    if (chosen.file) {
+      names.fichier = `${chosen.file.name} (${formatBytes(chosen.file.size)})`;
     }
     if (hasPhoto) names.remplace = "oui";
     return { ok: true };
@@ -582,14 +598,16 @@ export async function proposeSportifs(
       return { ok: true };
     }
     case "photo": {
+      const chosen = photoFile();
+      if (chosen.error && (context.attachments ?? []).length > 0) return refuse(chosen.error);
       const refusal = photoRefusal(
         p.action as "mettre" | "retirer",
-        context.attachment,
+        chosen.file,
         Boolean(athlete.photoPath),
       );
       if (refusal) return refuse(refusal);
-      if (context.attachment) {
-        names.fichier = `${context.attachment.name} (${formatBytes(context.attachment.size)})`;
+      if (chosen.file) {
+        names.fichier = `${chosen.file.name} (${formatBytes(chosen.file.size)})`;
       }
       if (athlete.photoPath) names.remplace = "oui";
       return { ok: true };

@@ -8,7 +8,13 @@ import { getCoachProfile } from "@/features/coach/profile";
 import { todayIsoInBrussels } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 
-import { attachmentBlocks } from "./attachment-content";
+import {
+  PREPARED_FOR_MS,
+  attachmentBlocksFor,
+  pagesProblem,
+  type AttachmentMeta,
+  type PreparedAttachment,
+} from "./attachment-rules";
 import { runAssistantStep, type StepResult } from "./loop";
 import { getAssistantModel } from "./model";
 import { remainingThisMonth } from "./queries";
@@ -60,14 +66,19 @@ export async function askAssistant(
 
   let usageId: string;
   let messages: Anthropic.MessageParam[];
-  // Fichier joint (D-209) : Claude lit son contenu (attachmentBlocks) ; les outils, comme
-  // importer_document, ne reçoivent que son nom, son type et sa taille.
-  const joined =
-    "start" in parsed.data ? parsed.data.start.attachment : parsed.data.next.attachment;
-  const attachment = joined
-    ? { name: joined.name, type: joined.type, size: joined.size }
-    : undefined;
-  const attachmentContent = joined ? attachmentBlocks(joined) : [];
+  // Fichiers joints (D-213) : relus en base (ceux du coach), prêts, copie Anthropic de moins de 55 min,
+  // 100 pages au plus ; vérifié AVANT de réserver la demande (un refus ne compte pas). Claude les lit
+  // (attachmentBlocksFor) ; les outils, comme importer_document, n'ont que nom, type et taille.
+  const refs =
+    ("start" in parsed.data ? parsed.data.start.attachments : parsed.data.next.attachments) ?? [];
+  const joined = await loadAttachments(supabase, orgId, refs);
+  if (!joined.ok) return fail(joined.kind);
+  const attachments: AttachmentMeta[] = joined.files.map((file) => ({
+    name: file.name,
+    type: file.mime,
+    size: file.size,
+  }));
+  const attachmentContent = attachmentBlocksFor(joined.files);
   if ("start" in parsed.data) {
     const { data, error } = await supabase.rpc("reserve_assistant_use", {
       p_organization_id: orgId,
@@ -77,7 +88,7 @@ export async function askAssistant(
       return fail(kind, kind === "quota" ? 0 : null);
     }
     usageId = data;
-    messages = toApiMessages(parsed.data.start);
+    messages = toApiMessages(parsed.data.start, attachments);
   } else {
     // La réservation doit être celle de CETTE organisation (relecture n°5).
     const { error } = await supabase.rpc("continue_assistant_use", {
@@ -106,7 +117,7 @@ export async function askAssistant(
         todayIso: todayIsoInBrussels(),
         model,
         runTool: (name, toolInput, pending) =>
-          runAssistantTool(orgId, name, toolInput, pending, user.id, attachment),
+          runAssistantTool(orgId, name, toolInput, pending, user.id, attachments),
         attachmentBlocks: attachmentContent,
       },
       messages,
@@ -134,4 +145,47 @@ export async function askAssistant(
     );
     return fail("unavailable", remaining);
   }
+}
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+// Les fichiers joints d'une demande, tels que la base les connaît (RLS : ceux du coach).
+async function loadAttachments(
+  supabase: Supabase,
+  organizationId: string,
+  refs: { id: string }[],
+): Promise<
+  | { ok: true; files: PreparedAttachment[] }
+  | { ok: false; kind: "attachments-missing" | "attachments-expired" | "attachments-pages" }
+> {
+  if (refs.length === 0) return { ok: true, files: [] };
+  const ids = [...new Set(refs.map((ref) => ref.id))];
+  const { data } = await supabase
+    .from("assistant_files")
+    .select("id, name, mime_type, size_bytes, pages, text_content, anthropic_file_id, prepared_at")
+    .eq("organization_id", organizationId)
+    .in("id", ids);
+  const rows = data ?? [];
+  if (rows.length !== ids.length || rows.some((row) => !row.prepared_at || row.pages === null)) {
+    return { ok: false, kind: "attachments-missing" };
+  }
+  const stale = Date.now() - PREPARED_FOR_MS;
+  if (rows.some((row) => row.anthropic_file_id && Date.parse(row.prepared_at!) < stale)) {
+    return { ok: false, kind: "attachments-expired" };
+  }
+  // Dans l'ordre où le coach les a joints.
+  const files = ids.map((id) => {
+    const row = rows.find((item) => item.id === id)!;
+    return {
+      id: row.id,
+      name: row.name,
+      mime: row.mime_type,
+      size: row.size_bytes,
+      pages: row.pages ?? 0,
+      text: row.text_content,
+      fileId: row.anthropic_file_id,
+    };
+  });
+  if (pagesProblem(files)) return { ok: false, kind: "attachments-pages" };
+  return { ok: true, files };
 }

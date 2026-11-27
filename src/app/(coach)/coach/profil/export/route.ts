@@ -65,6 +65,8 @@ const SOURCES: Source[] = [
   { table: "exercises", order: ["id"] },
   { table: "exercise_favorites", order: ["user_id", "exercise_id"], by: "user" },
   { table: "assistant_usage", order: ["id"] },
+  // Conversations de l'Assistant IA (D-212) : celles du coach (la RLS ne laisse voir que les siennes).
+  { table: "assistant_conversations", order: ["id"] },
 ];
 
 const FAILED = `L'export n'a pas abouti. Réessaie dans un instant ; si ça recommence, écris à ${LEGAL.contactEmail}.`;

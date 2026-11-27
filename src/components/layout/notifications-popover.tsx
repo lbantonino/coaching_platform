@@ -7,6 +7,7 @@ import {
   Flag,
   ListChecks,
   MessageSquare,
+  Sparkles,
   UserPen,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +44,7 @@ const icons: Record<PreviewKind, LucideIcon> = {
   unpaid: Coins,
   profiles: UserPen,
   competitions: Flag,
+  assistant: Sparkles,
 };
 
 // Ordinateur : 32 px avec filet (outils de l'en-tête) ; téléphone : 40 px dans la carte des outils.

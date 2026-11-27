@@ -117,6 +117,8 @@ export type AgendaTocPage = PageBase & {
   subtitle: string;
   rows: AgendaTocRow[];
   note: string | null;
+  // PDF unique (D-211) : la dernière page du sommaire mène à « Fiches et repères », à la suite.
+  fichesLink: { label: string; page: number; anchor: string } | null;
 };
 export type AgendaWeekPage = PageBase & {
   kind: "week";
@@ -349,10 +351,14 @@ function weekDays(week: PdfWeekInput, raceDate: string | null): AgendaDayView[] 
 // ---------------------------------------------------------------------------
 const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
 
-export function agendaPdf(input: PdfProgramInput): AgendaPdf {
+// `fiches` : les fiches suivent l'agenda dans le même fichier (PDF unique, D-211, programPdf).
+export function agendaPdf(input: PdfProgramInput, options: { fiches?: boolean } = {}): AgendaPdf {
   const raceDate = input.race?.date ?? null;
   const phases = [...new Set(input.weeks.map((week) => week.label).filter(Boolean))] as string[];
-  const tocPages = Math.max(1, Math.ceil(input.weeks.length / TOC_ROWS_PER_PAGE));
+  // La ligne « Fiches et repères » (PDF unique, D-211) compte comme une ligne du sommaire : elle ne
+  // doit jamais faire déborder une page pleine (relecture du 27/11 : titre long + 12 semaines).
+  const tocSlots = input.weeks.length + (options.fiches ? 1 : 0);
+  const tocPages = Math.max(1, Math.ceil(tocSlots / TOC_ROWS_PER_PAGE));
   const tocAnchor = (i: number) => (i === 0 ? "toc" : `toc-${i + 1}`);
   const weekAnchor = (index: number) => `week-${index}`;
   const end = addDays(input.startDate, 7 * input.weeksCount - 1);
@@ -411,10 +417,15 @@ export function agendaPdf(input: PdfProgramInput): AgendaPdf {
     note:
       i === tocPages - 1
         ? `Touche une semaine pour y aller. Dans chaque semaine, ‹ › passe à la semaine voisine et le bouton noir revient ici.${
-            hasFiches
-              ? " Les fiches (musculation, workload Hyrox, allures) sont dans le PDF « Fiches et repères »."
+            options.fiches
+              ? " Les fiches (musculation, workload Hyrox, allures) suivent l'agenda."
               : ""
           }`
+        : null,
+    // Le sommaire des fiches vient juste après la dernière semaine.
+    fichesLink:
+      options.fiches && i === tocPages - 1
+        ? { label: "Fiches et repères", page: tocPages + input.weeks.length + 1, anchor: "fiches" }
         : null,
   }));
 

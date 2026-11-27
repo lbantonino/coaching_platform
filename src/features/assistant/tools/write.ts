@@ -6,7 +6,8 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 
 import { currencyOf, formatMoney } from "@/domain/billing/money";
-import { formatBytes } from "@/domain/documents/documents";
+import { DOCUMENT_MAX_BYTES, DOCUMENT_MAX_LABEL, formatBytes } from "@/domain/documents/documents";
+import { pickAttachment } from "@/features/assistant/attachment-rules";
 import { EQUIPMENT_KEYS } from "@/domain/exercises/vocabulary";
 import { findSession } from "@/domain/training/plan-edit";
 import { HYROX_DIVISIONS, planIssues } from "@/domain/training/program-plan";
@@ -244,13 +245,18 @@ export const WRITE_TOOLS: Anthropic.Tool[] = [
   {
     name: "importer_document",
     description:
-      "Propose de ranger le fichier JOINT par le coach (ligne « [Fichier joint : …] » de sa demande) dans ses Documents, avec un nom, une catégorie (voir_categories_de_documents) et un sportif si utile. Tu ne vois jamais le contenu du fichier. Sans fichier joint, demande au coach de le joindre avec le bouton « Joindre ».",
+      "Propose de ranger un fichier JOINT par le coach (ligne « [Fichier joint : …] » ou « [Fichiers joints : …] » de sa demande) dans ses Documents (4 Mo au plus), avec un nom, une catégorie (voir_categories_de_documents) et un sportif si utile. Plusieurs fichiers joints : précise lequel avec fichier ; une carte par fichier. Sans fichier joint, demande au coach de le joindre avec le bouton « Joindre ».",
     input_schema: {
       type: "object",
       properties: {
         name: { type: "string", description: "Nom du document (160 caractères au plus)." },
         categoryId: { type: "string", description: "Id de voir_categories_de_documents." },
         athleteId: { type: "string", description: "Id trouvé avec chercher_sportifs." },
+        fichier: {
+          type: "string",
+          description:
+            "Nom exact du fichier joint à ranger, si plusieurs sont joints (ligne « [Fichiers joints : …] »).",
+        },
       },
       required: ["name"],
     },
@@ -258,7 +264,7 @@ export const WRITE_TOOLS: Anthropic.Tool[] = [
   {
     name: "preparer_pdf",
     description:
-      "Donne les deux PDF (Agenda du programme, Fiches et repères) de la dernière version PUBLIÉE d'un programme, en liens dans une carte. Rien n'est envoyé au sportif. Trouve l'id avec voir_programmes.",
+      "Donne le PDF de la dernière version PUBLIÉE d'un programme (un seul fichier : l'agenda, puis les fiches et repères), en lien dans une carte. Rien n'est envoyé au sportif. Trouve l'id avec voir_programmes.",
     input_schema: {
       type: "object",
       properties: { programId: { type: "string", description: "Id trouvé avec voir_programmes." } },
@@ -642,7 +648,7 @@ export async function proposeAction(
   name: string,
   input: unknown,
   pending: AssistantProposal[],
-  context: { attachment?: AssistantAttachment } = {},
+  context: { attachments?: AssistantAttachment[] } = {},
 ): Promise<Proposed> {
   // Schéma strict, renvoi à une carte seulement par le nom d'un sportif à créer (relecture n°11).
   const prepared = prepareToolInput(name, input, pending);
@@ -720,13 +726,19 @@ export async function proposeAction(
   }
 
   if (kind === "importer_document") {
-    // Le fichier doit être JOINT à la demande (il part au « Valider », depuis le navigateur).
-    if (!context.attachment) {
+    // Le fichier doit être JOINT à la demande (il part au « Valider », depuis le navigateur) ; parmi
+    // plusieurs, celui que nomme « fichier » (D-213). Les Documents : 4 Mo au plus.
+    const picked = pickAttachment(
+      context.attachments ?? [],
+      typeof p.fichier === "string" ? p.fichier : undefined,
+    );
+    if (!picked.ok) return refuse(picked.error);
+    if (picked.file.size > DOCUMENT_MAX_BYTES) {
       return refuse(
-        "Aucun fichier joint : demande au coach de le joindre avec le bouton « Joindre », puis de redemander.",
+        `« ${picked.file.name} » est trop lourd pour les Documents (${DOCUMENT_MAX_LABEL} au plus).`,
       );
     }
-    names.fichier = `${context.attachment.name} (${formatBytes(context.attachment.size)})`;
+    names.fichier = `${picked.file.name} (${formatBytes(picked.file.size)})`;
     if (typeof p.categoryId === "string") {
       const { data } = await supabase
         .from("document_categories")
@@ -741,7 +753,7 @@ export async function proposeAction(
 
   let links: AssistantProposal["links"];
   if (kind === "preparer_pdf") {
-    // Seulement un programme de l'organisation, publié : les PDF viennent de sa dernière version, lue
+    // Seulement un programme de l'organisation, publié : le PDF vient de sa dernière version, lue
     // comme les pages PDF (getPublishedProgram, relecture du lot 2, n°i).
     const published = await getPublishedProgram(organizationId, String(p.programId));
     if (!published) {
@@ -757,10 +769,12 @@ export async function proposeAction(
     names[program.id] = program.title;
     names.sportif = published.athleteName;
     names.version = publicationLine(program.publicationNumber, program.publishedAt);
-    const pdf = `/coach/o/${organizationId}/programmes/${program.id}/pdf`;
+    // Un seul PDF depuis D-211 (27/11) : l'agenda, puis les fiches et repères.
     links = [
-      { label: "Agenda du programme", href: `${pdf}/agenda` },
-      { label: "Fiches et repères", href: `${pdf}/fiches` },
+      {
+        label: "PDF du programme",
+        href: `/coach/o/${organizationId}/programmes/${program.id}/pdf`,
+      },
     ];
   }
 

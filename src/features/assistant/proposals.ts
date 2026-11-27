@@ -100,7 +100,7 @@ export type AssistantProposal = AssistantAction & {
   summary: string[];
   // Carte dont celle-ci attend l'exécution (sportif créé par une autre carte), ou null.
   dependsOn: string | null;
-  // Liens préparés par le serveur (lot 2 : les deux PDF d'un programme publié) : la carte les montre
+  // Liens préparés par le serveur (lot 2 : le PDF d'un programme publié) : la carte les montre
   // à la place de « Valider », il n'y a rien à exécuter.
   links?: { label: string; href: string }[];
 };
@@ -216,6 +216,8 @@ export const PARAMS = {
     name: text(160),
     categoryId: z.uuid().optional(),
     athleteId: z.uuid().optional(),
+    // D-213 : le fichier joint à ranger, parmi plusieurs (son nom).
+    fichier: text(200).optional(),
   }),
   // Lot 2 (D-181) : les PDF d'un programme PUBLIÉ (dernière version), en liens ; jamais d'envoi.
   preparer_pdf: z.strictObject({ programId: z.uuid() }),
@@ -827,7 +829,7 @@ export function summarize(
       for (let index = 0; names[`attention:${index}`] !== undefined; index++) {
         lines.push(names[`attention:${index}`] ?? null);
       }
-      lines.push("Les PDF seront tirés de cette version.");
+      lines.push("Le PDF sera tiré de cette version.");
       break;
     case "archiver_programme":
       lines.push(

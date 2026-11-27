@@ -391,7 +391,7 @@
     [
       {
         "type": "text",
-        "text": "Voici les PDF de son programme publié.",
+        "text": "Voici le PDF de son programme publié.",
         "citations": null
       },
       {
@@ -1857,6 +1857,26 @@
         "input": {
           "devise": "CHF",
           "taux": "0,94"
+        },
+        "caller": {
+          "type": "direct"
+        }
+      }
+    ]
+  ],
+  "Crée la tâche test des conversations": [
+    [
+      {
+        "type": "text",
+        "text": "Voici la tâche.",
+        "citations": null
+      },
+      {
+        "type": "tool_use",
+        "id": "toolu_conv1",
+        "name": "creer_tache",
+        "input": {
+          "title": "Tâche conversations 1700000000000"
         },
         "caller": {
           "type": "direct"

@@ -9,12 +9,8 @@ import {
 } from "@/features/assistant/form-data";
 import { assistantActionSchema, pdfRefusal, summarize } from "@/features/assistant/proposals";
 import { progressFor } from "@/features/assistant/loop";
-import {
-  askAssistantSchema,
-  attachmentLine,
-  systemPrompt,
-  toApiMessages,
-} from "@/features/assistant/rules";
+import { attachmentsLine } from "@/features/assistant/attachment-rules";
+import { askAssistantSchema, systemPrompt, toApiMessages } from "@/features/assistant/rules";
 import { shapeAthleteSheet } from "@/features/assistant/tools/shape";
 
 // Assistant IA, lot 2 (D-181) : compléter une fiche, créer un exercice, donner les PDF, importer un
@@ -187,22 +183,32 @@ describe("preparer_pdf", () => {
 
 describe("importer_document", () => {
   const file = { name: "bilan-avril.pdf", type: "application/pdf", size: 12_345 };
-  it("Claude ne reçoit que le nom, le type et la taille du fichier joint", () => {
-    expect(attachmentLine(file)).toBe(
+  it("la ligne du fichier joint précède la question", () => {
+    expect(attachmentsLine([file])).toBe(
       "[Fichier joint : bilan-avril.pdf · application/pdf · 12 Ko]",
     );
-    const [turn] = toApiMessages({ history: [], question: "Range ce document", attachment: file });
+    const [turn] = toApiMessages({ history: [], question: "Range ce document" }, [file]);
     // La ligne précède la question (qui reste le dernier paragraphe).
     expect(turn?.content).toBe(
       "[Fichier joint : bilan-avril.pdf · application/pdf · 12 Ko]\n\nRange ce document",
     );
   });
-  it("la demande refuse tout contenu de fichier et un fichier de plus de 4 Mo", () => {
-    const ask = (attachment: unknown) =>
-      askAssistantSchema.safeParse({ start: { history: [], question: "x", attachment } }).success;
-    expect(ask(file)).toBe(true);
-    expect(ask({ ...file, content: "JVBERi0..." })).toBe(false);
-    expect(ask({ ...file, size: 5 * 1024 * 1024 })).toBe(false);
+  // D-213 : la demande ne transporte que les identifiants Coory des fichiers (jamais leur contenu ni un
+  // identifiant Anthropic) ; 10 au plus.
+  it("la demande ne transporte que des identifiants de fichiers, 10 au plus", () => {
+    const ask = (attachments: unknown) =>
+      askAssistantSchema.safeParse({ start: { history: [], question: "x", attachments } }).success;
+    const id = "f0000000-0000-4000-8000-000000000001";
+    expect(ask([{ id }])).toBe(true);
+    expect(ask([{ id, fileId: "file_abc" }])).toBe(true);
+    expect(ask([{ id: "file_abc" }])).toBe(false);
+    expect(ask(Array.from({ length: 11 }, () => ({ id })))).toBe(false);
+    const parsed = askAssistantSchema.safeParse({
+      start: { history: [], question: "x", attachments: [{ id, fileId: "file_abc" }] },
+    });
+    expect(parsed.success && "start" in parsed.data && parsed.data.start.attachments).toEqual([
+      { id },
+    ]);
   });
   it("la carte : le nom du document, le fichier, la catégorie et le sportif ; jamais de contenu", () => {
     const CATEGORY = "dc000000-0000-4000-8000-000000000001";
@@ -239,7 +245,7 @@ describe("consigne du lot 2", () => {
     expect(prompt).toContain("son contenu est dans la demande");
     expect(prompt).toContain("n'invente jamais son contenu");
     expect(prompt).toContain("Si un fichier joint contient des données de santé");
-    expect(prompt).toContain("seulement d'un programme publié");
+    expect(prompt).toContain("seulement pour un programme publié");
     expect(prompt).toContain("créer un exercice");
   });
   it("dit ce que l'assistant regarde", () => {

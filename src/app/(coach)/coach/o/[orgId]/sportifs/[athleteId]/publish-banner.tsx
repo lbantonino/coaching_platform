@@ -50,8 +50,8 @@ export function PublishBanner({
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5 rounded-[14px] bg-violet/7 px-4 py-3">
         <p className="text-[13.5px] leading-[1.45] text-text-2">
           <strong className="font-semibold text-text">Modifications non publiées.</strong>{" "}
-          {/* MVP coach seul (D-167) : pas d'espace sportif, c'est la fiche et les PDF qui suivent. */}
-          La fiche de {firstName} et les PDF montrent encore la version {pending.currentVersion}.
+          {/* MVP coach seul (D-167) : pas d'espace sportif, c'est la fiche et le PDF qui suivent. */}
+          La fiche de {firstName} et le PDF montrent encore la version {pending.currentVersion}.
         </p>
         <button
           type="button"

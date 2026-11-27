@@ -72,9 +72,10 @@ try {
   if (!/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(env.API_URL ?? "")) {
     throw new Error("réservé à la base locale");
   }
-  const storage = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
+  const client = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
-  }).storage.from("profile-photos");
+  });
+  const storage = client.storage.from("profile-photos");
   let removed = 0;
   for (const folder of TEST_PHOTO_FOLDERS) {
     const { data } = await storage.list(folder);
@@ -85,6 +86,24 @@ try {
     }
   }
   if (removed > 0) console.log(`  photos de test : ${removed}`);
+
+  // Fichiers joints à l'Assistant IA par les tests (D-213) : coachs A, B et C de la graine (leurs
+  // lignes sont retirées par clean-test-data.sql).
+  const assistantFiles = client.storage.from("assistant-files");
+  let files = 0;
+  for (const folder of [
+    "0b000000-0000-4000-8000-0000000000b1/b0000000-0000-4000-8000-00000000000b",
+    "0a000000-0000-4000-8000-0000000000a1/a0000000-0000-4000-8000-00000000000a",
+    "0a000000-0000-4000-8000-0000000000a1/f0000000-0000-4000-8000-00000000000f",
+  ]) {
+    const { data } = await assistantFiles.list(folder, { limit: 1000 });
+    const paths = (data ?? []).map((file) => `${folder}/${file.name}`);
+    if (paths.length > 0) {
+      const { error } = await assistantFiles.remove(paths);
+      if (!error) files += paths.length;
+    }
+  }
+  if (files > 0) console.log(`  fichiers de test de l'assistant : ${files}`);
 } catch (error) {
   console.log(`  photos de test non retirées (${error instanceof Error ? error.message : error})`);
 }

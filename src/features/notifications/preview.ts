@@ -3,7 +3,7 @@ import { formatMoney } from "@/domain/billing/money";
 import type { UnpaidDate } from "@/features/billing/collect-queries";
 import type { NotifyPreferences } from "@/features/notifications/filter";
 import { editableTask } from "@/features/tasks/editable";
-import { dayShortLabel, daysBetween, dueLabel, messageTime } from "@/lib/format";
+import { dayShortLabel, daysBetween, dueLabel, formatDate, messageTime } from "@/lib/format";
 
 import type { Notifications } from "./queries";
 
@@ -16,7 +16,8 @@ import type { Notifications } from "./queries";
 // sont pas montrées. Les textes sont prêts à afficher (dates relatives à `today`).
 export const PREVIEW_ITEMS = 3;
 
-export type PreviewKind = "competitions" | "messages" | "tasks" | "unpaid" | "profiles";
+export type PreviewKind =
+  "competitions" | "messages" | "tasks" | "unpaid" | "profiles" | "assistant";
 
 export type PreviewItem = {
   key: string;
@@ -87,6 +88,24 @@ export function buildPreview(
     };
   };
   const sections: PreviewSection[] = [];
+  // D-212 : toujours (un avertissement avant un effacement, pas une préférence).
+  if (all.assistant.length > 0) {
+    sections.push(
+      section(
+        "assistant",
+        "Conversations bientôt effacées",
+        all.assistant,
+        (conversation) => ({
+          key: conversation.key,
+          read: conversation.read,
+          title: conversation.title,
+          sub: `Effacée le ${formatDate(conversation.expiresOn)} · télécharge-la ou écris-y`,
+          href: `/coach/assistant?conversation=${conversation.id}`,
+        }),
+        { href: "/coach/assistant", label: "Ouvrir l'Assistant IA" },
+      ),
+    );
+  }
   if (notify.messages) {
     sections.push(
       section(
