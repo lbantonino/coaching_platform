@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Link, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type {
   FicheBlock,
@@ -8,7 +8,6 @@ import type {
   FicheSection,
   FicheTone,
   FichesPdf,
-  FichesTocPage,
 } from "@/domain/training/pdf-fiches";
 
 import {
@@ -17,7 +16,6 @@ import {
   MUTED,
   PdfPage,
   SessionLines,
-  VIOLET,
   disciplinePdf,
   pdfText,
   titleStyles,
@@ -30,7 +28,7 @@ import {
 const BLOCK_LINE = 1.3;
 
 // Couleur d'une fiche : barre du sommaire, petit titre, en-tête des tableaux.
-const tones: Record<FicheTone, { bar: string; text: string; tint: string }> = {
+export const tones: Record<FicheTone, { bar: string; text: string; tint: string }> = {
   strength: {
     bar: disciplinePdf.strength.fill,
     text: disciplinePdf.strength.text,
@@ -49,41 +47,6 @@ const tones: Record<FicheTone, { bar: string; text: string; tint: string }> = {
 };
 
 const s = StyleSheet.create({
-  tocHead: {
-    flexDirection: "column",
-    gap: u(3),
-    paddingBottom: u(10),
-    borderBottomWidth: u(1.5),
-    borderBottomColor: INK,
-  },
-  tocTitle: { fontSize: u(28), fontWeight: 800, letterSpacing: u(-28 * 0.03), lineHeight: 1.18 },
-  // Lignes de hauteur fixe : sans flexGrow 0, React-PDF leur donne la place libre de la page.
-  tocRows: { flexDirection: "column", gap: u(5), flexGrow: 0 },
-  tocRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: u(12),
-    // Hauteur par le rembourrage, pas par minHeight : avec minHeight, React-PDF 4.9 déforme une pile
-    // de lignes à partir d'un certain nombre (6 lignes de 52 px rendues à 121 px).
-    paddingVertical: u(10),
-    paddingHorizontal: u(12),
-    borderRadius: u(8),
-    borderWidth: u(1),
-    borderColor: "#e6e4ec",
-    flexGrow: 0,
-    flexShrink: 0,
-    backgroundColor: "#ffffff",
-    textDecoration: "none",
-    color: INK,
-  },
-  // 8 px du bord de la ligne comme dans la maquette, malgré le rembourrage de 10 px.
-  bar: { width: u(6), alignSelf: "stretch", marginVertical: u(-2), borderRadius: u(3) },
-  tocText: { flexGrow: 1, flexShrink: 1, flexDirection: "column", gap: u(1) },
-  tocRowTitle: { fontSize: u(12.5), fontWeight: 700 },
-  tocRowSub: { fontSize: u(10.5), color: MUTED },
-  tocPage: { fontSize: u(10.5), fontWeight: 600, color: VIOLET },
-  note: { fontSize: u(10.5), lineHeight: 1.5, color: INK_2 },
-
   head: {
     flexDirection: "column",
     gap: u(2),
@@ -186,51 +149,6 @@ const cell = (flex: number, center = false) => ({
   paddingHorizontal: u(center ? 4 : 8),
   textAlign: center ? ("center" as const) : ("left" as const),
 });
-
-// Pages exportées pour le PDF unique du programme (program-pdf.tsx, D-211).
-export function FichesTocPageView({
-  page,
-  total,
-  model,
-}: {
-  page: FichesTocPage;
-  total: number;
-  model: FichesPdf;
-}) {
-  return (
-    <PdfPage
-      anchor={page.anchor}
-      bookmark={page.bookmark}
-      nav={page.nav}
-      headerTitle={model.headerTitle}
-      headerSubtitle={model.headerSubtitle}
-      footer={model.footer}
-      pageNumber={page.pageNumber}
-      totalPages={total}
-    >
-      <View style={s.tocHead}>
-        <Text style={titleStyles.kicker}>Sommaire</Text>
-        <Text style={s.tocTitle}>{pdfText(page.title)}</Text>
-        <Text style={titleStyles.subtitle}>{pdfText(page.subtitle)}</Text>
-      </View>
-      {page.rows.length > 0 ? (
-        <View style={s.tocRows}>
-          {page.rows.map((row) => (
-            <Link key={row.anchor} src={`#${row.anchor}`} style={s.tocRow}>
-              <View style={[s.bar, { backgroundColor: tones[row.tone].bar }]} />
-              <View style={s.tocText}>
-                <Text style={s.tocRowTitle}>{pdfText(row.title)}</Text>
-                <Text style={s.tocRowSub}>{pdfText(row.subtitle)}</Text>
-              </View>
-              <Text style={s.tocPage}>{`p. ${row.page} →`}</Text>
-            </Link>
-          ))}
-        </View>
-      ) : null}
-      <Text style={s.note}>{pdfText(page.note)}</Text>
-    </PdfPage>
-  );
-}
 
 function Blocks({ blocks }: { blocks: FicheBlock[] }) {
   return (

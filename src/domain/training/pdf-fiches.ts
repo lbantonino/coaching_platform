@@ -4,6 +4,7 @@ import { hyroxStationLabels } from "./hyrox-official";
 import { formatPaceRange, paceToSpeedKmh } from "./pace";
 import {
   WEEKDAYS,
+  ficheKey,
   hasFiche,
   pdfDayMonth,
   type PdfNav,
@@ -95,6 +96,8 @@ export type FicheSection =
 
 type PageBase = { anchor: string; nav: PdfNav; bookmark: string; pageNumber: number };
 export type FichesTocRow = {
+  // Séance de la fiche (« strength:Force bas du corps », voir ficheKey) ; null pour les allures.
+  key: string | null;
   title: string;
   subtitle: string;
   page: number;
@@ -129,7 +132,7 @@ export type FichesPdf = {
 // Regroupement : une fiche par séance (discipline + nom), dans l'ordre du programme.
 // ---------------------------------------------------------------------------
 type Occurrence = { week: PdfWeekInput; session: PdfSessionInput };
-type Group = { discipline: Discipline; title: string; occurrences: Occurrence[] };
+type Group = { key: string; discipline: Discipline; title: string; occurrences: Occurrence[] };
 
 function ficheGroups(weeks: PdfWeekInput[]): Group[] {
   const groups = new Map<string, Group>();
@@ -137,8 +140,9 @@ function ficheGroups(weeks: PdfWeekInput[]): Group[] {
     for (const session of week.sessions) {
       if (!hasFiche(session.content)) continue;
       const discipline = session.content.discipline ?? "hybrid";
-      const key = `${discipline}:${session.content.title}`;
+      const key = ficheKey(session.content);
       const group = groups.get(key) ?? {
+        key,
         discipline,
         title: session.content.title,
         occurrences: [],
@@ -744,6 +748,7 @@ export function paginate(sections: FicheSection[]): FicheSection[][] {
 // Le document
 // ---------------------------------------------------------------------------
 type Fiche = {
+  key: string | null;
   name: string;
   tone: FicheTone;
   kicker: string;
@@ -779,6 +784,7 @@ export function fichesPdf(input: PdfProgramInput): FichesPdf {
         0,
       );
       fiches.push({
+        key: group.key,
         name: group.title,
         tone: "strength",
         kicker: `Musculation · ${first.content.sessionType}`,
@@ -790,6 +796,7 @@ export function fichesPdf(input: PdfProgramInput): FichesPdf {
       });
     } else {
       fiches.push({
+        key: group.key,
         name: group.title,
         tone: "hyrox",
         kicker: `${group.discipline === "hyrox" ? "Hyrox" : "Séance"} · ${first.content.sessionType}`,
@@ -809,6 +816,7 @@ export function fichesPdf(input: PdfProgramInput): FichesPdf {
   );
   if (paces.length > 0) {
     fiches.push({
+      key: null,
       name: "Allures",
       tone: "paces",
       kicker: "Repères",
@@ -855,6 +863,7 @@ export function fichesPdf(input: PdfProgramInput): FichesPdf {
     title: "Fiches et repères",
     subtitle: "Le détail des séances renvoyées par l'agenda, et tes allures",
     rows: laidOut.map(({ fiche, anchor }) => ({
+      key: fiche.key,
       title: fiche.name,
       subtitle: fiche.tocSubtitle,
       page: pageOf.get(anchor) ?? 0,

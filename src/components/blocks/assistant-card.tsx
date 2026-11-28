@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useOpenNewPayment } from "@/components/blocks/new-payment-sheet";
 import { useOpenNewSession } from "@/components/blocks/new-session-sheet";
 import { useOpenTaskSheet } from "@/components/blocks/task-sheet";
+import { PdfLink } from "@/components/programs/pdf-link";
 import { Spinner } from "@/components/ui/spinner";
 import { canModify, canValidate, type CardState } from "@/features/assistant/cards";
 import { toPaymentPrefill, toSessionPrefill, toTaskPrefill } from "@/features/assistant/form-data";
@@ -99,16 +100,16 @@ export function AssistantCard({
         // Lot 2 (D-181) : les PDF d'un programme publié, à ouvrir ; rien à valider.
         <div className="flex flex-wrap items-center gap-2">
           {card.links.map((link) => (
-            <a
+            // 28/11 : dans l'app installée sur ordinateur, le PDF s'ouvre dans Coory (PdfLink).
+            <PdfLink
               key={link.href}
               href={link.href}
-              target="_blank"
-              rel="noopener"
+              title={link.label}
               className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[12px] px-3.5 text-[14px] font-medium text-text inset-ring inset-ring-line-2 transition-colors duration-150 hover:bg-surface-2 md:h-9 md:rounded-[10px] md:text-[13.5px]"
             >
               <FileDown aria-hidden size={15} strokeWidth={1.9} className="shrink-0" />
               {link.label}
-            </a>
+            </PdfLink>
           ))}
         </div>
       ) : card.status === "pending" ? (

@@ -3,6 +3,7 @@ import { programKindLabel, type Discipline } from "./discipline";
 import type { ProgramSessionContent } from "./program-session";
 import { sessionMomentLabels, type PublishedSession, type Weekday } from "./session-v2";
 import { formatMinutes } from "./session-view";
+import type { FicheTone } from "./pdf-fiches";
 
 // PDF 1 « Agenda du programme » (handoff 12_PDF_SYSTEM, maquette CooryPdfDoc, phase 5) : un sommaire
 // puis une page par semaine, tirés de la VERSION PUBLIÉE. Ce module construit le contenu de chaque
@@ -12,10 +13,12 @@ import { formatMinutes } from "./session-view";
 // Règles :
 // - une semaine = une page ; si elle déborde, les séances les plus longues passent à 3 lignes puis
 //   « → détail dans Coory » (règle du handoff), jamais une carte coupée sur deux pages ;
-// - la musculation, et un bloc Hyrox de plus de 4 lignes, ont leur fiche dans le PDF 2 « Fiches et
-//   repères » : l'agenda écrit le renvoi (texte, un lien entre deux fichiers ne marche pas sur
-//   téléphone) ; la musculation liste d'abord ses exercices comme la carte de l'app (superset et EMOM
-//   groupés, décision d'Antonino du 16/11), le Hyrox trop long écrit son résumé ;
+// - la musculation, et un bloc Hyrox de plus de 4 lignes, ont leur fiche après les semaines (PDF
+//   unique, D-211) : la carte ne répète pas son détail (décision d'Antonino du 28/11, qui remplace
+//   celle du 16/11) ; la musculation garde son nom, le Hyrox trop long sa ligne de résumé, puis
+//   « → Voir la fiche, page N », un lien vers la fiche ;
+// - un seul sommaire (28/11) : les semaines, puis « Fiches et repères » et une ligne par fiche ; sur
+//   chaque page, ‹ › mène aux pages voisines et le bouton du milieu, « Sommaire », au sommaire ;
 // - les lignes suivent les règles des cartes de l'agenda de l'app (card-lines.ts : Running en
 //   minutes, une info par ligne, puces, gras et italique).
 
@@ -28,7 +31,15 @@ const DAY_MIN = 30;
 const DAYS_AVAILABLE = 600;
 // Au-delà, une ligne passe à la ligne dans une carte (≈ 67 signes sur 440 px en 11 px).
 const CHARS_PER_LINE = 62;
-const TOC_ROWS_PER_PAGE = 12;
+// Sommaire (28/11) : place laissée aux lignes sous le titre, pour un titre de 2 lignes et une note
+// d'une ligne (≈ 552 px), avec une marge de sécurité. Une ligne fait 38 px, plus 5 px d'écart ;
+// l'intertitre « Fiches et repères » 24 px avec son écart. Le test de rendu vérifie ces mesures.
+const TOC_BUDGET = 548;
+const TOC_PITCH = 43;
+const TOC_GAP = 5;
+const TOC_HEADING = 24;
+const TOC_NOTE = "Touche une ligne pour y aller. Sur chaque page, « Sommaire » ramène ici.";
+export const FICHES_HEADING = "Fiches et repères";
 
 export const WEEKDAYS: Weekday[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 const weekdayNames: Record<Weekday, string> = {
@@ -83,14 +94,27 @@ export type PdfProgramInput = {
 export type PdfNavLink = { label: string; anchor: string };
 export type PdfNav = { prev: PdfNavLink | null; current: PdfNavLink; next: PdfNavLink | null };
 
+// Une fiche du PDF unique, telle que le sommaire et les cartes des semaines la citent (programPdf).
+export type PdfFicheLink = {
+  // Séance de la fiche (ficheKey) ; null pour les allures.
+  key: string | null;
+  title: string;
+  subtitle: string;
+  tone: FicheTone;
+  anchor: string;
+  // Rang de sa première page parmi les pages des fiches (0 : juste après la dernière semaine).
+  offset: number;
+};
+
 export type AgendaSessionView = {
   discipline: Discipline;
   title: string;
   // À droite de l'en-tête : « coach · 10:00 », « ≈ 55 min ».
   meta: string;
   lines: CardLine[];
-  // Séance qui a sa fiche : son résumé en gras (Hyrox) ou ses lignes (musculation), puis le renvoi.
-  fiche: { summary: string | null } | null;
+  // Séance qui a sa fiche : son résumé en gras (Hyrox) ou rien (musculation), puis le renvoi à la
+  // page de sa fiche (lien) ; sans page connue (agenda seul), « → fiche dans « Fiches et repères » ».
+  fiche: { summary: string | null; anchor: string | null; page: number | null } | null;
   // Séance raccourcie pour tenir sur la page : « → détail dans Coory ».
   cut: boolean;
 };
@@ -108,6 +132,14 @@ export type AgendaTocRow = {
   anchor: string;
 };
 
+export type AgendaFicheRow = {
+  title: string;
+  subtitle: string;
+  tone: FicheTone;
+  page: number;
+  anchor: string;
+};
+
 type PageBase = { anchor: string; nav: PdfNav; bookmark: string; pageNumber: number };
 export type AgendaTocPage = PageBase & {
   kind: "toc";
@@ -115,10 +147,11 @@ export type AgendaTocPage = PageBase & {
   kicker: string;
   title: string;
   subtitle: string;
+  // Les semaines de cette page du sommaire, puis (28/11) l'intertitre et les fiches qui y tiennent.
   rows: AgendaTocRow[];
+  fichesHeading: string | null;
+  fiches: AgendaFicheRow[];
   note: string | null;
-  // PDF unique (D-211) : la dernière page du sommaire mène à « Fiches et repères », à la suite.
-  fichesLink: { label: string; page: number; anchor: string } | null;
 };
 export type AgendaWeekPage = PageBase & {
   kind: "week";
@@ -183,6 +216,13 @@ export function hasFiche(content: ProgramSessionContent): boolean {
   return false;
 }
 
+// Une fiche par séance de même discipline et de même nom : la clé relie la carte d'une semaine à sa
+// fiche (pdf-fiches, lien « → Voir la fiche, page N » du 28/11).
+export const ficheKey = (content: ProgramSessionContent) =>
+  `${content.discipline ?? "hybrid"}:${content.title}`;
+
+type FicheTarget = { anchor: string; page: number };
+
 function sessionMeta(session: PdfSessionInput): string {
   const time = session.time ? session.time.slice(0, 5) : null;
   if (session.coachDate) return time ? `coach · ${time}` : "avec le coach";
@@ -194,35 +234,29 @@ function sessionMeta(session: PdfSessionInput): string {
   return [moment, time, duration].filter(Boolean).join(" · ");
 }
 
-// Lignes d'une musculation (16/11) : celles de la carte de l'app ; un bloc répété porte le nom de son
-// étape (« Superset · 3 tours », « Gainage · 4 tours ») plutôt que « 3 × ». Les blocs répétés de
-// cardLines suivent l'ordre des étapes répétées (échauffement et retour au calme exclus).
-function strengthLines(content: ProgramSessionContent): CardLine[] {
-  const repeated = content.steps.filter(
-    (step) => step.repeat && step.title !== "Échauffement" && step.title !== "Retour au calme",
-  );
-  let next = 0;
-  return cardLines(content).map((line) => {
-    if (line.kind !== "repeat") return line;
-    const step = repeated[next++];
-    const label = step
-      ? `${step.title} · ${step.badge ?? `${line.times} tours`}`
-      : `${line.times} tours`;
-    return { kind: "group", label, lines: line.lines };
-  });
-}
-
-function sessionView(session: PdfSessionInput, raceDate: string | null, date: string | null) {
+function sessionView(
+  session: PdfSessionInput,
+  raceDate: string | null,
+  date: string | null,
+  fiches: Map<string, FicheTarget>,
+) {
   const { content } = session;
   const race = raceDate !== null && date === raceDate;
   const fiche = hasFiche(content);
-  const strength = content.discipline === "strength";
+  const target = fiche ? fiches.get(ficheKey(content)) : undefined;
   return {
     discipline: content.discipline ?? "hybrid",
     title: `${race ? "★ " : ""}${content.title}`,
     meta: sessionMeta(session),
-    lines: strength ? strengthLines(content) : fiche ? [] : cardLines(content),
-    fiche: fiche ? { summary: strength ? null : session.headline } : null,
+    // Sa fiche détaille tout (28/11) : la carte ne répète rien, sauf la ligne de résumé d'un Hyrox.
+    lines: fiche ? [] : cardLines(content),
+    fiche: fiche
+      ? {
+          summary: content.discipline === "strength" ? null : session.headline,
+          anchor: target?.anchor ?? null,
+          page: target?.page ?? null,
+        }
+      : null,
     cut: false,
   } satisfies AgendaSessionView;
 }
@@ -285,19 +319,15 @@ export function firstLines(lines: CardLine[], max: number): CardLine[] {
 }
 
 // Une semaine trop chargée pour sa page : les séances les plus longues passent à 3 lignes, puis à
-// 1 ligne si besoin, chacune suivie de « → détail dans Coory » ; une musculation raccourcie garde son
-// renvoi « → fiche dans « Fiches et repères » » à la place.
+// 1 ligne si besoin, chacune suivie de « → détail dans Coory ». Une séance qui a sa fiche n'a pas de
+// lignes à raccourcir.
 export function fitWeek(days: AgendaDayView[]): AgendaDayView[] {
   let fitted = days;
   for (const max of [3, 1]) {
     if (estimateDaysHeight(fitted) <= DAYS_AVAILABLE) return fitted;
     const candidates = fitted
       .flatMap((day) => day.sessions)
-      // Une musculation listée se raccourcit aussi ; son renvoi à la fiche reste.
-      .filter(
-        (session) =>
-          (!session.fiche || session.fiche.summary === null) && cardLineCount(session.lines) > max,
-      )
+      .filter((session) => !session.fiche && cardLineCount(session.lines) > max)
       .sort((a, b) => sessionLines(b) - sessionLines(a));
     for (const target of candidates) {
       fitted = fitted.map((day) => ({
@@ -314,13 +344,17 @@ export function fitWeek(days: AgendaDayView[]): AgendaDayView[] {
   return fitted;
 }
 
-function weekDays(week: PdfWeekInput, raceDate: string | null): AgendaDayView[] {
+function weekDays(
+  week: PdfWeekInput,
+  raceDate: string | null,
+  fiches: Map<string, FicheTarget>,
+): AgendaDayView[] {
   if (!week.fixed) {
     // Dans l'ordre : une ligne par séance (« Séance 1 »…), datée seulement si elle est avec le coach.
     return week.sessions.map((session, i) => ({
       label: `Séance ${i + 1}`,
       date: session.coachDate ? pdfDayMonth(session.coachDate) : null,
-      sessions: [sessionView(session, raceDate, session.coachDate)],
+      sessions: [sessionView(session, raceDate, session.coachDate, fiches)],
     }));
   }
   // Jours fixés : les 7 jours (« Repos » sans séance). Une séance restée sans jour garde sa place à
@@ -332,7 +366,7 @@ function weekDays(week: PdfWeekInput, raceDate: string | null): AgendaDayView[] 
       date: pdfDayMonth(date),
       sessions: week.sessions
         .filter((session) => session.day === weekday)
-        .map((session) => sessionView(session, raceDate, date)),
+        .map((session) => sessionView(session, raceDate, date, fiches)),
     };
   });
   const free = week.sessions.filter((session) => session.day === null);
@@ -340,7 +374,7 @@ function weekDays(week: PdfWeekInput, raceDate: string | null): AgendaDayView[] 
     days.push({
       label: "Au choix",
       date: null,
-      sessions: free.map((session) => sessionView(session, raceDate, null)),
+      sessions: free.map((session) => sessionView(session, raceDate, null, fiches)),
     });
   }
   return days;
@@ -351,16 +385,71 @@ function weekDays(week: PdfWeekInput, raceDate: string | null): AgendaDayView[] 
 // ---------------------------------------------------------------------------
 const plural = (count: number, word: string) => `${count} ${word}${count > 1 ? "s" : ""}`;
 
-// `fiches` : les fiches suivent l'agenda dans le même fichier (PDF unique, D-211, programPdf).
-export function agendaPdf(input: PdfProgramInput, options: { fiches?: boolean } = {}): AgendaPdf {
+// ‹ › de chaque page : ses voisines dans l'ordre du fichier ; le bouton du milieu ramène toujours
+// au sommaire (demande d'Antonino du 28/11 : y aller d'un geste, sans défiler).
+export const SUMMARY_LINK: PdfNavLink = { label: "Sommaire", anchor: "toc" };
+export function chainNav(order: PdfNavLink[]): PdfNav[] {
+  return order.map((_, i) => ({
+    prev: order[i - 1] ?? null,
+    current: SUMMARY_LINK,
+    next: order[i + 1] ?? null,
+  }));
+}
+
+type TocItem =
+  | { kind: "week"; index: number }
+  | { kind: "heading" }
+  // Une ligne du sommaire porte deux fiches côte à côte.
+  | { kind: "fiches"; from: number; to: number };
+
+// Pages du sommaire : les semaines, puis l'intertitre et les fiches, à la hauteur de chaque ligne.
+// L'intertitre ne reste jamais seul en bas d'une page : il part avec la première ligne de fiches.
+export function tocLayout(weeks: number, fiches: number): TocItem[][] {
+  const pages: TocItem[][] = [[]];
+  let used = 0;
+  const fits = (height: number) => used + height - TOC_GAP <= TOC_BUDGET;
+  const place = (item: TocItem, height: number) => {
+    if (pages.at(-1)!.length > 0 && !fits(height)) {
+      pages.push([]);
+      used = 0;
+    }
+    pages.at(-1)!.push(item);
+    used += height;
+  };
+  for (let index = 0; index < weeks; index++) place({ kind: "week", index }, TOC_PITCH);
+  if (fiches > 0) {
+    if (pages.at(-1)!.length > 0 && !fits(TOC_HEADING + TOC_PITCH)) {
+      pages.push([]);
+      used = 0;
+    }
+    pages.at(-1)!.push({ kind: "heading" });
+    used += TOC_HEADING;
+    for (let from = 0; from < fiches; from += 2)
+      place({ kind: "fiches", from, to: Math.min(from + 2, fiches) }, TOC_PITCH);
+  }
+  return pages;
+}
+
+// `fiches` : les fiches qui suivent les semaines dans le même fichier (PDF unique, programPdf).
+export function agendaPdf(
+  input: PdfProgramInput,
+  options: { fiches?: PdfFicheLink[] } = {},
+): AgendaPdf {
   const raceDate = input.race?.date ?? null;
   const phases = [...new Set(input.weeks.map((week) => week.label).filter(Boolean))] as string[];
-  // La ligne « Fiches et repères » (PDF unique, D-211) compte comme une ligne du sommaire : elle ne
-  // doit jamais faire déborder une page pleine (relecture du 27/11 : titre long + 12 semaines).
-  const tocSlots = input.weeks.length + (options.fiches ? 1 : 0);
-  const tocPages = Math.max(1, Math.ceil(tocSlots / TOC_ROWS_PER_PAGE));
+  const fiches = options.fiches ?? [];
+  const layout = tocLayout(input.weeks.length, fiches.length);
+  const tocPages = layout.length;
   const tocAnchor = (i: number) => (i === 0 ? "toc" : `toc-${i + 1}`);
   const weekAnchor = (index: number) => `week-${index}`;
+  const fichePage = (offset: number) => tocPages + input.weeks.length + offset + 1;
+  const targets = new Map(
+    fiches.flatMap((fiche) =>
+      fiche.key
+        ? [[fiche.key, { anchor: fiche.anchor, page: fichePage(fiche.offset) }] as const]
+        : [],
+    ),
+  );
   const end = addDays(input.startDate, 7 * input.weeksCount - 1);
   const perWeek =
     input.sessionsPerWeek ?? Math.max(0, ...input.weeks.map((week) => week.sessions.length));
@@ -368,40 +457,42 @@ export function agendaPdf(input: PdfProgramInput, options: { fiches?: boolean } 
     week.sessions.some((session) => hasFiche(session.content)),
   );
 
-  // Ordre des pages : sommaire(s), puis les semaines. Chaque page sait où mènent ‹ et ›.
-  const order: { anchor: string; label: string }[] = [
-    ...Array.from({ length: tocPages }, (_, i) => ({ anchor: tocAnchor(i), label: "Sommaire" })),
+  // Ordre des pages : sommaire(s), semaines, puis (seul lien connu ici) la première fiche.
+  const navs = chainNav([
+    ...layout.map((_, i) => ({ anchor: tocAnchor(i), label: "Sommaire" })),
     ...input.weeks.map((week) => ({
       anchor: weekAnchor(week.index),
       label: `Semaine ${week.index}`,
     })),
-  ];
-  const pageOf = new Map(order.map((page, i) => [page.anchor, i + 1]));
-  const nav = (i: number, current: string): PdfNav => ({
-    prev: i > 0 ? order[i - 1]! : null,
-    current: { label: current, anchor: "toc" },
-    next: i < order.length - 1 ? order[i + 1]! : null,
-  });
+    ...(fiches[0] ? [{ anchor: fiches[0].anchor, label: fiches[0].title }] : []),
+  ]);
 
-  const rows: AgendaTocRow[] = input.weeks.map((week) => {
+  const weekRow = (week: PdfWeekInput, i: number): AgendaTocRow => {
     const race = raceDate !== null && raceDate >= week.monday && raceDate <= week.sunday;
     const range = `${pdfDayMonth(week.monday)} – ${pdfDayMonth(week.sunday)}`;
     return {
       title: `Semaine ${week.index}`,
       subtitle: week.label ? `${range} · ${week.label}` : range,
       tag: race ? "★ course" : week.light ? "allégée" : "",
-      page: pageOf.get(weekAnchor(week.index)) ?? 0,
+      page: tocPages + i + 1,
       phase: week.label ? phases.indexOf(week.label) : null,
       current: input.today >= week.monday && input.today <= week.sunday,
       anchor: weekAnchor(week.index),
     };
+  };
+  const ficheRow = (fiche: PdfFicheLink): AgendaFicheRow => ({
+    title: fiche.title,
+    subtitle: fiche.subtitle,
+    tone: fiche.tone,
+    page: fichePage(fiche.offset),
+    anchor: fiche.anchor,
   });
 
   const kind = programKindLabel(input.discipline);
-  const toc: AgendaTocPage[] = Array.from({ length: tocPages }, (_, i) => ({
+  const toc: AgendaTocPage[] = layout.map((items, i) => ({
     kind: "toc",
     anchor: tocAnchor(i),
-    nav: nav(i, "Sommaire"),
+    nav: navs[i]!,
     bookmark: tocPages > 1 ? `Sommaire (${i + 1})` : "Sommaire",
     pageNumber: i + 1,
     kicker: kind ? `${kind} · Sommaire` : "Sommaire",
@@ -413,20 +504,14 @@ export function agendaPdf(input: PdfProgramInput, options: { fiches?: boolean } 
     ]
       .filter(Boolean)
       .join(" · "),
-    rows: rows.slice(i * TOC_ROWS_PER_PAGE, (i + 1) * TOC_ROWS_PER_PAGE),
-    note:
-      i === tocPages - 1
-        ? `Touche une semaine pour y aller. Dans chaque semaine, ‹ › passe à la semaine voisine et le bouton noir revient ici.${
-            options.fiches
-              ? " Les fiches (musculation, workload Hyrox, allures) suivent l'agenda."
-              : ""
-          }`
-        : null,
-    // Le sommaire des fiches vient juste après la dernière semaine.
-    fichesLink:
-      options.fiches && i === tocPages - 1
-        ? { label: "Fiches et repères", page: tocPages + input.weeks.length + 1, anchor: "fiches" }
-        : null,
+    rows: items.flatMap((item) =>
+      item.kind === "week" ? [weekRow(input.weeks[item.index]!, item.index)] : [],
+    ),
+    fichesHeading: items.some((item) => item.kind === "heading") ? FICHES_HEADING : null,
+    fiches: items.flatMap((item) =>
+      item.kind === "fiches" ? fiches.slice(item.from, item.to).map(ficheRow) : [],
+    ),
+    note: i === tocPages - 1 ? TOC_NOTE : null,
   }));
 
   const weeks: AgendaWeekPage[] = input.weeks.map((week, i) => {
@@ -434,14 +519,17 @@ export function agendaPdf(input: PdfProgramInput, options: { fiches?: boolean } 
     return {
       kind: "week",
       anchor: weekAnchor(week.index),
-      nav: nav(tocPages + i, `Semaine ${week.index} sur ${input.weeksCount}`),
+      nav: navs[tocPages + i]!,
       bookmark: week.label ? `Semaine ${week.index} (${week.label})` : `Semaine ${week.index}`,
       pageNumber: tocPages + i + 1,
-      kicker: [week.label, week.light ? "allégée" : null].filter(Boolean).join(" · "),
+      // La position (« 3 sur 10 ») était dans le bouton du milieu, qui dit maintenant « Sommaire ».
+      kicker: [week.label, `${week.index} sur ${input.weeksCount}`, week.light ? "allégée" : null]
+        .filter(Boolean)
+        .join(" · "),
       title: `Semaine ${week.index}`,
       subtitle: week.light ? `${range} · semaine allégée` : range,
       badge: week.fixed ? "Jours fixés par le coach" : "Dans l'ordre, jours au choix",
-      days: fitWeek(weekDays(week, raceDate)),
+      days: fitWeek(weekDays(week, raceDate, targets)),
     };
   });
 

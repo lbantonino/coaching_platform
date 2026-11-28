@@ -3,12 +3,20 @@ import { describe, expect, it } from "vitest";
 import { programPdf } from "@/domain/training/pdf-programme";
 import { renderProgramPdf } from "@/features/programs/pdf/program-pdf";
 
-import { demoProgram, programWithoutFiches } from "./pdf-fixtures";
+import { card, demoProgram, programWithoutFiches, strength } from "./pdf-fixtures";
+
+// Le programme d'Antonino du 28/11 : 10 semaines et 4 fiches (2 musculations, 1 Hyrox, les allures).
+function withRenfo(weeks: number) {
+  const program = demoProgram(weeks);
+  const renfo = { ...strength(30, 3), title: "Renfo full body A", fixedDay: "sat" as const };
+  for (const week of program.weeks) week.sessions.push(card(renfo));
+  return program;
+}
 
 // Rendu RÉEL du PDF du programme par React-PDF (police intégrée) : un vrai fichier PDF, en A4, avec
 // EXACTEMENT les pages prévues par le modèle (une estimation de hauteur trop courte ferait déborder
 // une page et décalerait tous les numéros des sommaires), des liens internes et des signets. Depuis
-// D-211 (27/11), un seul fichier : l'agenda, puis « Fiches et repères ».
+// D-211 (27/11), un seul fichier ; depuis le 28/11, un seul sommaire (semaines puis fiches).
 const pagesOf = (pdf: Buffer) => {
   const raw = pdf.toString("latin1");
   return {
@@ -32,12 +40,12 @@ describe("rendu du PDF du programme", () => {
     expect(pages.outlines).toBe(true);
     expect(pages.links).toBeGreaterThan(model.totalPages);
     const raw = pdf.toString("latin1");
-    for (const name of ["toc", "toc-2", "week-1", "week-14", "fiches"])
+    for (const name of ["toc", "toc-2", "week-1", "week-14", "sheet-force-bas-du-corps"])
       expect(raw.includes(`(${name})`), name).toBe(true);
   }, 30_000);
 
-  // La ligne « Fiches et repères » compte comme une ligne du sommaire (12 par page) : 12 semaines =
-  // un sommaire plein, puis une deuxième page de sommaire avec cette ligne.
+  // 12 semaines remplissent une page de sommaire : l'intertitre « Fiches et repères » et les fiches
+  // passent ensemble sur une deuxième page (jamais l'intertitre seul en bas).
   it("TC-17 : 12 semaines = 2 pages de sommaire + 12 pages, puis les fiches", async () => {
     const model = programPdf(demoProgram(12));
     expect(model.agenda.pages).toHaveLength(14);
@@ -83,10 +91,25 @@ describe("rendu du PDF du programme", () => {
         expect(pagesOf(pdf).count).toBe(model.totalPages);
       }, 30_000);
 
+  // 28/11 : avec un titre court ou long (2 lignes), 10 semaines et 4 fiches tiennent dans un seul
+  // sommaire ; 11 semaines font passer une ligne de fiches à la page suivante.
+  for (const title of [
+    "Prépa HYROX Gand",
+    "Préparation HYROX Bruxelles printemps 2027 : bloc de force, endurance et allures spécifiques course",
+  ])
+    for (const weeks of [10, 11, 13])
+      it(`${weeks} semaines et 4 fiches, titre de ${title.length} caractères : exactement les pages prévues`, async () => {
+        const model = programPdf({ ...withRenfo(weeks), title });
+        const tocs = model.agenda.pages.filter((page) => page.kind === "toc");
+        if (weeks === 10) expect(tocs).toHaveLength(1);
+        const pdf = await renderProgramPdf(model, "Coach Test");
+        expect(pagesOf(pdf).count).toBe(model.totalPages);
+      }, 30_000);
+
   it("sans fiche ni allure : l'agenda seul", async () => {
     const model = programPdf(programWithoutFiches());
     const pdf = await renderProgramPdf(model, "Coach Test");
     expect(pagesOf(pdf).count).toBe(model.agenda.pages.length);
-    expect(pdf.toString("latin1").includes("(fiches)")).toBe(false);
+    expect(pdf.toString("latin1").includes("(sheet-")).toBe(false);
   }, 30_000);
 });

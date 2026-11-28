@@ -146,8 +146,8 @@ const s = StyleSheet.create({
 });
 
 // Chevrons de la maquette (11 px, trait 2,6).
-function Chevron({ to, color }: { to: "left" | "right" | "down"; color: string }) {
-  const d = to === "left" ? "M15 18l-6-6 6-6" : to === "right" ? "M9 18l6-6-6-6" : "M6 9l6 6 6-6";
+function Chevron({ to, color }: { to: "left" | "right"; color: string }) {
+  const d = to === "left" ? "M15 18l-6-6 6-6" : "M9 18l6-6-6-6";
   return (
     <Svg width={u(11)} height={u(11)} viewBox="0 0 24 24">
       <Path
@@ -158,6 +158,17 @@ function Chevron({ to, color }: { to: "left" | "right" | "down"; color: string }
         strokeLinejoin="round"
         fill="none"
       />
+    </Svg>
+  );
+}
+
+// Icône « liste » de lucide (la même famille que l'app), devant « Sommaire » dans le bouton du milieu.
+function ListIcon({ color }: { color: string }) {
+  return (
+    <Svg width={u(12)} height={u(12)} viewBox="0 0 24 24">
+      {["M3 6h.01", "M3 12h.01", "M3 18h.01", "M8 6h13", "M8 12h13", "M8 18h13"].map((d) => (
+        <Path key={d} d={d} stroke={color} strokeWidth={2.6} strokeLinecap="round" fill="none" />
+      ))}
     </Svg>
   );
 }
@@ -266,9 +277,10 @@ export function PdfPage({
       </View>
       <View style={s.nav}>
         <SideButton link={nav.prev} side="prev" />
+        {/* 28/11 : le bouton du milieu dit ce qu'il fait, « Sommaire », et y mène de partout. */}
         <Link src={`#${nav.current.anchor}`} style={[s.center, { textDecoration: "none" }]}>
+          <ListIcon color="#ffffff" />
           <Text style={s.centerText}>{pdfText(nav.current.label)}</Text>
-          <Chevron to="down" color="#ffffff" />
         </Link>
         <SideButton link={nav.next} side="next" />
       </View>

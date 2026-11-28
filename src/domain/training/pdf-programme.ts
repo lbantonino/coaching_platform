@@ -1,85 +1,65 @@
-import {
-  agendaPdf,
-  type AgendaPage,
-  type AgendaPdf,
-  type PdfNavLink,
-  type PdfProgramInput,
-} from "./pdf-agenda";
-import { fichesPdf, type FichesPdf } from "./pdf-fiches";
+import { agendaPdf, chainNav, type AgendaPdf, type PdfProgramInput } from "./pdf-agenda";
+import { fichesPdf, type FichePage, type FichesPdf } from "./pdf-fiches";
 
 // Un seul PDF par programme (D-211, demande d'Antonino du 27/11/2026) : le coach n'envoie plus qu'un
-// fichier au sportif. L'agenda (sommaire, puis une page par semaine), puis « Fiches et repères »
-// (sommaire, puis les fiches), composés à partir des deux modèles existants : rien n'est redessiné.
-// Ce module ne fait que les relier : ancres uniques, pages numérotées d'un bout à l'autre, ‹ › qui
-// passe d'une partie à l'autre.
-export const FICHES_ANCHOR = "fiches";
-const FICHES_LABEL = "Fiches et repères";
-
+// fichier au sportif. Un seul sommaire (28/11) : il liste les semaines, puis « Fiches et repères » et
+// chaque fiche ; les pages des fiches suivent la dernière semaine. Sur chaque page, ‹ › mène aux pages
+// voisines, d'un bout à l'autre du fichier, et le bouton du milieu, « Sommaire », au sommaire.
+// Les deux modèles existants font le contenu (rien n'est redessiné) ; le sommaire propre aux fiches
+// (sa page 1 dans fichesPdf) disparaît.
 export type ProgramPdf = {
   documentTitle: string;
   fileName: string;
   agenda: AgendaPdf;
-  // null : ni fiche ni allure, le PDF est l'agenda seul.
+  // Les pages des fiches seulement ; null : ni fiche ni allure, le PDF est l'agenda seul.
   fiches: FichesPdf | null;
   totalPages: number;
 };
 
 export function programPdf(input: PdfProgramInput): ProgramPdf {
   const alone = fichesPdf(input);
-  // Le sommaire des fiches seul (« Ce programme n'a pas de fiche ») n'apporterait rien.
-  const withFiches = alone.pages.length > 1;
-  const agenda = agendaPdf(input, { fiches: withFiches });
+  const toc = alone.pages[0];
+  const sheets = alone.pages.filter((page): page is FichePage => page.kind === "fiche");
   const header = `${input.title} · ${input.athleteName}`;
   const base = {
     documentTitle: `${header} · Programme`,
     fileName: `Programme - ${input.title} - ${input.athleteName} - v${input.version}.pdf`,
   };
-  if (!withFiches) return { ...base, agenda, fiches: null, totalPages: agenda.pages.length };
+  if (sheets.length === 0 || toc?.kind !== "toc") {
+    const agenda = agendaPdf(input);
+    return { ...base, agenda, fiches: null, totalPages: agenda.pages.length };
+  }
 
+  // Dans fichesPdf, la page 1 est son sommaire : sa première fiche est sa page 2.
+  const agenda = agendaPdf(input, {
+    fiches: toc.rows.map((row) => ({
+      key: row.key,
+      title: row.title,
+      subtitle: row.subtitle,
+      tone: row.tone,
+      anchor: row.anchor,
+      offset: row.page - 2,
+    })),
+  });
   const offset = agenda.pages.length;
-  const last = agenda.pages.at(-1)!;
-  const toFiches: PdfNavLink = { label: FICHES_LABEL, anchor: FICHES_ANCHOR };
-  // Dans les fiches, « toc » désignait leur sommaire : il devient « fiches », et son nom « Sommaire »
-  // devient « Fiches et repères » (le sommaire de l'agenda garde « toc » et « Sommaire »).
-  const moved = (link: PdfNavLink | null): PdfNavLink | null =>
-    link?.anchor === "toc"
-      ? { label: link.label === "Sommaire" ? FICHES_LABEL : link.label, anchor: FICHES_ANCHOR }
-      : link;
-
-  const fiches: FichesPdf = {
-    ...alone,
-    pages: alone.pages.map((page, i) => {
-      const shifted = {
-        ...page,
-        anchor: page.anchor === "toc" ? FICHES_ANCHOR : page.anchor,
-        pageNumber: page.pageNumber + offset,
-        nav: {
-          // ‹ du sommaire des fiches : la dernière semaine de l'agenda.
-          prev:
-            i === 0
-              ? { label: last.kind === "week" ? last.title : "Sommaire", anchor: last.anchor }
-              : moved(page.nav.prev),
-          current: moved(page.nav.current)!,
-          next: moved(page.nav.next),
-        },
-      };
-      return shifted.kind === "toc"
-        ? {
-            ...shifted,
-            bookmark: FICHES_LABEL,
-            rows: shifted.rows.map((row) => ({ ...row, page: row.page + offset })),
-          }
-        : shifted;
-    }),
-  };
-  // › de la dernière semaine : le sommaire des fiches.
-  const pages: AgendaPage[] = agenda.pages.map((page) =>
-    page === last ? { ...page, nav: { ...page.nav, next: toFiches } } : page,
-  );
+  const navs = chainNav([
+    ...agenda.pages.map((page) => ({
+      anchor: page.anchor,
+      label: page.kind === "toc" ? "Sommaire" : page.title,
+    })),
+    ...sheets.map((page) => ({ anchor: page.anchor, label: page.title })),
+  ]);
   return {
     ...base,
-    agenda: { ...agenda, pages },
-    fiches,
-    totalPages: offset + fiches.pages.length,
+    agenda: { ...agenda, pages: agenda.pages.map((page, i) => ({ ...page, nav: navs[i]! })) },
+    fiches: {
+      ...alone,
+      pages: sheets.map((page, i) => ({
+        ...page,
+        pageNumber: offset + i + 1,
+        nav: navs[offset + i]!,
+      })),
+    },
+    totalPages: offset + sheets.length,
   };
 }

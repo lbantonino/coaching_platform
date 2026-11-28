@@ -4,11 +4,14 @@ import { Link, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type {
   AgendaDayView,
+  AgendaFicheRow,
   AgendaPdf,
   AgendaSessionView,
   AgendaTocPage,
   AgendaWeekPage,
 } from "@/domain/training/pdf-agenda";
+
+import { tones as ficheTones } from "./fiches-pdf";
 
 import {
   INK,
@@ -25,7 +28,8 @@ import {
 } from "./pdf-kit";
 
 // PDF 1 « Agenda du programme » (maquettes PDF-09 sommaire, PDF-01 semaine, PDF-10 semaine de
-// course) : la mise en page seulement ; le contenu vient de agendaPdf() (domain/training).
+// course) : la mise en page seulement ; le contenu vient de agendaPdf() (domain/training). Depuis le
+// 28/11, son sommaire est celui de tout le fichier : les semaines, puis les fiches deux par ligne.
 
 const s = StyleSheet.create({
   tocHead: {
@@ -61,6 +65,12 @@ const s = StyleSheet.create({
   tocRowSub: { fontSize: u(10.5), color: MUTED },
   tocTag: { fontSize: u(10.5), fontWeight: 600, color: INK_2 },
   tocPage: { fontSize: u(10.5), fontWeight: 600, color: VIOLET },
+  // Intertitre « Fiches et repères » (28/11) : 24 px avec son écart, comme le prévoit tocLayout.
+  tocHeading: { marginTop: u(6) },
+  // Deux fiches par ligne, de la hauteur d'une semaine (titre et sous-titre sur une ligne chacun).
+  ficheLine: { flexDirection: "row", gap: u(8), flexGrow: 0, flexShrink: 0 },
+  ficheTile: { flexGrow: 1, flexBasis: 0 },
+  oneLine: { maxLines: 1, textOverflow: "ellipsis" },
   note: { fontSize: u(10.5), lineHeight: 1.5, color: INK_2 },
 
   weekHead: {
@@ -183,20 +193,37 @@ export function AgendaTocPageView({
             <Text style={s.tocPage}>{`p. ${row.page} →`}</Text>
           </Link>
         ))}
-      </View>
-      {/* PDF unique (D-211) : une ligne de plus, comme celles des semaines, vers les fiches. */}
-      {page.fichesLink ? (
-        <Link src={`#${page.fichesLink.anchor}`} style={[s.tocRow, { backgroundColor: "#ffffff" }]}>
-          <View style={[s.phaseBar, { backgroundColor: "#dcdae3" }]} />
-          <View style={s.tocText}>
-            <Text style={s.tocRowTitle}>{pdfText(page.fichesLink.label)}</Text>
-            <Text style={s.tocRowSub}>{"À la suite de l'agenda"}</Text>
+        {page.fichesHeading ? (
+          <Text style={[titleStyles.kicker, s.tocHeading]}>{pdfText(page.fichesHeading)}</Text>
+        ) : null}
+        {pairs(page.fiches).map((pair) => (
+          <View key={pair[0]!.anchor} style={s.ficheLine}>
+            {pair.map((fiche) => (
+              <FicheTile key={fiche.anchor} fiche={fiche} />
+            ))}
+            {pair.length === 1 ? <View style={s.ficheTile} /> : null}
           </View>
-          <Text style={s.tocPage}>{`p. ${page.fichesLink.page} →`}</Text>
-        </Link>
-      ) : null}
+        ))}
+      </View>
       {page.note ? <Text style={s.note}>{pdfText(page.note)}</Text> : null}
     </PdfPage>
+  );
+}
+
+const pairs = (fiches: AgendaFicheRow[]) =>
+  Array.from({ length: Math.ceil(fiches.length / 2) }, (_, i) => fiches.slice(2 * i, 2 * i + 2));
+
+function FicheTile({ fiche }: { fiche: AgendaFicheRow }) {
+  return (
+    <Link src={`#${fiche.anchor}`} style={[s.tocRow, s.ficheTile, { backgroundColor: "#ffffff" }]}>
+      <View style={[s.phaseBar, { backgroundColor: ficheTones[fiche.tone].bar }]} />
+      {/* Base nulle : le texte prend la place laissée par le numéro de page, et s'arrête sur « … ». */}
+      <View style={[s.tocText, { flexBasis: 0 }]}>
+        <Text style={[s.tocRowTitle, s.oneLine]}>{pdfText(fiche.title)}</Text>
+        <Text style={[s.tocRowSub, s.oneLine]}>{pdfText(fiche.subtitle)}</Text>
+      </View>
+      <Text style={[s.tocPage, { flexShrink: 0 }]}>{`p. ${fiche.page} →`}</Text>
+    </Link>
   );
 }
 
@@ -210,15 +237,20 @@ function SessionCard({ session }: { session: AgendaSessionView }) {
         <Text style={s.meta}>{pdfText(session.meta)}</Text>
       </View>
       <View style={s.body}>
-        {/* Musculation (16/11) : ses exercices comme la carte de l'app, puis le renvoi à sa fiche ;
-            Hyrox trop long : son résumé, puis le renvoi. */}
+        {/* Une séance qui a sa fiche (28/11) : rien à répéter pour la musculation, la ligne de
+            résumé d'un Hyrox trop long, puis le renvoi à la fiche. */}
         {session.fiche?.summary ? (
           <Text style={s.strongLine}>{pdfText(session.fiche.summary)}</Text>
         ) : null}
         {session.lines.length > 0 ? (
           <SessionLines lines={session.lines} discipline={session.discipline} />
         ) : null}
-        {session.fiche ? (
+        {/* 28/11 : un vrai lien vers la page de la fiche (même fichier). */}
+        {session.fiche?.anchor ? (
+          <Link src={`#${session.fiche.anchor}`} style={{ textDecoration: "none" }}>
+            <Text style={s.violetLine}>{`→ Voir la fiche, page ${session.fiche.page}`}</Text>
+          </Link>
+        ) : session.fiche ? (
           <Text style={s.violetLine}>→ fiche dans « Fiches et repères »</Text>
         ) : session.cut ? (
           <Text style={s.violetLine}>→ détail dans Coory</Text>

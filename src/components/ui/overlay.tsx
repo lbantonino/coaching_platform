@@ -96,6 +96,9 @@ const WIDTHS = {
   // « Nouvelle séance » façon Calendrier (D-204) : fond des pages (cartes blanches) ; centrée, 600 px ;
   // accrochée à un créneau de l'agenda sur ordinateur, sans voile (comme la bulle du Mac).
   event: "md:max-w-[min(600px,calc(100vw-48px))]",
+  // PDF d'un programme ouvert dans l'app installée sur ordinateur (28/11, PdfLink) : presque tout
+  // l'écran, pour lire une page A4 entière.
+  document: "md:max-w-[min(1180px,calc(100vw-48px))] md:h-[calc(100vh-48px)]",
 } as const;
 const PICKER_PHONE =
   "max-md:mx-2 max-md:mb-[calc(8px+env(safe-area-inset-bottom))] max-md:w-[calc(100%-16px)] max-md:rounded-[30px] max-md:pb-0 md:backdrop:bg-transparent";
@@ -438,7 +441,7 @@ export function Overlay({
         size === "picker"
           ? `shadow-[var(--lib-menu-shadow)] ${PICKER_PHONE}`
           : "shadow-[var(--dlg-shadow)]"
-      } ${size === "event" ? `max-md:bg-bg md:bg-bg ${anchor ? "md:backdrop:bg-transparent" : ""}` : ""} backdrop:bg-[var(--dlg-scrim)] open:flex open:flex-col md:max-h-[min(720px,calc(100vh-48px))] md:pb-0 ${
+      } ${size === "event" ? `max-md:bg-bg md:bg-bg ${anchor ? "md:backdrop:bg-transparent" : ""}` : ""} backdrop:bg-[var(--dlg-scrim)] open:flex open:flex-col ${size === "document" ? "md:max-h-[calc(100vh-48px)]" : "md:max-h-[min(720px,calc(100vh-48px))]"} md:pb-0 ${
         anchor
           ? `md:m-0 md:w-[var(--aw)] ${size === "picker" ? "md:rounded-[14px]" : "md:rounded-[18px]"} md:left-[var(--ax)] md:right-auto ${
               anchor.side === "top"

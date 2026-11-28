@@ -154,7 +154,7 @@ const add = (iso: string, days: number) => {
   return date.toISOString().slice(0, 10);
 };
 
-const card = (published: PublishedSession) => ({
+export const card = (published: PublishedSession) => ({
   content: sessionToDisplay(published),
   headline: sessionHeadline(published),
   day: published.fixedDay ?? null,

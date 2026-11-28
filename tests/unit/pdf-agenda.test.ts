@@ -26,7 +26,9 @@ describe("PDF Agenda du programme", () => {
       next: { label: "Semaine 1", anchor: "week-1" },
     });
     expect(first!.nav.prev).toEqual({ label: "Sommaire", anchor: "toc" });
-    expect(first!.nav.current).toEqual({ label: "Semaine 1 sur 6", anchor: "toc" });
+    // 28/11 : le bouton du milieu dit ce qu'il fait, « Sommaire » ; la position passe dans le titre.
+    expect(first!.nav.current).toEqual({ label: "Sommaire", anchor: "toc" });
+    expect((first as AgendaWeekPage).kicker).toBe("Base · 1 sur 6");
     expect(last!.nav.next).toBeNull();
     expect(last!.pageNumber).toBe(7);
     expect(pdf.fileName).toBe("Agenda du programme - Prépa test - Anaïs Test - v1.pdf");
@@ -42,14 +44,14 @@ describe("PDF Agenda du programme", () => {
     expect(toc.rows[5]).toMatchObject({ tag: "★ course", phase: 1 });
   });
 
-  it("au-delà de 12 semaines, le sommaire continue sur une deuxième page", () => {
+  it("un sommaire trop long continue sur une deuxième page", () => {
     const pdf = agendaPdf(demoProgram(20));
     expect(pdf.pages.filter((page) => page.kind === "toc")).toHaveLength(2);
     expect(pdf.pages[2]!.anchor).toBe("week-1");
     expect(pdf.pages[2]!.pageNumber).toBe(3);
   });
 
-  it("une semaine à jours fixés : 7 jours, Repos, renvoi aux fiches, Running en minutes", () => {
+  it("une semaine à jours fixés : 7 jours, Repos, fiches sans exercices, Running en minutes", () => {
     const week = agendaPdf(demoProgram(6)).pages[1] as AgendaWeekPage;
     expect(week.badge).toBe("Jours fixés par le coach");
     expect(week.days.map((day) => day.label)).toEqual([
@@ -63,22 +65,15 @@ describe("PDF Agenda du programme", () => {
     ]);
     expect(week.days[0]).toMatchObject({ date: "9 nov.", sessions: [] });
     const [tuesday] = week.days[1]!.sessions;
-    expect(tuesday).toMatchObject({ discipline: "hyrox", fiche: { summary: "3 tours · 43 min" } });
-    // Musculation (décision d'Antonino du 16/11) : les exercices listés comme la carte de l'app, le
-    // superset groupé, l'EMOM groupé, puis le renvoi à sa fiche (sans résumé).
+    expect(tuesday).toMatchObject({
+      discipline: "hyrox",
+      fiche: { summary: "3 tours · 43 min", anchor: null, page: null },
+    });
+    // Musculation (décision d'Antonino du 28/11, remplace celle du 16/11) : sa fiche détaille tout ;
+    // la carte de la semaine ne garde que son nom et le renvoi à la fiche.
     const wednesday = week.days[2]!.sessions[0]!;
-    expect(wednesday.fiche).toEqual({ summary: null });
-    expect(wednesday.lines[0]).toMatchObject({
-      kind: "line",
-      text: expect.stringMatching(/^Back squat/),
-    });
-    expect(
-      wednesday.lines.find((line) => line.kind === "group" && line.label.startsWith("Superset")),
-    ).toMatchObject({
-      label: "Superset · 3 tours",
-      lines: [expect.stringMatching(/^Fentes/), expect.stringMatching(/^Hip thrust/)],
-    });
-    expect(wednesday.lines.some((line) => line.kind === "repeat")).toBe(false);
+    expect(wednesday).toMatchObject({ title: "Force bas du corps", lines: [] });
+    expect(wednesday.fiche).toEqual({ summary: null, anchor: null, page: null });
     const thursday = week.days[3]!.sessions[0]!;
     expect(thursday).toMatchObject({ meta: "≈ 50 min", fiche: null, cut: false });
     expect(thursday.lines[0]).toEqual({ kind: "line", text: "15 min · Z2 · 135–150 bpm" });
@@ -110,29 +105,6 @@ describe("PDF Agenda du programme", () => {
     expect(week.days.map((day) => day.label)).toEqual(["Séance 1", "Séance 2", "Séance 3"]);
   });
 
-  it("un bloc répété qui n'est pas un superset garde son nom (« Gainage · 4 tours »)", () => {
-    const program = demoProgram(1);
-    const session = program.weeks[0]!.sessions[1]!;
-    const published = structuredClone(session.published!);
-    if (published.content.discipline !== "strength") throw new Error("musculation attendue");
-    published.content.items = [
-      ...published.content.items.slice(0, 3),
-      {
-        id: "gainage",
-        kind: "text",
-        title: "Gainage",
-        lines: [],
-        repeat: { times: 4, lines: ["Planche 45 s", "Dead bug 10"] },
-      },
-    ];
-    program.weeks[0]!.sessions[1] = { ...session, content: sessionToDisplay(published), published };
-    const week = agendaPdf(program).pages[1] as AgendaWeekPage;
-    const labels = week.days[2]!.sessions[0]!.lines.flatMap((line) =>
-      line.kind === "group" ? [line.label] : [],
-    );
-    expect(labels).toEqual(["Superset · 3 tours", "Gainage · 4 tours"]);
-  });
-
   it("fiche : toute la musculation, un Hyrox trop long pour une carte, jamais le Running", () => {
     expect(hasFiche(sessionToDisplay(strength(40)))).toBe(true);
     expect(hasFiche(sessionToDisplay(hyrox(3)))).toBe(true);
@@ -158,29 +130,6 @@ describe("PDF Agenda du programme", () => {
     const sessions = fitWeek(Array.from({ length: 7 }, () => day)).flatMap((d) => d.sessions);
     expect(sessions.some((session) => session.cut)).toBe(true);
     expect(sessions.filter((s) => s.cut).every((s) => s.lines.length <= 3)).toBe(true);
-  });
-
-  it("une musculation listée se raccourcit aussi, et garde son renvoi à la fiche", () => {
-    const day = {
-      label: "Lundi",
-      date: "9 nov.",
-      sessions: Array.from({ length: 3 }, () => ({
-        discipline: "strength" as const,
-        title: "Force",
-        meta: "≈ 60 min",
-        lines: Array.from({ length: 6 }, (_, i) => ({
-          kind: "line" as const,
-          text: `Exercice ${i + 1} 4 × 6`,
-        })),
-        fiche: { summary: null },
-        cut: false,
-      })),
-    };
-    const sessions = fitWeek(Array.from({ length: 7 }, () => day)).flatMap((d) => d.sessions);
-    expect(sessions.some((session) => session.cut)).toBe(true);
-    expect(
-      sessions.filter((s) => s.cut).every((s) => s.lines.length <= 3 && s.fiche !== null),
-    ).toBe(true);
   });
 });
 
